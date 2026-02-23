@@ -3306,13 +3306,15 @@ function init(){
 init();
 </script>
 
-<button id="saveButton" style="padding:10px; background:blue; color:white;">데이터 저장 테스트</button>
+
+<button id="saveButton" style="padding:10px; background:blue; color:white; cursor:pointer;">데이터 저장하기</button>
 
 <script type="module">
+  // 외부 파일 없이 직접 라이브러리를 불러옵니다.
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // 사용자님의 실제 설정값 (캡처 이미지 참조)
+  // 사용자님의 실제 설정값 (이미지 1번 참조)
   const firebaseConfig = {
     apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
     authDomain: "fmkorea1004.firebaseapp.com",
@@ -3327,19 +3329,23 @@ init();
 
   async function saveData() {
     try {
-      await addDoc(collection(db, "users"), {
-        text: "연동 성공!",
-        time: new Date()
+      // 'users' 폴더에 데이터를 저장합니다.
+      const docRef = await addDoc(collection(db, "users"), {
+        content: "연동 테스트 성공!",
+        timestamp: new Date()
       });
-      alert("데이터가 정상적으로 저장되었습니다!");
+      alert("데이터 저장 성공! ID: " + docRef.id);
     } catch (e) {
-      alert("실패 원인: " + e.message);
+      alert("저장 실패: " + e.message);
     }
   }
 
   document.getElementById("saveButton").onclick = saveData;
 </script>
 
+
+
+  
 
 
   
