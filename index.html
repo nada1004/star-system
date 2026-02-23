@@ -537,7 +537,7 @@ function sw(t,el){
   curTab=t;openDetails={};
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('fstrip').style.display=(t==='total')?'block':'none';
+  document.getElementById('fstrip').style.display=(t==='total'&&isLoggedIn)?'block':'none';
   // 이전 내용 제거 후 렌더링
   const C=document.getElementById('rcont');
   if(C) C.innerHTML='';
@@ -3306,6 +3306,12 @@ function applyLoginState(){
   if(exportBtn)exportBtn.style.display=isLoggedIn?'':'none';
   if(importBtn)importBtn.style.display=isLoggedIn?'':'none';
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
+  const fstrip=document.getElementById('fstrip');
+  if(fstrip){
+    if(!isLoggedIn){fstrip.style.display='none';}
+    else{fstrip.style.display=(curTab==='total')?'block':'none';}
+  }
   render();
 }
 
