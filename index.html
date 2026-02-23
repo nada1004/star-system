@@ -3305,5 +3305,43 @@ function init(){
 }
 init();
 </script>
+
+<button id="saveButton" style="padding:10px; background:blue; color:white;">데이터 저장 테스트</button>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // 사용자님의 실제 설정값 (캡처 이미지 참조)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+    authDomain: "fmkorea1004.firebaseapp.com",
+    projectId: "fmkorea1004",
+    storageBucket: "fmkorea1004.firebasestorage.app",
+    messagingSenderId: "376964714931",
+    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function saveData() {
+    try {
+      await addDoc(collection(db, "users"), {
+        text: "연동 성공!",
+        time: new Date()
+      });
+      alert("데이터가 정상적으로 저장되었습니다!");
+    } catch (e) {
+      alert("실패 원인: " + e.message);
+    }
+  }
+
+  document.getElementById("saveButton").onclick = saveData;
+</script>
+
+
+
+  
 </body>
 </html>
