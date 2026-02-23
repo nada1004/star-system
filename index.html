@@ -255,6 +255,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 
 <div class="foot no-export">
   <button onclick="doJpg()" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;">📸 JPG 저장</button>
+  <button id="saveDataBtn" class="btn btn-w btn-sm lock-admin" onclick="handleSaveToFirestore()" title="Firestore에 데이터를 저장합니다.">💾 데이터 저장하기</button>
   <button class="btn btn-w btn-sm lock-admin" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다. 다른 기기에서 복구 버튼으로 불러올 수 있습니다.">💾 데이터 내보내기</button>
   <button class="btn btn-w btn-sm lock-admin" onclick="doImport()" title="저장된 JSON 파일로 데이터를 불러옵니다.">📂 데이터 가져오기</button>
   <input type="file" id="fi" style="display:none" onchange="doFile(this)">
@@ -3201,6 +3202,9 @@ async function doJpg(){
   document.querySelectorAll('.no-export').forEach(e=>e.style.display='');
 }
 
+// Firebase Firestore 저장 버튼용 더미 함수 (실제 로직은 module 스크립트에서 바인딩)
+function handleSaveToFirestore(){}
+
 /* ══════════════════════════════════════
    로그인 시스템
 ══════════════════════════════════════ */
@@ -3306,15 +3310,13 @@ function init(){
 init();
 </script>
 
-
-<button id="saveButton" style="padding:10px; background:blue; color:white; cursor:pointer;">데이터 저장하기</button>
-
 <script type="module">
-  // 외부 파일 없이 직접 라이브러리를 불러옵니다.
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  // Firebase v10+ SDK (CDN)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // 사용자님의 실제 설정값 (이미지 1번 참조)
+  // Firebase 설정 (수정 금지)
   const firebaseConfig = {
     apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
     authDomain: "fmkorea1004.firebaseapp.com",
@@ -3324,30 +3326,35 @@ init();
     appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
   };
 
+  // Firebase 초기화
   const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const db = getFirestore(app);
 
-  async function saveData() {
-    try {
-      // 'users' 폴더에 데이터를 저장합니다.
-      const docRef = await addDoc(collection(db, "users"), {
-        content: "연동 테스트 성공!",
-        timestamp: new Date()
-      });
-      alert("데이터 저장 성공! ID: " + docRef.id);
-    } catch (e) {
-      alert("저장 실패: " + e.message);
-    }
-  }
+  // 버튼 클릭 시 Firestore에 데이터 저장
+  window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("saveDataBtn");
+    if (!btn) return;
 
-  document.getElementById("saveButton").onclick = saveData;
+    btn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("로그인이 필요한 서비스입니다.");
+        return;
+      }
+      try {
+        await addDoc(collection(db, "users"), {
+          content: "테스트 데이터",
+          timestamp: new Date(),
+          userEmail: user.email || null
+        });
+        alert("저장 성공!");
+      } catch (err) {
+        alert("에러: " + (err && err.message ? err.message : err));
+      }
+    });
+  });
 </script>
 
-
-
-  
-
-
-  
 </body>
 </html>
