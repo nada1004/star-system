@@ -3313,21 +3313,18 @@ init();
 <script type="module">
   // Firebase v10+ SDK (CDN)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged(auth, (user) => {
-  console.log("현재 접속 유저 상태:", user);
-  // 404 에러를 해결하기 전까지 버튼을 일단 보이게 설정
-  if (saveBtn) saveBtn.style.display = "inline-block"; } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   
   // Firebase 설정 (수정 금지)
-  const firebaseConfig = {
-    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
-    authDomain: "fmkorea1004.firebaseapp.com",
-    projectId: "fmkorea1004",
-    storageBucket: "fmkorea1004.firebasestorage.app",
-    messagingSenderId: "376964714931",
-    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+  authDomain: "fmkorea1004.firebaseapp.com",
+  projectId: "fmkorea1004",
+  storageBucket: "fmkorea1004.firebasestorage.app",
+  messagingSenderId: "376964714931",
+  appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6" // 31로 고정
+};
 
   // Firebase 초기화
   const app = initializeApp(firebaseConfig);
