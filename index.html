@@ -3310,66 +3310,70 @@ function init(){
 init();
 </script>
 
-<script type="module">
-  // Firebase v10+ SDK (CDN)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  
-  // Firebase 설정 (수정 금지)
+
 const firebaseConfig = {
-  // [일반] 탭에서 복사한 '웹 API 키'를 여기에 넣으세요
-  apiKey: "1:376964714931:web:ccb0a9c25c258ceae7fbc6", 
-  authDomain: "fmkorea1004.firebaseapp.com",
-  projectId: "fmkorea1004",
-  storageBucket: "fmkorea1004.firebasestorage.app",
-  messagingSenderId: "376964714931",
-  // 사용자님이 확인하신 바로 그 앱 ID입니다!
-  appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6" 
+    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+    authDomain: "fmkorea1004.firebaseapp.com",
+    projectId: "fmkorea1004",
+    storageBucket: "fmkorea1004.firebasestorage.app",
+    messagingSenderId: "376964714931",
+    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
 };
 
-  // Firebase 초기화
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_UID = "LMdjEAXECBMhYSZjdOksrIWvRP43";
 
-// 사이트 로드 시 자동으로 로그인 시도
-const adminEmail = "본인의_이메일_주소";
-const adminPassword = "본인의_비밀번호";
+// 요소 참조
+const loginBtn = document.getElementById("loginBtn");
+const saveBtn = document.getElementById("saveDataBtn");
+const statusText = document.getElementById("loginStatus");
 
-signInWithEmailAndPassword(auth, adminEmail, adminPassword)
-  .then((userCredential) => {
-    console.log("자동 로그인 성공!");
-  })
-  .catch((error) => {
-    console.error("로그인 실패:", error.message);
-  });
-  const db = getFirestore(app);
+// [수동 로그인 실행]
+if (loginBtn) {
+    loginBtn.onclick = async () => {
+        const email = document.getElementById("adminEmail").value;
+        const password = document.getElementById("adminPassword").value;
 
-  // 버튼 클릭 시 Firestore에 데이터 저장
-  window.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("saveDataBtn");
-    if (!btn) return;
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            alert("로그인 성공!");
+        } catch (error) {
+            console.error("로그인 실패:", error.message);
+            alert("로그인 실패: " + error.message);
+        }
+    };
+}
 
-    btn.addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        alert("로그인이 필요한 서비스입니다.");
-        return;
-      }
-      try {
-        await addDoc(collection(db, "users"), {
-          content: "테스트 데이터",
-          timestamp: new Date(),
-          userEmail: user.email || null
-        });
-        alert("저장 성공!");
-      } catch (err) {
-        alert("에러: " + (err && err.message ? err.message : err));
-      }
-    });
-  });
-</script>
+// [로그인 상태 감지]
+onAuthStateChanged(auth, (user) => {
+    if (user && user.uid === ADMIN_UID) {
+        statusText.innerText = `관리자 인증됨 (${user.email})`;
+        statusText.style.color = "blue";
+        if (saveBtn) saveBtn.style.display = "inline-block";
+        document.getElementById("loginSection").style.display = "none"; // 로그인 성공 시 창 숨기기
+    } else {
+        statusText.innerText = "권한이 없습니다. 관리자 계정으로 로그인하세요.";
+        statusText.style.color = "red";
+        if (saveBtn) saveBtn.style.display = "none";
+    }
+});
+
+// [데이터 저장 로직은 기존과 동일]
+if (saveBtn) {
+    saveBtn.onclick = async () => {
+        // ... (기존 저장 코드 유지) ...
+        try {
+            const dataToSave = { players: window.players || [], maps: window.maps || [], savedAt: new Date().toISOString() };
+            await setDoc(doc(db, "appData", "main"), dataToSave);
+            alert("✅ 데이터 저장 성공!");
+        } catch (e) { alert("저장 실패: " + e.message); }
+    };
+}
 
 
 <script type="module">
