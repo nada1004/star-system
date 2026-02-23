@@ -3306,60 +3306,6 @@ function init(){
 init();
 
 
-<button id="saveButton">데이터 저장하기</button>
-
-<script type="module">
-  // 1. 필요한 도구들 가져오기
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-  // 2. 내 Firebase 설정 (사용자님의 실제 설정값)
-  const firebaseConfig = {
-    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
-    authDomain: "fmkorea1004.firebaseapp.com",
-    projectId: "fmkorea1004",
-    storageBucket: "fmkorea1004.firebasestorage.app",
-    messagingSenderId: "376964714931",
-    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
-  };
-
-  // 3. 초기화
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  // 4. 저장 함수 정의
-  async function saveData() {
-    const user = auth.currentUser; // 현재 로그인된 사용자 확인
-
-    if (user) {
-      try {
-        await addDoc(collection(db, "users"), {
-          uid: user.uid,
-          email: user.email,
-          text: "로그인 유저의 테스트 데이터",
-          timestamp: new Date()
-        });
-        alert("성공적으로 저장되었습니다!");
-      } catch (e) {
-        alert("저장 실패: " + e.message);
-      }
-    } else {
-      // 비로그인 시 뜨는 메시지
-      alert("로그인이 필요한 서비스입니다. 먼저 로그인을 해주세요!");
-    }
-  }
-
-  // 5. 버튼에 기능 연결
-  const btn = document.getElementById("saveButton");
-  if (btn) {
-    btn.addEventListener("click", saveData);
-  }
-</script>
-
-
-
   
 </body>
 </html>
