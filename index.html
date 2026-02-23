@@ -3304,6 +3304,47 @@ function init(){
   render();
 }
 init();
+
+  <button id="saveButton">데이터 저장하기</button>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+        authDomain: "fmkorea1004.firebaseapp.com",
+        projectId: "fmkorea1004",
+        storageBucket: "fmkorea1004.firebasestorage.app",
+        messagingSenderId: "376964714931",
+        appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      async function saveData() {
+        const user = auth.currentUser;
+        if (user) {
+          try {
+            await addDoc(collection(db, "users"), {
+              uid: user.uid,
+              email: user.email,
+              timestamp: new Date()
+            });
+            alert("저장 성공!");
+          } catch (e) { alert("오류: " + e.message); }
+        } else {
+          alert("로그인이 필요합니다!");
+        }
+      }
+      document.getElementById("saveButton").onclick = saveData;
+    </script>
+</body>
+</html>
+
 </script>
 </body>
 </html>
