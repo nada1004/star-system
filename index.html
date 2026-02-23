@@ -3356,5 +3356,71 @@ init();
   });
 </script>
 
+
+
+
+
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+    authDomain: "fmkorea1004.firebaseapp.com",
+    projectId: "fmkorea1004",
+    storageBucket: "fmkorea1004.firebasestorage.app",
+    messagingSenderId: "376964714931",
+    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6" // 끝자리 fbc6 확인 완료
+  };
+
+  const ADMIN_UID = "fKZP5Ks690ePA4xBro2xNcBjhYI3";
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const saveBtn = document.getElementById("saveDataBtn");
+
+  // 관리자 로그인 체크
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.uid === ADMIN_UID) {
+      if (saveBtn) saveBtn.style.display = "inline-block"; // 관리자면 보임
+    } else {
+      if (saveBtn) saveBtn.style.display = "none"; // 아니면 숨김
+    }
+  });
+
+  // 클릭 시 Firestore에 저장
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user || user.uid !== ADMIN_UID) return alert("권한이 없습니다.");
+
+      try {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "⏳ 저장 중...";
+
+        const dataToSave = {
+          players: window.players || [],
+          maps: window.maps || [],
+          savedAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, "appData", "main"), dataToSave);
+        alert("✅ 데이터 저장 완료!");
+      } catch (err) {
+        alert("저장 실패: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 데이터 저장하기";
+      }
+    });
+  }
+</script>
+
+
+
+
+  
 </body>
 </html>
