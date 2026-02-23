@@ -3310,6 +3310,13 @@ function init(){
 init();
 </script>
 
+
+
+
+<script type="module">
+
+  // Firebase v10+ SDK (CDN)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -3374,7 +3381,12 @@ if (saveBtn) {
         } catch (e) { alert("저장 실패: " + e.message); }
     };
 }
+</script>
 
+  
+
+
+  
 
 <script type="module">
   // 1. SDK 버전 및 경로 통일 (404 및 SyntaxError 해결)
