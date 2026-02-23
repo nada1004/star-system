@@ -3375,7 +3375,7 @@ const firebaseConfig = {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const ADMIN_UID = "fKZP5Ks690ePA4xBro2xNcBjhYI3";
+const ADMIN_UID = "LMdjEAXECBMhYSZjdOksrIWvRP43";
 
   // 버튼 참조 (id가 정확해야 함)
   const saveBtn = document.getElementById("saveDataBtn");
@@ -3397,10 +3397,11 @@ const firebaseConfig = {
       console.log("저장 버튼 클릭됨!"); // 반응 확인용
       const user = auth.currentUser;
       
-      if (!user || user.uid !== ADMIN_UID) {
-        alert("관리자 권한이 없습니다. (현재 UID: " + (user ? user.uid : "로그인 안됨") + ")");
-        return;
-      }
+      // 예시: 버튼 클릭 이벤트 내부
+if (!user || user.uid !== "LMdjEAXECBMhYSZjdOksrIWvRP43") {
+  alert("관리자 권한이 없습니다.");
+  return;
+}
 
       try {
         saveBtn.disabled = true;
