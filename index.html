@@ -3357,6 +3357,80 @@ const firebaseConfig = {
 </script>
 
 
+<script type="module">
+  // 1. SDK 버전 및 경로 통일 (404 및 SyntaxError 해결)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+    authDomain: "fmkorea1004.firebaseapp.com",
+    projectId: "fmkorea1004",
+    storageBucket: "fmkorea1004.firebasestorage.app",
+    messagingSenderId: "376964714931",
+    appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6" // 31 확인
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const ADMIN_UID = "fKZP5Ks690ePA4xBro2xNcBjhYI3";
+
+  // 버튼 참조 (id가 정확해야 함)
+  const saveBtn = document.getElementById("saveDataBtn");
+
+  // 로그인 상태 감지 및 버튼 노출
+  onAuthStateChanged(auth, (user) => {
+    console.log("현재 유저 정보:", user); // 확인용
+    if (user && user.uid === ADMIN_UID) {
+      if (saveBtn) saveBtn.style.display = "inline-block";
+    } else {
+      // 테스트 중이라면 아래 주석을 해제하여 로그인 없이도 버튼을 띄울 수 있습니다.
+      // if (saveBtn) saveBtn.style.display = "inline-block"; 
+    }
+  });
+
+  // 클릭 이벤트 연결
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      console.log("저장 버튼 클릭됨!"); // 반응 확인용
+      const user = auth.currentUser;
+      
+      if (!user || user.uid !== ADMIN_UID) {
+        alert("관리자 권한이 없습니다. (현재 UID: " + (user ? user.uid : "로그인 안됨") + ")");
+        return;
+      }
+
+      try {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "⏳ 저장 중...";
+
+        const dataToSave = {
+          players: window.players || [],
+          maps: window.maps || [],
+          savedAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, "appData", "main"), dataToSave);
+        alert("✅ 데이터 저장 성공!");
+      } catch (err) {
+        console.error("저장 중 오류 발생:", err);
+        alert("저장 실패: " + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 데이터 저장하기";
+      }
+    };
+  } else {
+    console.error("오류: saveDataBtn 아이디를 가진 버튼을 찾을 수 없습니다.");
+  }
+</script>
+
+
+
+
+  
 
 </body>
 </html>
