@@ -3313,7 +3313,10 @@ init();
 <script type="module">
   // Firebase v10+ SDK (CDN)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged(auth, (user) => {
+  console.log("현재 접속 유저 상태:", user);
+  // 404 에러를 해결하기 전까지 버튼을 일단 보이게 설정
+  if (saveBtn) saveBtn.style.display = "inline-block"; } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   
   // Firebase 설정 (수정 금지)
@@ -3356,12 +3359,7 @@ import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10
   });
 </script>
 
-// 기존 onAuthStateChanged 부분을 이 코드로 교체
-onAuthStateChanged(auth, (user) => {
-  console.log("현재 접속 유저 상태:", user);
-  // 404 에러를 해결하기 전까지 버튼을 일단 보이게 설정
-  if (saveBtn) saveBtn.style.display = "inline-block"; 
-});
+
 
 </body>
 </html>
