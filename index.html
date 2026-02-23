@@ -3329,6 +3329,19 @@ const firebaseConfig = {
   // Firebase 초기화
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// 사이트 로드 시 자동으로 로그인 시도
+const adminEmail = "본인의_이메일_주소";
+const adminPassword = "본인의_비밀번호";
+
+signInWithEmailAndPassword(auth, adminEmail, adminPassword)
+  .then((userCredential) => {
+    console.log("자동 로그인 성공!");
+  })
+  .catch((error) => {
+    console.error("로그인 실패:", error.message);
+  });
   const db = getFirestore(app);
 
   // 버튼 클릭 시 Firestore에 데이터 저장
