@@ -420,13 +420,16 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
   <div id="rcont"></div>
 </div></div>
 
-<!-- 하단 버튼 제거 - 기능 유지용 숨김 요소 -->
+<!-- 하단 액션 버튼 바 -->
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
-<button id="btnExport" style="display:none" onclick="doExport()"></button>
-<button id="btnImport" style="display:none" onclick="doImport()"></button>
-<span id="cloudStatus" style="display:none"></span>
-<span id="exportHint" style="display:none"></span>
-<button id="btnCloudLoad" style="display:none" onclick="cloudLoad()"></button>
+<div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
+  <button class="btn btn-b" onclick="doJpg()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> JPG 저장</button>
+  <button class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
+  <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
+  <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
+  <span id="cloudStatus" style="font-size:12px;color:var(--gray-l);margin-left:4px"></span>
+  <span id="exportHint" style="font-size:12px;color:var(--gray-l)">💡 다른 기기와 공유 시 데이터 내보내기 → 가져오기를 사용하세요</span>
+</div>
 </div>
 
 <!-- 선수 수정 모달 -->
@@ -1600,7 +1603,8 @@ function recSummaryListHTML(arr, mode, context){
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}`:''}
         </div>
       </div>
-    </div>`;
+    </div>
+  </div>`;
   });
   return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
 }
@@ -5016,6 +5020,10 @@ function applyLoginState(){
   if(exportBtn)exportBtn.style.display=isLoggedIn?'':'none';
   if(importBtn)importBtn.style.display=isLoggedIn?'':'none';
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  const exportVis=document.getElementById('btnExportVis');
+  const importVis=document.getElementById('btnImportVis');
+  if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
+  if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
