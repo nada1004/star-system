@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타 대학 통합 관리 시스템 V26</title>
+<title>⭐ 스타 대학 통합 관리 시스템 V27</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -28,7 +28,7 @@ b,strong{font-weight:600;}
 .hdr-title{font-family:'Black Han Sans',sans-serif;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;}
 .hdr-ver{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:.5px;border:1px solid rgba(255,255,255,.22);z-index:1;}
 
-/* ══ V26 신규 CSS ══════════════════════════════════════════ */
+/* ══ V27 신규 CSS ══════════════════════════════════════════ */
 /* 조별 순위표 세련화 */
 .grp-rank-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
 .grp-rank-table th{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;}
@@ -349,7 +349,7 @@ tr:hover td{background:#f5f8ff;}
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타 대학 통합 관리 시스템</div>
-  <div class="hdr-ver">V26</div>
+  <div class="hdr-ver">V27</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -475,9 +475,12 @@ tr:hover td{background:#f5f8ff;}
 <!-- 대학 상세 모달 -->
 <div id="univModal" class="modal no-export">
   <div class="umbox">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
       <div class="mtitle" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
-      <button class="btn btn-w btn-sm" onclick="cm('univModal')">✕ 닫기</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn-capture" onclick="captureUnivModal()">📸 이미지 저장</button>
+        <button class="btn btn-w btn-sm" onclick="cm('univModal')">✕ 닫기</button>
+      </div>
     </div>
     <div id="univModalBody"></div>
   </div>
@@ -754,6 +757,33 @@ async function capturePlayerModal(){
     const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true});
     const a=document.createElement('a');
     a.download=`${window._playerModalCurrentName||'player'}_stat.jpg`;
+    a.href=canvas.toDataURL('image/jpeg',0.92);
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>document.body.removeChild(a),100);
+  }catch(e){alert('이미지 저장 오류: '+e.message);}
+}
+
+async function captureUnivModal(){
+  const body=document.getElementById('univModalBody');
+  const title=document.getElementById('univModalTitle');
+  if(!body){alert('캡처할 영역이 없습니다.');return;}
+  try{
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+    const a=document.createElement('a');
+    a.download=`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.jpg`;
+    a.href=canvas.toDataURL('image/jpeg',0.92);
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>document.body.removeChild(a),100);
+  }catch(e){alert('이미지 저장 오류: '+e.message);}
+}
+
+async function captureDetail(id, filename){
+  const el=document.getElementById(id);
+  if(!el){alert('캡처할 영역이 없습니다.');return;}
+  try{
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+    const a=document.createElement('a');
+    a.download=`경기상세_${filename}.jpg`;
     a.href=canvas.toDataURL('image/jpeg',0.92);
     document.body.appendChild(a);a.click();
     setTimeout(()=>document.body.removeChild(a),100);
@@ -1515,11 +1545,11 @@ function recSummaryListHTML(arr, mode, context){
         ${buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
-          ${isLoggedIn?`<div style="display:flex;gap:6px;align-items:center">
-            <input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
+            ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
-            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}
-          </div>`:''}
+            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}`:''}
         </div>
       </div>
     </div>`;
@@ -2226,8 +2256,8 @@ function saveMatch(mode){
       });
     });
     proM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A팀('+[...new Set(mA.map(m=>m.univ))].join('+')+')' ,
-      teamBLabel:'B팀('+[...new Set(mB.map(m=>m.univ))].join('+')+')' ,
+      teamALabel:'A팀',
+      teamBLabel:'B팀',
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
       univWins:univW,univLosses:univL
     });
@@ -2444,15 +2474,26 @@ function buildProInputHTML(){
   const bld=BLD['pro'];const allU=getAllUnivs();
   const uO=`<option value="">대학 선택</option>`+allU.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const mA=bld.membersA||[];const mB=bld.membersB||[];
+  // 티어 다중 선택 상태
+  if(!bld.tierFilters)bld.tierFilters=[];
+  const tf=bld.tierFilters;
   let h=`<div class="match-builder"><h3>🏅 프로리그 입력</h3>
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['pro'].date=this.value">
+    </div>
+    <div style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🎯 출전 티어 선택 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(복수 선택 가능)</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="BLD['pro'].tierFilters=[];BLD['pro'].sets=[];render()">전체</button>
+        ${TIERS.map(t=>`<button class="tier-filter-btn ${tf.includes(t)?'on':''}" onclick="proToggleTier('${t}')">${getTierLabel(t)}</button>`).join('')}
+      </div>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
       <div class="ck-panel">
         <h4>🔵 팀 A 구성</h4>
-        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <input type="text" id="pro-a-search" placeholder="🔍 대학 검색..." style="flex:1;min-width:100px" oninput="proSearchUniv('A')">
           <select id="pro-a-univ" style="flex:1" onchange="proFilterPlayers('A')">${uO}</select>
           <select id="pro-a-player" style="flex:1"><option value="">대학 먼저 선택</option></select>
           <button class="btn btn-b btn-xs" onclick="proAddMember('A')">+ 추가</button>
@@ -2461,7 +2502,8 @@ function buildProInputHTML(){
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B 구성</h4>
-        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <input type="text" id="pro-b-search" placeholder="🔍 대학 검색..." style="flex:1;min-width:100px" oninput="proSearchUniv('B')">
           <select id="pro-b-univ" style="flex:1" onchange="proFilterPlayers('B')">${uO}</select>
           <select id="pro-b-player" style="flex:1"><option value="">대학 먼저 선택</option></select>
           <button class="btn btn-b btn-xs" onclick="proAddMember('B')">+ 추가</button>
@@ -2472,13 +2514,35 @@ function buildProInputHTML(){
   h+=setBuilderHTML(bld,'pro');h+=`</div>`;return h;
 }
 
+function proSearchUniv(team){
+  const searchEl=document.getElementById(`pro-${team.toLowerCase()}-search`);
+  const selEl=document.getElementById(`pro-${team.toLowerCase()}-univ`);
+  if(!searchEl||!selEl)return;
+  const q=searchEl.value.trim().toLowerCase();
+  Array.from(selEl.options).forEach(opt=>{
+    if(!opt.value){opt.style.display='';return;}
+    opt.style.display=(!q||opt.text.toLowerCase().includes(q))?'':'none';
+  });
+  const firstMatch=Array.from(selEl.options).find(o=>o.value&&o.style.display!=='none');
+  if(firstMatch){selEl.value=firstMatch.value;proFilterPlayers(team);}
+}
+
+function proToggleTier(t){
+  const bld=BLD['pro'];if(!bld)return;
+  if(!bld.tierFilters)bld.tierFilters=[];
+  const idx=bld.tierFilters.indexOf(t);
+  if(idx>=0)bld.tierFilters.splice(idx,1);else bld.tierFilters.push(t);
+  bld.sets=[];render();
+}
+
 function proFilterPlayers(team){
   const univSel=document.getElementById(`pro-${team.toLowerCase()}-univ`);
   const playerSel=document.getElementById(`pro-${team.toLowerCase()}-player`);
   if(!univSel||!playerSel)return;
   const univ=univSel.value;
-  // 남자 멤버만 필터링
-  const mems=univ?players.filter(p=>p.univ===univ&&p.gender==='M'):[];
+  const bld=BLD['pro']||{};const tf=(bld.tierFilters||[]);
+  // 티어 필터 적용 (다중선택: 비어있으면 전체)
+  const mems=univ?players.filter(p=>p.univ===univ&&p.gender==='M'&&(tf.length===0||tf.includes(p.tier))):[];
   playerSel.innerHTML=mems.length?`<option value="">멤버 선택</option>`+mems.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join(''):`<option value="">멤버 없음</option>`;
 }
 
@@ -2896,6 +2960,9 @@ function rGrpEditInner(){
           ${!grp.univs.length?'<span style="color:var(--gray-l);font-size:12px">아직 없음</span>':''}
         </div>
         ${availU.length?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <div style="position:relative;flex:1;min-width:150px">
+            <input type="text" id="grp-univ-search-${gi}" placeholder="🔍 대학 검색..." style="width:100%;padding:6px 10px;font-size:12px;border:1px solid var(--border2);border-radius:6px" oninput="grpFilterUnivSel(${gi})">
+          </div>
           <select id="grp-univ-sel-${gi}" style="max-width:200px"><option value="">— 대학 선택 —</option>${availU.map(u=>`<option value="${u}">${u}</option>`).join('')}</select>
           <button class="btn btn-b btn-sm" onclick="grpAddUniv('${tn.id}',${gi})">+ 추가</button>
         </div>`:`<div style="font-size:11px;color:var(--gray-l)">모든 대학이 추가됨</div>`}
@@ -3126,6 +3193,20 @@ function grpDelTourney(ti){
   if(!confirm(`"${tourneys[ti].name}" 대회를 삭제하시겠습니까?`))return;
   if(curComp===tourneys[ti].name)curComp='';tourneys.splice(ti,1);save();render();
 }
+function grpFilterUnivSel(gi){
+  const searchEl=document.getElementById(`grp-univ-search-${gi}`);
+  const selEl=document.getElementById(`grp-univ-sel-${gi}`);
+  if(!searchEl||!selEl)return;
+  const q=searchEl.value.trim().toLowerCase();
+  Array.from(selEl.options).forEach(opt=>{
+    if(!opt.value)return;
+    opt.style.display=(!q||opt.text.toLowerCase().includes(q))?'':'none';
+  });
+  // 첫 번째 매칭 옵션 자동 선택
+  const firstMatch=Array.from(selEl.options).find(o=>o.value&&o.style.display!=='none');
+  if(firstMatch)selEl.value=firstMatch.value;
+}
+
 function grpAddGroup(tnId){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const name=`${'ABCDEFGHIJ'[tn.groups.length]||tn.groups.length+1}조`;
