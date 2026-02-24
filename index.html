@@ -255,9 +255,12 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 
 <div class="foot no-export">
   <button onclick="doJpg()" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;">📸 JPG 저장</button>
-  <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다. 다른 기기에서 복구 버튼으로 불러올 수 있습니다.">💾 데이터 내보내기</button>
+  <button id="btnCloudSave" class="btn btn-b btn-sm" style="display:none" onclick="cloudSave()">☁️ 클라우드 저장</button>
+  <button id="btnCloudLoad" class="btn btn-w btn-sm" style="display:none" onclick="cloudLoad()">☁️ 클라우드 불러오기</button>
+  <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다.">💾 데이터 내보내기</button>
   <button id="btnImport" class="btn btn-w btn-sm" style="display:none" onclick="doImport()" title="저장된 JSON 파일로 데이터를 불러옵니다.">📂 데이터 가져오기</button>
   <input type="file" id="fi" style="display:none" onchange="doFile(this)">
+  <span id="cloudStatus" style="font-size:11px;color:var(--gray-l);margin-left:6px"></span>
   <span id="exportHint" style="font-size:11px;color:var(--gray-l);margin-left:8px;display:none">💡 다른 기기와 공유 시 <b>데이터 내보내기 → 가져오기</b>를 사용하세요</span>
 </div>
 </div>
@@ -3303,9 +3306,13 @@ function applyLoginState(){
   const exportBtn=document.getElementById('btnExport');
   const importBtn=document.getElementById('btnImport');
   const exportHint=document.getElementById('exportHint');
+  const cloudSaveBtn=document.getElementById('btnCloudSave');
+  const cloudLoadBtn=document.getElementById('btnCloudLoad');
   if(exportBtn)exportBtn.style.display=isLoggedIn?'':'none';
   if(importBtn)importBtn.style.display=isLoggedIn?'':'none';
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  if(cloudSaveBtn)cloudSaveBtn.style.display=isLoggedIn?'':'none';
+  if(cloudLoadBtn)cloudLoadBtn.style.display=isLoggedIn?'':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
@@ -3374,6 +3381,157 @@ init();
     ){e.preventDefault();e.stopPropagation();return false;}
   });
 })();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const ADMIN_UID = "LMdjEAXECBMhYSZjdOksrIWvRP43";
+const ADMIN_EMAIL = "kpoppd@gmail.com";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
+  authDomain: "fmkorea1004.firebaseapp.com",
+  projectId: "fmkorea1004",
+  storageBucket: "fmkorea1004.firebasestorage.app",
+  messagingSenderId: "376964714931",
+  appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 상태 메시지
+function setStatus(msg, color='var(--gray-l)'){
+  const el=document.getElementById('cloudStatus');
+  if(el){el.textContent=msg;el.style.color=color;}
+}
+
+// ── 관리자 로그인 시 Firebase Auth도 자동 로그인 ──────────
+// 기존 doLogin 후킹: 로컬 관리자 로그인 성공 시 Firebase도 로그인
+const _origDoLogin = window.doLogin;
+window.doLoginFirebase = async function(pw){
+  try{
+    const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
+    if(cred.user.uid === ADMIN_UID){
+      setStatus('☁️ 클라우드 연결됨', 'var(--green)');
+    }
+  } catch(e){
+    // Firebase 로그인 실패해도 로컬 관리자 로그인은 유지
+    setStatus('⚠️ 클라우드 연결 실패 (로컬만 사용)', 'var(--gold)');
+  }
+};
+
+// Firebase Auth 상태 감지
+onAuthStateChanged(auth, (user)=>{
+  if(user && user.uid === ADMIN_UID){
+    setStatus('☁️ 클라우드 연결됨', 'var(--green)');
+  } else {
+    setStatus('');
+  }
+});
+
+// ── 클라우드 저장 ──────────────────────────────────────────
+window.cloudSave = async function(){
+  const user = auth.currentUser;
+  if(!user || user.uid !== ADMIN_UID){
+    // Firebase 미로그인 → 비밀번호 입력 받아서 로그인 후 저장
+    const pw = prompt('☁️ 클라우드 저장을 위해 Firebase 비밀번호를 입력하세요:');
+    if(!pw) return;
+    try{
+      setStatus('🔄 연결 중...', 'var(--blue)');
+      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
+    } catch(e){
+      setStatus('❌ 비밀번호 오류', 'var(--red)');
+      alert('Firebase 비밀번호가 틀렸습니다.');
+      return;
+    }
+  }
+  try{
+    setStatus('💾 저장 중...', 'var(--blue)');
+    const data = {
+      players: window.players||[],
+      univCfg: window.univCfg||[],
+      maps: window.maps||[],
+      tourD: window.tourD||[],
+      miniM: window.miniM||[],
+      univM: window.univM||[],
+      comps: window.comps||[],
+      ckM: window.ckM||[],
+      compNames: window.compNames||[],
+      curComp: window.curComp||'',
+      proM: window.proM||[],
+      members: window.members||[],
+      tourneys: window.tourneys||[],
+      tiers: window.TIERS||[],
+      savedAt: new Date().toISOString()
+    };
+    // 5MB Firestore 문서 제한 대응: JSON 문자열로 저장
+    const json = JSON.stringify(data);
+    await setDoc(doc(db,'appData','main'), { json, savedAt: data.savedAt });
+    setStatus(`✅ 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+  } catch(e){
+    setStatus('❌ 저장 실패: '+e.message, 'var(--red)');
+    console.error(e);
+  }
+};
+
+// ── 클라우드 불러오기 ──────────────────────────────────────
+window.cloudLoad = async function(){
+  const user = auth.currentUser;
+  if(!user || user.uid !== ADMIN_UID){
+    const pw = prompt('☁️ 클라우드 불러오기를 위해 Firebase 비밀번호를 입력하세요:');
+    if(!pw) return;
+    try{
+      setStatus('🔄 연결 중...', 'var(--blue)');
+      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
+    } catch(e){
+      setStatus('❌ 비밀번호 오류', 'var(--red)');
+      alert('Firebase 비밀번호가 틀렸습니다.');
+      return;
+    }
+  }
+  try{
+    setStatus('📥 불러오는 중...', 'var(--blue)');
+    const snap = await getDoc(doc(db,'appData','main'));
+    if(!snap.exists()){
+      setStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
+      alert('클라우드에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
+      return;
+    }
+    const d = JSON.parse(snap.data().json);
+    if(!confirm(`클라우드 데이터를 불러옵니다.\n저장 시각: ${d.savedAt||'알 수 없음'}\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
+
+    window.players=d.players||[];
+    window.univCfg=d.univCfg||window.univCfg;
+    window.maps=d.maps||window.maps;
+    window.tourD=d.tourD||Array(15).fill('');
+    window.miniM=d.miniM||[];
+    window.univM=d.univM||[];
+    window.comps=d.comps||[];
+    window.ckM=d.ckM||[];
+    window.compNames=d.compNames||[];
+    window.curComp=d.curComp||'';
+    window.proM=d.proM||[];
+    window.members=d.members||[];
+    window.tourneys=d.tourneys||[];
+    if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
+
+    // localStorage 동기화
+    if(window.save) window.save();
+    if(window.fixPoints) window.fixPoints();
+    if(typeof init==='function') init();
+    else if(window.render) window.render();
+
+    setStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+  } catch(e){
+    setStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
+    console.error(e);
+  }
+};
 </script>
 </body>
 </html>
