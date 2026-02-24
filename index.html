@@ -255,8 +255,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 
 <div class="foot no-export">
   <button onclick="doJpg()" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;">📸 JPG 저장</button>
-  <button id="btnCloudSave" class="btn btn-b btn-sm" style="display:none" onclick="cloudSave()">☁️ 클라우드 저장</button>
-  <button id="btnCloudLoad" class="btn btn-g btn-sm" style="display:none" onclick="cloudLoad()">📥 GitHub 데이터 불러오기</button>
+  <button id="btnCloudLoad" class="btn btn-g btn-sm" onclick="cloudLoad()">📥 데이터 불러오기</button>
   <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다.">💾 데이터 내보내기</button>
   <button id="btnImport" class="btn btn-w btn-sm" style="display:none" onclick="doImport()" title="저장된 JSON 파일로 데이터를 불러옵니다.">📂 데이터 가져오기</button>
   <input type="file" id="fi" style="display:none" onchange="doFile(this)">
@@ -3306,13 +3305,9 @@ function applyLoginState(){
   const exportBtn=document.getElementById('btnExport');
   const importBtn=document.getElementById('btnImport');
   const exportHint=document.getElementById('exportHint');
-  const cloudSaveBtn=document.getElementById('btnCloudSave');
-  const cloudLoadBtn=document.getElementById('btnCloudLoad');
   if(exportBtn)exportBtn.style.display=isLoggedIn?'':'none';
   if(importBtn)importBtn.style.display=isLoggedIn?'':'none';
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
-  if(cloudSaveBtn)cloudSaveBtn.style.display=isLoggedIn?'':'none';
-  if(cloudLoadBtn)cloudLoadBtn.style.display=isLoggedIn?'':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
@@ -3327,8 +3322,14 @@ function adminBtn(html){
   return isLoggedIn ? html : '';
 }
 function doExport(){
-  const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,members,tourneys})],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='star_backup_v22.json';a.click();
+  try{
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,members,tourneys})],{type:'application/json'});
+    const url=URL.createObjectURL(b);
+    const a=document.createElement('a');
+    a.href=url;a.download='star_backup_v24.json';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+  }catch(e){alert('내보내기 오류: '+e.message);}
 }
 function doImport(){document.getElementById('fi').click();}
 function doFile(inp){
@@ -3418,7 +3419,7 @@ window.cloudLoad = async function(){
     window.proM=d.proM||[];
     window.members=d.members||[];
     window.tourneys=d.tourneys||[];
-    if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
+    if(d.tiers&&d.tiers.length && typeof TIERS!=='undefined'){ TIERS.splice(0,TIERS.length,...d.tiers); }
 
     if(window.save) window.save();
     if(window.fixPoints) window.fixPoints();
@@ -3433,9 +3434,7 @@ window.cloudLoad = async function(){
 };
 
 // ── 저장 기능 없음 (읽기 전용) ────────────────────────────
-window.cloudSave = function(){
-  alert('ℹ️ 저장 기능은 사용하지 않습니다.\ndata.json 파일을 직접 GitHub에 업로드하세요.');
-};
+
 </script>
 </body>
 </html>
