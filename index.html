@@ -3383,77 +3383,28 @@ init();
 })();
 </script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
+/* ══════════════════════════════════════
+   Google Sheets 클라우드 저장/불러오기
+   - Apps Script 웹앱 URL을 아래 GS_URL에 입력하세요
+══════════════════════════════════════ */
 
-const ADMIN_UID = "uKyoaQQ858ajyGs6kSgcsEf5RKl2";
-// 이메일 난독화 (Base64)
-const _e=(s)=>atob(s);
-const ADMIN_EMAIL=_e("a3BvcHBkQGdtYWlsLmNvbQ==");
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyxTo79t-cmuyWGeuDODxceHANz4zWyr9mMfs_wCoPANFxc3bhvncd9wnqYo2bwiiP1Vw/exec';
+const GS_WRITE_PW = 'haram1019!@';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
-  authDomain: "fmkorea1004.firebaseapp.com",
-  projectId: "fmkorea1004",
-  storageBucket: "fmkorea1004.firebasestorage.app",
-  messagingSenderId: "376964714931",
-  appId: "1:376964714931:web:ccb0a9c25c258ceae7fbc6"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// 상태 메시지
-function setStatus(msg, color='var(--gray-l)'){
+function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
   if(el){el.textContent=msg;el.style.color=color;}
 }
 
-// ── 관리자 로그인 시 Firebase Auth도 자동 로그인 ──────────
-// 기존 doLogin 후킹: 로컬 관리자 로그인 성공 시 Firebase도 로그인
-const _origDoLogin = window.doLogin;
-window.doLoginFirebase = async function(pw){
-  try{
-    const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
-    if(cred.user.uid === ADMIN_UID){
-      setStatus('☁️ 클라우드 연결됨', 'var(--green)');
-    }
-  } catch(e){
-    // Firebase 로그인 실패해도 로컬 관리자 로그인은 유지
-    setStatus('⚠️ 클라우드 연결 실패 (로컬만 사용)', 'var(--gold)');
-  }
-};
-
-// Firebase Auth 상태 감지
-onAuthStateChanged(auth, (user)=>{
-  if(user && user.uid === ADMIN_UID){
-    setStatus('☁️ 클라우드 연결됨', 'var(--green)');
-  } else {
-    setStatus('');
-  }
-});
-
-// ── 클라우드 저장 ──────────────────────────────────────────
+// ── 클라우드 저장 (Google Sheets) ──────────────────────────
 window.cloudSave = async function(){
-  const user = auth.currentUser;
-  if(!user || user.uid !== ADMIN_UID){
-    // Firebase 미로그인 → 비밀번호 입력 받아서 로그인 후 저장
-    const pw = prompt('☁️ 클라우드 저장을 위해 Firebase 비밀번호를 입력하세요:');
-    if(!pw) return;
-    try{
-      setStatus('🔄 연결 중...', 'var(--blue)');
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
-    } catch(e){
-      setStatus('❌ 비밀번호 오류', 'var(--red)');
-      alert('Firebase 비밀번호가 틀렸습니다.');
-      return;
-    }
+  if(!GS_URL){
+    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.\n코드 내 GS_URL 변수에 배포 URL을 입력하세요.');
+    return;
   }
   try{
-    setStatus('💾 저장 중...', 'var(--blue)');
+    gsSetStatus('💾 저장 중...', 'var(--blue)');
     const data = {
       players: window.players||[],
       univCfg: window.univCfg||[],
@@ -3471,40 +3422,39 @@ window.cloudSave = async function(){
       tiers: window.TIERS||[],
       savedAt: new Date().toISOString()
     };
-    // 5MB Firestore 문서 제한 대응: JSON 문자열로 저장
+    data.password = GS_WRITE_PW;
     const json = JSON.stringify(data);
-    await setDoc(doc(db,'appData','main'), { json, savedAt: data.savedAt });
-    setStatus(`✅ 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: json
+    });
+    const result = await res.json();
+    if(result.error) throw new Error(result.error);
+    gsSetStatus(`✅ 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
   } catch(e){
-    setStatus('❌ 저장 실패: '+e.message, 'var(--red)');
+    gsSetStatus('❌ 저장 실패: '+e.message, 'var(--red)');
     console.error(e);
   }
 };
 
-// ── 클라우드 불러오기 ──────────────────────────────────────
+// ── 클라우드 불러오기 (Google Sheets) ─────────────────────
 window.cloudLoad = async function(){
-  const user = auth.currentUser;
-  if(!user || user.uid !== ADMIN_UID){
-    const pw = prompt('☁️ 클라우드 불러오기를 위해 Firebase 비밀번호를 입력하세요:');
-    if(!pw) return;
-    try{
-      setStatus('🔄 연결 중...', 'var(--blue)');
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
-    } catch(e){
-      setStatus('❌ 비밀번호 오류', 'var(--red)');
-      alert('Firebase 비밀번호가 틀렸습니다.');
-      return;
-    }
+  if(!GS_URL){
+    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.\n코드 내 GS_URL 변수에 배포 URL을 입력하세요.');
+    return;
   }
   try{
-    setStatus('📥 불러오는 중...', 'var(--blue)');
-    const snap = await getDoc(doc(db,'appData','main'));
-    if(!snap.exists()){
-      setStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
-      alert('클라우드에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
+    gsSetStatus('📥 불러오는 중...', 'var(--blue)');
+    const res = await fetch(GS_URL + '?action=load');
+    if(!res.ok) throw new Error('서버 응답 오류: '+res.status);
+    const text = await res.text();
+    if(!text || text.trim()===''){
+      gsSetStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
+      alert('구글 시트에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
       return;
     }
-    const d = JSON.parse(snap.data().json);
+    const d = JSON.parse(text);
     if(!confirm(`클라우드 데이터를 불러옵니다.\n저장 시각: ${d.savedAt||'알 수 없음'}\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
 
     window.players=d.players||[];
@@ -3522,15 +3472,14 @@ window.cloudLoad = async function(){
     window.tourneys=d.tourneys||[];
     if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
 
-    // localStorage 동기화
     if(window.save) window.save();
     if(window.fixPoints) window.fixPoints();
     if(typeof init==='function') init();
     else if(window.render) window.render();
 
-    setStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+    gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
   } catch(e){
-    setStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
+    gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
     console.error(e);
   }
 };
