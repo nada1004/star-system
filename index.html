@@ -174,6 +174,100 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 .hdr-login-btn:hover{background:rgba(255,255,255,.3);}
 /* 잠금 요소 */
 .locked{opacity:.4;pointer-events:none;cursor:not-allowed;}
+
+/* ══════════════════════════════════════
+   📱 모바일 UI 개선
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  body { padding: 0; font-size: 12px; }
+  .app { border-radius: 0; border: none; }
+  .hdr { padding: 10px 14px; gap: 8px; }
+  .hdr-title { font-size: 14px; }
+  .hdr-ver { display: none; }
+  #globalSearch { width: 110px !important; }
+
+  /* 탭 메뉴 */
+  .tabs { padding: 6px 8px; gap: 3px; }
+  .tab { padding: 6px 10px; font-size: 11px; }
+
+  /* 폼 영역 */
+  .form-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .form-row input, .form-row select { width: 100%; }
+  .flabel { font-size: 11px; }
+
+  /* 테이블 모바일 가독성 */
+  table { font-size: 11px; }
+  th, td { padding: 6px 8px; }
+  .ubadge { min-width: 44px; font-size: 10px; padding: 2px 6px; }
+
+  /* 버튼 크기 */
+  .btn { padding: 8px 14px; font-size: 12px; }
+  .btn-sm { padding: 7px 12px; font-size: 11px; }
+  .btn-xs { padding: 5px 8px; font-size: 10px; }
+
+  /* 메인 콘텐츠 */
+  .main { padding: 12px; }
+  .ssec { padding: 12px; }
+  .scards { gap: 8px; }
+  .scard { min-width: 90px; padding: 10px; }
+  .scard .sv { font-size: 20px; }
+
+  /* 푸터 */
+  .foot { flex-wrap: wrap; gap: 6px; padding: 10px 12px; padding-bottom: 70px; }
+
+  /* 모달 */
+  .mbox { width: 95vw !important; padding: 18px !important; margin: 10% auto !important; }
+  .umbox { width: 96vw !important; padding: 14px !important; margin: 4% auto !important; }
+
+  /* 점수보드 */
+  .score-board { gap: 8px; padding: 10px 12px; }
+  .score-num { font-size: 22px; }
+
+  /* 대전 카드 */
+  .rec-header { padding: 8px 10px; gap: 6px; }
+  .rec-sum-score { font-size: 18px; }
+
+  /* 투어너먼트 */
+  .tour-wrap { padding: 36px 12px 20px; }
+  .mcard { width: 120px; padding: 8px; }
+
+  /* 하단 네비게이션 바 숨김 공간 확보 */
+  #bottomNav { display: flex !important; }
+}
+
+@media (min-width: 769px) {
+  #bottomNav { display: none !important; }
+}
+
+/* 하단 고정 네비게이션 바 */
+#bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  z-index: 1000;
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  box-shadow: 0 -2px 12px rgba(0,0,0,.08);
+}
+.bnav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--gray-l);
+  font-size: 9px;
+  font-weight: 600;
+  transition: .15s;
+}
+.bnav-item.on { color: var(--blue); }
+.bnav-item span:first-child { font-size: 18px; }
 </style>
 </head>
 <body>
@@ -201,6 +295,13 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
   <div class="hdr-title">스타 대학 통합 관리 시스템</div>
   <div class="hdr-ver">V24</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
+    <!-- 전체 선수 검색 -->
+    <div style="position:relative">
+      <input id="globalSearch" type="text" placeholder="🔍 선수 검색..." oninput="onGlobalSearch(this.value)"
+        style="width:160px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;outline:none;"
+        onfocus="this.style.background='rgba(255,255,255,.25)'" onblur="this.style.background='rgba(255,255,255,.15)'">
+      <div id="globalSearchDrop" style="display:none;position:absolute;top:34px;right:0;background:#fff;border:1px solid var(--border2);border-radius:10px;width:280px;max-height:320px;overflow-y:auto;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.15)"></div>
+    </div>
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
     <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
     <button id="hdrLogoutBtn" class="hdr-login-btn" style="display:none;background:rgba(220,38,38,.4);border-color:rgba(220,38,38,.5)" onclick="doLogout()">🔓 로그아웃</button>
@@ -217,6 +318,8 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
   <button class="tab"     onclick="sw('comp',this)">🎖️ 대회</button>
   <button class="tab"     onclick="sw('pro',this)">🏅 프로리그</button>
   <button class="tab" onclick="sw('stats',this)">📊 통계</button>
+  <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
+  <button class="tab" onclick="sw('vote',this)">🎯 승부예측</button>
   <button id="tabMember" class="tab" onclick="sw('member',this)">👥 회원관리</button>
   <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
 </div>
@@ -257,7 +360,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 <div class="foot no-export">
   <button onclick="doJpg()" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;">📸 JPG 저장</button>
   <button id="btnCloudLoad" class="btn btn-g btn-sm" onclick="cloudLoad()">📥 데이터 불러오기</button>
-  <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다.">💾 GitHub 자동 저장</button>
+  <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다.">💾 데이터 내보내기</button>
   <button id="btnImport" class="btn btn-w btn-sm" style="display:none" onclick="doImport()" title="저장된 JSON 파일로 데이터를 불러옵니다.">📂 데이터 가져오기</button>
   <input type="file" id="fi" style="display:none" onchange="doFile(this)">
   <span id="cloudStatus" style="font-size:11px;color:var(--gray-l);margin-left:6px"></span>
@@ -446,6 +549,8 @@ function save(){
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
+let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
 let miniSub='input', univmSub='input', ckSub='input', compSub='league', histSub='mini';
 let histUniv='';
@@ -553,7 +658,7 @@ function render(){
   document.getElementById('farea').innerHTML='';
   // 이전 내용 제거
   C.innerHTML='';
-  const renderFn=({total:rTotal,tier:rTier,hist:rHist,mini:rMini,univck:rCK,univm:rUnivM,comp:rComp,pro:rPro,member:rMember,cfg:rCfg,stats:rStats})[curTab];
+  const renderFn=({total:rTotal,tier:rTier,hist:rHist,mini:rMini,univck:rCK,univm:rUnivM,comp:rComp,pro:rPro,member:rMember,cfg:rCfg,stats:rStats,cal:rCal,vote:rVote})[curTab];
   if(renderFn)renderFn(C,T);
 }
 
@@ -907,7 +1012,7 @@ function rHist(C,T){
   h+=`</div>`;
   // 공통 연도/월 필터 (대전 기록 하위 탭용)
   // 대학별 / 대학별 포인트 순위(univstat, univrank)는 각 화면 내부에서 필터를 붙이므로 제외
-  const needDateFilter=['race','mini','ck','univm','comp','pro','player'].includes(histSub);
+  const needDateFilter=['mini','ck','univm','comp','pro','player'].includes(histSub); // race는 raceSummaryHTML() 내에서 passDateFilter 사용, rRace()에서 자체 호출하므로 여기서 제외
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
@@ -1118,7 +1223,7 @@ function recSummaryListHTML(arr, mode, context){
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;align-items:center" class="no-export">
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 보기</button>
-          ${mode!=='ck'?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
+          ${mode!=='ck'&&mode!=='pro'?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
         </div>
       </div>
@@ -1127,7 +1232,7 @@ function recSummaryListHTML(arr, mode, context){
       </div>
     </div>`;
   });
-  return h;
+  return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
 }
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
@@ -1199,6 +1304,7 @@ function compSummaryListHTML(context){
   if(!comps.length)return`<div style="padding:40px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
   let h='';
   [...comps].sort((a,b)=>b.d.localeCompare(a.d)).forEach((m)=>{
+    if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     const rIdx=comps.indexOf(m);
     const a=m.a||m.hostUniv||m.u||'';const b=m.b||'';
     const ca=gc(a);const cb=gc(b);
@@ -1231,7 +1337,7 @@ function compSummaryListHTML(context){
       </div>
     </div>`;
   });
-  return h;
+  return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
 }
 
 function delRec(mode,i){
@@ -3094,7 +3200,7 @@ function setAllFemale(){
 }
 
 function delPlayer(){
-  if(confirm(`"${editName}" 선수를 삭제할까요?`)){players=players.filter(p=>p.name!==editName);save();render();cm('emModal');}
+  if(confirm(`"${editName}" 선수를 삭제할까요?`)){const idx=players.findIndex(p=>p.name===editName);if(idx>=0)players.splice(idx,1);save();render();cm('emModal');}
 }
 
 function openRE(mode,idx){
@@ -3380,6 +3486,368 @@ function rStats(C,T){
   </div>`;
 }
 
+
+/* ══════════════════════════════════════
+   🔍 전체 선수 검색
+══════════════════════════════════════ */
+function onGlobalSearch(val){
+  const drop = document.getElementById('globalSearchDrop');
+  if(!val || val.trim()===''){drop.style.display='none';return;}
+  const q = val.toLowerCase();
+  const results = players.filter(p=>
+    p.name.toLowerCase().includes(q) ||
+    (p.univ||'').toLowerCase().includes(q) ||
+    (p.tier||'').toLowerCase().includes(q) ||
+    (p.race||'').toLowerCase().includes(q)
+  ).slice(0,15);
+  if(results.length===0){
+    drop.innerHTML='<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';
+    drop.style.display='block';return;
+  }
+  const raceEmoji={T:'⚔️',Z:'🦟',P:'🔮'};
+  drop.innerHTML = results.map(p=>{
+    const col=gc(p.univ);
+    const wr=p.win+p.loss===0?0:Math.round(p.win/(p.win+p.loss)*100);
+    return `<div onclick="globalSearchSelect('${p.name}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:.1s"
+      onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"
+    >
+      <div style="width:36px;height:36px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${raceEmoji[p.race]||'👤'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13px">${p.name} ${p.gender==='M'?'<span style="font-size:10px;background:#2563eb;color:#fff;padding:1px 5px;border-radius:4px">♂</span>':''}</div>
+        <div style="font-size:11px;color:var(--gray-l)">${p.univ} · ${p.tier}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-weight:700;font-size:12px;color:var(--blue)">${wr}%</div>
+        <div style="font-size:10px;color:var(--gray-l)">${p.win}승${p.loss}패</div>
+      </div>
+    </div>`;
+  }).join('');
+  drop.style.display='block';
+}
+
+function globalSearchSelect(name){
+  document.getElementById('globalSearch').value='';
+  document.getElementById('globalSearchDrop').style.display='none';
+  openPlayerModal(name);
+}
+
+// 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#globalSearch') && !e.target.closest('#globalSearchDrop')){
+    const d=document.getElementById('globalSearchDrop');
+    if(d) d.style.display='none';
+  }
+});
+
+
+/* ══════════════════════════════════════
+   📅 경기 캘린더
+══════════════════════════════════════ */
+function rCal(C,T){
+  T.textContent='📅 경기 캘린더';
+
+  // 모든 경기 날짜 수집
+  const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
+  const dateMap={};
+  allMatches.forEach(m=>{
+    const d=m.d||'';
+    if(!d)return;
+    if(!dateMap[d])dateMap[d]=[];
+    let label='';
+    if(miniM.includes(m)) label=`⚡ ${m.a||''} vs ${m.b||''}`;
+    else if(univM.includes(m)) label=`🏟️ ${m.a||''} vs ${m.b||''}`;
+    else if(ckM.includes(m)) label=`🤝 ${m.a||''} vs ${m.b||''}`;
+    else if(proM.includes(m)) label=`🏅 프로리그`;
+    else label=`🎖️ 대회`;
+    dateMap[d].push(label);
+  });
+
+  const now=new Date(calYear,calMonth,1);
+  const year=now.getFullYear();
+  const month=now.getMonth();
+  const firstDay=new Date(year,month,1).getDay();
+  const lastDate=new Date(year,month+1,0).getDate();
+  const weeks=['일','월','화','수','목','금','토'];
+
+  // 주간뷰: 이번 주
+  const today=new Date();
+  const weekStart=new Date(today);
+  weekStart.setDate(today.getDate()-today.getDay());
+
+  function pad(n){return String(n).padStart(2,'0');}
+  function dateStr(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`;}
+
+  let calHTML='';
+
+  if(calView==='month'){
+    // 월간 뷰
+    let cells='';
+    let day=1;
+    for(let row=0;row<6;row++){
+      let rowHTML='';
+      for(let col=0;col<7;col++){
+        const idx=row*7+col;
+        if(idx<firstDay||day>lastDate){
+          rowHTML+=`<td style="background:var(--surface);min-height:80px;vertical-align:top;padding:4px"></td>`;
+        } else {
+          const ds=dateStr(year,month,day);
+          const matches=dateMap[ds]||[];
+          const isToday=ds===dateStr(today.getFullYear(),today.getMonth(),today.getDate());
+          const hasMatch=matches.length>0;
+          rowHTML+=`<td style="vertical-align:top;padding:4px;min-height:80px;cursor:${hasMatch?'pointer':'default'};${hasMatch?'background:#f0f6ff;':''}border-radius:6px"
+            ${hasMatch?`onclick="calShowDay('${ds}')"`:''}
+          >
+            <div style="font-weight:${isToday?'900':'600'};font-size:12px;color:${isToday?'#fff':'var(--text)'};background:${isToday?'var(--blue)':'transparent'};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px">${day}</div>
+            ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:var(--blue);color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m}</div>`).join('')}
+            ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700">+${matches.length-2}더보기</div>`:''}
+          </td>`;
+          day++;
+        }
+      }
+      cells+=`<tr>${rowHTML}</tr>`;
+      if(day>lastDate)break;
+    }
+    calHTML=`
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <thead><tr>${weeks.map((w,i)=>`<th style="padding:8px;font-size:11px;color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${w}</th>`).join('')}</tr></thead>
+        <tbody>${cells}</tbody>
+      </table>`;
+  } else {
+    // 주간 뷰
+    let rows='';
+    for(let i=0;i<7;i++){
+      const d=new Date(weekStart);
+      d.setDate(weekStart.getDate()+i);
+      const ds=dateStr(d.getFullYear(),d.getMonth(),d.getDate());
+      const matches=dateMap[ds]||[];
+      const isToday=ds===dateStr(today.getFullYear(),today.getMonth(),today.getDate());
+      rows+=`<div style="display:flex;gap:12px;padding:10px 14px;background:${isToday?'var(--blue-l)':'var(--white)'};border:1px solid ${isToday?'var(--blue-ll)':'var(--border)'};border-radius:8px;margin-bottom:6px;align-items:flex-start">
+        <div style="min-width:48px;text-align:center">
+          <div style="font-size:10px;color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${weeks[i]}</div>
+          <div style="font-family:'Black Han Sans',sans-serif;font-size:20px;color:${isToday?'var(--blue)':'var(--text)'}">${d.getDate()}</div>
+        </div>
+        <div style="flex:1">
+          ${matches.length===0
+            ?`<span style="color:var(--gray-l);font-size:12px">경기 없음</span>`
+            :matches.map(m=>`<div style="font-size:12px;font-weight:600;padding:4px 8px;background:var(--blue);color:#fff;border-radius:5px;margin-bottom:3px;display:inline-block;margin-right:4px">${m}</div>`).join('')
+          }
+        </div>
+      </div>`;
+    }
+    calHTML=rows;
+  }
+
+  C.innerHTML=`
+  <div>
+    <!-- 컨트롤 바 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀</button>
+      <span style="font-family:'Black Han Sans',sans-serif;font-size:16px;min-width:100px;text-align:center">${year}년 ${month+1}월</span>
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">▶</button>
+      <button class="btn btn-w btn-sm" onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="btn btn-sm ${calView==='month'?'btn-b':'btn-w'}" onclick="calView='month';render()">월간</button>
+        <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calView='week';render()">주간</button>
+      </div>
+    </div>
+    <!-- 캘린더 본문 -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;overflow-x:auto">
+      ${calHTML}
+    </div>
+    <!-- 선택 날짜 경기 목록 -->
+    <div id="calDayDetail" style="margin-top:14px"></div>
+  </div>`;
+}
+
+function calShowDay(ds){
+  const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
+  const matches=allMatches.filter(m=>m.d===ds);
+  const el=document.getElementById('calDayDetail');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="ssec">
+      <h4>📅 ${ds} 경기 목록</h4>
+      ${matches.map(m=>{
+        const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
+        return `<div style="padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;color:var(--blue)">${typeLabel}</span>
+          <span style="font-weight:700">${m.a||''}</span>
+          <span style="color:var(--gray-l)">vs</span>
+          <span style="font-weight:700">${m.b||''}</span>
+          <span style="margin-left:auto;font-family:'Black Han Sans',sans-serif;font-size:16px">${m.sa??''} : ${m.sb??''}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+
+function swNav(t,el){
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  // 탭 전환 시 서브탭 상태 초기화
+  if(t==='comp'){compSub='league';leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';}
+  if(t==='mini')miniSub='records';
+  if(t==='univck')ckSub='records';
+  if(t==='univm')univmSub='records';
+  if(t==='pro')proSub='records';
+  if(t==='hist')histSub='mini';
+  // 탭버튼 찾아서 sw 호출 (데스크탑 탭 UI 동기화)
+  let found=false;
+  document.querySelectorAll('.tab').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    if(oc.includes("'"+t+"'")){sw(t,b);found=true;}
+  });
+  // 탭 버튼이 없는 경우(모바일 전용 탭 등) 직접 렌더링
+  if(!found){
+    curTab=t;openDetails={};
+    const fstrip=document.getElementById('fstrip');
+    if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn)?'block':'none';
+    const C=document.getElementById('rcont');
+    if(C) C.innerHTML='';
+    render();
+  }
+}
+
+/* ══════════════════════════════════════
+   🎯 승부예측 시스템
+══════════════════════════════════════ */
+function saveVotes(){ localStorage.setItem('su_votes', JSON.stringify(voteData)); }
+
+function rVote(C,T){
+  T.textContent='🎯 승부예측';
+
+  // 예정/진행중 경기 수집 (결과 없는 미니대전)
+  const upcoming = miniM.filter(m=> m.sa==null || m.sa===''); // null/undefined/빈문자열=미입력, sa=0도 완료로 정상 처리
+  // 결과 있는 경기
+  const finished = miniM.filter(m=> m.sa!=null && m.sa!==''); // 숫자(0포함)가 있으면 완료 경기
+
+  function getVoteKey(m){ return m._id||`${m.a}_${m.b}_${m.d}`; }
+
+  function voteBar(key, side){
+    const v = voteData[key]||{a:0,b:0};
+    const total = v.a+v.b;
+    const myVote = voteData[key+'_my'];
+    const pctA = total===0?50:Math.round(v.a/total*100);
+    const pctB = 100-pctA;
+    const aCol = gc((miniM.find(m=>getVoteKey(m)===key)||{}).a||'');
+    const bCol = gc((miniM.find(m=>getVoteKey(m)===key)||{}).b||'');
+    return `
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-bottom:4px">
+          <span>🗳️ 총 ${total}표</span>
+          ${myVote?`<span style="color:var(--blue);font-weight:700">✅ 내 예측: ${myVote==='a'?(miniM.find(m=>getVoteKey(m)===key)||{}).a||'A':(miniM.find(m=>getVoteKey(m)===key)||{}).b||'B'}</span>`:''}
+        </div>
+        <div style="display:flex;height:22px;border-radius:20px;overflow:hidden;background:#f1f5f9">
+          <div style="width:${pctA}%;background:${aCol||'var(--blue)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;transition:.4s">${pctA}%</div>
+          <div style="width:${pctB}%;background:${bCol||'var(--red)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;transition:.4s">${pctB}%</div>
+        </div>
+      </div>`;
+  }
+
+  C.innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- 예측 가능한 경기 -->
+    <div class="ssec">
+      <h4>🎯 승부예측</h4>
+      ${upcoming.length===0
+        ? '<p style="color:var(--gray-l);font-size:13px">예측 가능한 경기가 없습니다.<br><span style="font-size:11px">미니대전에서 결과 미입력 경기가 여기에 표시됩니다.</span></p>'
+        : upcoming.map(m=>{
+            const key=getVoteKey(m);
+            const v=voteData[key]||{a:0,b:0};
+            const myVote=voteData[key+'_my'];
+            const aCol=gc(m.a||'');
+            const bCol=gc(m.b||'');
+            return `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+              <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">📅 ${m.d||'날짜 미정'}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="flex:1;text-align:center;padding:10px;background:${aCol}22;border-radius:8px;border:2px solid ${myVote==='a'?aCol:'transparent'}">
+                  <div style="font-weight:800;color:${aCol}">${m.a||'팀A'}</div>
+                </div>
+                <div style="font-weight:900;color:var(--gray-l);font-size:18px">VS</div>
+                <div style="flex:1;text-align:center;padding:10px;background:${bCol}22;border-radius:8px;border:2px solid ${myVote==='b'?bCol:'transparent'}">
+                  <div style="font-weight:800;color:${bCol}">${m.b||'팀B'}</div>
+                </div>
+              </div>
+              ${voteBar(key)}
+              ${myVote
+                ? `<button class="btn btn-w btn-sm" style="width:100%;margin-top:10px" onclick="cancelVote('${key}')">🔄 예측 취소</button>`
+                : `<div style="display:flex;gap:8px;margin-top:10px">
+                    <button class="btn btn-sm" style="flex:1;background:${aCol};color:#fff;border-color:${aCol}" onclick="doVote('${key}','a')">${m.a||'팀A'} 승리</button>
+                    <button class="btn btn-sm" style="flex:1;background:${bCol};color:#fff;border-color:${bCol}" onclick="doVote('${key}','b')">${m.b||'팀B'} 승리</button>
+                  </div>`
+              }
+            </div>`;
+          }).join('')
+      }
+    </div>
+
+    <!-- 예측 결과 확인 -->
+    <div class="ssec">
+      <h4>🏆 예측 결과</h4>
+      ${finished.length===0
+        ? '<p style="color:var(--gray-l);font-size:13px">결과가 나온 경기가 없습니다.</p>'
+        : finished.map(m=>{
+            const key=getVoteKey(m);
+            const v=voteData[key]||{a:0,b:0};
+            const myVote=voteData[key+'_my'];
+            const winner=m.sa>m.sb?'a':'b';
+            const correct=myVote&&myVote===winner;
+            const voted=!!myVote;
+            const aCol=gc(m.a||'');
+            const bCol=gc(m.b||'');
+            const total=v.a+v.b;
+            const pctA=total===0?50:Math.round(v.a/total*100);
+            return `<div style="background:var(--white);border:1px solid ${voted?(correct?'var(--green)':'var(--red)'):'var(--border)'};border-radius:12px;padding:14px;margin-bottom:8px;opacity:${voted?1:0.7}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:11px;color:var(--gray-l)">📅 ${m.d||''}</span>
+                ${voted?`<span style="font-size:12px;font-weight:700;color:${correct?'var(--green)':'var(--red)'}">${correct?'✅ 예측 성공!':'❌ 예측 실패'}</span>`:'<span style="font-size:11px;color:var(--gray-l)">예측 안함</span>'}
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;text-align:center;font-weight:${m.sa>m.sb?'900':'400'};color:${m.sa>m.sb?aCol:'var(--gray-l)'}">
+                  ${m.sa>m.sb?'🏆 ':''} ${m.a||'팀A'}
+                </div>
+                <div style="font-family:'Black Han Sans';font-size:20px">${m.sa} : ${m.sb}</div>
+                <div style="flex:1;text-align:center;font-weight:${m.sb>m.sa?'900':'400'};color:${m.sb>m.sa?bCol:'var(--gray-l)'}">
+                  ${m.sb>m.sa?'🏆 ':''} ${m.b||'팀B'}
+                </div>
+              </div>
+              <div style="margin-top:8px">
+                <div style="display:flex;height:18px;border-radius:20px;overflow:hidden;background:#f1f5f9">
+                  <div style="width:${pctA}%;background:${aCol};transition:.4s"></div>
+                  <div style="width:${100-pctA}%;background:${bCol};transition:.4s"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:3px">
+                  <span>${pctA}% (${v.a}표)</span><span>${100-pctA}% (${v.b}표)</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')
+      }
+    </div>
+
+  </div>`;
+}
+
+function doVote(key, side){
+  if(voteData[key+'_my']){ alert('이미 예측했습니다!'); return; }
+  if(!voteData[key]) voteData[key]={a:0,b:0};
+  voteData[key][side]++;
+  voteData[key+'_my']=side;
+  saveVotes();
+  render();
+}
+
+function cancelVote(key){
+  const side=voteData[key+'_my'];
+  if(!side)return;
+  if(!confirm('예측을 취소하시겠습니까?'))return;
+  if(voteData[key]) voteData[key][side]=Math.max(0,voteData[key][side]-1);
+  delete voteData[key+'_my'];
+  saveVotes();
+  render();
+}
+
 function sf(u,t){fUniv=u;fTier=t;render();}
 function fsearch(type){
   const id=type==='w'?'ws':'ls';const lid=type==='w'?'wl':'ll';
@@ -3508,52 +3976,17 @@ function applyLoginState(){
 function adminBtn(html){
   return isLoggedIn ? html : '';
 }
-async function doExport(){
-  if(!GITHUB_TOKEN || GITHUB_TOKEN==='여기에_토큰_입력'){
-    alert('⚠️ GitHub Token이 설정되지 않았습니다.\n코드 내 GITHUB_TOKEN 변수에 토큰을 입력하세요.');
-    return;
-  }
+function doExport(){
   try{
-    gsSetStatus('🔄 GitHub에 저장 중...','var(--blue)');
-    const data = {players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,members,tourneys,savedAt:new Date().toISOString()};
-    const json = JSON.stringify(data, null, 2);
-    const encoded = btoa(unescape(encodeURIComponent(json)));
-
-    // 현재 파일 SHA 가져오기
-    const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`,{
-      headers:{
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    const getJson = await getRes.json();
-    const sha = getJson.sha;
-
-    // 파일 업데이트
-    const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`,{
-      method:'PUT',
-      headers:{
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-        content: encoded,
-        sha: sha
-      })
-    });
-    if(!putRes.ok){
-      const err = await putRes.json();
-      throw new Error(err.message||'업로드 실패');
-    }
-    gsSetStatus(`✅ GitHub 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
-    alert('✅ GitHub에 자동 저장 완료!');
-  }catch(e){
-    gsSetStatus('❌ 저장 실패: '+e.message,'var(--red)');
-    alert('❌ 저장 실패: '+e.message);
-  }
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,members,tourneys},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(b);
+    const a=document.createElement('a');
+    a.href=url;a.download='star_backup.json';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+  }catch(e){alert('내보내기 오류: '+e.message);}
 }
+
 function doImport(){document.getElementById('fi').click();}
 function doFile(inp){
   const r=new FileReader();
@@ -3614,12 +4047,6 @@ init();
 ══════════════════════════════════════ */
 const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
 
-// ▼▼▼ 새로 발급한 GitHub Personal Access Token 여기에 입력 ▼▼▼
-const GITHUB_TOKEN = '여기에_토큰_입력';
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-const GITHUB_OWNER = 'nada1004';
-const GITHUB_REPO  = 'star-system';
-const GITHUB_FILE  = 'data.json';
 
 function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
@@ -3664,5 +4091,15 @@ window.cloudLoad = async function(){
 // ── 저장 기능 없음 (읽기 전용) ────────────────────────────
 
 </script>
+
+<!-- 📱 하단 고정 네비게이션 바 (모바일) -->
+<div id="bottomNav">
+  <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><span>📋</span><span>스트리머</span></button>
+  <button class="bnav-item" id="bn1" onclick="swNav('tier',this)"><span>📊</span><span>티어</span></button>
+  <button class="bnav-item" id="bn2" onclick="swNav('hist',this)"><span>📅</span><span>기록</span></button>
+  <button class="bnav-item" id="bn3" onclick="swNav('mini',this)"><span>⚡</span><span>미니</span></button>
+  <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><span>📈</span><span>통계</span></button>
+  <button class="bnav-item" id="bn5" onclick="swNav('cal',this)"><span>🗓️</span><span>캘린더</span></button>
+</div>
 </body>
 </html>
