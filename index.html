@@ -3406,25 +3406,24 @@ window.cloudLoad = async function(){
     const d = await res.json();
     if(!confirm(`GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
 
-    window.players=d.players||[];
-    window.univCfg=d.univCfg||window.univCfg;
-    window.maps=d.maps||window.maps;
-    window.tourD=d.tourD||Array(15).fill('');
-    window.miniM=d.miniM||[];
-    window.univM=d.univM||[];
-    window.comps=d.comps||[];
-    window.ckM=d.ckM||[];
-    window.compNames=d.compNames||[];
-    window.curComp=d.curComp||'';
-    window.proM=d.proM||[];
-    window.members=d.members||[];
-    window.tourneys=d.tourneys||[];
+    players=d.players||[];
+    univCfg=d.univCfg||univCfg;
+    maps=d.maps||maps;
+    tourD=d.tourD||Array(15).fill('');
+    miniM=d.miniM||[];
+    univM=d.univM||[];
+    comps=d.comps||[];
+    ckM=d.ckM||[];
+    compNames=d.compNames||[];
+    curComp=d.curComp||'';
+    proM=d.proM||[];
+    members=d.members||[];
+    tourneys=d.tourneys||[];
     if(d.tiers&&d.tiers.length && typeof TIERS!=='undefined'){ TIERS.splice(0,TIERS.length,...d.tiers); }
 
-    if(window.save) window.save();
-    if(window.fixPoints) window.fixPoints();
-    if(typeof init==='function') init();
-    else if(window.render) window.render();
+    save();
+    fixPoints();
+    init();
 
     gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
   } catch(e){
