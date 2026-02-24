@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타 대학 통합 관리 시스템 V27</title>
+<title>⭐ 스타 대학 통합 관리 시스템 V28</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -28,7 +28,9 @@ b,strong{font-weight:600;}
 .hdr-title{font-family:'Black Han Sans',sans-serif;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;}
 .hdr-ver{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:.5px;border:1px solid rgba(255,255,255,.22);z-index:1;}
 
-/* ══ V27 신규 CSS ══════════════════════════════════════════ */
+/* ══ V28 신규 CSS ══════════════════════════════════════════ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.rec-sum-score{cursor:pointer;}
 /* 조별 순위표 세련화 */
 .grp-rank-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
 .grp-rank-table th{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;}
@@ -93,7 +95,7 @@ th{background:var(--surface);padding:8px 12px;border-bottom:1px solid var(--bord
 td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;font-weight:400;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#f5f8ff;}
-.ugrp td{background:linear-gradient(90deg,var(--c,#2563eb)12%,#f7f9fc 100%);font-family:'Black Han Sans',sans-serif;font-size:13px;border-top:1px solid var(--border);padding:7px 14px;color:var(--c,#2563eb);border-left:3px solid var(--c,#2563eb);text-align:left;}
+.ugrp td{background:linear-gradient(90deg,var(--c,#2563eb)18%,#eef3fb 100%);font-family:'Black Han Sans',sans-serif;font-size:13px;border-top:2px solid var(--c,#2563eb);padding:8px 16px;color:#fff;border-left:4px solid var(--c,#2563eb);text-align:left;}
 .tgrp td{background:#f7f9fc;color:var(--text3);font-weight:500;font-size:11px;padding:4px 16px 4px 28px;border-bottom:1px solid var(--border);text-align:left;}
 .rbadge{font-weight:600;padding:2px 6px;border-radius:4px;font-size:11px;letter-spacing:.3px;}
 .rT{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}
@@ -349,7 +351,7 @@ tr:hover td{background:#f5f8ff;}
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타 대학 통합 관리 시스템</div>
-  <div class="hdr-ver">V27</div>
+  <div class="hdr-ver">V28</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -612,6 +614,7 @@ function save(){
 
 let curTab='total', editName='', reMode='', reIdx=-1;
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
+let calActiveDay=''; // 현재 열린 날짜 (토글용)
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
 let miniSub='input', univmSub='input', ckSub='input', compSub='league', histSub='mini';
@@ -640,16 +643,34 @@ function genderIcon(gender){
   return '';
 }
 
+/* ══════════════════════════════════════
+   ELO 시스템 (K=32, 기본 1200점)
+══════════════════════════════════════ */
+const ELO_K = 32;
+const ELO_DEFAULT = 1200;
+
+function getElo(p){ return p.elo !== undefined ? p.elo : ELO_DEFAULT; }
+
+function calcEloChange(winnerElo, loserElo){
+  const expected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+  return Math.round(ELO_K * (1 - expected));
+}
+
 function applyGameResult(winName, loseName, date, map, matchId){
   const w=players.find(p=>p.name===winName);
   const l=players.find(p=>p.name===loseName);
   if(!w||!l||w===l)return;
   w.win++;l.loss++;w.points+=3;l.points-=3;
+  // ELO 업데이트
+  const wElo=getElo(w);const lElo=getElo(l);
+  const delta=calcEloChange(wElo,lElo);
+  w.elo=(w.elo||ELO_DEFAULT)+delta;
+  l.elo=(l.elo||ELO_DEFAULT)-delta;
   const t=Date.now();
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||''});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||''});
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:+delta,eloAfter:w.elo});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo});
 }
 
 /* ══════════════════════════════════════
@@ -680,7 +701,12 @@ function revertMatchRecord(matchObj){
         if(mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
         if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===mdate);
         if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName);
-        if(idx>=0) w.history.splice(idx,1);
+        if(idx>=0){
+          // ELO 롤백
+          const hRec=w.history[idx];
+          if(hRec.eloDelta!==undefined) w.elo=(w.elo||ELO_DEFAULT)-hRec.eloDelta;
+          w.history.splice(idx,1);
+        }
       }
       if(l){
         l.loss=Math.max(0,(l.loss||0)-1);
@@ -689,7 +715,11 @@ function revertMatchRecord(matchObj){
         if(mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
         if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===mdate);
         if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName);
-        if(idx>=0) l.history.splice(idx,1);
+        if(idx>=0){
+          const hRec=l.history[idx];
+          if(hRec.eloDelta!==undefined) l.elo=(l.elo||ELO_DEFAULT)-hRec.eloDelta;
+          l.history.splice(idx,1);
+        }
       }
     });
   });
@@ -819,6 +849,8 @@ function buildPlayerDetailHTML(p){
         <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:${wr>=50?'var(--green)':'var(--red)'}">${wr}%</div></div>
       <div><div style="font-size:11px;color:var(--gray-l)">포인트</div>
         <div style="font-family:'Black Han Sans',sans-serif;font-size:18px" class="${pC(p.points)}">${pS(p.points)}</div></div>
+      <div style="border-left:2px solid var(--border);padding-left:12px"><div style="font-size:11px;color:var(--gold);font-weight:700">🏅 ELO</div>
+        <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:${(p.elo||ELO_DEFAULT)>=1200?'var(--green)':'var(--red)'}">${p.elo||ELO_DEFAULT}</div></div>
     </div>
   </div>`;
   // 종족별 승률
@@ -849,15 +881,19 @@ function buildPlayerDetailHTML(p){
   // 최근 기록 (개인 history)
   if(p.history.length){
     h+=`<div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">📋 최근 경기 기록 (상위 20개)</div>`;
-    h+=`<table><thead><tr><th>날짜</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th></tr></thead><tbody>`;
+    h+=`<table><thead><tr><th>날짜</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th></tr></thead><tbody>`;
     p.history.slice(0,20).forEach(hh=>{
       const isWin=hh.result==='승';
+      const eloStr=hh.eloDelta!==undefined
+        ?`<span style="font-size:11px;font-weight:700;color:${hh.eloDelta>0?'var(--green)':'var(--red)'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`
+        :'-';
       h+=`<tr>
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${isWin?`<span style="background:var(--blue);color:#fff;font-size:11px;font-weight:800;padding:2px 9px;border-radius:4px">WIN</span>`:`<span style="background:#94a3b8;color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:4px;opacity:.7">LOSE</span>`}</td>
         <td style="cursor:pointer;color:var(--blue);font-weight:700;text-decoration:underline dotted" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${hh.opp}'),100)">${hh.opp}</td>
         <td><span class="rbadge r${hh.oppRace}">${hh.oppRace}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map}</td>
+        <td>${eloStr}</td>
       </tr>`;
     });
     h+=`</tbody></table>`;
@@ -980,8 +1016,8 @@ function rTotal(C,T){
   getAllUnivs().forEach(u=>{
     const up=players.filter(p=>p.univ===u.name);if(!up.length)return;
     h+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?9:8}">
-      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:${u.color}">🏛️ ${u.name}</span>
-      <span style="font-size:11px;opacity:.6">(${up.length}명)</span>
+      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,.4)">🏛️ ${u.name}</span>
+      <span style="font-size:11px;opacity:.85;color:#fff;margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
     const sorted=[...up].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     let lt='';
@@ -1017,6 +1053,7 @@ function rTier(C,T){
     {id:'wins',lbl:'🏆 다승순'},
     {id:'winstreak',lbl:'🔥 승차순'},
     {id:'winrate',lbl:'📈 승률순'},
+    {id:'elo',lbl:'🏅 ELO순'},
     {id:'revstreak',lbl:'❄️ 역승차순'},
     {id:'recent',lbl:'🕐 최근 경기'},
   ];
@@ -1076,16 +1113,17 @@ function rTier(C,T){
     list.sort((a,b)=>{const ra=(a.win+a.loss)?a.win/(a.win+a.loss):0;const rb=(b.win+b.loss)?b.win/(b.win+b.loss):0;return rb-ra||b.win-a.win;});
   }
   else if(tierRankMode==='winstreak'){
-    // 승차: 승수 - 패수 (많을수록 상위)
     list.sort((a,b)=>(b.win-b.loss)-(a.win-a.loss)||b.win-a.win);
   }
   else if(tierRankMode==='revstreak'){
-    // 역승차: 패수 - 승수 (많을수록 상위, 즉 승차 낮은 순)
     list.sort((a,b)=>(b.loss-b.win)-(a.loss-a.win)||b.loss-a.loss);
+  }
+  else if(tierRankMode==='elo'){
+    list.sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   }
 
   const modeHeaders={
-    tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차'
+    tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',elo:'🏅 ELO'
   };
   const extraHeader=modeHeaders[tierRankMode]||'포인트';
 
@@ -1098,11 +1136,13 @@ function rTier(C,T){
     else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;
     else rnkHTML=`<span style="font-family:'Black Han Sans',sans-serif;font-size:13px">${i+1}위</span>`;
     let extraVal='';
+    const playerElo=p.elo||ELO_DEFAULT;
     if(tierRankMode==='tier') extraVal=`<span class="${pC(p.points)}" style="font-family:'Black Han Sans',sans-serif;font-size:14px">${pS(p.points)}</span>`;
     else if(tierRankMode==='wins') extraVal=`<span class="wt" style="font-size:15px;font-weight:800">${p.win}</span>`;
     else if(tierRankMode==='winrate') extraVal=`<span style="font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>`;
     else if(tierRankMode==='winstreak'){const diff=p.win-p.loss;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
     else if(tierRankMode==='revstreak'){const diff=p.loss-p.win;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--red)':diff<0?'var(--green)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
+    else if(tierRankMode==='elo') extraVal=`<span style="font-family:'Black Han Sans',sans-serif;font-size:15px;font-weight:800;color:${playerElo>=1400?'#7c3aed':playerElo>=1300?'var(--gold)':playerElo>=1200?'var(--green)':'var(--red)'}">${playerElo}</span>`;
     h+=`<tr>
       <td>${rnkHTML}</td>
       <td>${getTierBadge(p.tier)}</td>
@@ -1525,7 +1565,7 @@ function recSummaryListHTML(arr, mode, context){
         <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${labelA}</span>
-          <div class="rec-sum-score">
+          <div class="rec-sum-score" style="cursor:pointer;padding:2px 8px;border-radius:6px;transition:.1s" onmouseenter="this.style.background='#f0f6ff'" onmouseleave="this.style.background=''" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기">
             <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span>
             <span style="color:var(--gray-l);font-size:14px">:</span>
             <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span>
@@ -2896,16 +2936,16 @@ function rCompPlayerRank(tn){
 function rCompGrpEdit(){
   if(!isLoggedIn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">로그인 후 이용 가능합니다.</div>`;
   if(grpSub==='edit'&&grpEditId) return rGrpEditInner();
-  // 티어 필터 상태
-  if(typeof window._grpTierFilter==='undefined') window._grpTierFilter='';
-  const tf=window._grpTierFilter;
+  // 티어 필터 상태 (다중 선택)
+  if(!window._grpTierFilters) window._grpTierFilters=[];
+  const tf=window._grpTierFilters;
   let h=`<div class="grp-edit-header">
     <span style="font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--blue)">🏗️ 대회 조편성 관리</span>
     <button class="btn btn-b btn-sm" onclick="grpNewTourney()">+ 새 대회 만들기</button>
     <div style="margin-left:auto;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">티어 필터:</span>
-      <button class="tier-filter-btn ${tf===''?'on':''}" onclick="window._grpTierFilter='';render()">전체</button>
-      ${TIERS.map(t=>`<button class="tier-filter-btn ${tf===t?'on':''}" onclick="window._grpTierFilter='${t}';render()">${getTierLabel(t)}</button>`).join('')}
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">출전 티어 <span style="font-weight:400">(복수선택)</span>:</span>
+      <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="window._grpTierFilters=[];render()">전체</button>
+      ${TIERS.map(t=>`<button class="tier-filter-btn ${tf.includes(t)?'on':''}" onclick="grpToggleTier('${t}')">${getTierLabel(t)}</button>`).join('')}
     </div>
   </div>`;
   if(!tourneys.length){h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;border:2px dashed var(--border2)">등록된 대회가 없습니다.</div>`;return h;}
@@ -3078,11 +3118,12 @@ function grpRefreshSets(){
   const aEl=document.getElementById('gm-a');const bEl=document.getElementById('gm-b');
   if(!aEl)return;
   const teamA=aEl.value,teamB=bEl?bEl.value:'';
-  const tf=window._grpTierFilter||'';
-  const mA=players.filter(p=>p.univ===teamA&&(tf===''||p.tier===tf));
-  const mB=players.filter(p=>p.univ===teamB&&(tf===''||p.tier===tf));
-  const optsA=`<option value="">A팀 선수${tf?` [${getTierLabel(tf)}]`:''}</option>`+mA.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
-  const optsB=`<option value="">B팀 선수${tf?` [${getTierLabel(tf)}]`:''}</option>`+mB.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const tf=window._grpTierFilters||[];
+  const mA=players.filter(p=>p.univ===teamA&&(tf.length===0||tf.includes(p.tier)));
+  const mB=players.filter(p=>p.univ===teamB&&(tf.length===0||tf.includes(p.tier)));
+  const tierLabel=tf.length>0?` [${tf.map(t=>t).join('+')}]`:'';
+  const optsA=`<option value="">A팀 선수${tierLabel}</option>`+mA.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsB=`<option value="">B팀 선수${tierLabel}</option>`+mB.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
   const setsEl=document.getElementById('gm-sets');if(!setsEl)return;
   if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
   let h='';
@@ -3193,6 +3234,13 @@ function grpDelTourney(ti){
   if(!confirm(`"${tourneys[ti].name}" 대회를 삭제하시겠습니까?`))return;
   if(curComp===tourneys[ti].name)curComp='';tourneys.splice(ti,1);save();render();
 }
+function grpToggleTier(t){
+  if(!window._grpTierFilters)window._grpTierFilters=[];
+  const idx=window._grpTierFilters.indexOf(t);
+  if(idx>=0)window._grpTierFilters.splice(idx,1);else window._grpTierFilters.push(t);
+  render();
+}
+
 function grpFilterUnivSel(gi){
   const searchEl=document.getElementById(`grp-univ-search-${gi}`);
   const selEl=document.getElementById(`grp-univ-sel-${gi}`);
@@ -3954,25 +4002,6 @@ function rStats(C,T){
       </div>
     </div>
 
-    <!-- 월별 경기 수 그래프 -->
-    <div class="ssec">
-      <h4>📅 월별 경기 수</h4>
-      ${months.length===0?'<p style="color:var(--gray-l)">경기 기록이 없습니다.</p>':`
-      <div style="display:flex;align-items:flex-end;gap:8px;height:140px;padding:0 4px">
-        ${(()=>{
-          const max=Math.max(...months.map(m=>monthStats[m]),1);
-          return months.map(m=>{
-            const h=Math.round(monthStats[m]/max*120);
-            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px">
-              <span style="font-size:10px;font-weight:700;color:var(--blue)">${monthStats[m]}</span>
-              <div style="width:100%;height:${h}px;background:linear-gradient(180deg,#2563eb,#60a5fa);border-radius:6px 6px 0 0"></div>
-              <span style="font-size:9px;color:var(--gray-l);white-space:nowrap">${m.slice(5)}월</span>
-            </div>`;
-          }).join('');
-        })()}
-      </div>`}
-    </div>
-
     <!-- 맵별 승률 통계 -->
     <div class="ssec">
       <h4>🗺️ 맵별 경기 통계</h4>
@@ -4158,11 +4187,11 @@ function rCal(C,T){
           const matches=dateMatchMap[ds]||[];
           const isToday=ds===todayStr;
           const hasMatch=matches.length>0;
-          rowHTML+=`<td style="vertical-align:top;padding:4px;min-height:80px;cursor:${hasMatch?'pointer':'default'};${hasMatch?'background:#f0f6ff;':''}border-radius:6px"
-            ${hasMatch?`onclick="calShowDay('${ds}')"`:''}
-          >
+          rowHTML+=`<td style="vertical-align:top;padding:4px;min-height:80px;cursor:${hasMatch?'pointer':'default'};${hasMatch?'background:#f0f6ff;':''}border-radius:6px;transition:.15s;${hasMatch&&calActiveDay===ds?'outline:2px solid var(--blue);':''}"
+            ${hasMatch?`onclick="calToggleDay('${ds}')"`:''}
+            ${hasMatch?`onmouseenter="this.style.background='#dbeafe'" onmouseleave="this.style.background='${calActiveDay===ds?'#dbeafe':'#f0f6ff}'"`:''}>
             <div style="font-weight:${isToday?'900':'600'};font-size:12px;color:${isToday?'#fff':'var(--text)'};background:${isToday?'var(--blue)':'transparent'};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px">${day}</div>
-            ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:var(--blue);color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${matchLabel(m)}</div>`).join('')}
+            ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:${proM.includes(m)?'#7c3aed':miniM.includes(m)?'#2563eb':univM.includes(m)?'#16a34a':ckM.includes(m)?'#d97706':'#2563eb'};color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${matchLabel(m)}</div>`).join('')}
             ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700">+${matches.length-2}더</div>`:''}
           </td>`;
           day++;
@@ -4285,6 +4314,21 @@ function rCal(C,T){
   </div>`;
 }
 
+function calToggleDay(ds){
+  const el=document.getElementById('calDayDetail');
+  if(!el)return;
+  // 같은 날짜를 다시 클릭하면 닫기
+  if(calActiveDay===ds){
+    calActiveDay='';
+    el.innerHTML='';
+    render(); // 셀 outline 업데이트
+    return;
+  }
+  calActiveDay=ds;
+  calShowDay(ds);
+  render(); // 셀 outline 업데이트
+}
+
 function calShowDay(ds){
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
   const matches=allMatches.filter(m=>m.d===ds);
@@ -4292,12 +4336,12 @@ function calShowDay(ds){
   if(!el)return;
 
   el.innerHTML=`
-    <div class="ssec">
+    <div class="ssec" style="border:2px solid var(--blue);animation:fadeIn .2s">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h4 style="margin:0">📅 ${ds} 경기 목록</h4>
+        <h4 style="margin:0;color:var(--blue)">📅 ${ds} 경기 목록 <span style="font-size:12px;font-weight:400;color:var(--gray-l)">${matches.length}경기</span></h4>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-b btn-sm" onclick="calDayDate='${ds}';calView='day';render()">📋 일간 상세보기</button>
-          <button class="btn btn-w btn-sm" onclick="document.getElementById('calDayDetail').innerHTML=''">✕ 닫기</button>
+          <button class="btn btn-b btn-sm" onclick="calDayDate='${ds}';calView='day';calActiveDay='';render()">📋 일간 상세보기</button>
+          <button class="btn btn-w btn-sm" onclick="calActiveDay='';document.getElementById('calDayDetail').innerHTML='';render()">✕ 닫기</button>
         </div>
       </div>
       ${matches.map((m,mi)=>{
@@ -4308,26 +4352,29 @@ function calShowDay(ds){
         const aWin=(m.sa??-1)>(m.sb??-1);const bWin=(m.sb??-1)>(m.sa??-1);
         const hasResult=(m.sa!=null&&m.sa!=='');
         const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
-        const detKey=`caldm-${ds}-${mi}`;
+        const typeBg=miniM.includes(m)?'#2563eb':univM.includes(m)?'#7c3aed':ckM.includes(m)?'#d97706':proM.includes(m)?'#7c3aed':'#16a34a';
+        const detKey=\`caldm-\${ds}-\${mi}\`;
         const detHTML=buildDetailHTML(m,miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp',
           tA,tB,ca,cb,aWin,bWin);
-        return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">
-          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:11px;font-weight:700;color:var(--blue)">${typeLabel}</span>
-            <span class="ubadge${hasResult&&!aWin?' loser':''}" style="background:${ca}">${tA}</span>
-            ${hasResult
-              ?`<div style="font-family:'Black Han Sans',sans-serif;font-size:18px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l)"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`
-              :`<span style="color:var(--gray-l);font-weight:700">vs</span>`
-            }
-            <span class="ubadge${hasResult&&!bWin?' loser':''}" style="background:${cb}">${tB}</span>
-            ${hasResult
-              ?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승!</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승!</span>`:'<span style="color:var(--gray-l)">무</span>')
-              :'<span style="font-size:11px;color:var(--gray-l)">미입력</span>'
-            }
-            <div style="margin-left:auto" class="no-export"><button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button></div>
+        return \`<div class="rec-summary" style="margin-bottom:8px">
+          <div class="rec-sum-header" style="cursor:pointer" onclick="toggleDetail('\${detKey}')">
+            <span style="background:\${typeBg};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">\${typeLabel}</span>
+            <div class="rec-sum-vs" style="flex:1">
+              <span class="ubadge\${hasResult&&!aWin?' loser':''}" style="background:\${ca}">\${tA}</span>
+              \${hasResult
+                ?\`<div class="rec-sum-score" style="cursor:pointer" title="클릭: 상세 보기/닫기"><span class="\${aWin?'wt':bWin?'lt':'pt-z'}">\${m.sa}</span><span style="color:var(--gray-l);font-size:14px"> : </span><span class="\${bWin?'wt':aWin?'lt':'pt-z'}">\${m.sb}</span></div>\`
+                :\`<span style="color:var(--gray-l);font-weight:700">vs</span>\`
+              }
+              <span class="ubadge\${hasResult&&!bWin?' loser':''}" style="background:\${cb}">\${tB}</span>
+              \${hasResult
+                ?(aWin?\`<span style="font-size:12px;font-weight:800;color:\${ca}">▶ \${tA} 승</span>\`:bWin?\`<span style="font-size:12px;font-weight:800;color:\${cb}">▶ \${tB} 승</span>\`:'<span style="color:var(--gray-l)">무</span>')
+                :'<span style="font-size:11px;color:var(--gray-l)">미입력</span>'
+              }
+            </div>
+            <div class="no-export" style="margin-left:auto"><button id="detbtn-\${detKey}" class="btn-detail" onclick="event.stopPropagation();toggleDetail('\${detKey}')">▼ 상세</button></div>
           </div>
-          <div id="det-${detKey}" class="rec-detail-area" style="padding:10px 14px">${detHTML}</div>
-        </div>`;
+          <div id="det-\${detKey}" class="rec-detail-area" style="padding:10px 14px">\${detHTML}</div>
+        </div>\`;
       }).join('')}
     </div>`;
 }
