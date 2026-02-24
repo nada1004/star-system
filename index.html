@@ -2590,34 +2590,78 @@ function rPro(C,T){
 }
 
 function buildProInputHTML(){
-  const bld=BLD['pro'];const allU=getAllUnivs();
-  const uO=`<option value="">대학 선택</option>`+allU.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const bld=BLD['pro'];
   const mA=bld.membersA||[];const mB=bld.membersB||[];
-  // 티어 다중 선택 상태
+  // 프로리그는 god~1티어까지만 허용
+  const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   if(!bld.tierFilters)bld.tierFilters=[];
   const tf=bld.tierFilters;
+  // 남자 + PRO_TIERS 해당 선수만
+  const eligible=players.filter(p=>
+    p.gender==='M' &&
+    PRO_TIERS.includes(p.tier) &&
+    (tf.length===0||tf.includes(p.tier))
+  ).sort((a,b)=>{
+    const ti=t=>PRO_TIERS.indexOf(t);
+    return ti(a.tier)-ti(b.tier)||(a.name||'').localeCompare(b.name||'');
+  });
+
   let h=`<div class="match-builder"><h3>🏅 프로리그 입력</h3>
     <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['pro'].date=this.value">
     </div>
 
+    <!-- ① 참가 티어 선택 -->
+    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택 · god~1티어 · 남자만)</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="BLD['pro'].tierFilters=[];BLD['pro'].membersA=[];BLD['pro'].membersB=[];BLD['pro'].sets=[];render()">전체</button>
+        ${PRO_TIERS.map(t=>`<button class="tier-filter-btn ${tf.includes(t)?'on':''}" onclick="proToggleTier('${t}')">${getTierLabel(t)}</button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 선수: <strong>${eligible.length}명</strong></div>
+    </div>
+
+    <!-- ② 선수 클릭 → 팀 배정 -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 선수 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 / B팀 버튼으로 추가)</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto">
+        ${eligible.length===0
+          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 선수 목록이 표시됩니다</span>'
+          :eligible.map(p=>{
+              const inA=mA.some(m=>m.name===p.name);
+              const inB=mB.some(m=>m.name===p.name);
+              const bg=inA?'#2563eb':inB?'#dc2626':gc(p.univ);
+              if(inA||inB){
+                return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;opacity:0.55">${p.name}<span style="opacity:.8;font-size:10px;margin-left:2px">${p.univ}/${p.tier}</span><span style="background:rgba(255,255,255,.3);border-radius:2px;padding:0 4px;font-size:9px;font-weight:800;margin-left:3px">${inA?'A팀':'B팀'}</span></span>`;
+              }
+              return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;padding:3px 6px;border-radius:6px;font-size:11px">
+                <span style="font-weight:700">${p.name}</span><span style="opacity:.8;font-size:10px">${p.univ}/${p.tier}</span>
+                <button onclick="proAddPlayer('A','${p.name}')" style="background:#fff;color:#2563eb;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer;margin-left:2px">A팀</button>
+                <button onclick="proAddPlayer('B','${p.name}')" style="background:#fff;color:#dc2626;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer">B팀</button>
+              </span>`;
+            }).join('')
+        }
+      </div>
+    </div>
+
+    <!-- ③ 팀 구성 확인 + 검색 추가 -->
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
       <div class="ck-panel">
-        <h4>🔵 팀 A 구성</h4>
-        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          <input type="text" id="pro-a-search" placeholder="🔍 선수 이름·메모 검색..." style="flex:1;min-width:140px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px" oninput="proSearchPlayer('A')">
+        <h4>🔵 팀 A (${mA.length}명)</h4>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input type="text" id="pro-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('A')">
         </div>
-        <div id="pro-a-drop" style="display:none;max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:#fff;margin-bottom:6px"></div>
-        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersA.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수를 검색하여 추가하세요</span>'}</div>
+        <div id="pro-a-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:#fff;margin-bottom:6px"></div>
+        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersA.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
       <div class="ck-panel">
-        <h4>🔴 팀 B 구성</h4>
-        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          <input type="text" id="pro-b-search" placeholder="🔍 선수 이름·메모 검색..." style="flex:1;min-width:140px;padding:6px 10px;border:1px solid var(--border2);border-radius:6px" oninput="proSearchPlayer('B')">
+        <h4>🔴 팀 B (${mB.length}명)</h4>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input type="text" id="pro-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('B')">
         </div>
-        <div id="pro-b-drop" style="display:none;max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:#fff;margin-bottom:6px"></div>
-        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수를 검색하여 추가하세요</span>'}</div>
+        <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:#fff;margin-bottom:6px"></div>
+        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
     </div>`;
   h+=setBuilderHTML(bld,'pro');h+=`</div>`;return h;
@@ -2629,10 +2673,14 @@ function proSearchPlayer(team){
   if(!searchEl||!dropEl)return;
   const q=searchEl.value.trim().toLowerCase();
   if(!q){dropEl.style.display='none';dropEl.innerHTML='';return;}
+  const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   const bld=BLD['pro']||{};
+  const tf=bld.tierFilters||[];
   const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
   const results=players.filter(p=>
     p.gender==='M' &&
+    PRO_TIERS.includes(p.tier) &&
+    (tf.length===0||tf.includes(p.tier)) &&
     !already.includes(p.name) &&
     (p.name.toLowerCase().includes(q)||(p.memo||'').toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||(p.tier||'').toLowerCase().includes(q))
   ).slice(0,20);
@@ -2640,7 +2688,7 @@ function proSearchPlayer(team){
     dropEl.innerHTML='<div style="padding:10px;color:var(--gray-l);font-size:12px;text-align:center">검색 결과 없음</div>';
     dropEl.style.display='block';return;
   }
-  dropEl.innerHTML=results.map(p=>`<div onclick="proAddPlayerDirect('${team}','${p.name}')"
+  dropEl.innerHTML=results.map(p=>`<div onclick="proAddPlayer('${team}','${p.name}');document.getElementById('pro-${team.toLowerCase()}-search').value='';document.getElementById('pro-${team.toLowerCase()}-drop').style.display='none'"
     style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px"
     onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
     <span style="display:inline-block;width:28px;height:28px;border-radius:6px;background:${gc(p.univ)};color:#fff;text-align:center;line-height:28px;font-size:11px;font-weight:700;flex-shrink:0">${(p.race||'?').charAt(0)}</span>
@@ -2666,12 +2714,22 @@ function proAddPlayerDirect(team, name){
   render();
 }
 
+function proAddPlayer(team, name){
+  const bld=BLD['pro'];if(!bld)return;
+  const all=[...(bld.membersA||[]),...(bld.membersB||[])];
+  if(all.find(m=>m.name===name))return;
+  const pObj=players.find(p=>p.name===name)||{};
+  const mem={name,univ:pObj.univ||'',race:pObj.race||'',tier:pObj.tier||''};
+  if(team==='A')bld.membersA.push(mem);else bld.membersB.push(mem);
+  bld.sets=[];render();
+}
+
 function proToggleTier(t){
   const bld=BLD['pro'];if(!bld)return;
   if(!bld.tierFilters)bld.tierFilters=[];
   const idx=bld.tierFilters.indexOf(t);
   if(idx>=0)bld.tierFilters.splice(idx,1);else bld.tierFilters.push(t);
-  bld.sets=[];render();
+  bld.membersA=[];bld.membersB=[];bld.sets=[];render();
 }
 
 function proFilterPlayers(team){
