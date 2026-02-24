@@ -300,7 +300,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
       <input id="globalSearch" type="text" placeholder="🔍 선수 검색..." oninput="onGlobalSearch(this.value)"
         style="width:160px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;outline:none;"
         onfocus="this.style.background='rgba(255,255,255,.25)'" onblur="this.style.background='rgba(255,255,255,.15)'">
-      <div id="globalSearchDrop" style="display:none;position:absolute;top:34px;right:0;background:#fff;border:1px solid var(--border2);border-radius:10px;width:280px;max-height:320px;overflow-y:auto;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.15)"></div>
+      <div id="globalSearchDrop" style="display:none;position:fixed;top:50px;right:16px;background:#fff;border:1px solid var(--border2);border-radius:10px;width:300px;max-height:360px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.22)"></div>
     </div>
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
     <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
@@ -319,7 +319,6 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
   <button class="tab"     onclick="sw('pro',this)">🏅 프로리그</button>
   <button class="tab" onclick="sw('stats',this)">📊 통계</button>
   <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
-  <button class="tab" onclick="sw('vote',this)">🎯 승부예측</button>
   <button id="tabMember" class="tab" onclick="sw('member',this)">👥 회원관리</button>
   <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
 </div>
@@ -746,6 +745,16 @@ function buildPlayerDetailHTML(p){
     });
     h+=`</tbody></table>`;
   }
+  // 선수 메모
+  h+=`<div style="margin-top:16px;padding:14px;background:#fffbeb;border:1px solid var(--gold-b);border-radius:10px">
+    <div style="font-weight:700;font-size:12px;color:var(--gold);margin-bottom:8px">📝 선수 메모</div>
+    ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.6">${p.memo.replace(/\n/g,'<br>')}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">메모 없음</div>'}
+    ${isLoggedIn?`<textarea id="player-memo-input" style="width:100%;min-height:70px;font-size:12px;border:1px solid var(--border2);border-radius:6px;padding:8px;resize:vertical" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <button class="btn btn-b btn-sm" onclick="savePlayerMemo('${p.name}')">💾 메모 저장</button>
+      ${p.memo?`<button class="btn btn-r btn-sm" onclick="savePlayerMemo('${p.name}',true)">삭제</button>`:''}
+    </div>`:''}
+  </div>`;
   return h;
 }
 
@@ -1229,6 +1238,14 @@ function recSummaryListHTML(arr, mode, context){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin)}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
+          ${isLoggedIn?`<div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
+            <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모 저장</button>
+            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}
+          </div>`:''}
+        </div>
       </div>
     </div>`;
   });
@@ -1519,6 +1536,37 @@ function toggleDetail(key){
     area.classList.toggle('open',!!openDetails[key]);
     if(btn){btn.classList.toggle('open',!!openDetails[key]);btn.textContent=openDetails[key]?'▲ 상세 닫기':'▼ 상세 보기';}
   }
+}
+
+function savePlayerMemo(name, del=false){
+  const p=players.find(x=>x.name===name);
+  if(!p)return;
+  if(del){
+    delete p.memo;
+  } else {
+    const el=document.getElementById('player-memo-input');
+    if(el) p.memo=el.value.trim();
+  }
+  save();
+  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
+}
+
+function saveMemo(mode,idx,inputId){
+  let arr;
+  if(mode==='mini') arr=miniM;
+  else if(mode==='univm') arr=univM;
+  else if(mode==='comp') arr=comps;
+  else if(mode==='ck') arr=ckM;
+  else if(mode==='pro') arr=proM;
+  else return;
+  if(!arr[idx])return;
+  if(inputId===null){
+    delete arr[idx].memo;
+  } else {
+    const el=document.getElementById(inputId);
+    if(el) arr[idx].memo=el.value.trim();
+  }
+  save();render();
 }
 
 function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
@@ -3184,8 +3232,56 @@ function openEP(name){
 }
 function savePlayer(){
   const p=players.find(x=>x.name===editName);
-  p.name=document.getElementById('ed-n').value;p.tier=document.getElementById('ed-t').value;
-  p.univ=document.getElementById('ed-u').value;p.race=document.getElementById('ed-r').value;
+  const newName=document.getElementById('ed-n').value.trim();
+  const oldName=editName;
+
+  // 이름 변경 시 모든 기록 자동 갱신
+  if(newName && newName !== oldName){
+    // 히스토리 내 상대방 이름 갱신
+    players.forEach(other=>{
+      (other.history||[]).forEach(h=>{
+        if(h.opp===oldName) h.opp=newName;
+      });
+    });
+    // 히스토리 내 본인 이름은 p.name 변경으로 자동 처리
+    // 미니대전/대학대전/대회/CK/프로 경기 내 선수명 갱신
+    const renameInMatches=(arr)=>{
+      arr.forEach(m=>{
+        (m.sets||[]).forEach(set=>{
+          (set.games||[]).forEach(g=>{
+            if(g.playerA===oldName) g.playerA=newName;
+            if(g.playerB===oldName) g.playerB=newName;
+            if(g.winner && (g.winner===oldName)) g.winner=newName;
+          });
+        });
+        (m.teamAMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
+        (m.teamBMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
+      });
+    };
+    renameInMatches(miniM);
+    renameInMatches(univM);
+    renameInMatches(comps);
+    renameInMatches(ckM);
+    renameInMatches(proM);
+    // 조편성 대회
+    tourneys.forEach(tn=>{
+      tn.groups.forEach(grp=>{
+        (grp.matches||[]).forEach(m=>{
+          (m.sets||[]).forEach(set=>{
+            (set.games||[]).forEach(g=>{
+              if(g.playerA===oldName) g.playerA=newName;
+              if(g.playerB===oldName) g.playerB=newName;
+            });
+          });
+        });
+      });
+    });
+  }
+
+  p.name=newName||oldName;
+  p.tier=document.getElementById('ed-t').value;
+  p.univ=document.getElementById('ed-u').value;
+  p.race=document.getElementById('ed-r').value;
   p.gender=document.getElementById('ed-g').value;
   p.win=parseInt(document.getElementById('ed-win').value)||0;
   p.loss=parseInt(document.getElementById('ed-loss').value)||0;
@@ -3355,21 +3451,25 @@ function rStats(C,T){
     .map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l}))
     .sort((a,b)=>b.total-a.total);
 
-  // 5. 폼 (최근 5경기)
-  const formPlayers=players
-    .filter(p=>p.history&&p.history.length>=3)
-    .map(p=>{
-      const rec=[...p.history].slice(0,5);
-      const streak=()=>{
-        let s=0,type=rec[0]?.result;
-        for(const h of rec){if(h.result===type)s++;else break;}
-        return {n:s,type};
-      };
-      const st=streak();
-      return {...p,form:rec,streak:st};
-    })
-    .sort((a,b)=>b.streak.n-a.streak.n)
-    .slice(0,10);
+  // 5. 폼 (최근 5경기) - 여자/남자 분리
+  function calcFormPlayers(genderFilter){
+    return players
+      .filter(p=>p.history&&p.history.length>=3&&(genderFilter?p.gender===genderFilter:true))
+      .map(p=>{
+        const rec=[...p.history].slice(0,5);
+        const streak=()=>{
+          let s=0,type=rec[0]?.result;
+          for(const h of rec){if(h.result===type)s++;else break;}
+          return {n:s,type};
+        };
+        const st=streak();
+        return {...p,form:rec,streak:st};
+      })
+      .sort((a,b)=>b.streak.n-a.streak.n)
+      .slice(0,10);
+  }
+  const formPlayersF=calcFormPlayers('F');
+  const formPlayersM=calcFormPlayers('M');
 
   // ── 렌더링 ───────────────────────────────────────────────
   const raceColor={T:'#2563eb',Z:'#dc2626',P:'#7c3aed'};
@@ -3465,11 +3565,11 @@ function rStats(C,T){
       </div>
     </div>
 
-    <!-- 최근 폼 (연승/연패) -->
+    <!-- 최근 폼 (연승/연패) - 여자 -->
     <div class="ssec">
-      <h4>🔥 최근 폼 TOP 10</h4>
+      <h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${formPlayers.map(p=>{
+        ${formPlayersF.map(p=>{
           const formIcons=p.form.map(h=>h.result==='승'?'<span style="color:var(--green);font-weight:800">W</span>':'<span style="color:var(--red);font-weight:800">L</span>').join(' ');
           const streakColor=p.streak.type==='승'?'var(--green)':'var(--red)';
           const streakLabel=p.streak.type==='승'?`🔥 ${p.streak.n}연승`:`❄️ ${p.streak.n}연패`;
@@ -3479,7 +3579,25 @@ function rStats(C,T){
             <span style="margin-left:auto;font-size:12px">${formIcons}</span>
             <span style="font-weight:800;color:${streakColor};min-width:60px;text-align:right">${streakLabel}</span>
           </div>`;
-        }).join('')||'<p style="color:var(--gray-l)">경기 기록이 3경기 이상인 선수가 없습니다.</p>'}
+        }).join('')||'<p style="color:var(--gray-l)">경기 기록이 3경기 이상인 여자 선수가 없습니다.</p>'}
+      </div>
+    </div>
+
+    <!-- 최근 폼 (연승/연패) - 남자 -->
+    <div class="ssec">
+      <h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span></h4>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${formPlayersM.map(p=>{
+          const formIcons=p.form.map(h=>h.result==='승'?'<span style="color:var(--green);font-weight:800">W</span>':'<span style="color:var(--red);font-weight:800">L</span>').join(' ');
+          const streakColor=p.streak.type==='승'?'var(--green)':'var(--red)';
+          const streakLabel=p.streak.type==='승'?`🔥 ${p.streak.n}연승`:`❄️ ${p.streak.n}연패`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+            <span style="font-weight:800;min-width:80px">${p.name}<span class="male-icon" style="margin-left:4px">♂</span></span>
+            <span style="font-size:11px;color:${gc(p.univ)};font-weight:700">${p.univ}</span>
+            <span style="margin-left:auto;font-size:12px">${formIcons}</span>
+            <span style="font-weight:800;color:${streakColor};min-width:60px;text-align:right">${streakLabel}</span>
+          </div>`;
+        }).join('')||'<p style="color:var(--gray-l)">경기 기록이 3경기 이상인 남자 선수가 없습니다.</p>'}
       </div>
     </div>
 
@@ -3543,24 +3661,32 @@ document.addEventListener('click', e=>{
 /* ══════════════════════════════════════
    📅 경기 캘린더
 ══════════════════════════════════════ */
+
+// 캘린더 주간/일간 뷰를 위한 상태
+let calWeekOffset=0; // 현재 주 기준 오프셋 (0=이번주, -1=지난주 ...)
+let calDayDate=''; // 일간뷰 현재 날짜
+
 function rCal(C,T){
   T.textContent='📅 경기 캘린더';
 
-  // 모든 경기 날짜 수집
+  // 모든 경기 데이터 맵 (날짜→경기 객체 배열)
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
-  const dateMap={};
+  const dateMatchMap={};
   allMatches.forEach(m=>{
     const d=m.d||'';
     if(!d)return;
-    if(!dateMap[d])dateMap[d]=[];
-    let label='';
-    if(miniM.includes(m)) label=`⚡ ${m.a||''} vs ${m.b||''}`;
-    else if(univM.includes(m)) label=`🏟️ ${m.a||''} vs ${m.b||''}`;
-    else if(ckM.includes(m)) label=`🤝 ${m.a||''} vs ${m.b||''}`;
-    else if(proM.includes(m)) label=`🏅 프로리그`;
-    else label=`🎖️ 대회`;
-    dateMap[d].push(label);
+    if(!dateMatchMap[d])dateMatchMap[d]=[];
+    dateMatchMap[d].push(m);
   });
+
+  // 날짜 label 생성
+  function matchLabel(m){
+    if(miniM.includes(m)) return `⚡ ${m.a||''} vs ${m.b||''}`;
+    if(univM.includes(m)) return `🏟️ ${m.a||''} vs ${m.b||''}`;
+    if(ckM.includes(m))   return `🤝 CK`;
+    if(proM.includes(m))  return `🏅 프로`;
+    return `🎖️ 대회`;
+  }
 
   const now=new Date(calYear,calMonth,1);
   const year=now.getFullYear();
@@ -3569,18 +3695,28 @@ function rCal(C,T){
   const lastDate=new Date(year,month+1,0).getDate();
   const weeks=['일','월','화','수','목','금','토'];
 
-  // 주간뷰: 이번 주
   const today=new Date();
-  const weekStart=new Date(today);
-  weekStart.setDate(today.getDate()-today.getDay());
-
   function pad(n){return String(n).padStart(2,'0');}
   function dateStr(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`;}
+  const todayStr=dateStr(today.getFullYear(),today.getMonth(),today.getDate());
+
+  // 주간뷰 기준 weekStart (오프셋 적용)
+  const weekStart=new Date(today);
+  weekStart.setDate(today.getDate()-today.getDay()+calWeekOffset*7);
+
+  // 일간뷰 날짜
+  if(!calDayDate) calDayDate=todayStr;
 
   let calHTML='';
+  let navHTML='';
 
   if(calView==='month'){
-    // 월간 뷰
+    navHTML=`
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀ 이전</button>
+      <span style="font-family:'Black Han Sans',sans-serif;font-size:16px;min-width:110px;text-align:center">${year}년 ${month+1}월</span>
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">다음 ▶</button>
+      <button class="btn btn-w btn-sm" onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>`;
+
     let cells='';
     let day=1;
     for(let row=0;row<6;row++){
@@ -3588,18 +3724,18 @@ function rCal(C,T){
       for(let col=0;col<7;col++){
         const idx=row*7+col;
         if(idx<firstDay||day>lastDate){
-          rowHTML+=`<td style="background:var(--surface);min-height:80px;vertical-align:top;padding:4px"></td>`;
+          rowHTML+=`<td style="background:var(--surface);vertical-align:top;padding:4px;min-height:80px"></td>`;
         } else {
           const ds=dateStr(year,month,day);
-          const matches=dateMap[ds]||[];
-          const isToday=ds===dateStr(today.getFullYear(),today.getMonth(),today.getDate());
+          const matches=dateMatchMap[ds]||[];
+          const isToday=ds===todayStr;
           const hasMatch=matches.length>0;
           rowHTML+=`<td style="vertical-align:top;padding:4px;min-height:80px;cursor:${hasMatch?'pointer':'default'};${hasMatch?'background:#f0f6ff;':''}border-radius:6px"
             ${hasMatch?`onclick="calShowDay('${ds}')"`:''}
           >
             <div style="font-weight:${isToday?'900':'600'};font-size:12px;color:${isToday?'#fff':'var(--text)'};background:${isToday?'var(--blue)':'transparent'};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px">${day}</div>
-            ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:var(--blue);color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m}</div>`).join('')}
-            ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700">+${matches.length-2}더보기</div>`:''}
+            ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:var(--blue);color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${matchLabel(m)}</div>`).join('')}
+            ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700">+${matches.length-2}더</div>`:''}
           </td>`;
           day++;
         }
@@ -3612,16 +3748,27 @@ function rCal(C,T){
         <thead><tr>${weeks.map((w,i)=>`<th style="padding:8px;font-size:11px;color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${w}</th>`).join('')}</tr></thead>
         <tbody>${cells}</tbody>
       </table>`;
-  } else {
-    // 주간 뷰
+
+  } else if(calView==='week'){
+    // 주간뷰에 이전/다음 주 네비
+    const ws=new Date(weekStart);
+    const we=new Date(weekStart);we.setDate(we.getDate()+6);
+    const wsStr=`${ws.getMonth()+1}/${ws.getDate()}`;
+    const weStr=`${we.getMonth()+1}/${we.getDate()}`;
+    navHTML=`
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset--;render()">◀ 이전 주</button>
+      <span style="font-family:'Black Han Sans',sans-serif;font-size:15px;min-width:130px;text-align:center">${wsStr} ~ ${weStr}</span>
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset++;render()">다음 주 ▶</button>
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset=0;render()">이번 주</button>`;
+
     let rows='';
     for(let i=0;i<7;i++){
-      const d=new Date(weekStart);
-      d.setDate(weekStart.getDate()+i);
+      const d=new Date(weekStart);d.setDate(weekStart.getDate()+i);
       const ds=dateStr(d.getFullYear(),d.getMonth(),d.getDate());
-      const matches=dateMap[ds]||[];
-      const isToday=ds===dateStr(today.getFullYear(),today.getMonth(),today.getDate());
-      rows+=`<div style="display:flex;gap:12px;padding:10px 14px;background:${isToday?'var(--blue-l)':'var(--white)'};border:1px solid ${isToday?'var(--blue-ll)':'var(--border)'};border-radius:8px;margin-bottom:6px;align-items:flex-start">
+      const matches=dateMatchMap[ds]||[];
+      const isToday=ds===todayStr;
+      rows+=`<div style="display:flex;gap:12px;padding:10px 14px;background:${isToday?'var(--blue-l)':'var(--white)'};border:1px solid ${isToday?'var(--blue)':'var(--border)'};border-radius:8px;margin-bottom:6px;align-items:flex-start;cursor:${matches.length?'pointer':'default'}"
+        ${matches.length?`onclick="calDayDate='${ds}';calView='day';render()"`:''}>
         <div style="min-width:48px;text-align:center">
           <div style="font-size:10px;color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${weeks[i]}</div>
           <div style="font-family:'Black Han Sans',sans-serif;font-size:20px;color:${isToday?'var(--blue)':'var(--text)'}">${d.getDate()}</div>
@@ -3629,32 +3776,79 @@ function rCal(C,T){
         <div style="flex:1">
           ${matches.length===0
             ?`<span style="color:var(--gray-l);font-size:12px">경기 없음</span>`
-            :matches.map(m=>`<div style="font-size:12px;font-weight:600;padding:4px 8px;background:var(--blue);color:#fff;border-radius:5px;margin-bottom:3px;display:inline-block;margin-right:4px">${m}</div>`).join('')
+            :matches.map(m=>{
+              const ca=gc(m.a||'');const cb=gc(m.b||'');
+              const aWin=(m.sa??-1)>(m.sb??-1);const bWin=(m.sb??-1)>(m.sa??-1);
+              const hasResult=(m.sa!=null&&m.sa!=='');
+              return `<div style="font-size:11px;font-weight:600;padding:4px 8px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:5px;margin-bottom:3px;display:flex;align-items:center;gap:6px">
+                <span style="color:var(--blue);font-size:10px">${matchLabel(m).split(' ')[0]}</span>
+                <span style="font-weight:700;color:${aWin&&hasResult?ca:'var(--text)'}">${m.a||''}</span>
+                ${hasResult?`<span style="font-family:'Black Han Sans',sans-serif;font-size:13px">${m.sa}:<span>${m.sb}</span></span>`:`<span style="color:var(--gray-l)">vs</span>`}
+                <span style="font-weight:700;color:${bWin&&hasResult?cb:'var(--text)'}">${m.b||''}</span>
+                ${hasResult?(aWin?`<span style="font-size:10px;color:${ca};font-weight:800">▶ ${m.a} 승</span>`:bWin?`<span style="font-size:10px;color:${cb};font-weight:800">▶ ${m.b} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">무</span>'):''}
+              </div>`;
+            }).join('')
           }
         </div>
       </div>`;
     }
     calHTML=rows;
+
+  } else if(calView==='day'){
+    // 일간뷰
+    const d=new Date(calDayDate);
+    const prevD=new Date(d);prevD.setDate(d.getDate()-1);
+    const nextD=new Date(d);nextD.setDate(d.getDate()+1);
+    const fmtDayStr=(dt)=>dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    navHTML=`
+      <button class="btn btn-w btn-sm" onclick="calDayDate='${fmtDayStr(prevD)}';render()">◀ 전날</button>
+      <span style="font-family:'Black Han Sans',sans-serif;font-size:16px;min-width:130px;text-align:center">${calDayDate}</span>
+      <button class="btn btn-w btn-sm" onclick="calDayDate='${fmtDayStr(nextD)}';render()">다음날 ▶</button>
+      <button class="btn btn-w btn-sm" onclick="calDayDate='${todayStr}';render()">오늘</button>`;
+
+    const matches=dateMatchMap[calDayDate]||[];
+    if(!matches.length){
+      calHTML=`<div style="padding:40px;text-align:center;color:var(--gray-l)">이 날 경기가 없습니다.</div>`;
+    } else {
+      calHTML=matches.map((m,mi)=>{
+        const ca=gc(m.a||'');const cb=gc(m.b||'');
+        const aWin=(m.sa??-1)>(m.sb??-1);const bWin=(m.sb??-1)>(m.sa??-1);
+        const hasResult=(m.sa!=null&&m.sa!=='');
+        const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
+        const detKey=`calday-${calDayDate}-${mi}`;
+        const detHTML=buildDetailHTML(m,miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp',
+          m.a||'A',m.b||'B',ca,cb,aWin,bWin);
+        return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden">
+          <div style="padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;font-weight:700;color:var(--blue)">${typeLabel}</span>
+            <span class="ubadge${aWin&&hasResult?'':hasResult?' loser':''} clickable-univ" style="background:${ca}" onclick="openUnivModal('${m.a||''}')">${m.a||''}</span>
+            ${hasResult?`<div style="font-family:'Black Han Sans',sans-serif;font-size:20px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`:`<span style="color:var(--gray-l);font-weight:700">vs</span>`}
+            <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''} clickable-univ" style="background:${cb}" onclick="openUnivModal('${m.b||''}')">${m.b||''}</span>
+            ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${m.a} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${m.b} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>'}
+            <div style="margin-left:auto" class="no-export"><button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button></div>
+          </div>
+          <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">${detHTML}</div>
+        </div>`;
+      }).join('');
+    }
   }
 
   C.innerHTML=`
   <div>
     <!-- 컨트롤 바 -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀</button>
-      <span style="font-family:'Black Han Sans',sans-serif;font-size:16px;min-width:100px;text-align:center">${year}년 ${month+1}월</span>
-      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">▶</button>
-      <button class="btn btn-w btn-sm" onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      ${navHTML}
       <div style="margin-left:auto;display:flex;gap:4px">
         <button class="btn btn-sm ${calView==='month'?'btn-b':'btn-w'}" onclick="calView='month';render()">월간</button>
-        <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calView='week';render()">주간</button>
+        <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
+        <button class="btn btn-sm ${calView==='day'?'btn-b':'btn-w'}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
       </div>
     </div>
     <!-- 캘린더 본문 -->
     <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;overflow-x:auto">
       ${calHTML}
     </div>
-    <!-- 선택 날짜 경기 목록 -->
+    <!-- 선택 날짜 경기 목록 (월간뷰용) -->
     <div id="calDayDetail" style="margin-top:14px"></div>
   </div>`;
 }
@@ -3664,17 +3858,40 @@ function calShowDay(ds){
   const matches=allMatches.filter(m=>m.d===ds);
   const el=document.getElementById('calDayDetail');
   if(!el)return;
+
   el.innerHTML=`
     <div class="ssec">
-      <h4>📅 ${ds} 경기 목록</h4>
-      ${matches.map(m=>{
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h4 style="margin:0">📅 ${ds} 경기 목록</h4>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-b btn-sm" onclick="calDayDate='${ds}';calView='day';render()">📋 일간 상세보기</button>
+          <button class="btn btn-w btn-sm" onclick="document.getElementById('calDayDetail').innerHTML=''">✕ 닫기</button>
+        </div>
+      </div>
+      ${matches.map((m,mi)=>{
+        const ca=gc(m.a||'');const cb=gc(m.b||'');
+        const aWin=(m.sa??-1)>(m.sb??-1);const bWin=(m.sb??-1)>(m.sa??-1);
+        const hasResult=(m.sa!=null&&m.sa!=='');
         const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
-        return `<div style="padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:12px;font-weight:700;color:var(--blue)">${typeLabel}</span>
-          <span style="font-weight:700">${m.a||''}</span>
-          <span style="color:var(--gray-l)">vs</span>
-          <span style="font-weight:700">${m.b||''}</span>
-          <span style="margin-left:auto;font-family:'Black Han Sans',sans-serif;font-size:16px">${m.sa??''} : ${m.sb??''}</span>
+        const detKey=`caldm-${ds}-${mi}`;
+        const detHTML=buildDetailHTML(m,miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp',
+          m.a||'A',m.b||'B',ca,cb,aWin,bWin);
+        return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">
+          <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:var(--blue)">${typeLabel}</span>
+            <span class="ubadge${hasResult&&!aWin?' loser':''} clickable-univ" style="background:${ca}" onclick="openUnivModal('${m.a||''}')">${m.a||''}</span>
+            ${hasResult
+              ?`<div style="font-family:'Black Han Sans',sans-serif;font-size:18px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l)"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`
+              :`<span style="color:var(--gray-l);font-weight:700">vs</span>`
+            }
+            <span class="ubadge${hasResult&&!bWin?' loser':''} clickable-univ" style="background:${cb}" onclick="openUnivModal('${m.b||''}')">${m.b||''}</span>
+            ${hasResult
+              ?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${m.a} 승!</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${m.b} 승!</span>`:'<span style="color:var(--gray-l)">무</span>')
+              :'<span style="font-size:11px;color:var(--gray-l)">미입력</span>'
+            }
+            <div style="margin-left:auto" class="no-export"><button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button></div>
+          </div>
+          <div id="det-${detKey}" class="rec-detail-area" style="padding:10px 14px">${detHTML}</div>
         </div>`;
       }).join('')}
     </div>`;
