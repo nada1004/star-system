@@ -3388,8 +3388,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const ADMIN_UID = "LMdjEAXECBMhYSZjdOksrIWvRP43";
-const ADMIN_EMAIL = "kpoppd@gmail.com";
+const ADMIN_UID = "uKyoaQQ858ajyGs6kSgcsEf5RKl2";
+// 이메일 난독화 (Base64)
+const _e=(s)=>atob(s);
+const ADMIN_EMAIL=_e("a3BvcHBkQGdtYWlsLmNvbQ==");
 
 const firebaseConfig = {
   apiKey: "AIzaSyDkEDX0KujRpAD0895sggeJMu3iiwrj5ml",
