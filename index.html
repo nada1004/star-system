@@ -256,7 +256,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fbff;}
 <div class="foot no-export">
   <button onclick="doJpg()" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:10px 22px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;">📸 JPG 저장</button>
   <button id="btnCloudSave" class="btn btn-b btn-sm" style="display:none" onclick="cloudSave()">☁️ 클라우드 저장</button>
-  <button id="btnCloudLoad" class="btn btn-w btn-sm" style="display:none" onclick="cloudLoad()">☁️ 클라우드 불러오기</button>
+  <button id="btnCloudLoad" class="btn btn-g btn-sm" style="display:none" onclick="cloudLoad()">📥 GitHub 데이터 불러오기</button>
   <button id="btnExport" class="btn btn-w btn-sm" style="display:none" onclick="doExport()" title="데이터를 JSON 파일로 저장합니다.">💾 데이터 내보내기</button>
   <button id="btnImport" class="btn btn-w btn-sm" style="display:none" onclick="doImport()" title="저장된 JSON 파일로 데이터를 불러옵니다.">📂 데이터 가져오기</button>
   <input type="file" id="fi" style="display:none" onchange="doFile(this)">
@@ -3385,114 +3385,56 @@ init();
 
 <script>
 /* ══════════════════════════════════════
-   Google Sheets 클라우드 저장/불러오기
-   - Apps Script 웹앱 URL을 아래 GS_URL에 입력하세요
+   GitHub JSON 읽기 전용 불러오기
+   ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-
-const GS_URL = 'https://script.google.com/macros/s/AKfycbyxTo79t-cmuyWGeuDODxceHANz4zWyr9mMfs_wCoPANFxc3bhvncd9wnqYo2bwiiP1Vw/exec';
-const GS_WRITE_PW = 'haram1019!@';
+const GITHUB_JSON_URL = 'data.json';
+// 예시: 'https://raw.githubusercontent.com/아이디/저장소명/main/data.json'
 
 function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
   if(el){el.textContent=msg;el.style.color=color;}
 }
 
-// ── 클라우드 저장 (Google Sheets) ──────────────────────────
-window.cloudSave = async function(){
-  if(!GS_URL){
-    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.\n코드 내 GS_URL 변수에 배포 URL을 입력하세요.');
-    return;
-  }
+// ── GitHub JSON 불러오기 ───────────────────────────────────
+window.cloudLoad = async function(){
   try{
-    gsSetStatus('💾 저장 중...', 'var(--blue)');
-    const data = {
-      players: window.players||[],
-      univCfg: window.univCfg||[],
-      maps: window.maps||[],
-      tourD: window.tourD||[],
-      miniM: window.miniM||[],
-      univM: window.univM||[],
-      comps: window.comps||[],
-      ckM: window.ckM||[],
-      compNames: window.compNames||[],
-      curComp: window.curComp||'',
-      proM: window.proM||[],
-      members: window.members||[],
-      tourneys: window.tourneys||[],
-      tiers: window.TIERS||[],
-      savedAt: new Date().toISOString()
-    };
-    data.password = GS_WRITE_PW;
-    const json = JSON.stringify(data);
-    await fetch(GS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type':'text/plain'},
-      body: json
-    });
-    gsSetStatus(`✅ 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+    gsSetStatus('📥 불러오는 중...', 'var(--blue)');
+    const res = await fetch(GITHUB_JSON_URL + '?t=' + Date.now());
+    if(!res.ok) throw new Error('파일을 찾을 수 없습니다 ('+res.status+')');
+    const d = await res.json();
+    if(!confirm(`GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
+
+    window.players=d.players||[];
+    window.univCfg=d.univCfg||window.univCfg;
+    window.maps=d.maps||window.maps;
+    window.tourD=d.tourD||Array(15).fill('');
+    window.miniM=d.miniM||[];
+    window.univM=d.univM||[];
+    window.comps=d.comps||[];
+    window.ckM=d.ckM||[];
+    window.compNames=d.compNames||[];
+    window.curComp=d.curComp||'';
+    window.proM=d.proM||[];
+    window.members=d.members||[];
+    window.tourneys=d.tourneys||[];
+    if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
+
+    if(window.save) window.save();
+    if(window.fixPoints) window.fixPoints();
+    if(typeof init==='function') init();
+    else if(window.render) window.render();
+
+    gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
   } catch(e){
-    gsSetStatus('❌ 저장 실패: '+e.message, 'var(--red)');
+    gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
     console.error(e);
   }
 };
 
-// ── 클라우드 불러오기 (Google Sheets JSONP) ───────────────
-window.cloudLoad = function(){
-  if(!GS_URL){
-    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.');
-    return;
-  }
-  gsSetStatus('📥 불러오는 중...', 'var(--blue)');
-
-  // 기존 JSONP 스크립트 제거
-  const old = document.getElementById('_gsJsonp');
-  if(old) old.remove();
-
-  // 콜백 함수 등록
-  window._gsCallback = function(val){
-    try{
-      if(!val || val===''){
-        gsSetStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
-        alert('구글 시트에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
-        return;
-      }
-      const d = typeof val==='string' ? JSON.parse(val) : val;
-      if(!confirm(`클라우드 데이터를 불러옵니다.\n저장 시각: ${d.savedAt||'알 수 없음'}\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
-
-      window.players=d.players||[];
-      window.univCfg=d.univCfg||window.univCfg;
-      window.maps=d.maps||window.maps;
-      window.tourD=d.tourD||Array(15).fill('');
-      window.miniM=d.miniM||[];
-      window.univM=d.univM||[];
-      window.comps=d.comps||[];
-      window.ckM=d.ckM||[];
-      window.compNames=d.compNames||[];
-      window.curComp=d.curComp||'';
-      window.proM=d.proM||[];
-      window.members=d.members||[];
-      window.tourneys=d.tourneys||[];
-      if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
-
-      if(window.save) window.save();
-      if(window.fixPoints) window.fixPoints();
-      if(typeof init==='function') init();
-      else if(window.render) window.render();
-
-      gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
-    } catch(e){
-      gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
-      console.error(e);
-    }
-  };
-
-  // JSONP 스크립트 태그 삽입
-  const s = document.createElement('script');
-  s.id = '_gsJsonp';
-  s.src = GS_URL + '?callback=_gsCallback';
-  s.onerror = ()=>{ gsSetStatus('❌ 불러오기 실패', 'var(--red)'); };
-  document.body.appendChild(s);
+// ── 저장 기능 없음 (읽기 전용) ────────────────────────────
+window.cloudSave = function(){
+  alert('ℹ️ 저장 기능은 사용하지 않습니다.\ndata.json 파일을 직접 GitHub에 업로드하세요.');
 };
 </script>
 </body>
