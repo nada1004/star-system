@@ -3424,13 +3424,12 @@ window.cloudSave = async function(){
     };
     data.password = GS_WRITE_PW;
     const json = JSON.stringify(data);
-    const res = await fetch(GS_URL, {
+    await fetch(GS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type':'text/plain'},
       body: json
     });
-    const result = await res.json();
-    if(result.error) throw new Error(result.error);
     gsSetStatus(`✅ 저장 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
   } catch(e){
     gsSetStatus('❌ 저장 실패: '+e.message, 'var(--red)');
@@ -3438,50 +3437,62 @@ window.cloudSave = async function(){
   }
 };
 
-// ── 클라우드 불러오기 (Google Sheets) ─────────────────────
-window.cloudLoad = async function(){
+// ── 클라우드 불러오기 (Google Sheets JSONP) ───────────────
+window.cloudLoad = function(){
   if(!GS_URL){
-    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.\n코드 내 GS_URL 변수에 배포 URL을 입력하세요.');
+    alert('⚠️ Google Sheets Apps Script URL이 설정되지 않았습니다.');
     return;
   }
-  try{
-    gsSetStatus('📥 불러오는 중...', 'var(--blue)');
-    const res = await fetch(GS_URL + '?action=load');
-    if(!res.ok) throw new Error('서버 응답 오류: '+res.status);
-    const text = await res.text();
-    if(!text || text.trim()===''){
-      gsSetStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
-      alert('구글 시트에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
-      return;
+  gsSetStatus('📥 불러오는 중...', 'var(--blue)');
+
+  // 기존 JSONP 스크립트 제거
+  const old = document.getElementById('_gsJsonp');
+  if(old) old.remove();
+
+  // 콜백 함수 등록
+  window._gsCallback = function(val){
+    try{
+      if(!val || val===''){
+        gsSetStatus('⚠️ 저장된 데이터 없음', 'var(--gold)');
+        alert('구글 시트에 저장된 데이터가 없습니다. 먼저 저장해주세요.');
+        return;
+      }
+      const d = typeof val==='string' ? JSON.parse(val) : val;
+      if(!confirm(`클라우드 데이터를 불러옵니다.\n저장 시각: ${d.savedAt||'알 수 없음'}\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
+
+      window.players=d.players||[];
+      window.univCfg=d.univCfg||window.univCfg;
+      window.maps=d.maps||window.maps;
+      window.tourD=d.tourD||Array(15).fill('');
+      window.miniM=d.miniM||[];
+      window.univM=d.univM||[];
+      window.comps=d.comps||[];
+      window.ckM=d.ckM||[];
+      window.compNames=d.compNames||[];
+      window.curComp=d.curComp||'';
+      window.proM=d.proM||[];
+      window.members=d.members||[];
+      window.tourneys=d.tourneys||[];
+      if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
+
+      if(window.save) window.save();
+      if(window.fixPoints) window.fixPoints();
+      if(typeof init==='function') init();
+      else if(window.render) window.render();
+
+      gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+    } catch(e){
+      gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
+      console.error(e);
     }
-    const d = JSON.parse(text);
-    if(!confirm(`클라우드 데이터를 불러옵니다.\n저장 시각: ${d.savedAt||'알 수 없음'}\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
+  };
 
-    window.players=d.players||[];
-    window.univCfg=d.univCfg||window.univCfg;
-    window.maps=d.maps||window.maps;
-    window.tourD=d.tourD||Array(15).fill('');
-    window.miniM=d.miniM||[];
-    window.univM=d.univM||[];
-    window.comps=d.comps||[];
-    window.ckM=d.ckM||[];
-    window.compNames=d.compNames||[];
-    window.curComp=d.curComp||'';
-    window.proM=d.proM||[];
-    window.members=d.members||[];
-    window.tourneys=d.tourneys||[];
-    if(d.tiers&&d.tiers.length) window.TIERS.splice(0,window.TIERS.length,...d.tiers);
-
-    if(window.save) window.save();
-    if(window.fixPoints) window.fixPoints();
-    if(typeof init==='function') init();
-    else if(window.render) window.render();
-
-    gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
-  } catch(e){
-    gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
-    console.error(e);
-  }
+  // JSONP 스크립트 태그 삽입
+  const s = document.createElement('script');
+  s.id = '_gsJsonp';
+  s.src = GS_URL + '?callback=_gsCallback';
+  s.onerror = ()=>{ gsSetStatus('❌ 불러오기 실패', 'var(--red)'); };
+  document.body.appendChild(s);
 };
 </script>
 </body>
