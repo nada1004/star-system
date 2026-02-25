@@ -57,12 +57,79 @@
       "univ": "케이대",
       "tier": "3티어",
       "race": "T",
-      "win": 0,
-      "loss": 0,
-      "history": [],
-      "points": 0,
+      "win": 4,
+      "loss": 2,
+      "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "빵리나",
+          "oppRace": "P",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 14,
+          "eloAfter": 1237
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "이유란",
+          "oppRace": "Z",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 17,
+          "eloAfter": 1223
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "박듀듀",
+          "oppRace": "P",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 18,
+          "eloAfter": 1206
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "뚜미",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 19,
+          "eloAfter": 1188
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "박듀듀",
+          "oppRace": "P",
+          "map": "라데온",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -15,
+          "eloAfter": 1169
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "박듀듀",
+          "oppRace": "P",
+          "map": "라데온",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
+      "points": 6,
       "gender": "F",
-      "elo": 1200
+      "elo": 1237
     },
     {
       "name": "찌킹",
@@ -417,9 +484,64 @@
       "univ": "흑카데미",
       "tier": "3티어",
       "race": "T",
-      "win": 1,
-      "loss": 0,
+      "win": 4,
+      "loss": 2,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -19,
+          "eloAfter": 1225
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "토마토",
+          "oppRace": "P",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 15,
+          "eloAfter": 1244
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "공다츠",
+          "oppRace": "Z",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 16,
+          "eloAfter": 1229
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "디임",
+          "oppRace": "P",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 14,
+          "eloAfter": 1213
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "토마토",
+          "oppRace": "P",
+          "map": "폴리포이드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -17,
+          "eloAfter": 1199
+        },
         {
           "date": "2026-02-24",
           "time": 1771981898407,
@@ -432,9 +554,9 @@
           "eloAfter": 1216
         }
       ],
-      "points": 0,
+      "points": 3,
       "gender": "F",
-      "elo": 1216
+      "elo": 1225
     },
     {
       "name": "링가",
@@ -1450,11 +1572,23 @@
       "tier": "2티어",
       "race": "Z",
       "win": 0,
-      "loss": 0,
-      "history": [],
-      "points": 0,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "또봉순",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
+      "points": -3,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "디임",
@@ -1462,8 +1596,41 @@
       "tier": "3티어",
       "race": "P",
       "win": 2,
-      "loss": 1,
+      "loss": 4,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "뚜미",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -14,
+          "eloAfter": 1141
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "이유란",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -14,
+          "eloAfter": 1155
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "이유란",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -15,
+          "eloAfter": 1169
+        },
         {
           "date": "2026-02-24",
           "time": 1771981700036,
@@ -1503,9 +1670,9 @@
           "matchId": "mm086o4fy27u"
         }
       ],
-      "points": 3,
+      "points": -6,
       "gender": "F",
-      "elo": 1184
+      "elo": 1141
     },
     {
       "name": "오조은",
@@ -1563,9 +1730,20 @@
       "univ": "씨나인",
       "tier": "4티어",
       "race": "Z",
-      "win": 1,
+      "win": 2,
       "loss": 1,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "꼬니부킹",
+          "oppRace": "P",
+          "map": "폴리포이드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 16,
+          "eloAfter": 1217
+        },
         {
           "date": "2026-02-24",
           "time": 1771981700036,
@@ -1607,9 +1785,9 @@
           "matchId": "mm086o4fy27u"
         }
       ],
-      "points": 0,
+      "points": 3,
       "gender": "F",
-      "elo": 1201
+      "elo": 1217
     },
     {
       "name": "졈니",
@@ -1648,8 +1826,30 @@
       "tier": "5티어",
       "race": "Z",
       "win": 1,
-      "loss": 4,
+      "loss": 6,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "단양",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -15,
+          "eloAfter": 1184
+        },
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "단양",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -17,
+          "eloAfter": 1199
+        },
         {
           "date": "2026-02-24",
           "time": 1771981700036,
@@ -1707,9 +1907,9 @@
           "matchId": "mm086o4fy27u"
         }
       ],
-      "points": -9,
+      "points": -15,
       "gender": "F",
-      "elo": 1216
+      "elo": 1184
     },
     {
       "name": "남수댕",
@@ -1822,9 +2022,31 @@
       "univ": "씨나인",
       "tier": "6티어",
       "race": "Z",
-      "win": 0,
+      "win": 2,
       "loss": 1,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "키모야",
+          "oppRace": "T",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 15,
+          "eloAfter": 1216
+        },
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "키모야",
+          "oppRace": "T",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 17,
+          "eloAfter": 1201
+        },
         {
           "date": "2026-02-24",
           "time": 1771981700036,
@@ -1837,9 +2059,9 @@
           "eloAfter": 1184
         }
       ],
-      "points": 0,
+      "points": 6,
       "gender": "F",
-      "elo": 1184
+      "elo": 1216
     },
     {
       "name": "효짱",
@@ -1887,8 +2109,19 @@
       "tier": "8티어",
       "race": "Z",
       "win": 2,
-      "loss": 2,
+      "loss": 3,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "구키",
+          "oppRace": "P",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -17,
+          "eloAfter": 1199
+        },
         {
           "date": "2026-02-24",
           "time": 1771981700036,
@@ -1937,9 +2170,9 @@
           "matchId": "mm086o4fy27u"
         }
       ],
-      "points": 0,
+      "points": -3,
       "gender": "F",
-      "elo": 1216
+      "elo": 1199
     },
     {
       "name": "은조",
@@ -2021,8 +2254,30 @@
       "tier": "3티어",
       "race": "P",
       "win": 1,
-      "loss": 3,
+      "loss": 5,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -14,
+          "eloAfter": 1170
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "공다츠",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        },
         {
           "date": "2026-02-20",
           "time": 1771927135256,
@@ -2060,9 +2315,9 @@
           "matchId": "mlx8pgg65g7y"
         }
       ],
-      "points": -6,
+      "points": -12,
       "gender": "F",
-      "elo": 1200
+      "elo": 1170
     },
     {
       "name": "오하얀",
@@ -2438,9 +2693,42 @@
       "univ": "이노대",
       "tier": "3티어",
       "race": "P",
-      "win": 0,
-      "loss": 1,
+      "win": 2,
+      "loss": 2,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -18,
+          "eloAfter": 1213
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "라데온",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 15,
+          "eloAfter": 1231
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "라데온",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        },
         {
           "date": "2026-02-19",
           "time": 1771928521984,
@@ -2451,18 +2739,51 @@
           "matchId": "mm0ghpts50kl"
         }
       ],
-      "points": -3,
+      "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1213
     },
     {
       "name": "이유란",
       "univ": "이노대",
       "tier": "3티어",
       "race": "Z",
-      "win": 2,
-      "loss": 0,
+      "win": 4,
+      "loss": 1,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "규리야",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -17,
+          "eloAfter": 1212
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "디임",
+          "oppRace": "P",
+          "map": "실피드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 14,
+          "eloAfter": 1229
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "디임",
+          "oppRace": "P",
+          "map": "실피드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 15,
+          "eloAfter": 1215
+        },
         {
           "date": "2026-02-19",
           "time": 1771928521984,
@@ -2482,9 +2803,9 @@
           "matchId": "mm0g2is0tae3"
         }
       ],
-      "points": 6,
+      "points": 9,
       "gender": "F",
-      "elo": 1200
+      "elo": 1212
     },
     {
       "name": "라운이",
@@ -2794,9 +3115,31 @@
       "univ": "츠캄몬스타즈",
       "tier": "3티어",
       "race": "P",
-      "win": 0,
-      "loss": 1,
+      "win": 1,
+      "loss": 2,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "뚜미",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -15,
+          "eloAfter": 1202
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "뚜미",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 17,
+          "eloAfter": 1217
+        },
         {
           "date": "2026-02-20",
           "time": 1771914569631,
@@ -2809,7 +3152,7 @@
       ],
       "points": -3,
       "gender": "F",
-      "elo": 1200
+      "elo": 1202
     },
     {
       "name": "햇살",
@@ -3397,9 +3740,20 @@
       "univ": "와플대",
       "tier": "2티어",
       "race": "Z",
-      "win": 0,
+      "win": 1,
       "loss": 1,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "나무늘봉순",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        },
         {
           "date": "2026-02-20",
           "time": 1771926596702,
@@ -3410,9 +3764,9 @@
           "matchId": "mm0fcg9qe3e8"
         }
       ],
-      "points": -3,
+      "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1216
     },
     {
       "name": "꼬니부킹",
@@ -3420,8 +3774,19 @@
       "tier": "4티어",
       "race": "P",
       "win": 2,
-      "loss": 3,
+      "loss": 4,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "요닝",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        },
         {
           "date": "2026-02-19",
           "time": 1771928253639,
@@ -3468,9 +3833,9 @@
           "matchId": "mlx9vf04pimc"
         }
       ],
-      "points": -3,
+      "points": -6,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "몽순",
@@ -3508,9 +3873,31 @@
       "univ": "와플대",
       "tier": "5티어",
       "race": "Z",
-      "win": 4,
+      "win": 6,
       "loss": 1,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "란란",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 15,
+          "eloAfter": 1232
+        },
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "란란",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 17,
+          "eloAfter": 1217
+        },
         {
           "date": "2026-02-19",
           "time": 1771928253639,
@@ -3557,9 +3944,9 @@
           "matchId": "mm08b7bwozov"
         }
       ],
-      "points": 9,
+      "points": 15,
       "gender": "F",
-      "elo": 1200
+      "elo": 1232
     },
     {
       "name": "비재희",
@@ -3625,8 +4012,30 @@
       "tier": "7티어",
       "race": "T",
       "win": 2,
-      "loss": 0,
+      "loss": 2,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "오리꿍",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -15,
+          "eloAfter": 1168
+        },
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "패",
+          "opp": "오리꿍",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": -17,
+          "eloAfter": 1183
+        },
         {
           "date": "2026-02-20",
           "time": 1771926596702,
@@ -3646,18 +4055,29 @@
           "matchId": "mm08b7bwozov"
         }
       ],
-      "points": 6,
+      "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1168
     },
     {
       "name": "구키",
       "univ": "와플대",
       "tier": "8티어",
       "race": "P",
-      "win": 2,
+      "win": 3,
       "loss": 3,
       "history": [
+        {
+          "date": "2026-02-19",
+          "time": 1771994018798,
+          "result": "승",
+          "opp": "이지다",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm1jhjhqnnpj",
+          "eloDelta": 17,
+          "eloAfter": 1217
+        },
         {
           "date": "2026-02-19",
           "time": 1771928253639,
@@ -3704,9 +4124,9 @@
           "matchId": "mlx9vf04pimc"
         }
       ],
-      "points": -3,
+      "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1217
     },
     {
       "name": "황단비",
@@ -3909,9 +4329,31 @@
       "univ": "수술대",
       "tier": "3티어",
       "race": "Z",
-      "win": 2,
-      "loss": 0,
+      "win": 3,
+      "loss": 1,
       "history": [
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "패",
+          "opp": "뚜미",
+          "oppRace": "T",
+          "map": "-",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": -16,
+          "eloAfter": 1200
+        },
+        {
+          "date": "2026-02-25",
+          "time": 1771991816449,
+          "result": "승",
+          "opp": "빵리나",
+          "oppRace": "P",
+          "map": "녹아웃",
+          "matchId": "mm1i6c5dm0br",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        },
         {
           "date": "2026-02-20",
           "time": 1771927135256,
@@ -7379,7 +7821,7 @@
       "elo": 1200
     },
     {
-      "name": "짭제",
+      "name": "박상현",
       "univ": "수술대",
       "tier": "G",
       "race": "Z",
@@ -7388,7 +7830,8 @@
       "loss": 0,
       "points": 0,
       "history": [],
-      "elo": 1200
+      "elo": 1200,
+      "memo": "짭제"
     },
     {
       "name": "송병구",
@@ -8541,6 +8984,65 @@
     ""
   ],
   "miniM": [
+    {
+      "_id": "mm1jhjhqnnpj",
+      "d": "2026-02-19",
+      "a": "씨나인",
+      "b": "와플대",
+      "sa": 0,
+      "sb": 1,
+      "sets": [
+        {
+          "scoreA": 3,
+          "scoreB": 4,
+          "winner": "B",
+          "games": [
+            {
+              "playerA": "요닝",
+              "playerB": "꼬니부킹",
+              "winner": "A",
+              "map": "폴리포이드"
+            },
+            {
+              "playerA": "란란",
+              "playerB": "단양",
+              "winner": "B",
+              "map": "라데온"
+            },
+            {
+              "playerA": "오리꿍",
+              "playerB": "키모야",
+              "winner": "A",
+              "map": "실피드"
+            },
+            {
+              "playerA": "나무늘봉순",
+              "playerB": "또봉순",
+              "winner": "B",
+              "map": "폴리포이드"
+            },
+            {
+              "playerA": "이지다",
+              "playerB": "구키",
+              "winner": "B",
+              "map": "실피드"
+            },
+            {
+              "playerA": "오리꿍",
+              "playerB": "키모야",
+              "winner": "A",
+              "map": "실피드"
+            },
+            {
+              "playerA": "란란",
+              "playerB": "단양",
+              "winner": "B",
+              "map": "녹아웃"
+            }
+          ]
+        }
+      ]
+    },
     {
       "_id": "mm0gq1lp2lzq",
       "d": "2026-02-19",
@@ -9954,8 +10456,388 @@
   "comps": [],
   "ckM": [],
   "compNames": [],
-  "curComp": "노답유스대전",
+  "curComp": "3티어 PL",
   "proM": [
+    {
+      "_id": "mm1jaq6e2o1d",
+      "d": "2026-02-18",
+      "sa": 2,
+      "sb": 1,
+      "teamALabel": "A팀",
+      "teamBLabel": "B팀",
+      "teamAMembers": [
+        {
+          "name": "윤찬희",
+          "univ": "흑카데미",
+          "race": "T",
+          "tier": "K"
+        },
+        {
+          "name": "황병영",
+          "univ": "츠캄몬스타즈",
+          "race": "T",
+          "tier": "G"
+        },
+        {
+          "name": "윤수철",
+          "univ": "이노대",
+          "race": "P",
+          "tier": "K"
+        },
+        {
+          "name": "진영화",
+          "univ": "엠비대",
+          "race": "P",
+          "tier": "JA"
+        },
+        {
+          "name": "지동원",
+          "univ": "츠캄몬스타즈",
+          "race": "T",
+          "tier": "JA"
+        }
+      ],
+      "teamBMembers": [
+        {
+          "name": "김태영",
+          "univ": "YB",
+          "race": "T",
+          "tier": "K"
+        },
+        {
+          "name": "김정우",
+          "univ": "뉴캣슬",
+          "race": "Z",
+          "tier": "G"
+        },
+        {
+          "name": "송병구",
+          "univ": "수술대",
+          "race": "P",
+          "tier": "K"
+        },
+        {
+          "name": "김경모",
+          "univ": "케이대",
+          "race": "Z",
+          "tier": "K"
+        },
+        {
+          "name": "이경민",
+          "univ": "츠캄몬스타즈",
+          "race": "P",
+          "tier": "JA"
+        }
+      ],
+      "sets": [
+        {
+          "scoreA": 4,
+          "scoreB": 1,
+          "winner": "A",
+          "games": [
+            {
+              "playerA": "윤찬희",
+              "playerB": "이경민",
+              "winner": "A",
+              "map": "폴스타"
+            },
+            {
+              "playerA": "윤수철",
+              "playerB": "송병구",
+              "winner": "A",
+              "map": "매치포인트"
+            },
+            {
+              "playerA": "황병영",
+              "playerB": "김경모",
+              "winner": "A",
+              "map": "옥타곤"
+            },
+            {
+              "playerA": "지동원",
+              "playerB": "김정우",
+              "winner": "B",
+              "map": "제인도"
+            },
+            {
+              "playerA": "진영화",
+              "playerB": "김태영",
+              "winner": "A",
+              "map": "녹아웃"
+            }
+          ]
+        },
+        {
+          "scoreA": 2,
+          "scoreB": 5,
+          "winner": "B",
+          "games": [
+            {
+              "playerA": "진영화",
+              "playerB": "송병구",
+              "winner": "B",
+              "map": "매치포인트"
+            },
+            {
+              "playerA": "지동원",
+              "playerB": "송병구",
+              "winner": "B",
+              "map": "제인도"
+            },
+            {
+              "playerA": "윤찬희",
+              "playerB": "송병구",
+              "winner": "A",
+              "map": "폴스타"
+            },
+            {
+              "playerA": "윤찬희",
+              "playerB": "김경모",
+              "winner": "A",
+              "map": "녹아웃"
+            },
+            {
+              "playerA": "윤찬희",
+              "playerB": "김정우",
+              "winner": "B",
+              "map": "실피드"
+            },
+            {
+              "playerA": "윤수철",
+              "playerB": "김정우",
+              "winner": "B",
+              "map": "애티튜드"
+            },
+            {
+              "playerA": "황병영",
+              "playerB": "김정우",
+              "winner": "B",
+              "map": "옥타곤"
+            }
+          ]
+        },
+        {
+          "scoreA": 1,
+          "scoreB": 0,
+          "winner": "A",
+          "games": [
+            {
+              "playerA": "지동원",
+              "playerB": "김경모",
+              "winner": "A",
+              "map": "제인도"
+            }
+          ]
+        }
+      ],
+      "univWins": {
+        "흑카데미": 3,
+        "이노대": 1,
+        "츠캄몬스타즈": 2,
+        "뉴캣슬": 4,
+        "엠비대": 1,
+        "수술대": 2
+      },
+      "univLosses": {
+        "츠캄몬스타즈": 4,
+        "수술대": 2,
+        "케이대": 3,
+        "YB": 1,
+        "엠비대": 1,
+        "흑카데미": 1,
+        "이노대": 1
+      }
+    },
+    {
+      "_id": "mm1irtrmzxv2",
+      "d": "2026-02-19",
+      "sa": 2,
+      "sb": 1,
+      "teamALabel": "A팀",
+      "teamBLabel": "B팀",
+      "teamAMembers": [
+        {
+          "name": "임홍규",
+          "univ": "JSA",
+          "race": "Z",
+          "tier": "G"
+        },
+        {
+          "name": "박상현",
+          "univ": "수술대",
+          "race": "Z",
+          "tier": "G"
+        },
+        {
+          "name": "이재호",
+          "univ": "무소속",
+          "race": "T",
+          "tier": "G"
+        },
+        {
+          "name": "변현제",
+          "univ": "이노대",
+          "race": "P",
+          "tier": "G"
+        },
+        {
+          "name": "김지성",
+          "univ": "무소속",
+          "race": "T",
+          "tier": "G"
+        }
+      ],
+      "teamBMembers": [
+        {
+          "name": "도재욱",
+          "univ": "뉴캣슬",
+          "race": "P",
+          "tier": "G"
+        },
+        {
+          "name": "장윤철",
+          "univ": "케이대",
+          "race": "P",
+          "tier": "G"
+        },
+        {
+          "name": "김택용",
+          "univ": "씨나인",
+          "race": "P",
+          "tier": "G"
+        },
+        {
+          "name": "조일장",
+          "univ": "츠캄몬스타즈",
+          "race": "Z",
+          "tier": "G"
+        },
+        {
+          "name": "유영진",
+          "univ": "무소속",
+          "race": "T",
+          "tier": "G"
+        }
+      ],
+      "sets": [
+        {
+          "scoreA": 2,
+          "scoreB": 4,
+          "winner": "B",
+          "games": [
+            {
+              "playerA": "박상현",
+              "playerB": "김택용",
+              "winner": "B",
+              "map": "매치포인트"
+            },
+            {
+              "playerA": "김지성",
+              "playerB": "유영진",
+              "winner": "B",
+              "map": "폴스타"
+            },
+            {
+              "playerA": "이재호",
+              "playerB": "조일장",
+              "winner": "B",
+              "map": "애티튜드"
+            },
+            {
+              "playerA": "임홍규",
+              "playerB": "장윤철",
+              "winner": "A",
+              "map": "녹아웃"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "도재욱",
+              "winner": "A",
+              "map": "실피드"
+            },
+            {
+              "playerA": "이재호",
+              "playerB": "김택용",
+              "winner": "B",
+              "map": "제인도"
+            }
+          ]
+        },
+        {
+          "scoreA": 5,
+          "scoreB": 1,
+          "winner": "A",
+          "games": [
+            {
+              "playerA": "박상현",
+              "playerB": "도재욱",
+              "winner": "B",
+              "map": "실피드"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "도재욱",
+              "winner": "A",
+              "map": "녹아웃"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "김택용",
+              "winner": "A",
+              "map": "제인도"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "조일장",
+              "winner": "A",
+              "map": "매치포인트"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "유영진",
+              "winner": "A",
+              "map": "옥타곤"
+            },
+            {
+              "playerA": "변현제",
+              "playerB": "장윤철",
+              "winner": "A",
+              "map": "애티튜드"
+            }
+          ]
+        },
+        {
+          "scoreA": 1,
+          "scoreB": 0,
+          "winner": "A",
+          "games": [
+            {
+              "playerA": "박상현",
+              "playerB": "장윤철",
+              "winner": "A",
+              "map": "폴스타"
+            }
+          ]
+        }
+      ],
+      "univWins": {
+        "씨나인": 2,
+        "무소속": 1,
+        "츠캄몬스타즈": 1,
+        "JSA": 1,
+        "이노대": 6,
+        "뉴캣슬": 1,
+        "수술대": 1
+      },
+      "univLosses": {
+        "수술대": 2,
+        "무소속": 4,
+        "케이대": 3,
+        "뉴캣슬": 2,
+        "씨나인": 1,
+        "츠캄몬스타즈": 1
+      }
+    },
     {
       "_id": "mm0f0rxf5v20",
       "d": "2026-02-24",
@@ -10174,7 +11056,7 @@
     },
     {
       "_id": "mm0e0bi6xg2w",
-      "d": "2026-02-19",
+      "d": "2026-02-18",
       "sa": 0,
       "sb": 2,
       "teamALabel": "A팀(씨나인+뉴캣슬+케이대+무소속)",
@@ -10568,17 +11450,11 @@
   "members": [],
   "tourneys": [
     {
-      "id": "mm1fom7t7nl3",
-      "name": "노답유스대전",
+      "id": "mm1i163pp8iv",
+      "name": "3티어 PL",
       "type": "tier",
       "groups": [],
-      "createdAt": "2026-02-25T02:47:10.457Z"
-    },
-    {
-      "id": "mm0gsm1utxhy",
-      "name": "3티어 PL",
-      "groups": [],
-      "createdAt": "2026-02-24T10:30:30.306Z"
+      "createdAt": "2026-02-25T03:52:55.333Z"
     },
     {
       "id": "mm08dpahdt8q",
@@ -10792,13 +11668,13 @@
               "_id": "mm08v8ck7l6v"
             },
             {
-              "a": "뉴캣슬",
+              "a": "늪지대",
               "b": "뉴캣슬",
               "d": "2026-03-04",
               "sa": 0,
               "sb": 0,
               "sets": [],
-              "_id": "mm08x6a5bz7i"
+              "_id": "mm1hsrwv2bts"
             },
             {
               "a": "씨나인",
