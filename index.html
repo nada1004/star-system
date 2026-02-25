@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타 대학 통합 관리 시스템 V31</title>
+<title>⭐ 스타대학 데이터 센터 V31</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -409,7 +409,7 @@ body.dark .sort-btn.on{background:#2563eb;color:#fff;}
 <div class="app">
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
-  <div class="hdr-title">스타 대학 통합 관리 시스템</div>
+  <div class="hdr-title">스타대학 데이터 센터</div>
   <div class="hdr-ver">V31</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
@@ -3913,6 +3913,9 @@ function memberAddPost(){
   document.getElementById('mb-posts').innerHTML=memberPostsHTML(_tmpPosts);
 }
 function memberRemovePost(i){_tmpPosts.splice(i,1);document.getElementById('mb-posts').innerHTML=memberPostsHTML(_tmpPosts);}
+
+let _tmpComments=[];
+function memberRemoveComment(i){_tmpComments.splice(i,1);const el=document.getElementById('mb-comments');if(el)el.innerHTML=memberCommentsHTML(_tmpComments);}
 
 function memberSave(){
   const nick=document.getElementById('mb-nick').value.trim();
