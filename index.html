@@ -527,6 +527,7 @@ body.dark .sort-btn.on{background:#2563eb;color:#fff;}
       <div class="mtitle" id="playerModalTitle" style="margin-bottom:0">선수 상세</div>
       <div style="display:flex;gap:6px;align-items:center">
         <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="openEPFromModal()">✏️ 수정</button>
+        <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
         <button class="btn btn-w btn-sm" onclick="cm('playerModal')">✕ 닫기</button>
       </div>
@@ -541,6 +542,7 @@ body.dark .sort-btn.on{background:#2563eb;color:#fff;}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
       <div class="mtitle" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
       <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-p btn-sm" onclick="openShareCardFromUniv()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="captureUnivModal()">📸 이미지 저장</button>
         <button class="btn btn-w btn-sm" onclick="cm('univModal')">✕ 닫기</button>
       </div>
@@ -837,6 +839,48 @@ function openEPFromModal(){
   setTimeout(()=>openEP(name),100);
 }
 
+function openShareCardFromPlayer(){
+  const name=window._playerModalCurrentName;
+  if(!name)return;
+  cm('playerModal');
+  _shareMode='player';
+  _sharePlayerSearch=name;
+  statsSub='sharecard';
+  curTab='stats';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
+  render();
+  setTimeout(()=>renderShareCardByPlayer(name),80);
+}
+
+function openShareCardFromUniv(){
+  const name=window._univModalCurrentName;
+  if(!name)return;
+  cm('univModal');
+  _shareMode='univ';
+  _shareUnivSearch=name;
+  statsSub='sharecard';
+  curTab='stats';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
+  render();
+  setTimeout(()=>renderShareCardByUniv(name),80);
+}
+function openShareCardFromMatch(mode,idx){
+  // 해당 경기 객체를 전역에 저장 후 공유카드 탭으로 이동
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
+  window._shareMatchObj=arr[idx]||null;
+  _shareMode='match';
+  statsSub='sharecard';
+  curTab='stats';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
+  render();
+  setTimeout(()=>{
+    if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);
+  },80);
+}
+
 async function capturePlayerModal(){
   const body=document.getElementById('playerModalBody');
   if(!body){alert('캡처할 영역이 없습니다.');return;}
@@ -880,6 +924,7 @@ async function captureDetail(id, filename){
 function openUnivModal(univName){
   document.getElementById('univModalTitle').innerText=`🏛️ ${univName} 대학 상세`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
+  window._univModalCurrentName=univName;
   om('univModal');
 }
 
@@ -1534,17 +1579,25 @@ function rHistUnivStat(){
       const key=`ustat-comp-${rIdx}`;
       h+=`<div class="rec-summary">
         <div class="rec-sum-header">
-          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d}</span>
-          <span style="font-weight:700;font-size:13px">🎖️ ${m.n}</span>
+          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
+          <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}</span>
           <div class="rec-sum-vs">
             ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-            ${(a&&b)?`<div class="rec-sum-score"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span></div>`:''}
+            ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span></div>`:''}
             ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
             <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+histUniv+' 승':aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}</span>
           </div>
-          <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 보기</button></div>
+          <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button></div>
         </div>
-        <div id="det-${key}" class="rec-detail-area">${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}</div>
+        <div id="det-${key}" class="rec-detail-area">
+          ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','대회_${m.d||'match'}')">📷 이미지 저장</button>
+              <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('comp',${rIdx})">🎴 공유 카드</button>
+            </div>
+          </div>
+        </div>
       </div>`;
     });
   }
@@ -1589,13 +1642,21 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         ${(m.n&&mode!=='comp')?`<span style="font-weight:700;font-size:12px;color:var(--text3)">${m.n}</span>`:''}
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${isCK?'':m.a}')">${labelA}</span>
-          <div class="rec-sum-score"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
+          <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
           <span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${isCK?'':m.b}')">${labelB}</span>
           <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
         </div>
-        <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 보기</button></div>
+        <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button></div>
       </div>
-      <div id="det-${key}" class="rec-detail-area">${buildDetailHTML({...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}</div>
+      <div id="det-${key}" class="rec-detail-area">
+        ${buildDetailHTML({...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
+            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
+          </div>
+        </div>
+      </div>
     </div>`;
   });
   return h;
@@ -1660,6 +1721,7 @@ function recSummaryListHTML(arr, mode, context){
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
+            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
             ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}`:''}
@@ -1737,23 +1799,64 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
   return h;
 }
 
+// tourneys에서 완료된 모든 경기를 flat하게 추출
+function getTourneyMatches(){
+  const result=[];
+  (tourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach((grp,gi)=>{
+      const gl='ABCDEFGHIJ'[gi]||String(gi);
+      const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+      (grp.matches||[]).forEach((m,mi)=>{
+        if(!m.a||!m.b)return;
+        if(m.sa==null||m.sb==null)return;
+        result.push({
+          _src:'tour',_tnId:tn.id,_gi:gi,_mi:mi,
+          d:m.d||'',n:tn.name,a:m.a,b:m.b,
+          sa:m.sa,sb:m.sb,sets:m.sets||[],
+          grpName:grp.name,grpLetter:gl,grpColor:col
+        });
+      });
+    });
+  });
+  return result;
+}
 function compSummaryListHTML(context){
-  if(!comps.length)return`<div style="padding:40px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
-  let h='';
-  [...comps].sort((a,b)=>b.d.localeCompare(a.d)).forEach((m)=>{
-    if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
-    const rIdx=comps.indexOf(m);
+  // tourneys 경기 + comps 배열 모두 합산
+  const tourItems=getTourneyMatches();
+  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+  const allItems=[...tourItems,...compItems];
+  if(!allItems.length)return`<div style="padding:40px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
+  // 날짜 필터 적용 후 정렬
+  const filtered=allItems.filter(m=>
+    typeof passDateFilter!=='function'||passDateFilter(m.d||'')
+  );
+  filtered.sort((a,b)=>recSortDir==='asc'
+    ?(a.d||'').localeCompare(b.d||'')
+    :(b.d||'').localeCompare(a.d||''));
+  const sortBar=`<div class="sort-bar no-export">
+    <span style="font-size:11px;color:var(--text3)">날짜 정렬</span>
+    <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
+    <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
+    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${filtered.length}건</span>
+  </div>`;
+  if(!filtered.length)return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+  let h=sortBar;
+  filtered.forEach((m,listIdx)=>{
     const a=m.a||m.hostUniv||m.u||'';const b=m.b||'';
     const ca=gc(a);const cb=gc(b);
     const aWin=m.sa>m.sb;const bWin=m.sb>m.sa;
-    const key=`${context}-comp-${rIdx}`;
+    const key=`${context}-comp-${listIdx}`;
+    const rIdx=(m._src==='comps')?m._origIdx:-1;
+    // GROUP 배지 (tourneys 경기)
+    const grpBadge=m._src==='tour'
+      ?`<span style="background:${m.grpColor};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;margin-left:6px">GROUP ${m.grpLetter}</span>`:'';
     h+=`<div class="rec-summary">
       <div class="rec-sum-header">
-        <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d}</span>
-        <span style="font-weight:700;font-size:13px">🎖️ ${m.n}</span>
+        <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
+        <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}${grpBadge}</span>
         <div class="rec-sum-vs">
           ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-          ${(a&&b)?`<div class="rec-sum-score">
+          ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세보기">
             <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
             <span style="color:var(--gray-l);font-size:14px">:</span>
             <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
@@ -1763,18 +1866,41 @@ function compSummaryListHTML(context){
             ${aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}
           </span>`:''}
         </div>
-        <div style="margin-left:auto;display:flex;gap:6px;align-items:center" class="no-export">
-          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 보기</button>
-          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`)}
-          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`)}
+        <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
+          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button>
+          ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
+          ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${buildDetailHTML({...m,_editRef:`comp:${rIdx}`},'comp',a,b,ca,cb,aWin,bWin)}
+        ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
+          ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn-capture btn-xs" onclick="captureDetail('det-${key}','대회_${(m.d||'match').replace(/\\//g,'-')}')">📷 이미지 저장</button>
+            <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');statsSub='sharecard';curTab='stats';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});render();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+            ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
+            <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
+            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">삭제</button>`:''}`:''}
+          </div>
+        </div>
       </div>
     </div>`;
   });
   return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+}
+// 공유카드용 - context별 캐시된 filtered 배열에서 m 객체 반환 헬퍼
+window._compListCache={};
+function _getCompMatchObj(listIdx,context){
+  // 캐시가 없으면 재생성
+  if(!window._compListCache[context]){
+    const tourItems=getTourneyMatches();
+    const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+    const all=[...tourItems,...compItems].filter(m=>typeof passDateFilter!=='function'||passDateFilter(m.d||''));
+    all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+    window._compListCache[context]=all;
+  }
+  return window._compListCache[context][listIdx]||null;
 }
 
 function delRec(mode,i){
@@ -3012,7 +3138,7 @@ function rCompLeague(tn){
           <div style="text-align:center;min-width:60px">
             ${isDone?`<div class="grp-match-score"><span style="color:${aWin?'var(--green)':bWin?'var(--red)':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l)"> : </span><span style="color:${bWin?'var(--green)':aWin?'var(--red)':'var(--text)'}">${m.sb}</span></div>
             <div style="font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'};">${aWin?m.a+' 승':bWin?m.b+' 승':'무승부'}</div>
-            ${hasDetail?`<button class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">상세 ▼</button>`:''}
+            ${isDone?`<button class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">상세 ▼</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;color:var(--gray-l)">VS</div>`}
           </div>
           <div style="text-align:center;min-width:80px">
@@ -3024,8 +3150,12 @@ function rCompLeague(tn){
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">삭제</button>
         </div>`:''}
       </div>
-      <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:12px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
-        ${grpMatchDetail(m)}
+      <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:14px 16px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
+        ${isDone?buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">아직 경기가 진행되지 않았습니다.</div>'}
+        ${isDone?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap" class="no-export">
+          <button class="btn-capture btn-xs" onclick="captureDetail('${detId}','대회_${(m.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
+          <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=${JSON.stringify(m).replace(/"/g,"'")};statsSub='sharecard';curTab='stats';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});render();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+        </div>`:''}
       </div>`;
     });
     h+=`</div>`;
@@ -3346,12 +3476,14 @@ function grpOpenMatchModal(tn,gi,mi){
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:130px">
           <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">🔵 팀 A 대학</div>
-          <select id="gm-a" onchange="grpRefreshSets()" style="width:100%">${uOpts}</select>
+          <select id="gm-a" onchange="grpRefreshSets();grpUpdateMemberList();" style="width:100%">${uOpts}</select>
+          <div id="gm-a-mems" style="margin-top:5px;font-size:11px;color:var(--text3)"></div>
         </div>
         <div style="font-size:16px;font-weight:800;color:var(--gray-l);padding-top:22px">VS</div>
         <div style="flex:1;min-width:130px">
           <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🔴 팀 B 대학</div>
-          <select id="gm-b" onchange="grpRefreshSets()" style="width:100%">${uOptsB}</select>
+          <select id="gm-b" onchange="grpRefreshSets();grpUpdateMemberList();" style="width:100%">${uOptsB}</select>
+          <div id="gm-b-mems" style="margin-top:5px;font-size:11px;color:var(--text3)"></div>
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">📅 날짜</div>
@@ -3878,6 +4010,10 @@ function memberFillForm(m){
         <input type="text" id="mb-post-note" placeholder="메모" style="width:100px">
         <button class="btn btn-b btn-xs" onclick="memberAddPost()">추가</button>
       </div>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:6px">💬 댓글 이력</div>
+      <div id="mb-comments">${memberCommentsHTML(_tmpComments)}</div>
     </div>`;
 }
 
@@ -4470,12 +4606,13 @@ function statsEloHTML(){
     .sort((a,b)=>(b.elo||1200)-(a.elo||1200)).slice(0,30);
   if(!_eloSelPlayer&&top20.length)_eloSelPlayer=top20[0].name;
   return`<div style="display:flex;flex-direction:column;gap:16px">
-  <div class="ssec">
+  <div class="ssec" id="stats-elo-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
       <select id="elo-sel-player" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_eloSelPlayer=this.value;initEloChart()">
         ${top20.map(p=>`<option value="${p.name}"${_eloSelPlayer===p.name?' selected':''}>${p.name} (${p.univ}) ELO:${p.elo||1200}</option>`).join('')}
       </select>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 JPG 저장</button>
     </div>
     <canvas id="eloChart" style="width:100%;max-height:300px"></canvas>
     <div id="eloRankTable" style="margin-top:16px"></div>
@@ -4580,12 +4717,13 @@ function statsGrowthHTML(){
   const cands=players.filter(p=>p.history&&p.history.length>=5)
     .sort((a,b)=>b.history.length-a.history.length);
   if(!_growthSel&&cands.length)_growthSel=cands[0].name;
-  return`<div class="ssec">
+  return`<div class="ssec" id="stats-growth-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 선수 성장 곡선</h4>
       <select id="growth-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_growthSel=this.value;initGrowthChart()">
         ${cands.map(p=>`<option value="${p.name}"${_growthSel===p.name?' selected':''}>${p.name} (${p.univ}) ${p.history.length}경기</option>`).join('')}
       </select>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 JPG 저장</button>
     </div>
     <canvas id="growthChart" style="width:100%;max-height:300px"></canvas>
     <div id="growthInfo" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"></div>
@@ -4681,9 +4819,11 @@ function statsAwardHTML(){
   const prevYm=now.getMonth()===0
     ?`${now.getFullYear()-1}-12`
     :`${now.getFullYear()}-${String(now.getMonth()).padStart(2,'0')}`;
+  const proIds=statsProMatchIds();
   function calcMonth(ym2){
     return players.map(p=>{
-      const mh=(p.history||[]).filter(h=>(h.date||'').startsWith(ym2));
+      // 프로리그 제외한 히스토리만 필터링
+      const mh=statsNonProHist(p).filter(h=>(h.date||'').startsWith(ym2));
       const w=mh.filter(h=>h.result==='승').length;
       const l=mh.filter(h=>h.result==='패').length;
       const tot=w+l;
@@ -4718,8 +4858,11 @@ function statsAwardHTML(){
   const mostActive=curList.sort((a,b)=>b.mt-a.mt)[0];
   const prevTop=prevList[0];
   return`<div style="display:flex;flex-direction:column;gap:20px">
-  <div class="ssec">
-    <h4 style="margin-bottom:14px">🏆 이달의 선수 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span></h4>
+  <div class="ssec" id="stats-award-sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <h4 style="margin:0">🏆 이달의 선수 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 JPG 저장</button>
+    </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       ${awardCard('👑 이달 최다승',''+mostWin?mostWin:null,'이번 달 가장 많은 승리!','#d97706')}
       ${awardCard('🎯 이달 최고 승률',highRate,'(3경기 이상)','#16a34a')}
@@ -4801,7 +4944,11 @@ function statsRecordsHTML(){
       </div>`}
     </div>`;
   }
-  return`<div style="display:flex;flex-wrap:wrap;gap:14px">${cats.map(recordCard).join('')}</div>`;
+  return`<div id="stats-records-sec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <span style="font-size:12px;color:var(--gray-l)">(프로리그 제외)</span>
+    <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-records-sec','records')">📷 JPG 저장</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:14px">${cats.map(recordCard).join('')}</div></div>`;
 }
 
 /* ══════════════════════════════════════
@@ -4813,12 +4960,13 @@ function statsRadarHTML(){
   if(!_radarSelUniv&&univs.length)_radarSelUniv=univs[0].name;
   const proIds=statsProMatchIds();
   return`<div style="display:flex;flex-direction:column;gap:16px">
-  <div class="ssec">
+  <div class="ssec" id="stats-radar-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <h4 style="margin:0">🕸️ 대학별 성적 레이더 차트</h4>
+      <h4 style="margin:0">🕸️ 대학별 성적 레이더 차트 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
       <select id="radar-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_radarSelUniv=this.value;initRadarChart()">
         ${univs.map(u=>`<option value="${u.name}"${_radarSelUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
       </select>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 JPG 저장</button>
     </div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
       <canvas id="radarChart" width="280" height="280" style="flex-shrink:0"></canvas>
@@ -4972,6 +5120,7 @@ function initRadarChart(){
 function statsMismatchHTML(){
   const proIds=statsProMatchIds();
   const allMatches=[];
+  // proM을 제외한 배열만 처리
   [...miniM,...univM,...ckM,...comps].forEach((m,_)=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
@@ -5010,12 +5159,15 @@ function statsMismatchHTML(){
     </div>`;
   }
   return`<div style="display:flex;flex-direction:column;gap:16px">
-  <div class="ssec">
-    <h4 style="margin-bottom:12px">🔥 이변 TOP 10 (하위 ELO가 승리)</h4>
+  <div class="ssec" id="stats-mismatch-top">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h4>🔥 이변 TOP 10 (하위 ELO가 승리) <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-mismatch-top','mismatch')">📷 JPG 저장</button>
+    </div>
     ${upsets.length?`<div style="display:flex;flex-direction:column;gap:6px">${upsets.map(matchRow).join('')}</div>`:'<p style="color:var(--gray-l)">이변 기록이 없습니다.</p>'}
   </div>
   <div class="ssec">
-    <h4 style="margin-bottom:12px">⚡ ELO 격차 TOP 20 경기</h4>
+    <h4 style="margin-bottom:12px">⚡ ELO 격차 TOP 20 경기 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
     ${bigDiff.length?`<div style="display:flex;flex-direction:column;gap:6px">${bigDiff.map(matchRow).join('')}</div>`:'<p style="color:var(--gray-l)">ELO 격차 100 이상 경기 없음</p>'}
   </div></div>`;
 }
@@ -5024,145 +5176,266 @@ function statsMismatchHTML(){
    8. 경기 결과 공유 카드 생성
 ══════════════════════════════════════ */
 let _shareMode='player';
+let _sharePlayerSearch='';
+let _shareUnivSearch='';
+let _shareMatchPage=0; // 경기 결과 페이지 인덱스
+const SHARE_MATCH_PER_PAGE=5;
 function statsShareCardHTML(){
   const pList=players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
-  const uList=getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const uList=(typeof univCfg!=='undefined'&&univCfg.length)?univCfg.filter(u=>players.some(p=>p.univ===u.name)):getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const filteredP=_sharePlayerSearch
+    ?pList.filter(p=>p.name.toLowerCase().includes(_sharePlayerSearch.toLowerCase())||p.univ.toLowerCase().includes(_sharePlayerSearch.toLowerCase()))
+    :[];  // 검색하기 전에는 빈 배열 - 아무것도 표시 안 함
+  // 모든 경기 최신순 (tourneys 대회 경기 포함)
+  const tourMatchesForShare=typeof getTourneyMatches==="function"?getTourneyMatches():[];
+  const allMatches=[...miniM,...univM,...ckM,...comps,...tourMatchesForShare].sort((a,b)=>(b.d||"").localeCompare(a.d||""));
+
+
+  const totalPages=Math.ceil(allMatches.length/SHARE_MATCH_PER_PAGE)||1;
+  const safePage=Math.min(_shareMatchPage,totalPages-1);
+  const pageMatches=allMatches.slice(safePage*SHARE_MATCH_PER_PAGE,(safePage+1)*SHARE_MATCH_PER_PAGE);
+
   return`<div class="ssec">
-    <h4 style="margin-bottom:14px">🎴 경기 결과 공유 카드 생성</h4>
-    <div style="display:flex;gap:8px;margin-bottom:14px" class="no-export">
-      <button class="stab ${_shareMode==='player'?'on':''}" onclick="_shareMode='player';renderShareCard()">👤 선수 카드</button>
-      <button class="stab ${_shareMode==='univ'?'on':''}" onclick="_shareMode='univ';renderShareCard()">🏛️ 대학 카드</button>
-      <button class="stab ${_shareMode==='match'?'on':''}" onclick="_shareMode='match';renderShareCard()">⚔️ 경기 결과</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h4 style="margin:0;font-size:16px">🎴 공유 카드 생성</h4>
+      <button class="btn-capture btn-xs no-export" onclick="downloadShareCard()">📷 이미지 저장</button>
     </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px" class="no-export">
-      <div>
-        ${_shareMode==='player'?`<label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">선수 선택</label>
-          <select id="share-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="renderShareCard()">
-            ${pList.map(p=>`<option value="${p.name}">${p.name} (${p.univ})</option>`).join('')}
-          </select>`:
-        _shareMode==='univ'?`<label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">대학 선택</label>
-          <select id="share-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="renderShareCard()">
-            ${uList.map(u=>`<option value="${u.name}">${u.name}</option>`).join('')}
-          </select>`:
-        `<label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">최근 경기 선택</label>
-          <select id="share-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="renderShareCard()">
-            ${[...miniM,...univM,...ckM].slice(0,20).map((m,i)=>{
-              const a=m.a||'A팀',b=m.b||'B팀';
-              return`<option value="${i}">[${m.d||''}] ${a} ${m.sa}:${m.sb} ${b}</option>`;
-            }).join('')}
-          </select>`}
+    <!-- 모드 탭 -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" class="no-export">
+      <button class="stab ${_shareMode==='player'?'on':''}" onclick="_shareMode='player';_sharePlayerSearch='';render()">👤 선수 카드</button>
+      <button class="stab ${_shareMode==='univ'?'on':''}" onclick="_shareMode='univ';render()">🏛️ 대학 카드</button>
+      <button class="stab ${_shareMode==='match'?'on':''}" onclick="_shareMode='match';window._shareMatchObj=null;render()">⚔️ 경기 결과</button>
+    </div>
+
+    ${_shareMode==='player'?`
+    <div style="margin-bottom:12px" class="no-export">
+      <input type="text" id="share-player-q" value="${_sharePlayerSearch}"
+        placeholder="🔍 스트리머 이름 또는 대학 이름 검색..."
+        oninput="_sharePlayerSearch=this.value;renderShareCardFilterPlayers()"
+        style="width:100%;max-width:380px;padding:9px 16px;border:2px solid var(--blue);border-radius:8px;font-size:13px;box-sizing:border-box">
+      <div id="share-player-list" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;max-height:160px;overflow-y:auto;padding:2px">
+        ${filteredP.length?filteredP.slice(0,50).map(p=>`
+          <button onclick="renderShareCardByPlayer('${p.name}')"
+            style="padding:4px 13px;border-radius:20px;border:2px solid ${gc(p.univ)};background:${gc(p.univ)}22;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.12s"
+            onmouseover="this.style.background='${gc(p.univ)}55'" onmouseout="this.style.background='${gc(p.univ)}22'">
+            ${p.name} <span style="font-size:10px;opacity:.65">${p.univ}</span>
+          </button>`).join('')
+          :(_sharePlayerSearch?'<span style="color:var(--gray-l);font-size:12px;padding:8px">검색 결과 없음</span>'
+          :'<span style="color:var(--gray-l);font-size:12px;padding:8px">이름 또는 대학명을 입력하세요</span>')}
       </div>
-      <button class="btn btn-b" onclick="downloadShareCard()" style="align-self:flex-end">📷 이미지 저장</button>
-    </div>
-    <div id="share-card-wrap" style="display:inline-block;max-width:100%">
-      <div id="share-card" style="width:360px;min-height:200px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif">
-        <p style="text-align:center;color:var(--gray-l);padding:40px">위에서 선택하면 카드가 생성됩니다</p>
+    </div>`
+    :_shareMode==='univ'?`
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" class="no-export">
+      ${uList.map(u=>`
+        <button onclick="renderShareCardByUniv('${u.name}')"
+          style="padding:7px 20px;border-radius:20px;background:${u.color};color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px ${u.color}55;transition:.15s"
+          onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+          ${u.name}
+        </button>`).join('')||'<span style="color:var(--gray-l);font-size:12px">등록된 대학이 없습니다</span>'}
+    </div>`
+    :`
+    <div style="margin-bottom:14px" class="no-export">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3)">⏱️ 최신순 경기 목록 (5개씩 표시)</div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="btn btn-w btn-xs" onclick="_shareMatchPage=Math.max(0,_shareMatchPage-1);render()" ${safePage===0?'disabled':''}>◀ 이전</button>
+          <span style="font-size:11px;color:var(--gray-l);padding:0 6px">${safePage+1} / ${totalPages}</span>
+          <button class="btn btn-w btn-xs" onclick="_shareMatchPage=Math.min(${totalPages-1},_shareMatchPage+1);render()" ${safePage>=totalPages-1?'disabled':''}>다음 ▶</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;border:1px solid var(--border);border-radius:10px;padding:6px">
+        ${pageMatches.length?pageMatches.map((m,pi)=>{
+          const globalIdx=safePage*SHARE_MATCH_PER_PAGE+pi;
+          const a=m.a||m.u||'A팀',b=m.b||'B팀';
+          const ca=gc(a),cb=gc(b);
+          const aWin=m.sa>m.sb;
+          const isActive=window._shareMatchObj&&window._shareMatchObj===m;
+          return`<button onclick="window._shareAllMatchesCached=window._shareAllMatchesCached||[...miniM,...univM,...ckM,...comps].sort((a,b)=>(b.d||'').localeCompare(a.d||''));window._shareMatchObj=window._shareAllMatchesCached[${globalIdx}];renderShareCardByMatchObj(window._shareMatchObj)"
+            style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;border:2px solid ${isActive?'var(--blue)':'var(--border)'};background:${isActive?'var(--blue-l)':'transparent'};cursor:pointer;text-align:left;font-size:12px;transition:.1s"
+            onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background='${isActive?'var(--blue-l)':'transparent'}'">
+            <span style="color:var(--gray-l);min-width:80px;font-size:10px">${m.d||'-'}</span>
+            <span style="background:${ca};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${a}</span>
+            <span style="font-weight:900;font-size:15px;color:${aWin?'var(--green)':'#aaa'}">${m.sa}</span>
+            <span style="color:var(--gray-l)">:</span>
+            <span style="font-weight:900;font-size:15px;color:${(!aWin&&m.sb>m.sa)?'var(--green)':'#aaa'}">${m.sb}</span>
+            <span style="background:${cb};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${b}</span>
+            ${m.n?`<span style="color:var(--gold);font-size:10px;font-weight:600">🎖️${m.n}</span>`:''}
+          </button>`;
+        }).join(''):'<span style="color:var(--gray-l);padding:12px;font-size:12px;display:block">경기 기록이 없습니다</span>'}
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);text-align:right;margin-top:4px">전체 ${allMatches.length}경기</div>
+    </div>`}
+
+    <!-- 카드 미리보기 -->
+    <div id="sharecard-preview-wrap">
+      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block">
+        <p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>
       </div>
     </div>
   </div>`;
 }
+// 이전 코드 호환용
+function renderShareCardFilterPlayers(){
+  const q=(document.getElementById('share-player-q')||{}).value||'';
+  _sharePlayerSearch=q;
+  const pList=players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
+  const filtered=q?pList.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.univ.toLowerCase().includes(q.toLowerCase())):[];
+  const list=document.getElementById('share-player-list');
+  if(!list)return;
+  if(!q){
+    list.innerHTML='<span style="color:var(--gray-l);font-size:12px;padding:8px">이름 또는 대학명을 입력하세요</span>';
+    return;
+  }
+  list.innerHTML=filtered.length?filtered.slice(0,50).map(p=>`
+    <button onclick="renderShareCardByPlayer('${p.name}')"
+      style="padding:4px 13px;border-radius:20px;border:2px solid ${gc(p.univ)};background:${gc(p.univ)}22;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.12s"
+      onmouseover="this.style.background='${gc(p.univ)}55'" onmouseout="this.style.background='${gc(p.univ)}22'">
+      ${p.name} <span style="font-size:10px;opacity:.65">${p.univ}</span>
+    </button>`).join(''):'<span style="color:var(--gray-l);font-size:12px;padding:8px">검색 결과 없음</span>';
+}
+function renderShareCardDynamic(){renderShareCardFilterPlayers();}
 function renderShareCard(){
   const sel=document.getElementById('share-sel');
-  const val=sel?sel.value:'';
-  const card=document.getElementById('share-card');
-  if(!card)return;
-  if(_shareMode==='player'){
-    const p=players.find(x=>x.name===val);if(!p){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">선수를 찾을 수 없습니다</p>';return;}
-    const h=statsNonProHist(p);
-    const w=h.filter(x=>x.result==='승').length,l=h.filter(x=>x.result==='패').length,tot=w+l;
-    const rate=tot?Math.round(w/tot*100):0;
-    const elo=p.elo||1200;
-    const eloColor=elo>=1400?'#7c3aed':elo>=1300?'#d97706':elo>=1200?'#16a34a':'#dc2626';
-    const col=gc(p.univ);
-    const form=h.slice(0,5).map(x=>x.result==='승'?'<span style="display:inline-block;width:22px;height:22px;background:#16a34a;color:#fff;font-size:11px;font-weight:800;border-radius:5px;text-align:center;line-height:22px">W</span>':'<span style="display:inline-block;width:22px;height:22px;background:#dc2626;color:#fff;font-size:11px;font-weight:800;border-radius:5px;text-align:center;line-height:22px">L</span>').join('');
-    card.innerHTML=`<div style="background:linear-gradient(135deg,${col},${col}cc);padding:24px;color:#fff">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-        <div style="width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;border:3px solid rgba(255,255,255,.5)">${p.name[0]}</div>
-        <div>
-          <div style="font-size:22px;font-weight:900;letter-spacing:.5px">${p.name}</div>
-          <div style="font-size:12px;opacity:.85">${p.univ} · ${p.tier||'-'} · ${p.race==='T'?'테란':p.race==='Z'?'저그':'프로토스'}</div>
-        </div>
-        <div style="margin-left:auto;text-align:center;background:rgba(255,255,255,.2);border-radius:12px;padding:8px 14px">
-          <div style="font-size:10px;opacity:.8">ELO</div>
-          <div style="font-size:20px;font-weight:900">${elo}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">승</div><div style="font-size:22px;font-weight:900">${w}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">패</div><div style="font-size:22px;font-weight:900">${l}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">승률</div><div style="font-size:22px;font-weight:900">${rate}%</div>
-        </div>
-      </div>
+  if(sel){
+    const val=sel.value;
+    if(_shareMode==='player')renderShareCardByPlayer(val);
+    else if(_shareMode==='univ')renderShareCardByUniv(val);
+  }
+}
+function renderShareCardByPlayer(name){
+  const card=document.getElementById('share-card');if(!card)return;
+  const p=players.find(x=>x.name===name);
+  if(!p){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">선수를 찾을 수 없습니다</p>';return;}
+  const h=typeof statsNonProHist==='function'?statsNonProHist(p):(p.history||[]);
+  const w=h.filter(x=>x.result==='승').length,l=h.filter(x=>x.result==='패').length,tot=w+l;
+  const rate=tot?Math.round(w/tot*100):0;
+  const elo=p.elo||1200;
+  const col=gc(p.univ);
+  const form=h.slice(-5).reverse().map(x=>x.result==='승'
+    ?'<span style="display:inline-block;width:24px;height:24px;background:#16a34a;color:#fff;font-size:11px;font-weight:800;border-radius:5px;text-align:center;line-height:24px">W</span>'
+    :'<span style="display:inline-block;width:24px;height:24px;background:#dc2626;color:#fff;font-size:11px;font-weight:800;border-radius:5px;text-align:center;line-height:24px">L</span>').join('');
+  const raceLabel=p.race==='T'?'테란':p.race==='Z'?'저그':p.race==='P'?'프로토스':'?';
+  card.innerHTML=`<div style="background:linear-gradient(135deg,${col}ee,${col}99);padding:26px;color:#fff">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;border:3px solid rgba(255,255,255,.5)">${p.name[0]}</div>
       <div>
-        <div style="font-size:10px;opacity:.8;margin-bottom:6px">최근 5경기</div>
-        <div style="display:flex;gap:4px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
+        <div style="font-size:22px;font-weight:900;letter-spacing:.5px">${p.name}</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px">${p.univ} · ${p.tier||'-'} · ${raceLabel}</div>
       </div>
-      <div style="margin-top:14px;text-align:right;font-size:10px;opacity:.5">⭐ 스타대학 데이터 센터</div>
-    </div>`;
-  } else if(_shareMode==='univ'){
-    const u=getAllUnivs().find(x=>x.name===val);if(!u){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">대학을 찾을 수 없습니다</p>';return;}
-    const proIds=statsProMatchIds();
-    const sc=calcUnivRadar(u.name,proIds);
-    const mem=players.filter(p=>p.univ===u.name);
-    card.innerHTML=`<div style="background:linear-gradient(135deg,${u.color},${u.color}bb);padding:24px;color:#fff">
-      <div style="font-size:24px;font-weight:900;margin-bottom:4px">${u.name}</div>
-      <div style="font-size:12px;opacity:.8;margin-bottom:18px">선수 ${mem.length}명</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">팀 승률</div><div style="font-size:22px;font-weight:900">${sc.winrate}%</div>
-        </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">평균 ELO</div><div style="font-size:22px;font-weight:900">${sc.avgElo}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">총 포인트</div><div style="font-size:22px;font-weight:900">${sc.pts>=0?'+':''}${sc.pts}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;opacity:.8">전적</div><div style="font-size:22px;font-weight:900">${sc.w}W${sc.l}L</div>
-        </div>
+      <div style="margin-left:auto;text-align:center;background:rgba(255,255,255,.2);border-radius:12px;padding:8px 14px">
+        <div style="font-size:10px;opacity:.8">ELO</div>
+        <div style="font-size:22px;font-weight:900">${elo}</div>
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
-        ${mem.slice(0,8).map(p=>`<span style="background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600">${p.name}</span>`).join('')}
-        ${mem.length>8?`<span style="opacity:.7;font-size:11px;padding:3px 6px">+${mem.length-8}명</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;opacity:.8">승</div><div style="font-size:24px;font-weight:900">${w}</div>
       </div>
-      <div style="margin-top:10px;text-align:right;font-size:10px;opacity:.5">⭐ 스타대학 데이터 센터</div>
-    </div>`;
-  } else {
-    const allM=[...miniM,...univM,...ckM];
-    const idx=parseInt(val)||0;
-    const m=allM[idx];
-    if(!m){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">경기를 선택하세요</p>';return;}
-    const a=m.a||'A팀',b=m.b||'B팀';
-    const ca=gc(a),cb=gc(b);
-    const aWin=m.sa>m.sb;
-    card.innerHTML=`<div style="background:#1e293b;padding:24px;color:#fff">
-      <div style="text-align:center;margin-bottom:18px">
-        <div style="font-size:11px;opacity:.6;margin-bottom:4px">${m.d||''}</div>
-        <div style="font-size:13px;font-weight:700;opacity:.8">경기 결과</div>
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;opacity:.8">패</div><div style="font-size:24px;font-weight:900">${l}</div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;opacity:.8">승률</div><div style="font-size:24px;font-weight:900">${rate}%</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;opacity:.8;margin-bottom:6px">최근 5경기</div>
+      <div style="display:flex;gap:4px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
+    </div>
+    <div style="margin-top:14px;text-align:right;font-size:10px;opacity:.45">⭐ 스타대학 데이터 센터</div>
+  </div>`;
+}
+function renderShareCardByUniv(univName){
+  const card=document.getElementById('share-card');if(!card)return;
+  const uList=typeof univCfg!=='undefined'&&univCfg.length?univCfg:getAllUnivs();
+  const u=uList.find(x=>x.name===univName)||getAllUnivs().find(x=>x.name===univName);
+  if(!u){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">대학을 찾을 수 없습니다</p>';return;}
+  const proIds=typeof statsProMatchIds==='function'?statsProMatchIds():new Set();
+  const sc=typeof calcUnivRadar==='function'?calcUnivRadar(u.name,proIds):{winrate:0,avgElo:0,pts:0,w:0,l:0};
+  const mem=players.filter(p=>p.univ===u.name);
+  card.innerHTML=`<div style="background:linear-gradient(135deg,${u.color}ee,${u.color}99);padding:26px;color:#fff">
+    <div style="font-size:26px;font-weight:900;margin-bottom:4px">${u.name}</div>
+    <div style="font-size:12px;opacity:.8;margin-bottom:18px">🎓 소속 선수 ${mem.length}명</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;opacity:.8">팀 승률</div><div style="font-size:24px;font-weight:900">${sc.winrate}%</div>
+      </div>
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;opacity:.8">평균 ELO</div><div style="font-size:24px;font-weight:900">${sc.avgElo}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;opacity:.8">총 포인트</div><div style="font-size:24px;font-weight:900">${sc.pts>=0?'+':''}${sc.pts}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;opacity:.8">전적</div><div style="font-size:24px;font-weight:900">${sc.w}W ${sc.l}L</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+      ${mem.slice(0,10).map(p=>`<span style="background:rgba(255,255,255,.22);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:600">${p.name}</span>`).join('')}
+      ${mem.length>10?`<span style="opacity:.7;font-size:11px;padding:3px 6px">+${mem.length-10}명</span>`:''}
+    </div>
+    <div style="margin-top:10px;text-align:right;font-size:10px;opacity:.45">⭐ 스타대학 데이터 센터</div>
+  </div>`;
+}
+function renderShareCardByMatchObj(m){
+  const card=document.getElementById('share-card');if(!card)return;
+  if(!m){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">경기를 선택하세요</p>';return;}
+  const a=m.a||'A팀',b=m.b||'B팀';
+  const ca=gc(a),cb=gc(b);
+  const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
+  // 세트 상세
+  let setsHTML='';
+  if(m.sets&&m.sets.length){
+    setsHTML=m.sets.map((s,si)=>{
+      const swA=s.scoreA||0,swB=s.scoreB||0;
+      const sAW=swA>swB,sBW=swB>swA;
+      const games=(s.games||[]).filter(g=>g.playerA||g.playerB).map(g=>{
+        const aW=g.winner==='A',bW=g.winner==='B';
+        return`<div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0">
+          <span style="color:var(--gray-l);min-width:36px">경기${g.playerA||g.playerB?'':'?'}</span>
+          <span style="${aW?'font-weight:800':'opacity:.6'}">${g.playerA||'?'}</span>
+          ${aW?'<span style="background:#16a34a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">WIN</span>':''}
+          <span style="color:#999">vs</span>
+          ${bW?'<span style="background:#16a34a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">WIN</span>':''}
+          <span style="${bW?'font-weight:800':'opacity:.6'}">${g.playerB||'?'}</span>
+          ${g.map?`<span style="color:var(--gray-l);font-size:10px">📍${g.map}</span>`:''}
+        </div>`;
+      }).join('');
+      return`<div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${games?'6':'0'}px">
+          <span style="font-size:11px;font-weight:700;opacity:.8">${si+1}세트</span>
+          <span style="font-weight:800;background:${sAW?ca:'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:4px;font-size:11px">${a}</span>
+          <span style="font-weight:900;font-size:14px">${swA}<span style="opacity:.5;font-size:12px;margin:0 2px">:</span>${swB}</span>
+          <span style="font-weight:800;background:${sBW?cb:'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:4px;font-size:11px">${b}</span>
+          <span style="font-size:10px;opacity:.8;margin-left:auto">${sAW?'▶ '+a+' 세트 승':sBW?'▶ '+b+' 세트 승':'무승부'}</span>
+        </div>
+        ${games}
+      </div>`;
+    }).join('');
+  }
+  card.innerHTML=`<div style="background:linear-gradient(160deg,#1e293b,#0f172a);padding:24px;color:#fff;min-width:340px">
+    <div style="text-align:center;margin-bottom:18px">
+      ${m.n?`<div style="font-size:11px;color:#fbbf24;font-weight:700;margin-bottom:4px">🎖️ ${m.n}</div>`:''}
+      <div style="font-size:11px;opacity:.5;margin-bottom:6px">${m.d||''}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px">
         <div style="text-align:center;flex:1">
-          <div style="width:52px;height:52px;border-radius:50%;background:${ca};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;${aWin?'box-shadow:0 0 0 3px #fff4':'opacity:.7'}">${a[0]}</div>
-          <div style="font-size:15px;font-weight:800;${aWin?'':'opacity:.7'}">${a}</div>
-          ${aWin?'<div style="font-size:10px;color:#fbbf24;font-weight:700;margin-top:4px">✓ 승리</div>':''}
+          <div style="width:50px;height:50px;border-radius:50%;background:${ca};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.5)':'opacity:.65'}">${a[0]}</div>
+          <div style="font-size:15px;font-weight:800;${aWin?'':'opacity:.65'}">${a}</div>
+          ${aWin?'<div style="font-size:10px;color:#fbbf24;font-weight:700;margin-top:3px">✓ 승리</div>':''}
         </div>
         <div style="text-align:center">
-          <div style="font-size:38px;font-weight:900;letter-spacing:4px">${m.sa}<span style="color:#64748b;font-size:24px;margin:0 4px">:</span>${m.sb}</div>
+          <div style="font-size:40px;font-weight:900;letter-spacing:2px"><span style="color:${aWin?'#4ade80':'#f87171'}">${m.sa}</span><span style="color:#475569;font-size:28px;margin:0 6px">:</span><span style="color:${bWin?'#4ade80':'#f87171'}">${m.sb}</span></div>
         </div>
         <div style="text-align:center;flex:1">
-          <div style="width:52px;height:52px;border-radius:50%;background:${cb};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;${!aWin?'box-shadow:0 0 0 3px #fff4':'opacity:.7'}">${b[0]}</div>
-          <div style="font-size:15px;font-weight:800;${!aWin?'':'opacity:.7'}">${b}</div>
-          ${!aWin&&m.sb>m.sa?'<div style="font-size:10px;color:#fbbf24;font-weight:700;margin-top:4px">✓ 승리</div>':''}
+          <div style="width:50px;height:50px;border-radius:50%;background:${cb};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.5)':'opacity:.65'}">${b[0]}</div>
+          <div style="font-size:15px;font-weight:800;${bWin?'':'opacity:.65'}">${b}</div>
+          ${bWin?'<div style="font-size:10px;color:#fbbf24;font-weight:700;margin-top:3px">✓ 승리</div>':''}
         </div>
       </div>
-      <div style="margin-top:18px;text-align:right;font-size:10px;opacity:.4">⭐ 스타대학 데이터 센터</div>
-    </div>`;
-  }
+    </div>
+    ${setsHTML?`<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px">${setsHTML}</div>`:''}
+    <div style="margin-top:12px;text-align:right;font-size:10px;opacity:.35">⭐ 스타대학 데이터 센터</div>
+  </div>`;
 }
 async function downloadShareCard(){
   const el=document.getElementById('share-card');
@@ -5207,8 +5480,11 @@ function statsAdvSearchHTML(){
   else if(f.sort==='games') list.sort((a,b)=>b._tot-a._tot);
   else if(f.sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
   return`<div style="display:flex;flex-direction:column;gap:14px">
-  <div class="ssec">
-    <h4 style="margin-bottom:12px">🔍 선수 고급 검색 필터</h4>
+  <div class="ssec" id="stats-advsearch-sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h4 style="margin:0">🔍 선수 고급 검색 필터</h4>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-advsearch-sec','advsearch')">📷 JPG 저장</button>
+    </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" placeholder="🔍 이름 검색..." value="${f.name}" oninput="_advFilter.name=this.value;render()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
       <select onchange="_advFilter.univ=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
@@ -5887,11 +6163,7 @@ function applyLoginState(){
     if(el) el.style.display=isLoggedIn?'':'none';
   });
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
-  const exportBtn=document.getElementById('btnExport');
-  const importBtn=document.getElementById('btnImport');
   const exportHint=document.getElementById('exportHint');
-  if(exportBtn)exportBtn.style.display=isLoggedIn?'':'none';
-  if(importBtn)importBtn.style.display=isLoggedIn?'':'none';
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
@@ -6075,6 +6347,17 @@ async function captureStats(){
   try{
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true});
     const a=document.createElement('a');a.download=`stats_${new Date().toISOString().slice(0,10)}.jpg`;
+    a.href=canvas.toDataURL('image/jpeg',.93);a.click();
+  }catch(e){alert('이미지 저장 오류: '+e.message);}
+}
+
+async function captureSection(sectionId, filename){
+  const el=document.getElementById(sectionId);
+  if(!el){alert('캡처할 영역이 없습니다.');return;}
+  try{
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false});
+    const a=document.createElement('a');
+    a.download=`${filename||sectionId}_${new Date().toISOString().slice(0,10)}.jpg`;
     a.href=canvas.toDataURL('image/jpeg',.93);a.click();
   }catch(e){alert('이미지 저장 오류: '+e.message);}
 }
