@@ -1562,18 +1562,33 @@ function openVsShareCard(){
   const bRate=total?100-aRate:0;
   const aLead=aWins>bWins,bLead=bWins>aWins;
 
-  // 배경: 우세한 쪽 색상 기반
-  function darkenVs(hex,f=0.5){
-    if(!hex||hex.length<7)return'#1e293b';
-    try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return`rgb(${Math.floor(r*f)},${Math.floor(g*f)},${Math.floor(b*f)})`;}catch{return'#1e293b';}
+  // 배경: 우세한 쪽 색상 HSL 기반 — 채도·색조 살리고 명도만 낮춤
+  function hexToHslVs(hex){
+    let h=(hex||'').replace('#','');
+    if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if(h.length!==6)return null;
+    let r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+    let hue=0,sat=0,lit=(mx+mn)/2;
+    if(mx!==mn){const d=mx-mn;sat=lit>.5?d/(2-mx-mn):d/(mx+mn);
+      if(mx===r)hue=((g-b)/d+(g<b?6:0))/6;
+      else if(mx===g)hue=((b-r)/d+2)/6;
+      else hue=((r-g)/d+4)/6;}
+    return{h:Math.round(hue*360),s:Math.round(sat*100),l:Math.round(lit*100)};
   }
-  const winCol=aLead?colA:bLead?colB:'#475569';
-  const cardBg=aLead
-    ?`linear-gradient(135deg,${darkenVs(colA,0.5)},${darkenVs(colA,0.35)})`
-    :bLead
-    ?`linear-gradient(135deg,${darkenVs(colB,0.5)},${darkenVs(colB,0.35)})`
-    :`linear-gradient(135deg,#1e293b,#334155)`;
+  function makeVsBg(hex){
+    const hsl=hexToHslVs(hex);
+    if(!hsl)return{bg:'linear-gradient(135deg,#1e293b,#334155)',accent:'#94a3b8'};
+    const {h,s}=hsl;
+    const bgS=Math.min(Math.max(s,50),80);
+    const darkL=Math.max(22,Math.min(30,hsl.l*0.5+8));
+    const midL=Math.max(36,Math.min(46,hsl.l*0.8+12));
+    const accent=`hsl(${h},${Math.min(s+10,90)}%,${Math.min(65,Math.max(50,hsl.l))}%)`;
+    return{bg:`linear-gradient(135deg,hsl(${h},${bgS}%,${darkL}%),hsl(${h},${bgS}%,${midL}%))`,accent};
+  }
+  const vsWinBg=aLead?makeVsBg(colA):bLead?makeVsBg(colB):{bg:'linear-gradient(135deg,#1e293b,#334155)',accent:'#94a3b8'};
+  const winCol=vsWinBg.accent;
+  const cardBg=vsWinBg.bg;
 
   // 최근 5경기 폼
   const recentForm=gameLogs.slice(0,5).map(lg=>
@@ -5784,34 +5799,55 @@ function renderShareCardByMatchObj(m){
   const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
   const draw=!aWin&&!bWin;
 
-  // ── 배경 색상: 승리팀 색상 기반 그라디언트 ──
-  // 승리팀 색상을 기준으로 더 깊고 풍부한 그라디언트 생성
-  function hexToRgb(hex){
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return{r,g,b};
+  // ── 배경 색상: 승리팀 색상 HSL 기반 그라디언트 ──
+  // hex → HSL 변환으로 채도·색조는 유지하고 명도만 조절 → 자연스러운 팀 컬러 배경
+  function hexToHsl(hex){
+    // 3자리 hex 처리 (#abc → #aabbcc)
+    let h=hex.replace('#','');
+    if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if(h.length!==6) return null;
+    let r=parseInt(h.slice(0,2),16)/255;
+    let g=parseInt(h.slice(2,4),16)/255;
+    let b=parseInt(h.slice(4,6),16)/255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b);
+    let hue=0,sat=0,lit=(max+min)/2;
+    if(max!==min){
+      const d=max-min;
+      sat=lit>.5?d/(2-max-min):d/(max+min);
+      if(max===r) hue=((g-b)/d+(g<b?6:0))/6;
+      else if(max===g) hue=((b-r)/d+2)/6;
+      else hue=((r-g)/d+4)/6;
+    }
+    return{h:Math.round(hue*360),s:Math.round(sat*100),l:Math.round(lit*100)};
   }
-  function darken(hex, factor=0.6){
-    // hex가 없거나 짧으면 fallback
-    if(!hex||hex.length<7) return '#1e293b';
-    try{
-      const {r,g,b}=hexToRgb(hex);
-      return `rgb(${Math.floor(r*factor)},${Math.floor(g*factor)},${Math.floor(b*factor)})`;
-    }catch(e){return '#1e293b';}
+  function hslStr(h,s,l){return `hsl(${h},${s}%,${l}%)`;}
+  // 팀 색상에서 HSL 뽑아 배경용 어두운/밝은 버전 생성
+  function makeCardBg(hex){
+    const hsl=hexToHsl(hex);
+    if(!hsl) return{bg:'linear-gradient(160deg,#1e293b,#334155)',accent:'#94a3b8',div:'rgba(255,255,255,.15)'};
+    const {h,s}=hsl;
+    // 채도는 적절히 유지(너무 회색이면 높이고, 너무 형광이면 낮춤)
+    const bgS=Math.min(Math.max(s,50),80);
+    // 어두운 쪽(그라디언트 시작): 명도 22~30
+    const darkL=Math.max(22, Math.min(30, hsl.l*0.5+8));
+    // 밝은 쪽(그라디언트 끝): 명도 36~46
+    const midL=Math.max(36, Math.min(46, hsl.l*0.8+12));
+    const bg=`linear-gradient(160deg,${hslStr(h,bgS,darkL)},${hslStr(h,bgS,midL)})`;
+    // 강조색: 원색보다 약간 밝고 채도 높게
+    const accentL=Math.min(65, Math.max(50, hsl.l));
+    const accent=hslStr(h,Math.min(s+10,90),accentL);
+    return{bg,accent,div:`hsla(${h},${bgS}%,70%,.25)`};
   }
+
   let cardBg, accentColor, dividerColor;
   if(aWin){
-    // A팀 승리: A팀 색상 기반
-    cardBg=`linear-gradient(160deg,${darken(ca,0.55)},${darken(ca,0.38)},${darken(ca,0.25)})`;
-    accentColor=ca;
-    dividerColor=ca+'55';
+    const {bg,accent,div}=makeCardBg(ca);
+    cardBg=bg; accentColor=accent; dividerColor=div;
   } else if(bWin){
-    // B팀 승리: B팀 색상 기반
-    cardBg=`linear-gradient(160deg,${darken(cb,0.55)},${darken(cb,0.38)},${darken(cb,0.25)})`;
-    accentColor=cb;
-    dividerColor=cb+'55';
+    const {bg,accent,div}=makeCardBg(cb);
+    cardBg=bg; accentColor=accent; dividerColor=div;
   } else {
-    // 무승부: 중립 다크 그라디언트
-    cardBg='linear-gradient(160deg,#1e293b,#334155,#1e3a5f)';
+    cardBg='linear-gradient(160deg,#1e293b,#334155)';
     accentColor='#94a3b8';
     dividerColor='rgba(255,255,255,.15)';
   }
