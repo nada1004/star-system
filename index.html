@@ -711,6 +711,46 @@ let filterYear='전체';
 let filterMonth='전체'; // '전체' 또는 '01'~'12'
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
+// 스타대학 아이콘 URL 매핑
+const UNIV_ICONS={
+  '엠비대':'https://i.ibb.co/6cfNW2Nt/image.png',
+  '와플대':'https://i.ibb.co/Zp8f2w8c/image.png',
+  '정선대':'https://i.ibb.co/QFc22RMp/image.png',
+  '츠캄몬스타즈':'https://i.ibb.co/ZpRrMWMt/image.png',
+  '수술대':'https://i.ibb.co/Q7CGzwck/image.png',
+  'JSA':'https://i.ibb.co/tpdY6Z6T/jsa.png',
+  '늪지대':'https://i.ibb.co/1YhTgzdS/image.png',
+  '뉴캣슬':'https://i.ibb.co/qM7NQVMr/image.png',
+  '씨나인':'https://i.ibb.co/8nyMJyWh/image.png',
+  'HM':'https://i.ibb.co/ksZY7Ksq/hm-1.png',
+  'BGM':'https://i.ibb.co/PGL06DJb/bgm-1.png',
+  '흑카데미':'https://i.ibb.co/VW7Rw0G7/image.png',
+  '케이대':'https://i.ibb.co/8n196Hq8/image.png',
+  '이노대':'https://i.ibb.co/pjK8Hb1Z/image.png'
+};
+// 대학명 옆에 아이콘 img 태그 반환 (폰트 크기에 맞는 em 단위 사용)
+function gUI(n,size='1em'){const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';if(!url)return '';return `<img src="${url}" alt="${n}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-left:3px;border-radius:2px" onerror="this.style.display='none'">`;}
+// 대학명 + 아이콘 HTML 반환
+function univNameWithIcon(n,fontSize){const icon=gUI(n,fontSize||'1em');return n+(icon?icon:'');}
+// DOM 요소 내 ubadge에 대학 아이콘 주입
+function injectUnivIcons(container){
+  if(!container)return;
+  container.querySelectorAll('.ubadge:not([data-icon-done])').forEach(el=>{
+    const name=el.textContent.trim();
+    const url=UNIV_ICONS[name];
+    if(url){
+      el.setAttribute('data-icon-done','1');
+      el.style.display='inline-flex';
+      el.style.alignItems='center';
+      el.style.gap='3px';
+      const img=document.createElement('img');
+      img.src=url;img.alt=name;
+      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:2px;flex-shrink:0';
+      img.onerror=function(){this.style.display='none';};
+      el.appendChild(img);
+    }
+  });
+}
 function pC(n){return n>0?'pt-p':n<0?'pt-n':'pt-z';}
 function pS(n){return (n>0?'+':'')+n;}
 function getAllUnivs(){
@@ -839,6 +879,8 @@ function render(){
       const header=el.querySelector('.rec-sum-header');
       if(!header||header.innerText.trim()==='')el.remove();
     });
+    // ubadge에 대학 아이콘 자동 주입 (이미 처리된 것 제외)
+    injectUnivIcons(C);
   });
 }
 
@@ -851,6 +893,7 @@ function openPlayerModal(name){
   if(!p)return;
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 선수 상세`;
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
+  injectUnivIcons(document.getElementById('playerModalBody'));
   // 어드민 전용 수정 버튼
   const editBtn=document.getElementById('playerModalEditBtn');
   if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
@@ -938,6 +981,7 @@ async function captureDetail(id, filename){
 function openUnivModal(univName){
   document.getElementById('univModalTitle').innerText=`🏛️ ${univName} 대학 상세`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
+  injectUnivIcons(document.getElementById('univModalBody'));
   window._univModalCurrentName=univName;
   om('univModal');
 }
@@ -953,7 +997,7 @@ function buildPlayerDetailHTML(p){
   const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
   let h=`<div class="ipanel" style="border-color:${col}66;background:${col}0d;margin-bottom:14px;">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-      <span class="ubadge clickable-univ" style="background:${col};font-size:13px;padding:5px 14px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${p.univ}</span>
+      <span class="ubadge clickable-univ" style="background:${col};font-size:13px;padding:5px 14px;display:inline-flex;align-items:center;gap:3px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${p.univ}${gUI(p.univ,'13px')}</span>
       <span class="rbadge r${p.race}">${p.race}</span>
       <span style="font-size:20px">${p.name}${genderIcon(p.gender)}</span>
       ${getTierBadge(p.tier)}
@@ -1047,7 +1091,7 @@ function buildUnivDetailHTML(univName){
 
   let h=`<div style="background:${col}0d;border:2px solid ${col}44;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <span class="ubadge" style="background:${col};font-size:14px;padding:5px 16px">${univName}</span>
+      <span class="ubadge" style="background:${col};font-size:14px;padding:5px 16px;display:inline-flex;align-items:center;gap:4px">${univName}${gUI(univName,'14px')}</span>
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:${col}">대학 통합 정보</span>
     </div>
     <div style="display:flex;gap:20px;flex-wrap:wrap">
@@ -1130,7 +1174,7 @@ function rTotal(C,T){
   getAllUnivs().forEach(u=>{
     const up=players.filter(p=>p.univ===u.name);if(!up.length)return;
     h+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?9:8}">
-      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;">🏛️ ${u.name}</span>
+      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">🏛️ ${u.name}${gUI(u.name,'14px')}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
     const sorted=[...up].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
@@ -1580,10 +1624,10 @@ function openVsShareCard(){
     const hsl=hexToHslVs(hex);
     if(!hsl)return{bg:'linear-gradient(135deg,#1e293b,#334155)',accent:'#94a3b8'};
     const {h,s}=hsl;
-    const bgS=Math.min(Math.max(s,50),80);
-    const darkL=Math.max(22,Math.min(30,hsl.l*0.5+8));
-    const midL=Math.max(36,Math.min(46,hsl.l*0.8+12));
-    const accent=`hsl(${h},${Math.min(s+10,90)}%,${Math.min(65,Math.max(50,hsl.l))}%)`;
+    const bgS=Math.min(Math.max(s,40),70);
+    const darkL=Math.max(38,Math.min(52,hsl.l*0.7+18));
+    const midL=Math.max(55,Math.min(68,hsl.l*0.9+22));
+    const accent=`hsl(${h},${Math.min(s+10,90)}%,${Math.min(75,Math.max(60,hsl.l))}%)`;
     return{bg:`linear-gradient(135deg,hsl(${h},${bgS}%,${darkL}%),hsl(${h},${bgS}%,${midL}%))`,accent};
   }
   const vsWinBg=aLead?makeVsBg(colA):bLead?makeVsBg(colB):{bg:'linear-gradient(135deg,#1e293b,#334155)',accent:'#94a3b8'};
@@ -1702,6 +1746,7 @@ function rHist(C,T){
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
     {id:'tourney',lbl:'🎖️ 대회'},
+    {id:'tiertour',lbl:'🎯 티어대회'},
     {id:'univstat',lbl:'🏛️ 대학별'},
     {id:'univrank',lbl:'🏛️ 대학별 포인트 순위'},
     {id:'pro',lbl:'🏅 프로리그'},
@@ -1757,6 +1802,7 @@ function rHist(C,T){
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
+  else if(histSub==='tiertour') h+=ttM&&ttM.length?recSummaryListHTMLFiltered(ttM,'tt','hist'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회 기록이 없습니다.</div>';
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   C.innerHTML=h;
 }
@@ -1992,7 +2038,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
-    const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:ckM;
+    const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:mode==='tt'?ttM:ckM;
     const i=srcArr.indexOf(m);
     const isCK=isCKmode;
     const ca=isCK?'#2563eb':gc(m.a);const cb=isCK?'#dc2626':gc(m.b);
@@ -2079,7 +2125,7 @@ function recSummaryListHTML(arr, mode, context){
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
-          ${mode!=='ck'?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
+          ${(mode!=='ck'&&mode!=='pro')||mode==='tt'?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
         </div>
       </div>
@@ -4739,6 +4785,13 @@ function openRE(mode,idx){
       <label>B팀 레이블</label><input type="text" id="re-tlb" value="${m.teamBLabel||''}">
       <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+  } else if(mode==='tt'){
+    const m=ttM[idx];tit='🎯 티어대회 수정';
+    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>대회명/메모</label><input type="text" id="re-ttn" value="${m.n||m.t||''}">
+      <label>A팀 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
+      <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
+      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   }
   document.getElementById('reTitle').innerText=tit;
   document.getElementById('reBody').innerHTML=body;om('reModal');
@@ -4764,6 +4817,12 @@ function saveRow(){
     const m=proM[reIdx];m.d=d;
     m.teamALabel=document.getElementById('re-tla')?.value||m.teamALabel;
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
+    m.sa=parseInt(document.getElementById('re-sa').value)||0;
+    m.sb=parseInt(document.getElementById('re-sb').value)||0;
+  } else if(reMode==='tt'){
+    const m=ttM[reIdx];m.d=d;
+    const ttn=document.getElementById('re-ttn')?.value;
+    if(ttn!==undefined){m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   }
@@ -5824,32 +5883,39 @@ function renderShareCardByMatchObj(m){
   // 팀 색상에서 HSL 뽑아 배경용 어두운/밝은 버전 생성
   function makeCardBg(hex){
     const hsl=hexToHsl(hex);
-    if(!hsl) return{bg:'linear-gradient(160deg,#1e293b,#334155)',accent:'#94a3b8',div:'rgba(255,255,255,.15)'};
+    if(!hsl) return{bg:'linear-gradient(160deg,#1e293b,#334155)',accent:'#94a3b8',div:'rgba(255,255,255,.15)',textColor:'#fff',subColor:'rgba(255,255,255,.65)',dimColor:'rgba(255,255,255,.4)'};
     const {h,s}=hsl;
     // 채도는 적절히 유지(너무 회색이면 높이고, 너무 형광이면 낮춤)
-    const bgS=Math.min(Math.max(s,50),80);
-    // 어두운 쪽(그라디언트 시작): 명도 22~30
-    const darkL=Math.max(22, Math.min(30, hsl.l*0.5+8));
-    // 밝은 쪽(그라디언트 끝): 명도 36~46
-    const midL=Math.max(36, Math.min(46, hsl.l*0.8+12));
+    const bgS=Math.min(Math.max(s,40),70);
+    // 어두운 쪽(그라디언트 시작): 명도 38~52 — 팀색보다 연하게
+    const darkL=Math.max(38, Math.min(52, hsl.l*0.7+18));
+    // 밝은 쪽(그라디언트 끝): 명도 55~68
+    const midL=Math.max(55, Math.min(68, hsl.l*0.9+22));
     const bg=`linear-gradient(160deg,${hslStr(h,bgS,darkL)},${hslStr(h,bgS,midL)})`;
     // 강조색: 원색보다 약간 밝고 채도 높게
-    const accentL=Math.min(65, Math.max(50, hsl.l));
+    const accentL=Math.min(75, Math.max(60, hsl.l));
     const accent=hslStr(h,Math.min(s+10,90),accentL);
-    return{bg,accent,div:`hsla(${h},${bgS}%,70%,.25)`};
+    // 배경 밝기 기준으로 텍스트 색상 결정
+    const avgL=(darkL+midL)/2;
+    const isDark=avgL<50;
+    const textColor=isDark?'#fff':`hsl(${h},${Math.min(bgS,60)}%,12%)`;
+    const subColor=isDark?'rgba(255,255,255,.75)':`hsla(${h},${bgS}%,18%,.8)`;
+    const dimColor=isDark?'rgba(255,255,255,.45)':`hsla(${h},${bgS}%,25%,.6)`;
+    return{bg,accent,div:`hsla(${h},${bgS}%,80%,.3)`,textColor,subColor,dimColor};
   }
 
-  let cardBg, accentColor, dividerColor;
+  let cardBg, accentColor, dividerColor, mainTextColor, subTextColor, dimTextColor;
   if(aWin){
-    const {bg,accent,div}=makeCardBg(ca);
-    cardBg=bg; accentColor=accent; dividerColor=div;
+    const {bg,accent,div,textColor,subColor,dimColor}=makeCardBg(ca);
+    cardBg=bg; accentColor=accent; dividerColor=div; mainTextColor=textColor; subTextColor=subColor; dimTextColor=dimColor;
   } else if(bWin){
-    const {bg,accent,div}=makeCardBg(cb);
-    cardBg=bg; accentColor=accent; dividerColor=div;
+    const {bg,accent,div,textColor,subColor,dimColor}=makeCardBg(cb);
+    cardBg=bg; accentColor=accent; dividerColor=div; mainTextColor=textColor; subTextColor=subColor; dimTextColor=dimColor;
   } else {
     cardBg='linear-gradient(160deg,#1e293b,#334155)';
     accentColor='#94a3b8';
     dividerColor='rgba(255,255,255,.15)';
+    mainTextColor='#fff'; subTextColor='rgba(255,255,255,.75)'; dimTextColor='rgba(255,255,255,.45)';
   }
 
   // ── 세트 상세 HTML ──
@@ -5898,7 +5964,7 @@ function renderShareCardByMatchObj(m){
   const winnerLabel=aWin?a:bWin?b:'';
   const winnerColor=aWin?ca:cb;
 
-  card.innerHTML=`<div style="background:${cardBg};padding:22px 24px;color:#fff;min-width:340px;position:relative;overflow:hidden">
+  card.innerHTML=`<div style="background:${cardBg};padding:22px 24px;color:${mainTextColor};min-width:340px;position:relative;overflow:hidden">
     <!-- 배경 장식 -->
     <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:${accentColor};opacity:.08;pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;border-radius:50%;background:${accentColor};opacity:.06;pointer-events:none"></div>
@@ -5906,32 +5972,32 @@ function renderShareCardByMatchObj(m){
     <!-- 헤더: 대회명 + 날짜 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       ${m.n?`<div style="font-size:11px;color:#fbbf24;font-weight:700;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);padding:2px 10px;border-radius:20px">🎖️ ${m.n}</div>`:'<div></div>'}
-      <div style="font-size:11px;color:rgba(255,255,255,.45)">${m.d||''}</div>
+      <div style="font-size:11px;color:${dimTextColor}">${m.d||''}</div>
     </div>
 
     <!-- 팀 대결 스코어 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px">
       <!-- A팀 -->
       <div style="text-align:center;flex:1;min-width:0">
-        <div style="width:52px;height:52px;border-radius:14px;background:${ca};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;border:${aWin?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.2)'};${aWin?'box-shadow:0 0 20px '+ca+'88':'opacity:.6'}">${a[0]}</div>
-        <div style="font-size:14px;font-weight:800;${aWin?'':'opacity:.6'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a}</div>
+        <div style="width:52px;height:52px;border-radius:14px;background:${ca};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;border:${aWin?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.2)'};${aWin?'box-shadow:0 0 20px '+ca+'88':'opacity:.6'}">${a[0]}</div>
+        <div style="font-size:14px;font-weight:800;color:${mainTextColor};${aWin?'':' opacity:.6'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a}</div>
         ${aWin?`<div style="margin-top:4px"><span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:''}
       </div>
 
       <!-- 스코어 -->
       <div style="text-align:center;flex-shrink:0;padding:0 4px">
         <div style="font-size:46px;font-weight:900;letter-spacing:4px;line-height:1">
-          <span style="color:${aWin?'#4ade80':bWin?'rgba(255,255,255,.35)':'rgba(255,255,255,.7)'}">${m.sa}</span>
-          <span style="color:rgba(255,255,255,.2);font-size:28px;margin:0 4px">:</span>
-          <span style="color:${bWin?'#4ade80':aWin?'rgba(255,255,255,.35)':'rgba(255,255,255,.7)'}">${m.sb}</span>
+          <span style="color:${aWin?accentColor:bWin?dimTextColor:subTextColor}">${m.sa}</span>
+          <span style="color:${dimTextColor};font-size:28px;margin:0 4px">:</span>
+          <span style="color:${bWin?accentColor:aWin?dimTextColor:subTextColor}">${m.sb}</span>
         </div>
-        ${draw?'<div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:1px">무 승 부</div>':''}
+        ${draw?`<div style="font-size:10px;color:${dimTextColor};margin-top:4px;letter-spacing:1px">무 승 부</div>`:''}
       </div>
 
       <!-- B팀 -->
       <div style="text-align:center;flex:1;min-width:0">
-        <div style="width:52px;height:52px;border-radius:14px;background:${cb};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;border:${bWin?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.2)'};${bWin?'box-shadow:0 0 20px '+cb+'88':'opacity:.6'}">${b[0]}</div>
-        <div style="font-size:14px;font-weight:800;${bWin?'':'opacity:.6'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b}</div>
+        <div style="width:52px;height:52px;border-radius:14px;background:${cb};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;border:${bWin?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.2)'};${bWin?'box-shadow:0 0 20px '+cb+'88':'opacity:.6'}">${b[0]}</div>
+        <div style="font-size:14px;font-weight:800;color:${mainTextColor};${bWin?'':' opacity:.6'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b}</div>
         ${bWin?`<div style="margin-top:4px"><span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:''}
       </div>
     </div>
@@ -5940,7 +6006,7 @@ function renderShareCardByMatchObj(m){
     ${setsHTML?`<div style="border-top:1px solid ${dividerColor};padding-top:14px;margin-bottom:8px">${setsHTML}</div>`:''}
 
     <!-- 푸터 -->
-    <div style="text-align:right;font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+    <div style="text-align:right;font-size:10px;color:${dimTextColor};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
   </div>`;
 }
 
