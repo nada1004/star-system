@@ -1411,7 +1411,7 @@ function rTier(C,T){
     h+=`<tr>
       <td style="text-align:center">${rnkHTML}</td>
       <td style="text-align:center">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center"><span style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${gUI(p.univ,'16px')} <span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${p.univ}')">${p.univ}</span></span></td>
+      <td style="text-align:center"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${p.univ}')">${p.univ}</span></td>
       <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
       <td style="text-align:left;padding-left:16px;font-weight:700"><span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</td>
       <td style="text-align:center" class="wt">${p.win}</td>
@@ -3748,16 +3748,16 @@ function rCompLeague(tn){
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:80px">
-            <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:#fff;background:${ca||'#888'};padding:8px 12px;border-radius:8px;${aWin?'box-shadow:0 0 0 2.5px '+ca+'99':''}${isDone&&!aWin?';opacity:.5':''}">${m.a||'—'}</div>
+            <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:#fff;background:${ca||'#888'};padding:8px 12px;border-radius:8px;${aWin?'box-shadow:0 0 0 2.5px '+ca+'99':''}${isDone&&!aWin?';opacity:.5':''};cursor:pointer" onclick="openUnivModal('${m.a||''}')">${m.a||'—'}</div>
           </div>
           <div style="text-align:center;min-width:60px">
-            ${isDone?`<div class="grp-match-score"><span style="color:${aWin?'var(--green)':bWin?'var(--red)':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l)"> : </span><span style="color:${bWin?'var(--green)':aWin?'var(--red)':'var(--text)'}">${m.sb}</span></div>
+            ${isDone?`<div class="grp-match-score score-click" onclick="leagueToggleDet('${detId}',document.querySelector('[data-det=\\'${detId}\\']'))" title="클릭하여 상세 보기"><span style="color:${aWin?'var(--green)':bWin?'var(--red)':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l)"> : </span><span style="color:${bWin?'var(--green)':aWin?'var(--red)':'var(--text)'}">${m.sb}</span></div>
             <div style="font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'};">${aWin?m.a+' 승':bWin?m.b+' 승':'무승부'}</div>
-            ${isDone?`<button class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">상세 ▼</button>`:''}
+            ${isDone?`<button class="btn-detail" data-det="${detId}" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">상세 보기 ▼</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;color:var(--gray-l)">VS</div>`}
           </div>
           <div style="text-align:center;min-width:80px">
-            <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:#fff;background:${cb||'#888'};padding:8px 12px;border-radius:8px;${bWin?'box-shadow:0 0 0 2.5px '+cb+'99':''}${isDone&&!bWin?';opacity:.5':''}">${m.b||'—'}</div>
+            <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:#fff;background:${cb||'#888'};padding:8px 12px;border-radius:8px;${bWin?'box-shadow:0 0 0 2.5px '+cb+'99':''}${isDone&&!bWin?';opacity:.5':''};cursor:pointer" onclick="openUnivModal('${m.b||''}')">${m.b||'—'}</div>
           </div>
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
@@ -3782,7 +3782,9 @@ function leagueToggleDet(id,btn){
   const el=document.getElementById(id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
-  if(btn){btn.textContent=open?'닫기 ▲':'상세 보기 ▼';btn.classList.toggle('open',open);}
+  // btn이 없으면 data-det 속성으로 찾기
+  const detBtn=btn||document.querySelector(`[data-det="${id}"]`);
+  if(detBtn){detBtn.textContent=open?'닫기 ▲':'상세 보기 ▼';detBtn.classList.toggle('open',open);}
 }
 
 function leagueEditMatch(tnId,gi,mi){
@@ -6082,18 +6084,18 @@ function renderShareCardByMatchObj(m){
     const hsl=hexToHsl(hex);
     if(!hsl) return{bg:'linear-gradient(160deg,#1e3a5c,#1e4a7c)',accent:'#60a5fa',div:'rgba(0,0,0,.1)',textColor:'#1e293b',subColor:'rgba(30,41,59,.7)',dimColor:'rgba(30,41,59,.45)'};
     const {h,s,l}=hsl;
-    // 배경은 팀 원색보다 명도 +28~38 높은 파스텔톤 (항상 팀색보다 연함)
-    const bgS=Math.max(Math.min(s,60),25);
-    const bgL1=Math.min(l+28,90);
-    const bgL2=Math.min(l+38,96);
-    const bg=`linear-gradient(160deg,hsl(${h},${bgS}%,${bgL1}%),hsl(${h},${Math.max(bgS-10,15)}%,${bgL2}%))`;
+    // 배경은 팀 원색보다 명도 +40~52 높은 파스텔톤 (항상 팀색보다 연함)
+    const bgS=Math.max(Math.min(s,40),15);
+    const bgL1=Math.min(l+40,93);
+    const bgL2=Math.min(l+52,97);
+    const bg=`linear-gradient(160deg,hsl(${h},${bgS}%,${bgL1}%),hsl(${h},${Math.max(bgS-8,10)}%,${bgL2}%))`;
     // 강조색: 팀 원색 (배경보다 어둡게 → 잘 보임)
-    const accent=`hsl(${h},${Math.min(s+5,90)}%,${Math.max(l-5,25)}%)`;
-    const divC=`hsla(${h},${bgS}%,${Math.min(l+10,70)}%,.4)`;
+    const accent=`hsl(${h},${Math.min(s+10,90)}%,${Math.max(l-10,20)}%)`;
+    const divC=`hsla(${h},${bgS}%,${Math.min(l+15,75)}%,.35)`;
     // 배경이 항상 밝으므로 텍스트는 어두운 색
-    const textColor=`hsl(${h},${Math.min(s,50)}%,${Math.max(l-40,8)}%)`;
-    const subColor=`hsla(${h},${Math.min(s,50)}%,${Math.max(l-30,15)}%,.85)`;
-    const dimColor=`hsla(${h},${Math.min(s,40)}%,${Math.max(l-20,25)}%,.6)`;
+    const textColor=`hsl(${h},${Math.min(s,60)}%,${Math.max(l-45,6)}%)`;
+    const subColor=`hsla(${h},${Math.min(s,55)}%,${Math.max(l-35,12)}%,.9)`;
+    const dimColor=`hsla(${h},${Math.min(s,45)}%,${Math.max(l-25,20)}%,.65)`;
     return{bg,accent,div:divC,textColor,subColor,dimColor};
   }
 
