@@ -34,6 +34,12 @@ b,strong{font-weight:600;}
 .score-click{cursor:pointer;padding:2px 10px;border-radius:8px;transition:.12s;}
 .score-click:hover{background:var(--blue-ll,#dbeafe);}
 
+/* 공유카드 모달 */
+.sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:3000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.sharecard-modal-box{background:var(--white);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:95vw;position:relative;}
+.sharecard-modal-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-l);line-height:1;}
+.sharecard-modal-close:hover{color:var(--text);}
+.sharecard-modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;}
 /* 조별 순위표 세련화 */
 .grp-rank-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
 .grp-rank-table th{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;}
@@ -477,7 +483,7 @@ body.dark .sort-btn.on{background:#2563eb;color:#fff;}
 <!-- 하단 액션 버튼 바 -->
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
 <div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
-  <button class="btn btn-b" onclick="doJpg()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> JPG 저장</button>
+  <button class="btn btn-b" onclick="doJpg()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> 이미지 저장</button>
   <button class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
   <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
@@ -802,6 +808,12 @@ function render(){
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
   document.getElementById('farea').innerHTML='';
+  // 탭 버튼 UI 동기화
+  document.querySelectorAll('.tab').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    const active=oc.includes("'"+curTab+"'");
+    b.classList.toggle('on',active);
+  });
   // 이전 내용 제거
   C.innerHTML='';
   const renderFn=({total:rTotal,tier:rTier,hist:rHist,mini:rMini,univck:rCK,univm:rUnivM,comp:rComp,pro:rPro,member:rMember,cfg:rCfg,stats:rStats,cal:rCal,vote:rVote})[curTab];
@@ -845,11 +857,7 @@ function openShareCardFromPlayer(){
   cm('playerModal');
   _shareMode='player';
   _sharePlayerSearch=name;
-  statsSub='sharecard';
-  curTab='stats';
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
-  render();
+  openShareCardModal();
   setTimeout(()=>renderShareCardByPlayer(name),80);
 }
 
@@ -859,23 +867,14 @@ function openShareCardFromUniv(){
   cm('univModal');
   _shareMode='univ';
   _shareUnivSearch=name;
-  statsSub='sharecard';
-  curTab='stats';
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
-  render();
+  openShareCardModal();
   setTimeout(()=>renderShareCardByUniv(name),80);
 }
 function openShareCardFromMatch(mode,idx){
-  // 해당 경기 객체를 전역에 저장 후 공유카드 탭으로 이동
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
   window._shareMatchObj=arr[idx]||null;
   _shareMode='match';
-  statsSub='sharecard';
-  curTab='stats';
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});
-  render();
+  openShareCardModal();
   setTimeout(()=>{
     if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);
   },80);
@@ -1594,7 +1593,7 @@ function rHistUnivStat(){
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','대회_${m.d||'match'}')">📷 이미지 저장</button>
-              <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('comp',${rIdx})">🎴 공유 카드</button>
+              <button class="btn btn-p btn-xs no-export" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             </div>
           </div>
         </div>
@@ -1878,7 +1877,7 @@ function compSummaryListHTML(context){
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             <button class="btn-capture btn-xs" onclick="captureDetail('det-${key}','대회_${(m.d||'match').replace(/\\//g,'-')}')">📷 이미지 저장</button>
-            <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');statsSub='sharecard';curTab='stats';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});render();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+            <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">삭제</button>`:''}`:''}
@@ -3154,7 +3153,7 @@ function rCompLeague(tn){
         ${isDone?buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">아직 경기가 진행되지 않았습니다.</div>'}
         ${isDone?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap" class="no-export">
           <button class="btn-capture btn-xs" onclick="captureDetail('${detId}','대회_${(m.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
-          <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=${JSON.stringify(m).replace(/"/g,"'")};statsSub='sharecard';curTab='stats';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>{if(b.textContent.includes('통계'))b.classList.add('on');});render();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+          <button class="btn btn-p btn-xs" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button>
         </div>`:''}
       </div>`;
     });
@@ -4554,7 +4553,7 @@ function statsOverviewHTML(){
   <div class="ssec" id="stats-univ-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <h4 style="margin:0;font-family:'Noto Sans KR',sans-serif">🏛️ 대학별 승률 랭킹</h4>
-      <button class="btn-capture btn-xs no-export" onclick="captureStats()">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" onclick="captureStats()">📷 이미지 저장</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${univRank.filter(u=>u.w+u.l>0).map((u,i)=>{
@@ -4612,7 +4611,7 @@ function statsEloHTML(){
       <select id="elo-sel-player" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_eloSelPlayer=this.value;initEloChart()">
         ${top20.map(p=>`<option value="${p.name}"${_eloSelPlayer===p.name?' selected':''}>${p.name} (${p.univ}) ELO:${p.elo||1200}</option>`).join('')}
       </select>
-      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
     <canvas id="eloChart" style="width:100%;max-height:300px"></canvas>
     <div id="eloRankTable" style="margin-top:16px"></div>
@@ -4723,7 +4722,7 @@ function statsGrowthHTML(){
       <select id="growth-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_growthSel=this.value;initGrowthChart()">
         ${cands.map(p=>`<option value="${p.name}"${_growthSel===p.name?' selected':''}>${p.name} (${p.univ}) ${p.history.length}경기</option>`).join('')}
       </select>
-      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
     <canvas id="growthChart" style="width:100%;max-height:300px"></canvas>
     <div id="growthInfo" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"></div>
@@ -4861,7 +4860,7 @@ function statsAwardHTML(){
   <div class="ssec" id="stats-award-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <h4 style="margin:0">🏆 이달의 선수 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
-      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       ${awardCard('👑 이달 최다승',''+mostWin?mostWin:null,'이번 달 가장 많은 승리!','#d97706')}
@@ -4946,7 +4945,7 @@ function statsRecordsHTML(){
   }
   return`<div id="stats-records-sec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
     <span style="font-size:12px;color:var(--gray-l)">(프로리그 제외)</span>
-    <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-records-sec','records')">📷 JPG 저장</button>
+    <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-records-sec','records')">📷 이미지 저장</button>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:14px">${cats.map(recordCard).join('')}</div></div>`;
 }
@@ -4966,7 +4965,7 @@ function statsRadarHTML(){
       <select id="radar-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_radarSelUniv=this.value;initRadarChart()">
         ${univs.map(u=>`<option value="${u.name}"${_radarSelUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
       </select>
-      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
       <canvas id="radarChart" width="280" height="280" style="flex-shrink:0"></canvas>
@@ -5162,7 +5161,7 @@ function statsMismatchHTML(){
   <div class="ssec" id="stats-mismatch-top">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <h4>🔥 이변 TOP 10 (하위 ELO가 승리) <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
-      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-mismatch-top','mismatch')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-mismatch-top','mismatch')">📷 이미지 저장</button>
     </div>
     ${upsets.length?`<div style="display:flex;flex-direction:column;gap:6px">${upsets.map(matchRow).join('')}</div>`:'<p style="color:var(--gray-l)">이변 기록이 없습니다.</p>'}
   </div>
@@ -5189,6 +5188,8 @@ function statsShareCardHTML(){
   // 모든 경기 최신순 (tourneys 대회 경기 포함)
   const tourMatchesForShare=typeof getTourneyMatches==="function"?getTourneyMatches():[];
   const allMatches=[...miniM,...univM,...ckM,...comps,...tourMatchesForShare].sort((a,b)=>(b.d||"").localeCompare(a.d||""));
+  // 캐시 초기화 (페이지 렌더링마다 fresh)
+  window._shareAllMatchesCached=null;
 
 
   const totalPages=Math.ceil(allMatches.length/SHARE_MATCH_PER_PAGE)||1;
@@ -5198,7 +5199,6 @@ function statsShareCardHTML(){
   return`<div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h4 style="margin:0;font-size:16px">🎴 공유 카드 생성</h4>
-      <button class="btn-capture btn-xs no-export" onclick="downloadShareCard()">📷 이미지 저장</button>
     </div>
     <!-- 모드 탭 -->
     <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" class="no-export">
@@ -5250,7 +5250,7 @@ function statsShareCardHTML(){
           const ca=gc(a),cb=gc(b);
           const aWin=m.sa>m.sb;
           const isActive=window._shareMatchObj&&window._shareMatchObj===m;
-          return`<button onclick="window._shareAllMatchesCached=window._shareAllMatchesCached||[...miniM,...univM,...ckM,...comps].sort((a,b)=>(b.d||'').localeCompare(a.d||''));window._shareMatchObj=window._shareAllMatchesCached[${globalIdx}];renderShareCardByMatchObj(window._shareMatchObj)"
+          return`<button onclick="window._shareMatchObj=[...miniM,...univM,...ckM,...comps,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])].sort((a,b)=>(b.d||'').localeCompare(a.d||''))[${globalIdx}]||null;renderShareCardByMatchObj(window._shareMatchObj)"
             style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;border:2px solid ${isActive?'var(--blue)':'var(--border)'};background:${isActive?'var(--blue-l)':'transparent'};cursor:pointer;text-align:left;font-size:12px;transition:.1s"
             onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background='${isActive?'var(--blue-l)':'transparent'}'">
             <span style="color:var(--gray-l);min-width:80px;font-size:10px">${m.d||'-'}</span>
@@ -5268,8 +5268,12 @@ function statsShareCardHTML(){
 
     <!-- 카드 미리보기 -->
     <div id="sharecard-preview-wrap">
-      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block">
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">💡 카드를 클릭하면 사라집니다</div>
+      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block;cursor:pointer" title="클릭하여 카드 닫기" onclick="this.innerHTML='<p style=text-align:center;color:var(--gray-l);padding:36px_20px;font-size:13px>위에서 선택하면 카드가 생성됩니다</p>'.replace(/_/g,' ')">
         <p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>
+      </div>
+      <div class="sharecard-modal-actions" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn btn-p btn-sm" onclick="downloadShareCardJpg()">📷 이미지 저장</button>
       </div>
     </div>
   </div>`;
@@ -5437,9 +5441,98 @@ function renderShareCardByMatchObj(m){
     <div style="margin-top:12px;text-align:right;font-size:10px;opacity:.35">⭐ 스타대학 데이터 센터</div>
   </div>`;
 }
+
+
+// 캘린더 경기 공유카드 열기
+function _calShareDirect(dummy, mi, ds){
+  // 캘린더 일간뷰에서 공유카드 열기 - 캘린더와 동일한 allMatches 구성
+  const allM=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])].filter(m=>(m.d||'')===ds);
+  const m=allM[mi];
+  if(!m)return;
+  const isCKorPro=(ckM.includes(m)||proM.includes(m));
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);
+}
+function openCalMatchShareCard(mode, globalIdx){
+  // globalIdx는 [...miniM,...univM,...comps,...ckM,...proM] 기준 인덱스
+  const allM=[...miniM,...univM,...comps,...ckM,...proM];
+  const m=allM[globalIdx];
+  if(!m)return;
+  const isCKorPro=(ckM.includes(m)||proM.includes(m));
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+}
+
+// 대회 탭 경기 공유카드 열기
+function openCompMatchShareCard(tnId, gi, mi){
+  const tn=(tourneys||[]).find(t=>t.id===tnId);
+  if(!tn)return;
+  const grp=tn.groups&&tn.groups[gi];
+  if(!grp)return;
+  const m=grp.matches&&grp.matches[mi];
+  if(!m)return;
+  window._shareMatchObj={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);
+}
+
+// 공유카드 모달 열기
+function openShareCardModal(){
+  // 기존 모달 제거
+  const existing=document.getElementById('sharecard-overlay');
+  if(existing)existing.remove();
+  
+  const overlay=document.createElement('div');
+  overlay.id='sharecard-overlay';
+  overlay.className='sharecard-modal-overlay';
+  overlay.innerHTML=`<div class="sharecard-modal-box">
+    <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()">✕</button>
+    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:12px;padding-right:30px">🎴 공유 카드</div>
+    <div id="modal-share-card" style="cursor:pointer" title="클릭하여 닫기" onclick="document.getElementById('sharecard-overlay').remove()">
+      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block">
+        <p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">카드를 생성하는 중...</p>
+      </div>
+    </div>
+    <div class="sharecard-modal-actions">
+      <button class="btn btn-p" onclick="downloadShareCardJpg()">📷 이미지 저장</button>
+      <button class="btn btn-w" onclick="document.getElementById('sharecard-overlay').remove()">닫기</button>
+    </div>
+  </div>`;
+  // 배경 클릭 시 닫기
+  overlay.addEventListener('click', function(e){
+    if(e.target===overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+// 이미지 저장 함수 (JPG)
+async function downloadShareCardJpg(){
+  const el=document.getElementById('share-card');
+  if(!el||el.querySelector('p')){alert('먼저 카드를 생성하세요.');return;}
+  try{
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:3,useCORS:true,logging:false});
+    const a=document.createElement('a');
+    a.download=`share_card_${new Date().toISOString().slice(0,10)}.jpg`;
+    a.href=canvas.toDataURL('image/jpeg',0.95);a.click();
+  }catch(e){alert('저장 오류: '+e.message);}
+}
+
+// 안전한 match 객체 파싱 헬퍼
+function _getMatchObjSafe(jsonObj){
+  try{
+    if(typeof jsonObj==='string') return JSON.parse(jsonObj);
+    return jsonObj;
+  }catch(e){return null;}
+}
+
 async function downloadShareCard(){
   const el=document.getElementById('share-card');
-  if(!el){alert('카드가 없습니다.');return;}
+  if(!el||!el.children.length||el.querySelector('p')){alert('먼저 카드를 생성하세요.');return;}
   try{
     const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:true,logging:false});
     const a=document.createElement('a');
@@ -5483,7 +5576,7 @@ function statsAdvSearchHTML(){
   <div class="ssec" id="stats-advsearch-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <h4 style="margin:0">🔍 선수 고급 검색 필터</h4>
-      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-advsearch-sec','advsearch')">📷 JPG 저장</button>
+      <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-advsearch-sec','advsearch')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" placeholder="🔍 이름 검색..." value="${f.name}" oninput="_advFilter.name=this.value;render()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
@@ -5612,7 +5705,7 @@ function rCal(C,T){
   T.textContent='📅 경기 캘린더';
 
   // 모든 경기 데이터 맵 (날짜→경기 객체 배열)
-  const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
+  const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
   const dateMatchMap={};
   allMatches.forEach(m=>{
     const d=m.d||'';
@@ -5774,9 +5867,18 @@ function rCal(C,T){
             ${hasResult?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`:`<span style="color:var(--gray-l);font-weight:700">vs</span>`}
             <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tB}</span>
             ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>'}
-            <div style="margin-left:auto" class="no-export"><button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button></div>
+            <div style="margin-left:auto;display:flex;gap:4px;align-items:center" class="no-export">
+            <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button>
+            <button class="btn btn-p btn-xs" onclick="openCalMatchShareCard('${miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp'}',${allMatches.indexOf(m)})">🎴 공유 카드</button>
           </div>
-          <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">${detHTML}</div>
+          </div>
+          <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">
+            ${detHTML}
+            ${hasResult?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px" class="no-export">
+              <button class="btn-capture btn-xs" onclick="captureDetail('det-${detKey}','${calDayDate}_match')">📷 이미지 저장</button>
+              <button class="btn btn-p btn-xs" onclick="openCalMatchShareCard('${miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp'}',${allMatches.indexOf(m)})">🎴 공유 카드</button>
+            </div>`:''}
+          </div>
         </div>`;
       }).join('');
     }
@@ -5829,7 +5931,7 @@ function calShowDay(ds){
   }
   _calActiveDay=ds;
   _calDetailState={}; // 날짜 변경 시 상세 상태 초기화
-  const allMatches=[...miniM,...univM,...comps,...ckM,...proM];
+  const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
   const matches=allMatches.filter(m=>m.d===ds);
 
   function buildMatchRow(m,mi){
@@ -5867,7 +5969,7 @@ function calShowDay(ds){
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'
       +detHTML
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-      +'<button class="btn-capture btn-xs no-export" onclick="captureDetail(\'det-'+detKey+'\',\''+ds+'_match\')">📷 이미지 저장</button>'
+      +'<button class="btn-capture btn-xs no-export" onclick="captureDetail(\'det-'+detKey+'\',\''+ds+'_match\')">📷 이미지 저장</button>'      +' <button class="btn btn-p btn-xs no-export" onclick="openCalMatchShareCard(\''+modeKey+'\','+allMatches.indexOf(m)+');event.stopPropagation()">🎴 공유 카드</button>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -6381,9 +6483,11 @@ function init(){
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
   }
-  document.getElementById('p-tier').innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
-  refreshSel();
-  document.getElementById('m-date').valueAsDate=new Date();
+  const ptier=document.getElementById('p-tier');
+  if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
+  try{refreshSel();}catch(e){}
+  const mdate=document.getElementById('m-date');
+  if(mdate) mdate.valueAsDate=new Date();
   initLoginHash();
   applyLoginState();
   render();
@@ -6427,9 +6531,20 @@ function gsSetStatus(msg, color='var(--gray-l)'){
 window.cloudLoad = async function(){
   try{
     gsSetStatus('📥 불러오는 중...', 'var(--blue)');
-    const res = await fetch(GITHUB_JSON_URL + '?t=' + Date.now());
-    if(!res.ok) throw new Error('파일을 찾을 수 없습니다 ('+res.status+')');
-    const d = await res.json();
+    let res, d;
+    // raw.githubusercontent.com fetch (CORS 허용됨)
+    const urls=[
+      GITHUB_JSON_URL + '?t=' + Date.now(),
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json?t='+Date.now(),
+    ];
+    let lastErr=null;
+    for(const url of urls){
+      try{
+        res = await fetch(url, {cache:'no-store', mode:'cors'});
+        if(res.ok){ try{ d=await res.json(); }catch(e){ throw new Error('JSON 파싱 오류'); } break; }
+      }catch(e){ lastErr=e; }
+    }
+    if(!d) throw new Error('데이터를 불러올 수 없습니다. 인터넷 연결 또는 GitHub 저장소를 확인하세요. ('+( lastErr?lastErr.message:'HTTP '+( res?res.status:'연결실패'))+')');
     if(!confirm(`GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
 
     players=d.players||[];
@@ -6450,6 +6565,10 @@ window.cloudLoad = async function(){
 
     save();
     fixPoints();
+    curTab='total'; // 탭 초기화 (렌더링 오류 방지)
+    statsSub='overview';
+    histSub='mini';
+    compSub='league';
     init();
 
     gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
