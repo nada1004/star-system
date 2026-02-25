@@ -391,6 +391,13 @@ body.dark .pill.on{background:#2563eb;color:#fff;}
 body.dark .sort-bar{background:#162032;border-color:#2d3f55;}
 body.dark .sort-btn{background:#1e293b;border-color:#3a4f6a;color:#94a3b8;}
 body.dark .sort-btn.on{background:#2563eb;color:#fff;}
+/* 다크모드 공유카드 모달 */
+body.dark .sharecard-modal-box{background:#1e293b;border:1px solid #2d3f55;color:#e2e8f0;}
+body.dark .sharecard-modal-box .mtitle,
+body.dark .sharecard-modal-box [style*="color:var(--blue)"]{color:#60a5fa!important;}
+body.dark .sharecard-modal-close{color:#64748b;}
+body.dark .sharecard-modal-close:hover{color:#e2e8f0;}
+/* 공유카드 모달은 다크모드일 때만 어둡게, 아닐 때는 기본 흰색 */
 </style>
 </head>
 <body>
@@ -484,7 +491,7 @@ body.dark .sort-btn.on{background:#2563eb;color:#fff;}
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
 <div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
   <button class="btn btn-b" onclick="doJpg()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> 이미지 저장</button>
-  <button class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
+  <button id="btnCloudLoad" class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
   <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
   <span id="cloudStatus" style="font-size:12px;color:var(--gray-l);margin-left:4px"></span>
@@ -807,7 +814,7 @@ function render(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
-  document.getElementById('farea').innerHTML='';
+  const farea=document.getElementById('farea');if(farea)farea.innerHTML='';
   // 탭 버튼 UI 동기화
   document.querySelectorAll('.tab').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';
@@ -816,6 +823,9 @@ function render(){
   });
   // 이전 내용 제거
   C.innerHTML='';
+  // 날짜 필터 변경 시 캐시 초기화
+  window._compListCache={};
+  window._histTourneyCache={};
   const renderFn=({total:rTotal,tier:rTier,hist:rHist,mini:rMini,univck:rCK,univm:rUnivM,comp:rComp,pro:rPro,member:rMember,cfg:rCfg,stats:rStats,cal:rCal,vote:rVote})[curTab];
   if(renderFn)renderFn(C,T);
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
@@ -1443,7 +1453,7 @@ function rHist(C,T){
     {id:'mini',lbl:'⚡ 미니대전'},
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
-    {id:'comp',lbl:'🎖️ 대회'},
+    {id:'tourney',lbl:'🎖️ 대회'},
     {id:'univstat',lbl:'🏛️ 대학별'},
     {id:'univrank',lbl:'🏛️ 대학별 포인트 순위'},
     {id:'pro',lbl:'🏅 프로리그'},
@@ -1453,7 +1463,7 @@ function rHist(C,T){
   let h=`<div class="stabs no-export">`;
   tabs.forEach(t=>{h+=`<button class="stab ${histSub===t.id?'on':''}" onclick="histSub='${t.id}';openDetails={};render()">${t.lbl}</button>`;});
   h+=`</div>`;
-  const needDateFilter=['mini','ck','univm','comp','pro','player'].includes(histSub);
+  const needDateFilter=['mini','ck','univm','comp','tourney','pro','player'].includes(histSub);
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
@@ -1496,11 +1506,120 @@ function rHist(C,T){
   else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
+  else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   C.innerHTML=h;
 }
 
-/* 대학별 통합 성적 */
+
+/* ══════════════════════════════════════
+   대전 기록 > 대회 탭: 미니대전처럼 보이는 대회 경기 기록
+══════════════════════════════════════ */
+function histTourneyHTML(context){
+  // tourneys(조편성 대회) + comps(기존 대회) 합산
+  const tourItems=getTourneyMatches();
+  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+  const allItems=[...tourItems,...compItems].filter(m=>{
+    if(!m.a||!m.b) return false;
+    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
+    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
+  });
+  allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+  const sortBar=`<div class="sort-bar no-export">
+    <span style="font-size:11px;color:var(--text3)">날짜 정렬</span>
+    <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
+    <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
+    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
+  </div>`;
+  if(!allItems.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">대회 경기 기록이 없습니다.</div>`;
+
+  // 대회명별로 그룹화
+  const groups={};
+  allItems.forEach((m,idx)=>{
+    const compName=m.n||m.compName||'기타 대회';
+    if(!groups[compName]) groups[compName]=[];
+    groups[compName].push({m,idx});
+  });
+
+  let h=sortBar;
+  Object.entries(groups).forEach(([compName,items])=>{
+    const firstDate=items[items.length-1]?.m?.d||'';
+    const lastDate=items[0]?.m?.d||'';
+    const dateRange=firstDate===lastDate?firstDate:(firstDate&&lastDate?`${lastDate} ~ ${firstDate}`:'');
+    h+=`<div style="background:linear-gradient(90deg,var(--blue-l),var(--white));border:1.5px solid var(--blue-ll);border-radius:12px;padding:10px 16px;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue)">🎖️ ${compName}</span>
+      ${dateRange?`<span style="font-size:11px;color:var(--gray-l)">${dateRange}</span>`:''}
+      <span style="font-size:11px;color:var(--text3);background:var(--blue-ll);border-radius:20px;padding:1px 10px">${items.length}경기</span>
+    </div>`;
+    items.forEach(({m,idx})=>{
+      const a=m.a||'',b=m.b||'';
+      const ca=gc(a),cb=gc(b);
+      const aWin=m.sa>m.sb,bWin=m.sb>m.sa;
+      const key=`${context}-tourney-${idx}`;
+      const rIdx=(m._src==='comps')?m._origIdx:-1;
+      const grpBadge=m._src==='tour'
+        ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
+      h+=`<div class="rec-summary" style="margin-left:12px;border-left:3px solid var(--blue-ll)">
+        <div class="rec-sum-header">
+          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
+          ${grpBadge}
+          <div class="rec-sum-vs">
+            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
+            ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기">
+              <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
+              <span style="color:var(--gray-l);font-size:14px">:</span>
+              <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
+            </div>`:''}
+            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
+            ${(a&&b)?`<span style="font-size:12px;font-weight:700;color:${aWin?ca:bWin?cb:'#888'}">
+              ${aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}
+            </span>`:''}
+          </div>
+          <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
+            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
+            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
+            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
+          </div>
+        </div>
+        <div id="det-${key}" class="rec-detail-area">
+          ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
+            ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn-capture btn-xs" onclick="captureDetail('det-${key}','대회_${(m.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
+              <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+              ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
+              <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
+              ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">삭제</button>`:''}`:''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+  return h;
+}
+
+// 대회 탭 공유카드용 헬퍼
+window._histTourneyCache={};
+function _getHistTourneyMatchObj(idx, context){
+  const key=context+'_tourney';
+  if(!window._histTourneyCache[key]){
+    const tourItems=getTourneyMatches();
+    const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+    const all=[...tourItems,...compItems].filter(m=>{
+      if(!m.a||!m.b) return false;
+      if(m.sa==null||m.sb==null) return false;
+      return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
+    });
+    all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+    window._histTourneyCache[key]=all;
+  }
+  return window._histTourneyCache[key][idx]||null;
+}
+
+
 function rHistUnivStat(){
   const allU=getAllUnivs();
   if(!histUniv&&allU.length) histUniv=allU[0].name;
@@ -1801,6 +1920,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 // tourneys에서 완료된 모든 경기를 flat하게 추출
 function getTourneyMatches(){
   const result=[];
+  if(!Array.isArray(tourneys))return result;
   (tourneys||[]).forEach(tn=>{
     (tn.groups||[]).forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi]||String(gi);
@@ -1891,8 +2011,9 @@ function compSummaryListHTML(context){
 // 공유카드용 - context별 캐시된 filtered 배열에서 m 객체 반환 헬퍼
 window._compListCache={};
 function _getCompMatchObj(listIdx,context){
-  // 캐시가 없으면 재생성
-  if(!window._compListCache[context]){
+  // 캐시 없거나 데이터 변경 시 재생성
+  if(!window._compListCache||!window._compListCache[context]){
+    if(!window._compListCache)window._compListCache={};
     const tourItems=getTourneyMatches();
     const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
     const all=[...tourItems,...compItems].filter(m=>typeof passDateFilter!=='function'||passDateFilter(m.d||''));
@@ -2685,7 +2806,11 @@ function ckAddBySearch(team, name){
 
 function ckFilterPlayers(team){
   const univSel=document.getElementById(`ck-${team.toLowerCase()}-univ`);
-  playerSel.innerHTML=univMembers.length?`<option value="">멤버 선택</option>`+univMembers.map(p=>`<option value="${p.name}">${p.name} [${p.tier}/${p.race}]</option>`).join(''):`<option value="">멤버 없음</option>`;
+  const playerSel=document.getElementById(`ck-${team.toLowerCase()}-player`);
+  if(!univSel||!playerSel)return;
+  const univ=univSel.value;
+  const univMembers=univ?players.filter(p=>p.univ===univ):[];
+  playerSel.innerHTML=univMembers.length?`<option value="">멤버 선택</option>`+univMembers.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join(''):`<option value="">멤버 없음</option>`;
 }
 
 function ckAddMember(team){
@@ -5269,7 +5394,7 @@ function statsShareCardHTML(){
     <!-- 카드 미리보기 -->
     <div id="sharecard-preview-wrap">
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">💡 카드를 클릭하면 사라집니다</div>
-      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block;cursor:pointer" title="클릭하여 카드 닫기" onclick="this.innerHTML='<p style=text-align:center;color:var(--gray-l);padding:36px_20px;font-size:13px>위에서 선택하면 카드가 생성됩니다</p>'.replace(/_/g,' ')">
+      <div id="share-card" style="width:380px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:inline-block;cursor:pointer" title="클릭하여 카드 초기화" onclick="resetShareCard(this)">
         <p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>
       </div>
       <div class="sharecard-modal-actions" style="justify-content:flex-start;margin-top:10px">
@@ -5417,7 +5542,9 @@ function renderShareCardByMatchObj(m){
       </div>`;
     }).join('');
   }
-  card.innerHTML=`<div style="background:linear-gradient(160deg,#1e293b,#0f172a);padding:24px;color:#fff;min-width:340px">
+  const isDark=document.body.classList.contains('dark');
+  const cardBg=isDark?'linear-gradient(160deg,#1e293b,#0f172a)':'linear-gradient(160deg,#1e3a8a,#2563eb)';
+  card.innerHTML=`<div style="background:${cardBg};padding:24px;color:#fff;min-width:340px">
     <div style="text-align:center;margin-bottom:18px">
       ${m.n?`<div style="font-size:11px;color:#fbbf24;font-weight:700;margin-bottom:4px">🎖️ ${m.n}</div>`:''}
       <div style="font-size:11px;opacity:.5;margin-bottom:6px">${m.d||''}</div>
@@ -5444,23 +5571,53 @@ function renderShareCardByMatchObj(m){
 
 
 // 캘린더 경기 공유카드 열기
-function _calShareDirect(dummy, mi, ds){
-  // 캘린더 일간뷰에서 공유카드 열기 - 캘린더와 동일한 allMatches 구성
-  const allM=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])].filter(m=>(m.d||'')===ds);
-  const m=allM[mi];
+// calView=day 경기 공유카드 - rCal의 allMatches 캐시 이용
+function openRCalMatchShareCard(ds, mi){
+  const all=(window._rCalAllMatches||[...miniM,...univM,...comps,...ckM,...proM]);
+  const dayMatches=all.filter(m=>m.d===ds&&m.sa!=null&&m.sa!=='');
+  const m=dayMatches[mi];
   if(!m)return;
-  const isCKorPro=(ckM.includes(m)||proM.includes(m));
+  const isCKorPro=ckM.includes(m)||proM.includes(m);
   window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
   _shareMode='match';
   openShareCardModal();
-  setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);
+  setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
 }
-function openCalMatchShareCard(mode, globalIdx){
-  // globalIdx는 [...miniM,...univM,...comps,...ckM,...proM] 기준 인덱스
-  const allM=[...miniM,...univM,...comps,...ckM,...proM];
-  const m=allM[globalIdx];
+
+// 캘린더 calShowDay 공유카드 - 캐시된 배열의 인덱스로 참조
+function openCalMatchShareCardByCache(ds, mi){
+  const matches=window._calDayCache&&window._calDayCache[ds];
+  if(!matches||mi>=matches.length)return;
+  const m=matches[mi];
   if(!m)return;
-  const isCKorPro=(ckM.includes(m)||proM.includes(m));
+  const isCKorPro=ckM.includes(m)||proM.includes(m);
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+}
+
+function openCalMatchShareCard(mode, idx){
+  // mode별 배열에서 직접 인덱스로 참조
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:comps;
+  if(!arr||idx<0||idx>=arr.length){
+    // 못 찾으면 tourney에서 시도 (mode==='comp'일 때)
+    if(mode==='comp'){
+      const tourItems=typeof getTourneyMatches==='function'?getTourneyMatches():[];
+      const m=tourItems[idx-comps.length];
+      if(m){
+        window._shareMatchObj=m;
+        _shareMode='match';
+        openShareCardModal();
+        setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);
+        return;
+      }
+    }
+    return;
+  }
+  const m=arr[idx];
+  if(!m)return;
+  const isCKorPro=(mode==='ck'||mode==='pro');
   window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
   _shareMode='match';
   openShareCardModal();
@@ -5508,6 +5665,13 @@ function openShareCardModal(){
     if(e.target===overlay) overlay.remove();
   });
   document.body.appendChild(overlay);
+}
+
+// 공유카드 초기화
+function resetShareCard(el){
+  const c=el||document.getElementById('share-card');
+  if(!c)return;
+  c.innerHTML='<p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>';
 }
 
 // 이미지 저장 함수 (JPG)
@@ -5706,6 +5870,7 @@ function rCal(C,T){
 
   // 모든 경기 데이터 맵 (날짜→경기 객체 배열)
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
+  window._rCalAllMatches=allMatches; // calView=day 공유카드용 전역 캐시
   const dateMatchMap={};
   allMatches.forEach(m=>{
     const d=m.d||'';
@@ -5869,14 +6034,14 @@ function rCal(C,T){
             ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>'}
             <div style="margin-left:auto;display:flex;gap:4px;align-items:center" class="no-export">
             <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button>
-            <button class="btn btn-p btn-xs" onclick="openCalMatchShareCard('${miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp'}',${allMatches.indexOf(m)})">🎴 공유 카드</button>
+            <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>
           </div>
           </div>
           <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">
             ${detHTML}
             ${hasResult?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px" class="no-export">
               <button class="btn-capture btn-xs" onclick="captureDetail('det-${detKey}','${calDayDate}_match')">📷 이미지 저장</button>
-              <button class="btn btn-p btn-xs" onclick="openCalMatchShareCard('${miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp'}',${allMatches.indexOf(m)})">🎴 공유 카드</button>
+              <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>
             </div>`:''}
           </div>
         </div>`;
@@ -5933,6 +6098,9 @@ function calShowDay(ds){
   _calDetailState={}; // 날짜 변경 시 상세 상태 초기화
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
   const matches=allMatches.filter(m=>m.d===ds);
+  // 공유카드용 캐시 - 날짜별 매치 배열 저장
+  if(!window._calDayCache)window._calDayCache={};
+  window._calDayCache[ds]=matches;
 
   function buildMatchRow(m,mi){
     if(m.sa==null||m.sa==='') return ''; // 미입력 항목 제외
@@ -5969,7 +6137,8 @@ function calShowDay(ds){
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'
       +detHTML
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-      +'<button class="btn-capture btn-xs no-export" onclick="captureDetail(\'det-'+detKey+'\',\''+ds+'_match\')">📷 이미지 저장</button>'      +' <button class="btn btn-p btn-xs no-export" onclick="openCalMatchShareCard(\''+modeKey+'\','+allMatches.indexOf(m)+');event.stopPropagation()">🎴 공유 카드</button>'
+      +'<button class="btn-capture btn-xs no-export" onclick="captureDetail(\'det-'+detKey+'\',\''+ds+'_match\')">📷 이미지 저장</button>'
+      +' <button class="btn btn-p btn-xs no-export" onclick="openCalMatchShareCardByCache(\''+ds+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -6307,6 +6476,14 @@ function doFile(inp){
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
       members=d.members||[];tourneys=d.tourneys||[];ttM=d.ttM||[];
+      window._compListCache={};window._shareAllMatchesCached=null;
+      (function(){
+        const allD=[...miniM,...univM,...comps,...ckM,...proM];
+        const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
+        years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
+        yearOptions.sort();
+      })();
+      filterYear='전체';filterMonth='전체';
       fixPoints();save();init();
     }catch{alert('파일 읽기 오류');}
   };
@@ -6531,50 +6708,97 @@ function gsSetStatus(msg, color='var(--gray-l)'){
 window.cloudLoad = async function(){
   try{
     gsSetStatus('📥 불러오는 중...', 'var(--blue)');
-    let res, d;
-    // raw.githubusercontent.com fetch (CORS 허용됨)
+    const loadBtn=document.getElementById('btnCloudLoad');
+    if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
+    let d=null;
+    const baseUrl=GITHUB_JSON_URL;
+    // 다중 URL 시도 (raw → jsdelivr → CORS proxy 순서)
+    // GitHub API - base64 인코딩으로 반환 (CORS 완전 허용)
+    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/data.json';
     const urls=[
-      GITHUB_JSON_URL + '?t=' + Date.now(),
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json?t='+Date.now(),
+      baseUrl+'?nocache='+Date.now(),                    // 1. raw.githubusercontent.com (직접)
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json', // 2. jsdelivr CDN
+      ghApiUrl,                                           // 3. GitHub API (base64)
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl), // 4. CORS proxy
     ];
-    let lastErr=null;
+    let lastErr='';
     for(const url of urls){
       try{
-        res = await fetch(url, {cache:'no-store', mode:'cors'});
-        if(res.ok){ try{ d=await res.json(); }catch(e){ throw new Error('JSON 파싱 오류'); } break; }
-      }catch(e){ lastErr=e; }
+        const res=await Promise.race([
+          fetch(url,{cache:'no-store',mode:'cors'}),
+          new Promise((_,r)=>setTimeout(()=>r(new Error('타임아웃(10s)')),10000))
+        ]);
+        if(res&&res.ok){
+          const text=await res.text();
+          try{
+            const raw=JSON.parse(text);
+            // GitHub API 응답 처리 (base64 content 필드가 있으면 디코딩)
+            if(raw&&raw.content&&raw.encoding==='base64'){
+              const decoded=atob(raw.content.replace(/\s/g,''));
+              d=JSON.parse(decoded);
+            } else {
+              d=raw;
+            }
+          }catch(e){ lastErr='JSON 형식 오류: '+e.message; continue; }
+          break;
+        }
+        lastErr='HTTP '+(res?res.status:'오류');
+      }catch(e){ lastErr=e.message||String(e); }
     }
-    if(!d) throw new Error('데이터를 불러올 수 없습니다. 인터넷 연결 또는 GitHub 저장소를 확인하세요. ('+( lastErr?lastErr.message:'HTTP '+( res?res.status:'연결실패'))+')');
-    if(!confirm(`GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?`)) return;
+    if(!d) throw new Error('데이터를 불러올 수 없습니다.\n원인: '+lastErr+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+    if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
-    players=d.players||[];
-    univCfg=d.univCfg||univCfg;
-    maps=d.maps||maps;
-    tourD=d.tourD||Array(15).fill('');
-    miniM=d.miniM||[];
-    univM=d.univM||[];
-    comps=d.comps||[];
-    ckM=d.ckM||[];
-    compNames=d.compNames||[];
-    curComp=d.curComp||'';
-    proM=d.proM||[];
-    members=d.members||[];
-    tourneys=d.tourneys||[];
-    ttM=d.ttM||[];
+    // 필드명 별칭 지원 (파싱 유연성)
+    players=d.players||d.player||[];
+    univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
+    maps=d.maps||d.map||maps;
+    tourD=d.tourD||d.tournamentDates||Array(15).fill('');
+    miniM=d.miniM||d.mini||d.miniMatches||[];
+    univM=d.univM||d.univ||d.univMatches||[];
+    comps=d.comps||d.comp||d.competitions||[];
+    ckM=d.ckM||d.ck||d.ckMatches||[];
+    compNames=d.compNames||d.competitionNames||[];
+    curComp=d.curComp||d.currentComp||'';
+    proM=d.proM||d.pro||d.proMatches||[];
+    members=d.members||d.member||[];
+    tourneys=d.tourneys||d.tournaments||d.tourney||[];
+    ttM=d.ttM||d.tt||[];
     if(d.tiers&&d.tiers.length && typeof TIERS!=='undefined'){ TIERS.splice(0,TIERS.length,...d.tiers); }
+    console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
     save();
     fixPoints();
+    window._compListCache={}; // 대회 목록 캐시 초기화
+    window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
+    window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
     curTab='total'; // 탭 초기화 (렌더링 오류 방지)
     statsSub='overview';
     histSub='mini';
     compSub='league';
+    // yearOptions를 불러온 데이터에서 자동 추출
+    (function(){
+      const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
+      const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
+      years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
+      yearOptions.sort();
+    })();
+    filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
+    filterMonth='전체';
     init();
 
-    gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()})`, 'var(--green)');
+    const compCount=(d.comps||[]).length;
+    const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
+    const miniCount=(d.miniM||[]).length;
+    const _lb=document.getElementById('btnCloudLoad');if(_lb){_lb.disabled=false;_lb.innerHTML='<span>☁️</span> 데이터 불러오기';}
+    gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()}) — 미니 ${miniCount}건·대회 ${compCount+tourCount}건`, 'var(--green)');
   } catch(e){
-    gsSetStatus('❌ 불러오기 실패: '+e.message, 'var(--red)');
-    console.error(e);
+    const _lb2=document.getElementById('btnCloudLoad');if(_lb2){_lb2.disabled=false;_lb2.innerHTML='<span>☁️</span> 데이터 불러오기';}
+    const errMsg=e.message||String(e);
+    gsSetStatus('❌ 불러오기 실패 (하단 메시지 확인)', 'var(--red)');
+    console.error('[cloudLoad 오류]', e);
+    // 간결한 에러 메시지 표시
+    const shortMsg=errMsg.split('\n').slice(0,3).join('\n');
+    setTimeout(()=>alert('⚠️ 데이터 불러오기 실패\n\n'+shortMsg), 100);
   }
 };
 
