@@ -9,7 +9,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김뽀뇨",
@@ -48,7 +49,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "규리야",
@@ -59,7 +61,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "찌킹",
@@ -89,7 +92,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "늑대채린",
@@ -100,7 +104,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "보혜",
@@ -111,7 +116,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "정소윤",
@@ -122,7 +128,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "구루미",
@@ -133,7 +140,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "내가먼지",
@@ -163,7 +171,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "또해영",
@@ -193,7 +202,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "박하악",
@@ -223,7 +233,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "정서린",
@@ -253,7 +264,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "냥수디",
@@ -274,7 +286,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다예나",
@@ -304,7 +317,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "단비송",
@@ -352,7 +366,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "우힝이",
@@ -382,7 +397,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "히엉",
@@ -393,7 +409,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "뚜미",
@@ -404,7 +421,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "링가",
@@ -434,7 +452,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이아깽",
@@ -445,7 +464,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "메옹",
@@ -484,7 +504,8 @@
         }
       ],
       "points": 9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "경콩이",
@@ -505,7 +526,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "깽이다",
@@ -516,7 +538,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "제갈츄빈",
@@ -527,7 +550,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김유나",
@@ -538,7 +562,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "하블리",
@@ -559,7 +584,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "라미",
@@ -589,7 +615,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "나린",
@@ -619,7 +646,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김태향",
@@ -649,7 +677,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "려원",
@@ -697,7 +726,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "밥새",
@@ -745,7 +775,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "쟈닌",
@@ -784,7 +815,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "돌애정",
@@ -814,7 +846,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "백원이야",
@@ -853,7 +886,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "모비",
@@ -910,7 +944,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "옥수수",
@@ -921,7 +956,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "미진이",
@@ -932,7 +968,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "애공",
@@ -943,7 +980,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "초롱빡",
@@ -982,7 +1020,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "슬아",
@@ -1003,7 +1042,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "슈슈",
@@ -1033,7 +1073,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "애실",
@@ -1054,7 +1095,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "연블비",
@@ -1102,7 +1144,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "하리보나",
@@ -1113,7 +1156,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "지아송",
@@ -1143,7 +1187,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다라츄",
@@ -1182,7 +1227,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "아링",
@@ -1212,7 +1258,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "정연이",
@@ -1223,7 +1270,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "찡찡시아",
@@ -1234,7 +1282,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "나무늘봉순",
@@ -1245,7 +1294,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "디임",
@@ -1284,7 +1334,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오조은",
@@ -1323,7 +1374,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "요닝",
@@ -1353,7 +1405,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "졈니",
@@ -1383,7 +1436,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "란란",
@@ -1440,7 +1494,8 @@
         }
       ],
       "points": -9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "남수댕",
@@ -1479,7 +1534,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "히댕",
@@ -1509,7 +1565,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "모리",
@@ -1520,7 +1577,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오리꿍",
@@ -1531,7 +1589,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "효짱",
@@ -1570,7 +1629,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이지다",
@@ -1618,7 +1678,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "은조",
@@ -1629,7 +1690,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "혜로로",
@@ -1650,7 +1712,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "소심",
@@ -1689,7 +1752,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "빵리나",
@@ -1737,7 +1801,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오하얀",
@@ -1785,7 +1850,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "설둥이",
@@ -1842,7 +1908,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "선정은",
@@ -1908,7 +1975,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김채이",
@@ -1947,7 +2015,8 @@
         }
       ],
       "points": -9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "은서",
@@ -2013,7 +2082,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "고요",
@@ -2024,7 +2094,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "초이",
@@ -2035,7 +2106,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "으니",
@@ -2046,7 +2118,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이응씨",
@@ -2057,7 +2130,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다나짱",
@@ -2096,7 +2170,8 @@
         }
       ],
       "points": -9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "박듀듀",
@@ -2117,7 +2192,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이유란",
@@ -2147,7 +2223,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "라운이",
@@ -2186,7 +2263,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "비타밍",
@@ -2216,7 +2294,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김설",
@@ -2282,7 +2361,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "수니양",
@@ -2303,7 +2383,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다뉴",
@@ -2378,7 +2459,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "아리송이",
@@ -2408,7 +2490,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김말랑",
@@ -2419,7 +2502,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "연또",
@@ -2430,7 +2514,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "박하밍",
@@ -2441,7 +2526,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "토마토",
@@ -2462,7 +2548,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "햇살",
@@ -2492,7 +2579,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "치리",
@@ -2513,7 +2601,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "주하랑",
@@ -2524,7 +2613,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "소주양",
@@ -2572,7 +2662,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "임조이",
@@ -2602,7 +2693,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "먼진",
@@ -2632,7 +2724,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "진땅콩",
@@ -2653,7 +2746,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "박쭈이",
@@ -2664,7 +2758,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "카히리",
@@ -2685,7 +2780,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "하리",
@@ -2696,7 +2792,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "링고",
@@ -2735,7 +2832,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "최세상",
@@ -2765,7 +2863,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "시녕몽",
@@ -2804,7 +2903,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "엄보리",
@@ -2843,7 +2943,8 @@
         }
       ],
       "points": 9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "정다닝",
@@ -2891,7 +2992,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "면추가",
@@ -2930,7 +3032,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "엄키키",
@@ -2978,7 +3081,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "권아온",
@@ -2989,7 +3093,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "요정너구리",
@@ -3000,7 +3105,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "햄희",
@@ -3011,7 +3117,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "또봉순",
@@ -3032,7 +3139,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "꼬니부킹",
@@ -3089,7 +3197,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "몽순",
@@ -3119,7 +3228,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "단양",
@@ -3176,7 +3286,8 @@
         }
       ],
       "points": 9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "비재희",
@@ -3233,7 +3344,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "키모야",
@@ -3263,7 +3375,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "구키",
@@ -3320,7 +3433,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "황단비",
@@ -3350,7 +3464,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "단이",
@@ -3361,7 +3476,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "있찌",
@@ -3372,7 +3488,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다린",
@@ -3383,7 +3500,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "남덕선",
@@ -3413,7 +3531,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "유복실",
@@ -3434,7 +3553,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "나애리",
@@ -3464,7 +3584,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "파찌",
@@ -3485,7 +3606,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "공다츠",
@@ -3515,7 +3637,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "연애인",
@@ -3536,7 +3659,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "깨림이",
@@ -3575,7 +3699,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "주서리",
@@ -3605,7 +3730,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김무아",
@@ -3644,7 +3770,8 @@
         }
       ],
       "points": 9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "귀요민정",
@@ -3655,7 +3782,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "밍가",
@@ -3685,7 +3813,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "2라니",
@@ -3706,7 +3835,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "핑핑",
@@ -3745,7 +3875,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "해요이",
@@ -3766,7 +3897,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "행복짱",
@@ -3787,7 +3919,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "상어녀",
@@ -3798,7 +3931,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "최도랑",
@@ -3828,7 +3962,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "키링",
@@ -3839,7 +3974,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "쥬나",
@@ -3850,7 +3986,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "유이",
@@ -3871,7 +4008,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "강덕구",
@@ -3892,7 +4030,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "백갑숙",
@@ -3913,7 +4052,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "진유성",
@@ -3934,7 +4074,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "막내현진",
@@ -3955,7 +4096,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "퀸주",
@@ -3966,7 +4108,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "밍또얌",
@@ -3977,7 +4120,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "뀨알",
@@ -3988,7 +4132,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "냥냥코기",
@@ -3999,7 +4144,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "우질",
@@ -4010,7 +4156,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오세은",
@@ -4021,7 +4168,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "유즈",
@@ -4032,7 +4180,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "안아",
@@ -4043,7 +4192,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김쵸아",
@@ -4073,7 +4223,8 @@
         }
       ],
       "points": 6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "삐약삐약",
@@ -4103,7 +4254,8 @@
         }
       ],
       "points": -6,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "뽀누나",
@@ -4124,7 +4276,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "태린",
@@ -4163,7 +4316,8 @@
         }
       ],
       "points": 9,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "진니",
@@ -4193,7 +4347,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "흑설2",
@@ -4232,7 +4387,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김세주",
@@ -4253,7 +4409,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "햇참새",
@@ -4264,7 +4421,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "먹체토",
@@ -4275,7 +4433,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "유녜",
@@ -4286,7 +4445,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이영숙",
@@ -4297,7 +4457,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "사랑e",
@@ -4308,7 +4469,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "금선2",
@@ -4338,7 +4500,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "뚜비",
@@ -4377,7 +4540,8 @@
         }
       ],
       "points": 3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "도릿",
@@ -4398,7 +4562,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "세월",
@@ -4409,7 +4574,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "이주리",
@@ -4420,7 +4586,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "삼교",
@@ -4450,7 +4617,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "멍라희",
@@ -4461,7 +4629,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "따쥐",
@@ -4472,7 +4641,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "서지수",
@@ -4483,7 +4653,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "채린짱",
@@ -4494,7 +4665,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "세나",
@@ -4505,7 +4677,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오리",
@@ -4516,7 +4689,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "지두두",
@@ -4527,7 +4701,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "다예",
@@ -4538,7 +4713,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "최하니",
@@ -4549,7 +4725,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "구보라",
@@ -4560,7 +4737,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "기나",
@@ -4590,7 +4768,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "림예이",
@@ -4601,7 +4780,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "정소이",
@@ -4612,7 +4792,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "김하선",
@@ -4623,7 +4804,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "만다",
@@ -4634,7 +4816,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "아라미",
@@ -4645,7 +4828,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "예슬",
@@ -4656,7 +4840,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "연둥바둥",
@@ -4667,7 +4852,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "미니언",
@@ -4678,7 +4864,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "하두링",
@@ -4717,7 +4904,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "뿌하",
@@ -4728,7 +4916,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "팥순",
@@ -4739,7 +4928,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "햄찌야",
@@ -4750,7 +4940,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "제티",
@@ -4761,7 +4952,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "지우리",
@@ -4772,7 +4964,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "민트",
@@ -4783,7 +4976,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "새밍",
@@ -4794,7 +4988,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "맹꽁안나",
@@ -4805,7 +5000,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "요시",
@@ -4826,7 +5022,8 @@
         }
       ],
       "points": -3,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "하이유",
@@ -4837,7 +5034,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "비그리",
@@ -4848,7 +5046,8 @@
       "loss": 0,
       "history": [],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "혜냥",
@@ -4878,7 +5077,8 @@
         }
       ],
       "points": 0,
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "우리밍",
@@ -4899,7 +5099,8 @@
           "matchId": "mlx9ozi28j9i"
         }
       ],
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "한쪼니",
@@ -4929,7 +5130,8 @@
           "matchId": "mlx9ozi28j9i"
         }
       ],
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "으냉이",
@@ -4959,7 +5161,8 @@
           "matchId": "mlx9ozi28j9i"
         }
       ],
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "오뀨",
@@ -4980,7 +5183,8 @@
           "matchId": "mlx9ozi28j9i"
         }
       ],
-      "gender": "M"
+      "gender": "M",
+      "elo": 1200
     },
     {
       "name": "하루묭",
@@ -5001,7 +5205,8 @@
           "matchId": "mlx9ozi28j9i"
         }
       ],
-      "gender": "F"
+      "gender": "F",
+      "elo": 1200
     },
     {
       "name": "흑운장",
@@ -5012,7 +5217,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "윤찬희",
@@ -5043,7 +5249,8 @@
           "matchId": "mm0f0rxf5v20"
         }
       ],
-      "memo": "몽군"
+      "memo": "몽군",
+      "elo": 1200
     },
     {
       "name": "달그락영주",
@@ -5054,7 +5261,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "빡재",
@@ -5065,7 +5273,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "시조새",
@@ -5076,7 +5285,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "임홍규",
@@ -5107,7 +5317,8 @@
           "matchId": "mm0e0bi6xg2w"
         }
       ],
-      "memo": "홍구"
+      "memo": "홍구",
+      "elo": 1200
     },
     {
       "name": "조기석",
@@ -5118,7 +5329,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "배병우",
@@ -5129,7 +5341,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김병수",
@@ -5140,7 +5353,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김영진",
@@ -5151,7 +5365,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "윤준석",
@@ -5162,7 +5377,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김민우",
@@ -5173,7 +5389,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "쌍디",
@@ -5184,7 +5401,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "서기수",
@@ -5195,7 +5413,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김성제",
@@ -5206,7 +5425,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "인치호",
@@ -5217,7 +5437,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "킁식",
@@ -5228,7 +5449,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "져지현",
@@ -5239,7 +5461,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "케이",
@@ -5250,7 +5473,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김학수",
@@ -5261,7 +5485,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "정영재",
@@ -5282,7 +5507,8 @@
           "map": "폴스타",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "장윤철",
@@ -5312,7 +5538,8 @@
           "map": "애티튜드",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "흥덕",
@@ -5323,7 +5550,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김경모",
@@ -5381,7 +5609,8 @@
           "matchId": "mlx8pgg65g7y"
         }
       ],
-      "memo": "깨모다"
+      "memo": "깨모다",
+      "elo": 1200
     },
     {
       "name": "정민기",
@@ -5392,7 +5621,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "고석현",
@@ -5403,7 +5633,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "유민",
@@ -5414,7 +5645,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "철구",
@@ -5425,7 +5657,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박재혁",
@@ -5436,7 +5669,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김택용",
@@ -5447,7 +5681,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김민철",
@@ -5458,7 +5693,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이영호",
@@ -5469,7 +5705,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김윤종",
@@ -5526,7 +5763,8 @@
           "map": "실피드",
           "matchId": "mm086o4fy27u"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "윤용태",
@@ -5537,7 +5775,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "왜냐맨",
@@ -5548,7 +5787,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "윤진규",
@@ -5559,7 +5799,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "최재성",
@@ -5570,7 +5811,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "강구열",
@@ -5581,7 +5823,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "빵훈",
@@ -5592,7 +5835,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박퍼니",
@@ -5603,7 +5847,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "전태규",
@@ -5614,7 +5859,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "민찬기",
@@ -5625,7 +5871,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "원선재",
@@ -5673,7 +5920,8 @@
           "map": "녹아웃",
           "matchId": "mlx8pgg65g7y"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "배호딱",
@@ -5684,7 +5932,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "권혁진",
@@ -5695,7 +5944,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "정경두",
@@ -5734,7 +5984,8 @@
           "map": "라데온",
           "matchId": "mm07e32peehe"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "김수식",
@@ -5745,7 +5996,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김인호",
@@ -5756,7 +6008,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김성대",
@@ -5767,7 +6020,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "임진묵",
@@ -5778,7 +6032,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "변현제",
@@ -5789,7 +6044,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이예훈",
@@ -5828,7 +6084,8 @@
           "map": "폴스타",
           "matchId": "mm07e32peehe"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "윤수철",
@@ -5867,7 +6124,8 @@
           "map": "실피드",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "구성훈",
@@ -5878,7 +6136,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "어윤수",
@@ -5917,7 +6176,8 @@
           "map": "라데온",
           "matchId": "mm07e32peehe"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "김범수",
@@ -5928,7 +6188,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김윤환",
@@ -5958,7 +6219,8 @@
           "map": "폴스타",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "이경민",
@@ -6006,7 +6268,8 @@
           "map": "실피드",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "황병영",
@@ -6045,7 +6308,8 @@
           "map": "실피드",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "조일장",
@@ -6093,7 +6357,8 @@
           "map": "애티튜드",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "박준오",
@@ -6132,7 +6397,8 @@
           "map": "녹아웃",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "박수범",
@@ -6162,7 +6428,8 @@
           "map": "애티튜드",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "지동원",
@@ -6246,7 +6513,8 @@
           "map": "제인도",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "배성흠",
@@ -6257,7 +6525,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "파도튜브",
@@ -6268,7 +6537,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "수입뿌드",
@@ -6279,7 +6549,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "마예준",
@@ -6290,7 +6561,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "병하",
@@ -6301,7 +6573,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이영한",
@@ -6331,7 +6604,8 @@
           "map": "애티튜드",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "얍삽e",
@@ -6361,7 +6635,8 @@
           "map": "실피드",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "진영화",
@@ -6454,7 +6729,8 @@
           "map": "녹아웃",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "만두호성",
@@ -6493,7 +6769,8 @@
           "map": "폴스타",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "이창우",
@@ -6523,7 +6800,8 @@
           "map": "제인도",
           "matchId": "mm072lx5k6kq"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "박조스",
@@ -6534,7 +6812,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "토스봇",
@@ -6545,7 +6824,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "와이퍼",
@@ -6556,7 +6836,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박성준",
@@ -6567,7 +6848,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "프발",
@@ -6578,7 +6860,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김상곤",
@@ -6589,7 +6872,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김대한",
@@ -6600,7 +6884,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "허유",
@@ -6611,7 +6896,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "전상옥",
@@ -6622,7 +6908,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "송현덕",
@@ -6633,7 +6920,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "짭제",
@@ -6644,7 +6932,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "송병구",
@@ -6701,7 +6990,8 @@
           "map": "옥타곤",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "신상문",
@@ -6712,7 +7002,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "서문지훈",
@@ -6723,7 +7014,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "선우도현",
@@ -6734,7 +7026,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "손찬웅",
@@ -6745,7 +7038,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이소룡",
@@ -6756,7 +7050,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "멍이예요",
@@ -6767,7 +7062,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "기뉴다",
@@ -6778,7 +7074,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박성균",
@@ -6789,7 +7086,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "도재욱",
@@ -6819,7 +7117,8 @@
           "map": "제인도",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "김정우",
@@ -6858,7 +7157,8 @@
           "map": "애티튜드",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "샤이니",
@@ -6869,7 +7169,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "구라미스",
@@ -6880,7 +7181,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김건욱",
@@ -6891,7 +7193,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "미동미동",
@@ -6902,7 +7205,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "액션구드론",
@@ -6913,7 +7217,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박성준b",
@@ -6924,7 +7229,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "초난강",
@@ -6935,7 +7241,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "트슈",
@@ -6946,7 +7253,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "욱하는형",
@@ -6957,7 +7265,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "뽀현욱",
@@ -6968,7 +7277,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박성진",
@@ -6979,7 +7289,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "라박이",
@@ -6990,7 +7301,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김기덕",
@@ -7001,7 +7313,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "쿰신",
@@ -7012,7 +7325,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "쿨지지",
@@ -7023,7 +7337,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "라히",
@@ -7034,7 +7349,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "혁민",
@@ -7045,7 +7361,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "강민",
@@ -7056,7 +7373,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "최호선",
@@ -7104,7 +7422,8 @@
           "map": "제인도",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "방태수",
@@ -7152,7 +7471,8 @@
           "map": "제인도",
           "matchId": "mm0f0rxf5v20"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "박태민",
@@ -7163,7 +7483,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "파메",
@@ -7174,7 +7495,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "나도현",
@@ -7185,7 +7507,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "유영진",
@@ -7233,7 +7556,8 @@
           "map": "제인도",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "김지성",
@@ -7272,7 +7596,8 @@
           "map": "폴스타",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "이영웅",
@@ -7283,7 +7608,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이재호",
@@ -7294,7 +7620,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김명운",
@@ -7324,7 +7651,8 @@
           "map": "녹아웃",
           "matchId": "mm0e0bi6xg2w"
         }
-      ]
+      ],
+      "elo": 1200
     },
     {
       "name": "이제동",
@@ -7335,7 +7663,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "아빈",
@@ -7346,7 +7675,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이인극",
@@ -7357,7 +7687,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "안기효",
@@ -7368,7 +7699,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "박준혁",
@@ -7379,7 +7711,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김봉실",
@@ -7390,7 +7723,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "원지훈",
@@ -7401,7 +7735,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이윤열",
@@ -7412,7 +7747,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "이완",
@@ -7423,7 +7759,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "팔레트",
@@ -7434,7 +7771,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김상수",
@@ -7445,7 +7783,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "초롱초롱",
@@ -7456,7 +7795,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "카권",
@@ -7467,7 +7807,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "하얀눈길",
@@ -7478,7 +7819,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "난수",
@@ -7489,7 +7831,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "안정우",
@@ -7500,7 +7843,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "내가스틱",
@@ -7511,7 +7855,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "유성민",
@@ -7522,7 +7867,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "카리스",
@@ -7533,7 +7879,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "모토케이",
@@ -7544,7 +7891,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "앙상국",
@@ -7555,7 +7903,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     },
     {
       "name": "김태영",
@@ -7586,7 +7935,8 @@
           "matchId": "mm0e0bi6xg2w"
         }
       ],
-      "memo": "사태"
+      "memo": "사태",
+      "elo": 1200
     },
     {
       "name": "염보성",
@@ -7597,7 +7947,8 @@
       "win": 0,
       "loss": 0,
       "points": 0,
-      "history": []
+      "history": [],
+      "elo": 1200
     }
   ],
   "univCfg": [
@@ -7758,13 +8109,13 @@
             },
             {
               "playerA": "돌애정",
-              "playerB": "",
+              "playerB": "지아송",
               "winner": "B",
               "map": "폴리포이드"
             },
             {
               "playerA": "백원이야",
-              "playerB": "",
+              "playerB": "아링",
               "winner": "B",
               "map": "녹아웃"
             }
