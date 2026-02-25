@@ -985,7 +985,7 @@ async function captureDetail(id, filename){
 }
 
 function openUnivModal(univName){
-  document.getElementById('univModalTitle').innerText=`🏛️ ${univName} 대학 상세`;
+  const _univTitleIcon=UNIV_ICONS[univName]||(univCfg.find(x=>x.name===univName)||{}).icon||'';document.getElementById('univModalTitle').innerText=`${_univTitleIcon?'':'🏛️ '}${univName} 대학 상세`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
   injectUnivIcons(document.getElementById('univModalBody'));
   window._univModalCurrentName=univName;
@@ -1015,7 +1015,7 @@ function buildPlayerDetailHTML(p){
           <span style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff">${getTierLabel(p.tier)||p.tier}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:3px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${p.univ}${gUI(p.univ,'11px')}</span>
+          <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:3px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${p.univ}</span>
           <span style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
         </div>
       </div>
@@ -1168,22 +1168,21 @@ function buildUnivDetailHTML(univName){
     h+=`<div style="font-weight:700;font-size:12px;color:${col};margin-bottom:10px;display:flex;align-items:center;gap:6px">
       <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 선수 (${members.length}명)
     </div>`;
-    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">`;
+    h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px"><table style="margin:0;border:none;border-radius:0"><thead><tr><th style="text-align:center">티어</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:16px">이름</th><th style="text-align:center;width:40px">성별</th><th style="text-align:center;width:40px">승</th><th style="text-align:center;width:40px">패</th><th style="text-align:center;width:52px">승률</th><th style="text-align:center;width:60px">포인트</th></tr></thead><tbody>`;
     sorted.forEach(p=>{
       const tw=p.win+p.loss;const twr=tw?Math.round(p.win/tw*100):0;
-      h+=`<div style="background:var(--white);border:1px solid ${col}33;border-radius:12px;padding:12px 14px;min-width:100px;text-align:center;cursor:pointer;transition:.15s;box-shadow:0 1px 4px rgba(0,0,0,.04)"
-        onclick="cm('univModal');setTimeout(()=>openPlayerModal('${p.name}'),100)"
-        onmouseover="this.style.boxShadow='0 3px 12px ${col}33';this.style.borderColor='${col}88'"
-        onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';this.style.borderColor='${col}33'">
-        <div style="width:32px;height:32px;border-radius:9px;background:${col};margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff">${p.name[0]}</div>
-        <div style="font-weight:700;font-size:12px;color:var(--text);margin-bottom:3px">${p.name}${genderIcon(p.gender)}</div>
-        <div style="margin-bottom:4px">${getTierBadge(p.tier)}</div>
-        <div style="margin-bottom:3px"><span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span></div>
-        <div style="font-size:10px"><span class="wt">${p.win}</span>W <span class="lt">${p.loss}</span>L</div>
-        <div style="font-size:10px;font-weight:700;color:${twr>=50?'#16a34a':'#dc2626'}">${tw?twr+'%':'-'}</div>
-      </div>`;
+      h+=`<tr style="cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${p.name}'),100)" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
+        <td style="text-align:center">${getTierBadge(p.tier)}</td>
+        <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
+        <td style="text-align:left;padding-left:16px;font-weight:600"><span class="clickable-name">${p.name}</span></td>
+        <td style="text-align:center">${genderIcon(p.gender)}</td>
+        <td style="text-align:center" class="wt">${p.win}</td>
+        <td style="text-align:center" class="lt">${p.loss}</td>
+        <td style="text-align:center;font-weight:700;color:${twr>=50?'#16a34a':'#dc2626'}">${tw?twr+'%':'-'}</td>
+        <td style="text-align:center" class="${pC(p.points)}">${pS(p.points)}</td>
+      </tr>`;
     });
-    h+=`</div>`;
+    h+=`</tbody></table></div>`;
   }
 
   // ── 상대 대학 전적 ──
@@ -1240,17 +1239,17 @@ function buildUnivDetailHTML(univName){
 ══════════════════════════════════════ */
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
-  let h=`<table><thead><tr><th style="text-align:center;width:70px">티어</th><th style="text-align:center">대학</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:16px">스트리머</th><th style="text-align:center;width:44px">승</th><th style="text-align:center;width:44px">패</th><th style="text-align:center;width:64px">포인트</th>${isLoggedIn?'<th class="no-export" style="width:60px">관리</th>':''}</tr></thead><tbody>`;
+  let h=`<table><thead><tr><th style="text-align:center;width:70px">티어</th><th style="text-align:center">대학</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:16px">스트리머</th><th style="text-align:center;width:44px">승</th><th style="text-align:center;width:44px">패</th><th style="text-align:center;width:52px">승률</th><th style="text-align:center;width:64px">포인트</th>${isLoggedIn?'<th class="no-export" style="width:60px">관리</th>':''}</tr></thead><tbody>`;
   getAllUnivs().forEach(u=>{
     const up=players.filter(p=>p.univ===u.name);if(!up.length)return;
-    h+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?8:7}">
-      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">🏛️ ${u.name}${gUI(u.name,'14px')}</span>
+    h+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?9:8}">
+      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${(()=>{const _ui=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';return _ui?`<img src="${_ui}" alt="" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:'🏛️';})()}${u.name}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
     const sorted=[...up].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     let lt='';
     sorted.forEach(p=>{
-      if(p.tier!==lt){lt=p.tier;h+=`<tr class="tgrp"><td colspan="${isLoggedIn?8:7}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
+      if(p.tier!==lt){lt=p.tier;h+=`<tr class="tgrp"><td colspan="${isLoggedIn?9:8}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
       h+=`<tr>
         <td style="text-align:center">${getTierBadge(p.tier)}</td>
         <td style="text-align:center"><span class="ubadge clickable-univ" style="background:${u.color}" onclick="openUnivModal('${u.name}')">${p.univ}</span></td>
@@ -1258,6 +1257,7 @@ function rTotal(C,T){
         <td style="text-align:left;padding-left:16px;font-weight:600"><span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</td>
         <td style="text-align:center" class="wt">${p.win}</td>
         <td style="text-align:center" class="lt">${p.loss}</td>
+        <td style="text-align:center;font-weight:700;color:${(p.win+p.loss)?(Math.round(p.win/(p.win+p.loss)*100)>=50?'var(--green)':' var(--red)'):'var(--gray-l)'}">${(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100)+'%':'-'}</td>
         <td style="text-align:center" class="${pC(p.points)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px">${pS(p.points)}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">수정</button>`)}</td>`:''}
       </tr>`;
@@ -1385,7 +1385,7 @@ function rTier(C,T){
     h+=`<tr>
       <td style="text-align:center">${rnkHTML}</td>
       <td style="text-align:center">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${p.univ}')">${p.univ}</span></td>
+      <td style="text-align:center"><span style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${(()=>{const _ui=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return _ui?`<img src="${_ui}" alt="" style="width:16px;height:16px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:'🏛️';})()} <span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${p.univ}')">${p.univ}</span></span></td>
       <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
       <td style="text-align:left;padding-left:16px;font-weight:700"><span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</td>
       <td style="text-align:center" class="wt">${p.win}</td>
@@ -7059,7 +7059,7 @@ function refreshSel(){
 function openGameEditModal(editRef, si, gi){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
@@ -7122,7 +7122,7 @@ function openGameEditModal(editRef, si, gi){
 function saveGameEdit(editRef, si, gi, btn){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
