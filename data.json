@@ -1034,11 +1034,34 @@
       "tier": "유스",
       "race": "T",
       "win": 0,
-      "loss": 0,
-      "history": [],
-      "points": 0,
+      "loss": 2,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "따쥐",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -17,
+          "eloAfter": 1168
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "있찌",
+          "oppRace": "P",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -15,
+          "eloAfter": 1185
+        }
+      ],
+      "points": -6,
       "gender": "F",
-      "elo": 1200
+      "elo": 1168
     },
     {
       "name": "애공",
@@ -3327,11 +3350,23 @@
       "tier": "8티어",
       "race": "Z",
       "win": 0,
-      "loss": 0,
-      "history": [],
-      "points": 0,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "단솔",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
+      "points": -3,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "요정너구리",
@@ -3721,12 +3756,35 @@
       "univ": "와플대",
       "tier": "유스",
       "race": "P",
-      "win": 0,
+      "win": 2,
       "loss": 0,
-      "history": [],
-      "points": 0,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "미진이",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 15,
+          "eloAfter": 1231
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "오세은",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
+      "points": 6,
       "gender": "F",
-      "elo": 1200
+      "elo": 1231
     },
     {
       "name": "다린",
@@ -4504,9 +4562,32 @@
       "univ": "뉴캣슬",
       "tier": "유스",
       "race": "T",
-      "win": 0,
-      "loss": 0,
-      "history": [],
+      "win": 1,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "따쥐",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 16,
+          "eloAfter": 1200
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "있찌",
+          "oppRace": "P",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
       "elo": 1200
@@ -4977,12 +5058,46 @@
       "univ": "HM",
       "tier": "유스",
       "race": "Z",
-      "win": 0,
-      "loss": 0,
-      "history": [],
-      "points": 0,
+      "win": 1,
+      "loss": 2,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "미진이",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 17,
+          "eloAfter": 1186
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "오세은",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -16,
+          "eloAfter": 1169
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "패",
+          "opp": "단솔",
+          "oppRace": "T",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": -15,
+          "eloAfter": 1185
+        }
+      ],
+      "points": -3,
       "gender": "F",
-      "elo": 1200
+      "elo": 1186
     },
     {
       "name": "서지수",
@@ -8289,6 +8404,41 @@
       "points": 0,
       "history": [],
       "elo": 1200
+    },
+    {
+      "name": "단솔",
+      "univ": "정선대",
+      "tier": "유스",
+      "race": "T",
+      "gender": "F",
+      "win": 2,
+      "loss": 0,
+      "points": 6,
+      "history": [
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "따쥐",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 15,
+          "eloAfter": 1231
+        },
+        {
+          "date": "2026-02-23",
+          "time": 1771989639666,
+          "result": "승",
+          "opp": "권아온",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm1gvoj6f78l",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
+      "elo": 1231
     }
   ],
   "univCfg": [
@@ -9804,7 +9954,7 @@
   "comps": [],
   "ckM": [],
   "compNames": [],
-  "curComp": "정선숲퍼컵",
+  "curComp": "노답유스대전",
   "proM": [
     {
       "_id": "mm0f0rxf5v20",
@@ -10418,6 +10568,13 @@
   "members": [],
   "tourneys": [
     {
+      "id": "mm1fom7t7nl3",
+      "name": "노답유스대전",
+      "type": "tier",
+      "groups": [],
+      "createdAt": "2026-02-25T02:47:10.457Z"
+    },
+    {
       "id": "mm0gsm1utxhy",
       "name": "3티어 PL",
       "groups": [],
@@ -10739,18 +10896,6 @@
         }
       ],
       "createdAt": "2026-02-24T06:34:57.737Z"
-    },
-    {
-      "id": "mm06gjz7h5y9",
-      "name": "노답 유스 대전",
-      "groups": [
-        {
-          "name": "A조",
-          "univs": [],
-          "matches": []
-        }
-      ],
-      "createdAt": "2026-02-24T05:41:11.587Z"
     }
   ]
 }
