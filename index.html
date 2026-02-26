@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타대학 데이터 센터 V37</title>
+<title>⭐ 스타대학 데이터 센터 V40</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -536,7 +536,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V37</div>
+  <div class="hdr-ver">V40</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -4390,18 +4390,34 @@ function rCompGrpRankFull(tn){
 
 function rCompTour(){
   const tn=getCurrentTourney();
-  if(tn && tn.groups && tn.groups.length>=2){
+  // tourney가 있으면 항상 동적 브라켓 사용 (그룹 없어도 수동 팀 선택 가능)
+  if(tn){
     return rCompTourDynamic(tn);
   }
-  // fallback: 기존 수동 8강
+  // fallback: tourney 없을 때 기존 수동 8강 (레거시)
   const allU=getAllUnivs();
-  function teamBox(idx,label){const v=tourD[idx]||'';const col=v?gc(v):'';return `<div class="mteam ${v?'set':''}" style="${v?`background:${col}18;border-color:${col};color:${col};font-weight:800`:''}">` + (v||label) + `</div>`;}
+  function teamBox(idx,label){
+    const v=tourD[idx]||'';const col=v?gc(v):'';
+    return `<div class="mteam ${v?'set':''}" style="${v?`background:${col}18;border-color:${col};color:${col};font-weight:800`:'color:#94a3b8'}">` + (v||label) + `</div>`;
+  }
   function mCard(label,i1,i2,no){
-    const selHtml=isLoggedIn?`<div class="msel-wrap no-export">
-      <select class="msel" onchange="upTour(${i1},this.value)"><option value="">팀A...</option>${allU.map(u=>`<option value="${u.name}"${tourD[i1]===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <select class="msel" onchange="upTour(${i2},this.value)"><option value="">팀B...</option>${allU.map(u=>`<option value="${u.name}"${tourD[i2]===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+    const v1=tourD[i1]||'',v2=tourD[i2]||'';
+    const c1=v1?gc(v1):'',c2=v2?gc(v2):'';
+    const selHtml=isLoggedIn?`<div class="msel-wrap no-export" style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+      <select class="msel" onchange="upTour(${i1},this.value)" style="border-left:3px solid ${c1||'var(--border2)'};font-weight:${v1?'700':'400'}">
+        <option value="">팀A 선택...</option>
+        ${allU.map(u=>`<option value="${u.name}"${v1===u.name?' selected':''}>${u.name}</option>`).join('')}
+      </select>
+      <select class="msel" onchange="upTour(${i2},this.value)" style="border-left:3px solid ${c2||'var(--border2)'};font-weight:${v2?'700':'400'}">
+        <option value="">팀B 선택...</option>
+        ${allU.map(u=>`<option value="${u.name}"${v2===u.name?' selected':''}>${u.name}</option>`).join('')}
+      </select>
     </div>`:'';
-    return `<div class="mcard"><div class="mcard-lbl">${label} · ${no}</div>${teamBox(i1,'미확정')}<div class="mvs">VS</div>${teamBox(i2,'미확정')}${selHtml}</div>`;
+    return `<div class="mcard" style="${(v1||v2)?'border-color:var(--blue-ll)':''}">
+      <div class="mcard-lbl">${label} · ${no}</div>
+      ${teamBox(i1,'미확정')}<div class="mvs">VS</div>${teamBox(i2,'미확정')}
+      ${selHtml}
+    </div>`;
   }
   const champ=tourD[14]||''; const cc=champ?gc(champ):'';
   const champSel=isLoggedIn?`<select class="msel no-export" style="margin-top:10px" onchange="upTour(14,this.value)"><option value="">챔피언...</option>${allU.map(u=>`<option value="${u.name}"${champ===u.name?' selected':''}>${u.name}</option>`).join('')}</select>`:'';
@@ -4421,7 +4437,48 @@ function rCompTour(){
   </div></div>`;
 }
 
-/* ── 동적 브라켓 시각화 ── */
+/* ══════════════════════════════════════
+   브라켓 상태 저장 유틸
+   tn.bracket = {
+     slots: { "r-mi-side": "대학명" },   // 각 라운드 각 경기 슬롯 수동 override
+     winners: { "r-mi": "대학명" },       // 각 라운드 각 경기 승자
+     champ: "대학명"
+   }
+══════════════════════════════════════ */
+function getBracket(tn){
+  if(!tn.bracket)tn.bracket={slots:{},winners:{},champ:''};
+  if(!tn.bracket.slots)tn.bracket.slots={};
+  if(!tn.bracket.winners)tn.bracket.winners={};
+  if(tn.bracket.champ===undefined)tn.bracket.champ='';
+  return tn.bracket;
+}
+function setBracketWinner(tnId,rnd,mi,winner){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const br=getBracket(tn);
+  const key=`${rnd}-${mi}`;
+  if(br.winners[key]===winner){br.winners[key]='';} // 토글 off
+  else{br.winners[key]=winner;}
+  save();render();
+}
+function setBracketSlot(tnId,rnd,mi,side,val){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const br=getBracket(tn);
+  br.slots[`${rnd}-${mi}-${side}`]=val;
+  // 슬롯 바꾸면 해당 매치 승자 초기화
+  delete br.winners[`${rnd}-${mi}`];
+  save();render();
+}
+function setBracketChamp(tnId,val){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  getBracket(tn).champ=val;save();render();
+}
+function resetBracket(tnId){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  if(!confirm('브라켓을 초기화하시겠습니까?\n수동으로 입력한 팀 배치와 결과가 모두 삭제됩니다.'))return;
+  tn.bracket={slots:{},winners:{},champ:''};save();render();
+}
+
+/* ── 동적 브라켓 시각화 (수정 가능 버전) ── */
 function rCompTourDynamic(tn){
   function getGrpRank(grp){
     const stat={};
@@ -4439,108 +4496,179 @@ function rCompTourDynamic(tn){
       .sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);
   }
 
-  // 조별 1,2위 추출
-  const grpRanks=tn.groups.map((grp,gi)=>{
+  const grpRanks=(tn.groups&&tn.groups.length>=2)?tn.groups.map((grp,gi)=>{
     const gl='ABCDEFGHIJ'[gi]||String(gi+1);
     const color=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
     const ranked=getGrpRank(grp);
-    return {grpName:grp.name||('조'+gl),color,ranked};
-  });
+    return{grpName:grp.name||('조'+gl),color,ranked};
+  }):[];
 
-  // 4조 기준 교차 배치: A1 vs B2 | B1 vs A2 | C1 vs D2 | D1 vs C2
-  // N조 범용: 홀수조 1위 vs 짝수조 2위
   const numGroups=grpRanks.length;
-  const pairCount=Math.floor(numGroups/2)*2; // 짝수로
-  const r1pairs=[];
+  const pairCount=Math.floor(numGroups/2)*2;
+  const r1teams=[]; // 1라운드 팀 목록 순서대로 (조편성 자동 배치)
   for(let i=0;i<pairCount;i+=2){
-    const gA=grpRanks[i], gB=grpRanks[i+1]||grpRanks[0];
-    r1pairs.push({
-      a:{univ:gA.ranked[0]?.u||'TBD',grpName:gA.grpName,color:gA.color,rank:1,w:gA.ranked[0]?.w||0,l:gA.ranked[0]?.l||0},
-      b:{univ:gB.ranked[1]?.u||'TBD',grpName:gB.grpName,color:gB.color,rank:2,w:gB.ranked[1]?.w||0,l:gB.ranked[1]?.l||0}
-    });
-    r1pairs.push({
-      a:{univ:gB.ranked[0]?.u||'TBD',grpName:gB.grpName,color:gB.color,rank:1,w:gB.ranked[0]?.w||0,l:gB.ranked[0]?.l||0},
-      b:{univ:gA.ranked[1]?.u||'TBD',grpName:gA.grpName,color:gA.color,rank:2,w:gA.ranked[1]?.w||0,l:gA.ranked[1]?.l||0}
-    });
+    const gA=grpRanks[i],gB=grpRanks[i+1]||grpRanks[0];
+    r1teams.push(
+      {univ:gA.ranked[0]?.u||'',grpName:gA.grpName,color:gA.color,rank:1},
+      {univ:gB.ranked[1]?.u||'',grpName:gB.grpName,color:gB.color,rank:2},
+      {univ:gB.ranked[0]?.u||'',grpName:gB.grpName,color:gB.color,rank:1},
+      {univ:gA.ranked[1]?.u||'',grpName:gA.grpName,color:gA.color,rank:2}
+    );
   }
-  // 홀수 조 남은 경우 와일드카드
   if(numGroups%2===1){
     const last=grpRanks[numGroups-1];
-    r1pairs.push({
-      a:{univ:last.ranked[0]?.u||'TBD',grpName:last.grpName,color:last.color,rank:1,w:last.ranked[0]?.w||0,l:last.ranked[0]?.l||0},
-      b:{univ:'WC',grpName:'와일드카드',color:'#6b7280',rank:'-'}
-    });
+    r1teams.push(
+      {univ:last.ranked[0]?.u||'',grpName:last.grpName,color:last.color,rank:1},
+      {univ:'',grpName:'와일드카드',color:'#6b7280',rank:'-'}
+    );
   }
-
-  // 라운드 수 계산
-  let bracketN=r1pairs.length; let totalRounds=0;
+  // 그룹 없으면 기본 4경기(8강) 수동 브라켓
+  const numR1=r1teams.length>0?Math.ceil(r1teams.length/2):4;
+  let bracketN=numR1; let totalRounds=0;
   let n=bracketN; while(n>1){n=Math.ceil(n/2);totalRounds++;}
   if(totalRounds===0)totalRounds=1;
   const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
 
-  function teamSlot(team, isWin=false){
-    if(!team) return `<div style="height:38px;background:#f1f5f9;border-radius:6px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8">미정</div>`;
-    const isTbd=team.univ==='TBD'||team.univ==='WC';
-    const col=(!isTbd&&team.univ!=='BYE')?gc(team.univ):team.color||'#94a3b8';
-    return `<div style="height:38px;padding:0 8px;border-radius:6px;border:${isWin?'2px':'1px'} solid ${isWin?col:col+'55'};background:${isWin?col+'20':'var(--white)'};display:flex;align-items:center;gap:5px;font-size:12px;font-weight:${isWin?'800':'600'};color:${isWin?col:isTbd?'#94a3b8':'var(--text)'};overflow:hidden;white-space:nowrap">
-      ${team.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
-      <span style="overflow:hidden;text-overflow:ellipsis;flex:1">${isTbd?'미정':team.univ}</span>
-      ${!isTbd&&team.w!==undefined?`<span style="font-size:9px;color:var(--gray-l);flex-shrink:0">${team.w}W</span>`:''}
-      ${isWin?'<span style="font-size:13px;flex-shrink:0">✅</span>':''}
+  const br=getBracket(tn);
+  const allU=getAllUnivs();
+  const tnId=tn.id;
+
+  // 브라켓 전체 팀 상태 계산 (수동 override + 자동 승자 전파)
+  // rounds[r][mi] = {a,b} (각각 {univ,color,...} or null)
+  const rounds=[]; // rounds[0] = 1라운드
+  for(let r=0;r<totalRounds;r++){
+    const matchCount=Math.ceil(numR1/Math.pow(2,r));
+    const pairs=[];
+    for(let mi=0;mi<matchCount;mi++){
+      let teamA=null,teamB=null;
+      if(r===0){
+        // 1라운드: 조 순위에서 기본값, 수동 override 우선
+        const baseA=r1teams[mi*2]||null;
+        const baseB=r1teams[mi*2+1]||null;
+        const slotA=br.slots[`0-${mi}-a`];
+        const slotB=br.slots[`0-${mi}-b`];
+        teamA=slotA!==undefined?(slotA?{univ:slotA,color:gc(slotA)}:null):(baseA?.univ?baseA:null);
+        teamB=slotB!==undefined?(slotB?{univ:slotB,color:gc(slotB)}:null):(baseB?.univ?baseB:null);
+      }else{
+        // 이후 라운드: 이전 라운드 승자 또는 수동 override
+        const prevMiA=mi*2, prevMiB=mi*2+1;
+        const autoA=br.winners[`${r-1}-${prevMiA}`]||null;
+        const autoB=br.winners[`${r-1}-${prevMiB}`]||null;
+        const slotA=br.slots[`${r}-${mi}-a`];
+        const slotB=br.slots[`${r}-${mi}-b`];
+        teamA=slotA!==undefined?(slotA?{univ:slotA,color:gc(slotA)}:null):(autoA?{univ:autoA,color:gc(autoA)}:null);
+        teamB=slotB!==undefined?(slotB?{univ:slotB,color:gc(slotB)}:null):(autoB?{univ:autoB,color:gc(autoB)}:null);
+      }
+      pairs.push({a:teamA,b:teamB,winner:br.winners[`${r}-${mi}`]||null});
+    }
+    rounds.push(pairs);
+  }
+
+  function teamSlot(team,isWinner,tnId,rnd,mi,side){
+    const col=team?gc(team.univ):'#94a3b8';
+    const univName=team?.univ||'';
+    const isTbd=!univName;
+    const winMark=isWinner?'<span style="font-size:13px;margin-left:2px">✅</span>':'';
+
+    // 편집모드면 셀렉트
+    if(isLoggedIn){
+      const grpBadge=team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:'';
+      const winMarkInner=isWinner?`<span style="font-size:11px;flex-shrink:0">✅</span>`:'';
+      return `<div style="display:flex;align-items:center;gap:3px;height:38px">
+        ${grpBadge}
+        <select style="flex:1;height:32px;font-size:12px;font-weight:${isWinner?'800':'600'};padding:0 6px;border-radius:6px;border:${isWinner?'2px':'1px'} solid ${isWinner?col:isTbd?'#cbd5e1':col+'55'};background:${isWinner?col+'15':isTbd?'#f8fafc':'var(--white)'};color:${isWinner?col:isTbd?'#94a3b8':'var(--text)'};cursor:pointer;min-width:0"
+          onchange="setBracketSlot('${tnId}',${rnd},${mi},'${side}',this.value)">
+          <option value="">— 미정 —</option>
+          ${allU.map(u=>`<option value="${u.name}"${univName===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        ${winMarkInner}
+      </div>`;
+    }
+    return `<div style="height:38px;padding:0 8px;border-radius:6px;border:${isWinner?'2px':'1px'} solid ${isWinner?col:isTbd?'#cbd5e1':col+'55'};background:${isWinner?col+'22':isTbd?'#f8fafc':'var(--white)'};display:flex;align-items:center;gap:4px;font-size:12px;font-weight:${isWinner?'800':'600'};color:${isWinner?col:isTbd?'#94a3b8':'var(--text)'};overflow:hidden;white-space:nowrap">
+      ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
+      <span style="overflow:hidden;text-overflow:ellipsis;flex:1">${isTbd?'미정':univName}</span>
+      ${winMark}
     </div>`;
   }
 
-  function matchCard(pair, rLabel, no){
-    return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:210px;box-shadow:0 2px 6px rgba(0,0,0,.07)">
-      <div style="font-size:9px;color:var(--gray-l);font-weight:700;margin-bottom:5px;text-align:center">${rLabel} ${no}경기</div>
-      ${teamSlot(pair.a)}
-      <div style="text-align:center;font-size:10px;color:var(--gray-l);font-weight:700;margin:3px 0">VS</div>
-      ${teamSlot(pair.b)}
-      <div style="text-align:center;font-size:10px;color:var(--gray-l);margin-top:4px">미진행</div>
+  function matchCard(pair, rLabel, rnd, mi){
+    const {a,b,winner}=pair;
+    const aIsWin=winner&&winner===a?.univ;
+    const bIsWin=winner&&winner===b?.univ;
+    const canSetWinner=isLoggedIn&&a?.univ&&b?.univ;
+    const isDone=!!winner;
+
+    // 승자 버튼
+    let winBtns='';
+    if(canSetWinner){
+      winBtns=`<div style="display:flex;gap:4px;margin-top:5px">
+        <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${a.univ}')"
+          style="flex:1;padding:3px 0;border-radius:5px;border:1.5px solid ${aIsWin?gc(a.univ):'var(--border2)'};background:${aIsWin?gc(a.univ)+'22':'var(--white)'};font-size:10px;font-weight:700;color:${aIsWin?gc(a.univ):'var(--text3)'};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${aIsWin?'✅ ':''}${a.univ.length>6?a.univ.slice(0,5)+'…':a.univ} 승
+        </button>
+        <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${b.univ}')"
+          style="flex:1;padding:3px 0;border-radius:5px;border:1.5px solid ${bIsWin?gc(b.univ):'var(--border2)'};background:${bIsWin?gc(b.univ)+'22':'var(--white)'};font-size:10px;font-weight:700;color:${bIsWin?gc(b.univ):'var(--text3)'};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${bIsWin?'✅ ':''}${b.univ.length>6?b.univ.slice(0,5)+'…':b.univ} 승
+        </button>
+      </div>`;
+    }else if(!a?.univ||!b?.univ){
+      winBtns=`<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px">팀 배정 후 결과 입력</div>`;
+    }
+
+    return `<div style="background:var(--white);border:${isDone?'2px':'1px'} solid ${isDone?'var(--blue)':'var(--border)'};border-radius:10px;padding:8px 10px;min-width:190px;max-width:210px;box-shadow:${isDone?'0 2px 10px rgba(37,99,235,.12)':'0 1px 4px rgba(0,0,0,.06)'}">
+      <div style="font-size:9px;color:${isDone?'var(--blue)':'var(--gray-l)'};font-weight:700;margin-bottom:5px;text-align:center;letter-spacing:.5px">${rLabel} ${mi+1}경기${isDone?' ✓':''}</div>
+      ${teamSlot(a,aIsWin,tnId,rnd,mi,'a')}
+      <div style="text-align:center;font-size:9px;color:var(--gray-l);font-weight:700;margin:3px 0">VS</div>
+      ${teamSlot(b,bIsWin,tnId,rnd,mi,'b')}
+      ${winBtns}
     </div>`;
   }
 
   let allRoundsHTML='';
-  let currentPairs=r1pairs;
   for(let r=0;r<totalRounds;r++){
     const rNum=totalRounds-r;
     const rLabel=roundLabels[rNum]||(rNum+'강');
-    allRoundsHTML+=`<div style="display:flex;flex-direction:column;gap:14px;min-width:210px;padding-top:28px">
-      <div style="font-size:11px;font-weight:800;color:var(--blue);text-align:center;letter-spacing:.5px;white-space:nowrap">${rLabel}</div>
-      ${currentPairs.map((p,mi)=>matchCard(p,rLabel,mi+1)).join('')}
+    const pairs=rounds[r];
+    const colH=pairs.length>1?`${pairs.length*110+pairs.length*14}px`:'auto';
+    allRoundsHTML+=`<div style="display:flex;flex-direction:column;justify-content:space-around;gap:14px;min-width:200px;padding-top:28px;align-items:center">
+      <div style="font-size:11px;font-weight:800;color:var(--blue);text-align:center;letter-spacing:.5px;white-space:nowrap;width:100%">${rLabel}</div>
+      ${pairs.map((p,mi)=>matchCard(p,rLabel,r,mi)).join('')}
     </div>`;
     if(r<totalRounds-1){
-      allRoundsHTML+=`<div style="display:flex;flex-direction:column;justify-content:space-around;min-width:32px;padding-top:52px">
-        ${currentPairs.map(()=>'<div style="height:2px;background:linear-gradient(90deg,#cbd5e1,#93c5fd)"></div>').join('')}
+      const connH=Math.max(1,pairs.length);
+      allRoundsHTML+=`<div style="display:flex;flex-direction:column;justify-content:space-around;min-width:28px;padding-top:52px;gap:${connH>1?Math.floor(100/connH):0}px">
+        ${pairs.map(()=>'<div style="height:2px;background:linear-gradient(90deg,#cbd5e1,#93c5fd);min-width:28px"></div>').join('')}
       </div>`;
     }
-    const next=[];
-    for(let i=0;i<currentPairs.length;i+=2)
-      next.push({a:{univ:'승자',color:'#94a3b8'},b:{univ:'승자',color:'#94a3b8'}});
-    currentPairs=next;
   }
 
-  // 챔피언
-  const champ=tourD[14]||''; const cc=champ?gc(champ):'#d97706';
-  allRoundsHTML+=`<div style="display:flex;align-items:center;min-width:32px;padding-top:52px">
-    <div style="height:2px;width:32px;background:linear-gradient(90deg,#93c5fd,${cc})"></div>
+  // 챔피언 박스
+  const finalPairs=rounds[totalRounds-1]||[];
+  const finalWinner=finalPairs[0]?.winner||br.champ||'';
+  const cc=finalWinner?gc(finalWinner):'#d97706';
+  allRoundsHTML+=`<div style="display:flex;align-items:center;min-width:24px;padding-top:52px">
+    <div style="height:2px;width:24px;background:linear-gradient(90deg,#93c5fd,${cc})"></div>
   </div>
   <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding-top:28px;min-width:140px">
-    <div style="font-size:10px;font-weight:800;color:#d97706;text-align:center;margin-bottom:8px">🏆 CHAMPION</div>
-    <div style="background:${cc}15;border:2px solid ${cc};border-radius:12px;padding:14px 18px;text-align:center">
+    <div style="font-size:10px;font-weight:800;color:#d97706;text-align:center;margin-bottom:8px;letter-spacing:2px">🏆 CHAMPION</div>
+    <div style="background:${cc}15;border:2px solid ${cc};border-radius:12px;padding:14px 18px;text-align:center;min-width:130px">
       <div style="font-size:22px;margin-bottom:4px">🏆</div>
-      <div style="font-weight:900;font-size:13px;color:${cc};white-space:nowrap">${champ||'?'}</div>
+      <div style="font-weight:900;font-size:14px;color:${cc};white-space:nowrap">${finalWinner||'?'}</div>
     </div>
-    ${isLoggedIn?`<select style="margin-top:7px;font-size:11px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;max-width:130px" onchange="upTour(14,this.value)">
-      <option value="">챔피언 선택...</option>
-      ${getAllUnivs().map(u=>`<option value="${u.name}"${tourD[14]===u.name?' selected':''}>${u.name}</option>`).join('')}
+    ${isLoggedIn?`<select style="margin-top:7px;font-size:11px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;max-width:130px" onchange="setBracketChamp('${tnId}',this.value)">
+      <option value="">챔피언 직접 지정...</option>
+      ${allU.map(u=>`<option value="${u.name}"${finalWinner===u.name?' selected':''}>${u.name}</option>`).join('')}
     </select>`:''}
   </div>`;
 
   return `<div>
-    <div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px">⚔️ ${tn.name} — 토너먼트 브라켓</div>
-    <!-- 조별 순위 요약 -->
-    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-weight:900;font-size:15px;color:var(--blue)">⚔️ ${tn.name} — 토너먼트 브라켓</span>
+      ${isLoggedIn?`<button class="btn btn-w btn-xs" onclick="resetBracket('${tnId}')" title="브라켓 초기화">🔄 초기화</button>`:''}
+      ${isLoggedIn?`<span style="font-size:11px;color:var(--gray-l);margin-left:4px">💡 팀 슬롯 클릭으로 변경 · 승 버튼으로 결과 입력</span>`:''}
+    </div>
+    <!-- 조별 순위 요약 (그룹 있는 경우만) -->
+    ${grpRanks.length>0?`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
       ${grpRanks.map(g=>`<div style="background:${g.color}10;border:1px solid ${g.color}44;border-radius:8px;padding:7px 11px;min-width:120px">
         <div style="font-size:11px;font-weight:800;color:${g.color};margin-bottom:5px">${g.grpName}</div>
         ${g.ranked.slice(0,2).map((s,ri)=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
@@ -4549,14 +4677,13 @@ function rCompTourDynamic(tn){
           <span style="font-size:9px;color:var(--gray-l)">${s.w}승${s.l}패</span>
         </div>`).join('')}
       </div>`).join('')}
-    </div>
+    </div>`:`<div style="font-size:11px;color:var(--gray-l);margin-bottom:10px;padding:6px 10px;background:var(--surface);border-radius:6px">💡 조편성이 없습니다. 아래 드롭다운에서 직접 팀을 배치하세요.</div>`}
     <!-- 브라켓 -->
     <div style="overflow-x:auto;padding-bottom:8px">
-      <div style="display:flex;align-items:center;gap:0;min-width:fit-content;padding:4px 0">
+      <div style="display:flex;align-items:center;gap:0;min-width:fit-content;padding:8px 0">
         ${allRoundsHTML}
       </div>
     </div>
-    <div style="font-size:10px;color:var(--gray-l);margin-top:8px">💡 이후 라운드는 경기 결과 입력 후 자동 업데이트됩니다</div>
   </div>`;
 }
 
@@ -5814,9 +5941,15 @@ function rStats(C,T){
     {id:'maprank',     lbl:'🗺️ 맵별 특화'},
     {id:'univmatrix',  lbl:'🏛️ 대학 매트릭스'},
     {id:'racetrend',   lbl:'🔬 종족 트렌드'},
-    {id:'csvexport',   lbl:'📥 CSV 내보내기'},
+    ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     {id:'sharecard',   lbl:'🎴 공유 카드'},
     {id:'advsearch',   lbl:'🔍 고급 검색'},
+    {id:'killer',      lbl:'🗡️ 킬러/피해자'},
+    {id:'seasonal',    lbl:'📅 요일/시즌 승률'},
+    {id:'clutch',      lbl:'⚡ 클러치 지수'},
+    {id:'streakhist',  lbl:'🔥 역대 연속 기록'},
+    {id:'tiermatch',   lbl:'🎖️ 티어별 승률'},
+    {id:'univmatrix2', lbl:'🏛️ 대학 매트릭스+'},
   ];
   let h=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${statsSub===o.id?'on':''}" onclick="statsSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
   if(statsSub==='overview')    h+=statsOverviewHTML();
@@ -5834,6 +5967,12 @@ function rStats(C,T){
   else if(statsSub==='csvexport')h+=statsCsvExportHTML();
   else if(statsSub==='sharecard')h+=statsShareCardHTML();
   else if(statsSub==='advsearch')h+=statsAdvSearchHTML();
+  else if(statsSub==='killer')   h+=statsKillerHTML();
+  else if(statsSub==='seasonal') h+=statsSeasonalHTML();
+  else if(statsSub==='clutch')   h+=statsClutchHTML();
+  else if(statsSub==='streakhist')h+=statsStreakHistHTML();
+  else if(statsSub==='tiermatch') h+=statsTierMatchHTML();
+  else if(statsSub==='univmatrix2')h+=statsUnivMatrix2HTML();
   C.innerHTML=h;
   // 서브탭별 후처리
   if(statsSub==='elo')         initEloChart();
@@ -5970,17 +6109,36 @@ function statsOverviewHTML(){
    2. ELO 랭킹 변동 그래프
 ══════════════════════════════════════ */
 let _eloSelPlayer='';
+function eloSearchFilter(q){
+  const d=document.getElementById('elo-search-drop');if(!d)return;
+  const items=d.querySelectorAll('.sitem');
+  items.forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
 function statsEloHTML(){
-  const top20=players.filter(p=>p.history&&p.history.length>0)
-    .sort((a,b)=>(b.elo||1200)-(a.elo||1200)).slice(0,30);
-  if(!_eloSelPlayer&&top20.length)_eloSelPlayer=top20[0].name;
+  const allWithHist=players.filter(p=>p.history&&p.history.length>0)
+    .sort((a,b)=>(b.elo||1200)-(a.elo||1200));
+  const top20=allWithHist.slice(0,30);
+  if(!_eloSelPlayer&&allWithHist.length)_eloSelPlayer=allWithHist[0].name;
+  const selP=players.find(p=>p.name===_eloSelPlayer);
   return`<div style="display:flex;flex-direction:column;gap:16px">
   <div class="ssec" id="stats-elo-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
-      <select id="elo-sel-player" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_eloSelPlayer=this.value;initEloChart()">
-        ${top20.map(p=>`<option value="${p.name}"${_eloSelPlayer===p.name?' selected':''}>${p.name} (${p.univ}) ELO:${p.elo||1200}</option>`).join('')}
-      </select>
+      <div style="position:relative">
+        <input id="elo-search-input" type="text" placeholder="🔍 선수 이름 검색..."
+          value="${_eloSelPlayer}"
+          style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
+          oninput="eloSearchFilter(this.value)"
+          onfocus="document.getElementById('elo-search-drop').style.display='block'"
+          onblur="setTimeout(()=>{const d=document.getElementById('elo-search-drop');if(d)d.style.display='none'},200)"
+          onkeydown="if(event.key==='Enter'){const q=this.value.trim();const m=players.filter(p=>p.history&&p.history.length>0&&p.name.includes(q));if(m.length===1){_eloSelPlayer=m[0].name;this.value=m[0].name;document.getElementById('elo-search-drop').style.display='none';initEloChart();}else if(q&&m.length>0){_eloSelPlayer=m[0].name;this.value=m[0].name;document.getElementById('elo-search-drop').style.display='none';initEloChart();}}">
+        <div id="elo-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
+          ${allWithHist.map(p=>`<div class="sitem" onmousedown="_eloSelPlayer='${p.name.replace(/'/g,"\'")}';document.getElementById('elo-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('elo-search-drop').style.display='none';initEloChart()">
+            <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">ELO ${p.elo||1200}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      ${selP?`<span class="ubadge" style="background:${gc(selP.univ)}">${selP.univ}</span>`:''}
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
     <canvas id="eloChart" style="width:100%;max-height:300px"></canvas>
@@ -6074,25 +6232,42 @@ function initEloChart(){
   // 제목
   ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
   ctx.fillText(`${p.name} ELO 변동 (현재: ${p.elo||1200})`,pad.l,14);
-  // 선택 변경 시 select 업데이트
-  const sel=document.getElementById('elo-sel-player');
-  if(sel)sel.value=_eloSelPlayer;
+  // 검색 인풋 동기화
+  const inp=document.getElementById('elo-search-input');
+  if(inp)inp.value=_eloSelPlayer;
 }
 
 /* ══════════════════════════════════════
    3. 선수 성장 곡선
 ══════════════════════════════════════ */
 let _growthSel='';
+function growthSearchFilter(q){
+  const d=document.getElementById('growth-search-drop');if(!d)return;
+  d.querySelectorAll('.sitem').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
 function statsGrowthHTML(){
-  const cands=players.filter(p=>p.history&&p.history.length>=5)
+  const cands=players.filter(p=>p.history&&p.history.length>=2)
     .sort((a,b)=>b.history.length-a.history.length);
   if(!_growthSel&&cands.length)_growthSel=cands[0].name;
+  const selP=players.find(p=>p.name===_growthSel);
   return`<div class="ssec" id="stats-growth-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 선수 성장 곡선</h4>
-      <select id="growth-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_growthSel=this.value;initGrowthChart()">
-        ${cands.map(p=>`<option value="${p.name}"${_growthSel===p.name?' selected':''}>${p.name} (${p.univ}) ${p.history.length}경기</option>`).join('')}
-      </select>
+      <div style="position:relative">
+        <input id="growth-search-input" type="text" placeholder="🔍 선수 이름 검색..."
+          value="${_growthSel}"
+          style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
+          oninput="growthSearchFilter(this.value)"
+          onfocus="document.getElementById('growth-search-drop').style.display='block'"
+          onblur="setTimeout(()=>{const d=document.getElementById('growth-search-drop');if(d)d.style.display='none'},200)"
+          onkeydown="if(event.key==='Enter'){const q=this.value.trim();const m=players.filter(p=>p.history&&p.history.length>=2&&p.name.includes(q));if(m.length>0){_growthSel=m[0].name;this.value=m[0].name;document.getElementById('growth-search-drop').style.display='none';initGrowthChart();}}">
+        <div id="growth-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
+          ${cands.map(p=>`<div class="sitem" onmousedown="_growthSel='${p.name.replace(/'/g,"\'")}';document.getElementById('growth-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('growth-search-drop').style.display='none';initGrowthChart()">
+            <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      ${selP?`<span class="ubadge" style="background:${gc(selP.univ)}">${selP.univ}</span>`:''}
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
     <canvas id="growthChart" style="width:100%;max-height:300px"></canvas>
@@ -6176,8 +6351,8 @@ function initGrowthChart(){
         <div style="font-size:11px;color:var(--gray-l)">경기 기록</div>
       </div>`;
   }
-  const sel=document.getElementById('growth-sel');
-  if(sel)sel.value=_growthSel;
+  const inp2=document.getElementById('growth-search-input');
+  if(inp2)inp2.value=_growthSel;
 }
 
 /* ══════════════════════════════════════
@@ -6206,13 +6381,23 @@ function statsAwardHTML(){
   const [py,pm]=prevYm.split('-');
   function awardCard(title,p,extra='',color='#2563eb'){
     if(!p)return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;flex:1;min-width:200px"><div style="font-size:28px;margin-bottom:8px">🏆</div><div style="color:var(--gray-l)">기록 없음</div></div>`;
+    const univColor=gc(p.univ);
+    // 대학 아이콘 (gUI 사용 - UNIV_ICONS 또는 univCfg.icon 우선)
+    const univIconUrl=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
+    // 아이콘: URL 있으면 이미지, 없으면 대학명 첫 글자 표시
+    const univIconInner=univIconUrl
+      ? `<img src="${univIconUrl}" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:16px;font-weight:900;color:white>${p.univ[0]||'?'}</span>'">`
+      : `<span style="font-size:18px;font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${p.univ[0]||'?'}</span>`;
     return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${p.name}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:${gc(p.univ)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px">${p.name[0]}</div>
-        <div>
-          <div style="font-weight:800;font-size:16px">${p.name}</div>
-          <div style="font-size:11px;color:var(--gray-l)">${p.univ} · ${p.tier||'-'}</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>
+        <div style="min-width:0">
+          <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;gap:3px;background:${univColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700">${gUI(p.univ,'0.85em')}${p.univ}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${getTierLabel(p.tier||'-')}</span>
+          </div>
         </div>
       </div>
       <div style="display:flex;gap:8px;font-size:12px;flex-wrap:wrap">
@@ -7095,23 +7280,51 @@ async function downloadShareCard(){
 /* ══════════════════════════════════════
    A. 활동량 히트맵
 ══════════════════════════════════════ */
+let _heatmapSelPlayer='';
+function heatmapSearchFilter(q){
+  const d=document.getElementById('heatmap-search-drop');if(!d)return;
+  d.querySelectorAll('.sitem').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
 function statsHeatmapHTML(){
-  // 모든 경기에서 날짜별 게임 수 집계
-  const allM=[...miniM,...univM,...ckM,...comps,...proM];
+  const playersWithHist=players.filter(p=>(p.history||[]).length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const isPlayerMode=!!_heatmapSelPlayer;
   const dayCnt={};
-  allM.forEach(m=>{
-    (m.sets||[]).forEach(s=>(s.games||[]).forEach(()=>{
-      const d=m.d||''; if(!d) return;
-      dayCnt[d]=(dayCnt[d]||0)+1;
+  if(isPlayerMode){
+    // 선수별 히트맵: history의 날짜 기준 (1경기=1칸)
+    const tp=players.find(p=>p.name===_heatmapSelPlayer);
+    (tp?.history||[]).forEach(h=>{
+      const d=h.date||'';if(!d)return;
+      if(h.result==='승')dayCnt[d]=(dayCnt[d]||0)+1; // 승자 기준 1번만 카운트
+    });
+    // 0이면 패배 포함해서 다시
+    if(!Object.keys(dayCnt).length){
+      (tp?.history||[]).forEach(h=>{const d=h.date||'';if(!d)return;dayCnt[d]=(dayCnt[d]||0)+1;});
+    }
+  }else{
+    // 전체 경기 히트맵: 매치 날짜 기준 게임 수 (토너먼트 포함)
+    const _heatTourM=typeof getTourneyMatches==='function'?getTourneyMatches():[];
+    const allM=[...miniM,...univM,...ckM,...comps,...proM,..._heatTourM];
+    allM.forEach(m=>{
+      const d=m.d||'';if(!d)return;
+      // sets.games 카운트
+      let cnt=0;
+      (m.sets||[]).forEach(s=>(s.games||[]).forEach(()=>cnt++));
+      if(cnt>0)dayCnt[d]=(dayCnt[d]||0)+cnt;
+      else dayCnt[d]=(dayCnt[d]||0)+1; // 경기 자체도 카운트
+    });
+    // 개인 히스토리에서도 집계 (매치 데이터 없는 개인전)
+    const matchDates=new Set(Object.keys(dayCnt));
+    players.forEach(p=>(p.history||[]).forEach(h=>{
+      const d=h.date||'';if(!d||h.result!=='승')return;
+      // 이미 매치로 집계된 날짜는 추가 집계 안 함 (중복 방지)
+      if(!matchDates.has(d))dayCnt[d]=(dayCnt[d]||0)+1;
     }));
-  });
-  // 개인 히스토리도 포함
-  players.forEach(p=>(p.history||[]).forEach(h=>{
-    const d=h.date||''; if(!d) return;
-    // 이미 경기 단위로 위에서 집계했으므로 중복 방지 위해 개인은 별도 집계 안 함
-  }));
+  }
 
-  if(!Object.keys(dayCnt).length) return `<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">경기 기록이 없습니다.</p></div>`;
+  if(!Object.keys(dayCnt).length){
+    const msg=isPlayerMode?`${_heatmapSelPlayer} 선수의 경기 기록이 없습니다.`:'경기 기록이 없습니다.';
+    return `<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">${msg}</p></div>`;
+  }
 
   // 최근 52주(364일) 기준
   const today=new Date(); today.setHours(0,0,0,0);
@@ -7162,13 +7375,31 @@ function statsHeatmapHTML(){
   const activeDays=Object.keys(dayCnt).length;
   const topDays=Object.entries(dayCnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
+  const selHeatP=players.find(p=>p.name===_heatmapSelPlayer);
   return`<div style="display:flex;flex-direction:column;gap:16px">
   <div class="ssec" id="stats-heatmap-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <h4 style="margin:0">📅 활동량 히트맵 <span style="font-size:11px;color:var(--gray-l);font-weight:400">최근 1년</span></h4>
-      <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-l)">
-        <span>총 <b style="color:var(--blue)">${totalGames}</b>게임</span>
-        <span>활동일 <b style="color:var(--green)">${activeDays}</b>일</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="position:relative">
+          <input id="heatmap-search-input" type="text" placeholder="🔍 선수 검색 (전체보기: 비워두기)"
+            value="${_heatmapSelPlayer}"
+            style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
+            oninput="heatmapSearchFilter(this.value);if(!this.value){_heatmapSelPlayer='';render();}"
+            onfocus="document.getElementById('heatmap-search-drop').style.display='block'"
+            onblur="setTimeout(()=>{const d=document.getElementById('heatmap-search-drop');if(d)d.style.display='none'},200)">
+          <div id="heatmap-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
+            <div class="sitem" style="color:var(--gray-l);font-style:italic" onmousedown="_heatmapSelPlayer='';document.getElementById('heatmap-search-input').value='';document.getElementById('heatmap-search-drop').style.display='none';render()">— 전체 경기 보기 —</div>
+            ${playersWithHist.map(p=>`<div class="sitem" onmousedown="_heatmapSelPlayer='${p.name.replace(/'/g,"\'")}';document.getElementById('heatmap-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('heatmap-search-drop').style.display='none';render()">
+              <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${(p.history||[]).length}경기</span>
+            </div>`).join('')}
+          </div>
+        </div>
+        ${selHeatP?`<span class="ubadge" style="background:${gc(selHeatP.univ)}">${selHeatP.univ}</span>`:''}
+        <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-l)">
+          <span>총 <b style="color:var(--blue)">${totalGames}</b>${isPlayerMode?'경기':'게임'}</span>
+          <span>활동일 <b style="color:var(--green)">${activeDays}</b>일</span>
+        </div>
       </div>
     </div>
     <div style="overflow-x:auto;padding-bottom:4px">
@@ -7219,7 +7450,8 @@ function statsTierWinHTML(){
   }).forEach(p=>{
     const myIdx=tierIdx[p.tier]??99;
     let up={w:0,l:0}, same={w:0,l:0}, down={w:0,l:0};
-    statsNonProHist(p).forEach(h=>{
+    // 전체 히스토리 (프로리그 포함) 사용
+    (p.history||[]).forEach(h=>{
       const opp=players.find(x=>x.name===h.opp);
       if(!opp) return;
       const oppIdx=tierIdx[opp.tier]??99;
@@ -7228,7 +7460,7 @@ function statsTierWinHTML(){
       if(h.result==='승') bucket.w++; else bucket.l++;
     });
     const tot=up.w+up.l+same.w+same.l+down.w+down.l;
-    if(tot<3) return;
+    if(tot<1) return; // 최소 1경기
     data.push({...p,up,same,down,tot});
   });
   data.sort((a,b)=>{
@@ -7253,7 +7485,7 @@ function statsTierWinHTML(){
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec" id="stats-tierwin-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h4 style="margin:0">🎯 티어별 승률 분석 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(3경기 이상)</span></h4>
+      <h4 style="margin:0">🎯 티어별 승률 분석 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그·남자 포함 전체)</span></h4>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
       <select onchange="_tierWinFilter.race=this.value;render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
@@ -7302,12 +7534,37 @@ function statsTierWinHTML(){
 ══════════════════════════════════════ */
 let _mapRankSelMap='';
 function statsMapRankHTML(){
-  const allMaps=[...new Set(players.flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))].sort();
-  if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.</p></div>`;
+  // 맵 이름: 설정된 maps + 경기 히스토리에 있는 맵 모두 합산
+  const histMaps=[...new Set(players.flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))];
+  // maps 설정 배열에서도 추가 (maps = 전체 맵 설정)
+  const configMaps=(maps||[]).filter(m=>m&&m!=='-');
+  const allMaps=[...new Set([...histMaps,...configMaps])].sort();
+  if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:11px">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
   if(!_mapRankSelMap||!allMaps.includes(_mapRankSelMap)) _mapRankSelMap=allMaps[0];
 
   const mapData={};
   allMaps.forEach(m=>mapData[m]={});
+  // 경기 매치 데이터에서도 맵 집계 (sets.games)
+  // tourneys(조별대회) 경기도 포함
+  const tourMatchSets=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMatchSets.push(m))));
+  const allMatchSets=[...miniM,...univM,...ckM,...comps,...proM,...tourMatchSets];
+  // 경기 sets.games에서 맵별 선수 집계
+  allMatchSets.forEach(m=>{
+    (m.sets||[]).forEach((set,si)=>{
+      // set 레벨 맵 이름 (set.map 또는 maps[si] 또는 m.map)
+      const setMap=set.map||(m.maps&&m.maps[si])||m.map||'';
+      (set.games||[]).forEach(g=>{
+        const mapName=g.map||setMap||'';
+        if(!mapName||mapName==='-')return;
+        if(!mapData[mapName])mapData[mapName]={};
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(wn){const p=players.find(x=>x.name===wn);if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};mapData[mapName][wn].w++;}
+        if(ln){const p=players.find(x=>x.name===ln);if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};mapData[mapName][ln].l++;}
+      });
+    });
+  });
+  // 개인 히스토리에서도 맵 집계
   players.forEach(p=>{
     (p.history||[]).forEach(h=>{
       if(!h.map||h.map==='-') return;
@@ -7318,12 +7575,13 @@ function statsMapRankHTML(){
     });
   });
 
-  // 맵 전체 통계
+  // 맵 전체 통계 - 모든 플레이어의 승+패 합산 (양쪽 집계이므로 /2)
   const mapSummary=allMaps.map(m=>{
     const entries=Object.values(mapData[m]||{});
-    const total=entries.reduce((s,v)=>s+v.w+v.l,0)/2; // 양쪽 중복
-    return{name:m,games:Math.round(total),players:Object.keys(mapData[m]||{}).length};
-  }).sort((a,b)=>b.games-a.games);
+    const rawTotal=entries.reduce((s,v)=>s+v.w+v.l,0);
+    const total=Math.round(rawTotal/2); // 승자/패자 양쪽 집계 보정
+    return{name:m,games:total,players:Object.keys(mapData[m]||{}).length};
+  }).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name,'ko'));
 
   const selData=Object.entries(mapData[_mapRankSelMap]||{})
     .map(([name,s])=>({name,w:s.w,l:s.l,univ:s.univ,tier:s.tier,tot:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}))
@@ -7454,21 +7712,36 @@ function statsUnivMatrixHTML(){
 ══════════════════════════════════════ */
 let _raceTrendMonths=12;
 function statsRaceTrendHTML(){
-  // 월별 종족별 경기 수 집계
-  const allM=[...miniM,...univM,...ckM,...comps,...proM];
+  // 월별 종족별 경기 수 집계 (매치 sets.games + 개인 history 승자기준 합산)
   const monthData={};
+  function addRace(ym,race){if(!ym||ym.length!==7)return;if(!monthData[ym])monthData[ym]={T:0,Z:0,P:0,total:0};if(race&&monthData[ym][race]!==undefined){monthData[ym][race]++;monthData[ym].total++;}}
+  // 매치 sets.games 집계
+  const tourMs4=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs4.push(m))));
+  const allM=[...miniM,...univM,...ckM,...comps,...proM,...tourMs4];
   allM.forEach(m=>{
-    const ym=(m.d||'').slice(0,7); if(!ym||ym.length!==7) return;
-    if(!monthData[ym]) monthData[ym]={T:0,Z:0,P:0,total:0};
+    const ym=(m.d||'').slice(0,7);
     (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
       const pA=players.find(x=>x.name===g.playerA), pB=players.find(x=>x.name===g.playerB);
-      if(pA?.race){monthData[ym][pA.race]=(monthData[ym][pA.race]||0)+1;monthData[ym].total++;}
-      if(pB?.race){monthData[ym][pB.race]=(monthData[ym][pB.race]||0)+1;monthData[ym].total++;}
+      addRace(ym,pA?.race);addRace(ym,pB?.race);
     }));
+  });
+  // 개인 history 중 위 매치에 없는 개인전 (matchId 기준 중복 방지)
+  const matchIdsInSets=new Set();
+  allM.forEach(m=>(m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.matchId)matchIdsInSets.add(g.matchId);})));
+  players.forEach(p=>{
+    if(!p.race)return;
+    (p.history||[]).forEach(h=>{
+      if(h.result!=='승')return; // 승자 기준 1회만
+      if(h.matchId&&matchIdsInSets.has(h.matchId))return; // 이미 집계된 것 제외
+      const ym=(h.date||'').slice(0,7);
+      const opp=players.find(x=>x.name===h.opp);
+      addRace(ym,p.race);
+      addRace(ym,opp?.race);
+    });
   });
 
   const months=Object.keys(monthData).sort().slice(-_raceTrendMonths);
-  if(!months.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">경기 기록이 없습니다.</p></div>`;
+  if(!months.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">경기 기록이 없습니다.<br><span style="font-size:11px">경기 기록에 선수 정보와 종족이 입력되어야 집계됩니다.</span></p></div>`;
 
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec" id="stats-racetrend-sec">
@@ -7514,16 +7787,28 @@ function statsRaceTrendHTML(){
 function initRaceTrendChart(){
   const canvas=document.getElementById('raceTrendChart');
   if(!canvas) return;
-  const allM=[...miniM,...univM,...ckM,...comps,...proM];
   const monthData={};
+  function addRace2(ym,race){if(!ym||ym.length!==7)return;if(!monthData[ym])monthData[ym]={T:0,Z:0,P:0,total:0};if(race&&monthData[ym][race]!==undefined){monthData[ym][race]++;monthData[ym].total++;}}
+  const tourMs3=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs3.push(m))));
+  const allM=[...miniM,...univM,...ckM,...comps,...proM,...tourMs3];
   allM.forEach(m=>{
-    const ym=(m.d||'').slice(0,7); if(!ym||ym.length!==7) return;
-    if(!monthData[ym]) monthData[ym]={T:0,Z:0,P:0,total:0};
+    const ym=(m.d||'').slice(0,7);
     (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
-      const pA=players.find(x=>x.name===g.playerA), pB=players.find(x=>x.name===g.playerB);
-      if(pA?.race){monthData[ym][pA.race]++;monthData[ym].total++;}
-      if(pB?.race){monthData[ym][pB.race]++;monthData[ym].total++;}
+      const pA=players.find(x=>x.name===g.playerA),pB=players.find(x=>x.name===g.playerB);
+      addRace2(ym,pA?.race);addRace2(ym,pB?.race);
     }));
+  });
+  const matchIdsInSets2=new Set();
+  allM.forEach(m=>(m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.matchId)matchIdsInSets2.add(g.matchId);})));
+  players.forEach(p=>{
+    if(!p.race)return;
+    (p.history||[]).forEach(h=>{
+      if(h.result!=='승')return;
+      if(h.matchId&&matchIdsInSets2.has(h.matchId))return;
+      const ym=(h.date||'').slice(0,7);
+      const opp=players.find(x=>x.name===h.opp);
+      addRace2(ym,p.race);addRace2(ym,opp?.race);
+    });
   });
   const months=Object.keys(monthData).sort().slice(-_raceTrendMonths);
   if(!months.length){canvas.style.display='none';return;}
@@ -7590,9 +7875,601 @@ function initRaceTrendChart(){
 }
 
 /* ══════════════════════════════════════
+   NEW-1. 킬러 선수 / 피해자 선수
+══════════════════════════════════════ */
+let _killerSelPlayer='';
+function statsKillerHTML(){
+  const playersWithHistory=players.filter(p=>(p.history||[]).length>0);
+  if(!_killerSelPlayer&&playersWithHistory.length)_killerSelPlayer=playersWithHistory[0].name;
+  const univs=getAllUnivs();
+
+  function calcKiller(targetName){
+    const target=players.find(p=>p.name===targetName);
+    if(!target)return{killers:[],victims:[]};
+    const oppMap={};
+    (target.history||[]).forEach(h=>{
+      if(!h.opp)return;
+      if(!oppMap[h.opp])oppMap[h.opp]={w:0,l:0};
+      if(h.result==='승')oppMap[h.opp].w++;
+      else oppMap[h.opp].l++;
+    });
+    const entries=Object.entries(oppMap).map(([name,s])=>{
+      const opp=players.find(p=>p.name===name);
+      return{name,w:s.w,l:s.l,tot:s.w+s.l,
+        winRate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,
+        univ:opp?.univ||'',elo:opp?.elo||1200};
+    }).filter(e=>e.tot>=1);
+    const killers=entries.filter(e=>e.l>0).sort((a,b)=>{
+      const aLR=a.l/(a.w+a.l), bLR=b.l/(b.w+b.l);
+      return bLR-aLR||b.l-a.l;
+    }).slice(0,10);
+    const victims=entries.filter(e=>e.w>0).sort((a,b)=>{
+      const aWR=a.w/(a.w+a.l), bWR=b.w/(b.w+b.l);
+      return bWR-aWR||b.w-a.w;
+    }).slice(0,10);
+    return{killers,victims};
+  }
+
+  const target=players.find(p=>p.name===_killerSelPlayer);
+  const {killers,victims}=calcKiller(_killerSelPlayer);
+  const tColor=gc(target?.univ||'');
+
+  function oppRow(e,isKiller){
+    const col=gc(e.univ);
+    const myW=isKiller?e.l:e.w, myL=isKiller?e.w:e.l;
+    const myRate=e.tot?Math.round(myW/e.tot*100):0;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openPlayerModal('${e.name}')">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></span>
+      <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}</span>
+      <span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span>
+      <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+        <div style="width:${myRate}%;background:${isKiller?'var(--red)':'var(--green)'};height:100%;border-radius:20px"></div>
+      </div>
+      <span style="font-weight:800;font-size:12px;color:${isKiller?'var(--red)':'var(--green)'};white-space:nowrap;min-width:52px">${myRate}% (${myW}W${myL}L)</span>
+      <span style="font-size:10px;color:var(--gray-l)">${e.tot}경기</span>
+    </div>`;
+  }
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <h4 style="margin-bottom:12px">🗡️ 킬러 & 피해자 선수</h4>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:12px;font-weight:600;color:var(--text3)">선수 선택:</span>
+      <select style="padding:6px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600"
+        onchange="_killerSelPlayer=this.value;render()">
+        ${playersWithHistory.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>
+          `<option value="${p.name}"${_killerSelPlayer===p.name?' selected':''}>${p.name} (${p.univ})</option>`
+        ).join('')}
+      </select>
+      ${target?`<span class="ubadge" style="background:${tColor}">${target.univ}</span>
+      <span style="font-size:12px;color:var(--gray-l)">${target.win||0}승 ${target.loss||0}패</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-weight:800;font-size:14px;color:var(--red);margin-bottom:8px;padding:8px 12px;background:#fef2f2;border-radius:8px;border-left:4px solid var(--red)">
+          💀 나를 가장 많이 이긴 선수 (천적)
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${killers.length?killers.map(e=>oppRow(e,true)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">천적 없음 👑</p>'}
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:14px;color:var(--green);margin-bottom:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border-left:4px solid var(--green)">
+          🏆 내가 가장 많이 이긴 선수 (피해자)
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${victims.length?victims.map(e=>oppRow(e,false)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">피해자 없음</p>'}
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW-2. 요일 / 시즌별 승률
+══════════════════════════════════════ */
+let _seasonalFilter={gender:'',univ:'',race:''};
+function statsSeasonalHTML(){
+  const f=_seasonalFilter;
+  const univs=getAllUnivs();
+  const dayNames=['일','월','화','수','목','금','토'];
+  const dayStats=Array.from({length:7},(_,i)=>({day:dayNames[i],w:0,l:0}));
+  const monthStats={};
+
+  players.filter(p=>{
+    if(f.gender&&p.gender!==f.gender)return false;
+    if(f.univ&&p.univ!==f.univ)return false;
+    if(f.race&&p.race!==f.race)return false;
+    return true;
+  }).forEach(p=>{
+    (p.history||[]).forEach(h=>{
+      if(!h.date)return;
+      const d=new Date(h.date);
+      if(isNaN(d.getTime()))return;
+      const dow=d.getDay();
+      const ym=h.date.slice(0,7);
+      if(!monthStats[ym])monthStats[ym]={w:0,l:0};
+      if(h.result==='승'){dayStats[dow].w++;monthStats[ym].w++;}
+      else{dayStats[dow].l++;monthStats[ym].l++;}
+    });
+  });
+
+  const maxDay=Math.max(...dayStats.map(d=>d.w+d.l),1);
+  const sortedMonths=Object.entries(monthStats).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxMonth=Math.max(...sortedMonths.map(([,s])=>s.w+s.l),1);
+
+  function dayColor(rate){
+    if(rate>=60)return'#16a34a';if(rate>=50)return'#2563eb';if(rate>=40)return'#d97706';return'#dc2626';
+  }
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <h4 style="margin:0">📅 요일 / 시즌별 승률</h4>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
+        <select onchange="_seasonalFilter.gender=this.value;render()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:7px">
+          <option value="">성별 전체</option>
+          <option value="M"${f.gender==='M'?' selected':''}>👨 남자</option>
+          <option value="F"${f.gender==='F'?' selected':''}>👩 여자</option>
+        </select>
+        <select onchange="_seasonalFilter.univ=this.value;render()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:7px">
+          <option value="">대학 전체</option>
+          ${univs.map(u=>`<option value="${u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <select onchange="_seasonalFilter.race=this.value;render()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:7px">
+          <option value="">종족 전체</option>
+          <option value="T"${f.race==='T'?' selected':''}>테란</option>
+          <option value="Z"${f.race==='Z'?' selected':''}>저그</option>
+          <option value="P"${f.race==='P'?' selected':''}>프로토스</option>
+        </select>
+        <button class="btn btn-w btn-sm" onclick="_seasonalFilter={gender:'',univ:'',race:''};render()">초기화</button>
+      </div>
+    </div>
+    <h4 style="font-size:13px;margin-bottom:10px">🗓️ 요일별 승률</h4>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      ${dayStats.map((d,i)=>{
+        const tot=d.w+d.l;const rate=tot?Math.round(d.w/tot*100):0;
+        const col=dayColor(rate);const barH=tot?Math.round((tot/maxDay)*80)+20:0;
+        const isWeekend=i===0||i===6;
+        return`<div style="flex:1;min-width:70px;text-align:center;background:${isWeekend?'#fef3c7':'var(--white)'};border:1px solid var(--border);border-radius:10px;padding:12px 8px">
+          <div style="font-weight:800;font-size:15px;color:${isWeekend?'var(--gold)':'var(--text)'};margin-bottom:4px">${d.day}</div>
+          <div style="font-size:22px;font-weight:900;color:${col};margin-bottom:2px">${tot?rate+'%':'-'}</div>
+          <div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin:4px 0">
+            <div style="width:${rate}%;background:${col};height:100%;border-radius:2px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--gray-l)">${d.w}승 ${d.l}패</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <h4 style="font-size:13px;margin-bottom:10px">📆 월별 승률 추이</h4>
+    ${sortedMonths.length===0?'<p style="color:var(--gray-l)">기록 없음</p>':`
+    <div style="overflow-x:auto">
+      <div style="display:flex;align-items:flex-end;gap:6px;min-width:${sortedMonths.length*56}px;height:120px;padding-bottom:22px;position:relative">
+        ${sortedMonths.map(([ym,s])=>{
+          const tot=s.w+s.l;const rate=tot?Math.round(s.w/tot*100):0;
+          const col=dayColor(rate);
+          const barH=tot?Math.round((tot/maxMonth)*80)+10:4;
+          return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:48px;position:relative">
+            <span style="font-size:9px;color:${col};font-weight:800;margin-bottom:2px">${rate}%</span>
+            <div style="width:100%;height:${barH}px;background:${col};border-radius:4px 4px 0 0;opacity:.8;min-height:4px"></div>
+            <span style="font-size:9px;color:var(--gray-l);margin-top:3px;white-space:nowrap">${ym.slice(2)}</span>
+            <span style="font-size:9px;color:var(--gray-l)">${s.w}W${s.l}L</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`}
+  </div></div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW-3. 클러치 지수 (에이스전 승률)
+══════════════════════════════════════ */
+function statsClutchHTML(){
+  // 에이스 세트(ace:true) 의 게임에서 플레이한 선수들의 승률
+  const aceStats={};
+  const allMatchSets=[...miniM,...univM,...ckM,...comps,...proM];
+  allMatchSets.forEach(m=>{
+    (m.sets||[]).forEach(set=>{
+      if(!set.ace)return; // ace 세트만
+      (set.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wName=g.winner==='A'?g.playerA:g.playerB;
+        const lName=g.winner==='A'?g.playerB:g.playerA;
+        if(!aceStats[wName])aceStats[wName]={w:0,l:0};
+        if(!aceStats[lName])aceStats[lName]={w:0,l:0};
+        aceStats[wName].w++;
+        aceStats[lName].l++;
+      });
+    });
+  });
+
+  // history에서도 ace 경기 추적 (matchType이나 메모 기반은 없으니 세트 기반만 사용)
+  const aceList=Object.entries(aceStats).map(([name,s])=>{
+    const p=players.find(x=>x.name===name);
+    if(!p)return null;
+    const tot=s.w+s.l;
+    const rate=tot?Math.round(s.w/tot*100):0;
+    return{name,w:s.w,l:s.l,tot,rate,univ:p.univ,tier:p.tier,elo:p.elo||1200,
+      totalGames:(p.win||0)+(p.loss||0),
+      clutchRatio:tot>0?(s.w/tot-0.5)*2:0
+    };
+  }).filter(Boolean).filter(e=>e.tot>=1).sort((a,b)=>b.rate-a.rate||b.tot-a.tot);
+
+  const topClutch=aceList.slice(0,15);
+  const worstClutch=[...aceList].filter(e=>e.tot>=2).sort((a,b)=>a.rate-b.rate||b.tot-a.tot).slice(0,10);
+
+  function clutchRow(e,i){
+    const col=gc(e.univ);
+    const rateCol=e.rate>=60?'#7c3aed':e.rate>=50?'var(--green)':e.rate>=40?'var(--gold)':'var(--red)';
+    const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openPlayerModal('${e.name}')">
+      <span style="min-width:24px;font-size:15px">${badge}</span>
+      <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}</span>
+      <span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span>
+      <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+        <div style="width:${e.rate}%;background:${rateCol};height:100%;border-radius:20px"></div>
+      </div>
+      <span style="font-weight:900;font-size:14px;color:${rateCol};min-width:40px;text-align:right">${e.rate}%</span>
+      <span style="font-size:11px;color:var(--gray-l)">${e.w}W ${e.l}L (${e.tot}경기)</span>
+    </div>`;
+  }
+
+  const totalAceGames=aceList.reduce((s,e)=>s+e.tot,0)/2;
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <h4 style="margin-bottom:6px">⚡ 클러치 지수 <span style="font-size:11px;color:var(--gray-l);font-weight:400">에이스 결정전 / 타이브레이커 승률</span></h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:14px">총 에이스전: ${Math.round(totalAceGames)}경기 · 경기 입력 시 세트에 <b>ACE</b> 표시된 경기만 집계됩니다</p>
+    ${aceList.length===0?'<p style="color:var(--gray-l);padding:40px;text-align:center">에이스전 기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 세트 설정에서 ACE 세트로 지정해 주세요.</span></p>':`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-weight:800;font-size:13px;color:#7c3aed;margin-bottom:8px;padding:7px 12px;background:#f5f3ff;border-radius:8px;border-left:4px solid #7c3aed">🎯 클러치 킹 TOP 10</div>
+        <div style="display:flex;flex-direction:column;gap:4px">${topClutch.slice(0,10).map(clutchRow).join('')}</div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:13px;color:var(--red);margin-bottom:8px;padding:7px 12px;background:#fef2f2;border-radius:8px;border-left:4px solid var(--red)">💧 에이스전 약자 TOP 10</div>
+        <div style="display:flex;flex-direction:column;gap:4px">${worstClutch.map(clutchRow).join('')}</div>
+      </div>
+    </div>`}
+  </div></div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW-4. 역대 최장 연승/연패 기록 히스토리
+══════════════════════════════════════ */
+function statsStreakHistHTML(){
+  const allStreaks=[];
+  players.forEach(p=>{
+    const hist=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    if(!hist.length)return;
+    let cur=0, curType='', startDate='', endDate='';
+    hist.forEach((h,i)=>{
+      if(h.result===curType){
+        cur++;endDate=h.date||endDate;
+      }else{
+        if(cur>=3){
+          allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200});
+        }
+        cur=1;curType=h.result;startDate=h.date||'';endDate=h.date||'';
+      }
+      if(i===hist.length-1&&cur>=3){
+        allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200,current:true});
+      }
+    });
+  });
+
+  const winStreaks=allStreaks.filter(s=>s.type==='승').sort((a,b)=>b.n-a.n).slice(0,15);
+  const loseStreaks=allStreaks.filter(s=>s.type==='패').sort((a,b)=>b.n-a.n).slice(0,15);
+
+  function streakRow(s,i){
+    const col=gc(s.univ);
+    const isWin=s.type==='승';
+    const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer;${s.current?'border-color:'+( isWin?'#16a34a':'#dc2626')+';box-shadow:0 0 0 2px '+(isWin?'#dcfce7':'#fee2e2'):''}" onclick="openPlayerModal('${s.name}')">
+      <span style="min-width:24px;font-size:15px">${badge}</span>
+      <span style="font-weight:900;font-size:20px;color:${isWin?'var(--green)':'var(--red)'};min-width:48px">${s.n}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800;font-size:13px">${s.name} <span style="font-size:10px;color:${col};font-weight:600">${s.univ}</span>
+          ${s.current?`<span style="font-size:10px;background:${isWin?'#dcfce7':'#fee2e2'};color:${isWin?'#16a34a':'#dc2626'};padding:1px 6px;border-radius:4px;font-weight:700;margin-left:4px">진행중</span>`:''}
+        </div>
+        <div style="font-size:10px;color:var(--gray-l)">${s.start}${s.end&&s.end!==s.start?' ~ '+s.end:''}</div>
+      </div>
+      <span style="font-weight:800;font-size:13px;color:${isWin?'var(--green)':'var(--red)'};white-space:nowrap">연${isWin?'승':'패'}</span>
+    </div>`;
+  }
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <h4 style="margin-bottom:14px">🔥 역대 연속 기록 히스토리 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(3연속 이상)</span></h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-weight:800;font-size:13px;color:var(--green);margin-bottom:8px;padding:7px 12px;background:#f0fdf4;border-radius:8px;border-left:4px solid var(--green)">
+          🏆 역대 최장 연승 TOP 15
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${winStreaks.length?winStreaks.map(streakRow).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">기록 없음</p>'}
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:13px;color:var(--red);margin-bottom:8px;padding:7px 12px;background:#fef2f2;border-radius:8px;border-left:4px solid var(--red)">
+          ❄️ 역대 최장 연패 TOP 15
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${loseStreaks.length?loseStreaks.map(streakRow).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">기록 없음</p>'}
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW-5. 티어별 승률 (상대 티어 기준 매트릭스)
+══════════════════════════════════════ */
+function statsTierMatchHTML(){
+  // 실제 TIERS 배열 기반 (G, K, JA, J, S, 유스, 숫자티어 등)
+  const TIER_PALETTE=['#7c3aed','#dc2626','#2563eb','#16a34a','#0f172a','#0891b2','#d97706','#64748b','#9f1239','#065f46','#1e3a8a','#713f12','#3f3f46','#7c2d12','#166534'];
+  // 실제 사용된 티어만 추출 (모든 선수의 tier 중 실제 데이터 있는 것)
+  const usedTiers=[...new Set(players.map(p=>p.tier).filter(Boolean))].sort((a,b)=>TIERS.indexOf(a)-TIERS.indexOf(b));
+  if(!usedTiers.length)return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">티어 데이터가 없습니다.</p></div>`;
+
+  const tierColor={};
+  usedTiers.forEach((t,i)=>{
+    const presets={G:'#7c3aed',K:'#dc2626',JA:'#2563eb',J:'#16a34a',S:'#0f172a'};
+    tierColor[t]=presets[t]||TIER_PALETTE[i%TIER_PALETTE.length];
+  });
+
+  // 모든 히스토리 포함 (프로리그 포함, 남자 포함)
+  const matrix={};
+  usedTiers.forEach(t1=>{matrix[t1]={};usedTiers.forEach(t2=>{matrix[t1][t2]={w:0,l:0};});});
+
+  players.forEach(p=>{
+    const myTier=p.tier||'';
+    if(!myTier||!matrix[myTier])return;
+    (p.history||[]).forEach(h=>{
+      const opp=players.find(x=>x.name===h.opp);
+      const oppTier=opp?.tier||'';
+      if(!oppTier||!matrix[myTier][oppTier])return;
+      if(h.result==='승')matrix[myTier][oppTier].w++;
+      else matrix[myTier][oppTier].l++;
+    });
+  });
+
+  const tierOverview=usedTiers.map(t=>{
+    let w=0,l=0;
+    usedTiers.forEach(t2=>{w+=matrix[t][t2].w;l+=matrix[t][t2].l;});
+    return{tier:t,w,l,rate:w+l?Math.round(w/(w+l)*100):null};
+  }).filter(t=>t.w+t.l>0); // 경기 없는 티어 제외
+
+  const activeTiers=usedTiers.filter(t=>tierOverview.some(ov=>ov.tier===t));
+
+  function cellStyle(w,l){
+    if(!w&&!l)return'background:#f8fafc;color:#94a3b8';
+    const r=w/(w+l);
+    if(r>=0.65)return'background:#dcfce7;color:#16a34a';
+    if(r>=0.5)return'background:#f0fdf4;color:#16a34a';
+    if(r<=0.35)return'background:#fee2e2;color:#dc2626';
+    if(r<0.5)return'background:#fff5f5;color:#dc2626';
+    return'background:#f8fafc;color:#374151';
+  }
+
+  if(!activeTiers.length)return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">티어 간 경기 기록이 없습니다.<br><span style="font-size:11px">선수에 티어가 설정되고 경기 기록이 있어야 합니다.</span></p></div>`;
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <h4 style="margin-bottom:6px">🎖️ 티어 간 상대전적 매트릭스 <span style="font-size:11px;color:var(--gray-l);font-weight:400">전 경기 포함 (프로리그·남자 포함)</span></h4>
+    <p style="font-size:11px;color:var(--gray-l);margin-bottom:12px">가로=내 티어 / 세로=상대 티어 / 녹색=우세 빨강=열세</p>
+    <div style="overflow-x:auto">
+    <table style="border-collapse:collapse;font-size:12px;min-width:${100+activeTiers.length*72}px">
+      <thead><tr>
+        <th style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);white-space:nowrap">내↓ / 상대→</th>
+        ${activeTiers.map(t=>`<th style="padding:6px 8px;background:${tierColor[t]}22;border:1px solid var(--border);white-space:nowrap;min-width:72px">
+          <span style="background:${tierColor[t]};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${getTierLabel(t)}</span>
+        </th>`).join('')}
+        <th style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);white-space:nowrap">전체</th>
+      </tr></thead>
+      <tbody>
+        ${activeTiers.map(t1=>{
+          const ov=tierOverview.find(x=>x.tier===t1);
+          return`<tr>
+            <td style="padding:6px 10px;background:${tierColor[t1]}22;border:1px solid var(--border);font-weight:700;white-space:nowrap">
+              <span style="background:${tierColor[t1]};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${getTierLabel(t1)}</span>
+            </td>
+            ${activeTiers.map(t2=>{
+              if(t1===t2){
+                const s=matrix[t1][t2];const tot=s.w+s.l;
+                const r=tot?Math.round(s.w/tot*100):null;
+                return`<td style="padding:6px 8px;border:1px solid var(--border);text-align:center;background:#f1f5f9">
+                  <div style="font-size:9px;color:var(--gray-l);font-weight:600">동티어</div>
+                  ${tot?`<div style="font-weight:800;font-size:12px;color:${r>=50?'var(--green)':'var(--red)'}">${r}%</div>
+                  <div style="font-size:10px;color:var(--gray-l)">${s.w}W${s.l}L</div>`:'<div style="color:var(--gray-l);font-size:11px">-</div>'}
+                </td>`;
+              }
+              const s=matrix[t1][t2];const tot=s.w+s.l;
+              const r=tot?Math.round(s.w/tot*100):null;
+              const cs=cellStyle(s.w,s.l);
+              return`<td style="padding:5px 6px;border:1px solid var(--border);text-align:center;${cs}">
+                ${tot?`<div style="font-weight:800;font-size:12px">${r}%</div>
+                <div style="font-size:10px;opacity:.7">${s.w}W${s.l}L</div>`:'<span style="color:#94a3b8;font-size:11px">-</span>'}
+              </td>`;
+            }).join('')}
+            <td style="padding:5px 8px;border:1px solid var(--border);text-align:center;background:var(--surface)">
+              ${ov&&ov.rate!==null?`<div style="font-weight:800;font-size:12px;color:${ov.rate>=50?'var(--green)':'var(--red)'}">${ov.rate}%</div>
+              <div style="font-size:10px;color:var(--gray-l)">${ov.w}W${ov.l}L</div>`:'<span style="color:var(--gray-l)">-</span>'}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="ssec">
+    <h4 style="margin-bottom:12px">📊 티어별 전체 승률 요약</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      ${tierOverview.map(t=>{
+        const col=tierColor[t.tier]||'#6b7280';
+        const tot=t.w+t.l;
+        return`<div style="flex:1;min-width:90px;background:var(--white);border:2px solid ${col}33;border-radius:12px;padding:12px;text-align:center">
+          <div style="background:${col};color:#fff;padding:2px 9px;border-radius:5px;font-weight:800;font-size:12px;display:inline-block;margin-bottom:6px">${getTierLabel(t.tier)}</div>
+          <div style="font-size:24px;font-weight:900;color:${col}">${t.rate!==null?t.rate+'%':'-'}</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">${t.w}승 ${t.l}패</div>
+          ${tot?`<div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin-top:5px">
+            <div style="width:${t.rate||0}%;background:${col};height:100%;border-radius:2px"></div>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div></div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW-6. 대학 간 상대전적 매트릭스 상세 (+ 선수별 드릴다운)
+══════════════════════════════════════ */
+let _matrix2Sel={a:'',b:''};
+function statsUnivMatrix2HTML(){
+  const univs=getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  if(univs.length<2)return`<div class="ssec"><p style="color:var(--gray-l)">대학 데이터 부족</p></div>`;
+
+  const matrix={};
+  const playerMatrix={}; // playerMatrix[univA][univB]={playerA:{vs_playerB:{w,l}}}
+  univs.forEach(a=>{
+    matrix[a.name]={};
+    playerMatrix[a.name]={};
+    univs.forEach(b=>{
+      matrix[a.name][b.name]={w:0,l:0};
+      playerMatrix[a.name][b.name]={};
+    });
+  });
+
+  players.forEach(p=>{
+    (p.history||[]).forEach(h=>{
+      const opp=players.find(x=>x.name===h.opp);
+      if(!opp||opp.univ===p.univ)return;
+      if(!matrix[p.univ]||!matrix[p.univ][opp.univ])return;
+      if(h.result==='승')matrix[p.univ][opp.univ].w++;
+      else matrix[p.univ][opp.univ].l++;
+      // 선수별 매트릭스
+      if(!playerMatrix[p.univ][opp.univ][p.name])playerMatrix[p.univ][opp.univ][p.name]={};
+      if(!playerMatrix[p.univ][opp.univ][p.name][opp.name])playerMatrix[p.univ][opp.univ][p.name][opp.name]={w:0,l:0};
+      if(h.result==='승')playerMatrix[p.univ][opp.univ][p.name][opp.name].w++;
+      else playerMatrix[p.univ][opp.univ][p.name][opp.name].l++;
+    });
+  });
+
+  const univRank=univs.map(u=>{
+    let w=0,l=0;
+    univs.forEach(v=>{if(u.name!==v.name){w+=matrix[u.name][v.name].w;l+=matrix[u.name][v.name].l;}});
+    return{...u,w,l,rate:w+l?Math.round(w/(w+l)*100):0};
+  }).sort((a,b)=>b.rate-a.rate||b.w-a.w);
+
+  if(!_matrix2Sel.a&&univRank.length)_matrix2Sel.a=univRank[0].name;
+  if(!_matrix2Sel.b&&univRank.length>1)_matrix2Sel.b=univRank[1].name;
+
+  // 선택된 두 대학의 선수별 상세
+  let detailHTML='';
+  if(_matrix2Sel.a&&_matrix2Sel.b&&_matrix2Sel.a!==_matrix2Sel.b){
+    const pmAB=playerMatrix[_matrix2Sel.a]?.[_matrix2Sel.b]||{};
+    const pmBA=playerMatrix[_matrix2Sel.b]?.[_matrix2Sel.a]||{};
+    const sAB=matrix[_matrix2Sel.a]?.[_matrix2Sel.b]||{w:0,l:0};
+    const sBA=matrix[_matrix2Sel.b]?.[_matrix2Sel.a]||{w:0,l:0};
+    const colA=gc(_matrix2Sel.a), colB=gc(_matrix2Sel.b);
+
+    // A팀 선수별 vs B팀
+    const aPlayers=Object.entries(pmAB).map(([pName,opps])=>{
+      let w=0,l=0;Object.values(opps).forEach(s=>{w+=s.w;l+=s.l;});
+      return{name:pName,w,l,tot:w+l,rate:w+l?Math.round(w/(w+l)*100):0,opps};
+    }).sort((a,b)=>b.w-a.w);
+
+    detailHTML=`
+    <div class="ssec" style="margin-top:0">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <select style="padding:6px 10px;border:1.5px solid ${colA};border-radius:8px;font-size:13px;font-weight:700;color:${colA}"
+          onchange="_matrix2Sel.a=this.value;render()">
+          ${univRank.map(u=>`<option value="${u.name}"${_matrix2Sel.a===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <span style="font-weight:900;font-size:18px;color:var(--gray-l)">vs</span>
+        <select style="padding:6px 10px;border:1.5px solid ${colB};border-radius:8px;font-size:13px;font-weight:700;color:${colB}"
+          onchange="_matrix2Sel.b=this.value;render()">
+          ${univRank.map(u=>`<option value="${u.name}"${_matrix2Sel.b===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+          <span style="background:${colA};color:#fff;padding:4px 14px;border-radius:8px;font-weight:800">${_matrix2Sel.a} ${sAB.w}W ${sAB.l}L</span>
+          <span style="font-weight:900;font-size:15px">vs</span>
+          <span style="background:${colB};color:#fff;padding:4px 14px;border-radius:8px;font-weight:800">${_matrix2Sel.b} ${sBA.w}W ${sBA.l}L</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th style="background:${colA}22">${_matrix2Sel.a} 선수</th>
+          <th style="background:${colA}22">승</th><th style="background:${colA}22">패</th><th style="background:${colA}22">승률</th>
+          <th>vs 상대 선수 (${_matrix2Sel.b})</th>
+        </tr></thead>
+        <tbody>
+          ${aPlayers.map(p=>{
+            const oppDetail=Object.entries(p.opps).map(([oName,s])=>`
+              <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:${s.w>s.l?'#dcfce7':s.w<s.l?'#fee2e2':'#f1f5f9'};border-radius:6px;font-size:11px;cursor:pointer;margin:1px" onclick="openPlayerModal('${oName}')">
+                <b>${oName}</b> ${s.w}W${s.l}L
+              </span>`).join('');
+            return`<tr>
+              <td style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${p.name}')">${p.name}</td>
+              <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
+              <td style="font-weight:800;color:${p.rate>=50?'var(--green)':'var(--red)'}">${p.tot?p.rate+'%':'-'}</td>
+              <td>${oppDetail||'<span style="color:var(--gray-l);font-size:11px">-</span>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
+
+  function cellBg(w,l){
+    if(!w&&!l)return'#f8fafc';const r=w/(w+l);
+    if(r>=0.6)return'#dcfce7';if(r>=0.5)return'#f0fdf4';if(r<=0.4)return'#fee2e2';if(r<0.5)return'#fff5f5';return'#f8fafc';
+  }
+
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec" id="stats-univmatrix2-sec">
+    <h4 style="margin-bottom:12px">🏛️ 대학 간 상대전적 매트릭스 (상세)</h4>
+    <div style="overflow-x:auto">
+    <table style="border-collapse:collapse;font-size:12px;min-width:${60+univRank.length*72}px">
+      <thead><tr>
+        <th style="padding:6px 10px;background:var(--surface);border:1px solid var(--border)">↓나 / 상대→</th>
+        ${univRank.map(u=>`<th style="padding:6px 8px;background:${gc(u.name)}22;border:1px solid var(--border);white-space:nowrap;min-width:72px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span style="background:${gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${u.name}</span>
+            <span style="font-size:10px;color:${u.rate>=50?'var(--green)':'var(--red)'};font-weight:700">${u.rate}%</span>
+          </div>
+        </th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${univRank.map(u=>`<tr>
+          <td style="padding:6px 10px;background:${gc(u.name)}22;border:1px solid var(--border);font-weight:700;white-space:nowrap">
+            <span style="background:${gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${u.name}</span>
+          </td>
+          ${univRank.map(v=>{
+            if(u.name===v.name)return`<td style="background:#f1f5f9;border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
+            const s=matrix[u.name][v.name];const t=s.w+s.l;if(!t)return`<td style="background:#f8fafc;border:1px solid var(--border);text-align:center;color:var(--gray-l);font-size:11px">-</td>`;
+            const r=Math.round(s.w/t*100);
+            return`<td style="background:${cellBg(s.w,s.l)};border:1px solid var(--border);text-align:center;padding:5px 4px;cursor:pointer"
+              onclick="_matrix2Sel.a='${u.name}';_matrix2Sel.b='${v.name}';document.getElementById('matrix2-detail').scrollIntoView({behavior:'smooth'})">
+              <div style="font-weight:800;font-size:13px;color:${r>=50?'#16a34a':'#dc2626'}">${r}%</div>
+              <div style="font-size:10px;color:var(--gray-l)">${s.w}W${s.l}L</div>
+            </td>`;
+          }).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    <p style="font-size:11px;color:var(--gray-l);margin-top:6px">셀 클릭 시 아래 선수별 상세 표시</p>
+  </div>
+  <div id="matrix2-detail">${detailHTML}</div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
    F. CSV / 엑셀 내보내기
 ══════════════════════════════════════ */
 function statsCsvExportHTML(){
+  if(!isLoggedIn)return`<div class="ssec"><div style="padding:40px;text-align:center;color:var(--gray-l)">🔒 관리자만 사용 가능합니다.</div></div>`;
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec">
     <h4 style="margin-bottom:14px">📥 CSV / 데이터 내보내기</h4>
