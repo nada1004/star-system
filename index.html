@@ -696,50 +696,55 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 </div>
 
 <div id="pasteModal" class="modal no-export">
-  <div class="umbox" style="width:720px;max-width:95vw">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div class="umbox" style="width:740px;max-width:96vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="mtitle" style="margin-bottom:0">📋 경기 결과 붙여넣기 입력</div>
-      <button class="btn btn-w btn-sm" onclick="cm('pasteModal')">✕ 닫기</button>
-    </div>
-    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1e40af;line-height:1.7">
-      <b>📌 사용법</b> — 텍스트 또는 이미지 붙여넣기 모두 지원<br>
-      텍스트: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
-      이미지: 경기 결과 스크린샷을 <b>Ctrl+V</b> 또는 드래그 드롭하면 AI가 자동으로 읽어옵니다
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 경기 날짜</label>
-      <input type="date" id="paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-      <label style="font-size:12px;font-weight:700;color:var(--text2);margin-left:8px">📁 저장 형식</label>
-      <select id="paste-mode" onchange="document.getElementById('paste-comp-wrap').style.display=this.value==='comp'?'flex':'none'" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-        <option value="individual">개인 전적만 (히스토리)</option>
-        <option value="mini">⚡ 미니대전으로 저장</option>
-        <option value="univm">🏟️ 대학대전으로 저장</option>
-        <option value="comp">🎖️ 대회 기록으로 저장</option>
-      </select>
-      <div id="paste-comp-wrap" style="display:none;align-items:center;gap:6px;margin-top:4px;width:100%">
-        <input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:200px">
-        <span style="font-size:11px;color:var(--gray-l)">저장할 대회명 입력</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="paste-summary-badge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
+        <button class="btn btn-w btn-sm" onclick="cm('pasteModal')">✕ 닫기</button>
       </div>
     </div>
 
-    <!-- 이미지 드롭 영역 -->
-    <div id="paste-img-zone" style="border:2px dashed var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:10px;text-align:center;cursor:pointer;transition:.15s;position:relative"
-      ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='var(--blue-ll)'"
-      ondragleave="this.style.borderColor='var(--border2)';this.style.background=''"
-      ondrop="event.preventDefault();this.style.borderColor='var(--border2)';this.style.background='';pasteHandleImageDrop(event)">
-      <div style="font-size:13px;color:var(--gray-l)">🖼 이미지를 여기에 드래그 드롭하거나 Ctrl+V 로 붙여넣기</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:2px">스크린샷, 사진 등 — AI가 경기 결과를 자동으로 읽어옵니다</div>
-      <input type="file" id="paste-img-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="pasteHandleImageFile(this.files[0])">
-    </div>
-    <div id="paste-ocr-status" style="display:none;font-size:12px;color:var(--blue);margin-bottom:8px;padding:6px 12px;background:var(--blue-ll);border-radius:7px"></div>
+    <!-- 사용법 (접기/펼치기) -->
+    <details style="margin-bottom:12px">
+      <summary style="font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;padding:6px 10px;background:var(--blue-l);border-radius:8px;border:1px solid var(--blue-ll);list-style:none;display:flex;align-items:center;gap:5px">
+        📌 사용법 보기
+      </summary>
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.9;margin-top:-1px">
+        형식 A: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
+        형식 B: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">선수명[티어종족] ❌🆚⭕ 선수명[티어종족] 🌐맵</span><br>
+        세트 구분: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">══1세트══ / --2세트-- / 1셋ㅡㅡ</span> 형태 모두 인식<br>
+        <span style="color:#6b7280;font-size:11px">💡 선수 약자 자동 인식 (예: 주양 → 소주양) · 중복 시 버튼으로 직접 선택 · 3세트 이상은 에이스전으로 표시</span>
+      </div>
+    </details>
 
-    <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시:&#10;1. [도미] 도재욱P (승) vs (패) 유영진T&#10;2. [라데] 변현제P (패) vs (승) 이재호T&#10;3. [녹아] 김정우Z (승) vs (패) 황병영T"
-      style="width:100%;min-height:150px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
+    <!-- 날짜 + 저장 형식 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
+      <input type="date" id="paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2);margin-left:4px">📁 저장 형식</label>
+      <select id="paste-mode" onchange="onPasteModeChange(this.value)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+        <option value="individual">개인 전적만 (히스토리)</option>
+        <option value="mini">⚡ 미니대전으로 저장</option>
+        <option value="univm">🏟️ 대학대전으로 저장</option>
+        <option value="pro">🏅 프로리그로 저장</option>
+        <option value="comp">🎖️ 대회 기록으로 저장</option>
+      </select>
+      <div id="paste-comp-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">
+      </div>
+      <div id="paste-mode-hint" style="font-size:11px;color:var(--gray-l);width:100%;margin-top:2px"></div>
+    </div>
+
+    <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시 (형식A): 1. [도미] 도재욱P (승) vs (패) 유영진T&#10;예시 (형식B): 리나[4P]❌🆚⭕햇살[4T]🌐녹아"
+      style="width:100%;min-height:140px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
       oninput="pastePreview()"></textarea>
+
     <div id="paste-preview" style="margin-top:12px"></div>
-    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;align-items:center">
+      <span id="paste-pending-warn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 중복 선택 필요한 항목이 있습니다</span>
       <button class="btn btn-w" onclick="cm('pasteModal')">취소</button>
-      <button class="btn btn-b" onclick="pastePreview()">🔍 미리보기</button>
       <button class="btn btn-g" onclick="pasteApply()" id="paste-apply-btn" style="display:none">✅ 저장하기</button>
     </div>
   </div>
@@ -3886,6 +3891,7 @@ function buildProInputHTML(){
   });
 
   let h=`<div class="match-builder"><h3>🏅 프로리그 입력</h3>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
     <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['pro'].date=this.value">
@@ -7559,18 +7565,10 @@ function om(id){const el=document.getElementById(id);if(el)el.style.display='blo
 function cm(id){
   const el=document.getElementById(id);
   if(el)el.style.display='none';
-  if(id==='pasteModal'&&window._pasteImgListener){
-    document.removeEventListener('paste',window._pasteImgListener);
-    window._pasteImgListener=null;
-  }
 }
 window.addEventListener('click',e=>{
   if(e.target.classList.contains('modal')){
     e.target.style.display='none';
-    if(e.target.id==='pasteModal'&&window._pasteImgListener){
-      document.removeEventListener('paste',window._pasteImgListener);
-      window._pasteImgListener=null;
-    }
   }
   if(!e.target.closest('.swrap'))document.querySelectorAll('.sdrop').forEach(d=>d.style.display='none');
 });
@@ -8257,6 +8255,25 @@ function getMapAlias() {
  *   ✅ = 왼쪽 선수 승리,  ⬜ = 패배
  *   앞 번호(1. 1️⃣ ① 등) 자동 제거
  */
+// 부분 이름으로 선수 찾기 (약자 매칭)
+function findPlayerByPartialName(namePart) {
+  if (!namePart) return { player: null, candidates: [] };
+  const trimmed = namePart.trim();
+  // 1) 정확 일치
+  const exact = players.filter(p => p.name === trimmed);
+  if (exact.length === 1) return { player: exact[0], candidates: exact };
+  if (exact.length > 1)   return { player: null, candidates: exact };
+  // 2) 부분 일치 — 검색어가 2글자 이상일 때만 (1글자 오매칭 방지)
+  if (trimmed.length >= 2) {
+    const partial = players.filter(p =>
+      p.name.includes(trimmed) || trimmed.includes(p.name)
+    );
+    if (partial.length === 1) return { player: partial[0], candidates: partial };
+    if (partial.length > 1)   return { player: null, candidates: partial };
+  }
+  return { player: null, candidates: [] };
+}
+
 function parsePasteLine(line) {
   line = line.trim();
   if (!line) return null;
@@ -8272,58 +8289,67 @@ function parsePasteLine(line) {
   if (!line) return null;
 
   // ── 형식 B: 이모지 형식 ──
-  // 선수명종족 ✅️ 🆚️ ⬜ 선수명종족 🌍맵
-  // 또는 선수명종족 ⬜ 🆚️ ✅️ 선수명종족 🌍맵
+  // 선수명[숫자종족] ❌/⭕ 🆚 ⭕/❌ 선수명[숫자종족] 🌐맵
+  // 또는 선수명종족 ✅/⬜ 🆚 ⬜/✅ 선수명종족 🌍맵
   if (line.includes('🆚')) {
-    // 🆚 기준으로 좌/우 분리
     const vsIdx = line.indexOf('🆚');
     let leftPart  = line.slice(0, vsIdx).trim();
     let rightPart = line.slice(vsIdx + '🆚'.length).trim();
-    // 변형문자 제거 (️ ️)
+    // 변형문자 제거
     leftPart  = leftPart.replace(/️/g, '').trim();
     rightPart = rightPart.replace(/️/g, '').trim();
 
-    // 왼쪽 끝의 ✅/⬜ 추출
-    const leftMarkMatch  = leftPart.match(/(✅|⬜)\s*$/);
-    const rightMarkMatch = rightPart.match(/^(✅|⬜)\s*/);
+    // 승패 마크: ✅⭕ = 승, ❌⬜ = 패
+    const WIN_MARKS  = ['✅', '⭕'];
+    const LOSE_MARKS = ['❌', '⬜'];
+    const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
 
-    if (!leftMarkMatch || !rightMarkMatch) return null;
+    // 왼쪽 끝의 마크 추출
+    let leftMark = null;
+    for (const mk of ALL_MARKS) {
+      if (leftPart.endsWith(mk)) { leftMark = mk; leftPart = leftPart.slice(0, -mk.length).trim(); break; }
+    }
+    // 오른쪽 시작의 마크 추출
+    let rightMark = null;
+    for (const mk of ALL_MARKS) {
+      if (rightPart.startsWith(mk)) { rightMark = mk; rightPart = rightPart.slice(mk.length).trim(); break; }
+    }
 
-    const leftMark  = leftMarkMatch[1];
-    const rightMark = rightMarkMatch[1];
+    if (!leftMark || !rightMark) return null;
 
-    // 마크 제거 → 순수 선수+종족 문자열
-    const leftToken  = leftPart.slice(0, leftMarkMatch.index).trim();
-    const rightToken = rightPart.slice(rightMarkMatch[0].length).trim();
+    const leftWin  = WIN_MARKS.includes(leftMark);
+    const rightWin = WIN_MARKS.includes(rightMark);
+    if (leftWin === rightWin) return null; // 둘다 승/패면 오류
 
-    // 맵: 🌍 뒤 텍스트
+    // 맵: 🌐 또는 🌍 뒤 텍스트
     let map = '-';
-    const mapEmoji = rightToken.match(/🌍\s*(\S+)/);
-    let rightClean = rightToken;
+    const mapEmoji = rightPart.match(/[🌐🌍]\s*(\S+)/);
+    let rightClean = rightPart;
     if (mapEmoji) {
       const alias = mapEmoji[1].trim();
       map = getMapAlias()[alias] || alias;
       if (!maps.includes(map)) maps.push(map);
-      rightClean = rightToken.slice(0, mapEmoji.index).trim();
+      rightClean = rightPart.slice(0, mapEmoji.index).trim();
     }
 
-    // 이름+종족 분리 (끝 T/Z/P)
+    // 이름+종족 분리: 지원 형식 → "선수명[숫자T]" 또는 "선수명T"
     const splitNR = (s) => {
-      const m = s.match(/^(.+?)([TZP])$/);
-      return m ? { name: m[1].trim(), race: m[2] } : { name: s, race: '' };
+      // 형식: 이름[숫자종족] (예: 리나[4P])
+      const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
+      if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
+      // 형식: 이름종족 (예: 리나P)
+      const simpleM = s.match(/^(.+?)([TZP])$/);
+      if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
+      return { name: s.trim(), race: '' };
     };
-    const left  = splitNR(leftToken);
+    const left  = splitNR(leftPart);
     const right = splitNR(rightClean);
 
     if (!left.name || !right.name) return null;
 
-    const leftWin  = leftMark  === '✅';
-    const rightWin = rightMark === '✅';
-
     let winName, loseName;
-    if (leftWin && !rightWin)      { winName = left.name;  loseName = right.name; }
-    else if (rightWin && !leftWin) { winName = right.name; loseName = left.name;  }
-    else return null;
+    if (leftWin)  { winName = left.name;  loseName = right.name; }
+    else          { winName = right.name; loseName = left.name;  }
 
     return { winName, loseName, map };
   }
@@ -8355,6 +8381,46 @@ function parsePasteLine(line) {
   return { winName, loseName, map };
 }
 
+// 세트 구분선 판별 및 세트 번호 추출
+// 반환: null(아님) 또는 숫자(세트번호, 0=증가)
+function parseSetSeparator(line) {
+  const t = line.trim();
+  if (!t) return null;
+
+  // 세트 번호 추출 헬퍼
+  const extractSetNum = (s) => {
+    // 숫자+세트
+    const m1 = s.match(/(\d+)\s*세트/);
+    if (m1) return parseInt(m1[1]);
+    // 한글 수 (1셋,2셋,3셋)
+    const m2 = s.match(/(\d+)\s*셋/);
+    if (m2) return parseInt(m2[1]);
+    // 에이스
+    if (/에이스/.test(s)) return 3;
+    return null;
+  };
+
+  // 구분선 문자 집합: ═ ─ = - ㅡ _ ~ * ·
+  const SEP = /[═─=\-ㅡ_~*·]/;
+
+  // 패턴 1: 구분선 문자가 3개 이상 포함된 줄 (세트 숫자 유무 무관)
+  // 예: ─────1세트─────, =====2세트=====, 1셋ㅡㅡㅡㅡ, --2세트--, ======
+  const sepCount = (t.match(/[═─=\-ㅡ_~]/g) || []).length;
+  if (sepCount >= 2) {
+    const n = extractSetNum(t);
+    return n !== null ? n : 0; // 0 = 번호 없으면 자동 증가
+  }
+
+  // 패턴 2: "N세트" 또는 "N셋" 단독 줄 (구분선 없어도)
+  // 예: "2세트", "세트 3", "3셋", "에이스전"
+  if (/^(\d+\s*세트|세트\s*\d+|\d+\s*셋|셋\s*\d+|에이스전?|ace)$/i.test(t)) {
+    const n = extractSetNum(t);
+    return n !== null ? n : 0;
+  }
+
+  return null;
+}
+
 function pastePreview() {
   const raw = (document.getElementById('paste-input')?.value || '').trim();
   const previewEl = document.getElementById('paste-preview');
@@ -8365,62 +8431,170 @@ function pastePreview() {
   const lines = raw.split('\n');
   const results = [];
   const errors = [];
+  let currentSet = 1;
 
   lines.forEach((line, idx) => {
-    if (!line.trim()) return;
-    const parsed = parsePasteLine(line);
-    if (!parsed) {
-      errors.push({ line: idx + 1, raw: line.trim() });
+    const trimmed = line.trim();
+    if (!trimmed) return;
+
+    // 세트 구분선 처리
+    const sepResult = parseSetSeparator(trimmed);
+    if (sepResult !== null) {
+      if (sepResult === 0) currentSet++;
+      else currentSet = sepResult;
       return;
     }
-    // 선수 존재 여부 확인
-    const wPlayer = players.find(p => p.name === parsed.winName);
-    const lPlayer = players.find(p => p.name === parsed.loseName);
-    results.push({ ...parsed, wPlayer, lPlayer, lineNum: idx + 1, rawLine: line.trim() });
+
+    const parsed = parsePasteLine(line);
+    if (!parsed) {
+      errors.push({ line: idx + 1, raw: trimmed });
+      return;
+    }
+    const wMatch = findPlayerByPartialName(parsed.winName);
+    const lMatch = findPlayerByPartialName(parsed.loseName);
+    results.push({
+      ...parsed,
+      setNum: currentSet,
+      wPlayer: wMatch.player,
+      lPlayer: lMatch.player,
+      wCandidates: wMatch.candidates,
+      lCandidates: lMatch.candidates,
+      lineNum: idx + 1, rawLine: trimmed
+    });
   });
+
+  // 파싱 결과 저장 (기존에 사용자가 선택한 선수 유지)
+  if (window._pasteResults) {
+    results.forEach((r, i) => {
+      const prev = window._pasteResults[i];
+      if (!prev) return;
+      // 이미 단일 선수로 확정된 경우(중복 해소됨) → 유지
+      if (prev.wPlayer && prev.wCandidates.length === 1) {
+        r.wPlayer     = prev.wPlayer;
+        r.winName     = prev.wPlayer.name;
+        r.wCandidates = [prev.wPlayer];
+      }
+      if (prev.lPlayer && prev.lCandidates.length === 1) {
+        r.lPlayer     = prev.lPlayer;
+        r.loseName    = prev.lPlayer.name;
+        r.lCandidates = [prev.lPlayer];
+      }
+    });
+  }
+  window._pasteResults = results;
+
+  renderPastePreview(results, errors);
+}
+
+function renderPastePreview(results, errors) {
+  const previewEl = document.getElementById('paste-preview');
+  const applyBtn  = document.getElementById('paste-apply-btn');
+  const badge     = document.getElementById('paste-summary-badge');
+  const pendWarn  = document.getElementById('paste-pending-warn');
+  if (!previewEl) return;
+
+  const savable  = (results || []).filter(r => r.wPlayer && r.lPlayer);
+  const ambig    = (results || []).filter(r => (!r.wPlayer && r.wCandidates?.length > 1) || (!r.lPlayer && r.lCandidates?.length > 1));
+  const missing  = (results || []).filter(r => (!r.wPlayer && !r.wCandidates?.length) || (!r.lPlayer && !r.lCandidates?.length));
+
+  // 상단 뱃지
+  if (badge) {
+    if (results && results.length > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = `✅ ${savable.length}건 저장 가능`;
+      if (ambig.length) badge.textContent += ` · ⚠️ ${ambig.length}건 선택 필요`;
+      if (missing.length) badge.textContent += ` · ❌ ${missing.length}건 미등록`;
+      badge.style.background = savable.length === results.length ? '#dcfce7' : '#fef9c3';
+      badge.style.color      = savable.length === results.length ? '#16a34a' : '#b45309';
+      badge.style.border     = `1px solid ${savable.length === results.length ? '#bbf7d0' : '#fcd34d'}`;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // 하단 경고
+  if (pendWarn) pendWarn.style.display = ambig.length ? 'inline' : 'none';
 
   let html = '';
 
-  if (results.length > 0) {
-    html += `<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px">✅ 인식된 경기 <b style="color:var(--blue)">${results.length}건</b></div>`;
+  if (results && results.length > 0) {
     html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
     html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
-      <th style="text-align:left;padding:6px 10px;font-size:11px">#</th>
-      <th style="text-align:left;padding:6px 10px;font-size:11px">맵</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px;width:70px">세트</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px;width:80px">맵</th>
       <th style="text-align:left;padding:6px 10px;font-size:11px">🏆 승자</th>
-      <th style="text-align:left;padding:6px 10px;font-size:11px">vs</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px;width:28px">vs</th>
       <th style="text-align:left;padding:6px 10px;font-size:11px">💀 패자</th>
-      <th style="text-align:left;padding:6px 10px;font-size:11px">상태</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px;width:80px">상태</th>
     </tr></thead><tbody>`;
+
     results.forEach((r, i) => {
-      const wOk = !!r.wPlayer;
-      const lOk = !!r.lPlayer;
-      const ok = wOk && lOk;
-      const wStyle = wOk ? 'color:#16a34a;font-weight:700' : 'color:#dc2626;font-weight:700;text-decoration:underline dotted';
-      const lStyle = lOk ? 'color:#dc2626;font-weight:700' : 'color:#dc2626;font-weight:700;text-decoration:underline dotted';
+      const wOk    = !!r.wPlayer;
+      const lOk    = !!r.lPlayer;
+      const wAmbig = !wOk && r.wCandidates?.length > 1;
+      const lAmbig = !lOk && r.lCandidates?.length > 1;
+      const ok     = wOk && lOk;
+
+      const wStyle = wOk ? 'color:#16a34a;font-weight:700' : 'color:#dc2626;font-weight:700';
+      const lStyle = lOk ? 'color:#dc2626;font-weight:700' : 'color:#dc2626;font-weight:700';
+
+      const wDisplayName = wOk ? r.wPlayer.name : r.winName;
+      const lDisplayName = lOk ? r.lPlayer.name : r.loseName;
+
+      // 선수 셀 빌더
+      const buildCell = (isWin, displayName, resolved, ambig, candidates, role) => {
+        const style = resolved ? (isWin ? 'color:#16a34a;font-weight:700' : 'color:#dc2626;font-weight:700') : 'color:#dc2626;font-weight:700';
+        let cell = `<span style="${style}">${displayName}</span>`;
+        if (resolved) {
+          // 선택 완료 → 대학/티어 소속 표시
+          const p = isWin ? r.wPlayer : r.lPlayer;
+          if (p?.univ) cell += `<span style="font-size:10px;color:var(--gray-l);margin-left:4px">(${p.univ})</span>`;
+        } else if (ambig) {
+          cell += `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
+            <span style="font-size:10px;color:#b45309;font-weight:600">선택:</span>` +
+            candidates.map(c =>
+              `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
+                style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
+                onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
+                ${c.name}</button>`
+            ).join('') + `</div>`;
+        } else {
+          cell += '<span style="font-size:10px;color:#dc2626;margin-left:4px;font-weight:400">미등록</span>';
+        }
+        return cell;
+      };
+
+      const wCell = buildCell(true,  wDisplayName, wOk, wAmbig, r.wCandidates||[], 'w');
+      const lCell = buildCell(false, lDisplayName, lOk, lAmbig, r.lCandidates||[], 'l');
+
       const statusBadge = ok
-        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px">저장 가능</span>`
-        : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px">선수 없음</span>`;
-      html += `<tr style="background:${ok ? '' : '#fff5f5'}">
-        <td style="padding:5px 10px;color:var(--gray-l)">${r.lineNum}</td>
-        <td style="padding:5px 10px">${r.map !== '-' ? `<span style="background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 7px;font-size:11px">${r.map}</span>` : '<span style="color:var(--gray-l)">-</span>'}</td>
-        <td style="padding:5px 10px"><span style="${wStyle}">${r.winName}</span>${!wOk ? '<span style="font-size:10px;color:#dc2626;margin-left:4px">미등록</span>' : ''}</td>
-        <td style="padding:5px 10px;color:var(--gray-l);font-size:11px">vs</td>
-        <td style="padding:5px 10px"><span style="${lStyle}">${r.loseName}</span>${!lOk ? '<span style="font-size:10px;color:#dc2626;margin-left:4px">미등록</span>' : ''}</td>
-        <td style="padding:5px 10px">${statusBadge}</td>
+        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;white-space:nowrap">저장 가능</span>`
+        : (wAmbig || lAmbig)
+          ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;white-space:nowrap">선택 필요</span>`
+          : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;white-space:nowrap">미등록</span>`;
+
+      const setLabel = r.setNum >= 3 ? '🎯 에이스전' : (r.setNum||1) + '세트';
+      const setColor = r.setNum >= 3 ? '#7c3aed' : 'var(--blue)';
+
+      html += `<tr style="background:${ok ? '' : wAmbig||lAmbig ? '#fffbeb' : '#fff5f5'}">
+        <td style="padding:6px 10px;font-weight:700;font-size:11px;color:${setColor};white-space:nowrap">${setLabel}</td>
+        <td style="padding:6px 10px">${r.map && r.map !== '-' ? `<span style="background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 7px;font-size:11px;white-space:nowrap">${r.map}</span>` : '<span style="color:var(--gray-l)">-</span>'}</td>
+        <td style="padding:6px 10px">${wCell}</td>
+        <td style="padding:6px 10px;color:var(--gray-l);font-size:11px;text-align:center">vs</td>
+        <td style="padding:6px 10px">${lCell}</td>
+        <td style="padding:6px 10px">${statusBadge}</td>
       </tr>`;
     });
     html += `</tbody></table></div>`;
   }
 
-  if (errors.length > 0) {
+  if (errors && errors.length > 0) {
     html += `<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:11px;color:#dc2626">
-      <b>⚠️ 인식 불가 ${errors.length}줄</b> (건너뜀):<br>
-      ${errors.map(e => `<span style="font-family:monospace;opacity:.8">${e.line}행: ${e.raw.slice(0, 60)}${e.raw.length > 60 ? '...' : ''}</span>`).join('<br>')}
+      <b>⚠️ 인식 불가 ${errors.length}줄</b> (경기 형식이 아닌 줄은 자동 무시됩니다):<br>
+      ${errors.map(e => `<code style="opacity:.75;font-size:10px">${e.line}행: ${e.raw.slice(0,60)}${e.raw.length>60?'…':''}</code>`).join('<br>')}
     </div>`;
   }
 
-  const savable = results.filter(r => r.wPlayer && r.lPlayer);
   if (savable.length > 0 && applyBtn) {
     applyBtn.style.display = 'inline-flex';
     applyBtn.textContent = `✅ ${savable.length}건 저장하기`;
@@ -8429,7 +8603,33 @@ function pastePreview() {
   }
 
   previewEl.innerHTML = html;
-  window._pasteResults = results; // 저장용 캐시
+
+  // 중복 선택 버튼 이벤트 등록
+  previewEl.querySelectorAll('.paste-pick-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      pasteSelectPlayer(parseInt(this.dataset.idx), this.dataset.role, this.dataset.name);
+    });
+  });
+}
+
+// 중복 선수 선택 — 재파싱 없이 렌더링만 갱신
+function pasteSelectPlayer(idx, role, name) {
+  if (!window._pasteResults || !window._pasteResults[idx]) return;
+  const r = window._pasteResults[idx];
+  const p = players.find(pl => pl.name === name);
+  if (!p) return;
+  if (role === 'w') {
+    r.winName      = p.name;
+    r.wPlayer      = p;
+    r.wCandidates  = [p];
+  } else {
+    r.loseName     = p.name;
+    r.lPlayer      = p;
+    r.lCandidates  = [p];
+  }
+  // 재파싱 없이 렌더링만 갱신
+  renderPastePreview(window._pasteResults, []);
 }
 
 function pasteApply() {
@@ -8446,22 +8646,32 @@ function pasteApply() {
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
 
   const matchId = genId();
-  // 게임마다 개별 세트로 구성 (기존 saveMatch 방식과 동일)
-  const setsSnap = savable.map(r => ({
-    scoreA: 1, scoreB: 0, winner: 'A',
-    games: [{ playerA: r.winName, playerB: r.loseName, map: r.map || '-', winner: 'A' }]
-  }));
-  const totalA = savable.length; // A(승자)팀 세트 승
+
+  // 세트번호별로 게임 묶기 (1세트, 2세트, 에이스전 등 구분 저장)
+  const setMap = {};
+  savable.forEach(r => {
+    const sn = r.setNum || 1;
+    if (!setMap[sn]) setMap[sn] = [];
+    setMap[sn].push(r);
+  });
+  const setsSnap = Object.keys(setMap).sort((a,b) => a-b).map(sn => {
+    const games = setMap[sn].map(r => ({
+      playerA: r.wPlayer.name, playerB: r.lPlayer.name,
+      map: r.map || '-', winner: 'A'
+    }));
+    const scoreA = games.length;
+    return { scoreA, scoreB: 0, winner: 'A', games };
+  });
+  const totalA = setsSnap.length;
   const totalB = 0;
 
-  // 개인 전적 반영
+  // 개인 전적 반영 (DB 실제 이름으로)
   savable.forEach(r => {
-    applyGameResult(r.winName, r.loseName, dateVal, r.map || '-', matchId);
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId);
   });
 
   // 모드별 기록 추가
   if (mode === 'mini') {
-    // 팀 자동 결정: 승자들의 소속대학 중 최다
     const univCount = {};
     savable.forEach(r => { const u = r.wPlayer?.univ; if(u) univCount[u] = (univCount[u]||0)+1; });
     const teamA = Object.entries(univCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
@@ -8477,6 +8687,20 @@ function pasteApply() {
     savable.forEach(r => { const u = r.lPlayer?.univ; if(u) univCountB[u] = (univCountB[u]||0)+1; });
     const teamB = Object.entries(univCountB).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
     univM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa: totalA, sb: totalB, sets: setsSnap });
+  } else if (mode === 'pro') {
+    // 프로리그: 세트별로 묶어서 저장
+    const mA = [], mB = [];
+    savable.forEach(r => {
+      if (!mA.find(m => m.name === r.wPlayer.name))
+        mA.push({ name: r.wPlayer.name, univ: r.wPlayer.univ||'', race: r.wPlayer.race||'', tier: r.wPlayer.tier||'' });
+      if (!mB.find(m => m.name === r.lPlayer.name))
+        mB.push({ name: r.lPlayer.name, univ: r.lPlayer.univ||'', race: r.lPlayer.race||'', tier: r.lPlayer.tier||'' });
+    });
+    proM.unshift({ _id: matchId, d: dateVal, sa: totalA, sb: totalB,
+      teamALabel: 'A팀', teamBLabel: 'B팀',
+      teamAMembers: mA, teamBMembers: mB, sets: setsSnap,
+      univWins: {}, univLosses: {}
+    });
   } else if (mode === 'comp') {
     if (compName && !compNames.includes(compName)) compNames.push(compName);
     curComp = compName;
@@ -8490,116 +8714,64 @@ function pasteApply() {
 
   // 모달 닫고 완료 알림
   cm('pasteModal');
-  document.getElementById('paste-input').value = '';
-  document.getElementById('paste-preview').innerHTML = '';
-  document.getElementById('paste-apply-btn').style.display = 'none';
   window._pasteResults = null;
 
+  // 저장 형식에 따라 해당 탭으로 자동 이동
+  const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp' };
+  if (tabMap[mode]) {
+    const tabBtn = document.querySelector(`.tab[onclick*="sw('${tabMap[mode]}'"]`);
+    if (tabBtn) tabBtn.click();
+  }
+
   // 성공 토스트
+  const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';
   const toast = document.createElement('div');
-  toast.textContent = `✅ ${savable.length}건 경기 결과가 저장되었습니다!`;
-  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:fadein .2s';
+  toast.textContent = `✅ ${savable.length}건 저장 완료${modeLabel ? ' → ' + modeLabel : ''}!`;
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2800);
 }
 
+function onPasteModeChange(val) {
+  const compWrap = document.getElementById('paste-comp-wrap');
+  const hint     = document.getElementById('paste-mode-hint');
+  if (compWrap) compWrap.style.display = val === 'comp' ? 'flex' : 'none';
+  const hints = {
+    individual: '개인 전적 히스토리에만 기록됩니다.',
+    mini:       '미니대전 기록으로 저장됩니다. 팀은 승자/패자 소속 대학으로 자동 결정됩니다.',
+    univm:      '대학대전 기록으로 저장됩니다. 팀은 승자/패자 소속 대학으로 자동 결정됩니다.',
+    pro:        '프로리그 기록으로 저장됩니다. 승자는 A팀, 패자는 B팀으로 분류됩니다.',
+    comp:       '대회 기록으로 저장됩니다. 아래 대회명을 입력하세요.',
+  };
+  if (hint) hint.textContent = hints[val] || '';
+}
+
 function openPasteModal() {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
+  // 매번 열 때 초기화
+  const textarea  = document.getElementById('paste-input');
+  const previewEl = document.getElementById('paste-preview');
+  const applyBtn  = document.getElementById('paste-apply-btn');
+  const badge     = document.getElementById('paste-summary-badge');
+  const pendWarn  = document.getElementById('paste-pending-warn');
+  if (textarea)  textarea.value  = '';
+  if (previewEl) previewEl.innerHTML = '';
+  if (applyBtn)  applyBtn.style.display = 'none';
+  if (badge)     badge.style.display = 'none';
+  if (pendWarn)  pendWarn.style.display = 'none';
+  window._pasteResults = null;
+
   const dateInput = document.getElementById('paste-date');
-  if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  // 모드 힌트 초기화
+  const modeEl = document.getElementById('paste-mode');
+  if (modeEl) onPasteModeChange(modeEl.value);
+
   om('pasteModal');
-  // 기존 리스너 먼저 제거 후 재등록 (중복 방지)
-  if(window._pasteImgListener){
-    document.removeEventListener('paste', window._pasteImgListener);
-    window._pasteImgListener = null;
-  }
-  // Ctrl+V 이미지 캡처 리스너
-  window._pasteImgListener = function(e) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) pasteHandleImageFile(file);
-        break;
-      }
-    }
-  };
-  document.addEventListener('paste', window._pasteImgListener);
 }
 
-// pasteModal 닫힐 때 리스너 제거
-const _origCm = window.cm;
-
-function pasteHandleImageDrop(e) {
-  const file = e.dataTransfer?.files?.[0];
-  if (file && file.type.startsWith('image/')) pasteHandleImageFile(file);
-}
-
-async function pasteHandleImageFile(file) {
-  if (!file) return;
-  const statusEl = document.getElementById('paste-ocr-status');
-  if (statusEl) { statusEl.style.display='block'; statusEl.textContent='🤖 AI가 이미지를 분석 중입니다...'; }
-
-  try {
-    // 이미지를 base64로 변환
-    const base64 = await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload = () => res(reader.result.split(',')[1]);
-      reader.onerror = rej;
-      reader.readAsDataURL(file);
-    });
-
-    // 플레이어 이름 목록 전달
-    const playerNames = players.map(p => p.name).join(', ');
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/png', data: base64 } },
-            { type: 'text', text: `이 이미지는 스타크래프트 경기 결과입니다. 경기 결과를 다음 형식으로 한 줄씩 추출해주세요:
-[맵이름] 선수명종족 (승) vs (패) 선수명종족
-
-규칙:
-- 종족은 T(테란), Z(저그), P(프로토스) 중 하나
-- 맵 이름을 알 수 없으면 [맵] 생략
-- 승자는 (승), 패자는 (패)
-- 번호(1. 2. 등) 없이 순수 결과만
-- 등록된 선수 목록: ${playerNames}
-- 결과 형식만 출력, 설명 없이
-
-예시 출력:
-[투혼] 도재욱P (승) vs (패) 유영진T
-[라데리안] 변현제P (패) vs (승) 이재호T` }
-          ]
-        }]
-      })
-    });
-
-    const data = await response.json();
-    const text = data.content?.find(c => c.type === 'text')?.text || '';
-
-    if (text.trim()) {
-      const textarea = document.getElementById('paste-input');
-      if (textarea) {
-        textarea.value = (textarea.value ? textarea.value + '\n' : '') + text.trim();
-        pastePreview();
-      }
-      if (statusEl) statusEl.textContent = '✅ AI 분석 완료! 아래 결과를 확인하고 저장하세요.';
-    } else {
-      if (statusEl) statusEl.textContent = '⚠️ 이미지에서 경기 결과를 찾지 못했습니다. 텍스트로 직접 입력해주세요.';
-    }
-  } catch (err) {
-    if (statusEl) statusEl.textContent = '❌ 분석 실패: ' + (err.message || '알 수 없는 오류');
-    console.error('OCR error:', err);
-  }
-}
+// 이미지 OCR 기능 제거됨
 </script>
 </body>
 </html>
