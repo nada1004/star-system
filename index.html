@@ -734,6 +734,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
         형식 A: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
         형식 B: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">선수명[티어종족] ❌🆚⭕ 선수명[티어종족] 🌐맵</span><br>
         세트 구분: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">══1세트══ / --2세트-- / 1셋ㅡㅡ</span> 형태 모두 인식<br>
+        맵 약자: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">녹아 · 녹 → 녹아웃 / 라데 → 라데리안 / 도미 → 도미네이터</span> 등 자동 변환<br>
         <span style="color:#6b7280;font-size:11px">💡 선수 약자 자동 인식 (예: 주양 → 소주양) · 중복 시 버튼으로 직접 선택 · 3세트 이상은 에이스전으로 표시</span>
       </div>
     </details>
@@ -758,7 +759,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 
     <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시 (형식A): 1. [도미] 도재욱P (승) vs (패) 유영진T&#10;예시 (형식B): 리나[4P]❌🆚⭕햇살[4T]🌐녹아"
       style="width:100%;min-height:140px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
-      oninput="pastePreview()"></textarea>
+      oninput="pastePreview()" onpaste="setTimeout(pastePreview,0)"></textarea>
 
     <div id="paste-preview" style="margin-top:12px"></div>
 
@@ -5259,13 +5260,9 @@ function rCfg(C,T){
   </div></div>
   <div class="ssec"><h4>🗺️ 맵 관리</h4>`;
   maps.forEach((m,i)=>{
-    const a1=m.slice(0,1), a2=m.slice(0,2);
-    const badges=[a1,a2].filter((a,idx)=>a&&(idx===0||a.length===2)&&a!==m)
-      .map(a=>`<span style="background:var(--blue-ll);color:var(--blue);border-radius:4px;padding:1px 7px;font-size:11px;font-family:monospace;font-weight:700">${a}</span>`).join('');
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
       <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
-      <span style="display:flex;gap:3px;align-items:center">${badges}</span>
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">삭제</button>
     </div>`;
   });
@@ -5554,22 +5551,7 @@ function saveRow(){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-function _autoRegisterMapAlias(mapName) {
-  const alias1 = mapName.slice(0,1), alias2 = mapName.slice(0,2);
-  const allAlias = getMapAlias();
-  if (alias1 && alias1 !== mapName && (!allAlias[alias1] || allAlias[alias1] === mapName))
-    userMapAlias[alias1] = mapName;
-  if (alias2 && alias2.length === 2 && alias2 !== mapName && (!allAlias[alias2] || allAlias[alias2] === mapName))
-    userMapAlias[alias2] = mapName;
-}
-function addMap(){
-  const n=document.getElementById('nm').value.trim();
-  if(!n)return;
-  maps.push(n);
-  _autoRegisterMapAlias(n);
-  save();render();refreshSel();
-  document.getElementById('nm').value='';
-}
+function addMap(){const n=document.getElementById('nm').value.trim();if(!n)return;maps.push(n);save();render();refreshSel();}
 function delMap(i){maps.splice(i,1);save();render();refreshSel();}
 
 function _refreshAliasList(){
@@ -5734,21 +5716,19 @@ function statsOverviewHTML(){
     });
   });
   const mapRank=Object.entries(mapStats).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l})).sort((a,b)=>b.total-a.total);
-  function calcFormPlayers(genderFilter, streakType){
+  function calcFormPlayers(genderFilter){
     return players.filter(p=>(genderFilter?p.gender===genderFilter:true))
       .map(p=>{
+        // p.history에 이미 모든 경기(미니대전·대학대전·CK·프로리그·티어대회 포함)가
+        // applyGameResult를 통해 기록되므로 history만 사용 (중복 방지)
         const hist=[...(p.history||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
         const rec=hist.slice(0,5);
         if(rec.length<1)return null;
         const streak=(()=>{let s=0,type=rec[0]?.result;for(const h of rec){if(h.result===type)s++;else break;}return{n:s,type};})();
         return{...p,form:rec,streak};
-      }).filter(Boolean)
-      .filter(p=>p.streak.type===streakType)
-      .sort((a,b)=>b.streak.n-a.streak.n)
-      .slice(0,10);
+      }).filter(Boolean).sort((a,b)=>b.streak.n-a.streak.n).slice(0,10);
   }
-  const formF=calcFormPlayers('F','승'), formM=calcFormPlayers('M','승');
-  const formFDown=calcFormPlayers('F','패'), formMDown=calcFormPlayers('M','패');
+  const formF=calcFormPlayers('F'), formM=calcFormPlayers('M');
   const raceColor={T:'#2563eb',Z:'#dc2626',P:'#7c3aed'};
   const raceName={T:'테란',Z:'저그',P:'프로토스'};
   const raceEmoji={T:'⚔️',Z:'🦟',P:'🔮'};
@@ -5804,17 +5784,11 @@ function statsOverviewHTML(){
       <div style="font-size:11px;display:flex;justify-content:space-between"><span style="color:var(--green);font-weight:700">${m.w}승</span><span style="color:var(--gray-l)">${rate}%</span><span style="color:var(--red);font-weight:700">${m.l}패</span></div>
     </div>`;}).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}
   </div></div>
-  <div class="ssec"><h4>🔥 최근 폼 상승 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
+  <div class="ssec"><h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
     <div style="display:flex;flex-direction:column;gap:4px">${formF.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
   </div>
-  <div class="ssec"><h4>🔥 최근 폼 상승 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span></h4>
+  <div class="ssec"><h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span></h4>
     <div style="display:flex;flex-direction:column;gap:4px">${formM.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
-  </div>
-  <div class="ssec"><h4>❄️ 최근 폼 하락 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
-    <div style="display:flex;flex-direction:column;gap:4px">${formFDown.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
-  </div>
-  <div class="ssec"><h4>❄️ 최근 폼 하락 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span></h4>
-    <div style="display:flex;flex-direction:column;gap:4px">${formMDown.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
   </div>
   </div>`;
 }
@@ -8226,73 +8200,40 @@ function recClearSearch(mode) {
 
 // 맵 약자 → 전체 이름 매핑 (시스템 maps 배열에도 없으면 그대로 사용)
 const PASTE_MAP_ALIAS_DEFAULT = {
-  // ── 전체 이름 (full→full 매핑) ──
+  // ── 전체 이름 ──
   '투혼':'투혼','라데리안':'라데리안','녹아웃':'녹아웃','리트리트':'리트리트',
-  '폴리포이드':'폴리포이드','폴스타':'폴스타','옥타곤':'옥타곤',
-  '애티튜드':'애티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
+  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
   '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
   '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
   '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
-  '제인도':'제인도',
   // ── 약자 ──
-  // 폴리포이드
-  '폴':'폴리포이드','폴리':'폴리포이드',
-  // 폴스타
-  '폴스':'폴스타',
-  // 녹아웃
-  '녹':'녹아웃','녹아':'녹아웃',
-  // 실피드
+  '라데':'라데리안',
+  '녹아':'녹아웃','녹':'녹아웃',
+  '리트':'리트리트','리':'리트리트',
+  '폴':'폴리포이드','폴리':'폴리포이드',          // 폴 = 폴리포이드
+  '플스':'플스타',                                // 플스 = 플스타
+  '옥':'옥타곤',                                  // 옥 = 옥타곤
+  '에티':'에티튜드','에':'에티튜드',
+  '라':'라데리안',              // 에티/에 = 에티튜드
+  '매':'매치포인트','매치':'매치포인트',          // 매/매치 = 매치포인트
+  '도미':'도미네이터','도':'도미네이터',          // 도미/도 = 도미네이터
   '실':'실피드','실피':'실피드',
-  // 라데리안
-  '라':'라데리안','라데':'라데리안',
-  // 제인도
-  '제':'제인도','제인':'제인도',
-  // 옥타곤
-  '옥':'옥타곤','옥타':'옥타곤',
-  // 애티튜드
-  '애':'애티튜드','애티':'애티튜드',
-  // 매치포인트
-  '매':'매치포인트','매치':'매치포인트',
-  // 도미네이터
-  '도':'도미네이터','도미':'도미네이터',
-  // 투혼
-  '투':'투혼',
-  // 블리츠
-  '블':'블리츠','블리':'블리츠',
-  // 서킷
+  '블리':'블리츠','블':'블리츠',
   '서':'서킷',
-  // 리트리트
-  '리':'리트리트','리트':'리트리트',
-  // 메트로폴리스
-  '메':'메트로폴리스','메트':'메트로폴리스',
-  // 신 개마고원
-  '개':'신 개마고원','개마':'신 개마고원','신개마':'신 개마고원',
-  // 아이언포리스트
+  '투':'투혼',
+  '메트':'메트로폴리스','메':'메트로폴리스',
+  '개마':'신 개마고원','신개마':'신 개마고원','개':'신 개마고원',
   '아이':'아이언포리스트','포리':'아이언포리스트',
-  // 파이썬
-  '파':'파이썬','파이':'파이썬',
-  // 화랑
+  '파이':'파이썬','파':'파이썬',
   '화':'화랑',
-  // 지옥섬
-  '지':'지옥섬','지옥':'지옥섬',
-  // 네오리게이트
+  '지옥':'지옥섬','지':'지옥섬',
   '네오':'네오리게이트','리게':'네오리게이트',
-  // 투영
-  '투영':'투영',
 };
 
-// 기본 약자 + maps 배열 동적 생성 + 사용자 정의 약자를 합쳐 반환
-// 우선순위: userMapAlias > PASTE_MAP_ALIAS_DEFAULT > 자동생성(앞1~2글자)
+// 기본 약자 + 사용자 정의 약자를 합쳐 반환
 function getMapAlias() {
-  const autoAlias = {};
-  if (typeof maps !== 'undefined') {
-    maps.forEach(m => {
-      const a1 = m.slice(0,1), a2 = m.slice(0,2);
-      if (a1 && a1 !== m && !autoAlias[a1]) autoAlias[a1] = m;
-      if (a2 && a2.length === 2 && a2 !== m && !autoAlias[a2]) autoAlias[a2] = m;
-    });
-  }
-  return Object.assign({}, autoAlias, PASTE_MAP_ALIAS_DEFAULT, (typeof userMapAlias !== 'undefined' ? userMapAlias : {}));
+  return Object.assign({}, PASTE_MAP_ALIAS_DEFAULT, (typeof userMapAlias !== 'undefined' ? userMapAlias : {}));
 }
 
 /**
@@ -8323,28 +8264,17 @@ function findPlayerByPartialName(namePart) {
 }
 
 function parsePasteLine(line) {
-  line = line
-    .replace(/[\uFEFF\u200B\u200C\u200D\u00A0\u3000]/g, ' ')
-    .replace(/❌[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*⭕/gu, '❌🆚⭕')
-    .replace(/⭕[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*❌/gu, '⭕🆚❌')
-    .replace(/✅[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*⬜/gu, '✅🆚⬜')
-    .replace(/⬜[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*✅/gu, '⬜🆚✅')
-    .replace(/\uFE0F/gu, '')
-    .replace(/[🌐🌍🗺]/gu, ' ')
-    .replace(/\r/g, '')
-    .replace(/[ \t]+/g, ' ')
-    .trim();
+  line = line.trim();
   if (!line) return null;
 
   // 앞쪽 번호/기호 제거
   // "1.", "1)", "1경기", "1경기.", "①~⑳", "1️⃣", "-", "•", "▶" 등
   line = line
-    .replace(/^[\d]+\s*경기[\.\)·\s]*/i, '')
-    .replace(/^[\d]+[R라r][\.\)·\s]*/i, '')
+    .replace(/^[\d]+\s*경기[\.\)·\s]*/i, '')   // N경기  ← 새로 추가
+    .replace(/^[\d]+[R라r][\.\)·\s]*/i, '')     // NR, N라운드
     .replace(/^[\d]+[\.\)]\s*/, '')
     .replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]\s*/, '')
-    .replace(/^\d\uFE0F\u20E3\s*/, '')   // 1️⃣ (FE0F 포함)
-    .replace(/^\d\u20E3\s*/, '')           // 1⃣ (FE0F 제거 후)
+    .replace(/^\d️⃣\s*/, '')
     .replace(/^[-•·▶▷>\s]+/, '')
     .trim();
 
@@ -8355,8 +8285,8 @@ function parsePasteLine(line) {
     const vsIdx = line.indexOf('🆚');
     let leftPart  = line.slice(0, vsIdx).trim();
     let rightPart = line.slice(vsIdx + '🆚'.length).trim();
-    leftPart  = leftPart.replace(/\uFE0F/g, '').trim();
-    rightPart = rightPart.replace(/\uFE0F/g, '').trim();
+    leftPart  = leftPart.replace(/️/g, '').trim();
+    rightPart = rightPart.replace(/️/g, '').trim();
 
     const WIN_MARKS  = ['✅', '⭕'];
     const LOSE_MARKS = ['❌', '⬜'];
@@ -8378,17 +8308,13 @@ function parsePasteLine(line) {
     if (leftWin === rightWin) return null;
 
     let map = '-';
-    const mapEmoji = rightPart.match(/(?:[🌐🌍]\s*|\s+)(\S+)\s*$/);
+    const mapEmoji = rightPart.match(/[🌐🌍]\s*(\S+)/);
     let rightClean = rightPart;
     if (mapEmoji) {
       const alias = mapEmoji[1].trim();
-      const resolved = getMapAlias()[alias] || alias;
-      const isMaybeMap = maps.includes(resolved) || Object.keys(getMapAlias()).includes(alias) || alias.length <= 4;
-      if (isMaybeMap) {
-        map = resolved;
-        if (!maps.includes(map)) maps.push(map);
-        rightClean = rightPart.slice(0, mapEmoji.index).trim();
-      }
+      map = getMapAlias()[alias] || alias;
+      if (!maps.includes(map)) maps.push(map);
+      rightClean = rightPart.slice(0, mapEmoji.index).trim();
     }
 
     const splitNR = (s) => {
@@ -8462,43 +8388,6 @@ function parsePasteLine(line) {
     }
   }
 
-  // ── 형식 C: "N세트/N 맵 선수A X:Y 선수B" 누적 스코어 형식 ──
-  {
-    const cumRe = /^(\d+)\s*세트\s+(\S+)\s+(.+?)\s+(\d+):(\d+)\s+(.+)$|^(\d+)\s+(\S+)\s+(.+?)\s+(\d+):(\d+)\s+(.+)$|^(\d+)(\S+?)\s+(.+?)\s+(\d+):(\d+)\s+(.+)$/;
-    const cm = line.match(cumRe);
-    if (cm) {
-      let setNum, mapName, nameA, scoreA, scoreB, nameB;
-      if (cm[1] !== undefined) {
-        [setNum,mapName,nameA,scoreA,scoreB,nameB]=[parseInt(cm[1]),cm[2],cm[3].trim(),parseInt(cm[4]),parseInt(cm[5]),cm[6].trim()];
-      } else if (cm[7] !== undefined) {
-        [setNum,mapName,nameA,scoreA,scoreB,nameB]=[parseInt(cm[7]),cm[8],cm[9].trim(),parseInt(cm[10]),parseInt(cm[11]),cm[12].trim()];
-      } else {
-        [setNum,mapName,nameA,scoreA,scoreB,nameB]=[parseInt(cm[13]),cm[14],cm[15].trim(),parseInt(cm[16]),parseInt(cm[17]),cm[18].trim()];
-      }
-      const resolvedMap = getMapAlias()[mapName.trim()] || mapName.trim();
-      if (!maps.includes(resolvedMap)) maps.push(resolvedMap);
-      return { winName:nameA, loseName:nameB, rawScoreA:scoreA, rawScoreB:scoreB,
-               nameA, nameB, setNumFromLine:setNum, isCumulativeScore:true, map:resolvedMap };
-    }
-  }
-
-  // ── 형식 D: "맵 선수A X:Y 선수B" (N세트 없이) ──
-  {
-    const sm = line.match(/^(\S+)\s+(.+?)\s+(\d+):(\d+)\s+(.+)$/);
-    if (sm) {
-      const mapName = sm[1].trim();
-      const nameA = sm[2].trim().replace(/[TZP]$/, '').trim();
-      const scoreA = parseInt(sm[3]), scoreB = parseInt(sm[4]);
-      const nameB = sm[5].trim().replace(/[TZP]$/, '').trim();
-      if (!isNaN(scoreA) && !isNaN(scoreB)) {
-        const resolvedMap = getMapAlias()[mapName] || mapName;
-        if (!maps.includes(resolvedMap)) maps.push(resolvedMap);
-        return { winName:nameA, loseName:nameB, rawScoreA:scoreA, rawScoreB:scoreB,
-                 nameA, nameB, isCumulativeScore:true, map:resolvedMap };
-      }
-    }
-  }
-
   return null;
 }
 
@@ -8549,33 +8438,18 @@ function pastePreview() {
   if (!previewEl) return;
   if (!raw) { previewEl.innerHTML = ''; if(applyBtn) applyBtn.style.display='none'; return; }
 
-  // 보이지 않는 특수문자 + 이모지 정규화
-  const rawClean = raw
-    .replace(/[\uFEFF\u200B\u200C\u200D\u00A0\u3000]/g, ' ')  // 보이지않는공백 제거
-    .replace(/❌[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*⭕/gu, '❌🆚⭕')  // 🆚 정규화
-    .replace(/⭕[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*❌/gu, '⭕🆚❌')
-    .replace(/✅[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*⬜/gu, '✅🆚⬜')
-    .replace(/⬜[\uFE0F\u20E3]?\s*🆚[\uFE0F\u20E3]?\s*✅/gu, '⬜🆚✅')
-    .replace(/\uFE0F/gu, '')             // FE0F(변형선택자) 완전 제거
-    .replace(/[🌐🌍🗺]/gu, ' ')            // 맵 이모지 → 공백
-    .replace(/\r/g, '')
-    .replace(/[ \t]+/g, ' ')
-    .trim();
-  // 한 줄에 여러 세트가 붙어있는 경우 자동 분리
-  const rawExpanded = rawClean.replace(/(\d+세트\s)/g, '\n$1').trim();
-  const lines = rawExpanded.split('\n');
+  const lines = raw.split('\n');
   const results = [];
   const errors = [];
   let currentSet = 1;
-  let prevScoreA = null, prevScoreB = null;
 
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
 
-    // 세트 구분선 처리 (스코어 X:Y 있는 줄은 경기 결과이므로 구분선 처리 안 함)
+    // 세트 구분선 처리
     const sepResult = parseSetSeparator(trimmed);
-    if (sepResult !== null && !/\d+:\d+/.test(trimmed)) {
+    if (sepResult !== null) {
       if (sepResult === 0) currentSet++;
       else currentSet = sepResult;
       return;
@@ -8586,27 +8460,6 @@ function pastePreview() {
       errors.push({ line: idx + 1, raw: trimmed });
       return;
     }
-
-    // 누적 스코어 형식 처리
-    if (parsed.isCumulativeScore) {
-      const curA = parsed.rawScoreA, curB = parsed.rawScoreB;
-      if (prevScoreA === null) {
-        if (curA > curB) { parsed.winName = parsed.nameA; parsed.loseName = parsed.nameB; }
-        else if (curB > curA) { parsed.winName = parsed.nameB; parsed.loseName = parsed.nameA; }
-        else { errors.push({ line: idx + 1, raw: trimmed }); return; }
-      } else {
-        const diffA = curA - prevScoreA, diffB = curB - prevScoreB;
-        if (diffA > 0 && diffB === 0) { parsed.winName = parsed.nameA; parsed.loseName = parsed.nameB; }
-        else if (diffB > 0 && diffA === 0) { parsed.winName = parsed.nameB; parsed.loseName = parsed.nameA; }
-        else { errors.push({ line: idx + 1, raw: trimmed }); return; }
-      }
-      prevScoreA = curA; prevScoreB = curB;
-    } else {
-      prevScoreA = null; prevScoreB = null;
-    }
-
-    if (parsed.setNumFromLine) currentSet = parsed.setNumFromLine;
-
     const wMatch = findPlayerByPartialName(parsed.winName);
     const lMatch = findPlayerByPartialName(parsed.loseName);
     results.push({
@@ -8639,6 +8492,7 @@ function pastePreview() {
     });
   }
   window._pasteResults = results;
+  window._pasteErrors  = errors;  // ← 오류 목록도 보존
 
   renderPastePreview(results, errors);
 }
@@ -8786,7 +8640,7 @@ function pasteSelectPlayer(idx, role, name) {
     r.lCandidates  = [p];
   }
   // 재파싱 없이 렌더링만 갱신
-  renderPastePreview(window._pasteResults, []);
+  renderPastePreview(window._pasteResults, window._pasteErrors || []);
 }
 
 function pasteApply() {
@@ -8872,6 +8726,7 @@ function pasteApply() {
   // 모달 닫고 완료 알림
   cm('pasteModal');
   window._pasteResults = null;
+  window._pasteErrors  = null;
 
   // 저장 형식에 따라 해당 탭으로 자동 이동
   const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp' };
@@ -8917,6 +8772,7 @@ function openPasteModal() {
   if (badge)     badge.style.display = 'none';
   if (pendWarn)  pendWarn.style.display = 'none';
   window._pasteResults = null;
+  window._pasteErrors  = null;
 
   const dateInput = document.getElementById('paste-date');
   if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
