@@ -42,14 +42,12 @@ b,strong{font-weight:600;}
 .sharecard-modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;}
 /* 조별 순위표 세련화 */
 .grp-rank-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
-.grp-rank-table th{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:8px 8px;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;}
-.grp-rank-table td{padding:7px 8px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s;}
+.grp-rank-table th{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:8px 8px;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;text-align:left;}
+.grp-rank-table td{padding:7px 8px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s;text-align:left;}
 .grp-rank-table tr:last-child td{border-bottom:none;}
 .grp-rank-table tr:hover td{background:#f0f6ff;}
 .grp-rank-top1{background:linear-gradient(90deg,#fffbeb,#fff)!important;}
 .grp-rank-top2{background:linear-gradient(90deg,#f1f5f9,#fff)!important;}
-.grp-rank-table td:nth-child(1),.grp-rank-table td:nth-child(2){text-align:left;}
-.grp-rank-table th:nth-child(1),.grp-rank-table th:nth-child(2){text-align:left;}
 .grp-match-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .15s;}
 .grp-match-card:hover{box-shadow:0 3px 12px rgba(37,99,235,.1);}
 .grp-match-vs{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--gray-l);}
@@ -105,7 +103,8 @@ table{width:100%;border-collapse:collapse;background:transparent;border:1px soli
 tbody{height:auto;}
 table:empty{display:none;}
 th{background:var(--surface);padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;letter-spacing:.3px;font-weight:600;}
-td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;font-weight:400;background:var(--white);}
+td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;font-weight:400;background:var(--white);}
+.td-c{text-align:center!important;}
 tr:last-child td{border-bottom:none;}
 tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 /* 스트리머 이름 컬럼 공백 방지 */
@@ -2461,7 +2460,7 @@ function rHistUnivStat(){
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','대회_${m.d||'match'}')">📷 이미지 저장</button>
-              <button class="btn btn-p btn-xs no-export" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+              <button class="btn btn-p btn-xs no-export" onclick="_shareMode='match';window._shareMatchObj={a:'${a.replace(/'/g,"\\'")}',b:'${b.replace(/'/g,"\\'")}',sa:${m.sa||0},sb:${m.sb||0},d:'${(m.d||'').replace(/'/g,"\\'")}',n:'${(m.n||'대회').replace(/'/g,"\\'")}',sets:[]};openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             </div>
           </div>
         </div>
@@ -5576,17 +5575,20 @@ function statsOverviewHTML(){
   function calcFormPlayers(genderFilter){
     return players.filter(p=>(genderFilter?p.gender===genderFilter:true))
       .map(p=>{
-        const hist=[...( p.history||[])];
+        const hist=[...(p.history||[])];
         const extraGames=[];
+        const addedKeys=new Set();
         // ttM(티어대회) 게임 추가
         if(ttM&&ttM.length){
           ttM.forEach(m=>{
-            (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+            (m.sets||[]).forEach((s,si)=>(s.games||[]).forEach((g,gi)=>{
               if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
                 const isWin=(g.playerA===p.name&&g.winner==='A')||(g.playerB===p.name&&g.winner==='B');
-                if(!hist.some(h=>h.matchId&&m._id&&h.matchId===m._id)){
-                  extraGames.push({date:m.d||'',result:isWin?'승':'패',_extra:true,_src:'tt'});
-                }
+                if(hist.some(h=>h.matchId&&m._id&&h.matchId===m._id))return;
+                const k=`tt:${m._id||m.d||''}:${si}:${gi}`;
+                if(addedKeys.has(k))return;
+                addedKeys.add(k);
+                extraGames.push({date:m.d||'',result:isWin?'승':'패',_extra:true,_src:'tt'});
               }
             }));
           });
@@ -5594,13 +5596,13 @@ function statsOverviewHTML(){
         // 조별대회(tourneys) 게임 추가
         if(typeof getTourneyMatches==='function'){
           getTourneyMatches().forEach(m=>{
-            (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+            (m.sets||[]).forEach((s,si)=>(s.games||[]).forEach((g,gi)=>{
               if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
                 const isWin=(g.playerA===p.name&&g.winner==='A')||(g.playerB===p.name&&g.winner==='B');
-                const dupKey=p.name+':'+(m.d||'')+(m.n||'');
-                if(!extraGames.some(e=>e._key===dupKey)){
-                  extraGames.push({date:m.d||'',result:isWin?'승':'패',_extra:true,_src:'tour',_key:dupKey+(g.playerA||'')+(g.playerB||'')});
-                }
+                const k=`tour:${m._tnId||''}:${m._gi||0}:${m._mi||0}:${si}:${gi}`;
+                if(addedKeys.has(k))return;
+                addedKeys.add(k);
+                extraGames.push({date:m.d||'',result:isWin?'승':'패',_extra:true,_src:'tour'});
               }
             }));
           });
