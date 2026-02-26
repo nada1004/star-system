@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타대학 데이터 센터 V36</title>
+<title>⭐ 스타대학 데이터 센터 V37</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -536,7 +536,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V36</div>
+  <div class="hdr-ver">V37</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -5881,19 +5881,21 @@ function statsOverviewHTML(){
     });
   });
   const mapRank=Object.entries(mapStats).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l})).sort((a,b)=>b.total-a.total);
-  function calcFormPlayers(genderFilter){
+  function calcFormPlayers(genderFilter, streakFilter){
+    // streakFilter: '승' = 연승자만, '패' = 연패자만, undefined = 전체
     return players.filter(p=>(genderFilter?p.gender===genderFilter:true))
       .map(p=>{
-        // p.history에 이미 모든 경기(미니대전·대학대전·CK·프로리그·티어대회 포함)가
-        // applyGameResult를 통해 기록되므로 history만 사용 (중복 방지)
         const hist=[...(p.history||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
         const rec=hist.slice(0,5);
         if(rec.length<1)return null;
         const streak=(()=>{let s=0,type=rec[0]?.result;for(const h of rec){if(h.result===type)s++;else break;}return{n:s,type};})();
         return{...p,form:rec,streak};
-      }).filter(Boolean).sort((a,b)=>b.streak.n-a.streak.n).slice(0,10);
+      }).filter(Boolean)
+      .filter(p=>streakFilter?p.streak.type===streakFilter:true)
+      .sort((a,b)=>b.streak.n-a.streak.n).slice(0,10);
   }
-  const formF=calcFormPlayers('F'), formM=calcFormPlayers('M');
+  const formF=calcFormPlayers('F','승'), formM=calcFormPlayers('M','승');
+  const worstFormF=calcFormPlayers('F','패'), worstFormM=calcFormPlayers('M','패');
   const raceColor={T:'#2563eb',Z:'#dc2626',P:'#7c3aed'};
   const raceName={T:'테란',Z:'저그',P:'프로토스'};
   const raceEmoji={T:'⚔️',Z:'🦟',P:'🔮'};
@@ -5954,6 +5956,12 @@ function statsOverviewHTML(){
   </div>
   <div class="ssec"><h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span></h4>
     <div style="display:flex;flex-direction:column;gap:4px">${formM.map(formRow).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}</div>
+  </div>
+  <div class="ssec"><h4>🧊 최악 폼 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(연패 중)</span></h4>
+    <div style="display:flex;flex-direction:column;gap:4px">${worstFormF.map(formRow).join('')||'<p style="color:var(--gray-l)">연패 중인 선수 없음</p>'}</div>
+  </div>
+  <div class="ssec"><h4>🧊 최악 폼 TOP 10 <span style="font-size:12px;color:#2563eb;font-weight:600">👨 남자</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(연패 중)</span></h4>
+    <div style="display:flex;flex-direction:column;gap:4px">${worstFormM.map(formRow).join('')||'<p style="color:var(--gray-l)">연패 중인 선수 없음</p>'}</div>
   </div>
   </div>`;
 }
