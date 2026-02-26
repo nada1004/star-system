@@ -7572,8 +7572,10 @@ function statsMapRankHTML(){
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
         // matchId로 이미 history에서 집계된 게임이면 스킵
-        const wmKey=g.matchId&&wn?g.matchId+'_'+wn:'';
-        const lmKey=g.matchId&&ln?g.matchId+'_'+ln:'';
+        // matchId가 없으면 player.history에서 이미 집계됐을 가능성이 높으므로 스킵
+        if(!g.matchId) return;
+        const wmKey=wn?g.matchId+'_'+wn:'';
+        const lmKey=ln?g.matchId+'_'+ln:'';
         if(!mapData[mapName]) mapData[mapName]={};
         if(wn&&!countedMatchIds.has(wmKey)){
           const p=players.find(x=>x.name===wn);
