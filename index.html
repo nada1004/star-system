@@ -695,6 +695,56 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
   </div>
 </div>
 
+<div id="pasteModal" class="modal no-export">
+  <div class="umbox" style="width:720px;max-width:95vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" style="margin-bottom:0">📋 경기 결과 붙여넣기 입력</div>
+      <button class="btn btn-w btn-sm" onclick="cm('pasteModal')">✕ 닫기</button>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1e40af;line-height:1.7">
+      <b>📌 사용법</b> — 텍스트 또는 이미지 붙여넣기 모두 지원<br>
+      텍스트: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
+      이미지: 경기 결과 스크린샷을 <b>Ctrl+V</b> 또는 드래그 드롭하면 AI가 자동으로 읽어옵니다
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 경기 날짜</label>
+      <input type="date" id="paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2);margin-left:8px">📁 저장 형식</label>
+      <select id="paste-mode" onchange="document.getElementById('paste-comp-wrap').style.display=this.value==='comp'?'flex':'none'" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+        <option value="individual">개인 전적만 (히스토리)</option>
+        <option value="mini">⚡ 미니대전으로 저장</option>
+        <option value="univm">🏟️ 대학대전으로 저장</option>
+        <option value="comp">🎖️ 대회 기록으로 저장</option>
+      </select>
+      <div id="paste-comp-wrap" style="display:none;align-items:center;gap:6px;margin-top:4px;width:100%">
+        <input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:200px">
+        <span style="font-size:11px;color:var(--gray-l)">저장할 대회명 입력</span>
+      </div>
+    </div>
+
+    <!-- 이미지 드롭 영역 -->
+    <div id="paste-img-zone" style="border:2px dashed var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:10px;text-align:center;cursor:pointer;transition:.15s;position:relative"
+      ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='var(--blue-ll)'"
+      ondragleave="this.style.borderColor='var(--border2)';this.style.background=''"
+      ondrop="event.preventDefault();this.style.borderColor='var(--border2)';this.style.background='';pasteHandleImageDrop(event)">
+      <div style="font-size:13px;color:var(--gray-l)">🖼 이미지를 여기에 드래그 드롭하거나 Ctrl+V 로 붙여넣기</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:2px">스크린샷, 사진 등 — AI가 경기 결과를 자동으로 읽어옵니다</div>
+      <input type="file" id="paste-img-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="pasteHandleImageFile(this.files[0])">
+    </div>
+    <div id="paste-ocr-status" style="display:none;font-size:12px;color:var(--blue);margin-bottom:8px;padding:6px 12px;background:var(--blue-ll);border-radius:7px"></div>
+
+    <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시:&#10;1. [도미] 도재욱P (승) vs (패) 유영진T&#10;2. [라데] 변현제P (패) vs (승) 이재호T&#10;3. [녹아] 김정우Z (승) vs (패) 황병영T"
+      style="width:100%;min-height:150px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
+      oninput="pastePreview()"></textarea>
+    <div id="paste-preview" style="margin-top:12px"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="btn btn-w" onclick="cm('pasteModal')">취소</button>
+      <button class="btn btn-b" onclick="pastePreview()">🔍 미리보기</button>
+      <button class="btn btn-g" onclick="pasteApply()" id="paste-apply-btn" style="display:none">✅ 저장하기</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
@@ -736,6 +786,7 @@ function J(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}c
 let players    = J('su_p')  || [];
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
+let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
 let miniM      = J('su_mm') || [];
 let univM      = J('su_um') || [];
@@ -771,6 +822,7 @@ function save(){
   localStorage.setItem('su_p', JSON.stringify(players));
   localStorage.setItem('su_u', JSON.stringify(univCfg));
   localStorage.setItem('su_m', JSON.stringify(maps));
+  localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
   localStorage.setItem('su_t', JSON.stringify(tourD));
   localStorage.setItem('su_mm',JSON.stringify(miniM));
   localStorage.setItem('su_um',JSON.stringify(univM));
@@ -3573,7 +3625,7 @@ function rMini(C,T){
   if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('mini');
   }
-  if(miniSub==='input'&&isLoggedIn){if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>⚡ 미니대전 입력</h3>${setBuilderHTML(BLD['mini'],'mini')}</div>`;}
+  if(miniSub==='input'&&isLoggedIn){if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>⚡ 미니대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;}
   else if(miniSub==='rank'){h+=miniRankHTML();}
   else{h+=recSummaryListHTML(miniM,'mini','tab');}
   C.innerHTML=h;
@@ -3760,7 +3812,7 @@ function rUnivM(C,T){
   if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('univm');
   }
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
   else{h+=recSummaryListHTML(univM,'univm','tab');}
   C.innerHTML=h;
@@ -5193,6 +5245,30 @@ function rCfg(C,T){
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></div>
+  <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+      약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
+      <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 기본 내장 약자</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).slice(0,30).map(([k,v])=>k!==v?`<span style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 9px;font-size:11px;font-family:monospace"><b>${k}</b> → ${v}</span>`:'').filter(Boolean).join('')}
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔧 사용자 정의 약자</div>
+    <div id="alias-list" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="alias-key" placeholder="약자 (예: 녹)" style="width:100px" maxlength="10">
+      <span style="color:var(--gray-l)">→</span>
+      <select id="alias-val" style="width:180px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
+        <option value="">맵 선택...</option>
+        ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
+      </select>
+      <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
+    </div>
+    <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
+  </div>
   <div class="ssec"><h4>🎭 티어 관리</h4>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -5221,7 +5297,7 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>`;
-  // 관리자 수 표시
+  // 관리자 수 표시 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
@@ -5229,6 +5305,8 @@ function rCfg(C,T){
     if(listEl){listEl.textContent='※ 보안상 계정 목록은 표시되지 않습니다.';}
   },50);
   C.innerHTML=h;
+  // alias-list는 C.innerHTML 세팅 후 렌더링
+  setTimeout(_refreshAliasList, 10);
 }
 
 /* ══════════════════════════════════════
@@ -5450,6 +5528,47 @@ function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
 function addMap(){const n=document.getElementById('nm').value.trim();if(!n)return;maps.push(n);save();render();refreshSel();}
 function delMap(i){maps.splice(i,1);save();render();refreshSel();}
+
+function _refreshAliasList(){
+  const listEl = document.getElementById('alias-list');
+  if(!listEl) return;
+  const entries = Object.entries(userMapAlias);
+  if(entries.length === 0){
+    listEl.innerHTML = '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
+    return;
+  }
+  listEl.innerHTML = entries.map(([k,v])=>`
+    <div class="srow">
+      <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:50px;text-align:center">${k}</code>
+      <span style="color:var(--gray-l)">→</span>
+      <span style="font-weight:600;font-size:13px">${v}</span>
+      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">삭제</button>
+    </div>`).join('');
+}
+
+function addMapAlias(){
+  const key = (document.getElementById('alias-key')?.value || '').trim();
+  const val = (document.getElementById('alias-val')?.value || '').trim();
+  const msg = document.getElementById('alias-msg');
+  if(!key){ if(msg){msg.style.color='var(--red)';msg.textContent='약자를 입력하세요.';} return; }
+  if(!val){ if(msg){msg.style.color='var(--red)';msg.textContent='맵을 선택하세요.';} return; }
+  if(key===val){ if(msg){msg.style.color='var(--red)';msg.textContent='약자와 맵 이름이 같습니다.';} return; }
+  if(PASTE_MAP_ALIAS_DEFAULT[key] && PASTE_MAP_ALIAS_DEFAULT[key]!==val){
+    if(!confirm(`'${key}'는 기본 내장 약자(${PASTE_MAP_ALIAS_DEFAULT[key]})입니다.\n'${val}'으로 덮어쓸까요?`)) return;
+  }
+  userMapAlias[key]=val;
+  save();
+  if(msg){msg.style.color='var(--green)';msg.textContent=`✅ '${key}' → '${val}' 추가됨`;}
+  document.getElementById('alias-key').value='';
+  document.getElementById('alias-val').value='';
+  _refreshAliasList(); // render() 대신 목록만 부분 업데이트
+}
+
+function delMapAlias(key){
+  delete userMapAlias[key];
+  save();
+  _refreshAliasList();
+}
 
 function addTier(){
   const n=document.getElementById('nt-name').value.trim();
@@ -7437,9 +7556,22 @@ function fsearch(type){
 function selP(type,name){document.getElementById(type==='w'?'ws':'ls').value=name;document.getElementById(type==='w'?'wl':'ll').style.display='none';}
 function upTour(i,v){tourD[i]=v;save();render();}
 function om(id){const el=document.getElementById(id);if(el)el.style.display='block';}
-function cm(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+function cm(id){
+  const el=document.getElementById(id);
+  if(el)el.style.display='none';
+  if(id==='pasteModal'&&window._pasteImgListener){
+    document.removeEventListener('paste',window._pasteImgListener);
+    window._pasteImgListener=null;
+  }
+}
 window.addEventListener('click',e=>{
-  if(e.target.classList.contains('modal'))e.target.style.display='none';
+  if(e.target.classList.contains('modal')){
+    e.target.style.display='none';
+    if(e.target.id==='pasteModal'&&window._pasteImgListener){
+      document.removeEventListener('paste',window._pasteImgListener);
+      window._pasteImgListener=null;
+    }
+  }
   if(!e.target.closest('.swrap'))document.querySelectorAll('.sdrop').forEach(d=>d.style.display='none');
 });
 
@@ -8073,6 +8205,400 @@ function recClearSearch(mode) {
   const inp = document.getElementById('rq-' + mode);
   if (inp) { inp.value = ''; inp.focus(); }
   recFilterInPlace(mode, '');
+}
+
+/* ══════════════════════════════════════
+   붙여넣기 자동 입력 기능
+══════════════════════════════════════ */
+
+// 맵 약자 → 전체 이름 매핑 (시스템 maps 배열에도 없으면 그대로 사용)
+const PASTE_MAP_ALIAS_DEFAULT = {
+  // ── 전체 이름 ──
+  '투혼':'투혼','라데리안':'라데리안','녹아웃':'녹아웃','리트리트':'리트리트',
+  '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
+  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
+  '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
+  '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
+  // ── 약자 ──
+  '라데':'라데리안',
+  '녹아':'녹아웃','녹':'녹아웃',
+  '리트':'리트리트','리':'리트리트',
+  '폴':'폴리포이드','폴리':'폴리포이드',          // 폴 = 폴리포이드
+  '플스':'플스타',                                // 플스 = 플스타
+  '옥':'옥타곤',                                  // 옥 = 옥타곤
+  '에티':'에티튜드','에':'에티튜드',
+  '라':'라데리안',              // 에티/에 = 에티튜드
+  '매':'매치포인트','매치':'매치포인트',          // 매/매치 = 매치포인트
+  '도미':'도미네이터','도':'도미네이터',          // 도미/도 = 도미네이터
+  '실':'실피드','실피':'실피드',
+  '블리':'블리츠','블':'블리츠',
+  '서':'서킷',
+  '투':'투혼',
+  '메트':'메트로폴리스','메':'메트로폴리스',
+  '개마':'신 개마고원','신개마':'신 개마고원','개':'신 개마고원',
+  '아이':'아이언포리스트','포리':'아이언포리스트',
+  '파이':'파이썬','파':'파이썬',
+  '화':'화랑',
+  '지옥':'지옥섬','지':'지옥섬',
+  '네오':'네오리게이트','리게':'네오리게이트',
+};
+
+// 기본 약자 + 사용자 정의 약자를 합쳐 반환
+function getMapAlias() {
+  return Object.assign({}, PASTE_MAP_ALIAS_DEFAULT, (typeof userMapAlias !== 'undefined' ? userMapAlias : {}));
+}
+
+/**
+ * 한 줄 파싱 → {winName, loseName, map} | null
+ *
+ * 지원 형식 A: [맵] 선수명종족 (승) vs (패) 선수명종족
+ * 지원 형식 B: 선수명종족 ✅ 🆚 ⬜ 선수명종족 🌍맵  (이모지 형식)
+ *   ✅ = 왼쪽 선수 승리,  ⬜ = 패배
+ *   앞 번호(1. 1️⃣ ① 등) 자동 제거
+ */
+function parsePasteLine(line) {
+  line = line.trim();
+  if (!line) return null;
+
+  // 앞쪽 번호/기호 제거: "1.", "1)", "①~⑳", "1️⃣~9️⃣", "-", "•" 등
+  line = line
+    .replace(/^[\d]+[\.\)]\s*/, '')
+    .replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]\s*/, '')
+    .replace(/^\d️⃣\s*/, '')
+    .replace(/^[-•·]\s*/, '')
+    .trim();
+
+  if (!line) return null;
+
+  // ── 형식 B: 이모지 형식 ──
+  // 선수명종족 ✅️ 🆚️ ⬜ 선수명종족 🌍맵
+  // 또는 선수명종족 ⬜ 🆚️ ✅️ 선수명종족 🌍맵
+  if (line.includes('🆚')) {
+    // 🆚 기준으로 좌/우 분리
+    const vsIdx = line.indexOf('🆚');
+    let leftPart  = line.slice(0, vsIdx).trim();
+    let rightPart = line.slice(vsIdx + '🆚'.length).trim();
+    // 변형문자 제거 (️ ️)
+    leftPart  = leftPart.replace(/️/g, '').trim();
+    rightPart = rightPart.replace(/️/g, '').trim();
+
+    // 왼쪽 끝의 ✅/⬜ 추출
+    const leftMarkMatch  = leftPart.match(/(✅|⬜)\s*$/);
+    const rightMarkMatch = rightPart.match(/^(✅|⬜)\s*/);
+
+    if (!leftMarkMatch || !rightMarkMatch) return null;
+
+    const leftMark  = leftMarkMatch[1];
+    const rightMark = rightMarkMatch[1];
+
+    // 마크 제거 → 순수 선수+종족 문자열
+    const leftToken  = leftPart.slice(0, leftMarkMatch.index).trim();
+    const rightToken = rightPart.slice(rightMarkMatch[0].length).trim();
+
+    // 맵: 🌍 뒤 텍스트
+    let map = '-';
+    const mapEmoji = rightToken.match(/🌍\s*(\S+)/);
+    let rightClean = rightToken;
+    if (mapEmoji) {
+      const alias = mapEmoji[1].trim();
+      map = getMapAlias()[alias] || alias;
+      if (!maps.includes(map)) maps.push(map);
+      rightClean = rightToken.slice(0, mapEmoji.index).trim();
+    }
+
+    // 이름+종족 분리 (끝 T/Z/P)
+    const splitNR = (s) => {
+      const m = s.match(/^(.+?)([TZP])$/);
+      return m ? { name: m[1].trim(), race: m[2] } : { name: s, race: '' };
+    };
+    const left  = splitNR(leftToken);
+    const right = splitNR(rightClean);
+
+    if (!left.name || !right.name) return null;
+
+    const leftWin  = leftMark  === '✅';
+    const rightWin = rightMark === '✅';
+
+    let winName, loseName;
+    if (leftWin && !rightWin)      { winName = left.name;  loseName = right.name; }
+    else if (rightWin && !leftWin) { winName = right.name; loseName = left.name;  }
+    else return null;
+
+    return { winName, loseName, map };
+  }
+
+  // ── 형식 A: 기존 (승)/(패) 텍스트 형식 ──
+  let map = '-';
+  const mapMatch = line.match(/^\[([^\]]+)\]/);
+  if (mapMatch) {
+    const alias = mapMatch[1].trim();
+    map = getMapAlias()[alias] || alias;
+    if (!maps.includes(map)) maps.push(map);
+    line = line.slice(mapMatch[0].length).trim();
+  }
+
+  const partPattern = /(.+?)\s*([TZP])\s*\((승|패)\)/g;
+  const parts = [];
+  let m2;
+  while ((m2 = partPattern.exec(line)) !== null) {
+    parts.push({ name: m2[1].trim(), race: m2[2], result: m2[3] });
+  }
+  if (parts.length < 2) return null;
+
+  const [p1, p2] = parts;
+  let winName, loseName;
+  if (p1.result === '승' && p2.result === '패')      { winName = p1.name; loseName = p2.name; }
+  else if (p1.result === '패' && p2.result === '승') { winName = p2.name; loseName = p1.name; }
+  else return null;
+
+  return { winName, loseName, map };
+}
+
+function pastePreview() {
+  const raw = (document.getElementById('paste-input')?.value || '').trim();
+  const previewEl = document.getElementById('paste-preview');
+  const applyBtn = document.getElementById('paste-apply-btn');
+  if (!previewEl) return;
+  if (!raw) { previewEl.innerHTML = ''; if(applyBtn) applyBtn.style.display='none'; return; }
+
+  const lines = raw.split('\n');
+  const results = [];
+  const errors = [];
+
+  lines.forEach((line, idx) => {
+    if (!line.trim()) return;
+    const parsed = parsePasteLine(line);
+    if (!parsed) {
+      errors.push({ line: idx + 1, raw: line.trim() });
+      return;
+    }
+    // 선수 존재 여부 확인
+    const wPlayer = players.find(p => p.name === parsed.winName);
+    const lPlayer = players.find(p => p.name === parsed.loseName);
+    results.push({ ...parsed, wPlayer, lPlayer, lineNum: idx + 1, rawLine: line.trim() });
+  });
+
+  let html = '';
+
+  if (results.length > 0) {
+    html += `<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px">✅ 인식된 경기 <b style="color:var(--blue)">${results.length}건</b></div>`;
+    html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
+    html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">#</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">맵</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">🏆 승자</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">vs</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">💀 패자</th>
+      <th style="text-align:left;padding:6px 10px;font-size:11px">상태</th>
+    </tr></thead><tbody>`;
+    results.forEach((r, i) => {
+      const wOk = !!r.wPlayer;
+      const lOk = !!r.lPlayer;
+      const ok = wOk && lOk;
+      const wStyle = wOk ? 'color:#16a34a;font-weight:700' : 'color:#dc2626;font-weight:700;text-decoration:underline dotted';
+      const lStyle = lOk ? 'color:#dc2626;font-weight:700' : 'color:#dc2626;font-weight:700;text-decoration:underline dotted';
+      const statusBadge = ok
+        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px">저장 가능</span>`
+        : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px">선수 없음</span>`;
+      html += `<tr style="background:${ok ? '' : '#fff5f5'}">
+        <td style="padding:5px 10px;color:var(--gray-l)">${r.lineNum}</td>
+        <td style="padding:5px 10px">${r.map !== '-' ? `<span style="background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 7px;font-size:11px">${r.map}</span>` : '<span style="color:var(--gray-l)">-</span>'}</td>
+        <td style="padding:5px 10px"><span style="${wStyle}">${r.winName}</span>${!wOk ? '<span style="font-size:10px;color:#dc2626;margin-left:4px">미등록</span>' : ''}</td>
+        <td style="padding:5px 10px;color:var(--gray-l);font-size:11px">vs</td>
+        <td style="padding:5px 10px"><span style="${lStyle}">${r.loseName}</span>${!lOk ? '<span style="font-size:10px;color:#dc2626;margin-left:4px">미등록</span>' : ''}</td>
+        <td style="padding:5px 10px">${statusBadge}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  if (errors.length > 0) {
+    html += `<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:11px;color:#dc2626">
+      <b>⚠️ 인식 불가 ${errors.length}줄</b> (건너뜀):<br>
+      ${errors.map(e => `<span style="font-family:monospace;opacity:.8">${e.line}행: ${e.raw.slice(0, 60)}${e.raw.length > 60 ? '...' : ''}</span>`).join('<br>')}
+    </div>`;
+  }
+
+  const savable = results.filter(r => r.wPlayer && r.lPlayer);
+  if (savable.length > 0 && applyBtn) {
+    applyBtn.style.display = 'inline-flex';
+    applyBtn.textContent = `✅ ${savable.length}건 저장하기`;
+  } else if (applyBtn) {
+    applyBtn.style.display = 'none';
+  }
+
+  previewEl.innerHTML = html;
+  window._pasteResults = results; // 저장용 캐시
+}
+
+function pasteApply() {
+  if (!window._pasteResults) return;
+  if (!isLoggedIn) return alert('로그인이 필요합니다.');
+
+  const mode = document.getElementById('paste-mode')?.value || 'individual';
+  const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
+  const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
+
+  if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
+
+  const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
+  if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
+
+  const matchId = genId();
+  // 게임마다 개별 세트로 구성 (기존 saveMatch 방식과 동일)
+  const setsSnap = savable.map(r => ({
+    scoreA: 1, scoreB: 0, winner: 'A',
+    games: [{ playerA: r.winName, playerB: r.loseName, map: r.map || '-', winner: 'A' }]
+  }));
+  const totalA = savable.length; // A(승자)팀 세트 승
+  const totalB = 0;
+
+  // 개인 전적 반영
+  savable.forEach(r => {
+    applyGameResult(r.winName, r.loseName, dateVal, r.map || '-', matchId);
+  });
+
+  // 모드별 기록 추가
+  if (mode === 'mini') {
+    // 팀 자동 결정: 승자들의 소속대학 중 최다
+    const univCount = {};
+    savable.forEach(r => { const u = r.wPlayer?.univ; if(u) univCount[u] = (univCount[u]||0)+1; });
+    const teamA = Object.entries(univCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const univCountB = {};
+    savable.forEach(r => { const u = r.lPlayer?.univ; if(u) univCountB[u] = (univCountB[u]||0)+1; });
+    const teamB = Object.entries(univCountB).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    miniM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa: totalA, sb: totalB, sets: setsSnap });
+  } else if (mode === 'univm') {
+    const univCount = {};
+    savable.forEach(r => { const u = r.wPlayer?.univ; if(u) univCount[u] = (univCount[u]||0)+1; });
+    const teamA = Object.entries(univCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const univCountB = {};
+    savable.forEach(r => { const u = r.lPlayer?.univ; if(u) univCountB[u] = (univCountB[u]||0)+1; });
+    const teamB = Object.entries(univCountB).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    univM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa: totalA, sb: totalB, sets: setsSnap });
+  } else if (mode === 'comp') {
+    if (compName && !compNames.includes(compName)) compNames.push(compName);
+    curComp = compName;
+    comps.unshift({ _id: matchId, d: dateVal, n: compName, a: '', b: '', sa: totalA, sb: totalB, sets: setsSnap });
+  }
+  // individual: 개인 전적만 (이미 applyGameResult 처리됨)
+
+  if (typeof fixPoints === 'function') fixPoints();
+  save();
+  render();
+
+  // 모달 닫고 완료 알림
+  cm('pasteModal');
+  document.getElementById('paste-input').value = '';
+  document.getElementById('paste-preview').innerHTML = '';
+  document.getElementById('paste-apply-btn').style.display = 'none';
+  window._pasteResults = null;
+
+  // 성공 토스트
+  const toast = document.createElement('div');
+  toast.textContent = `✅ ${savable.length}건 경기 결과가 저장되었습니다!`;
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:fadein .2s';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2800);
+}
+
+function openPasteModal() {
+  if (!isLoggedIn) return alert('로그인이 필요합니다.');
+  const dateInput = document.getElementById('paste-date');
+  if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+  om('pasteModal');
+  // 기존 리스너 먼저 제거 후 재등록 (중복 방지)
+  if(window._pasteImgListener){
+    document.removeEventListener('paste', window._pasteImgListener);
+    window._pasteImgListener = null;
+  }
+  // Ctrl+V 이미지 캡처 리스너
+  window._pasteImgListener = function(e) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) pasteHandleImageFile(file);
+        break;
+      }
+    }
+  };
+  document.addEventListener('paste', window._pasteImgListener);
+}
+
+// pasteModal 닫힐 때 리스너 제거
+const _origCm = window.cm;
+
+function pasteHandleImageDrop(e) {
+  const file = e.dataTransfer?.files?.[0];
+  if (file && file.type.startsWith('image/')) pasteHandleImageFile(file);
+}
+
+async function pasteHandleImageFile(file) {
+  if (!file) return;
+  const statusEl = document.getElementById('paste-ocr-status');
+  if (statusEl) { statusEl.style.display='block'; statusEl.textContent='🤖 AI가 이미지를 분석 중입니다...'; }
+
+  try {
+    // 이미지를 base64로 변환
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    // 플레이어 이름 목록 전달
+    const playerNames = players.map(p => p.name).join(', ');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/png', data: base64 } },
+            { type: 'text', text: `이 이미지는 스타크래프트 경기 결과입니다. 경기 결과를 다음 형식으로 한 줄씩 추출해주세요:
+[맵이름] 선수명종족 (승) vs (패) 선수명종족
+
+규칙:
+- 종족은 T(테란), Z(저그), P(프로토스) 중 하나
+- 맵 이름을 알 수 없으면 [맵] 생략
+- 승자는 (승), 패자는 (패)
+- 번호(1. 2. 등) 없이 순수 결과만
+- 등록된 선수 목록: ${playerNames}
+- 결과 형식만 출력, 설명 없이
+
+예시 출력:
+[투혼] 도재욱P (승) vs (패) 유영진T
+[라데리안] 변현제P (패) vs (승) 이재호T` }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.find(c => c.type === 'text')?.text || '';
+
+    if (text.trim()) {
+      const textarea = document.getElementById('paste-input');
+      if (textarea) {
+        textarea.value = (textarea.value ? textarea.value + '\n' : '') + text.trim();
+        pastePreview();
+      }
+      if (statusEl) statusEl.textContent = '✅ AI 분석 완료! 아래 결과를 확인하고 저장하세요.';
+    } else {
+      if (statusEl) statusEl.textContent = '⚠️ 이미지에서 경기 결과를 찾지 못했습니다. 텍스트로 직접 입력해주세요.';
+    }
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '❌ 분석 실패: ' + (err.message || '알 수 없는 오류');
+    console.error('OCR error:', err);
+  }
 }
 </script>
 </body>
