@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타대학 데이터 센터 V35</title>
+<title>⭐ 스타대학 데이터 센터 V36</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -515,7 +515,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V35</div>
+  <div class="hdr-ver">V36</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -3405,8 +3405,8 @@ function setBuilderHTML(bld, mode){
           <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
         </div>`;
       set.games.forEach((g,gi)=>{
-        const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
-        const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
@@ -3450,17 +3450,15 @@ function saveMatch(mode){
   const date=bld.date||new Date().toISOString().slice(0,10);
   const matchId=genId();
   const setsSnap=bld.sets.map(s=>({scoreA:s.scoreA,scoreB:s.scoreB,winner:s.winner,games:s.games.map(g=>({...g}))}));
-  // pro 모드는 선수 개인 history에 반영하지 않음
-  if(mode!=='pro'){
-    bld.sets.forEach(set=>{
-      set.games.forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',matchId);
-      });
+  // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
+  bld.sets.forEach(set=>{
+    set.games.forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wName=g.winner==='A'?g.playerA:g.playerB;
+      const lName=g.winner==='A'?g.playerB:g.playerA;
+      applyGameResult(wName,lName,date,g.map||'-',matchId);
     });
-  }
+  });
   if(mode==='mini'){
     if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
     miniM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap});
@@ -3525,7 +3523,7 @@ function saveMatch(mode){
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap
     });
   }
-  BLD[mode]=null;save();
+  BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
   if(mode==='mini')miniSub='records';
   else if(mode==='univm')univmSub='records';
   else if(mode==='ck')ckSub='records';
@@ -3795,11 +3793,12 @@ function buildProInputHTML(){
   const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   if(!bld.tierFilters)bld.tierFilters=[];
   const tf=bld.tierFilters;
-  // 남자 + PRO_TIERS 해당 선수만
+  // god~1티어 선수 (클릭 목록: 기본 남자, 이미 팀에 추가된 여성은 포함)
+  const allAddedNames=new Set([...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name));
   const eligible=players.filter(p=>
-    p.gender==='M' &&
     PRO_TIERS.includes(p.tier) &&
-    (tf.length===0||tf.includes(p.tier))
+    (tf.length===0||tf.includes(p.tier)) &&
+    (p.gender==='M' || allAddedNames.has(p.name)) // 여자는 이미 추가된 경우만 목록에 표시
   ).sort((a,b)=>{
     const ti=t=>PRO_TIERS.indexOf(t);
     return ti(a.tier)-ti(b.tier)||(a.name||'').localeCompare(b.name||'');
@@ -3813,7 +3812,7 @@ function buildProInputHTML(){
 
     <!-- ① 참가 티어 선택 -->
     <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:10px 14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택 · god~1티어 · 남자만 / 검색은 여성 포함)</span></div>
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택 · god~1티어 · 검색으로 여성 선수도 추가 가능)</span></div>
       <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="BLD['pro'].tierFilters=[];BLD['pro'].membersA=[];BLD['pro'].membersB=[];BLD['pro'].sets=[];render()">전체</button>
         ${PRO_TIERS.map(t=>`<button class="tier-filter-btn ${tf.includes(t)?'on':''}" onclick="proToggleTier('${t}')">${getTierLabel(t)}</button>`).join('')}
@@ -3832,10 +3831,10 @@ function buildProInputHTML(){
               const inB=mB.some(m=>m.name===p.name);
               const bg=inA?'#2563eb':inB?'#dc2626':gc(p.univ);
               if(inA||inB){
-                return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;opacity:0.55">${p.name}<span style="opacity:.8;font-size:10px;margin-left:2px">${p.univ}/${p.tier}</span><span style="background:rgba(255,255,255,.3);border-radius:2px;padding:0 4px;font-size:9px;font-weight:800;margin-left:3px">${inA?'A팀':'B팀'}</span></span>`;
+                return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;opacity:0.55">${p.name}${p.gender==='F'?'<span style="font-size:9px;color:#fda4af">♀</span>':''}<span style="opacity:.8;font-size:10px;margin-left:2px">${p.univ}/${p.tier}</span><span style="background:rgba(255,255,255,.3);border-radius:2px;padding:0 4px;font-size:9px;font-weight:800;margin-left:3px">${inA?'A팀':'B팀'}</span></span>`;
               }
               return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;padding:3px 6px;border-radius:6px;font-size:11px">
-                <span style="font-weight:700">${p.name}</span><span style="opacity:.8;font-size:10px">${p.univ}/${p.tier}</span>
+                <span style="font-weight:700">${p.name}${p.gender==='F'?'<span style="font-size:9px;color:#fda4af;margin-left:2px">♀</span>':''}</span><span style="opacity:.8;font-size:10px">${p.univ}/${p.tier}</span>
                 <button onclick="proAddPlayer('A','${p.name}')" style="background:var(--white);color:#2563eb;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer;margin-left:2px">A팀</button>
                 <button onclick="proAddPlayer('B','${p.name}')" style="background:var(--white);color:#dc2626;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer">B팀</button>
               </span>`;
@@ -3876,6 +3875,7 @@ function proSearchPlayer(team){
   const bld=BLD['pro']||{};
   const tf=bld.tierFilters||[];
   const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
+  // 검색 시에는 gender 제한 없음 (혼성 경기 지원) - 티어 필터만 적용
   const results=players.filter(p=>
     PRO_TIERS.includes(p.tier) &&
     (tf.length===0||tf.includes(p.tier)) &&
@@ -3888,10 +3888,10 @@ function proSearchPlayer(team){
   }
   dropEl.innerHTML=results.map(p=>`<div onclick="proAddPlayer('${team}','${p.name}');document.getElementById('pro-${team.toLowerCase()}-search').value='';document.getElementById('pro-${team.toLowerCase()}-drop').style.display='none'"
     style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px"
-    onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
+    onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background=''">
     <span style="display:inline-block;width:28px;height:28px;border-radius:6px;background:${gc(p.univ)};color:#fff;text-align:center;line-height:28px;font-size:11px;font-weight:700;flex-shrink:0">${(p.race||'?').charAt(0)}</span>
     <div>
-      <div style="font-weight:700">${p.name} <span style="font-size:10px;background:${gc(p.univ)};color:#fff;padding:1px 5px;border-radius:3px">${p.univ}</span></div>
+      <div style="font-weight:700">${p.name}${p.gender==='F'?'<span style="color:#ec4899;font-size:10px;margin-left:3px">♀</span>':''} <span style="font-size:10px;background:${gc(p.univ)};color:#fff;padding:1px 5px;border-radius:3px">${p.univ}</span></div>
       <div style="font-size:10px;color:var(--gray-l)">${p.tier||'-'} · ${p.race||'-'}${p.memo?` · ${p.memo.slice(0,20)}`:''}</div>
     </div>
   </div>`).join('');
