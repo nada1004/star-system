@@ -733,6 +733,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
       <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.9;margin-top:-1px">
         형식 A: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
         형식 B: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">선수명[티어종족] ❌🆚⭕ 선수명[티어종족] 🌐맵</span><br>
+        형식 C: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">1세트 실피 이재호 0:1 변현제</span> (누적 스코어 자동 판별)<br>
         세트 구분: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">══1세트══ / --2세트-- / 1셋ㅡㅡ</span> 형태 모두 인식<br>
         맵 약자: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">녹아 · 녹 → 녹아웃 / 라데 → 라데리안 / 도미 → 도미네이터</span> 등 자동 변환<br>
         <span style="color:#6b7280;font-size:11px">💡 선수 약자 자동 인식 (예: 주양 → 소주양) · 중복 시 버튼으로 직접 선택 · 3세트 이상은 에이스전으로 표시</span>
@@ -8237,11 +8238,71 @@ function getMapAlias() {
 }
 
 /**
+ * 형식 C 파싱: N세트 맵약자 선수A 누적A:누적B 선수B
+ * 예) "1세트 실피 이재호 0:1 변현제"
+ * 누적 스코어를 이전 줄과 비교해 이번 세트 승자를 판별.
+ * prevScore = {a, b} (직전까지의 누적), null이면 0:0 기준
+ * 반환: { winName, loseName, map, nextScore:{a,b} } | null
+ */
+function parseFormatC(line, prevScore) {
+  const t = line.trim();
+  // 패턴: (N세트|N셋)? 맵약자? 이름A 숫자:숫자 이름B
+  // N세트/N셋은 앞에 올 수도, 없을 수도 있음
+  // 맵약자는 한글 1~6자 (선택)
+  const m = t.match(
+    /^(?:\d+\s*(?:세트|셋)\s+)?(\S+)\s+(\S+?)\s+(\d+)\s*:\s*(\d+)\s+(\S+)$/
+  );
+  if (!m) return null;
+
+  const mapRaw = m[1];
+  const nameA  = m[2];
+  const scoreA = parseInt(m[3]);
+  const scoreB = parseInt(m[4]);
+  const nameB  = m[5];
+
+  // 맵약자인지 확인: getMapAlias에 있거나, maps 배열에 있으면 맵으로 간주
+  // 없으면 맵 없이 nameA=mapRaw, nameB 재배치
+  const alias = getMapAlias();
+  let map = '-';
+  let playerA = nameA;
+  let playerB = nameB;
+
+  if (alias[mapRaw] || (typeof maps !== 'undefined' && maps.includes(mapRaw))) {
+    map = alias[mapRaw] || mapRaw;
+    if (typeof maps !== 'undefined' && !maps.includes(map)) maps.push(map);
+  } else {
+    // 맵 없는 형식: "이재호 0:1 변현제" (mapRaw가 사실 선수이름)
+    // N세트가 앞에 있었다면 m[1]은 첫 선수 이름
+    playerA = mapRaw;
+    // nameA는 스코어A 앞에 온 토큰이므로 playerB = nameB
+    // 실제로는 "이재호 0:1 변현제" → mapRaw=이재호, nameA=0(숫자불일치)
+    // 이 경우 m 자체가 매칭 안 되므로 별도 패턴 처리
+    map = '-';
+  }
+
+  const prev = prevScore || { a: 0, b: 0 };
+  const deltaA = scoreA - prev.a;
+  const deltaB = scoreB - prev.b;
+
+  // 한 세트에서 한 쪽만 1점 올라야 정상
+  if (deltaA + deltaB !== 1) return null;
+  if (deltaA < 0 || deltaB < 0) return null;
+
+  const aWon = deltaA === 1;
+  return {
+    winName:   aWon ? playerA : playerB,
+    loseName:  aWon ? playerB : playerA,
+    map,
+    nextScore: { a: scoreA, b: scoreB }
+  };
+}
+
+/**
  * 한 줄 파싱 → {winName, loseName, map} | null
  *
  * 지원 형식 A: [맵] 선수명종족 (승) vs (패) 선수명종족
  * 지원 형식 B: 선수명종족 ✅ 🆚 ⬜ 선수명종족 🌍맵  (이모지 형식)
- *   ✅ = 왼쪽 선수 승리,  ⬜ = 패배
+ * 지원 형식 C: N세트 맵약자 선수A 누적A:누적B 선수B
  *   앞 번호(1. 1️⃣ ① 등) 자동 제거
  */
 // 부분 이름으로 선수 찾기 (약자 매칭)
@@ -8442,10 +8503,35 @@ function pastePreview() {
   const results = [];
   const errors = [];
   let currentSet = 1;
+  let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }
+  let isFormatC    = false;  // 이번 블록이 형식 C인지
 
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
+
+    // ── 형식 C 우선 시도: N세트 맵 선수A 누적A:누적B 선수B ──
+    const cParsed = parseFormatC(trimmed, formatCScore);
+    if (cParsed) {
+      // 형식 C 세트 번호 추출 (줄 앞 "N세트/N셋")
+      const setNumM = trimmed.match(/^(\d+)\s*(?:세트|셋)/);
+      if (setNumM) currentSet = parseInt(setNumM[1]);
+      formatCScore = cParsed.nextScore;
+      isFormatC = true;
+      const wMatch = findPlayerByPartialName(cParsed.winName);
+      const lMatch = findPlayerByPartialName(cParsed.loseName);
+      results.push({
+        winName: cParsed.winName, loseName: cParsed.loseName, map: cParsed.map,
+        setNum: currentSet,
+        wPlayer: wMatch.player, lPlayer: lMatch.player,
+        wCandidates: wMatch.candidates, lCandidates: lMatch.candidates,
+        lineNum: idx + 1, rawLine: trimmed
+      });
+      return;
+    }
+
+    // 형식 C 블록이 끝나면 스코어 초기화
+    if (isFormatC) { formatCScore = null; isFormatC = false; }
 
     // 세트 구분선 처리
     const sepResult = parseSetSeparator(trimmed);
