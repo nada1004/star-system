@@ -5938,7 +5938,6 @@ function rStats(C,T){
     {id:'mismatch',    lbl:'⚡ 미스매치'},
     {id:'heatmap',     lbl:'📅 활동 히트맵'},
     {id:'tierwin',     lbl:'🎯 티어별 승률'},
-    {id:'maprank',     lbl:'🗺️ 맵별 특화'},
     {id:'univmatrix',  lbl:'🏛️ 대학 매트릭스'},
     {id:'racetrend',   lbl:'🔬 종족 트렌드'},
     ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
@@ -5961,7 +5960,6 @@ function rStats(C,T){
   else if(statsSub==='mismatch')h+=statsMismatchHTML();
   else if(statsSub==='heatmap')  h+=statsHeatmapHTML();
   else if(statsSub==='tierwin')  h+=statsTierWinHTML();
-  else if(statsSub==='maprank')  h+=statsMapRankHTML();
   else if(statsSub==='univmatrix')h+=statsUnivMatrixHTML();
   else if(statsSub==='racetrend')h+=statsRaceTrendHTML();
   else if(statsSub==='csvexport')h+=statsCsvExportHTML();
@@ -7529,118 +7527,7 @@ function statsTierWinHTML(){
   </div></div>`;
 }
 
-/* ══════════════════════════════════════
-   C. 맵별 선수 특화 분석
-══════════════════════════════════════ */
-let _mapRankSelMap='';
-function statsMapRankHTML(){
-  // 맵 이름: 설정된 maps + 경기 히스토리에 있는 맵 모두 합산
-  const histMaps=[...new Set(players.flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))];
-  // maps 설정 배열에서도 추가 (maps = 전체 맵 설정)
-  const configMaps=(maps||[]).filter(m=>m&&m!=='-');
-  const allMaps=[...new Set([...histMaps,...configMaps])].sort();
-  if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:11px">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
-  if(!_mapRankSelMap||!allMaps.includes(_mapRankSelMap)) _mapRankSelMap=allMaps[0];
 
-  const mapData={};
-  allMaps.forEach(m=>mapData[m]={});
-
-  // ── 1차: player.history 기준으로 집계 (주 소스)
-  // history의 matchId를 추적해 이중 집계 방지
-  const countedMatchIds=new Set();
-  players.forEach(p=>{
-    (p.history||[]).forEach(h=>{
-      if(!h.map||h.map==='-') return;
-      if(!mapData[h.map]) mapData[h.map]={};
-      if(!mapData[h.map][p.name]) mapData[h.map][p.name]={w:0,l:0,univ:p.univ,tier:p.tier};
-      if(h.result==='승') mapData[h.map][p.name].w++;
-      else mapData[h.map][p.name].l++;
-      if(h.matchId) countedMatchIds.add(h.matchId+'_'+p.name);
-    });
-  });
-
-  // ── 2차: sets.games 보완 (history에 없는 게임 - matchId 없거나 미매핑)
-  const tourMatchSets=[];
-  (tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMatchSets.push(m))));
-  const allMatchSets=[...miniM,...univM,...ckM,...comps,...proM,...tourMatchSets];
-  allMatchSets.forEach(m=>{
-    (m.sets||[]).forEach((set,si)=>{
-      const setMap=set.map||(m.maps&&m.maps[si])||m.map||'';
-      (set.games||[]).forEach(g=>{
-        const mapName=g.map||setMap||'';
-        if(!mapName||mapName==='-') return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        // matchId로 이미 history에서 집계된 게임이면 스킵
-        // matchId가 없으면 player.history에서 이미 집계됐을 가능성이 높으므로 스킵
-        if(!g.matchId) return;
-        const wmKey=wn?g.matchId+'_'+wn:'';
-        const lmKey=ln?g.matchId+'_'+ln:'';
-        if(!mapData[mapName]) mapData[mapName]={};
-        if(wn&&!countedMatchIds.has(wmKey)){
-          const p=players.find(x=>x.name===wn);
-          if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
-          mapData[mapName][wn].w++;
-        }
-        if(ln&&!countedMatchIds.has(lmKey)){
-          const p=players.find(x=>x.name===ln);
-          if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
-          mapData[mapName][ln].l++;
-        }
-      });
-    });
-  });
-
-  // 맵 전체 통계 — 승+패 합산 후 /2 (양 선수 모두 집계되므로)
-  const mapSummary=allMaps.map(m=>{
-    const entries=Object.values(mapData[m]||{});
-    const rawTotal=entries.reduce((s,v)=>s+v.w+v.l,0);
-    const total=Math.round(rawTotal/2);
-    return{name:m,games:total,players:Object.keys(mapData[m]||{}).length};
-  }).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name,'ko'));
-
-  const selData=Object.entries(mapData[_mapRankSelMap]||{})
-    .map(([name,s])=>({name,w:s.w,l:s.l,univ:s.univ,tier:s.tier,tot:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}))
-    .filter(p=>p.tot>=2)
-    .sort((a,b)=>b.rate-a.rate||b.tot-a.tot);
-
-  return`<div style="display:flex;flex-direction:column;gap:14px">
-  <div class="ssec">
-    <h4 style="margin-bottom:12px">🗺️ 맵별 경기 수 <span style="font-size:11px;color:var(--gray-l);font-weight:400">클릭하여 선택</span></h4>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${mapSummary.map(m=>`
-        <button onclick="_mapRankSelMap='${m.name.replace(/'/g,"\\'")}';render()"
-          style="padding:6px 14px;border-radius:8px;border:2px solid ${_mapRankSelMap===m.name?'var(--blue)':'var(--border2)'};background:${_mapRankSelMap===m.name?'var(--blue-l)':'var(--white)'};font-size:12px;font-weight:${_mapRankSelMap===m.name?'700':'500'};color:${_mapRankSelMap===m.name?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
-          ${m.name} <span style="font-size:10px;opacity:.6">${m.games}게임</span>
-        </button>`).join('')}
-    </div>
-  </div>
-  <div class="ssec" id="stats-maprank-sec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h4 style="margin:0">🏆 <span style="color:var(--blue)">${_mapRankSelMap}</span> 맵 강자 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(2경기 이상)</span></h4>
-    </div>
-    ${selData.length===0?'<p style="color:var(--gray-l)">해당 맵 기록이 없습니다.</p>':`
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th></tr></thead>
-      <tbody>
-        ${selData.map((p,i)=>`<tr style="cursor:pointer" onclick="openPlayerModal('${p.name}')">
-          <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
-          <td style="font-weight:700;color:var(--blue)">${p.name}</td>
-          <td><span class="ubadge" style="background:${gc(p.univ)}">${p.univ}</span></td>
-          <td style="font-size:11px">${p.tier||'-'}</td>
-          <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
-          <td style="font-weight:800;color:${p.rate>=50?'var(--green)':'var(--red)'}">
-            ${p.rate}%
-            <div style="width:48px;height:4px;background:#f1f5f9;border-radius:2px;display:inline-block;margin-left:4px;vertical-align:middle;overflow:hidden">
-              <div style="width:${p.rate}%;height:100%;background:${p.rate>=50?'var(--green)':'var(--red)'};border-radius:2px"></div>
-            </div>
-          </td>
-          <td>${p.tot}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table></div>`}
-  </div></div>`;
-}
 
 /* ══════════════════════════════════════
    D. 대학 간 상대전적 매트릭스
