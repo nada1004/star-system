@@ -8246,45 +8246,60 @@ function getMapAlias() {
  */
 function parseFormatC(line, prevScore) {
   const t = line.trim();
-  // 패턴: (N세트|N셋)? 맵약자? 이름A 숫자:숫자 이름B
-  // N세트/N셋은 앞에 올 수도, 없을 수도 있음
-  // 맵약자는 한글 1~6자 (선택)
-  const m = t.match(
-    /^(?:\d+\s*(?:세트|셋)\s+)?(\S+)\s+(\S+?)\s+(\d+)\s*:\s*(\d+)\s+(\S+)$/
-  );
-  if (!m) return null;
 
-  const mapRaw = m[1];
-  const nameA  = m[2];
-  const scoreA = parseInt(m[3]);
-  const scoreB = parseInt(m[4]);
-  const nameB  = m[5];
+  // 형식 C-1: N세트 맵 선수A 점수A:점수B 선수B  (맵 있음, 5토큰)
+  // 형식 C-2: N세트 선수A 점수A:점수B 선수B      (맵 없음, 4토큰)
+  // 앞의 "N세트 / N셋" 접두어 제거 후 파싱
+  const stripped = t.replace(/^\d+\s*(?:세트|셋)\s+/, '');
 
-  // 맵약자인지 확인: getMapAlias에 있거나, maps 배열에 있으면 맵으로 간주
-  // 없으면 맵 없이 nameA=mapRaw, nameB 재배치
-  const alias = getMapAlias();
-  let map = '-';
-  let playerA = nameA;
-  let playerB = nameB;
+  // C-1 시도: 맵 선수A 점수:점수 선수B (5토큰)
+  const m1 = stripped.match(/^(\S+)\s+(\S+)\s+(\d+)\s*:\s*(\d+)\s+(\S+)$/);
+  // C-2 시도: 선수A 점수:점수 선수B (3토큰, 가운데 점수)
+  const m2 = stripped.match(/^(\S+)\s+(\d+)\s*:\s*(\d+)\s+(\S+)$/);
 
-  if (alias[mapRaw] || (typeof maps !== 'undefined' && maps.includes(mapRaw))) {
-    map = alias[mapRaw] || mapRaw;
-    if (typeof maps !== 'undefined' && !maps.includes(map)) maps.push(map);
+  let mapRaw = null, playerA, playerB, scoreA, scoreB;
+
+  if (m1) {
+    const alias = getMapAlias();
+    const tok0 = m1[1];
+    // tok0이 맵 약자/이름이면 C-1, 아니면 C-2처럼 선수이름
+    if (alias[tok0] || (typeof maps !== 'undefined' && maps.includes(tok0))) {
+      // C-1: 맵 있음
+      mapRaw  = tok0;
+      playerA = m1[2];
+      scoreA  = parseInt(m1[3]);
+      scoreB  = parseInt(m1[4]);
+      playerB = m1[5];
+    } else if (m2) {
+      // tok0이 맵이 아니면 C-2로 재시도
+      playerA = m2[1];
+      scoreA  = parseInt(m2[2]);
+      scoreB  = parseInt(m2[3]);
+      playerB = m2[4];
+    } else {
+      return null;
+    }
+  } else if (m2) {
+    playerA = m2[1];
+    scoreA  = parseInt(m2[2]);
+    scoreB  = parseInt(m2[3]);
+    playerB = m2[4];
   } else {
-    // 맵 없는 형식: "이재호 0:1 변현제" (mapRaw가 사실 선수이름)
-    // N세트가 앞에 있었다면 m[1]은 첫 선수 이름
-    playerA = mapRaw;
-    // nameA는 스코어A 앞에 온 토큰이므로 playerB = nameB
-    // 실제로는 "이재호 0:1 변현제" → mapRaw=이재호, nameA=0(숫자불일치)
-    // 이 경우 m 자체가 매칭 안 되므로 별도 패턴 처리
-    map = '-';
+    return null;
   }
 
+  // 맵 이름 확정
+  const alias = getMapAlias();
+  let map = '-';
+  if (mapRaw) {
+    map = alias[mapRaw] || mapRaw;
+    if (typeof maps !== 'undefined' && !maps.includes(map)) maps.push(map);
+  }
+
+  // 누적 스코어 변화로 이번 세트 승패 판별
   const prev = prevScore || { a: 0, b: 0 };
   const deltaA = scoreA - prev.a;
   const deltaB = scoreB - prev.b;
-
-  // 한 세트에서 한 쪽만 1점 올라야 정상
   if (deltaA + deltaB !== 1) return null;
   if (deltaA < 0 || deltaB < 0) return null;
 
@@ -8476,8 +8491,11 @@ function parseSetSeparator(line) {
 
   // 패턴 1: 구분선 문자가 3개 이상 포함된 줄 (세트 숫자 유무 무관)
   // 예: ─────1세트─────, =====2세트=====, 1셋ㅡㅡㅡㅡ, --2세트--, ======
+  // 구분선: 특수문자 3개 이상 + 줄 길이의 40% 이상이 구분선 문자여야 세트구분으로 인식
+  // (이름에 하이픈 있는 경우 오파싱 방지)
   const sepCount = (t.match(/[═─=\-ㅡ_~]/g) || []).length;
-  if (sepCount >= 2) {
+  const isSepLine = sepCount >= 3 && sepCount >= Math.floor(t.length * 0.4);
+  if (isSepLine) {
     const n = extractSetNum(t);
     return n !== null ? n : 0; // 0 = 번호 없으면 자동 증가
   }
@@ -8670,7 +8688,7 @@ function renderPastePreview(results, errors) {
           ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;white-space:nowrap">선택 필요</span>`
           : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px;white-space:nowrap">미등록</span>`;
 
-      const setLabel = r.setNum >= 3 ? '🎯 에이스전' : (r.setNum||1) + '세트';
+      const setLabel = r.setNum >= 3 ? `🎯 ${r.setNum}세트` : (r.setNum||1) + '세트';
       const setColor = r.setNum >= 3 ? '#7c3aed' : 'var(--blue)';
 
       html += `<tr style="background:${ok ? '' : wAmbig||lAmbig ? '#fffbeb' : '#fff5f5'}">
@@ -8744,22 +8762,45 @@ function pasteApply() {
 
   const matchId = genId();
 
-  // 세트번호별로 게임 묶기 (1세트, 2세트, 에이스전 등 구분 저장)
+  // ── setsSnap 구성 ──
+  // 붙여넣기 입력의 각 행은 "개별 게임 1건"
+  // 세트번호별로 묶되, 각 게임의 실제 승자(playerA)를 기록
   const setMap = {};
   savable.forEach(r => {
     const sn = r.setNum || 1;
     if (!setMap[sn]) setMap[sn] = [];
     setMap[sn].push(r);
   });
-  const setsSnap = Object.keys(setMap).sort((a,b) => a-b).map(sn => {
-    const games = setMap[sn].map(r => ({
-      playerA: r.wPlayer.name, playerB: r.lPlayer.name,
-      map: r.map || '-', winner: 'A'
-    }));
-    const scoreA = games.length;
-    return { scoreA, scoreB: 0, winner: 'A', games };
+
+  // 전체 승자 기준 팀 결정 (가장 많이 이긴 쪽이 teamA)
+  const winCount = {};
+  savable.forEach(r => {
+    const u = r.wPlayer.name;
+    winCount[u] = (winCount[u] || 0) + 1;
   });
-  const totalA = setsSnap.length;
+  // 팀A = 가장 많이 이긴 선수, 팀B = 나머지 (1:1 매치업이면 각각 1명)
+  // mini/univm은 대학 기준으로 아래서 별도 계산
+
+  const setsSnap = Object.keys(setMap).sort((a,b) => a-b).map(sn => {
+    const rows = setMap[sn];
+    // 세트 내 게임들: playerA = 승자, playerB = 패자, winner 항상 'A'
+    const games = rows.map(r => ({
+      playerA: r.wPlayer.name,
+      playerB: r.lPlayer.name,
+      map: r.map || '-',
+      winner: 'A'
+    }));
+    // 세트 스코어 = 이 세트 안에서 각 선수의 승 수
+    // (단판 세트는 scoreA=1, scoreB=0)
+    return { scoreA: games.length, scoreB: 0, winner: 'A', games };
+  });
+
+  // totalA = 승리 게임 수, totalB = 패배 게임 수
+  // → 붙여넣기 입력에서는 팀 개념이 없으므로 저장 모드에 따라 계산
+  // mini/univm: 대학 기준 팀 구분
+  // pro: A팀(wPlayer)/B팀(lPlayer) 구분 유지
+  // 기타: 승리 게임 수 vs 패배 게임 수 = savable.length vs 0 (개인전)
+  const totalA = savable.length;
   const totalB = 0;
 
   // 개인 전적 반영 (DB 실제 이름으로)
@@ -8769,23 +8810,29 @@ function pasteApply() {
 
   // 모드별 기록 추가
   if (mode === 'mini') {
-    const univCount = {};
-    savable.forEach(r => { const u = r.wPlayer?.univ; if(u) univCount[u] = (univCount[u]||0)+1; });
-    const teamA = Object.entries(univCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-    const univCountB = {};
-    savable.forEach(r => { const u = r.lPlayer?.univ; if(u) univCountB[u] = (univCountB[u]||0)+1; });
-    const teamB = Object.entries(univCountB).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-    miniM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa: totalA, sb: totalB, sets: setsSnap });
+    const univWins = {}, univLosses = {};
+    savable.forEach(r => {
+      const wu = r.wPlayer?.univ; if(wu) univWins[wu] = (univWins[wu]||0)+1;
+      const lu = r.lPlayer?.univ; if(lu) univLosses[lu] = (univLosses[lu]||0)+1;
+    });
+    const teamA = Object.entries(univWins).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const teamB = Object.entries(univLosses).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const sa = univWins[teamA] || 0;
+    const sb = univWins[teamB] || 0;
+    miniM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa, sb, sets: setsSnap });
   } else if (mode === 'univm') {
-    const univCount = {};
-    savable.forEach(r => { const u = r.wPlayer?.univ; if(u) univCount[u] = (univCount[u]||0)+1; });
-    const teamA = Object.entries(univCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-    const univCountB = {};
-    savable.forEach(r => { const u = r.lPlayer?.univ; if(u) univCountB[u] = (univCountB[u]||0)+1; });
-    const teamB = Object.entries(univCountB).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-    univM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa: totalA, sb: totalB, sets: setsSnap });
+    const univWins = {}, univLosses = {};
+    savable.forEach(r => {
+      const wu = r.wPlayer?.univ; if(wu) univWins[wu] = (univWins[wu]||0)+1;
+      const lu = r.lPlayer?.univ; if(lu) univLosses[lu] = (univLosses[lu]||0)+1;
+    });
+    const teamA = Object.entries(univWins).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const teamB = Object.entries(univLosses).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const sa = univWins[teamA] || 0;
+    const sb = univWins[teamB] || 0;
+    univM.unshift({ _id: matchId, d: dateVal, a: teamA, b: teamB, sa, sb, sets: setsSnap });
   } else if (mode === 'pro') {
-    // 프로리그: 세트별로 묶어서 저장
+    // 프로리그: 세트별로 묶어서 저장 (승자=A팀, 패자=B팀)
     const mA = [], mB = [];
     savable.forEach(r => {
       if (!mA.find(m => m.name === r.wPlayer.name))
@@ -8793,7 +8840,11 @@ function pasteApply() {
       if (!mB.find(m => m.name === r.lPlayer.name))
         mB.push({ name: r.lPlayer.name, univ: r.lPlayer.univ||'', race: r.lPlayer.race||'', tier: r.lPlayer.tier||'' });
     });
-    proM.unshift({ _id: matchId, d: dateVal, sa: totalA, sb: totalB,
+    // A팀 = 가장 많이 이긴 선수들, B팀 = 진 선수들
+    // 실제 팀별 승수: A팀이 이긴 게임 = savable 전체(모두 wPlayer가 A팀원)
+    const proTotalA = savable.length;
+    const proTotalB = 0;
+    proM.unshift({ _id: matchId, d: dateVal, sa: proTotalA, sb: proTotalB,
       teamALabel: 'A팀', teamBLabel: 'B팀',
       teamAMembers: mA, teamBMembers: mB, sets: setsSnap,
       univWins: {}, univLosses: {}
