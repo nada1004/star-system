@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타대학 데이터 센터 V40</title>
+<title>⭐ 스타대학 데이터 센터 V41</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -536,7 +536,7 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 <div class="hdr">
   <span class="hdr-ico">🏆</span>
   <div class="hdr-title">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V40</div>
+  <div class="hdr-ver">V41</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -7544,27 +7544,10 @@ function statsMapRankHTML(){
 
   const mapData={};
   allMaps.forEach(m=>mapData[m]={});
-  // 경기 매치 데이터에서도 맵 집계 (sets.games)
-  // tourneys(조별대회) 경기도 포함
-  const tourMatchSets=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMatchSets.push(m))));
-  const allMatchSets=[...miniM,...univM,...ckM,...comps,...proM,...tourMatchSets];
-  // 경기 sets.games에서 맵별 선수 집계
-  allMatchSets.forEach(m=>{
-    (m.sets||[]).forEach((set,si)=>{
-      // set 레벨 맵 이름 (set.map 또는 maps[si] 또는 m.map)
-      const setMap=set.map||(m.maps&&m.maps[si])||m.map||'';
-      (set.games||[]).forEach(g=>{
-        const mapName=g.map||setMap||'';
-        if(!mapName||mapName==='-')return;
-        if(!mapData[mapName])mapData[mapName]={};
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(wn){const p=players.find(x=>x.name===wn);if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};mapData[mapName][wn].w++;}
-        if(ln){const p=players.find(x=>x.name===ln);if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};mapData[mapName][ln].l++;}
-      });
-    });
-  });
-  // 개인 히스토리에서도 맵 집계
+
+  // ── 1차: player.history 기준으로 집계 (주 소스)
+  // history의 matchId를 추적해 이중 집계 방지
+  const countedMatchIds=new Set();
   players.forEach(p=>{
     (p.history||[]).forEach(h=>{
       if(!h.map||h.map==='-') return;
@@ -7572,14 +7555,45 @@ function statsMapRankHTML(){
       if(!mapData[h.map][p.name]) mapData[h.map][p.name]={w:0,l:0,univ:p.univ,tier:p.tier};
       if(h.result==='승') mapData[h.map][p.name].w++;
       else mapData[h.map][p.name].l++;
+      if(h.matchId) countedMatchIds.add(h.matchId+'_'+p.name);
     });
   });
 
-  // 맵 전체 통계 - 모든 플레이어의 승+패 합산 (양쪽 집계이므로 /2)
+  // ── 2차: sets.games 보완 (history에 없는 게임 - matchId 없거나 미매핑)
+  const tourMatchSets=[];
+  (tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMatchSets.push(m))));
+  const allMatchSets=[...miniM,...univM,...ckM,...comps,...proM,...tourMatchSets];
+  allMatchSets.forEach(m=>{
+    (m.sets||[]).forEach((set,si)=>{
+      const setMap=set.map||(m.maps&&m.maps[si])||m.map||'';
+      (set.games||[]).forEach(g=>{
+        const mapName=g.map||setMap||'';
+        if(!mapName||mapName==='-') return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        // matchId로 이미 history에서 집계된 게임이면 스킵
+        const wmKey=g.matchId&&wn?g.matchId+'_'+wn:'';
+        const lmKey=g.matchId&&ln?g.matchId+'_'+ln:'';
+        if(!mapData[mapName]) mapData[mapName]={};
+        if(wn&&!countedMatchIds.has(wmKey)){
+          const p=players.find(x=>x.name===wn);
+          if(!mapData[mapName][wn])mapData[mapName][wn]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
+          mapData[mapName][wn].w++;
+        }
+        if(ln&&!countedMatchIds.has(lmKey)){
+          const p=players.find(x=>x.name===ln);
+          if(!mapData[mapName][ln])mapData[mapName][ln]={w:0,l:0,univ:p?.univ||'',tier:p?.tier||''};
+          mapData[mapName][ln].l++;
+        }
+      });
+    });
+  });
+
+  // 맵 전체 통계 — 승+패 합산 후 /2 (양 선수 모두 집계되므로)
   const mapSummary=allMaps.map(m=>{
     const entries=Object.values(mapData[m]||{});
     const rawTotal=entries.reduce((s,v)=>s+v.w+v.l,0);
-    const total=Math.round(rawTotal/2); // 승자/패자 양쪽 집계 보정
+    const total=Math.round(rawTotal/2);
     return{name:m,games:total,players:Object.keys(mapData[m]||{}).length};
   }).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name,'ko'));
 
