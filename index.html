@@ -495,12 +495,12 @@ body:not(.dark) .sharecard-modal-box{background:#ffffff;}
     <span class="flabel">⚔️ 경기 기록</span>
     <input type="date" id="m-date">
     <div class="swrap">
-      <input type="text" id="ws" placeholder="스트리머 검색..." onkeyup="fsearch('w')" style="width:130px;">
+      <input type="text" id="ws" placeholder="스트리머 검색..." onkeyup="fsearch('w');if(event.key==='Enter')recMatch()" style="width:130px;">
       <div id="wl" class="sdrop"></div>
     </div>
     <span style="font-weight:800;color:var(--gray-l);">VS</span>
     <div class="swrap">
-      <input type="text" id="ls" placeholder="스트리머 검색..." onkeyup="fsearch('l')" style="width:130px;">
+      <input type="text" id="ls" placeholder="스트리머 검색..." onkeyup="fsearch('l');if(event.key==='Enter')recMatch()" style="width:130px;">
       <div id="ll" class="sdrop"></div>
     </div>
     <select id="m-map"></select>
@@ -1135,6 +1135,24 @@ function buildPlayerDetailHTML(p){
       <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:4px;letter-spacing:.3px">ELO</div>
         <div style="font-weight:900;font-size:16px;color:#fff">${eloVal}</div>
+        ${(()=>{
+          // ELO 스파크라인: history에서 eloDelta로 추이 계산
+          const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
+          if(deltas.length<2) return '';
+          let cur=eloVal;
+          const points=[];
+          [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
+          let val=cur;
+          const elos=[val];
+          deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
+          const min=Math.min(...elos),max=Math.max(...elos);
+          const range=max-min||1;
+          const W=68,H=22;
+          const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*W)},${Math.round(H-((e-min)/range)*H)}`);
+          const last=elos[elos.length-1],prev=elos[elos.length-2];
+          const lineColor=last>=prev?'#86efac':'#fca5a5';
+          return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;margin:4px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        })()}
       </div>
     </div>
   </div>`;
@@ -1177,10 +1195,13 @@ function buildPlayerDetailHTML(p){
   // ── 최근 기록 ──
   if(p.history.length){
     const totalGames=p.history.length;
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임)</span></div>`;
+    const pageSize=20;
+    const showAll=totalGames<=pageSize;
+    const displayHist=p.history.slice(0,pageSize);
+    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · 최근 ${Math.min(pageSize,totalGames)}개 표시)</span></div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
-    p.history.slice(0,20).forEach((hh,hi)=>{
+    displayHist.forEach((hh,hi)=>{
       const isWin=hh.result==='승';
       const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
@@ -1197,7 +1218,13 @@ function buildPlayerDetailHTML(p){
         ${editBtnHTML}
       </tr>`;
     });
-    h+=`</tbody></table></div>`;
+    h+=`</tbody></table>`;
+    if(!showAll){
+      h+=`<div style="text-align:center;padding:8px;background:var(--surface);border-top:1px solid var(--border)">
+        <button class="btn btn-w btn-sm" onclick="goToPlayer('${p.name}')">📋 전체 ${totalGames}개 기록 보기 →</button>
+      </div>`;
+    }
+    h+=`</div>`;
   }
 
   // ── 선수 메모 ──
@@ -1343,9 +1370,23 @@ function buildUnivDetailHTML(univName){
 /* ══════════════════════════════════════
    성적 관리
 ══════════════════════════════════════ */
+let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
+let totalSearch=''; // 스트리머 탭 이름 검색
+
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
-  let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><colgroup>
+  // 필터 바
+  const raceOpts=['전체','T','Z','P'];
+  let filterBar=`<div class="fbar" style="margin-bottom:8px">
+    <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
+    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
+    <div style="margin-left:auto;position:relative;display:inline-block">
+      <input type="text" id="total-search" value="${totalSearch}" placeholder="🔍 이름 검색..."
+        oninput="totalSearch=this.value;render()"
+        style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:130px">
+    </div>
+  </div>`;
+  let h=filterBar+`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><colgroup>
     <col style="white-space:nowrap">
     <col style="white-space:nowrap">
     <col>
@@ -1364,8 +1405,13 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
+  let totalShown=0;
   getAllUnivs().forEach(u=>{
-    const up=players.filter(p=>p.univ===u.name);if(!up.length)return;
+    let up=players.filter(p=>p.univ===u.name);
+    if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalSearch.trim()) up=up.filter(p=>p.name.toLowerCase().includes(totalSearch.trim().toLowerCase()));
+    if(!up.length)return;
+    totalShown+=up.length;
     h+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?8:7}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
@@ -1387,7 +1433,12 @@ function rTotal(C,T){
       </tr>`;
     });
   });
+  if(totalShown===0){
+    h+=`<tr><td colspan="${isLoggedIn?8:7}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
+  }
   C.innerHTML=h+`</tbody></table></div>`;
+  // 검색 input 포커스 복원
+  const si=C.querySelector('#total-search');if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
 }
 
 /* ══════════════════════════════════════
@@ -1950,6 +2001,33 @@ async function captureVsCard(){
 
 function rHist(C,T){
   T.innerText='📅 대전 기록';
+
+  // ── 이번달 요약 배너 ──
+  (()=>{
+    const now=new Date();
+    const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const allM=[...miniM,...univM,...ckM,...comps];
+    const thisMonth=allM.filter(m=>(m.d||'').startsWith(ym)&&m.sa!=null&&m.sb!=null);
+    if(!thisMonth.length) return;
+    let wins=0,total=thisMonth.length;
+    thisMonth.forEach(m=>{if(m.sa>m.sb)wins++;else if(m.sb>m.sa)wins++;});
+    // 이번달 가장 많이 출전한 선수
+    const pCount={};
+    thisMonth.forEach(m=>{
+      (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+        if(g.playerA)pCount[g.playerA]=(pCount[g.playerA]||0)+1;
+        if(g.playerB)pCount[g.playerB]=(pCount[g.playerB]||0)+1;
+      }));
+    });
+    const mvp=Object.entries(pCount).sort((a,b)=>b[1]-a[1])[0];
+    const banner=document.createElement('div');
+    banner.style.cssText='background:linear-gradient(90deg,#1e40af,#3b82f6);color:#fff;border-radius:12px;padding:10px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 14px #3b82f644';
+    banner.innerHTML=`<span style="font-size:20px">📅</span>
+      <span style="font-size:13px;font-weight:700">${now.getMonth()+1}월 현재 <b style="font-size:18px">${total}</b>경기 진행</span>
+      ${mvp?`<span style="font-size:12px;background:rgba(255,255,255,.18);border-radius:8px;padding:3px 12px">🔥 최다출전 <b>${mvp[0]}</b> (${mvp[1]}게임)</span>`:''}
+      <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:auto">${ym}</span>`;
+    C.insertBefore(banner,C.firstChild);
+  })();
   const tabs=[
     {id:'race',lbl:'🧬 종족승률'},
     {id:'mini',lbl:'⚡ 미니대전'},
@@ -2359,6 +2437,7 @@ function recSummaryListHTML(arr, mode, context){
           </span>
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}')" title="결과 복사">📋</button>
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
           ${(mode!=='ck'&&mode!=='pro')||mode==='tt'?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
@@ -2537,6 +2616,7 @@ function compSummaryListHTML(context){
           </span>`:''}
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${a.replace(/'/g,"\\'")}',${m.sa||0},'${b.replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}')" title="결과 복사">📋</button>
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button>
           ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
           ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
@@ -4665,7 +4745,7 @@ function memberDoSearch(){
 }
 
 function memberOpenAdd(){
-  memberEditId=null;_tmpPosts=[];
+  memberEditId=null;_tmpPosts=[];_tmpComments=[];
   document.getElementById('memberModalTitle').textContent='회원 추가';
   memberFillForm({nick:'',uid:'',category:'warn',banType:'',memo:'',report:'',posts:[]});
   om('memberModal');
@@ -4673,7 +4753,7 @@ function memberOpenAdd(){
 
 function memberOpenEdit(id){
   const m=members.find(x=>x.id===id);if(!m)return;
-  memberEditId=id;_tmpPosts=[...(m.posts||[])];
+  memberEditId=id;_tmpPosts=[...(m.posts||[])];_tmpComments=[...(m.comments||[])];
   document.getElementById('memberModalTitle').textContent='회원 수정';
   memberFillForm(m);
   om('memberModal');
@@ -5001,7 +5081,7 @@ function savePlayer(){
           (set.games||[]).forEach(g=>{
             if(g.playerA===oldName) g.playerA=newName;
             if(g.playerB===oldName) g.playerB=newName;
-            if(g.winner && (g.winner===oldName)) g.winner=newName;
+            // g.winner는 'A'/'B' 값이므로 이름 비교 불필요
           });
         });
         (m.teamAMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
@@ -5582,9 +5662,9 @@ function statsAwardHTML(){
       ${extra?`<div style="margin-top:8px;font-size:11px;color:${color};font-weight:600">${extra}</div>`:''}
     </div>`;
   }
-  const mostWin=curList[0];
-  const highRate=curList.filter(p=>p.mt>=3).sort((a,b)=>b.mrate-a.mrate)[0];
-  const mostActive=curList.sort((a,b)=>b.mt-a.mt)[0];
+  const mostWin=curList[0]||null;
+  const highRate=curList.filter(p=>p.mt>=3).sort((a,b)=>b.mrate-a.mrate)[0]||null;
+  const mostActive=[...curList].sort((a,b)=>b.mt-a.mt)[0]||null;
   const prevTop=prevList[0];
   return`<div style="display:flex;flex-direction:column;gap:20px">
   <div class="ssec" id="stats-award-sec">
@@ -5593,7 +5673,7 @@ function statsAwardHTML(){
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
-      ${awardCard('👑 이달 최다승',''+mostWin?mostWin:null,'이번 달 가장 많은 승리!','#d97706')}
+      ${awardCard('👑 이달 최다승',mostWin,'이번 달 가장 많은 승리!','#d97706')}
       ${awardCard('🎯 이달 최고 승률',highRate,'(3경기 이상)','#16a34a')}
       ${awardCard('⚡ 이달 최다 경기',mostActive,'가장 활발하게 뛰었어요','#7c3aed')}
     </div>
@@ -5635,7 +5715,7 @@ function statsRecordsHTML(){
     const w=h.filter(x=>x.result==='승').length;
     const l=h.filter(x=>x.result==='패').length;
     const tot=w+l;
-    // 최장 연승 계산
+    // 최장 연승 계산 (오래된 순으로 반전 후 계산)
     let maxStreak=0,cur=0,lastRes='';
     [...h].reverse().forEach(x=>{if(x.result===lastRes){cur++;}else{cur=1;lastRes=x.result;}if(lastRes==='승')maxStreak=Math.max(maxStreak,cur);});
     // 현재 연승
@@ -7361,14 +7441,14 @@ function saveGameEdit(editRef, si, gi, btn){
       wP.points=(wP.points||0)-3;
       let wi=mid?wP.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===oldLose):-1;
       if(wi<0)wi=wP.history.findIndex(h=>h.result==='승'&&h.opp===oldLose&&h.date===mdate);
-      if(wi>=0){const hr=wP.history[wi];if(hr.eloDelta!=null)wP.elo=(wP.elo||1500)-hr.eloDelta;wP.history.splice(wi,1);}
+      if(wi>=0){const hr=wP.history[wi];if(hr.eloDelta!=null)wP.elo=(wP.elo||ELO_DEFAULT)-hr.eloDelta;wP.history.splice(wi,1);}
     }
     if(lP){
       lP.loss=Math.max(0,(lP.loss||0)-1);
       lP.points=(lP.points||0)+3;
       let li=mid?lP.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===oldWin):-1;
       if(li<0)li=lP.history.findIndex(h=>h.result==='패'&&h.opp===oldWin&&h.date===mdate);
-      if(li>=0){const hr=lP.history[li];if(hr.eloDelta!=null)lP.elo=(lP.elo||1500)-hr.eloDelta;lP.history.splice(li,1);}
+      if(li>=0){const hr=lP.history[li];if(hr.eloDelta!=null)lP.elo=(lP.elo||ELO_DEFAULT)-hr.eloDelta;lP.history.splice(li,1);}
     }
   }
 
@@ -7426,6 +7506,35 @@ function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   localStorage.setItem('su_dark',isDark?'1':'');
   document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
+}
+
+/* ── 클립보드 복사 유틸 ── */
+function copyMatchResult(a, sa, b, sb, date){
+  const winner=sa>sb?a:sb>sa?b:'무승부';
+  const text=`[${date||''}] ${a} ${sa}:${sb} ${b}${winner!=='무승부'?' ('+winner+' 승)':''}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('📋 클립보드에 복사됐습니다!');
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    showToast('📋 복사됐습니다!');
+  });
+}
+
+/* ── 토스트 알림 ── */
+function showToast(msg, duration=2000){
+  let t=document.getElementById('_toast');
+  if(!t){
+    t=document.createElement('div');t.id='_toast';
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.style.opacity='1';
+  clearTimeout(t._tid);
+  t._tid=setTimeout(()=>{t.style.opacity='0';},duration);
 }
 function initDark(){
   if(localStorage.getItem('su_dark')==='1'){
