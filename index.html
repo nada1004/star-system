@@ -117,14 +117,23 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .rP{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
 .ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);}
 .ubadge.loser{opacity:0.32;filter:grayscale(100%);box-shadow:none;}
-.tbadge{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
-.tbadge-god{background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;}
-.tbadge-king{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
-.tbadge-jack{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}
-.tbadge-joker{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;}
-.tbadge-spade{background:#1e293b;color:#e2e8f0;border:1px solid #334155;}
-.tbadge-0{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-b);}
-.tbadge-default{background:var(--surface);color:var(--text3);border:1px solid var(--border2);}
+.tbadge{display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;vertical-align:middle;line-height:1.4;}
+.tbadge-god{background:linear-gradient(135deg,#9333ea,#7c3aed);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.5);}
+.tbadge-king{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 2px 8px rgba(220,38,38,.45);}
+.tbadge-jack{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.4);}
+.tbadge-joker{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.4);}
+.tbadge-spade{background:linear-gradient(135deg,#334155,#0f172a);color:#f1f5f9;box-shadow:0 2px 8px rgba(15,23,42,.5);}
+.tbadge-0{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,.4);}
+.tbadge-t1{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;box-shadow:0 1px 5px rgba(37,99,235,.45);}
+.tbadge-t2{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;box-shadow:0 1px 5px rgba(59,130,246,.4);}
+.tbadge-t3{background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;box-shadow:0 1px 5px rgba(96,165,250,.35);}
+.tbadge-t4{background:linear-gradient(135deg,#3b82f6,#93c5fd);color:#1e3a8a;box-shadow:0 1px 5px rgba(147,197,253,.4);}
+.tbadge-t5{background:linear-gradient(135deg,#60a5fa,#bfdbfe);color:#1e3a8a;box-shadow:0 1px 5px rgba(191,219,254,.5);}
+.tbadge-t6{background:linear-gradient(135deg,#93c5fd,#dbeafe);color:#1e40af;box-shadow:0 1px 5px rgba(219,234,254,.6);}
+.tbadge-t7{background:linear-gradient(135deg,#bfdbfe,#eff6ff);color:#1d4ed8;box-shadow:0 1px 5px rgba(239,246,255,.6);}
+.tbadge-t8{background:linear-gradient(135deg,#e0eaff,#f8faff);color:#2563eb;border:1px solid #bfdbfe;box-shadow:0 1px 4px rgba(37,99,235,.12);}
+.tbadge-youth{background:linear-gradient(135deg,#fde68a,#fbbf24);color:#78350f;box-shadow:0 1px 5px rgba(251,191,36,.4);}
+.tbadge-default{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;}
 .wt{color:var(--green);font-weight:600;}
 .lt{color:var(--red);font-weight:600;}
 .pt-p{color:#16a34a;font-weight:700;}
@@ -806,6 +815,7 @@ const RNAME={T:'테란',Z:'저그',P:'프로토스'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
 
 function getTierBadge(tier){
+  if(!tier) return '';
   const map={
     'G':'tbadge tbadge-god',
     'K':'tbadge tbadge-king',
@@ -813,18 +823,36 @@ function getTierBadge(tier){
     'J':'tbadge tbadge-joker',
     'S':'tbadge tbadge-spade',
     '0티어':'tbadge tbadge-0',
+    '1티어':'tbadge tbadge-t1',
+    '2티어':'tbadge tbadge-t2',
+    '3티어':'tbadge tbadge-t3',
+    '4티어':'tbadge tbadge-t4',
+    '5티어':'tbadge tbadge-t5',
+    '6티어':'tbadge tbadge-t6',
+    '7티어':'tbadge tbadge-t7',
+    '8티어':'tbadge tbadge-t8',
+    '유스':'tbadge tbadge-youth',
   };
-  return `<span class="${map[tier]||'tbadge tbadge-default'}">${tier}</span>`;
+  const icons={'G':'👑','K':'🔴','JA':'⚔️','J':'🃏','S':'♠',
+    '0티어':'0️⃣','1티어':'1️⃣','2티어':'2️⃣','3티어':'3️⃣',
+    '4티어':'4️⃣','5티어':'5️⃣','6티어':'6️⃣','7티어':'7️⃣','8티어':'8️⃣','유스':'🐥'};
+  const ic=icons[tier]||'';
+  return `<span class="${map[tier]||'tbadge tbadge-default'}">${ic?ic+' ':''}${tier}</span>`;
 }
 
 function getTierLabel(tier){
-  const icons={G:'👑',K:'🔴',JA:'⚔️',J:'🃏',S:'♠️'};
+  const icons={G:'👑',K:'🔴',JA:'⚔️',J:'🃏',S:'♠',
+    '0티어':'0️⃣','1티어':'1️⃣','2티어':'2️⃣','3티어':'3️⃣',
+    '4티어':'4️⃣','5티어':'5️⃣','6티어':'6️⃣','7티어':'7️⃣','8티어':'8️⃣','유스':'🐥'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)'};
-  return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
+  const ic=icons[tier]||'';
+  return ic?`${ic} ${labels[tier]||tier}`:tier;
 }
 
 function getTierPillLabel(tier){
-  const icons={G:'👑',K:'🔴',JA:'⚔️',J:'🃏',S:'♠️'};
+  const icons={G:'👑',K:'🔴',JA:'⚔️',J:'🃏',S:'♠️',
+    '0티어':'0️⃣','1티어':'1️⃣','2티어':'2️⃣','3티어':'3️⃣',
+    '4티어':'4️⃣','5티어':'5️⃣','6티어':'6️⃣','7티어':'7️⃣','8티어':'8️⃣','유스':'🐥'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)'};
   return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
 }
@@ -1626,7 +1654,6 @@ function rTotal(C,T){
     <col style="white-space:nowrap"><col style="white-space:nowrap">
     ${isLoggedIn?'<col style="white-space:nowrap">':''}
   </colgroup><thead><tr>
-    <th style="text-align:center;white-space:nowrap;padding:8px 6px">사진</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
@@ -1645,24 +1672,24 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?8:7}">
+    tableHTML+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?7:6}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
     const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     let lt='';
     sorted.forEach(p=>{
-      if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?8:7}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
+      if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?7:6}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       tableHTML+=`<tr>
-        <td style="text-align:center;padding:5px 6px;white-space:nowrap">
-          ${p.photo
-            ? `<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);vertical-align:middle;display:inline-block" onerror="this.outerHTML='<span style=\\'display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border)\\'></span>'">`
-            : `<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border)"></span>`}
-        </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-        <td style="text-align:left;padding:7px 12px;font-weight:600;white-space:nowrap">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}  </td>
+        <td style="text-align:left;padding:6px 12px;white-space:nowrap">
+          <span style="display:inline-flex;align-items:center;gap:8px">
+            ${p.photo?`<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:'<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
+            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</span>
+          </span>
+        </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${(p.win+p.loss)?wr+'%':'-'}</td>
@@ -1672,7 +1699,7 @@ function rTotal(C,T){
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?8:7}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
+    tableHTML+=`<tr><td colspan="${isLoggedIn?7:6}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 
@@ -4162,7 +4189,7 @@ function proRankHTML(){
       <td style="text-align:left">${rnkHTML}</td>
       <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${p.name}')">${p.name}</td>
       <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${pObj.univ||''}')">${pObj.univ||'-'}</span></td>
-      <td>${pObj.tier||'-'}</td>
+      <td style="text-align:center">${pObj.tier?getTierBadge(pObj.tier):'-'}</td>
       <td class="wt" style="font-size:15px;font-weight:800">${p.w}</td>
       <td class="lt" style="font-size:15px;font-weight:800">${p.l}</td>
       <td class="${p.rate>=50?'wt':'lt'}" style="font-weight:800">${p.rate}%</td>
@@ -8417,7 +8444,10 @@ function statsTierMatchHTML(){
 
   const tierColor={};
   usedTiers.forEach((t,i)=>{
-    const presets={G:'#7c3aed',K:'#dc2626',JA:'#2563eb',J:'#16a34a',S:'#0f172a'};
+    const presets={G:'#7c3aed',K:'#dc2626',JA:'#2563eb',J:'#16a34a',S:'#0f172a',
+      '0티어':'#d97706',
+      '1티어':'#1e3a8a','2티어':'#1d4ed8','3티어':'#2563eb','4티어':'#3b82f6',
+      '5티어':'#60a5fa','6티어':'#93c5fd','7티어':'#bfdbfe','8티어':'#dbeafe','유스':'#fbbf24'};
     tierColor[t]=presets[t]||TIER_PALETTE[i%TIER_PALETTE.length];
   });
 
@@ -10157,8 +10187,11 @@ function rBoard(C,T){
   C.innerHTML=h;
   injectUnivIcons(C);
   requestAnimationFrame(()=>{ injectUnivIcons(C); initBoardDrag(); });
-  // 팝업 닫기 이벤트
-  document.addEventListener('click', _closeBrdPopup, {capture:true, once:false});
+  // 팝업 닫기 이벤트 (한 번만 등록)
+  if(!_brdPopupListenerAdded){
+    document.addEventListener('click', _closeBrdPopup, {capture:true});
+    _brdPopupListenerAdded = true;
+  }
 }
 
 function buildUnivBoardCard(u, forExport){
@@ -10281,7 +10314,7 @@ function buildUnivBoardCard(u, forExport){
         ${isSub?`<span style="font-size:9px;color:${ROLE_COLORS[p.role]||'#6b7280'};font-weight:700;flex-shrink:0">${p.role}</span>`:''}
         <span style="font-size:9px;font-weight:800;color:${rc.col};flex-shrink:0">${rc.txt}</span>
         <span style="font-weight:700;color:#111;font-size:12px">${p.name}</span>
-        <span style="font-size:9px;color:rgba(0,0,0,.4);margin-left:auto;flex-shrink:0">${p.tier||''}</span>
+        ${getTierBadge(p.tier)}
       </div>`;
     }
 
@@ -10294,7 +10327,7 @@ function buildUnivBoardCard(u, forExport){
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
         <span class="brd-name">${p.name}</span>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
-        <span style="font-size:9px;color:rgba(0,0,0,.35);margin-left:auto;flex-shrink:0">${p.tier||''}</span>
+        ${getTierBadge(p.tier)}
       </button>
       ${isAdmin?`<span style="font-size:10px;color:rgba(0,0,0,.25);padding:0 3px;cursor:grab;flex-shrink:0;user-select:none" title="드래그로 순서 변경">⠿</span>`:''}
     </div>`;
@@ -10341,6 +10374,7 @@ function _brdToast(msg, duration=2800){
 
 /* ── 선수 이동 팝업 ── */
 let _brdPopup = null;
+let _brdPopupListenerAdded = false;
 function _closeBrdPopup(e){
   if(!_brdPopup) return;
   if(!_brdPopup.contains(e.target)){
