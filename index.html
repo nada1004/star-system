@@ -1620,12 +1620,13 @@ function rTotal(C,T){
     </div>
   </div>`;
 
-  let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><colgroup>
-    <col style="white-space:nowrap"><col style="white-space:nowrap"><col>
+    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><colgroup>
+    <col style="white-space:nowrap"><col style="white-space:nowrap"><col style="white-space:nowrap"><col>
     <col style="white-space:nowrap"><col style="white-space:nowrap">
     <col style="white-space:nowrap"><col style="white-space:nowrap">
     ${isLoggedIn?'<col style="white-space:nowrap">':''}
   </colgroup><thead><tr>
+    <th style="text-align:center;white-space:nowrap;padding:8px 6px">사진</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
@@ -1654,6 +1655,11 @@ function rTotal(C,T){
       if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?8:7}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       tableHTML+=`<tr>
+        <td style="text-align:center;padding:5px 6px;white-space:nowrap">
+          ${p.photo
+            ? `<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);vertical-align:middle;display:inline-block" onerror="this.outerHTML='<span style=\\'display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border)\\'></span>'">`
+            : `<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border)"></span>`}
+        </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
         <td style="text-align:left;padding:7px 12px;font-weight:600;white-space:nowrap">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}  </td>
@@ -9853,8 +9859,73 @@ function init(){
 }
 init();
 initDark();
-</script>
 
+// ── 사이트 첫 접속 시 자동 불러오기 ──
+// localStorage에 선수 데이터가 없으면 GitHub에서 자동으로 불러옴 (새로고침 제외)
+(async function autoLoad(){
+  const hasLocal = J('su_p') && JSON.parse(localStorage.getItem('su_p')||'[]').length > 0;
+  if(hasLocal) return; // 이미 데이터 있으면 스킵
+  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  try{
+    gsSetStatus('🔄 데이터 자동 불러오는 중...','var(--blue)');
+    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/data.json';
+    const urls=[
+      ghApiUrl,
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json',
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(GITHUB_JSON_URL),
+    ];
+    let d=null;
+    for(const url of urls){
+      try{
+        const res=await Promise.race([
+          fetch(url,{cache:'no-store',mode:'cors'}),
+          new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
+        ]);
+        if(res&&res.ok){
+          const text=await res.text();
+          const raw=JSON.parse(text);
+          if(raw&&raw.content&&raw.encoding==='base64'){
+            const b64=raw.content.replace(/\s/g,'');
+            const bin=atob(b64);
+            const bytes=new Uint8Array(bin.length);
+            for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+            d=JSON.parse(new TextDecoder('utf-8').decode(bytes));
+          } else { d=raw; }
+          break;
+        }
+      }catch(e){ continue; }
+    }
+    if(d){
+      players=d.players||d.player||[];
+      univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
+      maps=d.maps||d.map||maps;
+      tourD=d.tourD||d.tournamentDates||Array(15).fill('');
+      miniM=d.miniM||d.mini||d.miniMatches||[];
+      univM=d.univM||d.univ||d.univMatches||[];
+      comps=d.comps||d.comp||d.competitions||[];
+      ckM=d.ckM||d.ck||d.ckMatches||[];
+      compNames=d.compNames||d.competitionNames||[];
+      curComp=d.curComp||d.currentComp||'';
+      proM=d.proM||d.pro||d.proMatches||[];
+      members=d.members||d.member||[];
+      tourneys=d.tourneys||d.tournaments||d.tourney||[];
+      ttM=d.ttM||d.tt||[];
+      if(d.tiers&&d.tiers.length)TIERS.splice(0,TIERS.length,...d.tiers);
+      (function(){
+        const allD=[...miniM,...univM,...comps,...ckM,...proM];
+        const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
+        years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
+        yearOptions.sort();
+      })();
+      fixPoints(); save(); init();
+      gsSetStatus(`✅ 자동 불러오기 완료 (${new Date().toLocaleTimeString()})`,'var(--green)');
+    } else { gsSetStatus('',''); }
+  }catch(e){
+    console.warn('[자동 불러오기 실패]',e);
+    gsSetStatus('','');
+  }
+})();
+</script>
 
 
 <script>
@@ -10204,12 +10275,13 @@ function buildUnivBoardCard(u, forExport){
     const placeholderHTML = photoSrc ? '' : '';
 
     if(forExport){
-      return `<div class="brd-row" style="margin-bottom:3px">
-        ${isMain?`<span class="brd-role-main" style="background:${rCol}18;color:${rCol};border-color:${rCol}44">${rIcon}${p.role}</span>`:''}
-        <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
-        <span class="brd-name">${p.name}</span>
-        ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
-        <span style="font-size:9px;color:rgba(0,0,0,.4);margin-left:auto">${p.tier||''}</span>
+      return `<div class="brd-row" style="margin-bottom:3px;display:flex;align-items:center;gap:4px;padding:3px 6px;background:rgba(255,255,255,.7);border-radius:6px">
+        ${photoSrc?`<img src="${photoSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.6)" onerror="this.style.display='none'">`:''}
+        ${isMain?`<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:${rCol};color:#fff;flex-shrink:0;white-space:nowrap">${rIcon}${p.role}</span>`:''}
+        ${isSub?`<span style="font-size:9px;color:${ROLE_COLORS[p.role]||'#6b7280'};font-weight:700;flex-shrink:0">${p.role}</span>`:''}
+        <span style="font-size:9px;font-weight:800;color:${rc.col};flex-shrink:0">${rc.txt}</span>
+        <span style="font-weight:700;color:#111;font-size:12px">${p.name}</span>
+        <span style="font-size:9px;color:rgba(0,0,0,.4);margin-left:auto;flex-shrink:0">${p.tier||''}</span>
       </div>`;
     }
 
@@ -10217,7 +10289,8 @@ function buildUnivBoardCard(u, forExport){
     const isAdmin=isLoggedIn;
     return `<div class="brd-row no-export-movebtns" data-player="${p.name}" data-univ="${u.name}" data-idx="${idx}"${isAdmin?' draggable="true"':''} style="cursor:${isAdmin?'grab':'default'}">
       <button class="brd-row-btn" onclick="event.stopPropagation();${isAdmin?`openBrdPlayerPopup(event,'${pNameSafe}','${u.name}',${idx},${sorted.length})`:`openPlayerModal('${pNameSafe}')`}" title="${isAdmin?'클릭: 순서변경/대학이동':'선수 상세 보기'}">
-        ${isMain?`<span class="brd-role-main" style="background:${rCol}18;color:${rCol};border-color:${rCol}44">${rIcon}${p.role}</span>`:''}
+        ${photoSrc?`<img src="${photoSrc}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.5);margin-right:1px" onerror="this.style.display='none'">` : ''}
+        ${isMain?`<span class="brd-role-main" style="background:${rCol};color:#fff;border-color:${rCol}">${rIcon}${p.role}</span>`:''}
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
         <span class="brd-name">${p.name}</span>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
@@ -10677,19 +10750,24 @@ async function downloadBoardAll(){
   const btn=event?.currentTarget;
   if(btn){btn.disabled=true;btn._ot=btn.textContent;btn.textContent='⏳...';}
   try{
-    const univs=_getBoardUnivs();
-    const tmpDiv=document.createElement('div');
-    // 실제 현황판 레이아웃 재현: board-wrap의 컬럼 수 계산
+    // 실제 화면에 표시된 DOM 순서대로 대학 가져오기
     const boardWrap=document.getElementById('board-wrap');
+    let univs;
+    if(boardWrap){
+      const cardEls=[...boardWrap.querySelectorAll('.brd-card[data-univ]')];
+      const allUnivMap={};
+      getAllUnivs().forEach(u=>allUnivMap[u.name]=u);
+      univs=cardEls.map(el=>allUnivMap[el.dataset.univ]).filter(Boolean);
+    } else {
+      univs=_getBoardUnivs();
+    }
+    const tmpDiv=document.createElement('div');
     let cols=5;
     if(boardWrap){
-      // auto-fill 컬럼 수 계산
       const w=boardWrap.offsetWidth;
       cols=Math.max(1,Math.floor(w/294));
     }
-    const cardW=280;
-    const gap=12;
-    const padH=16;
+    const cardW=280, gap=12, padH=16;
     const totalW=cols*(cardW+gap)-gap+padH*2;
     tmpDiv.style.cssText=`position:fixed;left:-9999px;top:0;width:${totalW}px;background:#f0f2f5;padding:${padH}px;display:grid;grid-template-columns:repeat(${cols},${cardW}px);gap:${gap}px;align-items:start;`;
     univs.forEach(u=>{
@@ -10703,7 +10781,7 @@ async function downloadBoardAll(){
     });
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,400));
+    await new Promise(r=>setTimeout(r,500));
     const canvas=await html2canvas(tmpDiv,{scale:2,useCORS:true,backgroundColor:'#f0f2f5',logging:false,width:tmpDiv.scrollWidth,height:tmpDiv.scrollHeight});
     document.body.removeChild(tmpDiv);
     _dlCanvasBoard(canvas,'현황판_전체저장.jpg');
@@ -10719,13 +10797,22 @@ async function downloadBoardSel(){
     if(!boardSelUniv||boardSelUniv==='전체'){alert('대학을 선택하세요.');return;}
     const u=getAllUnivs().find(x=>x.name===boardSelUniv);
     if(!u){alert('해당 대학을 찾을 수 없습니다.');return;}
+    // 실제 DOM 현황판에서 해당 대학 선수 순서 동기화
+    const boardWrap=document.getElementById('board-wrap');
+    if(boardWrap){
+      const card=boardWrap.querySelector(`.brd-card[data-univ="${boardSelUniv}"]`);
+      if(card){
+        const domOrder=[...card.querySelectorAll('[data-player]')].map(el=>el.dataset.player).filter(Boolean);
+        if(domOrder.length>0) boardPlayerOrder[boardSelUniv]=domOrder;
+      }
+    }
     const tmpDiv=document.createElement('div');
     tmpDiv.style.cssText='position:fixed;left:-9999px;top:0;width:360px;background:#f0f2f5;padding:12px;';
     tmpDiv.innerHTML=buildUnivBoardCard(u, true);
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,200));
+    await new Promise(r=>setTimeout(r,300));
     const canvas=await html2canvas(tmpDiv,{scale:2,useCORS:true,backgroundColor:'#f0f2f5',logging:false});
     document.body.removeChild(tmpDiv);
     _dlCanvasBoard(canvas,'현황판_'+boardSelUniv+'.jpg');
