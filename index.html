@@ -912,6 +912,42 @@ let ttM        = J('su_ttm') || [];
 let BLD = {};
 let openDetails = {};
 
+// ── 선수별 상태 아이콘 시스템 ──────────────────────────────
+let playerStatusIcons = J('su_psi') || {};
+const STATUS_ICON_DEFS = {
+  none:    { label: '없음',    emoji: '' },
+  up:      { label: '승급',    emoji: '⬆️' },
+  rise:    { label: '상승',    emoji: '🔥' },
+  stay:    { label: '유지',    emoji: '✅' },
+  freeze:  { label: '얼음',    emoji: '🧊' },
+  down:    { label: '강등',    emoji: '⬇️' },
+  custom1: { label: '커스텀1', emoji: J('su_si_c1') || '⭐' },
+  custom2: { label: '커스텀2', emoji: J('su_si_c2') || '💪' },
+  custom3: { label: '커스텀3', emoji: J('su_si_c3') || '💀' },
+};
+function getStatusIcon(name){ return playerStatusIcons[name]||''; }
+function setStatusIcon(name, iconId){
+  if(!iconId||iconId==='none') delete playerStatusIcons[name];
+  else playerStatusIcons[name]=STATUS_ICON_DEFS[iconId]?.emoji||iconId;
+  localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+}
+function saveCustomStatusIcon(slot, emoji){
+  localStorage.setItem('su_si_c'+slot, emoji);
+  const k='custom'+slot;
+  if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
+}
+function getPlayerPhotoHTML(playerName, size, extraStyle){
+  size=size||'28px'; extraStyle=extraStyle||'';
+  const p=players.find(x=>x.name===playerName);
+  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
+  if(!p||!p.photo) return '<span style="'+base+';background:var(--border2);border:1.5px solid var(--border)"></span>';
+  return '<img src="'+p.photo+'" style="'+base+';object-fit:cover;border:1.5px solid var(--border)" onerror="this.style.display=\'none\'">';
+}
+function getStatusIconHTML(name){
+  const ic=getStatusIcon(name);
+  return ic?`<span style="font-size:13px;margin-left:3px;flex-shrink:0">${ic}</span>`:'';
+}
+
 function fixPoints(){
   // 구 티어명 → 새 약어 마이그레이션
   const tierMap={god:'G',king:'K',jack:'JA',joker:'J',spade:'S'};
@@ -943,6 +979,7 @@ function save(){
   localStorage.setItem('su_ttm',JSON.stringify(ttM));
   localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
+  localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;
@@ -1561,13 +1598,13 @@ function buildUnivDetailHTML(univName){
     h+=`<div style="font-weight:700;font-size:12px;color:${col};margin-bottom:10px;display:flex;align-items:center;gap:6px">
       <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 선수 (${displayList.length}명)
     </div>`;
-    h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:7px 6px">직책</th><th style="text-align:center">티어</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:16px">이름</th><th style="text-align:center;width:40px">성별</th><th style="text-align:center;width:40px">승</th><th style="text-align:center;width:40px">패</th><th style="text-align:center;width:52px">승률</th><th style="text-align:center;width:60px">포인트</th></tr></thead><tbody>`;
+    h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:7px 6px">직책</th><th style="text-align:center">티어</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:10px">이름</th><th style="text-align:center;width:40px">성별</th><th style="text-align:center;width:40px">승</th><th style="text-align:center;width:40px">패</th><th style="text-align:center;width:52px">승률</th><th style="text-align:center;width:60px">포인트</th></tr></thead><tbody>`;
     displayList.forEach(p=>{
       const tw=p.win+p.loss;const twr=tw?Math.round(p.win/tw*100):0;
       h+=`<tr style="cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${p.name}'),100)" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">\r\n        <td style="text-align:center;padding:5px 4px;white-space:nowrap">${p.role?getRoleBadgeHTML(p.role,'10px'):''}</td>
         <td style="text-align:center">${getTierBadge(p.tier)}</td>
         <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
-        <td style="text-align:left;padding-left:16px;font-weight:600"><span class="clickable-name">${p.name}</span></td>
+        <td style="text-align:left;padding-left:10px;font-weight:600"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'24px')}<span class="clickable-name">${p.name}</span>${getStatusIconHTML(p.name)}</span></td>
         <td style="text-align:center">${genderIcon(p.gender)}</td>
         <td style="text-align:center" class="wt">${p.win}</td>
         <td style="text-align:center" class="lt">${p.loss}</td>
@@ -1676,7 +1713,14 @@ function rTotal(C,T){
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+    const sorted=(typeof _getBoardPlayers==='function')
+      ? _getBoardPlayers(u.name).filter(p=>{
+          if(totalRaceFilter!=='전체'&&p.race!==totalRaceFilter)return false;
+          if(totalSearch.trim()&&!p.name.toLowerCase().includes(totalSearch.trim().toLowerCase()))return false;
+          if(totalHideNoRecord&&!(p.win+p.loss))return false;
+          return true;
+        })
+      : [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     let lt='';
     sorted.forEach(p=>{
       if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?7:6}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
@@ -1687,7 +1731,7 @@ function rTotal(C,T){
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
             ${p.photo?`<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:'<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
-            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</span>
+            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
@@ -1817,11 +1861,15 @@ function rTier(C,T){
       h+=`<tr>
         <td style="color:var(--gray-l);font-size:11px">${g.date}</td>
         <td><span style="background:${lblColor};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${g.label||'-'}</span></td>
-        <td><span class="wt" style="font-weight:800;cursor:pointer" onclick="openPlayerModal('${g.winner.replace(/'/g,"\\'")}')">
-          ${wp?`<span class="rbadge r${wp.race}" style="font-size:10px;margin-right:3px">${wp.race}</span>`:''}${g.winner}</span>
+        <td><span style="display:inline-flex;align-items:center;gap:5px;font-weight:800" class="wt">
+          ${wp?getPlayerPhotoHTML(g.winner,'22px'):''}
+          <span style="cursor:pointer" onclick="openPlayerModal('${g.winner.replace(/'/g,"\\'")}')">
+            ${wp?`<span class="rbadge r${wp.race}" style="font-size:10px;margin-right:2px">${wp.race}</span>`:''}${g.winner}${getStatusIconHTML(g.winner)}</span></span>
           ${wp?`<span class="ubadge" style="background:${wc};font-size:10px;padding:1px 6px;margin-left:4px">${wp.univ}</span>`:''}</td>
-        <td><span style="opacity:.65;cursor:pointer" onclick="openPlayerModal('${g.loser.replace(/'/g,"\\'")}')">
-          ${lp?`<span class="rbadge r${lp.race}" style="font-size:10px;margin-right:3px">${lp.race}</span>`:''}${g.loser}</span>
+        <td><span style="display:inline-flex;align-items:center;gap:5px;opacity:.75">
+          ${lp?getPlayerPhotoHTML(g.loser,'22px'):''}
+          <span style="cursor:pointer" onclick="openPlayerModal('${g.loser.replace(/'/g,"\\'")}')">
+            ${lp?`<span class="rbadge r${lp.race}" style="font-size:10px;margin-right:2px">${lp.race}</span>`:''}${g.loser}</span></span>
           ${lp?`<span class="ubadge" style="background:${lc};font-size:10px;padding:1px 6px;margin-left:4px;opacity:.7">${lp.univ}</span>`:''}</td>
         <td style="color:var(--gray-l);font-size:11px">${g.map}</td>
       </tr>`;
@@ -1893,7 +1941,7 @@ function rTier(C,T){
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}</td>
+      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'26px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
@@ -1928,7 +1976,7 @@ function vsSearchHTML(){
       const p=players.find(x=>x.name===name);
       const raceLabel=p?(p.race==='T'?'테란':p.race==='Z'?'저그':'프로토스'):'';
       return `<div style="display:flex;align-items:center;gap:7px;flex:1;min-width:160px;background:${col}18;border:2px solid ${col}55;border-radius:10px;padding:8px 12px">
-        <div style="width:34px;height:34px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0">${name[0]}</div>
+        ${p&&p.photo?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${col};flex-shrink:0" onerror="this.style.display='none'">` : `<div style="width:34px;height:34px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0">${name[0]}</div>`}
         <div style="flex:1;min-width:0">
           <div style="font-weight:800;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
           <div style="font-size:10px;color:var(--gray-l)">${p?p.univ+' · '+p.tier+' · '+raceLabel:''}</div>
@@ -2906,6 +2954,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         h+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 4px;flex-wrap:wrap;">
           <span style="color:var(--gray-l);font-size:10px;min-width:42px;font-weight:600">경기${gi+1}</span>
           <div style="${styleA}">
+            ${pA?getPlayerPhotoHTML(pA.name,'22px','margin-right:2px'):''}
             ${pA?`<span class="rbadge r${pA.race}" style="font-size:10px">${pA.race}</span>`:''}
             <strong style="font-size:12px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
             ${pA?genderIcon(pA.gender):''}
@@ -2914,6 +2963,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
           </div>
           <span style="color:var(--gray-l);font-size:11px;font-weight:600">vs</span>
           <div style="${styleB}">
+            ${pB?getPlayerPhotoHTML(pB.name,'22px','margin-right:2px'):''}
             ${pB?`<span class="rbadge r${pB.race}" style="font-size:10px">${pB.race}</span>`:''}
             <strong style="font-size:12px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
             ${pB?genderIcon(pB.gender):''}
@@ -3336,9 +3386,9 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
       const mapStr=g.map?`<span style="background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px">📍${g.map}</span>`:'';
       h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
         <span style="color:var(--gray-l);font-size:10px;min-width:40px">경기${gi+1}</span>
-        <div style="${styleA}">${pA?`<span class="rbadge r${pA.race}" style="font-size:10px">${pA.race}</span>`:''}<strong style="font-size:12px" ${cA}>${g.playerA||'?'}</strong>${pA?genderIcon(pA.gender):''}<span style="font-size:10px;color:${ca};font-weight:700">(${labelA})</span>${aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px">WIN</span>`:''}</div>
+        <div style="${styleA}">${pA?getPlayerPhotoHTML(pA.name,'20px','margin-right:2px'):''} ${pA?`<span class="rbadge r${pA.race}" style="font-size:10px">${pA.race}</span>`:''}<strong style="font-size:12px" ${cA}>${g.playerA||'?'}</strong>${pA?genderIcon(pA.gender):''}<span style="font-size:10px;color:${ca};font-weight:700">(${labelA})</span>${aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px">WIN</span>`:''}</div>
         <span style="color:var(--gray-l);font-size:10px">vs</span>
-        <div style="${styleB}">${pB?`<span class="rbadge r${pB.race}" style="font-size:10px">${pB.race}</span>`:''}<strong style="font-size:12px" ${cB}>${g.playerB||'?'}</strong>${pB?genderIcon(pB.gender):''}<span style="font-size:10px;color:${cb};font-weight:700">(${labelB})</span>${bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px">WIN</span>`:''}</div>
+        <div style="${styleB}">${pB?getPlayerPhotoHTML(pB.name,'20px','margin-right:2px'):''} ${pB?`<span class="rbadge r${pB.race}" style="font-size:10px">${pB.race}</span>`:''}<strong style="font-size:12px" ${cB}>${g.playerB||'?'}</strong>${pB?genderIcon(pB.gender):''}<span style="font-size:10px;color:${cb};font-weight:700">(${labelB})</span>${bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px">WIN</span>`:''}</div>
         ${mapStr}
       </div>`;
     });
@@ -4187,7 +4237,7 @@ function proRankHTML(){
     else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
     h+=`<tr>
       <td style="text-align:left">${rnkHTML}</td>
-      <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${p.name}')">${p.name}</td>
+      <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${p.name}')"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'24px')}${p.name}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${pObj.univ||''}')">${pObj.univ||'-'}</span></td>
       <td style="text-align:center">${pObj.tier?getTierBadge(pObj.tier):'-'}</td>
       <td class="wt" style="font-size:15px;font-weight:800">${p.w}</td>
@@ -5775,6 +5825,38 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
+  <div class="ssec"><h4>🏷️ 선수 상태 아이콘 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 선수별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎨 커스텀 아이콘 이모지 지정</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${[1,2,3].map(n=>{const def=STATUS_ICON_DEFS['custom'+n];return `<div style="display:flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <span style="font-size:12px;font-weight:700">커스텀${n}:</span>
+          <span style="font-size:18px">${def?.emoji||''}</span>
+          <input type="text" id="ci${n}" value="${def?.emoji||''}" placeholder="이모지" style="width:44px;font-size:18px;text-align:center;border:1px solid var(--border2);border-radius:6px;padding:2px 4px">
+          <button class="btn btn-b btn-xs" onclick="const v=document.getElementById('ci${n}').value.trim();if(v){saveCustomStatusIcon(${n},v);render();}">저장</button>
+        </div>`;}).join('')}
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
+    <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
+        [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
+          const cur=playerStatusIcons[p.name]||'';
+          const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
+            ${getPlayerPhotoHTML(p.name,'26px')}
+            <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
+            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
+            <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+            </select>
+          </div>`;
+        }).join('')
+      }
+    </div>
+    <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
+  </div>
   <div class="ssec"><h4>🎭 티어 관리</h4>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -6261,7 +6343,8 @@ function statsOverviewHTML(){
     const si=p.streak.type==='승'?'🔥':'❄️';
     return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px">
       <span style="font-weight:700;font-size:11px;color:var(--gray-l);min-width:20px;text-align:right">${pi+1}</span>
-      <span style="font-weight:800;font-size:13px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${p.name}')">${p.name}</span>
+      ${getPlayerPhotoHTML(p.name,'26px')}
+      <span style="font-weight:800;font-size:13px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${p.name}')">${p.name}${getStatusIconHTML(p.name)}</span>
       <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:55px">${p.univ}</span>
       <span style="display:flex;gap:2px">${icons}</span>
       <span style="font-weight:800;font-size:12px;color:${sc};white-space:nowrap">${si} ${p.streak.n}연${p.streak.type==='승'?'승':'패'}</span>
@@ -6606,7 +6689,7 @@ function statsAwardHTML(){
     return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${p.name}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="width:44px;height:44px;border-radius:50%;background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>
+        ${p.photo?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:50%;background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
         <div style="min-width:0">
           <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
           <div style="display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap">
@@ -6704,8 +6787,9 @@ function statsRecordsHTML(){
           const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
           return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer;${i===0?'border-color:'+gc(p.univ)+';box-shadow:0 2px 8px '+gc(p.univ)+'33':''}" onclick="openPlayerModal('${p.name}')">
             <span style="font-size:16px;min-width:24px">${badge}</span>
+            ${getPlayerPhotoHTML(p.name,'30px')}
             <div style="flex:1;min-width:0">
-              <div style="font-weight:800;font-size:13px">${p.name} <span style="font-size:10px;color:${gc(p.univ)};font-weight:600">${p.univ}</span></div>
+              <div style="font-weight:800;font-size:13px">${p.name}${getStatusIconHTML(p.name)} <span style="font-size:10px;color:${gc(p.univ)};font-weight:600">${p.univ}</span></div>
               <div style="font-size:10px;color:var(--gray-l)">${cat.sub(p)}</div>
             </div>
             <span style="font-weight:900;font-size:16px;color:${i===0?gc(p.univ):'var(--text2)'};font-family:'Noto Sans KR',sans-serif">${cat.val(p)}</span>
@@ -7102,7 +7186,7 @@ function renderShareCardByPlayer(name){
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
       <div style="width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.4);flex-shrink:0;overflow:hidden">${(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:38px;height:38px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'30\\' height=\\'30\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">` :`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='30' height='30'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:20px;font-weight:900;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${p.gender==='M'?'<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:6px">♂</span>':''}</div>
+        <div style="font-size:20px;font-weight:900;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${getStatusIconHTML(p.name)}${p.gender==='M'?'<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:6px">♂</span>':''}</div>
         <div style="font-size:11px;opacity:.8;margin-top:3px">${p.univ} &nbsp;·&nbsp; ${p.tier||'-'} &nbsp;·&nbsp; ${raceLabel}</div>
       </div>
       <div style="text-align:center;background:rgba(0,0,0,.2);border-radius:10px;padding:7px 12px;flex-shrink:0">
@@ -8148,8 +8232,8 @@ function statsKillerHTML(){
     const myW=isKiller?e.l:e.w, myL=isKiller?e.w:e.l;
     const myRate=e.tot?Math.round(myW/e.tot*100):0;
     return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openPlayerModal('${e.name}')">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></span>
-      <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}</span>
+      ${getPlayerPhotoHTML(e.name,'28px')}
+      <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}${getStatusIconHTML(e.name)}</span>
       <span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span>
       <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
         <div style="width:${myRate}%;background:${isKiller?'var(--red)':'var(--green)'};height:100%;border-radius:20px"></div>
@@ -10228,7 +10312,7 @@ function buildUnivBoardCard(u, forExport){
         return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.9);border-radius:8px;padding:4px 10px;margin:2px;font-size:13px">
           ${isMain?`<span style="font-size:10px;font-weight:800;color:${rCol}">${rIcon}</span>`:''}
           <span style="font-size:10px;font-weight:800;color:${rc.col}">${rc.txt}</span>
-          <span style="font-weight:700;color:#111;font-size:13px">${p.name}</span>
+          <span style="font-weight:700;color:#111;font-size:13px">${p.name}${getStatusIconHTML(p.name)}</span>
         </span>`;
       }
       const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -10240,7 +10324,7 @@ function buildUnivBoardCard(u, forExport){
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.92);border-radius:8px;padding:5px 11px;margin:2px 2px;font-size:14px;cursor:${isLoggedIn?'grab':'pointer'};transition:box-shadow .12s,background .12s;box-shadow:0 1px 4px rgba(0,0,0,.08)" onmouseover="this.style.background='#fff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.16)'" onmouseout="this.style.background='rgba(255,255,255,.92)';this.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'" onclick="event.stopPropagation();${clickFn}">
         ${isMain?`<span style="font-size:11px;font-weight:800;color:${rCol}">${rIcon}</span>`:''}
         <span style="font-size:11px;font-weight:800;color:${rc.col}">${rc.txt}</span>
-        <span style="font-weight:700;color:#111;font-size:14px">${p.name}</span>
+        <span style="font-weight:700;color:#111;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</span>
         <span style="font-size:10px;color:rgba(0,0,0,.4);margin-left:2px">${p.tier||''}</span>
       </span>`;
     };
@@ -10313,7 +10397,7 @@ function buildUnivBoardCard(u, forExport){
         ${isMain?`<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:${rCol};color:#fff;flex-shrink:0;white-space:nowrap">${rIcon}${p.role}</span>`:''}
         ${isSub?`<span style="font-size:9px;color:${ROLE_COLORS[p.role]||'#6b7280'};font-weight:700;flex-shrink:0">${p.role}</span>`:''}
         <span style="font-size:9px;font-weight:800;color:${rc.col};flex-shrink:0">${rc.txt}</span>
-        <span style="font-weight:700;color:#111;font-size:12px">${p.name}</span>
+        <span style="font-weight:700;color:#111;font-size:12px">${p.name}${getStatusIconHTML(p.name)}</span>
         ${getTierBadge(p.tier)}
       </div>`;
     }
@@ -10325,7 +10409,7 @@ function buildUnivBoardCard(u, forExport){
         ${photoSrc?`<img src="${photoSrc}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.5);margin-right:1px" onerror="this.style.display='none'">` : ''}
         ${isMain?`<span class="brd-role-main" style="background:${rCol};color:#fff;border-color:${rCol}">${rIcon}${p.role}</span>`:''}
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
-        <span class="brd-name">${p.name}</span>
+        <span class="brd-name">${p.name}${getStatusIconHTML(p.name)}</span>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
         ${getTierBadge(p.tier)}
       </button>
