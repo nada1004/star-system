@@ -1669,12 +1669,35 @@
       "univ": "엠비대",
       "tier": "2티어",
       "race": "Z",
-      "win": 0,
-      "loss": 0,
-      "history": [],
+      "win": 1,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "또봉순",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 17,
+          "eloAfter": 1201
+        },
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "또봉순",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1201
     },
     {
       "name": "하리",
@@ -1693,12 +1716,24 @@
       "univ": "엠비대",
       "tier": "4티어",
       "race": "P",
-      "win": 0,
+      "win": 1,
       "loss": 0,
-      "history": [],
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "몽순",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1216
     },
     {
       "name": "최세상",
@@ -1717,12 +1752,35 @@
       "univ": "엠비대",
       "tier": "5티어",
       "race": "Z",
-      "win": 0,
-      "loss": 0,
-      "history": [],
+      "win": 1,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "단양",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 17,
+          "eloAfter": 1201
+        },
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "단양",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1201
     },
     {
       "name": "엄보리",
@@ -1730,11 +1788,23 @@
       "tier": "6티어",
       "race": "P",
       "win": 0,
-      "loss": 0,
-      "history": [],
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "비재희",
+          "oppRace": "Z",
+          "map": "실피드",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "정다닝",
@@ -1753,24 +1823,48 @@
       "univ": "엠비대",
       "tier": "7티어",
       "race": "Z",
-      "win": 0,
+      "win": 1,
       "loss": 0,
-      "history": [],
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "키모야",
+          "oppRace": "T",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1216
     },
     {
       "name": "엄키키",
       "univ": "엠비대",
       "tier": "8티어",
       "race": "P",
-      "win": 0,
+      "win": 1,
       "loss": 0,
-      "history": [],
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "단이",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1216
     },
     {
       "name": "요정너구리",
@@ -1801,12 +1895,35 @@
       "univ": "와플대",
       "tier": "2티어",
       "race": "Z",
-      "win": 0,
-      "loss": 0,
-      "history": [],
+      "win": 1,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "카히리",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -17,
+          "eloAfter": 1199
+        },
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "카히리",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1199
     },
     {
       "name": "꼬니부킹",
@@ -1826,35 +1943,82 @@
       "tier": "4티어",
       "race": "Z",
       "win": 0,
-      "loss": 0,
-      "history": [],
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "링고",
+          "oppRace": "P",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "단양",
       "univ": "와플대",
       "tier": "5티어",
       "race": "Z",
-      "win": 0,
-      "loss": 0,
-      "history": [],
+      "win": 1,
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "시녕몽",
+          "oppRace": "Z",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -17,
+          "eloAfter": 1199
+        },
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "시녕몽",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1199
     },
     {
       "name": "비재희",
       "univ": "와플대",
       "tier": "5티어",
       "race": "Z",
-      "win": 0,
+      "win": 1,
       "loss": 0,
-      "history": [],
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "승",
+          "opp": "엄보리",
+          "oppRace": "P",
+          "map": "실피드",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1216
     },
     {
       "name": "키모야",
@@ -1862,11 +2026,23 @@
       "tier": "7티어",
       "race": "T",
       "win": 0,
-      "loss": 0,
-      "history": [],
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "면추가",
+          "oppRace": "Z",
+          "map": "녹아웃",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "구키",
@@ -1898,11 +2074,23 @@
       "tier": "8티어",
       "race": "Z",
       "win": 0,
-      "loss": 0,
-      "history": [],
+      "loss": 1,
+      "history": [
+        {
+          "date": "2026-02-26",
+          "time": 1772201640986,
+          "result": "패",
+          "opp": "엄키키",
+          "oppRace": "P",
+          "map": "라데온",
+          "matchId": "mm4z3lsq7zoc",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
       "points": 0,
       "gender": "F",
-      "elo": 1200
+      "elo": 1184
     },
     {
       "name": "있찌",
@@ -5885,9 +6073,65 @@
               "b": "엠비대",
               "d": "2026-02-26",
               "sa": 0,
-              "sb": 0,
-              "sets": [],
-              "_id": "mm08tqay130r"
+              "sb": 1,
+              "sets": [
+                {
+                  "games": [
+                    {
+                      "playerA": "키모야",
+                      "playerB": "면추가",
+                      "winner": "B",
+                      "map": "녹아웃"
+                    },
+                    {
+                      "playerA": "몽순",
+                      "playerB": "링고",
+                      "winner": "B",
+                      "map": "녹아웃"
+                    },
+                    {
+                      "playerA": "단양",
+                      "playerB": "시녕몽",
+                      "winner": "A",
+                      "map": "폴리포이드"
+                    },
+                    {
+                      "playerA": "단이",
+                      "playerB": "엄키키",
+                      "winner": "B",
+                      "map": "라데온"
+                    },
+                    {
+                      "playerA": "비재희",
+                      "playerB": "엄보리",
+                      "winner": "A",
+                      "map": "실피드"
+                    },
+                    {
+                      "playerA": "또봉순",
+                      "playerB": "카히리",
+                      "winner": "A",
+                      "map": "라데온"
+                    },
+                    {
+                      "playerA": "또봉순",
+                      "playerB": "카히리",
+                      "winner": "B",
+                      "map": "녹아웃"
+                    },
+                    {
+                      "playerA": "단양",
+                      "playerB": "시녕몽",
+                      "winner": "B",
+                      "map": "라데온"
+                    }
+                  ],
+                  "scoreA": 3,
+                  "scoreB": 5,
+                  "winner": "B"
+                }
+              ],
+              "_id": "mm4z3lsq7zoc"
             },
             {
               "a": "정선대",
