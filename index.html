@@ -1336,6 +1336,15 @@ function openPlayerHistEdit(playerName, histIdx){
   om('reModal');
 }
 
+// 현황판 대학 공유카드 바로 열기
+function openBoardUnivShareCard(univName){
+  if(!univName||univName==='전체')return;
+  _shareMode='univ';
+  _shareUnivSearch=univName;
+  openShareCardModal();
+  setTimeout(()=>renderShareCardByUniv(univName),80);
+}
+
 function openShareCardFromPlayer(){
   const name=window._playerModalCurrentName;
   if(!name)return;
@@ -10296,17 +10305,42 @@ function rBoard(C,T){
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
     .brd-move-popup-btn:disabled{opacity:.35;cursor:default;background:none;}
     .brd-move-popup-sep{height:1px;background:var(--border);margin:4px 0;}
+    /* 현황판 툴바 버튼 */
+    .brd-tbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;line-height:1.4;}
+    .brd-tbtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.12);}
+    .brd-tbtn:active{transform:translateY(0);box-shadow:none;}
+    .brd-tbtn-img{border-color:#3b82f6;color:#2563eb;background:linear-gradient(135deg,#eff6ff,#dbeafe);}
+    .brd-tbtn-img:hover{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#2563eb;}
+    .brd-tbtn-share{border-color:#8b5cf6;color:#6d28d9;background:linear-gradient(135deg,#f5f3ff,#ede9fe);}
+    .brd-tbtn-share:hover{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#6d28d9;}
+    body.dark .brd-tbtn-img{background:linear-gradient(135deg,#1e3a5f,#1e3a8a);color:#93c5fd;border-color:#3b82f6;}
+    body.dark .brd-tbtn-share{background:linear-gradient(135deg,#2e1f5e,#3b2080);color:#c4b5fd;border-color:#7c3aed;}
   </style>
-  <div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;box-shadow:0 1px 6px rgba(0,0,0,.05)">
-    <span style="font-weight:800;font-size:14px;color:var(--text)">📊 현황판</span>
-    <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
-    <button class="btn btn-b btn-sm" onclick="downloadBoardAll()">📥 전체저장</button>
-    <select id="board-univ-sel" onchange="boardSelUniv=this.value;render()" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--border2);font-size:12px;font-weight:600;color:var(--text);background:var(--surface)">
-      <option value="전체">🏫 전체 보기</option>
-      ${univs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
-    </select>
-    ${boardSelUniv!=='전체'?`<button class="btn btn-g btn-sm" onclick="downloadBoardSel()">📥 다운</button>`:''}
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${isLoggedIn?'🖱️ 카드 헤더 드래그 또는 ◀▶ 으로 대학 순서 변경 · 스트리머 드래그/클릭=순서변경·대학이동':'👆 스트리머 클릭 → 선수 상세 보기'}</span>
+  <div class="no-export brd-toolbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+    <div style="display:flex;align-items:center;gap:8px;margin-right:2px">
+      <span style="font-size:18px;line-height:1">📊</span>
+      <span style="font-weight:900;font-size:15px;color:var(--text);letter-spacing:-.3px">현황판</span>
+    </div>
+    <div style="width:1px;height:22px;background:var(--border);opacity:.6"></div>
+    <button class="brd-tbtn brd-tbtn-img" onclick="downloadBoardAll()" title="현황판 전체 이미지로 저장">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      이미지 저장
+    </button>
+    <div style="width:1px;height:22px;background:var(--border);opacity:.5"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="position:relative">
+        <select id="board-univ-sel" onchange="boardSelUniv=this.value;render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
+          <option value="전체">🏫 전체 보기</option>
+          ${univs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      ${boardSelUniv!=='전체'?`<button class="brd-tbtn brd-tbtn-share" onclick="openBoardUnivShareCard('${boardSelUniv}')" title="${boardSelUniv} 공유 카드">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        공유카드
+      </button>`:''}
+    </div>
+    <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?'🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동':'👆 스트리머 클릭 → 선수 상세'}</span>
   </div>
   <div id="board-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start">`;
   const targets=boardSelUniv==='전체'?univs:univs.filter(u=>u.name===boardSelUniv);
