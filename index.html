@@ -10061,7 +10061,7 @@ function rBoard(C,T){
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
     /* 이동 팝업 */
-    .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;border:1px solid var(--border);}
+    .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
     .brd-move-popup-title{font-size:11px;font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
     .brd-move-popup-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:600;color:var(--text);transition:background .1s;text-align:left;}
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
@@ -10115,32 +10115,41 @@ function buildUnivBoardCard(u, forExport){
     const tierOrder=TIERS.filter(t=>tierMap[t]);
     if(tierMap['기타']&&!TIERS.includes('기타'))tierOrder.push('기타');
 
-    const buildPlayerChip=(p)=>{
+    const buildPlayerChip=(p, chipIdx)=>{
       const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
       const isMain=p.role&&MAIN_ROLES.includes(p.role);
       const rCol=ROLE_COLORS[p.role]||'';
       const rIcon=ROLE_ICONS[p.role]||'';
       if(forExport){
-        return `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.9);border-radius:7px;padding:3px 7px;margin:2px;font-size:11px">
-          ${isMain?`<span style="font-size:9px;font-weight:700;color:${rCol}">${rIcon}</span>`:''}
-          <span style="font-size:9px;font-weight:800;color:${rc.col}">${rc.txt}</span>
-          <span style="font-weight:700;color:#111">${p.name}</span>
+        return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.9);border-radius:8px;padding:4px 10px;margin:2px;font-size:13px">
+          ${isMain?`<span style="font-size:10px;font-weight:800;color:${rCol}">${rIcon}</span>`:''}
+          <span style="font-size:10px;font-weight:800;color:${rc.col}">${rc.txt}</span>
+          <span style="font-weight:700;color:#111;font-size:13px">${p.name}</span>
         </span>`;
       }
       const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      return `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.9);border-radius:7px;padding:3px 7px;margin:2px;font-size:11px;cursor:pointer" onclick="event.stopPropagation();openPlayerModal('${pNameSafe}')">
-        ${isMain?`<span style="font-size:9px;font-weight:700;color:${rCol}">${rIcon}</span>`:''}
-        <span style="font-size:9px;font-weight:800;color:${rc.col}">${rc.txt}</span>
-        <span style="font-weight:700;color:#111">${p.name}</span>
-        <span style="font-size:9px;color:rgba(0,0,0,.35)">${p.tier||''}</span>
+      const totalInUniv=sorted.length;
+      // 관리자는 이동/직책 팝업, 비관리자는 선수 상세
+      const clickFn=isLoggedIn
+        ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
+        : `openPlayerModal('${pNameSafe}')`;
+      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.92);border-radius:8px;padding:5px 11px;margin:2px 2px;font-size:14px;cursor:${isLoggedIn?'grab':'pointer'};transition:box-shadow .12s,background .12s;box-shadow:0 1px 4px rgba(0,0,0,.08)" onmouseover="this.style.background='#fff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.16)'" onmouseout="this.style.background='rgba(255,255,255,.92)';this.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'" onclick="event.stopPropagation();${clickFn}">
+        ${isMain?`<span style="font-size:11px;font-weight:800;color:${rCol}">${rIcon}</span>`:''}
+        <span style="font-size:11px;font-weight:800;color:${rc.col}">${rc.txt}</span>
+        <span style="font-weight:700;color:#111;font-size:14px">${p.name}</span>
+        <span style="font-size:10px;color:rgba(0,0,0,.4);margin-left:2px">${p.tier||''}</span>
       </span>`;
     };
 
+    // 전체 순서에서의 인덱스 맵
+    const chipIdxMap={};
+    sorted.forEach((p,i)=>{ chipIdxMap[p.name]=i; });
+
     const tierRows=tierOrder.map(tier=>{
       const ps=tierMap[tier];
-      return `<div style="margin-bottom:6px">
-        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.65);letter-spacing:.8px;padding:0 2px;margin-bottom:3px">${tier}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p)).join('')}</div>
+      return `<div style="margin-bottom:8px">
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:1px;padding:0 3px;margin-bottom:4px">${tier}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
       </div>`;
     }).join('');
 
@@ -10267,6 +10276,76 @@ function _closeBrdPopup(e){
   }
 }
 
+// 칩 전용 팝업 (무소속 등 칩 레이아웃) - 위/아래 이동 대신 대학이동 위주
+function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
+  if(!isLoggedIn){ openPlayerModal(playerName); return; }
+  e.stopPropagation();
+  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  const allUnivs = _getBoardUnivs();
+  const p = players.find(x=>x.name===playerName);
+  if(!p) return;
+
+  const popup = document.createElement('div');
+  popup.className = 'brd-move-popup';
+  _brdPopup = popup;
+
+  const otherUnivs = allUnivs.filter(u=>u.name!==univName);
+  const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+
+  popup.innerHTML = `
+    <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
+    <div class="brd-move-popup-sep"></div>
+    <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;padding:0 6px 4px">
+      ${['이사장','총장','부총장','총괄','교수','코치','학생회장','오락부장'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px">${r}</button>`).join('')}
+      <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;color:#dc2626">해제</button>
+    </div>
+    <div style="display:flex;gap:4px;padding:0 6px 6px;align-items:center">
+      <input id="brd-role-chip-${playerName.replace(/[^a-zA-Z0-9가-힣]/g,'')}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
+      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${playerName.replace(/[^a-zA-Z0-9가-힣]/g,'')}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
+    </div>
+    <div class="brd-move-popup-sep"></div>
+    <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
+    <div style="display:flex;gap:6px;padding:0 6px 4px">
+      <select id="brd-chip-univ-target" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
+      <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
+    </div>
+    <div class="brd-move-popup-sep"></div>
+    <button class="brd-move-popup-btn" onclick="_brdPopup&&_brdPopup.remove();_brdPopup=null;openPlayerModal('${playerName}')">📋 선수 상세 보기</button>
+  `;
+
+  document.body.appendChild(popup);
+  const targetEl = e.target.closest('.brd-chip');
+  const rect = targetEl?.getBoundingClientRect() || {left:e.clientX, top:e.clientY, width:0, height:0};
+  let left = rect.right + 6;
+  let top = rect.top;
+  const pw=240, ph=300;
+  if(left + pw > window.innerWidth) left = rect.left - pw - 6;
+  if(top + ph > window.innerHeight) top = window.innerHeight - ph - 10;
+  if(top < 8) top = 8;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+}
+
+function boardTransferPlayerFromChip(playerName, fromUniv){
+  if(!isLoggedIn){ alert('관리자만 이동할 수 있습니다.'); return; }
+  const sel = document.getElementById('brd-chip-univ-target');
+  const toUniv = sel?.value;
+  if(!toUniv || toUniv===fromUniv){ alert('이동할 대학을 선택하세요.'); return; }
+  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  const p = players.find(x=>x.name===playerName);
+  if(!p) return;
+  if(!confirm(`"${playerName}"을(를) "${fromUniv}" → "${toUniv}"로 이동하시겠습니까?`)) return;
+  p.univ = toUniv;
+  if(boardPlayerOrder[fromUniv]){
+    boardPlayerOrder[fromUniv] = boardPlayerOrder[fromUniv].filter(n=>n!==playerName);
+  }
+  save(); saveBoardPlayerOrder();
+  _refreshBoardCard(fromUniv);
+  _refreshBoardCard(toUniv);
+  _brdToast(`✅ "${playerName}" → "${toUniv}" 이동 완료`);
+}
+
 function openBrdPlayerPopup(e, playerName, univName, idx, total){
   // 비관리자는 팝업 없이 선수 상세 바로 열기
   if(!isLoggedIn){ openPlayerModal(playerName); return; }
@@ -10312,11 +10391,12 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
 
   document.body.appendChild(popup);
 
-  // 위치 계산
-  const rect = e.target.closest('.brd-row')?.getBoundingClientRect() || {left:e.clientX, top:e.clientY, width:0, height:0};
+  // 위치 계산 - 클릭 대상이 brd-row 또는 brd-chip 어느 것이든 처리
+  const targetEl = e.target.closest('.brd-row, .brd-chip');
+  const rect = targetEl?.getBoundingClientRect() || {left:e.clientX, top:e.clientY, width:0, height:0};
   let left = rect.left + rect.width + 6;
   let top = rect.top;
-  const pw=230, ph=260;
+  const pw=240, ph=320;
   if(left + pw > window.innerWidth) left = rect.left - pw - 6;
   if(top + ph > window.innerHeight) top = window.innerHeight - ph - 10;
   if(top < 8) top = 8;
@@ -10530,9 +10610,10 @@ function initBoardPlayerDrag(body){
     }
   });
 
-  body.querySelectorAll('.brd-row[data-player]').forEach(row=>{
+  // brd-row(일반 카드) + brd-chip(칩 레이아웃) 둘 다 드래그 등록
+  body.querySelectorAll('.brd-row[data-player], .brd-chip[data-player]').forEach(row=>{
     row.addEventListener('dragstart',e=>{
-      e.stopPropagation(); // 카드 드래그 방지
+      e.stopPropagation();
       _brdRowDragSrc=row;
       row.style.opacity='.45';
       e.dataTransfer.effectAllowed='move';
@@ -10540,7 +10621,7 @@ function initBoardPlayerDrag(body){
     });
     row.addEventListener('dragend',e=>{
       row.style.opacity='';
-      document.querySelectorAll('.brd-row').forEach(r=>r.style.outline='');
+      document.querySelectorAll('.brd-row, .brd-chip').forEach(r=>r.style.outline='');
       document.querySelectorAll('.brd-body').forEach(b=>b.style.outline='');
       _brdRowDragSrc=null;
     });
@@ -10549,13 +10630,11 @@ function initBoardPlayerDrag(body){
       e.preventDefault(); e.stopPropagation();
       e.dataTransfer.dropEffect='move';
       if(_brdRowDragSrc!==row){
-        body.querySelectorAll('.brd-row').forEach(r=>r.style.outline='');
+        body.querySelectorAll('.brd-row, .brd-chip').forEach(r=>r.style.outline='');
         row.style.outline='2px solid rgba(255,255,255,.85)';
       }
     });
-    row.addEventListener('dragleave',e=>{
-      row.style.outline='';
-    });
+    row.addEventListener('dragleave',e=>{ row.style.outline=''; });
     row.addEventListener('drop',e=>{
       e.preventDefault(); e.stopPropagation();
       row.style.outline='';
@@ -10563,7 +10642,6 @@ function initBoardPlayerDrag(body){
       const targetUniv = row.dataset.univ;
       const srcUniv = _brdRowDragSrc.dataset.univ;
       if(targetUniv !== srcUniv){
-        // 다른 대학 카드 내 row 위에 드롭 → 대학 이동
         const playerName = _brdRowDragSrc.dataset.player;
         if(!confirm(`"${playerName}"을(를) "${srcUniv}" → "${targetUniv}"로 이동하시겠습니까?`)) return;
         const p = players.find(x=>x.name===playerName);
@@ -10572,26 +10650,24 @@ function initBoardPlayerDrag(body){
         if(boardPlayerOrder[srcUniv]){
           boardPlayerOrder[srcUniv] = boardPlayerOrder[srcUniv].filter(n=>n!==playerName);
         }
-        // targetUniv 순서에 해당 row 위치 앞에 삽입
-        const targetRows = [...body.querySelectorAll('.brd-row[data-player]')].map(r=>r.dataset.player);
-        const targetIdx = targetRows.indexOf(row.dataset.player);
-        if(!boardPlayerOrder[targetUniv]) boardPlayerOrder[targetUniv] = [..._getBoardPlayers(targetUniv).map(p=>p.name)];
-        const ti = boardPlayerOrder[targetUniv].indexOf(row.dataset.player);
-        if(ti>=0) boardPlayerOrder[targetUniv].splice(ti,0,playerName);
+        const ti2 = (boardPlayerOrder[targetUniv]||[]).indexOf(row.dataset.player);
+        if(!boardPlayerOrder[targetUniv]) boardPlayerOrder[targetUniv] = _getBoardPlayers(targetUniv).map(p=>p.name);
+        if(ti2>=0) boardPlayerOrder[targetUniv].splice(ti2,0,playerName);
         else boardPlayerOrder[targetUniv].push(playerName);
         save(); saveBoardPlayerOrder();
         _refreshBoardCard(srcUniv); _refreshBoardCard(targetUniv);
         _brdToast(`✅ "${playerName}" → "${targetUniv}" 이동 완료`);
         return;
       }
-      // 같은 대학 내 순서 변경
-      const allRows = [...body.querySelectorAll('.brd-row[data-player]')];
-      const si=allRows.indexOf(_brdRowDragSrc), di=allRows.indexOf(row);
-      if(si<di) row.after(_brdRowDragSrc); else row.before(_brdRowDragSrc);
-      const newOrder=[...body.querySelectorAll('.brd-row[data-player]')].map(r=>r.dataset.player);
-      boardPlayerOrder[targetUniv]=newOrder;
-      saveBoardPlayerOrder();
-      body.querySelectorAll('.brd-row[data-player]').forEach((r,i)=>r.setAttribute('data-idx',i));
+      // 같은 대학 내 순서 변경 (칩은 flex wrap이라 DOM 순서 변경이 시각적으로 반영됨)
+      const allItems = [...body.querySelectorAll('.brd-row[data-player], .brd-chip[data-player]')];
+      const si=allItems.indexOf(_brdRowDragSrc), di=allItems.indexOf(row);
+      if(si>=0 && di>=0 && si!==di){
+        if(si<di) row.after(_brdRowDragSrc); else row.before(_brdRowDragSrc);
+        const newOrder=[...body.querySelectorAll('.brd-row[data-player], .brd-chip[data-player]')].map(r=>r.dataset.player);
+        boardPlayerOrder[targetUniv]=newOrder;
+        saveBoardPlayerOrder();
+      }
     });
   });
 }
