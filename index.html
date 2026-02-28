@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⭐ 스타대학 데이터 센터 V49.2</title>
+<title>⭐ 스타대학 데이터 센터 V49.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -274,213 +274,225 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
    📱 모바일 UI 개선
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
-  body { padding: 0; font-size: 12px; background: #fff; }
+  /* ── 기본 레이아웃 ── */
+  body { padding: 0; font-size: 12px; background: #f0f2f5; }
   .app { border-radius: 0; border: none; }
-  .hdr { padding: 9px 12px; gap: 7px; min-height: 48px; }
+
+  /* ── 헤더 ── */
+  .hdr { padding: 9px 12px; gap: 7px; min-height: 50px; }
   .hdr-title { font-size: 13px; }
   .hdr-ver { display: none; }
   .hdr-ico { font-size: 20px; }
-  /* 헤더 오른쪽 버튼들: 아이콘만 보이도록 */
   #globalSearch { width: 0 !important; padding: 0 !important; opacity: 0; pointer-events: none; position: absolute; }
   .hdr-search-wrap { position: relative; }
   .hdr-search-icon {
     display: flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 36px; height: 36px; border-radius: 50%;
     background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
-    cursor: pointer; font-size: 15px; color: #fff; flex-shrink: 0; transition: .15s;
+    cursor: pointer; font-size: 16px; color: #fff; flex-shrink: 0; transition: .15s;
   }
-  .hdr-search-icon:hover { background: rgba(255,255,255,.28); }
-  /* 검색창 오픈 시 */
   .hdr-search-wrap.open #globalSearch {
-    width: 140px !important; opacity: 1; pointer-events: auto; position: relative;
-    padding: 5px 10px !important; font-size: 12px !important;
+    width: 150px !important; opacity: 1; pointer-events: auto; position: relative;
+    padding: 6px 12px !important; font-size: 13px !important;
   }
   .hdr-search-wrap.open .hdr-search-icon { display: none; }
-  /* 다크 토글: 이모지만 */
-  #darkToggleBtn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50%; font-size: 15px; display: flex; align-items: center; justify-content: center; }
-  #darkToggleBtn::after { content: ''; } /* 텍스트 숨김은 JS로 */
-  .hdr-login-btn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-  /* 로그인 상태 텍스트 숨김 */
+  #darkToggleBtn { padding: 0 !important; width: 36px; height: 36px; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .hdr-login-btn { padding: 0 !important; width: 36px; height: 36px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
   #hdrLoginStatus { display: none !important; }
 
-  /* 탭 메뉴 - 모바일에서 스크롤 개선 */
-  .tabs { padding: 5px 6px; gap: 3px; }
-  .tab { padding: 7px 11px; font-size: 11px; border-radius: 8px; white-space: nowrap; min-height: 36px; display: flex; align-items: center; }
+  /* ── 탭 메뉴 ── */
+  .tabs { padding: 4px 6px; gap: 2px; scroll-padding: 6px; }
+  .tab { padding: 8px 12px; font-size: 11px; border-radius: 8px; white-space: nowrap; min-height: 38px; display: flex; align-items: center; touch-action: manipulation; }
 
-  /* 폼 영역 */
-  .form-row { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 12px; }
-  .form-row input, .form-row select { width: 100% !important; font-size: 13px; padding: 8px 10px; }
-  .flabel { font-size: 11px; }
+  /* ── 폼 영역 ── */
+  .form-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  .form-row input, .form-row select { width: 100% !important; font-size: 14px; padding: 10px 12px; min-height: 44px; border-radius: 8px; }
+  .flabel { font-size: 12px; }
   #fstrip { padding: 8px 12px 0; }
 
-  /* 테이블 */
-  table { font-size: 11px; }
-  th, td { padding: 6px 5px; }
-  .ubadge { min-width: 32px; font-size: 10px; padding: 2px 4px; }
-
-  /* 메인 콘텐츠 */
-  .main { overflow-x: hidden; padding: 10px 10px 90px; }
+  /* ── 메인 콘텐츠 ── */
+  .main { overflow-x: hidden; padding: 10px 8px 100px; }
   #actionBar { display: none !important; }
   #exportHint { display: none; }
 
-  /* 섹션 카드 */
-  .ssec { padding: 12px 10px; margin-bottom: 10px; }
+  /* ── 스트리머 테이블: 가로 스크롤 완전 방지 ── */
+  table { font-size: 11px; min-width: 0; width: 100%; table-layout: fixed; }
+  th, td { padding: 8px 4px; word-break: break-word; }
+  .td-name { max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ubadge { min-width: 28px; font-size: 10px; padding: 2px 4px; white-space: nowrap; }
+  .tbadge { padding: 2px 5px !important; font-size: 9px !important; }
+  /* 불필요한 컬럼 숨기기 */
+  .col-hide-mobile { display: none !important; }
+  .tab-cont { overflow-x: hidden; }
+  .tab-cont > div { overflow-x: hidden; }
+
+  /* ── 섹션 카드 ── */
+  .ssec { padding: 12px 10px; margin-bottom: 10px; border-radius: 10px; }
   .scards { gap: 6px; }
-  .scard { min-width: 80px; padding: 10px 8px; }
+  .scard { min-width: 72px; padding: 10px 6px; border-radius: 8px; }
   .scard .sv { font-size: 20px; }
 
-  /* 모달 - 모바일에서 바텀 시트로 (크기 축소) */
+  /* ── 모달: 바텀 시트 ── */
   .modal { align-items: flex-end !important; }
   .mbox {
-    width: 100% !important;
-    max-width: 100vw !important;
-    padding: 16px 14px 24px !important;
-    margin: 0 !important;
-    border-radius: 18px 18px 0 0 !important;
-    max-height: 75vh !important;
-    overflow-y: auto !important;
+    width: 100% !important; max-width: 100vw !important;
+    padding: 0 14px 28px !important; margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 88vh !important; overflow-y: auto !important;
     animation: slideUpModal .26s cubic-bezier(.22,.68,0,1.1);
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   .umbox {
-    width: 100% !important;
-    max-width: 100vw !important;
-    padding: 14px 12px 24px !important;
-    margin: 0 !important;
-    border-radius: 18px 18px 0 0 !important;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
+    width: 100% !important; max-width: 100vw !important;
+    padding: 0 14px 28px !important; margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 88vh !important; overflow-y: auto !important;
     animation: slideUpModal .26s cubic-bezier(.22,.68,0,1.1);
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   @keyframes slideUpModal {
-    from { transform: translateY(100%); opacity: .6; }
+    from { transform: translateY(100%); opacity: .5; }
     to   { transform: translateY(0); opacity: 1; }
   }
+  /* 드래그 핸들 */
   .mbox::before, .umbox::before {
-    content: '';
-    display: block;
-    width: 36px; height: 3px;
-    background: #d1d5db;
-    border-radius: 2px;
-    margin: -4px auto 12px;
-    flex-shrink: 0;
+    content: ''; display: block;
+    width: 40px; height: 4px; background: #d1d5db;
+    border-radius: 2px; margin: 12px auto 14px; flex-shrink: 0;
   }
-  .mtitle { cursor: default !important; font-size: 14px !important; }
+  .mtitle { cursor: default !important; font-size: 15px !important; padding-top: 4px !important; }
   .mtitle::before { display: none !important; }
-  /* 모달 내부 요소 크기 축소 */
-  .mbox input, .mbox select, .umbox input, .umbox select { 
-    padding: 7px 10px !important; font-size: 12px !important; 
+  .mbox input, .mbox select, .umbox input, .umbox select {
+    padding: 10px 12px !important; font-size: 14px !important;
+    min-height: 44px !important; border-radius: 8px !important;
   }
-  .mbox .btn, .umbox .btn { padding: 7px 12px !important; font-size: 12px !important; }
-  .mbox .ssec, .umbox .ssec { padding: 10px 10px !important; }
+  .mbox .btn, .umbox .btn { padding: 10px 14px !important; font-size: 13px !important; min-height: 44px; touch-action: manipulation; }
+  .mbox .ssec, .umbox .ssec { padding: 10px !important; }
   .mbox .scards, .umbox .scards { gap: 5px !important; }
   .mbox .scard, .umbox .scard { min-width: 64px !important; padding: 8px 6px !important; }
   .mbox .scard .sv, .umbox .scard .sv { font-size: 18px !important; }
+  .mbtns { flex-wrap: wrap; gap: 8px; }
+  .mbtns .btn { flex: 1; min-width: 100px; justify-content: center; }
 
-  /* 점수보드 */
+  /* ── 버튼 터치 영역 확대 ── */
+  .btn, button[class*="btn"] { min-height: 40px; touch-action: manipulation; }
+  .btn-xs { min-height: 30px !important; }
+  .btn-sm { min-height: 36px !important; }
+
+  /* ── 점수보드 ── */
   .score-board { gap: 6px; padding: 8px 10px; }
-  .score-num { font-size: 20px; }
+  .score-num { font-size: 22px; }
 
-  /* 대전 카드 */
-  .rec-header { padding: 8px 10px; gap: 5px; }
+  /* ── 대전 카드 ── */
+  .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
+  .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
   .rec-sum-score { font-size: 16px; }
-  .rec-sum-vs { flex-wrap: wrap; gap: 4px; }
-  .rec-summary { min-height: 40px; }
+  .rec-sum-vs { flex-wrap: wrap !important; gap: 4px !important; }
+  .rec-summary { min-height: 44px; }
+  .rec-detail-area { padding: 8px 10px !important; }
 
-  /* 투어너먼트 */
-  .tour-wrap { padding: 36px 8px 20px; }
+  /* ── 경기 빌더 ── */
+  .match-builder { padding: 12px 10px; border-radius: 10px; }
+  .match-builder h3 { font-size: 13px; padding: 10px 12px; margin: -12px -10px 12px; border-radius: 10px 10px 0 0; }
+  .set-block { padding: 10px; border-radius: 8px; }
+  .game-row { flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 8px; }
+  .game-row select { min-width: 0; flex: 1; font-size: 13px; min-height: 40px; }
+  .game-row .win-btn { flex: 1; min-width: 70px; min-height: 40px; font-size: 13px; padding: 8px 10px; }
+  .game-row .btn-r { min-width: 50px; min-height: 36px; }
+
+  /* ── 투어너먼트 ── */
+  .tour-wrap { padding: 36px 8px 20px; overflow-x: auto; }
   .mcard { width: 110px; padding: 7px; }
 
-  /* 조별리그 경기 카드 모바일 */
+  /* ── 조별리그 ── */
   .grp-match-card { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  .grp-rank-table th, .grp-rank-table td { padding: 6px 5px; font-size: 11px; }
 
-  /* 테이블 가로 스크롤 */
-  .tab-cont table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* ── 현황판 ── */
+  .brd-hdr { padding: 12px 14px 10px !important; }
+  .brd-body { padding: 8px 8px 12px !important; gap: 4px !important; }
+  .brd-card { border-radius: 14px !important; overflow: hidden; }
+  .brd-row { padding: 6px 8px !important; min-height: 40px; }
+  .brd-name { font-size: 13px !important; }
+  #board-wrap { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; gap: 10px !important; }
 
-  /* 세트/게임 빌더 */
-  .set-block { padding: 10px; }
-  .game-row { flex-wrap: wrap; gap: 5px; padding: 7px 8px; }
-  .game-row select { min-width: 100px; font-size: 12px; }
-  .win-btn { padding: 6px 10px; font-size: 12px; }
+  /* ── 검색 결과 ── */
+  #globalSearchDrop { right: 8px !important; left: 8px !important; width: auto !important; top: 54px !important; }
 
-  /* match-builder */
-  .match-builder h3 { font-size: 13px; padding: 10px 12px; margin: -10px -10px 12px; }
-
-  /* 경기 상세 자동 정렬 강화 */
-  .rec-detail-area { padding: 8px 10px !important; }
-  .detail-game-row {
-    flex-direction: column !important;
-    gap: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #eef0f4;
-    margin-bottom: 8px !important;
-  }
-  .detail-game-row > div[style*="display:flex"] {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    border-radius: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid rgba(0,0,0,.06) !important;
-    padding: 10px 12px !important;
-    flex-wrap: nowrap !important;
-  }
-  .detail-game-row > span[style*="color:var(--gray-l)"] {
-    display: block !important;
-    padding: 5px 10px 2px !important;
-    font-size: 9px !important;
-    color: #94a3b8 !important;
-    font-weight: 700 !important;
-    background: #f8fafc;
-    border-bottom: 1px solid #eef0f4;
-  }
-  /* set-row 헤더 모바일 */
-  .set-row > div:first-child {
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    padding: 8px 10px !important;
-    font-size: 12px !important;
-  }
-  /* rec-sum-header 모바일 */
-  .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
-  .rec-sum-vs { flex-wrap: wrap !important; gap: 4px !important; }
-
-  /* 하단 네비게이션 공간 확보 */
+  /* ── 하단 내비게이션 ── */
   #bottomNav { display: flex !important; }
 
-  /* 다크모드 모바일: 검은 글자 버그 수정 */
+  /* ── 다크모드 수정 ── */
   body.dark .brd-name { color: #e2e8f0 !important; }
   body.dark table td { color: #e2e8f0 !important; }
   body.dark .rbadge { opacity: .9; }
-  /* 현황판 카드 모바일: 헤더 패딩 최적화 */
-  .brd-hdr { padding: 12px 14px 10px !important; }
-  .brd-body { padding: 8px 8px 12px !important; gap: 3px !important; }
-  .brd-card { border-radius: 14px !important; overflow: hidden; }
-  /* tier 순위표 모바일 */
-  .tbadge { padding: 2px 6px !important; font-size: 10px !important; }
-  /* 직책 배지 모바일 */
-  .brd-role-main { font-size: 8px !important; padding: 1px 4px !important; }
-  /* 스트리머 테이블 가로 스크롤 강화 */
-  table { min-width: 420px; }
-  .main { padding: 10px 8px 90px !important; }
 
+  /* ── 필터/정렬 바 ── */
+  .fbar { gap: 4px; }
+  .fbar .pill { padding: 5px 10px; min-height: 34px; font-size: 11px; touch-action: manipulation; }
+  .sort-bar { flex-wrap: wrap; gap: 4px; }
+  .sort-btn { min-height: 34px; padding: 5px 10px; touch-action: manipulation; }
+  .tier-filter-bar { flex-wrap: wrap; gap: 4px; }
+  .tier-filter-btn { min-height: 34px; padding: 4px 12px; touch-action: manipulation; }
+
+  /* ── 현황판 툴바 ── */
+  .brd-toolbar { flex-wrap: wrap !important; gap: 8px !important; padding: 10px 12px !important; }
+  .brd-toolbar .btn { min-height: 38px; font-size: 12px; }
+
+  /* ── from merged block ── */
+/* 세트 헤더 */
+  .rec-detail-area .set-row > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+  /* 게임 행 - 좌우 나란히 → 세로 스택 */
+  .rec-detail-area > div[style*="display:flex"] {
+    flex-wrap: wrap !important;
+  }
+  /* 팀 배지 overflow 방지 */
+  .ubadge { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 현황판 이동 팝업 - 모바일에서 하단 시트 */
+  .brd-move-popup {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important; bottom: 0 !important;
+    top: auto !important;
+    max-width: 100vw !important; min-width: 0 !important;
+    width: 100% !important;
+    max-height: 70vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    overflow-y: auto !important;
+    padding: 8px 14px 30px !important;
+    animation: slideUpModal .25s ease;
+  }
+  .brd-move-popup::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: #dde2eb;
+    border-radius: 2px;
+    margin: 6px auto 10px;
+  }
+  /* 스트리머 탭 테이블 */
+  .total-tbl th, .total-tbl td { padding: 5px 4px !important; font-size: 11px !important; }
 }
 
 @media (max-width: 480px) {
   .hdr-title { font-size: 12px; letter-spacing: 0; }
-  /* 480px 이하에서 다크/로그인 버튼 이모지만 표시 */
-  #darkToggleBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 15px !important; }
-  #hdrLoginBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 14px !important; }
-  #hdrLogoutBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 14px !important; }
-  .tab { padding: 6px 9px; font-size: 10px; min-height: 34px; }
-  .scard { min-width: 70px; }
-  .game-row select { min-width: 90px; }
-  .td-name { max-width: 80px; }
-  .detail-set-hdr { flex-wrap: wrap !important; gap: 4px !important; }
+  #darkToggleBtn { width: 34px !important; height: 34px !important; font-size: 15px !important; }
+  #hdrLoginBtn, #hdrLogoutBtn { width: 34px !important; height: 34px !important; font-size: 14px !important; }
+  .tab { padding: 7px 10px; font-size: 10px; min-height: 36px; }
+  .scard { min-width: 66px; }
+  .game-row select { font-size: 12px; }
+  .td-name { max-width: 72px; }
+  #board-wrap { grid-template-columns: 1fr !important; }
+  .mbox, .umbox { max-height: 90vh !important; }
+  table { font-size: 10px; }
+  th, td { padding: 6px 3px; }
+  .fbar .pill, .sort-btn, .tier-filter-btn { font-size: 10px; padding: 4px 8px; }
 }
+
 
 /* ── 모바일 경기 상세 팝업 오버레이 ── */
 .mobile-match-overlay {
@@ -601,49 +613,7 @@ body.dark .mobile-match-sheet-close { background: #2d3f55; color: #94a3b8; }
 body.dark .mobile-match-sheet-score { background: #162032; border-color: #2d3f55; }
 body.dark .mobile-match-sheet-footer { background: #1e293b; border-color: #2d3f55; }
 body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
-@media (max-width: 768px) {
-  /* 세트 헤더 */
-  .rec-detail-area .set-row > div:first-child {
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    padding: 6px 8px !important;
-    font-size: 11px !important;
-  }
-  /* 게임 행 - 좌우 나란히 → 세로 스택 */
-  .rec-detail-area > div[style*="display:flex"] {
-    flex-wrap: wrap !important;
-  }
-  /* 팀 배지 overflow 방지 */
-  .ubadge { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* 현황판 그리드 모바일 - 1열 */
-  #board-wrap { grid-template-columns: 1fr !important; }
-  /* 현황판 툴바 버튼 모바일 */
-  .brd-toolbar { gap: 6px !important; padding: 8px 10px !important; }
-  .brd-tbtn { padding: 5px 10px !important; font-size: 11px !important; }
-  /* 현황판 이동 팝업 - 모바일에서 하단 시트 */
-  .brd-move-popup {
-    position: fixed !important;
-    left: 0 !important; right: 0 !important; bottom: 0 !important;
-    top: auto !important;
-    max-width: 100vw !important; min-width: 0 !important;
-    width: 100% !important;
-    max-height: 70vh !important;
-    border-radius: 20px 20px 0 0 !important;
-    overflow-y: auto !important;
-    padding: 8px 14px 30px !important;
-    animation: slideUpModal .25s ease;
-  }
-  .brd-move-popup::before {
-    content: '';
-    display: block;
-    width: 40px; height: 4px;
-    background: #dde2eb;
-    border-radius: 2px;
-    margin: 6px auto 10px;
-  }
-  /* 스트리머 탭 테이블 */
-  .total-tbl th, .total-tbl td { padding: 5px 4px !important; font-size: 11px !important; }
-}
+
 
 @media (min-width: 769px) {
   #bottomNav { display: none !important; }
@@ -839,7 +809,7 @@ body.dark [style*="background:#f0fdf4"] [style*="color:#15803d"]{color:#4ade80!i
 /* 현황판 카드 */
 body.dark .brd-card{filter:saturate(.55) brightness(.78);border-color:rgba(255,255,255,.06)!important;}
 body.dark .brd-card:hover{filter:saturate(.65) brightness(.88);}
-body.dark .brd-univ-name-btn{color:#e2e8f0!important;text-shadow:0 1px 4px rgba(0,0,0,.35)!important;}
+body.dark .brd-univ-name-btn{color:#fff!important;text-shadow:0 1px 6px rgba(0,0,0,.5)!important;}
 body.dark .brd-name{color:#e2e8f0!important;}
 /* brd-row 다크 */
 body.dark .brd-row{background:rgba(15,23,42,.6)!important;border-color:rgba(255,255,255,.1)!important;border-left-color:inherit!important;}
@@ -936,7 +906,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 <div class="hdr">
   <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
   <div class="hdr-title" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer" title="메인으로">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V49.2</div>
+  <div class="hdr-ver">V49.3</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
@@ -1856,6 +1826,7 @@ function buildPlayerDetailHTML(p){
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${gUI(p.univ,'12px')}${p.univ}</span>
           <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
+          ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" title="방송국 바로가기" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:16px;color:#fff;transition:.15s;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.35)'" onmouseout="this.style.background='rgba(255,255,255,.22)'">🏠</a>`:''}
         </div>
       </div>
     </div>
@@ -2121,7 +2092,7 @@ function rTotal(C,T){
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <button class="pill ${totalHideNoRecord?'on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 선수 숨기기</button>
     <div style="margin-left:auto;position:relative;display:inline-block">
-      <input type="text" id="total-search" value="${totalSearch}" placeholder="🔍 이름 검색..."
+      <input type="text" id="total-search" value="${totalSearch}" placeholder="🔍 이름/대학/종족/성별 검색..."
         oninput="(function(inp){totalSearch=inp.value;window._searchFocusId='total-search';clearTimeout(window._totalSearchTm);window._totalSearchTm=setTimeout(function(){render();window._searchFocusId=null;},200);})(this)"
         style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:130px">
     </div>
@@ -2147,7 +2118,21 @@ function rTotal(C,T){
   getAllUnivs().forEach(u=>{
     let up=players.filter(p=>p.univ===u.name);
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
-    if(totalSearch.trim()) up=up.filter(p=>p.name.toLowerCase().includes(totalSearch.trim().toLowerCase()));
+    if(totalSearch.trim()){
+      const _tsq=totalSearch.trim().toLowerCase();
+      const _RMAP={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P'};
+      const _GMAP={'여':'F','여자':'F','남':'M','남자':'M'};
+      const _toks=_tsq.split(/\s+/).filter(Boolean);
+      let _rf='',_gf='',_nts=[];
+      _toks.forEach(t=>{if(_RMAP[t])_rf=_RMAP[t];else if(_GMAP[t])_gf=_GMAP[t];else _nts.push(t);});
+      up=up.filter(p=>{
+        const nm=_nts.length===0||_nts.every(t=>
+          p.name.toLowerCase().includes(t)||(p.univ||'').toLowerCase().includes(t)||
+          (p.tier||'').toLowerCase().includes(t)||(p.role||'').toLowerCase().includes(t)
+        );
+        return nm&&(!_rf||p.race===_rf)&&(!_gf||p.gender===_gf);
+      });
+    }
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
@@ -2158,7 +2143,19 @@ function rTotal(C,T){
     const sorted=(typeof _getBoardPlayers==='function')
       ? _getBoardPlayers(u.name).filter(p=>{
           if(totalRaceFilter!=='전체'&&p.race!==totalRaceFilter)return false;
-          if(totalSearch.trim()&&!p.name.toLowerCase().includes(totalSearch.trim().toLowerCase()))return false;
+          if(totalSearch.trim()){
+            const _tsq2=totalSearch.trim().toLowerCase();
+            const _RMAP2={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P'};
+            const _GMAP2={'여':'F','여자':'F','남':'M','남자':'M'};
+            const _toks2=_tsq2.split(/\s+/).filter(Boolean);
+            let _rf2='',_gf2='',_nts2=[];
+            _toks2.forEach(t=>{if(_RMAP2[t])_rf2=_RMAP2[t];else if(_GMAP2[t])_gf2=_GMAP2[t];else _nts2.push(t);});
+            const _nm2=_nts2.length===0||_nts2.every(t=>
+              p.name.toLowerCase().includes(t)||(p.univ||'').toLowerCase().includes(t)||
+              (p.tier||'').toLowerCase().includes(t)||(p.role||'').toLowerCase().includes(t)
+            );
+            if(!(_nm2&&(!_rf2||p.race===_rf2)&&(!_gf2||p.gender===_gf2)))return false;
+          }
           if(totalHideNoRecord&&!(p.win+p.loss))return false;
           return true;
         })
@@ -3232,7 +3229,7 @@ function recSummaryListHTML(arr, mode, context){
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
-      <input type="text" id="rq-${mode}" placeholder="🔍 선수/대학 검색..." value="${initQ}"
+      <input type="text" id="rq-${mode}" placeholder="🔍 선수/대학/종족 검색..." value="${initQ}"
         oninput="recFilterInPlace('${mode}',this.value)"
         style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:140px">
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
@@ -3583,7 +3580,18 @@ function doSearch(val){
   if(!R)return;
   if(!v){R.innerHTML='';return;}
   // 여러 선수 매칭 지원
-  const matched=players.filter(x=>x.name.toLowerCase().includes(v)||(x.univ||'').toLowerCase().includes(v));
+  const _RMAP3={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P'};
+  const _GMAP3={'여':'F','여자':'F','남':'M','남자':'M'};
+  const _toks3=v.split(/\s+/).filter(Boolean);
+  let _rf3='',_gf3='',_nts3=[];
+  _toks3.forEach(t=>{if(_RMAP3[t])_rf3=_RMAP3[t];else if(_GMAP3[t])_gf3=_GMAP3[t];else _nts3.push(t);});
+  const matched=players.filter(x=>{
+    const nm=_nts3.length===0||_nts3.every(t=>
+      x.name.toLowerCase().includes(t)||(x.univ||'').toLowerCase().includes(t)||
+      (x.tier||'').toLowerCase().includes(t)||(x.role||'').toLowerCase().includes(t)
+    );
+    return nm&&(!_rf3||x.race===_rf3)&&(!_gf3||x.gender===_gf3);
+  });
   if(!matched.length){R.innerHTML=`<div style="color:var(--gray-l);padding:20px">검색 결과 없음</div>`;return;}
   // 완전 일치 우선, 아니면 첫 번째
   const p=matched.find(x=>x.name.toLowerCase()===v)||matched[0];
@@ -4096,48 +4104,99 @@ function setBuilderHTML(bld, mode){
   const mB=rfB?rawMB.filter(p=>p.race===rfB):rawMB;
   const canBuild=(isCK)?(rawMA.length&&rawMB.length):(teamA&&teamB);
   if(canBuild){
-    h+=`<div class="score-board">
-      <span style="font-weight:700">${isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':teamA}</span>
-      <span class="score-num wt">${scoreA}</span>
-      <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
-      <span class="score-num lt">${scoreB}</span>
-      <span style="font-weight:700">${isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':teamB}</span>
-      <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${bld.sets.length}세트</span>
+    // 입력 모드 토글: 세트 방식 / 세트 없는 방식
+    const useNoSet=bld.noSetMode||false;
+    h+=`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:600;color:var(--text3)">입력 방식:</span>
+      <button class="btn btn-sm ${!useNoSet?'btn-b':'btn-w'}" onclick="BLD['${mode}'].noSetMode=false;render()">📦 세트 방식</button>
+      <button class="btn btn-sm ${useNoSet?'btn-b':'btn-w'}" onclick="BLD['${mode}'].noSetMode=true;BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];render()">📋 세트 없이 경기 추가</button>
     </div>`;
-    bld.sets.forEach((set,si)=>{
-      const isAce=(si===2);const sLabel=isAce?'🎯 에이스전':`${si+1}세트`;
-      const sA=set.scoreA||0,sB=set.scoreB||0;
-      h+=`<div class="set-block ${isAce?'ace':''}">
-        <div class="set-title">
-          <span class="set-badge ${isAce?'ace':''}">${sLabel}</span>
-          <span style="font-size:12px;color:var(--gray-l)">경기 ${set.games.length}개 &nbsp;|&nbsp; <span class="${sA>sB?'wt':''}">${sA}</span>:<span class="${sB>sA?'wt':''}">${sB}</span></span>
-          <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
-        </div>`;
-      set.games.forEach((g,gi)=>{
+    if(useNoSet){
+      const freeGames=bld.freeGames||[];
+      let fgA=0,fgB=0;
+      freeGames.forEach(g=>{if(g.winner==='A')fgA++;else if(g.winner==='B')fgB++;});
+      const dA=bld.directSA!=null?bld.directSA:fgA;
+      const dB=bld.directSB!=null?bld.directSB:fgB;
+      h+=`<div class="score-board">
+        <span style="font-weight:700">${isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A')}</span>
+        <span class="score-num wt">${dA}</span>
+        <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
+        <span class="score-num lt">${dB}</span>
+        <span style="font-weight:700">${isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B')}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
+      </div>`;
+      h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <span style="font-size:12px;font-weight:700;color:var(--blue)">⚡ 간편 승수 입력</span>
+        <span style="font-size:12px">${teamA||'팀A'}:</span>
+        <input type="number" min="0" value="${bld.directSA??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSA=parseInt(this.value)||0;render()">
+        <span style="font-size:12px">${teamB||'팀B'}:</span>
+        <input type="number" min="0" value="${bld.directSB??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSB=parseInt(this.value)||0;render()">
+        <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
+      </div>`;
+      freeGames.forEach((g,gi)=>{
         const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
         const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-          <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+          <select onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
           <span style="font-size:11px;color:var(--gray-l)">vs</span>
-          <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
-          <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
-          <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
-          <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>
-          <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">삭제</button>
+          <select onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+          <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
+          <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
+          <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='B';render()">B 승</button>
+          <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].freeGames.splice(${gi},1);render()">삭제</button>
         </div>`;
       });
-      h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button></div>`;
-    });
-    if(bld.sets.length<3){
-      const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
-      h+=`<button class="btn btn-b" style="margin-right:8px;margin-top:4px" onclick="BLD['${mode}'].sets.push({games:[],scoreA:0,scoreB:0,winner:''});render()">+ ${nLabel}</button>`;
+      h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button>`;
+      h+=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">초기화</button>
+      </div>`;
+    } else {
+      h+=`<div class="score-board">
+        <span style="font-weight:700">${isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A')}</span>
+        <span class="score-num wt">${scoreA}</span>
+        <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
+        <span class="score-num lt">${scoreB}</span>
+        <span style="font-weight:700">${isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B')}</span>
+        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${bld.sets.length}세트</span>
+      </div>`;
+      bld.sets.forEach((set,si)=>{
+        const isAce=(si===2);const sLabel=isAce?'🎯 에이스전':`${si+1}세트`;
+        const sA=set.scoreA||0,sB=set.scoreB||0;
+        h+=`<div class="set-block ${isAce?'ace':''}">
+          <div class="set-title">
+            <span class="set-badge ${isAce?'ace':''}">${sLabel}</span>
+            <span style="font-size:12px;color:var(--gray-l)">경기 ${set.games.length}개 &nbsp;|&nbsp; <span class="${sA>sB?'wt':''}">${sA}</span>:<span class="${sB>sA?'wt':''}">${sB}</span></span>
+            <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
+          </div>`;
+        set.games.forEach((g,gi)=>{
+          const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
+          h+=`<div class="game-row">
+            <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
+            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+            <span style="font-size:11px;color:var(--gray-l)">vs</span>
+            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
+            <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
+            <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>
+            <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">삭제</button>
+          </div>`;
+        });
+        h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button></div>`;
+      });
+      if(bld.sets.length<3){
+        const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
+        h+=`<button class="btn btn-b" style="margin-right:8px;margin-top:4px" onclick="BLD['${mode}'].sets.push({games:[],scoreA:0,scoreB:0,winner:''});render()">+ ${nLabel}</button>`;
+      }
+      h+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">초기화</button>
+      </div>`;
     }
-    h+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-      <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">초기화</button>
-    </div>`;
   }
   return h;
 }
@@ -4152,8 +4211,45 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
-  if(!bld.sets.length)return alert('세트를 추가하세요.');
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
+  // 세트 없는 방식 처리
+  if(bld.noSetMode){
+    if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
+    const freeGames=bld.freeGames||[];
+    const date=bld.date||new Date().toISOString().slice(0,10);
+    const matchId=genId();
+    // 선수 지정된 경기 결과를 개인 history에 반영
+    freeGames.forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wName=g.winner==='A'?g.playerA:g.playerB;
+      const lName=g.winner==='A'?g.playerB:g.playerA;
+      applyGameResult(wName,lName,date,g.map||'-',matchId);
+    });
+    let totalA=0,totalB=0;
+    if(bld.directSA!=null||bld.directSB!=null){
+      totalA=bld.directSA||0;
+      totalB=bld.directSB||0;
+    } else {
+      freeGames.forEach(g=>{if(g.winner==='A')totalA++;else if(g.winner==='B')totalB++;});
+    }
+    // freeGames를 단일 세트로 저장 (sets 없이도 표시 가능하도록)
+    const setsSnap=freeGames.length?[{scoreA:totalA,scoreB:totalB,winner:totalA>totalB?'A':totalB>totalA?'B':'',games:freeGames.map(g=>({...g}))}]:[];
+    const matchObj={_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,noSetMode:true};
+    if(mode==='mini') miniM.unshift(matchObj);
+    else if(mode==='univm') univM.unshift(matchObj);
+    else if(mode==='comp'){
+      const cn=bld.compName||document.getElementById('comp-name-input')?.value||curComp||'';
+      if(!cn)return alert('대회명을 입력하세요.');
+      if(cn&&!compNames.includes(cn))compNames.push(cn);
+      curComp=cn;
+      comps.unshift({...matchObj,n:cn,hostUniv:bld.teamA,u:bld.teamA});
+    }
+    BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+    if(mode==='mini')miniSub='records';
+    else if(mode==='univm')univmSub='records';
+    render();return;
+  }
+  if(!bld.sets.length)return alert('세트를 추가하세요.');
   let totalA=0,totalB=0;
   bld.sets.forEach((s,si)=>{recalcSet(mode,si);if(s.winner==='A')totalA++;else if(s.winner==='B')totalB++;});
   const date=bld.date||new Date().toISOString().slice(0,10);
@@ -6402,6 +6498,12 @@ function openEP(name){
       <img id="ed-photo-preview" src="${p.photo||''}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;${p.photo?'':' display:none'}" onerror="this.style.display='none'">
     </div>
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.</div>
+    <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
+      ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" style="font-size:18px;text-decoration:none" title="방송국 바로가기">🏠</a>`:''}
+    </div>
+    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">치지직/트위치/유튜브 등 방송국 주소. 스트리머 상세에서 홈 아이콘으로 이동됩니다.</div>
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
@@ -6517,6 +6619,8 @@ function savePlayer(){
   p.points=parseInt(document.getElementById('ed-pts').value)||0;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
+  const _channel=(document.getElementById('ed-channel')?.value||'').trim();
+  p.channelUrl=_channel||undefined;
   save();render();cm('emModal');
   // playerModal 열려있으면 메모 즉시 갱신
   const _pm=document.getElementById('playerModal');
@@ -9535,33 +9639,65 @@ function statsAdvSearchHTML(){
 function onGlobalSearch(val){
   const drop = document.getElementById('globalSearchDrop');
   if(!val || val.trim()===''){drop.style.display='none';return;}
-  const q = val.toLowerCase();
-  const results = players.filter(p=>
-    p.name.toLowerCase().includes(q) ||
-    (p.univ||'').toLowerCase().includes(q) ||
-    (p.tier||'').toLowerCase().includes(q) ||
-    (p.race||'').toLowerCase().includes(q) ||
-    (p.memo||'').toLowerCase().includes(q)
-  ).slice(0,15);
+  const q = val.trim().toLowerCase();
+  // 다중 조건 파싱: "흑카 테란" → 이름에 "흑카" + 종족 "테란"
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const RACE_MAP={'테란':'T','테':'T','t':'T','저그':'Z','저':'Z','z':'Z','프로토스':'P','프토':'P','프':'P','p':'P'};
+  const GENDER_MAP={'여':'F','여자':'F','f':'F','남':'M','남자':'M','m':'M'};
+  let raceFilter='', genderFilter='', univFilter='', tierFilter='', nameTokens=[];
+  tokens.forEach(t=>{
+    if(RACE_MAP[t]){raceFilter=RACE_MAP[t];}
+    else if(GENDER_MAP[t]){genderFilter=GENDER_MAP[t];}
+    else{nameTokens.push(t);}
+  });
+  const results = players.filter(p=>{
+    const nameMatch = nameTokens.length===0 || nameTokens.every(t=>
+      p.name.toLowerCase().includes(t) ||
+      (p.univ||'').toLowerCase().includes(t) ||
+      (p.tier||'').toLowerCase().includes(t) ||
+      (p.role||'').toLowerCase().includes(t) ||
+      (p.memo||'').toLowerCase().includes(t)
+    );
+    const raceMatch = !raceFilter || p.race===raceFilter;
+    const genderMatch = !genderFilter || p.gender===genderFilter;
+    return nameMatch && raceMatch && genderMatch;
+  }).slice(0,18);
   if(results.length===0){
-    drop.innerHTML='<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';
+    drop.innerHTML=`<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">
+      <div style="font-size:20px;margin-bottom:6px">🔍</div>
+      검색 결과 없음<br>
+      <span style="font-size:10px;color:var(--gray-l);margin-top:4px;display:block">이름 · 대학 · 티어 · 종족(테란/저그/프토) · 성별(남/여) 검색 가능</span>
+    </div>`;
     drop.style.display='block';return;
   }
-  const raceEmoji={T:'⚔️',Z:'🦟',P:'🔮'};
-  drop.innerHTML = results.map(p=>{
+  const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',label:'테란'},Z:{bg:'#ede9fe',col:'#5b21b6',label:'저그'},P:{bg:'#fef3c7',col:'#92400e',label:'프토'}};
+  // 검색어 하이라이트 헬퍼
+  const hl=(str,q)=>{
+    if(!str||!q)return str||'';
+    const idx=str.toLowerCase().indexOf(q);
+    if(idx<0)return str;
+    return str.slice(0,idx)+`<mark style="background:#fef08a;color:inherit;border-radius:2px">`+str.slice(idx,idx+q.length)+`</mark>`+str.slice(idx+q.length);
+  };
+  const mainQ=nameTokens.join(' ');
+  window._gsResults = results;
+  drop.innerHTML = `<div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;border-bottom:1px solid var(--border)">${results.length}명 검색됨</div>` +
+  results.map((p,ri)=>{
     const col=gc(p.univ);
     const wr=p.win+p.loss===0?0:Math.round(p.win/(p.win+p.loss)*100);
-    return `<div onclick="globalSearchSelect('${p.name}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:.1s"
+    const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',label:p.race};
+    return `<div data-gsidx="${ri}" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;transition:.1s"
       onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''"
+      onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
-      <div style="width:36px;height:36px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${raceEmoji[p.race]||'👤'}</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:13px">${p.name} ${p.gender==='M'?'<span style="font-size:10px;background:#2563eb;color:#fff;padding:1px 5px;border-radius:4px">♂</span>':''}</div>
-        <div style="font-size:11px;color:var(--gray-l)">${p.univ} · ${p.tier}</div>
+        <div style="font-weight:700;font-size:13px">${hl(p.name,mainQ)}${p.gender==='M'?'<span style="font-size:9px;background:#2563eb;color:#fff;padding:1px 4px;border-radius:4px;margin-left:4px">♂</span>':''}</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:1px">${hl(p.univ,mainQ)} · ${hl(p.tier,mainQ)} · <span style="background:${rc.bg};color:${rc.col};padding:0 4px;border-radius:3px;font-size:10px;font-weight:700">${rc.label}</span>${p.role?` · <span style="color:var(--blue);font-size:10px">${hl(p.role,mainQ)}</span>`:''}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-weight:700;font-size:12px;color:var(--blue)">${wr}%</div>
+        <div style="font-weight:700;font-size:12px;color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</div>
         <div style="font-size:10px;color:var(--gray-l)">${p.win}승${p.loss}패</div>
+        ${p.points?`<div style="font-size:10px;color:var(--gold);font-weight:700">${p.points>0?'+':''}${p.points}pt</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -9571,6 +9707,7 @@ function onGlobalSearch(val){
 function globalSearchSelect(name){
   document.getElementById('globalSearch').value='';
   document.getElementById('globalSearchDrop').style.display='none';
+  window._gsResults = null;
   openPlayerModal(name);
 }
 
@@ -10746,6 +10883,14 @@ function _getBoardUnivs(){
   univs.forEach(u => { if(!boardOrder.includes(u.name)) ordered.push(u); });
   return ordered;
 }
+function toggleBoardUniv(name){
+  if(typeof boardSelUniv==='undefined') return;
+  boardSelUniv = (boardSelUniv===name) ? '전체' : name;
+  const sel = document.getElementById('board-univ-sel');
+  if(sel) sel.value = boardSelUniv;
+  render();
+}
+
 
 // 대학 내 선수 정렬 (boardPlayerOrder 우선, 없으면 기본 정렬)
 function _getBoardPlayers(univName){
@@ -10781,7 +10926,7 @@ function rBoard(C,T){
     .brd-card.dragging{opacity:.45;transform:scale(.97);}
     .brd-hdr{padding:16px 18px 13px;position:relative;z-index:1;cursor:grab;}
     .brd-hdr:active{cursor:grabbing;}
-    .brd-hdr::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 60%);pointer-events:none;}
+    .brd-hdr::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 55%);pointer-events:none;z-index:0;}
     .brd-circle{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);pointer-events:none;}
     .brd-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
@@ -10801,8 +10946,8 @@ function rBoard(C,T){
     .brd-row-drag{cursor:grab;}.brd-row-drag:active{cursor:grabbing;}
     .brd-tier-lbl{font-size:9px;font-weight:700;color:rgba(0,0,0,.45);letter-spacing:.8px;text-transform:uppercase;padding:0 2px;margin:6px 0 2px;}
     .brd-tier-lbl:first-child{margin-top:0;}
-    .brd-univ-name-btn{font-weight:900;font-size:18px;color:#1e293b;letter-spacing:.2px;line-height:1.15;text-shadow:none;cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;}
-    .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;}
+    .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
+    .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
     /* 이동 팝업 */
     .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
@@ -10935,25 +11080,25 @@ function buildUnivBoardCard(u, forExport){
 
     const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
-    return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${pastelCol};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
-      <div class="brd-hdr" style="cursor:${isLoggedIn&&!forExport?'grab':'default'}"${hdrDrag}>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:46px;height:46px;border-radius:13px;background:${hexToRgba(col,.15)};border:2px solid ${hexToRgba(col,.35)};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+    return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,0.9)};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+      <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
+        <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
+          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"` } title="클릭: 해당 대학만 보기 / 다시 클릭: 전체 보기">
             ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
-            <button class="brd-univ-name-btn" onclick="event.stopPropagation();${forExport?'':(`openUnivModal('${u.name}')`)}">
+            <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"`)}>
               ${u.name}</button>
-            <div style="font-size:11px;color:${hexToRgba(col,.75)};margin-top:3px">${cnt}명</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px">${cnt}명</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-            ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:${hexToRgba(col,.12)};border:1px solid ${hexToRgba(col,.3)};border-radius:5px;color:${col};font-size:11px;width:26px;height:22px;cursor:pointer">◀</button>
-            <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:${hexToRgba(col,.12)};border:1px solid ${hexToRgba(col,.3)};border-radius:5px;color:${col};font-size:11px;width:26px;height:22px;cursor:pointer">▶</button>`:''}
+            ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">◀</button>
+            <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">▶</button>`:''}
           </div>`:''}
         </div>
       </div>
-      <div class="brd-sep" style="background:${hexToRgba(col,.2)}"></div>
-      <div class="brd-body">${tierRows}</div>
+      <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
+      <div class="brd-body" style="background:${toPastel(col,0.9)}">${tierRows}</div>
     </div>`;
   };
 
@@ -11521,39 +11666,50 @@ async function downloadBoardAll(){
   const btn=event?.currentTarget;
   if(btn){btn.disabled=true;btn._ot=btn.textContent;btn.textContent='⏳...';}
   try{
-    // 실제 화면에 표시된 DOM 순서대로 대학 가져오기
+    // DOM에 표시된 현재 순서 및 선수 순서를 먼저 동기화
     const boardWrap=document.getElementById('board-wrap');
+    if(boardWrap){
+      // 대학 순서 동기화
+      boardOrder=[...boardWrap.querySelectorAll('.brd-card[data-univ]')].map(c=>c.dataset.univ);
+      // 각 대학의 선수 순서 동기화
+      boardWrap.querySelectorAll('.brd-card[data-univ]').forEach(card=>{
+        const uName=card.dataset.univ;
+        const domOrder=[...card.querySelectorAll('[data-player]')].map(el=>el.dataset.player).filter(Boolean);
+        if(domOrder.length>0) boardPlayerOrder[uName]=domOrder;
+      });
+    }
+    // 현재 순서로 대학 목록 구성
     let univs;
     if(boardWrap){
-      const cardEls=[...boardWrap.querySelectorAll('.brd-card[data-univ]')];
       const allUnivMap={};
       getAllUnivs().forEach(u=>allUnivMap[u.name]=u);
-      univs=cardEls.map(el=>allUnivMap[el.dataset.univ]).filter(Boolean);
+      univs=boardOrder.map(name=>allUnivMap[name]).filter(Boolean);
+      // boardOrder에 없는 대학 추가 (새로 추가된 경우)
+      getAllUnivs().forEach(u=>{if(!boardOrder.includes(u.name)&&players.some(p=>p.univ===u.name))univs.push(u);});
     } else {
       univs=_getBoardUnivs();
     }
     const tmpDiv=document.createElement('div');
-    let cols=5;
-    if(boardWrap){
-      const w=boardWrap.offsetWidth;
-      cols=Math.max(1,Math.floor(w/294));
-    }
-    const cardW=280, gap=12, padH=16;
+    let cols=4;
+    if(boardWrap){ const w=boardWrap.offsetWidth; cols=Math.max(1,Math.floor(w/294)); }
+    const cardW=290, gap=14, padH=18;
     const totalW=cols*(cardW+gap)-gap+padH*2;
-    tmpDiv.style.cssText=`position:fixed;left:-9999px;top:0;width:${totalW}px;background:#f0f2f5;padding:${padH}px;display:grid;grid-template-columns:repeat(${cols},${cardW}px);gap:${gap}px;align-items:start;`;
+    tmpDiv.style.cssText=`position:fixed;left:-9999px;top:0;width:${totalW}px;background:#f0f2f5;padding:${padH}px;display:grid;grid-template-columns:repeat(${cols},${cardW}px);gap:${gap}px;align-items:start;font-family:'Noto Sans KR',sans-serif;`;
     univs.forEach(u=>{
       const html=buildUnivBoardCard(u, true);
       if(!html)return;
       const wrapper=document.createElement('div');
       wrapper.innerHTML=html;
       const card=wrapper.firstElementChild;
+      if(!card)return;
+      card.style.width=cardW+'px';
       card.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
       tmpDiv.appendChild(card);
     });
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,500));
-    const canvas=await html2canvas(tmpDiv,{scale:2,useCORS:true,backgroundColor:'#f0f2f5',logging:false,width:tmpDiv.scrollWidth,height:tmpDiv.scrollHeight});
+    await new Promise(r=>setTimeout(r,600));
+    const canvas=await html2canvas(tmpDiv,{scale:2,useCORS:true,backgroundColor:'#f0f2f5',logging:false,width:tmpDiv.scrollWidth,height:tmpDiv.scrollHeight,windowWidth:tmpDiv.scrollWidth+200});
     document.body.removeChild(tmpDiv);
     _dlCanvasBoard(canvas,'현황판_전체저장.jpg');
   }catch(e){alert('다운로드 실패: '+e.message);}
