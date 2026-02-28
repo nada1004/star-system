@@ -1,4 +1,4 @@
-/* ── 사전 선언 (블록 간 의존성 해결) ── */
+/* ── 사전 선언 (의존성 해결) ── */
 const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
 const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'}};
 function gsSetStatus(msg, color='var(--gray-l)'){
@@ -9511,68 +9511,75 @@ init();
 initDark();
 
 // ── 사이트 첫 접속 시 자동 불러오기 ──
-// localStorage에 선수 데이터가 없으면 GitHub에서 자동으로 불러옴 (새로고침 제외)
 (async function autoLoad(){
-  const hasLocal = J('su_p') && JSON.parse(localStorage.getItem('su_p')||'[]').length > 0;
-  if(hasLocal) return; // 이미 데이터 있으면 스킵
-  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   try{
-    gsSetStatus('🔄 데이터 자동 불러오는 중...','var(--blue)');
-    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/data.json';
-    const urls=[
-      ghApiUrl,
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json',
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(GITHUB_JSON_URL),
-    ];
-    let d=null;
-    for(const url of urls){
-      try{
-        const res=await Promise.race([
-          fetch(url,{cache:'no-store',mode:'cors'}),
-          new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
-        ]);
-        if(res&&res.ok){
-          const text=await res.text();
-          const raw=JSON.parse(text);
-          if(raw&&raw.content&&raw.encoding==='base64'){
-            const b64=raw.content.replace(/\s/g,'');
-            const bin=atob(b64);
-            const bytes=new Uint8Array(bin.length);
-            for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-            d=JSON.parse(new TextDecoder('utf-8').decode(bytes));
-          } else { d=raw; }
-          break;
-        }
-      }catch(e){ continue; }
-    }
-    if(d){
-      players=d.players||d.player||[];
-      univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
-      maps=d.maps||d.map||maps;
-      tourD=d.tourD||d.tournamentDates||Array(15).fill('');
-      miniM=d.miniM||d.mini||d.miniMatches||[];
-      univM=d.univM||d.univ||d.univMatches||[];
-      comps=d.comps||d.comp||d.competitions||[];
-      ckM=d.ckM||d.ck||d.ckMatches||[];
-      compNames=d.compNames||d.competitionNames||[];
-      curComp=d.curComp||d.currentComp||'';
-      proM=d.proM||d.pro||d.proMatches||[];
-      members=d.members||d.member||[];
-      tourneys=d.tourneys||d.tournaments||d.tourney||[];
-      ttM=d.ttM||d.tt||[];
-      if(d.tiers&&d.tiers.length)TIERS.splice(0,TIERS.length,...d.tiers);
-      (function(){
-        const allD=[...miniM,...univM,...comps,...ckM,...proM];
-        const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
-        years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
-        yearOptions.sort();
-      })();
+    const stored = localStorage.getItem('su_p');
+    const hasLocal = stored && JSON.parse(stored).length > 0;
+    if(hasLocal) return;
+  }catch(e){}
+  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
+  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
+  const urls = [_RAW, _CDN, _API, _PROXY];
+  gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
+  let d = null;
+  for(const url of urls){
+    try{
+      const res = await Promise.race([
+        fetch(url, {cache:'no-store', mode:'cors'}),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
+      ]);
+      if(!res || !res.ok) continue;
+      const text = await res.text();
+      if(!text || !text.trim()) continue;
+      let raw;
+      try{ raw = JSON.parse(text); }catch(e){ continue; }
+      if(raw && raw.content && raw.encoding==='base64'){
+        try{
+          const b64 = raw.content.replace(/\s/g,'');
+          const bin = atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+          d = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+        }catch(e){ continue; }
+      } else {
+        d = raw;
+      }
+      if(d){ console.log('[자동 불러오기] 성공:', url); break; }
+    }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
+  }
+  if(d){
+    try{
+      players  = d.players  || d.player  || [];
+      univCfg  = d.univCfg  || d.univConfig || d.universities || univCfg;
+      maps     = d.maps     || d.map     || maps;
+      tourD    = d.tourD    || d.tournamentDates || Array(15).fill('');
+      miniM    = d.miniM    || d.mini    || d.miniMatches || [];
+      univM    = d.univM    || d.univ    || d.univMatches || [];
+      comps    = d.comps    || d.comp    || d.competitions || [];
+      ckM      = d.ckM      || d.ck      || d.ckMatches   || [];
+      compNames= d.compNames|| d.competitionNames || [];
+      curComp  = d.curComp  || d.currentComp || '';
+      proM     = d.proM     || d.pro     || d.proMatches  || [];
+      members  = d.members  || d.member  || [];
+      tourneys = d.tourneys || d.tournaments || d.tourney || [];
+      ttM      = d.ttM      || d.tt      || [];
+      if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
+      const allD=[...miniM,...univM,...comps,...ckM,...proM];
+      const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
+      years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
+      yearOptions.sort();
       fixPoints(); save(); init();
-      gsSetStatus(`✅ 자동 불러오기 완료 (${new Date().toLocaleTimeString()})`,'var(--green)');
-    } else { gsSetStatus('',''); }
-  }catch(e){
-    console.warn('[자동 불러오기 실패]',e);
-    gsSetStatus('','');
+      gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
+    }catch(e){
+      console.error('[자동 불러오기] 데이터 적용 오류:', e);
+      gsSetStatus && gsSetStatus('','');
+    }
+  } else {
+    gsSetStatus && gsSetStatus('','');
+    console.warn('[자동 불러오기] 모든 URL 실패');
   }
 })();
 
@@ -9580,10 +9587,10 @@ initDark();
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-/* GITHUB_JSON_URL - 상단 선언으로 이동 */
+/* GITHUB_JSON_URL - 상단 이동 */
 
 
-/* gsSetStatus - 상단 선언으로 이동 */
+/* gsSetStatus - 상단 이동 */
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
 window.cloudLoad = async function(){
@@ -9597,10 +9604,10 @@ window.cloudLoad = async function(){
     // GitHub API - base64 인코딩으로 반환 (CORS 완전 허용)
     const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/data.json';
     const urls=[
-      ghApiUrl,                                           // 1. GitHub API (CORS 완전 허용)
+      baseUrl+'?nocache='+Date.now(),                    // 1. raw 직접 (가장 빠름)
       'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json', // 2. jsdelivr CDN
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl), // 3. CORS proxy
-      baseUrl+'?nocache='+Date.now(),                    // 4. raw (직접)
+      ghApiUrl,                                           // 3. GitHub API
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl), // 4. CORS proxy
     ];
     let lastErr='';
     for(const url of urls){
@@ -9826,7 +9833,7 @@ function buildUnivBoardCard(u, forExport){
   const sorted=_getBoardPlayers(u.name);
   const allUnivs=getAllUnivs();
 
-  /* RACE_CFG - 상단 선언으로 이동 */
+  /* RACE_CFG - 상단 이동 */
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   // 파스텔 변환: 원색을 흰색과 mix=60% 블렌딩
   const toPastel=(hex,mix=0.72)=>{
