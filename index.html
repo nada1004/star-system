@@ -121,13 +121,13 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 /* ── 특별 티어: God·King·Jack·Joker·Spade 각각 차별화 ── */
 /* God: 퍼플 - 최고 등급 */
 .tbadge-god{background:linear-gradient(135deg,#2e0a6e,#5b21b6,#7c3aed);color:#fff;box-shadow:0 2px 14px rgba(124,58,237,.6),0 0 0 1px rgba(167,139,250,.35);border:1px solid rgba(196,181,253,.3);text-shadow:0 1px 4px rgba(0,0,0,.35);}
-/* King: 딥 네이비 골드 - God보다 덜 튀는 고급스러운 색 */
+/* King: 딥 네이비 골드 */
 .tbadge-king{background:linear-gradient(135deg,#1a2a52,#243670,#2d4288);color:#e2c97e;box-shadow:0 2px 10px rgba(26,42,82,.55),0 0 0 1px rgba(226,201,126,.25);border:1px solid rgba(226,201,126,.2);text-shadow:0 1px 3px rgba(0,0,0,.4);}
-/* Jack: 다크 틸 - 진중한 청록 */
+/* Jack: 다크 틸 */
 .tbadge-jack{background:linear-gradient(135deg,#0c4a5c,#0e6280,#0d7a9e);color:#fff;box-shadow:0 2px 10px rgba(12,74,92,.6);border:1px solid rgba(125,211,252,.18);}
-/* Joker: 인디고 슬레이트 - 차분한 보라 계열 */
-.tbadge-joker{background:linear-gradient(135deg,#312e81,#3730a3,#4338ca);color:#c7d2fe;box-shadow:0 2px 10px rgba(49,46,129,.55);border:1px solid rgba(199,210,254,.18);}
-/* Spade: 스틸 블루 - 침착한 중간 계열 */
+/* Joker: 에메랄드 그린 - King/Jack/Spade와 완전히 다른 색 계열 */
+.tbadge-joker{background:linear-gradient(135deg,#064e3b,#065f46,#047857);color:#a7f3d0;box-shadow:0 2px 10px rgba(6,78,59,.6);border:1px solid rgba(167,243,208,.2);}
+/* Spade: 스틸 블루 */
 .tbadge-spade{background:linear-gradient(135deg,#1e3a5f,#2952a3,#2563eb);color:#fff;box-shadow:0 2px 10px rgba(30,58,95,.55);border:1px solid rgba(191,219,254,.2);}
 .tbadge-0{background:linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,.5);}
 .tbadge-t1{background:linear-gradient(135deg,#2e54c8,#4070e0);color:#fff;box-shadow:0 1px 5px rgba(46,84,200,.5);}
@@ -308,44 +308,54 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .scard { min-width: 80px; padding: 10px 8px; }
   .scard .sv { font-size: 20px; }
 
-  /* 모달 - 모바일에서 바텀 시트로 */
+  /* 모달 - 모바일에서 바텀 시트로 (크기 축소) */
   .modal { align-items: flex-end !important; }
   .mbox {
     width: 100% !important;
     max-width: 100vw !important;
-    padding: 20px 16px 28px !important;
+    padding: 16px 14px 24px !important;
     margin: 0 !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 88vh !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 75vh !important;
     overflow-y: auto !important;
-    animation: slideUpModal .28s cubic-bezier(.22,.68,0,1.1);
+    animation: slideUpModal .26s cubic-bezier(.22,.68,0,1.1);
+    font-size: 12px !important;
   }
   .umbox {
     width: 100% !important;
     max-width: 100vw !important;
-    padding: 16px 14px 28px !important;
+    padding: 14px 12px 24px !important;
     margin: 0 !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 90vh !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 80vh !important;
     overflow-y: auto !important;
-    animation: slideUpModal .28s cubic-bezier(.22,.68,0,1.1);
+    animation: slideUpModal .26s cubic-bezier(.22,.68,0,1.1);
+    font-size: 12px !important;
   }
   @keyframes slideUpModal {
     from { transform: translateY(100%); opacity: .6; }
     to   { transform: translateY(0); opacity: 1; }
   }
-  /* 모달 안에 drag handle 삽입 */
   .mbox::before, .umbox::before {
     content: '';
     display: block;
-    width: 40px; height: 4px;
-    background: #dde2eb;
+    width: 36px; height: 3px;
+    background: #d1d5db;
     border-radius: 2px;
-    margin: -8px auto 14px;
+    margin: -4px auto 12px;
+    flex-shrink: 0;
   }
-  /* mtitle drag cursor 모바일은 비활성 */
-  .mtitle { cursor: default !important; }
+  .mtitle { cursor: default !important; font-size: 14px !important; }
   .mtitle::before { display: none !important; }
+  /* 모달 내부 요소 크기 축소 */
+  .mbox input, .mbox select, .umbox input, .umbox select { 
+    padding: 7px 10px !important; font-size: 12px !important; 
+  }
+  .mbox .btn, .umbox .btn { padding: 7px 12px !important; font-size: 12px !important; }
+  .mbox .ssec, .umbox .ssec { padding: 10px 10px !important; }
+  .mbox .scards, .umbox .scards { gap: 5px !important; }
+  .mbox .scard, .umbox .scard { min-width: 64px !important; padding: 8px 6px !important; }
+  .mbox .scard .sv, .umbox .scard .sv { font-size: 18px !important; }
 
   /* 점수보드 */
   .score-board { gap: 6px; padding: 8px 10px; }
@@ -946,7 +956,7 @@ body.dark .brd-row:hover{background:rgba(15,23,42,.75)!important;}
 body.dark .tbadge-god{box-shadow:0 2px 12px rgba(124,58,237,.4),0 0 0 1px rgba(139,92,246,.3)!important;}
 body.dark .tbadge-king{background:linear-gradient(135deg,#0f1a35,#1a2550,#222f68)!important;color:#d4af5a!important;box-shadow:0 2px 12px rgba(26,37,80,.5),0 0 0 1px rgba(212,175,90,.2)!important;}
 body.dark .tbadge-jack{box-shadow:0 2px 10px rgba(12,74,92,.45)!important;}
-body.dark .tbadge-joker{box-shadow:0 2px 10px rgba(49,46,129,.45)!important;}
+body.dark .tbadge-joker{background:linear-gradient(135deg,#022c22,#064e3b,#065f46)!important;color:#6ee7b7!important;box-shadow:0 2px 10px rgba(6,78,59,.5)!important;}
 body.dark .tbadge-spade{box-shadow:0 2px 10px rgba(30,58,95,.45)!important;}
 body.dark .tbadge-youth{background:linear-gradient(135deg,#065f46,#059669)!important;color:#d1fae5!important;}
 /* 티어 순위표 다크 테이블 row */
@@ -3457,6 +3467,7 @@ function recSummaryListHTML(arr, mode, context){
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
   if(!m.sets||!m.sets.length) return `<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>`;
+  const isMob = window.innerWidth <= 600;
   let h='';
   m.sets.forEach((set,si)=>{
     const isAce=(si===2);
@@ -3483,45 +3494,84 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const aIsWinner=(g.winner==='A');
         const bIsWinner=(g.winner==='B');
         const hasWinner=!!(g.winner);
-        const mapStr=g.map?`<span class="detail-map" style="background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:10px;color:var(--text3)">📍 ${g.map}</span>`:'';
-        const winBgA=ca+'22';const winBgB=cb+'22';
-        const winBorderA=ca+'66';const winBorderB=cb+'66';
-        const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
-        const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
-        const winTagA=aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
-        const winTagB=bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
-        const clickA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted;"`:'';
-        const clickB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted;"`:'';
-        h+=`<div class="detail-game-row" style="display:flex;align-items:center;gap:6px;padding:4px 4px;flex-wrap:wrap;">
-          <span style="color:var(--gray-l);font-size:10px;min-width:42px;font-weight:600">경기${gi+1}</span>
-          <div class="detail-player-a" style="${styleA}">
-            ${pA?getPlayerPhotoHTML(pA.name,'22px','margin-right:2px'):''}
-            ${pA?`<span class="rbadge r${pA.race}" style="font-size:10px">${pA.race}</span>`:''}
-            <strong style="font-size:12px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
-            ${pA?genderIcon(pA.gender):''}
-            <span style="font-size:10px;color:${ca};font-weight:700">(${labelA})</span>
-            ${winTagA}
-          </div>
-          <span class="detail-vs-sep" style="color:var(--gray-l);font-size:11px;font-weight:600">vs</span>
-          <div class="detail-player-b" style="${styleB}">
-            ${pB?getPlayerPhotoHTML(pB.name,'22px','margin-right:2px'):''}
-            ${pB?`<span class="rbadge r${pB.race}" style="font-size:10px">${pB.race}</span>`:''}
-            <strong style="font-size:12px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
-            ${pB?genderIcon(pB.gender):''}
-            <span style="font-size:10px;color:${cb};font-weight:700">(${labelB})</span>
-            ${winTagB}
-          </div>
-          ${mapStr}
-          ${isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export" style="margin-left:4px" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️ 수정</button>`:''}
-        </div>`;
+        const winBgA=ca+'22'; const winBgB=cb+'22';
+        const winBorderA=ca+'88'; const winBorderB=cb+'88';
+        const clickA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        const clickB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        const winTagA=aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:auto">WIN</span>`:'';
+        const winTagB=bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:auto">WIN</span>`:'';
+        const raceA=pA?`<span class="rbadge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
+        const raceB=pB?`<span class="rbadge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
+        const photoA=pA?getPlayerPhotoHTML(pA.name,'20px','margin-right:2px;flex-shrink:0'):'';
+        const photoB=pB?getPlayerPhotoHTML(pB.name,'20px','margin-right:2px;flex-shrink:0'):'';
+        const genderA=pA?genderIcon(pA.gender):'';
+        const genderB=pB?genderIcon(pB.gender):'';
+        const mapStr=g.map?`<div style="text-align:center;padding:4px 8px;background:var(--surface);font-size:10px;color:var(--text3);border-top:1px solid var(--border)">📍 ${g.map}</div>`:'';
+        const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
+
+        if(isMob){
+          // ── 모바일: 카드 형태 [경기N 헤더] [A선수] [VS 구분선] [B선수] [맵] ──
+          const bgA = hasWinner?(aIsWinner?`background:${winBgA};border-left:3px solid ${ca};`:`background:#f8fafc;opacity:.55;`):`background:var(--surface);`;
+          const bgB = hasWinner?(bIsWinner?`background:${winBgB};border-left:3px solid ${cb};`:`background:#f8fafc;opacity:.55;`):`background:var(--surface);`;
+          h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--surface);border-bottom:1px solid var(--border)">
+              <span style="font-size:10px;font-weight:700;color:var(--text3)">경기 ${gi+1}</span>
+              ${editBtn}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:9px 12px;${bgA}">
+              ${photoA}${raceA}
+              <strong style="font-size:13px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
+              ${genderA}
+              <span style="font-size:10px;color:${ca};font-weight:700;margin-left:2px">${labelA}</span>
+              ${winTagA}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;padding:3px 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+              <span style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:3px">VS</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:9px 12px;${bgB}">
+              ${photoB}${raceB}
+              <strong style="font-size:13px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
+              ${genderB}
+              <span style="font-size:10px;color:${cb};font-weight:700;margin-left:2px">${labelB}</span>
+              ${winTagB}
+            </div>
+            ${mapStr}
+          </div>`;
+        } else {
+          // ── PC: 기존 가로 레이아웃 ──
+          const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
+          const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
+          const winTagApc=aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
+          const winTagBpc=bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
+          const mapStrPc=g.map?`<span class="detail-map" style="background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:10px;color:var(--text3)">📍 ${g.map}</span>`:'';
+          h+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 4px;flex-wrap:wrap;">
+            <span style="color:var(--gray-l);font-size:10px;min-width:42px;font-weight:600">경기${gi+1}</span>
+            <div style="${styleA}">
+              ${photoA}${raceA}
+              <strong style="font-size:12px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
+              ${genderA}
+              <span style="font-size:10px;color:${ca};font-weight:700">(${labelA})</span>
+              ${winTagApc}
+            </div>
+            <span style="color:var(--gray-l);font-size:11px;font-weight:600">vs</span>
+            <div style="${styleB}">
+              ${photoB}${raceB}
+              <strong style="font-size:12px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
+              ${genderB}
+              <span style="font-size:10px;color:${cb};font-weight:700">(${labelB})</span>
+              ${winTagBpc}
+            </div>
+            ${mapStrPc}
+            ${editBtn}
+          </div>`;
+        }
       });
     } else {
       h+=`<div style="font-size:11px;color:var(--gray-l);padding:4px 0">상세 경기 기록 없음</div>`;
     }
     h+=`</div>`;
   });
-  h+=`</div>`; // rec-list-${mode} 닫기
-  // 렌더 직후 검색어 있으면 바로 필터 적용 (타이밍 문제 방지)
+  h+=`</div>`;
   if(typeof requestAnimationFrame!=='undefined'){
     const _mode=mode, _q=(window._recQ&&window._recQ[_mode])||'';
     if(_q) requestAnimationFrame(()=>recFilterInPlace(_mode,_q));
