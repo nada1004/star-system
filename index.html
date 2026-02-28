@@ -24,8 +24,10 @@ b,strong{font-weight:600;}
 .app{max-width:1480px;margin:auto;background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh2);overflow:hidden;}
 .hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#1e40af 100%);padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
 .hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,transparent 1px,transparent 14px);}
-.hdr-ico{font-size:22px;z-index:1;}
-.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;}
+.hdr-ico{font-size:22px;z-index:1;transition:.15s;}
+.hdr-ico:hover{transform:scale(1.1);}
+.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;transition:opacity .15s;}
+.hdr-title:hover{opacity:.85;}
 .hdr-ver{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:.5px;border:1px solid rgba(255,255,255,.22);z-index:1;}
 
 /* ══ V27 신규 CSS ══════════════════════════════════════════ */
@@ -276,11 +278,32 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 @media (max-width: 768px) {
   body { padding: 0; font-size: 12px; background: #fff; }
   .app { border-radius: 0; border: none; }
-  .hdr { padding: 8px 12px; gap: 6px; }
+  .hdr { padding: 9px 12px; gap: 7px; min-height: 48px; }
   .hdr-title { font-size: 13px; }
   .hdr-ver { display: none; }
-  .hdr-ico { font-size: 18px; }
-  #globalSearch { width: 100px !important; font-size: 12px !important; padding: 5px 8px !important; }
+  .hdr-ico { font-size: 20px; }
+  /* 헤더 오른쪽 버튼들: 아이콘만 보이도록 */
+  #globalSearch { width: 0 !important; padding: 0 !important; opacity: 0; pointer-events: none; position: absolute; }
+  .hdr-search-wrap { position: relative; }
+  .hdr-search-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+    cursor: pointer; font-size: 15px; color: #fff; flex-shrink: 0; transition: .15s;
+  }
+  .hdr-search-icon:hover { background: rgba(255,255,255,.28); }
+  /* 검색창 오픈 시 */
+  .hdr-search-wrap.open #globalSearch {
+    width: 140px !important; opacity: 1; pointer-events: auto; position: relative;
+    padding: 5px 10px !important; font-size: 12px !important;
+  }
+  .hdr-search-wrap.open .hdr-search-icon { display: none; }
+  /* 다크 토글: 이모지만 */
+  #darkToggleBtn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50%; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+  #darkToggleBtn::after { content: ''; } /* 텍스트 숨김은 JS로 */
+  .hdr-login-btn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  /* 로그인 상태 텍스트 숨김 */
+  #hdrLoginStatus { display: none !important; }
 
   /* 탭 메뉴 - 모바일에서 스크롤 개선 */
   .tabs { padding: 5px 6px; gap: 3px; }
@@ -449,65 +472,15 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 }
 
 @media (max-width: 480px) {
-  .hdr-title { font-size: 12px; }
-  #globalSearch { width: 80px !important; font-size: 11px !important; }
+  .hdr-title { font-size: 12px; letter-spacing: 0; }
+  /* 480px 이하에서 다크/로그인 버튼 이모지만 표시 */
+  #darkToggleBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 15px !important; }
+  #hdrLoginBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 14px !important; }
+  #hdrLogoutBtn { padding: 0 !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; font-size: 14px !important; }
   .tab { padding: 6px 9px; font-size: 10px; min-height: 34px; }
   .scard { min-width: 70px; }
   .game-row select { min-width: 90px; }
-  /* 스트리머 테이블 모바일 소형 */
   .td-name { max-width: 80px; }
-  /* 경기 상세보기 모바일 소형 - 강제 세로 스택 */
-  .detail-game-row {
-    flex-direction: column !important;
-    gap: 0 !important;
-    padding: 0 !important;
-    border: 1px solid #eef0f4 !important;
-    border-radius: 10px !important;
-    overflow: hidden !important;
-    margin-bottom: 8px !important;
-    background: #fff;
-  }
-  .detail-game-row > span.detail-vs-sep {
-    text-align: center !important;
-    display: block !important;
-    width: 100% !important;
-    background: #f1f5f9 !important;
-    padding: 3px 0 !important;
-    font-size: 9px !important;
-    letter-spacing: 2px !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-  }
-  .detail-game-row > span[style*="경기"] {
-    display: block !important;
-    padding: 5px 12px 3px !important;
-    min-width: 0 !important;
-    font-size: 9px !important;
-    background: #f8fafc !important;
-    border-bottom: 1px solid #eef0f4 !important;
-    width: 100% !important;
-  }
-  .detail-game-row > div.detail-player-a,
-  .detail-game-row > div.detail-player-b {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    border-radius: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid rgba(0,0,0,.05) !important;
-    padding: 10px 12px !important;
-    gap: 6px !important;
-    flex-wrap: nowrap !important;
-  }
-  .detail-game-row > span.detail-map { 
-    display: block !important; 
-    width: 100% !important; 
-    text-align: center !important;
-    padding: 4px 10px !important;
-    background: #f8fafc !important;
-    font-size: 10px !important;
-    color: #64748b !important;
-    border-top: 1px solid #eef0f4 !important;
-  }
   .detail-set-hdr { flex-wrap: wrap !important; gap: 4px !important; }
 }
 
@@ -828,6 +801,11 @@ body.dark .sitem:hover{background:#1e3a5f;}
 body.dark .tier-filter-btn{background:#1e293b;border-color:#3a4f6a;color:#94a3b8;}
 body.dark .tier-filter-btn:hover{border-color:#60a5fa;color:#60a5fa;}
 body.dark .tier-filter-btn.on{background:#2563eb;color:#fff;border-color:#2563eb;}
+/* PC에서 검색 아이콘 숨기고 input 보이기 */
+@media (min-width: 769px) {
+  .hdr-search-icon { display: none !important; }
+  #globalSearch { width: 160px !important; opacity: 1 !important; pointer-events: auto !important; position: relative !important; padding: 5px 12px !important; }
+}
 body.dark .pill{background:#1e293b;border-color:#3a4f6a;color:#94a3b8;}
 body.dark .pill.on{background:#2563eb;color:#fff;}
 body.dark .sort-bar{background:#162032;border-color:#2d3f55;}
@@ -893,77 +871,29 @@ body.dark .champ-box{background:linear-gradient(135deg,#2d200a,#3d2900)!importan
 /* 상태 아이콘 선택 패널 */
 body.dark [style*="background:#f0fdf4"]{background:#0d2a1c!important;border-color:#14532d!important;}
 body.dark [style*="background:#f0fdf4"] [style*="color:#15803d"]{color:#4ade80!important;}
-/* 현황판 툴바 */
-body.dark .brd-toolbar{background:var(--white)!important;border-color:var(--border)!important;}
-/* brd-row 다크: 흰 배경 → 어두운 배경 */
-body.dark .brd-row{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.12)!important;}
-body.dark .brd-row:hover{background:rgba(255,255,255,.14)!important;}
+/* ══ 다크모드 최종 통합 ══════════════════════════════════════════ */
+/* 현황판 카드 */
+body.dark .brd-card{filter:saturate(.55) brightness(.78);border-color:rgba(255,255,255,.06)!important;}
+body.dark .brd-card:hover{filter:saturate(.65) brightness(.88);}
+body.dark .brd-univ-name-btn{color:#e2e8f0!important;text-shadow:0 1px 4px rgba(0,0,0,.35)!important;}
 body.dark .brd-name{color:#e2e8f0!important;}
-/* brd-chip 다크 */
-body.dark .brd-chip{background:rgba(255,255,255,.1)!important;}
-body.dark .brd-chip:hover{background:rgba(255,255,255,.16)!important;}
-/* 이동 팝업 다크 */
-body.dark .brd-move-popup{background:#1e293b!important;border-color:#2d3f55!important;}
-body.dark .brd-move-popup-title{color:#94a3b8!important;border-color:#2d3f55!important;}
-body.dark .brd-move-popup-btn{color:#e2e8f0!important;}
-body.dark .brd-move-popup-btn:hover{background:#1e3a5f!important;color:#60a5fa!important;}
-body.dark .brd-move-popup-sep{background:#2d3f55!important;}
-/* 아이콘 선택 버튼 다크 */
-body.dark button[data-icon-id]{background:#1e293b!important;border-color:#3a4f6a!important;}
-body.dark button[data-icon-id][style*="#dcfce7"]{background:#0d2a1c!important;border-color:#16a34a!important;}
-/* 경기 상세보기 다크: 로저 스타일 */
-body.dark .rec-detail-area .set-row > div:first-child{background:#1e293b!important;border-color:#2d3f55!important;}
-body.dark .set-row-title{color:#93c5fd!important;}
-/* 빈 배경 inline style 다크 변환 */
-body.dark [style*="background:rgba(255,255,255,.9)"]{background:rgba(30,41,59,.9)!important;}
-body.dark [style*="background:rgba(255,255,255,.92)"]{background:rgba(30,41,59,.92)!important;}
-body.dark [style*="background:rgba(255,255,255,1)"]{background:#1e293b!important;}
-/* 스트리머 정보 수정 모달 다크 */
-body.dark #emModal [style*="background:#fffbeb"]{background:#1a1200!important;border-color:#78500a!important;}
-body.dark #emModal [style*="color:#b45309"]{color:#fbbf24!important;}
-
-/* ══ 다크모드 종합 개선 ════════════════════════════════════════════ */
-/* 현황판 brd-row: 다크에서 가독성 향상 */
+/* brd-row 다크 */
 body.dark .brd-row{background:rgba(15,23,42,.6)!important;border-color:rgba(255,255,255,.1)!important;border-left-color:inherit!important;}
 body.dark .brd-row:hover{background:rgba(15,23,42,.82)!important;}
-body.dark .brd-name{color:#e2e8f0!important;}
+body.dark .brd-row .brd-role-main{color:#fff!important;}
 /* brd-chip 다크 */
 body.dark .brd-chip{background:rgba(255,255,255,.1)!important;border-left-color:inherit!important;}
 body.dark .brd-chip:hover{background:rgba(255,255,255,.16)!important;}
-/* 현황판 티어 레이블 */
-body.dark .brd-tier-lbl{color:rgba(255,255,255,.6)!important;}
-/* 캘린더 다크모드 */
-body.dark #rcont table,body.dark #rcont table th,body.dark #rcont table td{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
-body.dark #rcont table th{color:var(--text3)!important;font-weight:700;}
-body.dark #rcont [style*="background:#f0f6ff"]{background:#1a2a40!important;border-color:#2d5589!important;}
-body.dark #rcont [style*="background:#f0f6ff"] *{color:#e2e8f0!important;}
-body.dark #rcont [style*="background:var(--white)"]{background:var(--white)!important;}
-body.dark #rcont [style*="background:var(--blue-l)"]{background:#1e3a5f!important;}
-/* 통계/차트 다크모드 */
-body.dark .ssec canvas{filter:invert(1) hue-rotate(180deg);opacity:.88;}
-body.dark .ssec [style*="background:#f8fafc"]{background:#162032!important;}
-body.dark .ssec [style*="background:#f1f5f9"]{background:#162032!important;}
-body.dark .ssec [style*="color:#1e293b"]{color:#e2e8f0!important;}
-body.dark .ssec [style*="color:#475569"]{color:#94a3b8!important;}
-body.dark .ssec [style*="color:#64748b"]{color:#7c8ea3!important;}
-body.dark .brd-card{filter:saturate(.55) brightness(.78);border-color:rgba(255,255,255,.06)!important;}
-body.dark .brd-card:hover{filter:saturate(.65) brightness(.88);}
-body.dark .brd-name{color:#e2e8f0!important;}
-body.dark .brd-univ-name-btn{color:#e2e8f0!important;text-shadow:0 1px 4px rgba(0,0,0,.35)!important;}
-body.dark .brd-row{background:rgba(15,23,42,.55)!important;border-color:rgba(255,255,255,.1)!important;}
-body.dark .brd-row:hover{background:rgba(15,23,42,.75)!important;}
-/* tbadge 다크모드: god/king 글로우 효과 */
-body.dark .tbadge-god{box-shadow:0 2px 12px rgba(124,58,237,.4),0 0 0 1px rgba(139,92,246,.3)!important;}
-body.dark .tbadge-king{background:linear-gradient(135deg,#0f1a35,#1a2550,#222f68)!important;color:#d4af5a!important;box-shadow:0 2px 12px rgba(26,37,80,.5),0 0 0 1px rgba(212,175,90,.2)!important;}
-body.dark .tbadge-jack{box-shadow:0 2px 10px rgba(12,74,92,.45)!important;}
-body.dark .tbadge-joker{background:linear-gradient(135deg,#022c22,#064e3b,#065f46)!important;color:#6ee7b7!important;box-shadow:0 2px 10px rgba(6,78,59,.5)!important;}
-body.dark .tbadge-spade{box-shadow:0 2px 10px rgba(30,58,95,.45)!important;}
+/* tbadge 다크모드 */
+body.dark .tbadge{filter:brightness(.9) saturate(.85);}
+body.dark .tbadge-god{filter:brightness(.95) saturate(.9);box-shadow:0 2px 12px rgba(124,58,237,.4),0 0 0 1px rgba(139,92,246,.3)!important;}
+body.dark .tbadge-king{filter:brightness(.95) saturate(.9);background:linear-gradient(135deg,#0f1a35,#1a2550,#222f68)!important;color:#d4af5a!important;box-shadow:0 2px 12px rgba(26,37,80,.5),0 0 0 1px rgba(212,175,90,.2)!important;}
+body.dark .tbadge-jack{filter:none;box-shadow:0 2px 10px rgba(12,74,92,.45)!important;}
+body.dark .tbadge-joker{filter:none;background:linear-gradient(135deg,#022c22,#064e3b,#065f46)!important;color:#6ee7b7!important;box-shadow:0 2px 10px rgba(6,78,59,.5)!important;}
+body.dark .tbadge-spade{filter:none;box-shadow:0 2px 10px rgba(30,58,95,.45)!important;}
 body.dark .tbadge-youth{background:linear-gradient(135deg,#065f46,#059669)!important;color:#d1fae5!important;}
-/* 티어 순위표 다크 테이블 row */
+/* 테이블 row 다크 */
 body.dark table tr[style*="border-left"]{border-left-color:inherit;}
-/* 직책 배지 다크 */
-body.dark [style*="text-shadow:0 1px 2px rgba(0,0,0,.2)"]{text-shadow:0 1px 3px rgba(0,0,0,.5)!important;}
-/* 스트리머 테이블 row 다크: 테두리 유지 */
 body.dark tr[style*="border-left"]{border-left-color:inherit;}
 body.dark table tr[style*="background"]{filter:brightness(.65) saturate(.9);}
 body.dark table tr[style*="background"]:hover{filter:brightness(.78) saturate(1.0);}
@@ -979,19 +909,44 @@ body.dark .brd-move-popup{background:#1e293b!important;border-color:#2d3f55!impo
 body.dark .brd-move-popup-title{color:#94a3b8!important;}
 body.dark .brd-move-popup-btn{color:#cbd5e1!important;}
 body.dark .brd-move-popup-btn:hover{background:#1e3a5f!important;color:#93c5fd!important;}
+body.dark .brd-move-popup-sep{background:#2d3f55!important;}
 /* 현황판 툴바 다크 */
 body.dark .brd-toolbar{background:var(--white)!important;border-color:var(--border)!important;}
-/* 현황판 race 배지 다크에서 가독성 */
 body.dark .brd-race{opacity:.9;}
-/* 모바일: 파스텔 카드 텍스트 다크모드 처리 상단 CSS에서 처리됨 */
-body.dark .brd-row .brd-role-main{color:#fff!important;}
-/* 스트리머 상세 모달 다크 */
+/* 모달 다크 */
 body.dark .mbox{background:#1e293b!important;color:#e2e8f0!important;}
+body.dark .umbox{background:#1e293b!important;color:#e2e8f0!important;}
 body.dark .mbox [style*="color:#111"]{color:#e2e8f0!important;}
 body.dark .mbox [style*="color:#111827"]{color:#e2e8f0!important;}
-/* 색상이 어두운 배지 다크에서 너무 밝아지는 것 방지 */
-body.dark .tbadge{filter:brightness(.9) saturate(.85);}
-body.dark .tbadge-god,body.dark .tbadge-king{filter:brightness(.95) saturate(.9);}
+/* 경기 상세 다크 */
+body.dark .rec-detail-area .set-row > div:first-child{background:#1e293b!important;border-color:#2d3f55!important;}
+body.dark .set-row-title{color:#93c5fd!important;}
+/* 빈 배경 inline style 다크 변환 */
+body.dark [style*="background:rgba(255,255,255,.9)"]{background:rgba(30,41,59,.9)!important;}
+body.dark [style*="background:rgba(255,255,255,.92)"]{background:rgba(30,41,59,.92)!important;}
+/* 기타 */
+body.dark [style*="background:#f0fdf4"]{background:#0d2a1c!important;border-color:#14532d!important;}
+body.dark [style*="background:#f0fdf4"] [style*="color:#15803d"]{color:#4ade80!important;}
+body.dark #emModal [style*="background:#fffbeb"]{background:#1a1200!important;border-color:#78500a!important;}
+body.dark #emModal [style*="color:#b45309"]{color:#fbbf24!important;}
+/* 캘린더 다크 */
+body.dark #rcont table,body.dark #rcont table th,body.dark #rcont table td{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
+body.dark #rcont table th{color:var(--text3)!important;font-weight:700;}
+body.dark #rcont [style*="background:#f0f6ff"]{background:#1a2a40!important;border-color:#2d5589!important;}
+body.dark #rcont [style*="background:#f0f6ff"] *{color:#e2e8f0!important;}
+body.dark #rcont [style*="background:var(--blue-l)"]{background:#1e3a5f!important;}
+/* 통계 차트 다크 */
+body.dark .ssec canvas{filter:invert(1) hue-rotate(180deg);opacity:.88;}
+body.dark .ssec [style*="background:#f8fafc"]{background:#162032!important;}
+body.dark .ssec [style*="background:#f1f5f9"]{background:#162032!important;}
+body.dark .ssec [style*="color:#1e293b"]{color:#e2e8f0!important;}
+body.dark .ssec [style*="color:#475569"]{color:#94a3b8!important;}
+body.dark .ssec [style*="color:#64748b"]{color:#7c8ea3!important;}
+/* 모바일 경기 상세 카드 다크 */
+body.dark .rec-detail-area [style*="border:1px solid var(--border);border-radius:10px"]{background:#1e293b!important;border-color:#2d3f55!important;}
+body.dark .rec-detail-area [style*="background:#f8fafc"]{background:#1a2436!important;}
+body.dark .rec-detail-area [style*="background:#f1f5f9"]{background:#162032!important;}
+body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#162032!important;}
 </style>
 </head>
 <body>
@@ -1015,8 +970,8 @@ body.dark .tbadge-god,body.dark .tbadge-king{filter:brightness(.95) saturate(.9)
 
 <div class="app">
 <div class="hdr">
-  <span class="hdr-ico">🏆</span>
-  <div class="hdr-title">스타대학 데이터 센터</div>
+  <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
+  <div class="hdr-title" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer" title="메인으로">스타대학 데이터 센터</div>
   <div class="hdr-ver">V49.2</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
@@ -10490,10 +10445,52 @@ async function captureSection(sectionId, filename){
   }catch(e){alert('이미지 저장 오류: '+e.message);}
 }
 
+/* ══ 모바일 헤더 검색 토글 ══ */
+function toggleHdrSearch(){
+  const wrap = document.getElementById('hdrSearchWrap');
+  const input = document.getElementById('globalSearch');
+  if(!wrap) return;
+  wrap.classList.toggle('open');
+  if(wrap.classList.contains('open')){
+    input.style.cssText = 'width:140px!important;opacity:1!important;pointer-events:auto!important;position:relative!important;padding:5px 10px!important;font-size:12px!important;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;outline:none;';
+    setTimeout(()=>input.focus(), 50);
+    input.onblur = ()=>{ if(!input.value){ wrap.classList.remove('open'); input.style.cssText=''; } };
+  } else {
+    input.style.cssText = '';
+    input.value = '';
+    onGlobalSearch('');
+  }
+}
+/* 모바일에서 다크 버튼, 로그인 버튼 텍스트 처리 */
+(function(){
+  function fixHdrBtnsForMobile(){
+    if(window.innerWidth <= 768){
+      const dk = document.getElementById('darkToggleBtn');
+      if(dk) dk.innerHTML = dk.textContent.includes('다크') ? '🌙' : '☀️';
+      const li = document.getElementById('hdrLoginBtn');
+      if(li) li.innerHTML = '🔐';
+      const lo = document.getElementById('hdrLogoutBtn');
+      if(lo) lo.innerHTML = '🔓';
+    } else {
+      const dk = document.getElementById('darkToggleBtn');
+      const isDark = document.body.classList.contains('dark');
+      if(dk) dk.innerHTML = isDark ? '☀️ 라이트' : '🌙 다크';
+      const li = document.getElementById('hdrLoginBtn');
+      if(li) li.innerHTML = '🔐 로그인하기';
+      const lo = document.getElementById('hdrLogoutBtn');
+      if(lo) lo.innerHTML = '🔓 로그아웃';
+    }
+  }
+  window.addEventListener('resize', fixHdrBtnsForMobile);
+  document.addEventListener('DOMContentLoaded', fixHdrBtnsForMobile);
+  setTimeout(fixHdrBtnsForMobile, 100);
+  window._fixHdrBtns = fixHdrBtnsForMobile;
+})();
+
 function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   localStorage.setItem('su_dark',isDark?'1':'');
-  document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
+  if(window._fixHdrBtns) window._fixHdrBtns(); else document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
 }
 
 /* ── 클립보드 복사 유틸 ── */
@@ -10558,9 +10555,9 @@ function showToast(msg, duration=2000){
 function initDark(){
   if(localStorage.getItem('su_dark')==='1'){
     document.body.classList.add('dark');
-    const btn=document.getElementById('darkToggleBtn');
-    if(btn)btn.textContent='☀️ 라이트';
   }
+  // 초기화 후 버튼 텍스트 설정 (모바일/PC 자동 대응)
+  setTimeout(()=>{ if(window._fixHdrBtns) window._fixHdrBtns(); }, 50);
 }
 
 function init(){
@@ -10966,27 +10963,44 @@ function buildUnivBoardCard(u, forExport){
 
     const tierRows=tierOrder.map((tier,tidx)=>{
       const ps=tierMap[tier];
-      // 티어 라벨 색: G/K/JA/J/S는 각 뱃지 고유색, 0~유스는 대학색 파스텔→진하게
-      const TIER_BADGE_COLORS = {
-        'G':'#7c3aed','K':'#2d4288','JA':'#0d7a9e','J':'#4338ca','S':'#2563eb'
-      };
-      const TIER_FADE_ORDER = ['유스','8티어','7티어','6티어','5티어','4티어','3티어','2티어','1티어','0티어'];
-      let tierLabelColor = col;
-      let tierLabelBg = 'transparent';
-      if(TIER_BADGE_COLORS[tier]){
-        tierLabelColor = TIER_BADGE_COLORS[tier];
-        tierLabelBg = hexToRgba(TIER_BADGE_COLORS[tier], .1);
+
+      // 색상 헬퍼: hex→HSL→조작→hex
+      const _h2hsl=(hex)=>{const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;default:h=((r-g)/d+4)/6;}}return[h*360,s*100,l*100];};
+      const _hsl2h=(h,s,l)=>{h/=360;s/=100;l/=100;const f=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};let r,g,b;if(!s){r=g=b=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3);}return'#'+[r,g,b].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');};
+      // 대학색 기반으로 어둡고 채도 높이기 (파스텔 배경에서 확실히 구분)
+      const vividD=(hex,dk=0.28,sat=1.3)=>{let[h,s,l]=_h2hsl(hex);s=Math.min(100,s*sat);l=Math.max(10,l*(1-dk));return _hsl2h(h,s,l);};
+      // 원색→흰색 블렌딩 (mix=0: 원색, mix=1: 흰색)
+      const blend=(hex,mix)=>{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'#'+[Math.round(r*(1-mix)+255*mix),Math.round(g*(1-mix)+255*mix),Math.round(b*(1-mix)+255*mix)].map(v=>v.toString(16).padStart(2,'0')).join('');};
+
+      // G/K/JA/J/S: 대학 원색에서 더 어둡고 채도 높여 파스텔 배경에서 확실히 튀게
+      const HIGH_TIER_IDX = {'G':0,'K':1,'JA':2,'J':3,'S':4};
+      // 유스~0티어: 유스는 중간 파스텔(mix=0.25), 0티어는 원색(mix=0)
+      const FADE_TIERS = ['유스','8티어','7티어','6티어','5티어','4티어','3티어','2티어','1티어','0티어'];
+
+      let tColor, tBg, tBorder;
+      if(tier in HIGH_TIER_IDX){
+        const dk=[0.36,0.33,0.30,0.28,0.26][HIGH_TIER_IDX[tier]];
+        tColor=vividD(col,dk,1.45);
+        tBg=hexToRgba(tColor,0.16);
+        tBorder=hexToRgba(tColor,0.55);
       } else {
-        const fi = TIER_FADE_ORDER.indexOf(tier);
-        if(fi >= 0){
-          const ratio = fi / (TIER_FADE_ORDER.length - 1); // 유스=0(연), 0티어=1(진)
-          const mix = 0.88 - ratio * 0.65; // 유스: mix=0.88(매우연), 0티어: mix=0.23(진)
-          tierLabelColor = toPastel(col, mix);
-          tierLabelBg = hexToRgba(col, 0.06 + ratio * 0.1);
+        const fi=FADE_TIERS.indexOf(tier);
+        if(fi>=0){
+          const ratio=fi/(FADE_TIERS.length-1); // 유스=0, 0티어=1
+          const mix=0.28*(1-ratio);              // 유스: mix=0.28(약간파스텔), 0티어: mix=0(원색)
+          tColor=blend(col,mix);
+          // 추가 어두움: vividD로 한번 더 강화
+          tColor=vividD(tColor, 0.15+ratio*0.1, 1.2);
+          tBg=hexToRgba(col,0.12+ratio*0.12);
+          tBorder=hexToRgba(col,0.35+ratio*0.3);
+        } else {
+          tColor=vividD(col,0.2,1.1);
+          tBg=hexToRgba(col,0.12);
+          tBorder=hexToRgba(col,0.35);
         }
       }
-      return `<div style="margin-bottom:6px">
-        <div style="font-size:10px;font-weight:800;color:${tierLabelColor};letter-spacing:1px;padding:1px 6px;margin-bottom:3px;background:${tierLabelBg};border-radius:4px;display:inline-block">${tier}</div>
+      return `<div style="margin-bottom:5px">
+        <div style="font-size:10px;font-weight:900;color:${tColor};letter-spacing:1.2px;padding:2px 8px;margin-bottom:3px;background:${tBg};border-radius:5px;border:1.5px solid ${tBorder};display:inline-block;line-height:1.5">${tier}</div>
         <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
       </div>`;
     }).join('');
@@ -11056,6 +11070,9 @@ function buildUnivBoardCard(u, forExport){
     const isAdmin=isLoggedIn;
     // 스트리머 행: 헤더 색보다 연한 파스텔톤 배경
     const rowPastel = toPastel(col, 0.88);
+    // 플레이어 행 티어 뱃지: 대학색을 어둡게+채도↑ (파스텔 배경에서 잘 보이도록)
+    const _vd=(hex)=>{const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;default:h=((r-g)/d+4)/6;}}h*=360;s=Math.min(100,s*100*1.3);l=Math.max(10,l*100*0.65);h/=360;s/=100;l/=100;const f=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};let r2,g2,b2;if(!s){r2=g2=b2=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p2=2*l-q;r2=f(p2,q,h+1/3);g2=f(p2,q,h);b2=f(p2,q,h-1/3);}return'#'+[r2,g2,b2].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');};
+    const rowTierCol=_vd(col);
     return `<div class="brd-row no-export-movebtns" data-player="${p.name}" data-univ="${u.name}" data-idx="${idx}"${isAdmin?' draggable="true"':''} style="cursor:${isAdmin?'grab':'default'};border-left:3px solid ${hexToRgba(col,.55)};background:${rowPastel};" onmouseover="this.style.background='rgba(255,255,255,.98)'" onmouseout="this.style.background='${rowPastel}'">
       <button class="brd-row-btn" onclick="event.stopPropagation();${isAdmin?`openBrdPlayerPopup(event,'${pNameSafe}','${u.name}',${idx},${sorted.length})`:`openPlayerModal('${pNameSafe}')`}" title="${isAdmin?'클릭: 순서변경/대학이동':'스트리머 상세 보기'}">
         ${photoSrc?`<img src="${photoSrc}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.5);margin-right:1px" onerror="this.style.display='none'">` : ''}
@@ -11063,7 +11080,7 @@ function buildUnivBoardCard(u, forExport){
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
         <strong class="brd-name" style="font-weight:800;color:#111">${p.name}${getStatusIconHTML(p.name)}</strong>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
-        ${p.tier?`<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:5px;background:${hexToRgba(col,.18)};color:${col};border:1px solid ${hexToRgba(col,.35)};flex-shrink:0;white-space:nowrap">${p.tier}</span>`:''}
+        ${p.tier?`<span style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:5px;background:${hexToRgba(rowTierCol,.18)};color:${rowTierCol};border:2px solid ${hexToRgba(rowTierCol,.6)};flex-shrink:0;white-space:nowrap;letter-spacing:.8px">${p.tier}</span>`:''}
       </button>
       ${isAdmin?`<span style="font-size:10px;color:rgba(0,0,0,.25);padding:0 3px;cursor:grab;flex-shrink:0;user-select:none" title="드래그로 순서 변경">⠿</span>`:''}
     </div>`;
@@ -11114,18 +11131,21 @@ let _brdPopupListenerAdded = false;
 function _closeBrdPopup(e){
   if(!_brdPopup) return;
   if(!_brdPopup.contains(e.target)){
-    _brdPopup.remove();
-    _brdPopup = null;
-    const dim = document.getElementById('brd-popup-dim');
-    if(dim) dim.remove();
+    _brdClose();
   }
+}
+// 중앙화된 팝업 닫기 - 딤 오버레이 포함 항상 정리
+function _brdClose(){
+  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  const dim=document.getElementById('brd-popup-dim');
+  if(dim) dim.remove();
 }
 
 // 칩 전용 팝업 (무소속 등 칩 레이아웃) - 위/아래 이동 대신 대학이동 위주
 function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   if(!isLoggedIn){ openPlayerModal(playerName); return; }
   e.stopPropagation();
-  if(typeof _brdPopup!=='undefined'&&_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  _brdClose();
   const allUnivs = _getBoardUnivs();
   const p = players.find(x=>x.name===playerName);
   if(!p) return;
@@ -11156,7 +11176,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
     </div>
     <div class="brd-move-popup-sep"></div>
-    <button class="brd-move-popup-btn" onclick="_brdPopup&&_brdPopup.remove();_brdPopup=null;openPlayerModal('${playerName}')">📋 스트리머 상세 보기</button>
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">📋 스트리머 상세 보기</button>
   `;
 
   document.body.appendChild(popup);
@@ -11165,7 +11185,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
     const dim = document.createElement('div');
     dim.id = 'brd-popup-dim';
     dim.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:4999;backdrop-filter:blur(2px)';
-    dim.onclick = () => { dim.remove(); if(_brdPopup){_brdPopup.remove();_brdPopup=null;} };
+    dim.onclick = () => { dim.remove(); _brdClose(); };
     document.body.insertBefore(dim, popup);
     popup.style.zIndex = '5000';
   } else {
@@ -11187,7 +11207,7 @@ function boardTransferPlayerFromChip(playerName, fromUniv){
   const sel = document.getElementById('brd-chip-univ-target');
   const toUniv = sel?.value;
   if(!toUniv || toUniv===fromUniv){ alert('이동할 대학을 선택하세요.'); return; }
-  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  _brdClose();
   const p = players.find(x=>x.name===playerName);
   if(!p) return;
   if(!confirm(`"${playerName}"을(를) "${fromUniv}" → "${toUniv}"로 이동하시겠습니까?`)) return;
@@ -11206,7 +11226,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   if(!isLoggedIn){ openPlayerModal(playerName); return; }
 
   e.stopPropagation();
-  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  _brdClose();
   const allUnivs = _getBoardUnivs();
   const p = players.find(x=>x.name===playerName);
   if(!p) return;
@@ -11223,7 +11243,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   popup.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
       <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${playerName} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${univName})</span></div>
-      <button onclick="_brdPopup&&_brdPopup.remove();_brdPopup=null" style="background:none;border:none;color:var(--gray-l);font-size:14px;cursor:pointer;padding:0 2px;line-height:1">✕</button>
+      <button onclick="_brdClose()" style="background:none;border:none;color:var(--gray-l);font-size:14px;cursor:pointer;padding:0 2px;line-height:1">✕</button>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border)">
       <button onclick="boardMovePlayer('${playerName}','${univName}','top')" title="맨 위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">⬆️</button>
@@ -11256,8 +11276,8 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
       </div>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px">
-      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdPopup&&_brdPopup.remove();_brdPopup=null;_refreshBoardCard('${univName}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
-      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdPopup&&_brdPopup.remove();_brdPopup=null;openPlayerModal('${playerName}')">📋 상세</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${univName}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();openPlayerModal('${playerName}')">📋 상세</button>
     </div>
   `;
 
@@ -11270,7 +11290,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
     const dim = document.createElement('div');
     dim.id = 'brd-popup-dim';
     dim.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:4999;backdrop-filter:blur(2px)';
-    dim.onclick = () => { dim.remove(); if(_brdPopup){_brdPopup.remove();_brdPopup=null;} };
+    dim.onclick = () => { dim.remove(); _brdClose(); };
     document.body.insertBefore(dim, popup);
     popup.style.zIndex = '5000';
   } else {
@@ -11298,7 +11318,7 @@ function setBrdRole(playerName, role){
     saveBoardPlayerOrder();
   }
   save();
-  if(_brdPopup){_brdPopup.remove();_brdPopup=null;}
+  _brdClose();
   _refreshBoardCard(p.univ);
 }
 function setBrdStatusIcon(btn, playerName, iconId){
@@ -11317,7 +11337,7 @@ function setBrdStatusIcon(btn, playerName, iconId){
 
 function boardMovePlayer(playerName, univName, dir){
   if(!isLoggedIn) return;
-  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  _brdClose();
   const sorted = _getBoardPlayers(univName);
   const idx = sorted.findIndex(p=>p.name===playerName);
   if(idx < 0) return;
@@ -11341,7 +11361,7 @@ function boardTransferPlayer(playerName, fromUniv){
   const sel = document.getElementById('brd-univ-target');
   const toUniv = sel?.value;
   if(!toUniv || toUniv===fromUniv){ alert('이동할 대학을 선택하세요.'); return; }
-  if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
+  _brdClose();
   const p = players.find(x=>x.name===playerName);
   if(!p) return;
   if(!confirm(`"${playerName}"을(를) "${fromUniv}" → "${toUniv}"로 이동하시겠습니까?\n\n스트리머 목록·티어 순위표·스트리머 상세·대학 상세가 모두 자동 반영됩니다.`)) return;
@@ -13056,41 +13076,44 @@ function closeMobileMatchSheet(e){
   window.toggleDetail = function(key){
     if(!isMobile()){ if(typeof origToggleDetail==='function') origToggleDetail(key); return; }
 
-    // 이미 열려있는 det 영역에서 데이터 가져오기
     const detEl = document.getElementById('det-' + key);
     if(!detEl) { if(typeof origToggleDetail==='function') origToggleDetail(key); return; }
 
-    // 일단 데이터가 없으면 원본 함수로 렌더 후 가져옴
-    if(!detEl.innerHTML.trim()){
-      if(typeof origToggleDetail==='function') origToggleDetail(key);
-    }
+    // 원본 함수로 렌더링 (buildDetailHTML 실행)
+    if(typeof origToggleDetail==='function') origToggleDetail(key);
 
-    // rec-sum-header에서 팀명, 스코어 추출
-    const sumEl = detEl.closest('.rec-summary');
+    // 렌더링 후 bottom sheet로 표시
+    const sumEl = detEl.closest('.rec-summary, .rec-card');
     let titleText = '경기 상세';
     let scoreHTML = '';
     if(sumEl){
-      const hdr = sumEl.querySelector('.rec-sum-header');
+      const hdr = sumEl.querySelector('.rec-sum-header, .rec-header');
       if(hdr){
         const badges = hdr.querySelectorAll('.ubadge');
         const scoreEl = hdr.querySelector('.rec-sum-score');
         if(scoreEl) scoreHTML = buildMobileScoreHTML(badges, scoreEl);
-        const titleEl = hdr.querySelector('[style*="font-weight:700"]') || hdr.querySelector('span[style]');
-        if(titleEl) titleText = titleEl.textContent.trim() || titleText;
-        // 날짜 + 대진 조합
+        // 날짜 + 팀명 추출
         const spans = hdr.querySelectorAll('span');
         let dateStr='', nameStr='';
         spans.forEach(s => {
           const t=s.textContent.trim();
           if(/^\d{4}-\d{2}-\d{2}/.test(t)) dateStr=t;
-          else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세')) nameStr=t;
+          else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세') && !t.includes(':')) nameStr=nameStr||t;
         });
-        if(nameStr) titleText = (dateStr?dateStr+' ':'')+nameStr;
+        if(badges.length>=2){
+          titleText = (dateStr?`<span style="font-size:11px;opacity:.7">${dateStr}</span><br>`:'') +
+            badges[0].textContent.trim() + ' vs ' + badges[1].textContent.trim();
+        } else if(nameStr){
+          titleText = (dateStr?dateStr+' ':'')+nameStr;
+        }
       }
     }
 
-    const bodyHTML = buildMobileDetailHTML(detEl.innerHTML);
+    // 현재 렌더된 내용을 그대로 bottom sheet에 복사
+    const bodyHTML = detEl.innerHTML || '<div style="padding:20px;text-align:center;color:var(--gray-l)">상세 기록 없음</div>';
     openMobileMatchSheet(titleText, scoreHTML, bodyHTML);
+    // 원본 inline detail은 다시 닫기 (sheet로만 표시)
+    if(typeof origToggleDetail==='function') origToggleDetail(key);
   };
 
   function buildMobileScoreHTML(badges, scoreEl){
