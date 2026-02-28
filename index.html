@@ -13,7 +13,7 @@
   --gold:#d97706;--gold-bg:#fffbeb;--gold-b:#fde68a;
   --green:#16a34a;--red:#dc2626;--gray:#64748b;--gray-l:#9ca3af;
   --text:#1a202c;--text2:#374151;--text3:#6b7280;
-  --god:#7c3aed;--king:#dc2626;--jack:#1e3a8a;--joker:#2040a8;--spade:#2d52c8;--youth:#10b981;
+  --god:#7c3aed;--king:#2563eb;--jack:#1e3a8a;--joker:#2040a8;--spade:#2d52c8;--youth:#10b981;
   --r:8px;--sh:0 1px 3px rgba(0,0,0,.06);--sh2:0 4px 20px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -120,7 +120,7 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .tbadge{display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;vertical-align:middle;line-height:1.4;}
 /* ── 특별 티어: God·King 차별화 ── */
 .tbadge-god{background:linear-gradient(135deg,#2e0a6e,#5b21b6,#7c3aed);color:#fff;box-shadow:0 2px 12px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3);border:1px solid rgba(196,181,253,.25);text-shadow:0 1px 4px rgba(0,0,0,.3);}
-.tbadge-king{background:linear-gradient(135deg,#7f0000,#b91c1c,#dc2626);color:#fff;box-shadow:0 2px 12px rgba(185,28,28,.55),0 0 0 1px rgba(252,165,165,.2);border:1px solid rgba(254,202,202,.2);text-shadow:0 1px 4px rgba(0,0,0,.3);}
+.tbadge-king{background:linear-gradient(135deg,#1a3a6e,#234fa8,#2563eb);color:#fff;box-shadow:0 2px 12px rgba(37,99,235,.5),0 0 0 1px rgba(147,197,253,.25);border:1px solid rgba(191,219,254,.25);text-shadow:0 1px 4px rgba(0,0,0,.3);}
 .tbadge-jack{background:linear-gradient(135deg,#0e2060,#182d80);color:#fff;box-shadow:0 2px 10px rgba(14,32,96,.7);border:1px solid rgba(255,255,255,.13);}
 .tbadge-joker{background:linear-gradient(135deg,#162b80,#2040a8);color:#fff;box-shadow:0 2px 10px rgba(22,43,128,.65);border:1px solid rgba(255,255,255,.14);}
 .tbadge-spade{background:linear-gradient(135deg,#1e389a,#2d52c8);color:#fff;box-shadow:0 2px 10px rgba(30,56,154,.6);border:1px solid rgba(255,255,255,.15);}
@@ -209,8 +209,9 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:2000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
-.mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:95vw;border-radius:12px;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.16);}
-.mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:var(--blue);margin-bottom:16px;}
+.mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:95vw;border-radius:12px;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.16);position:relative;}
+.mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:var(--blue);margin-bottom:16px;cursor:move;user-select:none;-webkit-user-select:none;}
+.mtitle::before{content:'⠿ ';font-size:12px;opacity:.35;margin-right:4px;}
 .mbox label{display:block;font-size:11px;font-weight:500;color:var(--gray-l);margin-top:10px;margin-bottom:3px;}
 .mbox input,.mbox select{width:100%;}
 .mbtns{display:flex;gap:7px;margin-top:18px;}
@@ -370,7 +371,159 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .detail-set-hdr { flex-wrap: wrap !important; gap: 4px !important; }
 }
 
-/* ── 경기 상세보기 모바일 공통 ── */
+/* ── 모바일 경기 상세 팝업 오버레이 ── */
+.mobile-match-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(15,23,42,.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: flex-end;
+  justify-content: center;
+}
+.mobile-match-overlay.open { display: flex; }
+.mobile-match-sheet {
+  width: 100%;
+  max-width: 100vw;
+  max-height: 88vh;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -8px 40px rgba(0,0,0,.22);
+  animation: slideUpSheet .28s cubic-bezier(.22,.68,0,1.2);
+  overflow: hidden;
+}
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.mobile-match-sheet-handle {
+  width: 40px; height: 4px;
+  background: #dde2eb;
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.mobile-match-sheet-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid #eef0f4;
+  flex-shrink: 0;
+}
+.mobile-match-sheet-title {
+  flex: 1;
+  font-weight: 900;
+  font-size: 15px;
+  color: #1e293b;
+}
+.mobile-match-sheet-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #64748b;
+  flex-shrink: 0;
+}
+.mobile-match-sheet-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef0f4;
+  flex-shrink: 0;
+}
+.mobile-match-sheet-team {
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+.mobile-match-sheet-num {
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1;
+}
+.mobile-match-sheet-sep {
+  font-weight: 900;
+  font-size: 18px;
+  color: #94a3b8;
+}
+.mobile-match-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 20px;
+}
+/* 세트 헤더 카드 */
+.mobile-set-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+/* 경기 행 모바일 - 세로 스택 */
+.mobile-game-row {
+  background: #fff;
+  border: 1px solid #eef0f4;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.mobile-game-map {
+  background: #f8fafc;
+  border-top: 1px solid #eef0f4;
+  padding: 5px 12px;
+  font-size: 10px;
+  color: #64748b;
+  text-align: center;
+}
+.mobile-game-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.mobile-game-player.winner {
+  background: rgba(37,99,235,.05);
+}
+.mobile-game-player.loser {
+  opacity: 0.45;
+  filter: grayscale(.8);
+}
+.mobile-game-vs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0;
+  background: #f1f5f9;
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 2px;
+}
+body.dark .mobile-match-sheet { background: #1e293b; }
+body.dark .mobile-match-sheet-hdr { border-color: #2d3f55; }
+body.dark .mobile-match-sheet-title { color: #e2e8f0; }
+body.dark .mobile-match-sheet-close { background: #2d3f55; color: #94a3b8; }
+body.dark .mobile-match-sheet-score { background: #162032; border-color: #2d3f55; }
+body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
+body.dark .mobile-game-row { background: #1e293b; border-color: #2d3f55; }
+body.dark .mobile-game-map { background: #162032; border-color: #2d3f55; color: #64748b; }
+body.dark .mobile-game-vs-bar { background: #162032; }
+body.dark .mobile-game-player.winner { background: rgba(96,165,250,.08); }
 @media (max-width: 768px) {
   /* 세트 헤더 */
   .rec-detail-area .set-row > div:first-child {
@@ -405,43 +558,50 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   display: none;
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: var(--white);
-  border-top: 1.5px solid var(--border);
+  background: rgba(255,255,255,0.96);
+  border-top: 1px solid rgba(0,0,0,.08);
   z-index: 1000;
-  padding: 4px 0 env(safe-area-inset-bottom, 4px);
-  box-shadow: 0 -3px 16px rgba(0,0,0,.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 0 4px env(safe-area-inset-bottom, 8px);
+  box-shadow: 0 -4px 24px rgba(0,0,0,.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .bnav-item {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 5px 2px 4px;
+  gap: 3px;
+  padding: 8px 2px 6px;
   cursor: pointer;
   border: none;
   background: none;
   font-family: 'Noto Sans KR', sans-serif;
-  color: var(--gray-l);
+  color: #94a3b8;
   font-size: 9px;
   font-weight: 600;
-  transition: color .15s, transform .1s;
+  transition: color .2s, transform .1s;
   -webkit-tap-highlight-color: transparent;
   position: relative;
+  letter-spacing: .2px;
 }
-.bnav-item:active { transform: scale(.92); }
+.bnav-item:active { transform: scale(.88); }
 .bnav-item.on { color: var(--blue); }
-.bnav-item.on::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 20%; right: 20%;
-  height: 2.5px;
-  background: var(--blue);
-  border-radius: 0 0 3px 3px;
+.bnav-item.on .bnav-icon-wrap {
+  background: rgba(37,99,235,.1);
+  border-radius: 12px;
 }
-.bnav-item span:first-child { font-size: 20px; line-height: 1; }
+.bnav-icon-wrap {
+  width: 40px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+  border-radius: 12px;
+}
+.bnav-item span.bnav-icon { font-size: 18px; line-height: 1; }
+.bnav-item span.bnav-label { font-size: 9.5px; font-weight: 600; line-height: 1; }
 
 body.dark {
   --bg:#0f172a;--white:#1e293b;--surface:#162032;--border:#2d3f55;--border2:#3a4f6a;
@@ -491,7 +651,10 @@ body.dark .mbox{background:#1e293b;border-color:#2d3f55;}
 body.dark .grp-rank-table th{background:linear-gradient(90deg,#0f172a,#1e3a8a);}
 body.dark .grp-rank-table td{border-color:#2d3f55;background:#1e293b;color:#e2e8f0;}
 body.dark .grp-rank-table tr:hover td{background:#243248;}
-body.dark #bottomNav{background:#1e293b;border-color:#2d3f55;}
+body.dark #bottomNav{background:rgba(30,41,59,.97);border-color:#2d3f55;}
+body.dark .bnav-item{color:#475569;}
+body.dark .bnav-item.on{color:#60a5fa;}
+body.dark .bnav-item.on .bnav-icon-wrap{background:rgba(96,165,250,.12);}
 body.dark #actionBar{background:#1e293b;border-color:#2d3f55;}
 body.dark .btn-w{background:#243248;color:#cbd5e1;border-color:#3a4f6a;}
 body.dark .btn-w:hover{background:#2d3f55;}
@@ -632,7 +795,7 @@ body.dark .brd-row{background:rgba(15,23,42,.55)!important;border-color:rgba(255
 body.dark .brd-row:hover{background:rgba(15,23,42,.75)!important;}
 /* tbadge 다크모드: god/king 글로우 효과 */
 body.dark .tbadge-god{box-shadow:0 2px 12px rgba(124,58,237,.4),0 0 0 1px rgba(139,92,246,.3)!important;}
-body.dark .tbadge-king{box-shadow:0 2px 12px rgba(185,28,28,.4),0 0 0 1px rgba(252,165,165,.2)!important;}
+body.dark .tbadge-king{box-shadow:0 2px 12px rgba(37,99,235,.45),0 0 0 1px rgba(147,197,253,.2)!important;}
 body.dark .tbadge-youth{background:linear-gradient(135deg,#065f46,#059669)!important;color:#d1fae5!important;}
 /* 티어 순위표 다크 테이블 row */
 body.dark table tr[style*="border-left"]{border-left-color:inherit;}
@@ -981,20 +1144,20 @@ function getTierBadge(tier){
     '유스':'tbadge tbadge-youth',
   };
   // 특수 티어만 아이콘 유지 (0~8티어/유스 아이콘 제거)
-  const icons={'G':'✨','K':'🔴','JA':'⚔️','J':'🃏','S':'♠','유스':'🐣'};
+  const icons={'G':'✨','K':'👑','JA':'⚔️','J':'🃏','S':'♠','유스':'🐣'};
   const ic=icons[tier]||'';
   return `<span class="${map[tier]||'tbadge tbadge-default'}">${ic?ic+' ':''}${tier}</span>`;
 }
 
 function getTierLabel(tier){
-  const icons={G:'✨',K:'🔴',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣'};
+  const icons={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스'};
   const ic=icons[tier]||'';
   return ic?`${ic} ${labels[tier]||tier}`:tier;
 }
 
 function getTierPillLabel(tier){
-  const icons={G:'✨',K:'🔴',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣'};
+  const icons={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스'};
   return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
 }
@@ -10555,6 +10718,7 @@ function buildUnivBoardCard(u, forExport){
     return '#'+[pr,pg,pb].map(v=>v.toString(16).padStart(2,'0')).join('');
   };
   const pastelCol=forExport?col:toPastel(col, 0.72);
+  const headerCol = col; // 헤더는 대학 상징색 그대로 사용
   const shd=hexToRgba(col,.18);
 
   // 티어별 칩 레이아웃 빌더 (무소속 + forExport 시 모든 대학에 적용)
@@ -10669,37 +10833,39 @@ function buildUnivBoardCard(u, forExport){
 
     const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const isAdmin=isLoggedIn;
-    return `<div class="brd-row no-export-movebtns" data-player="${p.name}" data-univ="${u.name}" data-idx="${idx}"${isAdmin?' draggable="true"':''} style="cursor:${isAdmin?'grab':'default'};border-left:3px solid ${hexToRgba(col,.4)};background:rgba(255,255,255,.82);" onmouseover="this.style.background='rgba(255,255,255,.97)'" onmouseout="this.style.background='rgba(255,255,255,.82)'">
+    // 스트리머 행: 헤더 색보다 연한 파스텔톤 배경
+    const rowPastel = toPastel(col, 0.88);
+    return `<div class="brd-row no-export-movebtns" data-player="${p.name}" data-univ="${u.name}" data-idx="${idx}"${isAdmin?' draggable="true"':''} style="cursor:${isAdmin?'grab':'default'};border-left:3px solid ${hexToRgba(col,.55)};background:${rowPastel};" onmouseover="this.style.background='rgba(255,255,255,.98)'" onmouseout="this.style.background='${rowPastel}'">
       <button class="brd-row-btn" onclick="event.stopPropagation();${isAdmin?`openBrdPlayerPopup(event,'${pNameSafe}','${u.name}',${idx},${sorted.length})`:`openPlayerModal('${pNameSafe}')`}" title="${isAdmin?'클릭: 순서변경/대학이동':'스트리머 상세 보기'}">
         ${photoSrc?`<img src="${photoSrc}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.5);margin-right:1px" onerror="this.style.display='none'">` : ''}
         ${isMain?`<span class="brd-role-main" style="background:${rCol};color:#fff;border-color:${rCol}">${rIcon}${p.role}</span>`:''}
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
-        <span class="brd-name">${p.name}${getStatusIconHTML(p.name)}</span>
+        <strong class="brd-name" style="font-weight:800;color:#111">${p.name}${getStatusIconHTML(p.name)}</strong>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
-        ${p.tier?`<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:5px;background:${hexToRgba(col,.15)};color:${col};border:1px solid ${hexToRgba(col,.3)};flex-shrink:0;white-space:nowrap">${p.tier}</span>`:''}
+        ${p.tier?`<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:5px;background:${hexToRgba(col,.18)};color:${col};border:1px solid ${hexToRgba(col,.35)};flex-shrink:0;white-space:nowrap">${p.tier}</span>`:''}
       </button>
       ${isAdmin?`<span style="font-size:10px;color:rgba(0,0,0,.25);padding:0 3px;cursor:grab;flex-shrink:0;user-select:none" title="드래그로 순서 변경">⠿</span>`:''}
     </div>`;
   }).join('');
 
-  return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${pastelCol};--brd-shd:${shd}" draggable="false">
-    <div class="brd-hdr" style="cursor:${isLoggedIn?'grab':'default'}"${isLoggedIn?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':''}>
+  return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${col};--brd-shd:${shd}" draggable="false">
+    <div class="brd-hdr" style="background:${headerCol};cursor:${isLoggedIn?'grab':'default'}"${isLoggedIn?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':''}>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:46px;height:46px;border-radius:13px;background:${hexToRgba(col,.15)};border:2px solid ${hexToRgba(col,.35)};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;cursor:pointer" onclick="event.stopPropagation();if(boardSelUniv==='${u.name}'){boardSelUniv='전체';}else{boardSelUniv='${u.name}';}const sel=document.getElementById('board-univ-sel');if(sel)sel.value=boardSelUniv;render();" title="클릭: 해당 대학 필터 (다시 클릭: 전체 보기)">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;cursor:pointer" onclick="event.stopPropagation();if(boardSelUniv==='${u.name}'){boardSelUniv='전체';}else{boardSelUniv='${u.name}';}const sel=document.getElementById('board-univ-sel');if(sel)sel.value=boardSelUniv;render();" title="클릭: 해당 대학 필터 (다시 클릭: 전체 보기)">
           ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
         </div>
         <div style="flex:1;min-width:0">
-          <button class="brd-univ-name-btn" onclick="event.stopPropagation();openUnivModal('${u.name}')">${u.name}</button>
-          <div style="font-size:11px;color:${hexToRgba(col,.75)};margin-top:3px">${cnt}명</div>
+          <button class="brd-univ-name-btn" style="color:#fff!important;font-size:19px;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25)" onclick="event.stopPropagation();openUnivModal('${u.name}')">${u.name}</button>
+          <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px">${cnt}명</div>
         </div>
         <div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-          ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" title="왼쪽으로" style="background:${hexToRgba(col,.12)};border:1px solid ${hexToRgba(col,.3)};border-radius:5px;color:${col};font-size:11px;width:26px;height:22px;cursor:pointer;line-height:1;transition:.12s" onmouseover="this.style.background='${hexToRgba(col,.22)}'" onmouseout="this.style.background='${hexToRgba(col,.12)}'">◀</button>
-          <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" title="오른쪽으로" style="background:${hexToRgba(col,.12)};border:1px solid ${hexToRgba(col,.3)};border-radius:5px;color:${col};font-size:11px;width:26px;height:22px;cursor:pointer;line-height:1;transition:.12s" onmouseover="this.style.background='${hexToRgba(col,.22)}'" onmouseout="this.style.background='${hexToRgba(col,.12)}'">▶</button>`:''}
+          ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" title="왼쪽으로" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;line-height:1;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.2)'">◀</button>
+          <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" title="오른쪽으로" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;line-height:1;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.2)'">▶</button>`:''}
         </div>
       </div>
     </div>
-    <div class="brd-sep" style="background:${hexToRgba(col,.2)}"></div>
-    <div class="brd-body">${playerRows}</div>
+    <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
+    <div class="brd-body" style="background:${toPastel(col, 0.88)}">${playerRows}</div>
   </div>`;
 }
 
@@ -11253,12 +11419,12 @@ function _dlCanvasBoard(canvas,filename){
 
 <!-- 📱 하단 고정 네비게이션 바 (모바일) -->
 <div id="bottomNav">
-  <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><span>📋</span><span>스트리머</span></button>
-  <button class="bnav-item" id="bn1" onclick="swNav('tier',this)"><span>📊</span><span>티어</span></button>
-  <button class="bnav-item" id="bn2" onclick="swNav('hist',this)"><span>📅</span><span>기록</span></button>
-  <button class="bnav-item" id="bn3" onclick="swNav('mini',this)"><span>⚡</span><span>미니</span></button>
-  <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><span>📈</span><span>통계</span></button>
-  <button class="bnav-item" id="bn5" onclick="swNav('cal',this)"><span>🗓️</span><span>캘린더</span></button>
+  <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📋</span></div><span class="bnav-label">스트리머</span></button>
+  <button class="bnav-item" id="bn1" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
+  <button class="bnav-item" id="bn2" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
+  <button class="bnav-item" id="bn3" onclick="swNav('mini',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">⚡</span></div><span class="bnav-label">미니</span></button>
+  <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
+  <button class="bnav-item" id="bn5" onclick="swNav('cal',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">🗓️</span></div><span class="bnav-label">캘린더</span></button>
 </div>
 <script>
 // 모바일에서 mobileActionBar 표시
@@ -12547,6 +12713,204 @@ function openPasteModal() {
 }
 
 
+</script>
+
+<!-- 모바일 경기 상세 오버레이 -->
+<div class="mobile-match-overlay" id="mobileMatchOverlay" onclick="closeMobileMatchSheet(event)">
+  <div class="mobile-match-sheet" id="mobileMatchSheet">
+    <div class="mobile-match-sheet-handle"></div>
+    <div class="mobile-match-sheet-hdr">
+      <div class="mobile-match-sheet-title" id="mms-title">경기 상세</div>
+      <button class="mobile-match-sheet-close" onclick="closeMobileMatchOverlay()">✕</button>
+    </div>
+    <div class="mobile-match-sheet-score" id="mms-score"></div>
+    <div class="mobile-match-sheet-body" id="mms-body"></div>
+  </div>
+</div>
+
+<script>
+/* ══ 드래그 이동 가능한 모달 ══ */
+(function(){
+  document.addEventListener('mousedown', function(e){
+    const title = e.target.closest('.mtitle');
+    if(!title) return;
+    const mbox = title.closest('.mbox');
+    if(!mbox) return;
+    const modal = mbox.closest('.modal');
+    if(!modal) return;
+
+    // 처음 드래그 시 absolute 위치로 전환
+    if(mbox.style.position !== 'absolute'){
+      const rect = mbox.getBoundingClientRect();
+      mbox.style.position = 'absolute';
+      mbox.style.margin = '0';
+      mbox.style.left = rect.left + 'px';
+      mbox.style.top = rect.top + 'px';
+      modal.style.alignItems = 'flex-start';
+      modal.style.justifyContent = 'flex-start';
+    }
+
+    const startX = e.clientX - mbox.offsetLeft;
+    const startY = e.clientY - mbox.offsetTop;
+    function onMove(ev){
+      mbox.style.left = Math.max(0, ev.clientX - startX) + 'px';
+      mbox.style.top  = Math.max(0, ev.clientY - startY) + 'px';
+    }
+    function onUp(){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+
+  // 모달 열릴 때 position 초기화
+  const origOm = window.om;
+  window.om = function(id){
+    const el = document.getElementById(id);
+    if(el){
+      const mbox = el.querySelector('.mbox');
+      if(mbox){ mbox.style.position=''; mbox.style.left=''; mbox.style.top=''; mbox.style.margin=''; }
+      el.style.alignItems=''; el.style.justifyContent='';
+    }
+    if(typeof origOm === 'function') origOm(id);
+  };
+})();
+
+/* ══ 모바일 경기 상세 시트 ══ */
+function openMobileMatchSheet(titleText, scoreHTML, bodyHTML){
+  document.getElementById('mms-title').innerHTML = titleText;
+  document.getElementById('mms-score').innerHTML = scoreHTML;
+  document.getElementById('mms-body').innerHTML = bodyHTML;
+  document.getElementById('mobileMatchOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileMatchOverlay(){
+  document.getElementById('mobileMatchOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeMobileMatchSheet(e){
+  if(e.target === document.getElementById('mobileMatchOverlay')) closeMobileMatchOverlay();
+}
+
+/* 모바일에서 상세 열기 버튼 intercept */
+(function(){
+  const isMobile = () => window.innerWidth <= 768;
+
+  // toggleDetail override for mobile
+  const origToggleDetail = window.toggleDetail;
+  window.toggleDetail = function(key){
+    if(!isMobile()){ if(typeof origToggleDetail==='function') origToggleDetail(key); return; }
+
+    // 이미 열려있는 det 영역에서 데이터 가져오기
+    const detEl = document.getElementById('det-' + key);
+    if(!detEl) { if(typeof origToggleDetail==='function') origToggleDetail(key); return; }
+
+    // 일단 데이터가 없으면 원본 함수로 렌더 후 가져옴
+    if(!detEl.innerHTML.trim()){
+      if(typeof origToggleDetail==='function') origToggleDetail(key);
+    }
+
+    // rec-sum-header에서 팀명, 스코어 추출
+    const sumEl = detEl.closest('.rec-summary');
+    let titleText = '경기 상세';
+    let scoreHTML = '';
+    if(sumEl){
+      const hdr = sumEl.querySelector('.rec-sum-header');
+      if(hdr){
+        const badges = hdr.querySelectorAll('.ubadge');
+        const scoreEl = hdr.querySelector('.rec-sum-score');
+        if(scoreEl) scoreHTML = buildMobileScoreHTML(badges, scoreEl);
+        const titleEl = hdr.querySelector('[style*="font-weight:700"]') || hdr.querySelector('span[style]');
+        if(titleEl) titleText = titleEl.textContent.trim() || titleText;
+        // 날짜 + 대진 조합
+        const spans = hdr.querySelectorAll('span');
+        let dateStr='', nameStr='';
+        spans.forEach(s => {
+          const t=s.textContent.trim();
+          if(/^\d{4}-\d{2}-\d{2}/.test(t)) dateStr=t;
+          else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세')) nameStr=t;
+        });
+        if(nameStr) titleText = (dateStr?dateStr+' ':'')+nameStr;
+      }
+    }
+
+    const bodyHTML = buildMobileDetailHTML(detEl.innerHTML);
+    openMobileMatchSheet(titleText, scoreHTML, bodyHTML);
+  };
+
+  function buildMobileScoreHTML(badges, scoreEl){
+    const aName = badges[0]?badges[0].textContent.trim():'';
+    const bName = badges[1]?badges[1].textContent.trim():'';
+    const aColor = badges[0]?getComputedStyle(badges[0]).backgroundColor:'#2563eb';
+    const bColor = badges[1]?getComputedStyle(badges[1]).backgroundColor:'#dc2626';
+    const nums = scoreEl.querySelectorAll('span');
+    let sa='?', sb='?';
+    if(nums.length>=2){ sa=nums[0].textContent.trim(); sb=nums[nums.length-1].textContent.trim(); }
+    const aWin = parseInt(sa)>parseInt(sb);
+    const bWin = parseInt(sb)>parseInt(sa);
+    return `
+      <div class="mobile-match-sheet-team" style="color:${aColor}">
+        <div style="font-size:11px;opacity:.7;margin-bottom:2px">${aName}</div>
+        <div class="mobile-match-sheet-num" style="${aWin?'':'opacity:.45'}">${sa}</div>
+      </div>
+      <div class="mobile-match-sheet-sep">:</div>
+      <div class="mobile-match-sheet-team" style="color:${bColor}">
+        <div style="font-size:11px;opacity:.7;margin-bottom:2px">${bName}</div>
+        <div class="mobile-match-sheet-num" style="${bWin?'':'opacity:.45'}">${sb}</div>
+      </div>`;
+  }
+
+  function buildMobileDetailHTML(rawHTML){
+    // 기존 detail HTML을 그대로 사용, 스타일만 개선
+    const wrap = document.createElement('div');
+    wrap.innerHTML = rawHTML;
+
+    // detail-game-row들을 mobile-game-row로 변환
+    wrap.querySelectorAll('.detail-game-row').forEach(row => {
+      row.style.flexDirection = 'column';
+      row.style.gap = '0';
+      row.style.padding = '0';
+      row.style.background = 'transparent';
+
+      const children = Array.from(row.children);
+      const gameNumSpan = children.find(c => c.tagName==='SPAN' && /경기\d/.test(c.textContent));
+      const playerDivs = children.filter(c => c.tagName==='DIV');
+      const vsSpan = children.find(c => c.tagName==='SPAN' && c.textContent.trim()==='vs');
+      const mapSpan = children.find(c => c.tagName==='SPAN' && c.textContent.includes('📍'));
+
+      // 새 모바일 카드 구성
+      const card = document.createElement('div');
+      card.className = 'mobile-game-row';
+      if(gameNumSpan){
+        card.style.position='relative';
+        const numBadge = document.createElement('div');
+        numBadge.style.cssText='position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;color:#94a3b8;';
+        numBadge.textContent = gameNumSpan.textContent.trim();
+        // don't add yet, we'll rebuild below
+      }
+
+      if(playerDivs[0]) { playerDivs[0].style.cssText+='padding:10px 14px 8px;'; card.appendChild(playerDivs[0]); }
+      const vsBar = document.createElement('div');
+      vsBar.className='mobile-game-vs-bar';
+      vsBar.textContent='VS';
+      card.appendChild(vsBar);
+      if(playerDivs[1]) { playerDivs[1].style.cssText+='padding:8px 14px 10px;'; card.appendChild(playerDivs[1]); }
+      if(mapSpan){
+        const mapDiv = document.createElement('div');
+        mapDiv.className='mobile-game-map';
+        mapDiv.innerHTML = mapSpan.innerHTML;
+        card.appendChild(mapDiv);
+      }
+      row.replaceWith(card);
+    });
+
+    return wrap.innerHTML;
+  }
+})();
 </script>
 </body>
 </html>
