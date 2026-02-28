@@ -1,3 +1,12 @@
+/* ── 사전 선언 (블록 간 의존성 해결) ── */
+const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'}};
+function gsSetStatus(msg, color='var(--gray-l)'){
+  const el=document.getElementById('cloudStatus');
+  if(el){el.textContent=msg;el.style.color=color;}
+}
+
+
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
@@ -9567,31 +9576,14 @@ initDark();
   }
 })();
 
-// ── 소스코드 보호 ──────────────────────────────────────────
-(function(){
-  // 우클릭 방지
-  document.addEventListener('contextmenu',function(e){e.preventDefault();});
-  // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S, Ctrl+Shift+J, Ctrl+Shift+C 차단
-  document.addEventListener('keydown',function(e){
-    if(
-      e.key==='F12'||
-      (e.ctrlKey&&e.shiftKey&&['I','i','J','j','C','c'].includes(e.key))||
-      (e.ctrlKey&&['U','u','S','s'].includes(e.key))
-    ){e.preventDefault();e.stopPropagation();return false;}
-  });
-})();
-
 /* ══════════════════════════════════════
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+/* GITHUB_JSON_URL - 상단 선언으로 이동 */
 
 
-function gsSetStatus(msg, color='var(--gray-l)'){
-  const el=document.getElementById('cloudStatus');
-  if(el){el.textContent=msg;el.style.color=color;}
-}
+/* gsSetStatus - 상단 선언으로 이동 */
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
 window.cloudLoad = async function(){
@@ -9834,7 +9826,7 @@ function buildUnivBoardCard(u, forExport){
   const sorted=_getBoardPlayers(u.name);
   const allUnivs=getAllUnivs();
 
-  const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'}};
+  /* RACE_CFG - 상단 선언으로 이동 */
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   // 파스텔 변환: 원색을 흰색과 mix=60% 블렌딩
   const toPastel=(hex,mix=0.72)=>{
@@ -10578,6 +10570,21 @@ function _dlCanvasBoard(canvas,filename){
   const a=document.createElement('a');a.href=url;a.download=filename;
   document.body.appendChild(a);a.click();setTimeout(()=>document.body.removeChild(a),100);
 }
+
+
+// ── 소스코드 보호 ──────────────────────────────────────────
+(function(){
+  // 우클릭 방지
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S, Ctrl+Shift+J, Ctrl+Shift+C 차단
+  document.addEventListener('keydown',function(e){
+    if(
+      e.key==='F12'||
+      (e.ctrlKey&&e.shiftKey&&['I','i','J','j','C','c'].includes(e.key))||
+      (e.ctrlKey&&['U','u','S','s'].includes(e.key))
+    ){e.preventDefault();e.stopPropagation();return false;}
+  });
+})();
 
 // 모바일에서 mobileActionBar 표시
 (function(){
@@ -11953,6 +11960,8 @@ function openPasteModal() {
 
   om('pasteModal');
 }
+
+
 
 /* ══ 드래그 이동 가능한 모달 (PC 전용) ══ */
 (function(){
