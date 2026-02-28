@@ -35,7 +35,7 @@ b,strong{font-weight:600;}
 .score-click:hover{background:var(--blue-ll,#dbeafe);}
 
 /* 공유카드 모달 */
-.sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:3000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:5000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
 .sharecard-modal-box{background:var(--white);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:95vw;position:relative;}
 .sharecard-modal-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-l);line-height:1;}
 .sharecard-modal-close:hover{color:var(--text);}
@@ -213,7 +213,7 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .ssec h4{font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:800;color:var(--text2);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--border);}
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
-.modal{display:none;position:fixed;z-index:2000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
+.modal{display:none;position:fixed;z-index:4000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
 .mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:95vw;border-radius:12px;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.16);position:relative;}
 .mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:var(--blue);margin-bottom:16px;cursor:move;user-select:none;-webkit-user-select:none;}
 .mtitle::before{content:'⠿ ';font-size:12px;opacity:.35;margin-right:4px;}
@@ -3005,7 +3005,7 @@ function histTourneyHTML(context){
           </div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
-          ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+          ${_regDet(key,m,'comp',a,b,ca,cb,aWin,bWin)}
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
             ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -3136,7 +3136,7 @@ function rHistUnivStat(){
           <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button></div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
-          ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+          ${_regDet(key,m,'comp',a,b,ca,cb,aWin,bWin)}
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','대회_${m.d||'match'}')">📷 이미지 저장</button>
@@ -3223,7 +3223,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${buildDetailHTML({...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
+        ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
@@ -3338,7 +3338,7 @@ function recSummaryListHTML(arr, mode, context){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${buildDetailHTML({...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin)}
+        ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -3375,9 +3375,16 @@ function recSummaryListHTML(arr, mode, context){
   return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
 }
 
-function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
-  if(!m.sets||!m.sets.length) return `<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>`;
-  const isMob = window.innerWidth <= 600;
+/* 모바일 시트용 레지스트리 */
+window._detReg = window._detReg || {};
+function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW){
+  window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW};
+  return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
+}
+
+function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin, forceMob){
+  if(!m.sets||!m.sets.length) return '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>';
+  const isMob = (forceMob === true) || (window.innerWidth <= 768);
   let h='';
   m.sets.forEach((set,si)=>{
     const isAce=(si===2);
@@ -3408,70 +3415,72 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const winBorderA=ca+'88'; const winBorderB=cb+'88';
         const clickA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
         const clickB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
-        const winTagA=aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:auto">WIN</span>`:'';
-        const winTagB=bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;margin-left:auto">WIN</span>`:'';
         const raceA=pA?`<span class="rbadge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
         const raceB=pB?`<span class="rbadge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
         const photoA=pA?getPlayerPhotoHTML(pA.name,'20px','margin-right:2px;flex-shrink:0'):'';
         const photoB=pB?getPlayerPhotoHTML(pB.name,'20px','margin-right:2px;flex-shrink:0'):'';
-        const genderA=pA?genderIcon(pA.gender):'';
-        const genderB=pB?genderIcon(pB.gender):'';
-        const mapStr=g.map?`<div style="text-align:center;padding:4px 8px;background:var(--surface);font-size:10px;color:var(--text3);border-top:1px solid var(--border)">📍 ${g.map}</div>`:'';
         const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
         if(isMob){
-          // ── 모바일: 카드 형태 [경기N 헤더] [A선수] [VS 구분선] [B선수] [맵] ──
-          const bgA = hasWinner?(aIsWinner?`background:${winBgA};border-left:3px solid ${ca};`:`background:#f8fafc;opacity:.55;`):`background:var(--surface);`;
-          const bgB = hasWinner?(bIsWinner?`background:${winBgB};border-left:3px solid ${cb};`:`background:#f8fafc;opacity:.55;`):`background:var(--surface);`;
-          h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;">
+          // ── 모바일: 이미지처럼 경기N 헤더 + 선수행(종족 선수명(팀) WIN/LOSE) + 맵 ──
+          const bgA = hasWinner?(aIsWinner?`background:${winBgA};border-left:3px solid ${ca};`:`background:#f8fafc;opacity:.58;`):`background:var(--surface);`;
+          const bgB = hasWinner?(bIsWinner?`background:${winBgB};border-left:3px solid ${cb};`:`background:#f8fafc;opacity:.58;`):`background:var(--surface);`;
+          const winLabelA = hasWinner?(aIsWinner
+            ?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:auto;flex-shrink:0">WIN</span>`
+            :`<span style="background:#e5e7eb;color:#9ca3af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto;flex-shrink:0">LOSE</span>`):'';
+          const winLabelB = hasWinner?(bIsWinner
+            ?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:auto;flex-shrink:0">WIN</span>`
+            :`<span style="background:#e5e7eb;color:#9ca3af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto;flex-shrink:0">LOSE</span>`):'';
+          const mapDot = g.map?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:4px;flex-shrink:0"></span>`:'';
+          h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:7px;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--surface);border-bottom:1px solid var(--border)">
-              <span style="font-size:10px;font-weight:700;color:var(--text3)">경기 ${gi+1}</span>
-              ${editBtn}
+              <span style="font-size:10px;font-weight:700;color:var(--text3)">경기${gi+1}</span>
+              <div style="display:flex;align-items:center;gap:4px">
+                ${g.map?`<div style="display:flex;align-items:center;gap:3px">${mapDot}<span style="font-size:10px;color:var(--text3)">${g.map}</span></div>`:''}
+                ${editBtn}
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;padding:9px 12px;${bgA}">
+            <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;${bgA}">
               ${photoA}${raceA}
-              <strong style="font-size:13px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
-              ${genderA}
-              <span style="font-size:10px;color:${ca};font-weight:700;margin-left:2px">${labelA}</span>
-              ${winTagA}
+              <strong style="font-size:13px;color:var(--text);flex:1;min-width:0" ${clickA}>${g.playerA||'?'}</strong>
+              <span style="font-size:11px;color:${ca};font-weight:700;background:${ca}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelA}</span>
+              ${winLabelA}
             </div>
-            <div style="display:flex;align-items:center;justify-content:center;padding:3px 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-              <span style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:3px">VS</span>
+            <div style="display:flex;align-items:center;justify-content:center;padding:2px 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+              <span style="font-size:9px;font-weight:800;color:var(--gray-l);letter-spacing:3px">VS</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;padding:9px 12px;${bgB}">
+            <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;${bgB}">
               ${photoB}${raceB}
-              <strong style="font-size:13px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
-              ${genderB}
-              <span style="font-size:10px;color:${cb};font-weight:700;margin-left:2px">${labelB}</span>
-              ${winTagB}
+              <strong style="font-size:13px;color:var(--text);flex:1;min-width:0" ${clickB}>${g.playerB||'?'}</strong>
+              <span style="font-size:11px;color:${cb};font-weight:700;background:${cb}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelB}</span>
+              ${winLabelB}
             </div>
-            ${mapStr}
           </div>`;
         } else {
-          // ── PC: 기존 가로 레이아웃 ──
-          const styleA=hasWinner?(aIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgA};border:2px solid ${winBorderA};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
-          const styleB=hasWinner?(bIsWinner?`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:${winBgB};border:2px solid ${winBorderB};`:`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:#f1f5f9;border:1px solid #cbd5e1;opacity:0.45;filter:grayscale(1);`):`display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;background:var(--surface);border:1px solid var(--border);`;
-          const winTagApc=aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
-          const winTagBpc=bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.5px">WIN</span>`:'';
-          const mapStrPc=g.map?`<span class="detail-map" style="background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:10px;color:var(--text3)">📍 ${g.map}</span>`:'';
-          h+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 4px;flex-wrap:wrap;">
-            <span style="color:var(--gray-l);font-size:10px;min-width:42px;font-weight:600">경기${gi+1}</span>
-            <div style="${styleA}">
+          // ── PC: 두 번째 이미지처럼 선수 vs 선수 가로 레이아웃 ──
+          const bgA = hasWinner ? (aIsWinner ? `background:${winBgA};border:1.5px solid ${winBorderA};` : `background:#f8fafc;border:1px solid #e2e8f0;opacity:.5;filter:grayscale(.6);`) : `background:var(--surface);border:1px solid var(--border);`;
+          const bgB = hasWinner ? (bIsWinner ? `background:${winBgB};border:1.5px solid ${winBorderB};` : `background:#f8fafc;border:1px solid #e2e8f0;opacity:.5;filter:grayscale(.6);`) : `background:var(--surface);border:1px solid var(--border);`;
+          const winTagApc = aIsWinner&&hasWinner ? `<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0">WIN</span>` : '';
+          const winTagBpc = bIsWinner&&hasWinner ? `<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0">WIN</span>` : '';
+          const teamBadgeA = `<span style="font-size:10px;font-weight:700;color:${ca};background:${ca}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelA}</span>`;
+          const teamBadgeB = `<span style="font-size:10px;font-weight:700;color:${cb};background:${cb}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelB}</span>`;
+          const mapDotPc = g.map ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span><span style="font-size:10px;color:var(--text3);white-space:nowrap">${g.map}</span>` : '';
+          h+=`<div style="display:flex;align-items:center;gap:5px;padding:4px 2px;">
+            <span style="color:var(--gray-l);font-size:10px;min-width:40px;font-weight:600;flex-shrink:0">경기${gi+1}</span>
+            <div style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;${bgA}flex:1;min-width:0;">
               ${photoA}${raceA}
-              <strong style="font-size:12px;color:var(--text)" ${clickA}>${g.playerA||'?'}</strong>
-              ${genderA}
-              <span style="font-size:10px;color:${ca};font-weight:700">(${labelA})</span>
+              <strong style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0" ${clickA}>${g.playerA||'?'}</strong>
+              ${teamBadgeA}
               ${winTagApc}
             </div>
-            <span style="color:var(--gray-l);font-size:11px;font-weight:600">vs</span>
-            <div style="${styleB}">
+            <span style="color:var(--gray-l);font-size:11px;font-weight:700;flex-shrink:0;padding:0 2px">vs</span>
+            <div style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;${bgB}flex:1;min-width:0;">
               ${photoB}${raceB}
-              <strong style="font-size:12px;color:var(--text)" ${clickB}>${g.playerB||'?'}</strong>
-              ${genderB}
-              <span style="font-size:10px;color:${cb};font-weight:700">(${labelB})</span>
+              <strong style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0" ${clickB}>${g.playerB||'?'}</strong>
+              ${teamBadgeB}
               ${winTagBpc}
             </div>
-            ${mapStrPc}
+            ${g.map?`<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">${mapDotPc}</div>`:''}
             ${editBtn}
           </div>`;
         }
@@ -3568,7 +3577,7 @@ function compSummaryListHTML(context){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${buildDetailHTML(m,'comp',a,b,ca,cb,aWin,bWin)}
+        ${_regDet(key,m,'comp',a,b,ca,cb,aWin,bWin)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -10905,34 +10914,24 @@ function buildUnivBoardCard(u, forExport){
         ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
         : `openPlayerModal('${pNameSafe}')`;
 
-      // 티어 색상 계산 (칩 내부) - 헬퍼 먼저 선언
-      const _h2hsl2=(hex)=>{const r2=parseInt(hex.slice(1,3),16)/255,g2=parseInt(hex.slice(3,5),16)/255,b2=parseInt(hex.slice(5,7),16)/255;const mx=Math.max(r2,g2,b2),mn=Math.min(r2,g2,b2);let h,s,l=(mx+mn)/2;if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r2:h=((g2-b2)/d+(g2<b2?6:0))/6;break;case g2:h=((b2-r2)/d+2)/6;break;default:h=((r2-g2)/d+4)/6;}}return[h*360,s*100,l*100];};
-      const _hsl2h2=(h,s,l)=>{h/=360;s/=100;l/=100;const fh=(pp,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return pp+(q-pp)*6*t;if(t<1/2)return q;if(t<2/3)return pp+(q-pp)*(2/3-t)*6;return pp;};let r2,g2,b2;if(!s){r2=g2=b2=l;}else{const q=l<.5?l*(1+s):l+s-l*s,pp=2*l-q;r2=fh(pp,q,h+1/3);g2=fh(pp,q,h);b2=fh(pp,q,h-1/3);}return'#'+[r2,g2,b2].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');};
-      const _chipTierColor=(tier)=>{
-        if(!tier) return 'rgba(0,0,0,.38)';
-        const HIGH={'G':0,'K':1,'JA':2,'J':3,'S':4};
-        const FADE=['유스','8티어','7티어','6티어','5티어','4티어','3티어','2티어','1티어','0티어'];
-        if(tier in HIGH){
-          const [hh,ss,ll]=_h2hsl2(col);
-          return _hsl2h2(hh,Math.min(100,ss*1.4),Math.max(10,ll*(0.65-HIGH[tier]*0.03)));
-        }
-        const fi=FADE.indexOf(tier);
-        if(fi>=0){
-          // 유스(0)→매우연(mix=0.68), 1티어(8)→연(mix=0.30), 0티어(9)→약간연(mix=0.23)
-          const mix=0.68-fi*(0.68-0.23)/9;
-          const r2=parseInt(col.slice(1,3),16),g2=parseInt(col.slice(3,5),16),b2=parseInt(col.slice(5,7),16);
-          return'#'+[Math.round(r2*(1-mix)+255*mix),Math.round(g2*(1-mix)+255*mix),Math.round(b2*(1-mix)+255*mix)].map(v=>v.toString(16).padStart(2,'0')).join('');
-        }
-        return hexToRgba(col,0.55);
+      // 티어 고정 색상 (칩)
+      const CHIP_TIER_COLORS = {
+        'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
+        '0티어':'#1d4ed8','1티어':'#2e54c8','2티어':'#3d6ee0','3티어':'#5082f0',
+        '4티어':'#6898f8','5티어':'#80b0ff','6티어':'#96c6ff','7티어':'#acdbff','8티어':'#c0e8ff',
+        '유스':'#fef08a'
       };
-      const chipTierCol=_chipTierColor(p.tier);
-      const chipTierBg=p.tier?hexToRgba(chipTierCol,0.10):'transparent';
+      const CHIP_TIER_TEXT = {
+        '5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1d4ed8','8티어':'#1d4ed8','유스':'#854d0e'
+      };
+      const chipTierCol = p.tier ? (CHIP_TIER_COLORS[p.tier] || col) : '#9ca3af';
+      const chipTierText = p.tier ? (CHIP_TIER_TEXT[p.tier] || '#fff') : '#fff';
 
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.88);border-radius:8px;padding:5px 11px;margin:2px 2px;font-size:14px;cursor:${isLoggedIn?'grab':'pointer'};transition:box-shadow .12s,background .12s;box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:3px solid ${hexToRgba(col,.5)}" onmouseover="this.style.background='#fff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.2)'" onmouseout="this.style.background='rgba(255,255,255,.88)';this.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'" onclick="event.stopPropagation();${clickFn}">
         ${isMain?`<span style="font-size:11px;font-weight:800;color:${rCol}">${rIcon}</span>`:''}
         <span style="font-size:11px;font-weight:800;color:${rc.col}">${rc.txt}</span>
         <span style="font-weight:700;color:#111;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</span>
-        ${p.tier?`<span style="font-size:10px;font-weight:800;color:${chipTierCol};background:${chipTierBg};padding:1px 5px;border-radius:4px;margin-left:1px;letter-spacing:.5px">${p.tier}</span>`:''}
+        ${p.tier?`<span style="font-size:10px;font-weight:800;color:${chipTierText};background:${chipTierCol};padding:1px 6px;border-radius:4px;margin-left:2px;letter-spacing:.3px;box-shadow:0 1px 3px rgba(0,0,0,.15)">${p.tier}</span>`:`<span style="font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;padding:1px 6px;border-radius:4px;margin-left:2px">?</span>`}
       </span>`;
     };
 
@@ -10943,43 +10942,20 @@ function buildUnivBoardCard(u, forExport){
     const tierRows=tierOrder.map((tier,tidx)=>{
       const ps=tierMap[tier];
 
-      // 색상 헬퍼: hex→HSL→조작→hex
-      const _h2hsl=(hex)=>{const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;default:h=((r-g)/d+4)/6;}}return[h*360,s*100,l*100];};
-      const _hsl2h=(h,s,l)=>{h/=360;s/=100;l/=100;const f=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};let r,g,b;if(!s){r=g=b=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3);}return'#'+[r,g,b].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');};
-      // 대학색 기반으로 어둡고 채도 높이기 (파스텔 배경에서 확실히 구분)
-      const vividD=(hex,dk=0.28,sat=1.3)=>{let[h,s,l]=_h2hsl(hex);s=Math.min(100,s*sat);l=Math.max(10,l*(1-dk));return _hsl2h(h,s,l);};
-      // 원색→흰색 블렌딩 (mix=0: 원색, mix=1: 흰색)
-      const blend=(hex,mix)=>{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'#'+[Math.round(r*(1-mix)+255*mix),Math.round(g*(1-mix)+255*mix),Math.round(b*(1-mix)+255*mix)].map(v=>v.toString(16).padStart(2,'0')).join('');};
 
-      // G/K/JA/J/S: 대학 원색에서 더 어둡고 채도 높여 파스텔 배경에서 확실히 튀게
-      const HIGH_TIER_IDX = {'G':0,'K':1,'JA':2,'J':3,'S':4};
-      // 유스~0티어: 유스는 중간 파스텔(mix=0.25), 0티어는 원색(mix=0)
-      const FADE_TIERS = ['유스','8티어','7티어','6티어','5티어','4티어','3티어','2티어','1티어','0티어'];
-
-      let tColor, tBg, tBorder;
-      if(tier in HIGH_TIER_IDX){
-        const dk=[0.36,0.33,0.30,0.28,0.26][HIGH_TIER_IDX[tier]];
-        tColor=vividD(col,dk,1.45);
-        tBg=hexToRgba(tColor,0.16);
-        tBorder=hexToRgba(tColor,0.55);
-      } else {
-        const fi=FADE_TIERS.indexOf(tier);
-        if(fi>=0){
-          const ratio=fi/(FADE_TIERS.length-1); // 유스=0, 0티어=1
-          const mix=0.28*(1-ratio);              // 유스: mix=0.28(약간파스텔), 0티어: mix=0(원색)
-          tColor=blend(col,mix);
-          // 추가 어두움: vividD로 한번 더 강화
-          tColor=vividD(tColor, 0.15+ratio*0.1, 1.2);
-          tBg=hexToRgba(col,0.12+ratio*0.12);
-          tBorder=hexToRgba(col,0.35+ratio*0.3);
-        } else {
-          tColor=vividD(col,0.2,1.1);
-          tBg=hexToRgba(col,0.12);
-          tBorder=hexToRgba(col,0.35);
-        }
-      }
+      const CHIP_HDR_COLORS = {
+        'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
+        '0티어':'#1d4ed8','1티어':'#2e54c8','2티어':'#3d6ee0','3티어':'#5082f0',
+        '4티어':'#6898f8','5티어':'#80b0ff','6티어':'#96c6ff','7티어':'#acdbff','8티어':'#c0e8ff',
+        '유스':'#fef08a','기타':'#94a3b8'
+      };
+      const CHIP_HDR_TEXT = {
+        '5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1d4ed8','8티어':'#1d4ed8','유스':'#854d0e','기타':'#fff'
+      };
+      const tColor = CHIP_HDR_COLORS[tier] || col;
+      const tText = CHIP_HDR_TEXT[tier] || '#fff';
       return `<div style="margin-bottom:5px">
-        <div style="font-size:10px;font-weight:900;color:${tColor};letter-spacing:1.2px;padding:2px 8px;margin-bottom:3px;background:${tBg};border-radius:5px;border:1.5px solid ${tBorder};display:inline-block;line-height:1.5">${tier}</div>
+        <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${tColor};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
         <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
       </div>`;
     }).join('');
@@ -11048,25 +11024,20 @@ function buildUnivBoardCard(u, forExport){
     const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const isAdmin=isLoggedIn;
     const rowPastel = toPastel(col, 0.88);
-    // 행 티어 뱃지 색: 유스~0티어는 연하게, G~S는 진하게 (칩과 동일 로직)
-    const _rowTierCol=(tier)=>{
-      if(!tier) return col;
-      const HIGH2={'G':0,'K':1,'JA':2,'J':3,'S':4};
-      const FADE2=['유스','8티어','7티어','6티어','5티어','4티어','3티어','2티어','1티어','0티어'];
-      const r2=parseInt(col.slice(1,3),16),g2=parseInt(col.slice(3,5),16),b2=parseInt(col.slice(5,7),16);
-      if(tier in HIGH2){
-        // G~S: 채도↑ 명도↓
-        const mix=-0.32;
-        return'#'+[Math.min(255,Math.round(r2*(1-mix))),Math.min(255,Math.round(g2*(1-mix))),Math.min(255,Math.round(b2*(1-mix)))].map(v=>Math.max(0,v).toString(16).padStart(2,'0')).join('');
-      }
-      const fi=FADE2.indexOf(tier);
-      if(fi>=0){
-        const mix=0.65-fi*(0.65-0.20)/9; // 유스=0.65(매우연)→0티어=0.20(약간연)
-        return'#'+[Math.round(r2*(1-mix)+255*mix),Math.round(g2*(1-mix)+255*mix),Math.round(b2*(1-mix)+255*mix)].map(v=>v.toString(16).padStart(2,'0')).join('');
-      }
-      return col;
+    // 행 티어 뱃지: 대학 색 기반 고정 색상으로 확실하게 표시
+    // 티어 고정 색상 (tbadge CSS와 동일 계열)
+    const TIER_FIXED_COLORS = {
+      'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
+      '0티어':'#1d4ed8','1티어':'#2e54c8','2티어':'#3d6ee0','3티어':'#5082f0',
+      '4티어':'#6898f8','5티어':'#80b0ff','6티어':'#96c6ff','7티어':'#acdbff','8티어':'#c0e8ff',
+      '유스':'#fef08a'
     };
-    const rowTierCol=_rowTierCol(p.tier);
+    // 5~8티어, 유스는 밝은 배경이므로 텍스트 색 별도
+    const TIER_TEXT_COLORS = {
+      '5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1d4ed8','8티어':'#1d4ed8','유스':'#854d0e'
+    };
+    const rowTierCol = p.tier ? (TIER_FIXED_COLORS[p.tier] || col) : col;
+    const rowTierText = p.tier ? (TIER_TEXT_COLORS[p.tier] || '#fff') : '#fff';
     return `<div class="brd-row no-export-movebtns" data-player="${p.name}" data-univ="${u.name}" data-idx="${idx}"${isAdmin?' draggable="true"':''} style="cursor:${isAdmin?'grab':'default'};border-left:3px solid ${hexToRgba(col,.55)};background:${rowPastel};" onmouseover="this.style.background='rgba(255,255,255,.98)'" onmouseout="this.style.background='${rowPastel}'">
       <button class="brd-row-btn" onclick="event.stopPropagation();${isAdmin?`openBrdPlayerPopup(event,'${pNameSafe}','${u.name}',${idx},${sorted.length})`:`openPlayerModal('${pNameSafe}')`}" title="${isAdmin?'클릭: 순서변경/대학이동':'스트리머 상세 보기'}">
         ${photoSrc?`<img src="${photoSrc}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.5);margin-right:1px" onerror="this.style.display='none'">` : ''}
@@ -11074,7 +11045,7 @@ function buildUnivBoardCard(u, forExport){
         <span class="brd-race" style="background:${rc.bg};color:${rc.col}">${rc.txt}</span>
         <strong class="brd-name" style="font-weight:800;color:#111">${p.name}${getStatusIconHTML(p.name)}</strong>
         ${isSub?`<span class="brd-role-sub">${p.role}</span>`:''}
-        ${p.tier?`<span style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:5px;background:${hexToRgba(rowTierCol,.18)};color:${rowTierCol};border:2px solid ${hexToRgba(rowTierCol,.6)};flex-shrink:0;white-space:nowrap;letter-spacing:.8px">${p.tier}</span>`:''}
+        ${p.tier?`<span style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:5px;background:${rowTierCol};color:${rowTierText};flex-shrink:0;white-space:nowrap;letter-spacing:.3px;box-shadow:0 1px 5px rgba(0,0,0,.15)">${p.tier}</span>`:`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:#e5e7eb;color:#6b7280;flex-shrink:0;white-space:nowrap">?</span>`}
       </button>
       ${isAdmin?`<span style="font-size:10px;color:rgba(0,0,0,.25);padding:0 3px;cursor:grab;flex-shrink:0;user-select:none" title="드래그로 순서 변경">⠿</span>`:''}
     </div>`;
@@ -13060,8 +13031,11 @@ function closeMobileMatchSheet(e){
     const detEl = document.getElementById('det-' + key);
     if(!detEl) { if(typeof origToggleDetail==='function') origToggleDetail(key); return; }
 
-    // 원본 함수로 렌더링 (buildDetailHTML 실행)
-    if(typeof origToggleDetail==='function') origToggleDetail(key);
+    // 원본 함수로 렌더링 (buildDetailHTML 실행) - openDetails[key] = true로 만듦
+    const wasClosed = !openDetails[key];
+    if(wasClosed){
+      if(typeof origToggleDetail==='function') origToggleDetail(key);
+    }
 
     // 렌더링 후 bottom sheet로 표시
     const sumEl = detEl.closest('.rec-summary, .rec-card');
@@ -13090,11 +13064,24 @@ function closeMobileMatchSheet(e){
       }
     }
 
-    // 현재 렌더된 내용을 그대로 bottom sheet에 복사
-    const bodyHTML = detEl.innerHTML || '<div style="padding:20px;text-align:center;color:var(--gray-l)">상세 기록 없음</div>';
+    // _detReg에서 match 데이터를 꺼내 강제 모바일 레이아웃으로 재생성
+    let bodyHTML;
+    const reg = window._detReg && window._detReg[key];
+    if(reg){
+      bodyHTML = buildDetailHTML(reg.m, reg.mode, reg.lA, reg.lB, reg.ca, reg.cb, reg.aW, reg.bW, true);
+    } else {
+      // fallback: det- innerHTML 복사
+      bodyHTML = detEl.innerHTML || '<div style="padding:20px;text-align:center;color:var(--gray-l)">상세 기록 없음</div>';
+    }
     openMobileMatchSheet(titleText, scoreHTML, bodyHTML);
-    // 원본 inline detail은 다시 닫기 (sheet로만 표시)
-    if(typeof origToggleDetail==='function') origToggleDetail(key);
+
+    // inline detail은 닫힌 상태 유지 (sheet에서만 보임)
+    if(openDetails[key]){
+      openDetails[key] = false;
+      detEl.classList.remove('open');
+      const btn = document.getElementById('detbtn-' + key);
+      if(btn){ btn.classList.remove('open'); btn.textContent = '▼ 상세 보기'; }
+    }
   };
 
   function buildMobileScoreHTML(badges, scoreEl){
