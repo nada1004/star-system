@@ -2098,11 +2098,11 @@ function rTotal(C,T){
     </div>
   </div>`;
 
-    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><colgroup>
-    <col style="white-space:nowrap"><col style="white-space:nowrap"><col style="white-space:nowrap"><col>
-    <col style="white-space:nowrap"><col style="white-space:nowrap">
-    <col style="white-space:nowrap"><col style="white-space:nowrap">
-    ${isLoggedIn?'<col style="white-space:nowrap">':''}
+    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
+    <col style="width:80px"><col style="width:60px"><col style="width:220px">
+    <col style="width:52px"><col style="width:52px">
+    <col style="width:70px"><col style="width:80px">
+    ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
@@ -2136,7 +2136,7 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?7:6}">
+    tableHTML+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?8:7}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
@@ -2162,7 +2162,7 @@ function rTotal(C,T){
       : [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     let lt='';
     sorted.forEach(p=>{
-      if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?7:6}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
+      if(p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?8:7}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       tableHTML+=`<tr>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
@@ -2182,7 +2182,7 @@ function rTotal(C,T){
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?7:6}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
+    tableHTML+=`<tr><td colspan="${isLoggedIn?8:7}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 
