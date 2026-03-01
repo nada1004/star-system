@@ -4871,10 +4871,55 @@
       "race": "P",
       "gender": "M",
       "win": 0,
-      "loss": 0,
-      "points": 0,
-      "history": [],
-      "elo": 1200,
+      "loss": 4,
+      "points": -12,
+      "history": [
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "패",
+          "opp": "이제동",
+          "oppRace": "Z",
+          "map": "매치포인트",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": -12,
+          "eloAfter": 1144
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "패",
+          "opp": "이제동",
+          "oppRace": "Z",
+          "map": "제인",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": -13,
+          "eloAfter": 1156
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "패",
+          "opp": "이제동",
+          "oppRace": "Z",
+          "map": "폴리포이드",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": -15,
+          "eloAfter": 1169
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "패",
+          "opp": "이제동",
+          "oppRace": "Z",
+          "map": "에티튜드",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": -16,
+          "eloAfter": 1184
+        }
+      ],
+      "elo": 1144,
       "role": "총괄",
       "photo": "https://i.namu.wiki/i/DJNXVWJ3CJ9Ugq3vNNs6ybzHH2VoiLcwwWwTRMN3SvUu3PPOKte_QwueUN0eAIQB4fvhZb_GfwaGt7uzdb7s_3yTPZUzexcPgXA_MXSWzHy8BmXtrA8kVhHwGg61QDCHOCTtS9jJtu_-tmNX8RoyFw.webp"
     },
@@ -5265,11 +5310,58 @@
       "tier": "G",
       "race": "Z",
       "gender": "M",
-      "win": 0,
+      "win": 4,
       "loss": 0,
-      "points": 0,
-      "history": [],
-      "elo": 1200
+      "points": 12,
+      "history": [
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "승",
+          "opp": "도재욱",
+          "oppRace": "P",
+          "map": "매치포인트",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": 12,
+          "eloAfter": 1256
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "승",
+          "opp": "도재욱",
+          "oppRace": "P",
+          "map": "제인",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": 13,
+          "eloAfter": 1244
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "승",
+          "opp": "도재욱",
+          "oppRace": "P",
+          "map": "폴리포이드",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": 15,
+          "eloAfter": 1231
+        },
+        {
+          "date": "2026-02-28",
+          "time": 1772332051791,
+          "result": "승",
+          "opp": "도재욱",
+          "oppRace": "P",
+          "map": "에티튜드",
+          "matchId": "mm74qrf3u866",
+          "eloDelta": 16,
+          "eloAfter": 1216
+        }
+      ],
+      "elo": 1256,
+      "photo": "https://i.namu.wiki/i/y_jspwzooj6Ghl3-amsg9Vkz5RGaQMu2puD6GT-yFcX4Op8UncX_kzfuJJXErYKEEz9JOdAdWeXBBx95TOBmMn0s-weaCBNMbHmS5IE21Ezrs5drSIaweNPwAn5IweOSyIW7mq4YkbX3G2EJQHfapw.webp",
+      "channelUrl": "https://www.sooplive.co.kr/station/jaedong23"
     },
     {
       "name": "아빈",
@@ -5694,7 +5786,67 @@
   "ckM": [],
   "compNames": [],
   "curComp": "정선숲퍼컵",
-  "proM": [],
+  "proM": [
+    {
+      "_id": "mm74qrf3u866",
+      "d": "2026-02-28",
+      "sa": 4,
+      "sb": 0,
+      "teamALabel": "무소속",
+      "teamBLabel": "뉴캣슬",
+      "teamAMembers": [
+        {
+          "name": "이제동",
+          "univ": "무소속",
+          "race": "Z",
+          "tier": "G"
+        }
+      ],
+      "teamBMembers": [
+        {
+          "name": "도재욱",
+          "univ": "뉴캣슬",
+          "race": "P",
+          "tier": "G"
+        }
+      ],
+      "sets": [
+        {
+          "scoreA": 4,
+          "scoreB": 0,
+          "winner": "A",
+          "games": [
+            {
+              "playerA": "이제동",
+              "playerB": "도재욱",
+              "map": "에티튜드",
+              "winner": "A"
+            },
+            {
+              "playerA": "이제동",
+              "playerB": "도재욱",
+              "map": "폴리포이드",
+              "winner": "A"
+            },
+            {
+              "playerA": "이제동",
+              "playerB": "도재욱",
+              "map": "제인",
+              "winner": "A"
+            },
+            {
+              "playerA": "이제동",
+              "playerB": "도재욱",
+              "map": "매치포인트",
+              "winner": "A"
+            }
+          ]
+        }
+      ],
+      "univWins": {},
+      "univLosses": {}
+    }
+  ],
   "tiers": [
     "G",
     "K",
