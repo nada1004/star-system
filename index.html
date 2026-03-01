@@ -1133,8 +1133,8 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
       <input type="date" id="paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
       <label style="font-size:12px;font-weight:700;color:var(--text2);margin-left:4px" id="paste-mode-label">📁 저장 형식</label>
       <select id="paste-mode" onchange="onPasteModeChange(this.value)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-      
-       <option value="mini">⚡ 미니대전으로 저장</option>
+        <option value="individual">개인 전적만 (히스토리)</option>
+        <option value="mini">⚡ 미니대전으로 저장</option>
         <option value="univm">🏟️ 대학대전으로 저장</option>
         <option value="pro">🏅 프로리그로 저장</option>
         <option value="comp">🎖️ 대회 기록으로 저장</option>
@@ -1397,11 +1397,6 @@ function gcHex8(n,alpha){
   const a=Math.round((alpha||0.06)*255).toString(16).padStart(2,'0');
   return c+a;
 }
-function gcHex8Hover(n,alpha){
-  const c=gc(n);
-  const a=Math.round((alpha||0.12)*255).toString(16).padStart(2,'0');
-  return c+a;
-}
 // 스타대학 아이콘 URL 매핑
 const UNIV_ICONS={
   '엠비대':'https://i.ibb.co/6cfNW2Nt/image.png',
@@ -1428,9 +1423,6 @@ function gUI(n,size='1em'){
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 }
-// 대학명 + 아이콘 HTML 반환 (아이콘이 좌측에 위치)
-function univNameWithIcon(n,fontSize){const icon=gUI(n,fontSize||'1em');return icon+n;}
-// DOM 요소 내 ubadge에 대학 아이콘 주입 (항상 좌측에, 기본 아이콘 포함)
 function injectUnivIcons(container){
   if(!container)return;
   container.querySelectorAll('.ubadge').forEach(el=>{
@@ -2646,11 +2638,6 @@ function _vsRenderResult(){
       </tbody></table>
     </div>`}
   </div>`;
-}
-
-// renderVs는 하위 호환성 유지
-function renderVs(){
-  if(vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
 }
 
 /* ── 1:1 전적 공유 카드 ─────────────────────────── */
@@ -4736,29 +4723,6 @@ function proToggleTier(t){
   bld.membersA=[];bld.membersB=[];bld.sets=[];render();
 }
 
-function proFilterPlayers(team){
-  const univSel=document.getElementById(`pro-${team.toLowerCase()}-univ`);
-  const playerSel=document.getElementById(`pro-${team.toLowerCase()}-player`);
-  if(!univSel||!playerSel)return;
-  const univ=univSel.value;
-  const bld=BLD['pro']||{};const tf=(bld.tierFilters||[]);
-  // 티어 필터 적용 (다중선택: 비어있으면 전체)
-  const mems=univ?players.filter(p=>p.univ===univ&&p.gender==='M'&&(tf.length===0||tf.includes(p.tier))):[];
-  playerSel.innerHTML=mems.length?`<option value="">멤버 선택</option>`+mems.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join(''):`<option value="">멤버 없음</option>`;
-}
-
-function proAddMember(team){
-  const univSel=document.getElementById(`pro-${team.toLowerCase()}-univ`);
-  const playerSel=document.getElementById(`pro-${team.toLowerCase()}-player`);
-  if(!univSel||!playerSel)return;
-  const univ=univSel.value;const name=playerSel.value;
-  if(!name)return alert('멤버를 선택하세요.');
-  const arr=team==='A'?BLD['pro'].membersA:BLD['pro'].membersB;
-  if(arr.find(m=>m.name===name))return alert('이미 추가됨');
-  const pObj=players.find(p=>p.name===name)||{};
-  arr.push({name,univ,race:pObj.race||'',tier:pObj.tier||''});BLD['pro'].sets=[];render();
-}
-
 function proRankHTML(){
   // 선수별 프로리그 승/패 집계
   const pStats={};
@@ -4988,38 +4952,6 @@ function leagueEditMatch(tnId,gi,mi){
   grpMatchState={tnId,gi,mi};
   const tn=tourneys.find(t=>t.id===tnId);
   if(tn)grpOpenMatchModal(tn,gi,mi);
-}
-
-function grpMatchDetail(m){
-  if(!m.sets||!m.sets.length) return `<div style="font-size:12px;color:var(--gray-l)">상세 기록이 없습니다.</div>`;
-  let h=`<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔍 세부 경기 기록</div>`;
-  m.sets.forEach((set,si)=>{
-    const lbl=si===2?'🎯 에이스전':`${si+1}세트`;
-    const sA=set.scoreA||0;const sB=set.scoreB||0;
-    h+=`<div style="margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:${si===2?'#f5f3ff':'var(--blue-l)'};border-radius:6px;margin-bottom:6px">
-        <strong style="font-size:11px;color:${si===2?'#7c3aed':'var(--blue)'}">${lbl}</strong>
-        <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px"><span class="${sA>sB?'wt':''}">${sA}</span><span style="color:var(--gray-l)">:</span><span class="${sB>sA?'wt':''}">${sB}</span></span>
-        <span style="font-size:11px;font-weight:700;color:${sA>sB?'var(--green)':sB>sA?'var(--red)':'var(--gray-l)'}">${sA>sB?(m.a||'A팀')+' 승':sB>sA?(m.b||'B팀')+' 승':'무승부'}</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">`;
-    (set.games||[]).forEach((g,gi)=>{
-      if(!g.playerA&&!g.playerB)return;
-      const pa=players.find(p=>p.name===g.playerA);const pb=players.find(p=>p.name===g.playerB);
-      const wA=g.winner==='A';const wB=g.winner==='B';
-      h+=`<div style="font-size:11px;background:var(--white);padding:5px 10px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;gap:4px">
-        <span style="font-size:10px;color:var(--gray-l);min-width:14px">${gi+1}</span>
-        <span style="font-weight:${wA?'800':'400'};color:${wA?'var(--green)':'var(--text)'}">${g.playerA||'?'}</span>
-        ${pa?`<span class="rbadge r${pa.race}" style="font-size:9px;padding:0 3px">${pa.race||''}</span>`:''}
-        <span style="color:var(--gray-l);font-size:10px">vs</span>
-        <span style="font-weight:${wB?'800':'400'};color:${wB?'var(--green)':'var(--text)'}">${g.playerB||'?'}</span>
-        ${pb?`<span class="rbadge r${pb.race}" style="font-size:9px;padding:0 3px">${pb.race||''}</span>`:''}
-        ${g.map?`<span style="color:var(--gray-l);font-size:10px;margin-left:2px">[${g.map}]</span>`:''}
-      </div>`;
-    });
-    h+=`</div></div>`;
-  });
-  return h;
 }
 
 function rCompGrpRankFull(tn){
@@ -6068,8 +6000,6 @@ function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
-function bindLeagueDateBtns(){}
-
 
 /* ══════════════════════════════════════
    회원 관리 (rMember)
@@ -6628,12 +6558,6 @@ function savePlayer(){
     const _pmb=document.getElementById('playerModalBody');
     if(_pmb) setTimeout(()=>{const _p2=players.find(x=>x.name===editName);if(_p2&&typeof buildPlayerModalHTML==='function')_pmb.innerHTML=buildPlayerModalHTML(_p2);},50);
   }
-}
-function setAllFemale(){
-  if(!confirm(`모든 스트리머 ${players.length}명을 여자로 일괄 변경하시겠습니까?\n이후 남자 선수는 개별 수정으로 변경하세요.`))return;
-  players.forEach(p=>p.gender='F');
-  save();render();
-  alert(`완료! 총 ${players.length}명이 여자로 변경되었습니다.`);
 }
 
 function delPlayer(){
@@ -7744,15 +7668,6 @@ function renderShareCardFilterPlayers(){
       onmouseover="this.style.background='${gc(p.univ)}55'" onmouseout="this.style.background='${gc(p.univ)}22'">
       ${p.name} <span style="font-size:10px;opacity:.65">${p.univ}</span>
     </button>`).join(''):'<span style="color:var(--gray-l);font-size:12px;padding:8px">검색 결과 없음</span>';
-}
-function renderShareCardDynamic(){renderShareCardFilterPlayers();}
-function renderShareCard(){
-  const sel=document.getElementById('share-sel');
-  if(sel){
-    const val=sel.value;
-    if(_shareMode==='player')renderShareCardByPlayer(val);
-    else if(_shareMode==='univ')renderShareCardByUniv(val);
-  }
 }
 function renderShareCardByPlayer(name){
   const card=document.getElementById('share-card');if(!card)return;
@@ -9632,7 +9547,6 @@ function statsAdvSearchHTML(){
 }
 
 
-
 /* ══════════════════════════════════════
    🔍 전체 선수 검색
 ══════════════════════════════════════ */
@@ -9751,8 +9665,20 @@ function rCal(C,T){
     return `🎖️ 대회`;
   }
   // 캘린더용 팀명 getter (프로/CK는 label 사용)
-  function getTeamA(m){ return ckM.includes(m)||proM.includes(m) ? 'A팀' : (m.a||''); }
-  function getTeamB(m){ return ckM.includes(m)||proM.includes(m) ? 'B팀' : (m.b||''); }
+  function getTeamA(m){
+  if(ckM.includes(m)||proM.includes(m)){
+    const raw=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
+    return raw||'A팀';
+  }
+  return m.a||'';
+}
+  function getTeamB(m){
+  if(ckM.includes(m)||proM.includes(m)){
+    const raw=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
+    return raw||'B팀';
+  }
+  return m.b||'';
+}
 
   const now=new Date(calYear,calMonth,1);
   const year=now.getFullYear();
@@ -10238,7 +10164,24 @@ async function doJpg(){
     const cap=document.getElementById('cap');
     const origStyle=cap.getAttribute('style')||'';
     cap.style.maxWidth='900px';cap.style.margin='0 auto';cap.style.padding='24px';
-    const canvas=await html2canvas(cap,{backgroundColor:'#fff',useCORS:true,scale:2,logging:false});
+    // 외부 이미지를 canvas data URL로 변환 (CORS 우회)
+    const imgEls = [...cap.querySelectorAll('img')];
+    const origSrcs = imgEls.map(img => img.src);
+    await Promise.allSettled(imgEls.map(img => new Promise(resolve => {
+      if (!img.src || img.src.startsWith('data:')) { resolve(); return; }
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || img.width || 64;
+      c.height = img.naturalHeight || img.height || 64;
+      const ctx2 = c.getContext('2d');
+      const tmp = new Image();
+      tmp.crossOrigin = 'anonymous';
+      tmp.onload = () => { ctx2.drawImage(tmp, 0, 0); try { img.src = c.toDataURL(); } catch(e){} resolve(); };
+      tmp.onerror = () => resolve();
+      tmp.src = img.src + (img.src.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    })));
+    const canvas=await html2canvas(cap,{backgroundColor:'#fff',useCORS:true,allowTaint:true,scale:2,logging:false,imageTimeout:8000});
+    // 원본 이미지 src 복원
+    imgEls.forEach((img, i) => { try { img.src = origSrcs[i]; } catch(e){} });
     cap.setAttribute('style',origStyle);
     restoreAll();
     // 캔버스를 가운데 여백 추가해서 새 캔버스에 그리기
@@ -10256,7 +10199,6 @@ async function doJpg(){
     alert('이미지 저장 오류: '+e.message);
   }
 }
-
 
 
 /* ══════════════════════════════════════
@@ -11137,7 +11079,7 @@ function buildUnivBoardCard(u, forExport){
 
     if(forExport){
       return `<div class="brd-row" style="margin-bottom:3px;display:flex;align-items:center;gap:4px;padding:3px 6px;background:rgba(255,255,255,.7);border-radius:6px">
-        ${photoSrc?`<img src="${photoSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.6)" onerror="this.style.display='none'">`:''}
+        ${photoSrc?`<img src="${photoSrc}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.8)" onerror="this.style.display='none'">`:''}
         ${isMain?`<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:${rCol};color:#fff;flex-shrink:0;white-space:nowrap">${rIcon}${p.role}</span>`:''}
         ${isSub?`<span style="font-size:9px;color:${ROLE_COLORS[p.role]||'#6b7280'};font-weight:700;flex-shrink:0">${p.role}</span>`:''}
         <span style="font-size:9px;font-weight:800;color:${rc.col};flex-shrink:0">${rc.txt}</span>
@@ -12446,33 +12388,33 @@ function parseSetSeparator(line) {
 
   // 세트 번호 추출 헬퍼
   const extractSetNum = (s) => {
-    // 숫자+세트
-    const m1 = s.match(/(\d+)\s*세트/);
-    if (m1) return parseInt(m1[1]);
-    // 한글 수 (1셋,2셋,3셋)
-    const m2 = s.match(/(\d+)\s*셋/);
-    if (m2) return parseInt(m2[1]);
-    // 에이스
-    if (/에이스/.test(s)) return 3;
+    const m1 = s.match(/(\d+)\s*세트/); if (m1) return parseInt(m1[1]);
+    const m2 = s.match(/(\d+)\s*셋/);   if (m2) return parseInt(m2[1]);
+    // ⚔NSET / NSET 형식 (예: ⚔1SET, ⚔2SET, 3SET)
+    const m3 = s.match(/⚔?\s*(\d+)\s*SET/i); if (m3) return parseInt(m3[1]);
+    // ACE / 에이스 → 3세트
+    if (/ACE|에이스/i.test(s)) return 3;
     return null;
   };
+
+  // ⚔NSET 형식 최우선 처리 (예: ⚔1SET 5/3, ⚔2SET, ⚔3SET ACE)
+  if (/⚔/.test(t)) {
+    const n = extractSetNum(t);
+    return n !== null ? n : 0;
+  }
 
   // 구분선 문자 집합: ═ ─ = - ㅡ _ ~ * ·
   const SEP = /[═─=\-ㅡ_~*·]/;
 
-  // 패턴 1: 구분선 문자가 3개 이상 포함된 줄 (세트 숫자 유무 무관)
-  // 예: ─────1세트─────, =====2세트=====, 1셋ㅡㅡㅡㅡ, --2세트--, ======
-  // 구분선: 특수문자 3개 이상 + 줄 길이의 40% 이상이 구분선 문자여야 세트구분으로 인식
-  // (이름에 하이픈 있는 경우 오파싱 방지)
+  // 패턴 1: 구분선 문자가 3개 이상 포함된 줄
   const sepCount = (t.match(/[═─=\-ㅡ_~]/g) || []).length;
   const isSepLine = sepCount >= 3 && sepCount >= Math.floor(t.length * 0.4);
   if (isSepLine) {
     const n = extractSetNum(t);
-    return n !== null ? n : 0; // 0 = 번호 없으면 자동 증가
+    return n !== null ? n : 0;
   }
 
-  // 패턴 2: "N세트" 또는 "N셋" 단독 줄 (구분선 없어도)
-  // 예: "2세트", "세트 3", "3셋", "에이스전"
+  // 패턴 2: "N세트" 또는 "N셋" 단독 줄
   if (/^(\d+\s*세트|세트\s*\d+|\d+\s*셋|셋\s*\d+|에이스전?|ace)$/i.test(t)) {
     const n = extractSetNum(t);
     return n !== null ? n : 0;
@@ -12952,6 +12894,21 @@ function pasteSelectPlayer(idx, role, name) {
     r.lCandidates  = [p];
     r.lSimilar     = [];
   }
+
+  // ── 같은 원본이름을 가진 다른 행도 자동 선택 ──
+  if (originalName && originalName !== p.name) {
+    window._pasteResults.forEach((row, ri) => {
+      if (ri === idx) return;
+      // 승자 이름이 동일한 경우
+      if ((row.winName === originalName || row.wSimilar?.some(c=>c.name===p.name)) && !row.wPlayer) {
+        row.winName = p.name; row.wPlayer = p; row.wCandidates = [p]; row.wSimilar = [];
+      }
+      // 패자 이름이 동일한 경우
+      if ((row.loseName === originalName || row.lSimilar?.some(c=>c.name===p.name)) && !row.lPlayer) {
+        row.loseName = p.name; row.lPlayer = p; row.lCandidates = [p]; row.lSimilar = [];
+      }
+    });
+  }
   renderPastePreview(window._pasteResults, window._pasteErrors || []);
 }
 
@@ -13032,8 +12989,16 @@ function pasteApply() {
     return { scoreA, scoreB, winner: scoreA >= scoreB ? 'A' : 'B', games };
   });
 
-  const sa = univWins[finalTeamA] || 0;
-  const sb = univWins[finalTeamB] || 0;
+  // sa/sb: 세트가 여러 개면 세트 승리 수, 아니면 총 게임 승리 수
+  const isMultiSet = Object.keys(setMap).length > 1;
+  let sa, sb;
+  if (isMultiSet) {
+    sa = setsSnap.filter(s => s.winner === 'A').length;
+    sb = setsSnap.filter(s => s.winner === 'B').length;
+  } else {
+    sa = univWins[finalTeamA] || 0;
+    sb = univWins[finalTeamB] || 0;
+  }
 
   // 개인 전적 반영
   savable.forEach(r => {
