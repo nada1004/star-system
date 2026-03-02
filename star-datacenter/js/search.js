@@ -474,7 +474,6 @@ function parsePasteLine(line) {
   // 예: "1️⃣(6티어)타밍T❌🆚✅하악Z🌐라" → "타밍T❌🆚✅하악Z🌐라"
   // 키캡 이모지(\uFE0F\u20E3) 포함 접두어를 문자 단위로 제거
   (function(){
-    let i = 0;
     const code0 = line.charCodeAt(0);
     // 숫자+\uFE0F+\u20E3 (keycap 이모지) 제거
     if (code0 >= 0x30 && code0 <= 0x39 &&
@@ -484,6 +483,11 @@ function parsePasteLine(line) {
     // ①~⑳ 제거
     else if (code0 >= 0x2460 && code0 <= 0x2473) {
       line = line.slice(1).trimStart();
+    }
+    // 🅰️ (에이스전, U+1F170 surrogate: 0xD83C 0xDD70) 제거
+    else if (code0 === 0xD83C && line.charCodeAt(1) === 0xDD70) {
+      line = line.slice(2).trimStart();
+      if (line.charCodeAt(0) === 0xFE0F) line = line.slice(1).trimStart();
     }
   })();
   line = line
@@ -546,6 +550,9 @@ function parsePasteLine(line) {
     }
 
     const splitNR = (s) => {
+      // 앞 종족 접두사 제거: Z조이, P마토, T주양 → 조이, 마토, 주양
+      const prefixM = s.match(/^([TZP])(.+)$/);
+      if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
       const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
       if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
       const simpleM = s.match(/^(.+?)([TZP])$/);
@@ -744,9 +751,35 @@ function pastePreview() {
   let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }
   let isFormatC    = false;  // 이번 블록이 형식 C인지
 
+  // 팀 로스터 초기화 (라인 "팀명 : 멤버1 멤버2..." 감지)
+  window._pasteRosterA = null;
+  window._pasteRosterB = null;
+  // 이미 수동으로 설정된 팀명이 없으면 초기화
+  if (!window._pasteForceTeamA) window._pasteForceTeamA = null;
+  if (!window._pasteForceTeamB) window._pasteForceTeamB = null;
+
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
+
+    // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." ──
+    if (!trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜')) {
+      const rosterM = trimmed.match(/^([^\s:：][^:：]{0,20}?)\s*[：:]\s*(\S+(?:\s+\S+){1,})$/);
+      if (rosterM) {
+        const tName = rosterM[1].trim();
+        const mems = rosterM[2].trim().split(/\s+/).filter(n => n.length > 0 && n.length <= 8);
+        if (mems.length >= 2) {
+          if (!window._pasteRosterA) {
+            window._pasteRosterA = { teamName: tName, members: mems };
+            if (!window._pasteForceTeamA) window._pasteForceTeamA = tName;
+          } else if (!window._pasteRosterB) {
+            window._pasteRosterB = { teamName: tName, members: mems };
+            if (!window._pasteForceTeamB) window._pasteForceTeamB = tName;
+          }
+          return;
+        }
+      }
+    }
 
     // ── 형식 C 우선 시도: N세트 맵 선수A 누적A:누적B 선수B ──
     const cParsed = parseFormatC(trimmed, formatCScore);
@@ -1564,6 +1597,16 @@ function swapPasteTeams(){
 }
 
 function closePasteModal() {
+  // 강제 모드(미니/대학대전)였다면 모드 선택기 원복
+  if (window._forcedPasteMode) {
+    window._forcedPasteMode = null;
+    const modeSel = document.getElementById('paste-mode');
+    const modeLbl = document.getElementById('paste-mode-label');
+    if (modeSel) modeSel.style.display = '';
+    if (modeLbl) modeLbl.style.display = '';
+    const hintEl = document.getElementById('paste-mode-hint');
+    if (hintEl) hintEl.textContent = '';
+  }
   // 대회 세트 모드였다면 UI 원복
   if (window._grpPasteMode) {
     window._grpPasteMode = false;
@@ -1597,6 +1640,7 @@ function closePasteModal() {
 function openPasteModal() {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
   window._grpPasteMode = false; // 일반 모드로 초기화
+  window._forcedPasteMode = null; // 강제 모드 초기화
   // 매번 열 때 초기화
   const textarea  = document.getElementById('paste-input');
   const previewEl = document.getElementById('paste-preview');
@@ -1610,15 +1654,49 @@ function openPasteModal() {
   if (pendWarn)  pendWarn.style.display = 'none';
   window._pasteResults = null;
   window._pasteErrors  = null;
+  window._pasteRosterA = null;
+  window._pasteRosterB = null;
+  window._pasteForceTeamA = null;
+  window._pasteForceTeamB = null;
 
   const dateInput = document.getElementById('paste-date');
   if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  // 모드 선택기 원상 복구
+  const modeSel = document.getElementById('paste-mode');
+  const modeLbl = document.getElementById('paste-mode-label');
+  if (modeSel) modeSel.style.display = '';
+  if (modeLbl) modeLbl.style.display = '';
 
   // 모드 힌트 초기화
   const modeEl = document.getElementById('paste-mode');
   if (modeEl) onPasteModeChange(modeEl.value);
 
   om('pasteModal');
+}
+
+/* ── 미니대전 전용 붙여넣기 ── */
+function openMiniPasteModal() {
+  openPasteModal();
+  window._forcedPasteMode = 'mini';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'mini'; sel.style.display = 'none'; onPasteModeChange('mini'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">⚡ 미니대전 경기 결과 입력 모드</span>';
+}
+
+/* ── 대학대전 전용 붙여넣기 ── */
+function openUnivmPasteModal() {
+  openPasteModal();
+  window._forcedPasteMode = 'univm';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'univm'; sel.style.display = 'none'; onPasteModeChange('univm'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🏟️ 대학대전 경기 결과 입력 모드</span>';
 }
 
 /* ═══════════════════════════════════════════════════

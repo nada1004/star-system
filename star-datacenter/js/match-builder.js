@@ -9,7 +9,7 @@ function rMini(C,T){
   if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('mini');
   }
-  if(miniSub==='input'&&isLoggedIn){if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>⚡ 미니대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;}
+  if(miniSub==='input'&&isLoggedIn){if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>⚡ 미니대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;}
   else if(miniSub==='rank'){h+=miniRankHTML();}
   else{h+=recSummaryListHTML(miniM,'mini','tab');}
   C.innerHTML=h;
@@ -196,7 +196,7 @@ function rUnivM(C,T){
   if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('univm');
   }
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
   else{h+=recSummaryListHTML(univM,'univm','tab');}
   C.innerHTML=h;
