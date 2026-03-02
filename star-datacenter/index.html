@@ -1,0 +1,432 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⭐ 스타대학 데이터 센터 V49.9</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 로그인 모달 (헤더 버튼 클릭 시) -->
+<div id="loginModal" class="modal no-export" style="display:none">
+  <div class="mbox" style="width:340px;text-align:center;padding:32px 28px">
+    <div style="font-size:32px;margin-bottom:8px">🔐</div>
+    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#1e3a8a;margin-bottom:20px">관리자 로그인</div>
+    <input type="text" id="li-id" placeholder="아이디" autocomplete="username"
+      style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:10px;display:block"
+      onkeydown="if(event.key==='Enter')document.getElementById('li-pw').focus()">
+    <input type="password" id="li-pw" placeholder="비밀번호" autocomplete="current-password"
+      style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:10px;display:block"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🔐 로그인</button>
+    <div class="login-err" id="li-err" style="color:#dc2626;font-size:12px;margin-top:8px;min-height:18px"></div>
+    <button onclick="cm('loginModal')" style="margin-top:10px;background:none;border:none;color:var(--gray-l);font-size:12px;cursor:pointer">취소</button>
+  </div>
+</div>
+
+<div class="app">
+<div class="hdr">
+  <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
+  <div class="hdr-title" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer" title="메인으로">스타대학 데이터 센터</div>
+  <div class="hdr-ver">V49.9</div>
+  <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
+    <!-- 전체 선수 검색 -->
+    <div style="position:relative">
+      <input id="globalSearch" type="text" placeholder="🔍 선수 검색..." oninput="onGlobalSearch(this.value)"
+        style="width:160px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;outline:none;"
+        onfocus="this.style.background='rgba(255,255,255,.25)'" onblur="this.style.background='rgba(255,255,255,.15)'">
+      <div id="globalSearchDrop" style="display:none;position:fixed;top:50px;right:16px;background:var(--white);border:1px solid var(--border2);border-radius:10px;width:300px;max-height:360px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.22)"></div>
+    </div>
+    <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
+    <button id="hdrCloudLoad" onclick="cloudLoad()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:1;display:flex;align-items:center;gap:4px;white-space:nowrap">☁️ 불러오기</button>
+    <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:1">🌙 다크</button>
+    <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
+    <button id="hdrLogoutBtn" class="hdr-login-btn" style="display:none;background:rgba(220,38,38,.4);border-color:rgba(220,38,38,.5)" onclick="doLogout()">🔓 로그아웃</button>
+  </div>
+</div>
+
+<div class="tabs no-export">
+  <button class="tab on"  onclick="sw('total',this)">📋 스트리머</button>
+  <button class="tab"     onclick="sw('board',this)">📊 현황판</button>
+  <button class="tab"     onclick="sw('tier',this)">📊 티어 순위표</button>
+  <button class="tab"     onclick="sw('hist',this)">📅 대전 기록</button>
+  <button class="tab"     onclick="sw('mini',this)">⚡ 미니대전</button>
+  <button class="tab"     onclick="sw('univck',this)">🤝 대학CK</button>
+  <button class="tab"     onclick="sw('univm',this)">🏟️ 대학대전</button>
+  <button class="tab"     onclick="sw('comp',this)">🎖️ 대회</button>
+  <button class="tab"     onclick="sw('pro',this)">🏅 프로리그</button>
+  <button class="tab" onclick="sw('stats',this)">📊 통계</button>
+  <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
+  <button id="tabMember" class="tab" onclick="sw('member',this)">👥 회원관리</button>
+  <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
+</div>
+
+<div id="fstrip" class="fstrip no-export lock-admin">
+  <div class="form-row">
+    <span class="flabel">🎬 스트리머 등록</span>
+    <select id="p-univ"></select>
+    <select id="p-tier"></select>
+    <select id="p-race"><option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option></select>
+    <select id="p-gender"><option value="F">👩 여자</option><option value="M">👨 남자</option></select>
+    <input type="text" id="p-name" placeholder="스트리머 이름" style="width:120px;">
+    <input type="text" id="p-role" placeholder="직책(선택)" style="width:90px;">
+    <button class="btn btn-b" onclick="addPlayer()">+ 등록</button>
+  </div>
+  <div class="form-row" style="border-color:#93c5fd;background:#f0f6ff;">
+    <span class="flabel">⚔️ 경기 기록</span>
+    <input type="date" id="m-date">
+    <button class="btn btn-w btn-xs" onclick="document.getElementById('m-date').valueAsDate=new Date()" title="오늘 날짜로" style="padding:3px 8px;font-size:11px;flex-shrink:0">오늘</button>
+    <div class="swrap">
+      <input type="text" id="ws" placeholder="스트리머 검색..." onkeyup="fsearch('w');if(event.key==='Enter')recMatch()" style="width:130px;">
+      <div id="wl" class="sdrop"></div>
+    </div>
+    <span style="font-weight:800;color:var(--gray-l);">VS</span>
+    <div class="swrap">
+      <input type="text" id="ls" placeholder="스트리머 검색..." onkeyup="fsearch('l');if(event.key==='Enter')recMatch()" style="width:130px;">
+      <div id="ll" class="sdrop"></div>
+    </div>
+    <select id="m-map"></select>
+    <button class="btn btn-g" onclick="recMatch()">💾 저장</button>
+  </div>
+</div>
+
+<div class="main"><div id="cap">
+  <div class="rtitle" id="rtitle"></div>
+  <div id="farea" class="no-export"></div>
+  <div id="rcont"></div>
+</div></div>
+
+<!-- 하단 액션 버튼 바 -->
+<input type="file" id="fi" style="display:none" onchange="doFile(this)">
+<div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
+  <button class="btn btn-b" id="btn-img-save" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">현황판 저장</span></button>
+  <button id="btnCloudLoad" class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
+  <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
+  <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
+  <span id="cloudStatus" style="font-size:12px;color:var(--gray-l);margin-left:4px"></span>
+  <span id="exportHint" style="font-size:12px;color:var(--gray-l)">💡 다른 기기와 공유 시 데이터 내보내기 → 가져오기를 사용하세요</span>
+</div>
+</div>
+
+<!-- 선수 수정 모달 -->
+<div id="emModal" class="modal no-export" style="z-index:5000">
+  <div class="mbox">
+    <div class="mtitle">✏️ 스트리머 정보 수정</div>
+    <div id="emBody"></div>
+    <div class="mbtns">
+      <button class="btn btn-b" style="flex:1" onclick="savePlayer()">저장</button>
+      <button class="btn btn-r" style="flex:1" onclick="delPlayer()">삭제</button>
+      <button class="btn btn-w" style="flex:1" onclick="cm('emModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 기록 수정 모달 -->
+<div id="reModal" class="modal no-export" style="z-index:5000">
+  <div class="mbox">
+    <div class="mtitle" id="reTitle">수정</div>
+    <div id="reBody"></div>
+    <div class="mbtns">
+      <button class="btn btn-b" style="flex:1" onclick="saveRow()">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="cm('reModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 대회명 관리 모달 -->
+<div id="cnModal" class="modal no-export">
+  <div class="mbox" style="width:420px;">
+    <div class="mtitle">🎖️ 대회명 관리</div>
+    <div id="cnBody"></div>
+    <div class="mbtns"><button class="btn btn-w" style="flex:1" onclick="cm('cnModal')">닫기</button></div>
+  </div>
+</div>
+
+<!-- 스트리머 상세 모달 -->
+<div id="playerModal" class="modal no-export">
+  <div class="umbox">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
+      <div class="mtitle" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="openEPFromModal()">✏️ 수정</button>
+        <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
+        <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
+        <button class="btn btn-w btn-sm" onclick="cm('playerModal')">✕ 닫기</button>
+      </div>
+    </div>
+    <div id="playerModalBody"></div>
+  </div>
+</div>
+
+<!-- 대학 상세 모달 -->
+<div id="univModal" class="modal no-export">
+  <div class="umbox">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
+      <div class="mtitle" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-p btn-sm" onclick="openShareCardFromUniv()">🎴 공유 카드</button>
+        <button class="btn-capture" onclick="captureUnivModal()">📸 이미지 저장</button>
+        <button class="btn btn-w btn-sm" onclick="cm('univModal')">✕ 닫기</button>
+      </div>
+    </div>
+    <div id="univModalBody"></div>
+  </div>
+</div>
+
+<!-- 조편성 경기 입력 모달 -->
+<div id="grpMatchModal" class="modal no-export">
+  <div class="umbox" style="width:780px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" id="grpMatchTitle" style="margin-bottom:0">경기 입력</div>
+      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">✕ 닫기</button>
+    </div>
+    <div id="grpMatchBody"></div>
+  </div>
+</div>
+
+<!-- 대회 경기 붙여넣기 모달 -->
+<div id="grpPasteModal" class="modal no-export">
+  <div class="umbox" style="width:720px;max-width:96vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mtitle" style="margin-bottom:0">📋 대회 경기 결과 붙여넣기 일괄 입력</div>
+      <button class="btn btn-w btn-sm" onclick="cm('grpPasteModal')">✕ 닫기</button>
+    </div>
+    <div id="grpPasteBody"></div>
+    <div class="mbtns" style="margin-top:14px;gap:8px">
+      <button id="grp-paste-apply-btn" class="btn btn-g" style="flex:1;display:none" onclick="grpPasteApply()">✅ 세트에 적용</button>
+      <button class="btn btn-w" style="flex:0 0 auto" onclick="cm('grpPasteModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원 추가/수정 모달 -->
+<div id="memberModal" class="modal no-export">
+  <div class="umbox" style="width:680px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" id="memberModalTitle" style="margin-bottom:0">회원 추가</div>
+      <button class="btn btn-w btn-sm" onclick="cm('memberModal')">✕ 닫기</button>
+    </div>
+    <div id="memberModalBody"></div>
+    <div class="mbtns" style="margin-top:16px">
+      <button class="btn btn-b" style="flex:1" onclick="memberSave()">💾 저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="cm('memberModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원 상세 모달 -->
+<div id="memberDetailModal" class="modal no-export">
+  <div class="umbox" style="width:680px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" id="memberDetailTitle" style="margin-bottom:0">회원 상세</div>
+      <button class="btn btn-w btn-sm" onclick="cm('memberDetailModal')">✕ 닫기</button>
+    </div>
+    <div id="memberDetailBody"></div>
+  </div>
+</div>
+
+<div id="pasteModal" class="modal no-export">
+  <div class="umbox" style="width:740px;max-width:96vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mtitle" style="margin-bottom:0">📋 경기 결과 붙여넣기 입력</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="paste-summary-badge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
+        <button class="btn btn-w btn-sm" onclick="closePasteModal()">✕ 닫기</button>
+      </div>
+    </div>
+
+    <!-- 사용법 (접기/펼치기) -->
+    <details style="margin-bottom:12px">
+      <summary style="font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;padding:6px 10px;background:var(--blue-l);border-radius:8px;border:1px solid var(--blue-ll);list-style:none;display:flex;align-items:center;gap:5px">
+        📌 사용법 보기
+      </summary>
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.9;margin-top:-1px">
+        형식 A: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">[맵] 선수명종족 (승) vs (패) 선수명종족</span><br>
+        형식 B: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">선수명[티어종족] ❌🆚⭕ 선수명[티어종족] 🌐맵</span><br>
+        형식 C: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">1세트 실피 이재호 0:1 변현제</span> (누적 스코어 자동 판별)<br>
+        세트 구분: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">══1세트══ / --2세트-- / 1셋ㅡㅡ</span> 형태 모두 인식<br>
+        맵 약자: <span style="font-family:monospace;background:#dbeafe;padding:1px 6px;border-radius:4px">녹아 · 녹 → 녹아웃 / 라데 → 라데리안 / 도미 → 도미네이터</span> 등 자동 변환<br>
+        <span style="color:#6b7280;font-size:11px">💡 선수 약자 자동 인식 (예: 주양 → 소주양) · 중복 시 버튼으로 직접 선택 · 3세트 이상은 에이스전으로 표시</span>
+      </div>
+    </details>
+
+    <!-- 날짜 + 저장 형식 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
+      <input type="date" id="paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2);margin-left:4px" id="paste-mode-label">📁 저장 형식</label>
+      <select id="paste-mode" onchange="onPasteModeChange(this.value)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+        <option value="mini">⚡ 미니대전으로 저장</option>
+        <option value="univm">🏟️ 대학대전으로 저장</option>
+        <option value="comp">🎖️ 대회 기록으로 저장</option>
+      </select>
+      <div id="paste-comp-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">
+      </div>
+      <div id="paste-mode-hint" style="font-size:11px;color:var(--gray-l);width:100%;margin-top:2px"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s" id="match-mode-label-game" onclick="setPasteMatchMode('game')">
+          <input type="radio" id="paste-match-mode-game" name="paste-match-mode" value="game" checked style="display:none">
+          🎮 경기 방식 <span style="font-size:10px;opacity:.7">(승자 수 합산)</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s" id="match-mode-label-set" onclick="setPasteMatchMode('set')">
+          <input type="radio" id="paste-match-mode-set" name="paste-match-mode" value="set" style="display:none">
+          📋 세트제 <span style="font-size:10px;opacity:.7">(세트별 승리 팀)</span>
+        </label>
+      </div>
+      <span id="paste-match-mode-hint" style="font-size:11px;color:#0369a1;margin-left:4px">경기 방식: 1경기·2경기·3경기 → 이긴 경기 수 많은 팀 우승</span>
+    </div>
+    <div style="display:none"><!-- placeholder to keep structure -->
+    </div>
+
+    <div style="position:relative">
+      <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시 (형식A): 1. [도미] 도재욱P (승) vs (패) 유영진T&#10;예시 (형식B): 리나[4P]❌🆚⭕햇살[4T]🌐녹아"
+        style="width:100%;min-height:140px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
+        oninput="pastePreview()" onpaste="setTimeout(pastePreview,0)"></textarea>
+      <button onclick="document.getElementById('paste-input').value='';pastePreview();"
+        title="입력 지우기"
+        style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;line-height:1;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s;"
+        onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
+    </div>
+
+    <div id="paste-preview" style="margin-top:12px"></div>
+    <div id="paste-team-swap-row" style="display:none;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:#92400e">🔄 팀 인식 결과:</span>
+      <span id="paste-team-a-label" style="font-size:12px;font-weight:800;color:#1d4ed8"></span>
+      <span style="font-size:12px;color:#6b7280">vs</span>
+      <span id="paste-team-b-label" style="font-size:12px;font-weight:800;color:#dc2626"></span>
+      <button class="btn btn-xs btn-o" onclick="swapPasteTeams()" style="margin-left:4px">⇄ 팀 A↔B 교체</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;align-items:center">
+      <span id="paste-pending-warn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 중복 선택 필요한 항목이 있습니다</span>
+      <button class="btn btn-w" onclick="closePasteModal()">취소</button>
+      <button class="btn btn-g" onclick="pasteApply()" id="paste-apply-btn" style="display:none">✅ 저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 프로리그 전용 붙여넣기 모달 ===== -->
+<div id="proPasteModal" class="modal no-export">
+  <div class="umbox" style="width:780px;max-width:97vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mtitle" style="margin-bottom:0">🏅 프로리그 경기 결과 붙여넣기</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="pro-paste-badge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
+        <button class="btn btn-w btn-sm" onclick="closeProPasteModal()">✕ 닫기</button>
+      </div>
+    </div>
+    <details style="margin-bottom:12px">
+      <summary style="font-size:12px;font-weight:700;color:#7c3aed;cursor:pointer;padding:6px 10px;background:#f5f3ff;border-radius:8px;border:1px solid #ddd6fe;list-style:none;display:flex;align-items:center;gap:5px">📌 사용법 보기</summary>
+      <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#5b21b6;line-height:1.9;margin-top:-1px">
+        형식 A: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">[맵] 홍길동T (승) vs (패) 이순신Z</span><br>
+        형식 B: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">홍길동[4T]❌🆚⭕이순신[3Z]🌐라데리안</span><br>
+        세트 구분: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">══1세트══ / [2SET] / ----2세트----</span><br>
+        <b>입력 순서 = A/B조</b>: 첫 번째 선수 → A조, 두 번째 → B조 자동 배정<br>
+        <span style="color:#7c3aed;font-size:11px">💡 이름/맵 인식 실패 시 직접 수정 · ⇄ 버튼으로 A/B조 전체 교체 · 승패도 행별 변경 가능</span>
+      </div>
+    </details>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
+      <input type="date" id="pro-paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+      <div style="display:flex;gap:6px;align-items:center;margin-left:8px">
+        <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1" id="pro-mode-game-lbl" onclick="setProPasteMode('game')">🎮 경기 방식</label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)" id="pro-mode-set-lbl" onclick="setProPasteMode('set')">📋 세트제</label>
+      </div>
+    </div>
+    <div style="position:relative">
+      <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z"
+        style="width:100%;min-height:120px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
+        oninput="proPreview()" onpaste="setTimeout(proPreview,0)"></textarea>
+      <button onclick="document.getElementById('pro-paste-input').value='';proPreview();"
+        style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center"
+        onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
+    </div>
+    <div id="pro-paste-preview" style="margin-top:12px"></div>
+    <div id="pro-swap-row" style="display:none;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:#92400e">🔄 현재 조 배정:</span>
+      <span id="pro-team-a-label" style="font-size:13px;font-weight:900;color:#1d4ed8">🔵 A조</span>
+      <span style="font-size:12px;color:#6b7280">vs</span>
+      <span id="pro-team-b-label" style="font-size:13px;font-weight:900;color:#dc2626">🔴 B조</span>
+      <button class="btn btn-xs btn-o" onclick="swapProTeams()" style="margin-left:4px">⇄ A조↔B조 전체 교체</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;align-items:center">
+      <span id="pro-paste-warn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
+      <button class="btn btn-w" onclick="closeProPasteModal()">취소</button>
+      <button class="btn btn-g" onclick="proApply()" id="pro-apply-btn" style="display:none">✅ 프로리그에 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/constants.js"></script>
+<script src="js/data.js"></script>
+<script src="js/render.js"></script>
+<script src="js/players.js"></script>
+<script src="js/vs.js"></script>
+<script src="js/history.js"></script>
+<script src="js/match.js"></script>
+<script src="js/match-builder.js"></script>
+<script src="js/competition.js"></script>
+<script src="js/tier-tour.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/vote.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/init.js"></script>
+
+<script src="js/protection.js"></script>
+<script src="js/cloud-board.js"></script>
+
+
+<!-- 📱 모바일 전용 플로팅 액션 버튼 -->
+<div id="mobileActionBar" style="display:none;position:fixed;bottom:68px;right:12px;z-index:995;flex-direction:column;gap:8px;align-items:flex-end;">
+  <button onclick="cloudLoad()" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:24px;padding:10px 16px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;box-shadow:0 4px 16px rgba(22,163,74,.35);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;">
+    <span style="font-size:16px">☁️</span><span>불러오기</span>
+  </button>
+
+</div>
+
+<!-- 📱 하단 고정 네비게이션 바 (모바일) -->
+<div id="bottomNav">
+  <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📋</span></div><span class="bnav-label">스트리머</span></button>
+  <button class="bnav-item" id="bn1" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
+  <button class="bnav-item" id="bn2" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
+  <button class="bnav-item" id="bn3" onclick="swNav('mini',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">⚡</span></div><span class="bnav-label">미니</span></button>
+  <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
+  <button class="bnav-item" id="bn5" onclick="swNav('cal',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">🗓️</span></div><span class="bnav-label">캘린더</span></button>
+</div>
+
+<script src="js/mobile-bar.js"></script>
+
+<script src="js/search.js"></script>
+
+<!-- 모바일 경기 상세 오버레이 -->
+<div class="mobile-match-overlay" id="mobileMatchOverlay" onclick="closeMobileMatchSheet(event)">
+  <div class="mobile-match-sheet" id="mobileMatchSheet" onclick="event.stopPropagation()">
+    <div class="mobile-match-sheet-handle"></div>
+    <div class="mobile-match-sheet-hdr">
+      <div class="mobile-match-sheet-title" id="mms-title">경기 상세</div>
+      <button class="mobile-match-sheet-close" onclick="closeMobileMatchOverlay()">✕</button>
+    </div>
+    <div class="mobile-match-sheet-score" id="mms-score"></div>
+    <div class="mobile-match-sheet-body" id="mms-body"></div>
+    <div class="mobile-match-sheet-footer" id="mms-footer" style="display:none;padding:10px 14px 16px;border-top:1px solid #eef0f4;display:flex;gap:8px;flex-shrink:0">
+      <button id="mms-btn-capture" class="btn-capture btn-xs" style="flex:1;justify-content:center;display:flex;align-items:center;gap:4px" onclick="window._mmsCaptureKey&&captureDetail('det-'+window._mmsCaptureKey, window._mmsCaptureDate||'match')">📷 이미지 저장</button>
+      <button id="mms-btn-share" class="btn btn-p btn-xs" style="flex:1;justify-content:center" onclick="window._mmsShareFn&&window._mmsShareFn()">🎴 공유 카드</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="js/modal-drag.js"></script>
+</body>
+</html>
