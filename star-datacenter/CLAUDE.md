@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **실행 방법**: `index.html`을 브라우저로 열기. (로컬 파일 CORS 이슈가 발생하면 VS Code Live Server 또는 `npx serve .` 사용)
 
+빌드/테스트/lint 커맨드 없음. 브라우저 콘솔(F12)로 직접 디버깅.
+
 ## 아키텍처
 
 ### 데이터 흐름
@@ -46,7 +48,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   a, b: string,       // 팀A, 팀B 이름
   sa, sb: number,     // 세트 스코어
   sets: [{
-    games: [{ playerA, playerB, winner:'A'|'B', map, raceA, raceB }]
+    games: [{ playerA, playerB, winner:'A'|'B', map, raceA, raceB, eloDelta }]
   }],
   memo: string
 }
@@ -65,7 +67,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `match.js` | `rRace()` 종족별, `rUniv()` 대학별 탭 |
 | `match-builder.js` | `rMini()`, `rCK()`, `rUnivM()`, `rPro()` — 경기 입력 UI |
 | `competition.js` | `rComp()`, 리그/브래킷/조편성, `rCompTour()` |
-| `tier-tour.js` | `rTierTour()` 티어별 토너먼트 |
+| `tier-tour.js` | `rTierTour()` 티어별 토너먼트, `openGrpPasteModal()` 대회 붙여넣기 |
 | `stats.js` | `rStats()` — ELO 차트, 승률, 히트맵, 시즌별 통계 등 20+ 서브탭 |
 | `calendar.js` | `rCal()` 캘린더 탭 |
 | `vote.js` | `rVote()` 승부예측 탭 |
@@ -73,9 +75,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `init.js` | `init()` 초기화, `autoLoad()` 첫 접속 GitHub 자동 로드 |
 | `protection.js` | 우클릭/F12/Ctrl+U 차단 |
 | `cloud-board.js` | `cloudLoad()` 수동 불러오기, `rBoard()` 현황판 탭 |
-| `search.js` | `recFilterInPlace()` 실시간 검색, `parsePasteText()` 붙여넣기 파싱 |
+| `search.js` | `recFilterInPlace()` 실시간 검색, 붙여넣기 파싱 전체 로직 |
 | `modal-drag.js` | 모달 드래그 이동(PC), `openMobileMatchSheet()` 모바일 경기 상세 |
 | `mobile-bar.js` | 모바일 하단 내비게이션 표시 여부 제어 |
+
+## 붙여넣기 파싱 (search.js)
+
+메뉴별로 전용 모달 함수가 분리되어 있음:
+- `openMiniPasteModal()` — 미니대전 전용 (mode=mini 고정, 모드 선택기 숨김)
+- `openUnivmPasteModal()` — 대학대전 전용 (mode=univm 고정)
+- `openProPasteModal()` — 프로리그 전용 (별도 모달 `#proPasteModal`)
+- `openGrpPasteModal()` — 대회 전용 (tier-tour.js, `#pasteModal` 재활용 + `_grpPasteMode=true`)
+
+**강제 모드 흐름**: `openMiniPasteModal()` / `openUnivmPasteModal()` → `window._forcedPasteMode` 설정 → `closePasteModal()`에서 모드 선택기 원복.
+
+### 파싱 형식 (parsePasteLine)
+- **형식 A**: `[맵] 선수명종족 (승) vs (패) 선수명종족`
+- **형식 B (🆚)**: `선수명[티어종족]❌🆚⭕선수명[티어종족]🌐맵` 또는 `P선수명✅🆚️⬜Z선수명 [맵약자]`
+  - `Z조이✅🆚️⬜Z블비` 처럼 **앞에 붙은 종족(P/T/Z) 접두사는 자동 제거**
+  - `🅰️` (에이스전) 접두사도 자동 제거
+- **형식 C**: `1세트 맵 선수A 0:1 선수B` (누적 스코어 자동 판별)
+- **형식 D**: 여러 줄 `패배!\n이름\nVS\n이름\n승리!\n맵: 맵명` 형식
+
+### 팀 로스터 라인 감지
+붙여넣기에 `팀명 : 멤버1 멤버2 멤버3` 형식 줄이 있으면 자동으로 팀A/B 이름 설정:
+```
+츠캄몬 : 마토 주랑 주양 조이 땅콩   →  window._pasteForceTeamA = '츠캄몬'
+늪지대 : 롱빡 슈슈 예실 블비 라츄   →  window._pasteForceTeamB = '늪지대'
+```
+- `_pasteRosterA` / `_pasteRosterB` 에 `{teamName, members[]}` 저장
+- 게임 결과 라인이 아닌 것(🆚/✅/❌/⬜ 없음)만 로스터로 인식
+
+### 세트 구분 인식 (parseSetSeparator)
+- `⚔1SET 5/3` → setNum=1, `⚔3SET ACE` → setNum=3 (최우선)
+- `━━━━━` (U+2501) — 구분선으로 인식 안됨, errors에 추가됨 (무해)
+- `----------` (하이픈 3개 이상, 전체 길이의 40% 이상) → 세트 증가
+- `1세트`, `2SET`, `에이스전` 단독 줄도 인식
+
+### 맵 약자 시스템
+`getMapAlias()` (constants.js) — 약자→정식 맵명 매핑. 예: `녹아→녹아웃`, `라데→라데리안`, `실피→실피드`. `[맵약자]` 브라켓 또는 🌐 이모지 뒤에 붙여 지정.
 
 ## 티어 시스템
 `G > K > JA > J > S > 0티어 > 1티어 > ... > 8티어 > 유스`
@@ -112,4 +150,5 @@ CSS 변수는 `:root`에 정의. 주요 변수:
 ## 주의사항
 - **스크립트 로드 순서 중요**: `constants.js`가 반드시 먼저 로드되어야 함 (글로벌 변수 선언). `render.js`의 `save()` 함수는 모든 데이터 변수가 선언된 후 호출됨.
 - **`rBoard`는 cloud-board.js에 있음** — 다른 탭 렌더 함수(`r*`)들이 각각의 파일에 있는 것과 다르게 board 탭은 cloud-board.js 하단에 위치.
-- **붙여넣기 파싱** (search.js): 경기 결과 텍스트를 복사-붙여넣기하면 자동으로 선수/맵/승패 파싱. 구분선 `═ ─ = - ㅡ _` 등으로 세트 구분.
+- **`openGrpPasteModal`는 tier-tour.js에 있음** — 경쟁 스크립트가 competition.js이지만 대회 붙여넣기 함수는 tier-tour.js 최상단에 위치.
+- **글로벌 `window._paste*` 변수들**: 붙여넣기 모달 상태를 전역으로 공유. `_pasteResults`, `_pasteErrors`, `_pasteForceTeamA/B`, `_pasteRosterA/B`, `_forcedPasteMode`, `_grpPasteMode` 등.
