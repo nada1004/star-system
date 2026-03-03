@@ -1032,8 +1032,11 @@ async function downloadBoardAll(){
     try{
       const w=tmpDiv.scrollWidth||bw;
       const h=Math.max(tmpDiv.scrollHeight,tmpDiv.offsetHeight,200);
+      // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
+      const MAX_DIM=16000;
+      const safeScale=Math.max(1,Math.min(2,Math.floor(MAX_DIM/Math.max(w,h))));
       const canvas=await html2canvas(tmpDiv,{
-        scale:2,useCORS:false,allowTaint:false,
+        scale:safeScale,useCORS:false,allowTaint:false,
         backgroundColor:'#f0f2f5',logging:false,imageTimeout:5000,
         width:w,height:h,windowWidth:w+200,windowHeight:h+200
       });
