@@ -1063,11 +1063,11 @@ async function downloadBoardAll(){
         const rect = tmpDiv.getBoundingClientRect();
 
         await _imgToDataUrls(tmpDiv, 4000); // 이미지당 최대 4초
-        // 변환 안 된 외부 src 제거 (canvas taint 방지)
+        // 변환 안 된 외부 img 완전 제거 (src 숨김만으로는 html2canvas가 여전히 처리 시도)
         tmpDiv.querySelectorAll('img').forEach(im => {
           const s = im.getAttribute('src') || '';
-          if (s && !s.startsWith('data:') && !s.startsWith('blob:')) {
-            im.style.display = 'none'; im.removeAttribute('src');
+          if (!s || (!s.startsWith('data:') && !s.startsWith('blob:'))) {
+            im.parentNode && im.parentNode.removeChild(im);
           }
         });
 

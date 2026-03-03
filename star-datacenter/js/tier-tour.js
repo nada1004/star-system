@@ -777,6 +777,8 @@ function changeBoardUnivColor(univName, newColor){
 
 /* ══════════════════════════════════════
    선수 CRUD
+══════════════════════════════════════ */
+function addPlayer(){
   const n=document.getElementById('p-name').value.trim();
   if(!n)return alert('이름을 입력하세요.');
   if(players.find(p=>p.name===n))return alert('이미 존재합니다.');

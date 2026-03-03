@@ -206,6 +206,11 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:4000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
 .mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:95vw;border-radius:12px;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.16);position:relative;}
+/* emModal(수정창): 내용이 길어 스크롤 + 제목·버튼 고정 */
+#emModal .mbox{max-height:88vh;display:flex;flex-direction:column;padding:0;}
+#emModal .mtitle{padding:20px 24px 14px;flex-shrink:0;border-bottom:1px solid var(--border);margin-bottom:0;}
+#emModal #emBody{overflow-y:auto;flex:1;min-height:0;padding:12px 24px 4px;}
+#emModal .mbtns{padding:14px 24px 18px;flex-shrink:0;border-top:1px solid var(--border);margin-top:0;}
 .mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:var(--blue);margin-bottom:16px;cursor:move;user-select:none;-webkit-user-select:none;}
 .mtitle::before{content:'⠿ ';font-size:12px;opacity:.35;margin-right:4px;}
 .mbox label{display:block;font-size:11px;font-weight:500;color:var(--gray-l);margin-top:10px;margin-bottom:3px;}
