@@ -1031,7 +1031,8 @@ async function downloadBoardAll(){
 
     const cardCanvases = [];
     try {
-      // 각 대학 카드를 개별 tmpDiv에 렌더링 → 캡처
+      // 1단계: 모든 카드를 DOM에 한꺼번에 추가 (개별 대기 없이 일괄 렌더링)
+      const cardDivs = [];
       for (const u of univs) {
         const html = buildUnivBoardCard(u, true);
         if (!html) continue;
@@ -1042,23 +1043,24 @@ async function downloadBoardAll(){
         document.body.appendChild(tmpDiv);
         tmpDivs.push(tmpDiv);
         injectUnivIcons(tmpDiv);
-        await new Promise(r=>setTimeout(r,300));
-        void tmpDiv.getBoundingClientRect();
+        cardDivs.push({ u, tmpDiv });
+      }
+      // 모든 카드가 한 번에 렌더링되도록 한 번만 대기
+      await new Promise(r=>setTimeout(r,600));
 
+      // 2단계: 각 카드 이미지 변환 → html2canvas 캡처 (순차)
+      for (const { tmpDiv } of cardDivs) {
+        void tmpDiv.getBoundingClientRect();
         await _imgToDataUrls(tmpDiv);
-        // 혹시 변환 안 된 외부 src가 남아있으면 제거 (taint 완전 차단)
+        // 변환 안 된 외부 src 제거 (taint 방지)
         tmpDiv.querySelectorAll('img').forEach(im => {
           const s = im.getAttribute('src') || '';
           if (s && !s.startsWith('data:') && !s.startsWith('blob:')) {
             im.style.display = 'none'; im.removeAttribute('src');
           }
         });
-
         const w = tmpDiv.offsetWidth || cardW;
         const h = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
-        // allowTaint:true — _imgToDataUrls로 img를 data URL로 변환했으므로
-        // 실제 taint는 발생하지 않으며, false 시 Firefox에서 canvas error state로
-        // html2canvas promise 자체가 reject되는 문제를 방지함
         let canvas = null;
         try {
           canvas = await html2canvas(tmpDiv, {
@@ -1071,15 +1073,11 @@ async function downloadBoardAll(){
           });
         } catch { /* 이 카드 캡처 실패 → 건너뜀 */ }
         if (canvas && canvas.width > 0 && canvas.height > 0) {
-          // 캔버스를 즉시 dataURL로 추출 — taint 상태 캔버스를 ctx.drawImage에
-          // 직접 넘기면 대상 ctx 전체가 에러 상태가 되므로 Image 경유로 우회
           try {
             const dataUrl = canvas.toDataURL('image/png');
             cardCanvases.push({ dataUrl, width: canvas.width, height: canvas.height });
-          } catch { /* taint → 이 카드 건너뜀 */ }
+          } catch { /* taint → 건너뜀 */ }
         }
-        document.body.removeChild(tmpDiv);
-        tmpDivs.pop();
       }
     } finally {
       if (wasDark) document.body.classList.add('dark');

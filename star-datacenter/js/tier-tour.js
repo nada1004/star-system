@@ -867,6 +867,18 @@ function openEP(name){
     </div>`;
   om('emModal');
 }
+// 스트리머 상세 모달 → 수정창 열기 (openEP와 같은 파일에 정의해 ReferenceError 방지)
+function openEPFromModal(){
+  const name=window._playerModalCurrentName;
+  if(!name)return;
+  try{
+    openEP(name);
+    cm('playerModal');
+  }catch(e){
+    console.error('openEP 오류:',e);
+    alert('수정창 열기 실패: '+e.message);
+  }
+}
 function savePlayer(){
   const p=players.find(x=>x.name===editName);
   const newName=document.getElementById('ed-n').value.trim();
