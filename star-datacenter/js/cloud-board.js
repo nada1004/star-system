@@ -1066,7 +1066,12 @@ async function downloadBoardAll(){
           x: 0, y: 0, scrollX: 0, scrollY: 0
         });
         if (canvas && canvas.width > 0 && canvas.height > 0) {
-          cardCanvases.push(canvas);
+          // 캔버스를 즉시 dataURL로 추출 — 에러 상태 캔버스를 ctx.drawImage에
+          // 직접 넘기면 대상 ctx 전체가 에러 상태가 되므로 Image 경유로 우회
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            cardCanvases.push({ dataUrl, width: canvas.width, height: canvas.height });
+          } catch { /* 캔버스 에러/taint → 이 카드 건너뜀 */ }
         }
         document.body.removeChild(tmpDiv);
         tmpDivs.pop();
@@ -1077,12 +1082,24 @@ async function downloadBoardAll(){
 
     if (!cardCanvases.length) throw new Error('캡처된 카드가 없습니다.');
 
-    // 모든 카드 캔버스를 세로로 스티칭
+    // dataURL → Image 로드 (data: URL은 same-origin → ctx 에러 전파 없음)
+    const cardImgs = await Promise.all(cardCanvases.map(({ dataUrl, width, height }) =>
+      new Promise(res => {
+        const img = new Image();
+        img.onload = () => res({ img, width, height });
+        img.onerror = () => res(null);
+        img.src = dataUrl;
+      })
+    ));
+    const validImgs = cardImgs.filter(Boolean);
+    if (!validImgs.length) throw new Error('캡처된 카드가 없습니다.');
+
+    // 모든 카드 이미지를 세로로 스티칭
     const scaledGap = gap * SCALE;
     const scaledPadH = padH * SCALE;
-    const totalW = cardCanvases[0].width + scaledPadH * 2;
-    const totalH = cardCanvases.reduce((sum, c) => sum + c.height, 0)
-                   + scaledGap * (cardCanvases.length - 1)
+    const totalW = validImgs[0].width + scaledPadH * 2;
+    const totalH = validImgs.reduce((sum, c) => sum + c.height, 0)
+                   + scaledGap * (validImgs.length - 1)
                    + scaledPadH * 2;
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = totalW;
@@ -1091,9 +1108,9 @@ async function downloadBoardAll(){
     ctx.fillStyle = '#f0f2f5';
     ctx.fillRect(0, 0, totalW, totalH);
     let y = scaledPadH;
-    for (const c of cardCanvases) {
-      ctx.drawImage(c, scaledPadH, y);
-      y += c.height + scaledGap;
+    for (const { img, height } of validImgs) {
+      ctx.drawImage(img, scaledPadH, y);
+      y += height + scaledGap;
     }
     _dlCanvasBoard(finalCanvas, '현황판_전체저장.jpg');
   }catch(e){alert('다운로드 실패: '+e.message);}

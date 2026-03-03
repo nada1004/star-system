@@ -112,7 +112,7 @@ function openEPFromModal(){
   const name=window._playerModalCurrentName;
   if(!name)return;
   cm('playerModal');
-  setTimeout(()=>openEP(name),100);
+  openEP(name);
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
