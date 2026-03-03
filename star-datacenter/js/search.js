@@ -74,6 +74,22 @@ function getMapAlias() {
   return Object.assign({}, PASTE_MAP_ALIAS_DEFAULT, (typeof userMapAlias !== 'undefined' ? userMapAlias : {}));
 }
 
+// 맵 이름 변환: exact alias → prefix 매칭(2자 이상) → 원본 반환
+function resolveMapName(alias) {
+  if (!alias) return alias;
+  const dict = getMapAlias();
+  if (dict[alias]) return dict[alias];
+  if (alias.length < 2) return alias;
+  // 등록된 전체 맵 이름 중 prefix 일치
+  const allFull = [...new Set(Object.values(dict))];
+  const pre = allFull.find(m => m.startsWith(alias));
+  if (pre) return pre;
+  // 사용자가 직접 등록한 maps 배열에서도 prefix 매칭
+  const regPre = (typeof maps !== 'undefined' ? maps : []).find(m => m.startsWith(alias));
+  if (regPre) return regPre;
+  return alias;
+}
+
 /**
  * 형식 C 파싱: N세트 맵약자 선수A 누적A:누적B 선수B
  * 예) "1세트 실피 이재호 0:1 변현제"
@@ -506,8 +522,8 @@ function parsePasteLine(line) {
     const vsIdx = line.indexOf('🆚');
     let leftPart  = line.slice(0, vsIdx).trim();
     let rightPart = line.slice(vsIdx + '🆚'.length).trim();
-    leftPart  = leftPart.replace(/️/g, '').trim();
-    rightPart = rightPart.replace(/️/g, '').trim();
+    leftPart  = leftPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
+    rightPart = rightPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
 
     const WIN_MARKS  = ['✅', '⭕'];
     const LOSE_MARKS = ['❌', '⬜'];
@@ -532,21 +548,29 @@ function parsePasteLine(line) {
     let rightClean = rightPart;
 
     // 맵 추출: 🌐맵 / 🌍맵 이모지 방식 또는 [맵약자] 브라켓 방식 모두 지원
-    const mapEmoji = rightPart.match(/[🌐🌍]\s*(\S+)/);
+    // ※ [🌐🌍] 문자클래스는 서로게이트 쌍을 개별 코드유닛으로 처리해 오작동 → alternation 사용
+    const mapEmoji = rightPart.match(/(?:🌐|🌍)\s*(\S+)/);
     const mapBracket = rightPart.match(/\[([^\]]+)\]\s*$/);
 
     if (mapEmoji) {
       // 이모지 방식: 선수명🌐맵
       const alias = mapEmoji[1].trim();
-      map = getMapAlias()[alias] || alias;
-      // 맵 자동 등록 금지
+      map = resolveMapName(alias);
       rightClean = rightPart.slice(0, mapEmoji.index).trim();
     } else if (mapBracket) {
-      // 브라켓 방식: 선수명 [맵약자]
+      // 브라켓 방식 (우측 끝): 선수명 [맵약자]
       const alias = mapBracket[1].trim();
-      map = getMapAlias()[alias] || alias;
-      // 맵 자동 등록 금지
+      map = resolveMapName(alias);
       rightClean = rightPart.slice(0, mapBracket.index).trim();
+    }
+
+    // 좌측 앞 [맵약자] 방식: [폴리] 이지다⬜🆚✅경콩이
+    if (map === '-') {
+      const leftBracket = leftPart.match(/^\[([^\]]+)\]\s*/);
+      if (leftBracket) {
+        map = resolveMapName(leftBracket[1].trim());
+        leftPart = leftPart.slice(leftBracket[0].length).trim();
+      }
     }
 
     const splitNR = (s) => {
@@ -597,14 +621,11 @@ function parsePasteLine(line) {
       const lastWord = line.match(/(\S+)\s*$/);
       if (lastWord) {
         const lw = lastWord[1];
-        const alias = getMapAlias();
-        if (alias[lw]) {
+        const _aDict = getMapAlias();
+        const _resolved = resolveMapName(lw);
+        if (_aDict[lw] || (typeof maps !== 'undefined' && maps.includes(lw)) || (_resolved !== lw && lw.length >= 2)) {
           _rawMapStr = lw;
-          map = alias[lw];
-          line = line.slice(0, lastWord.index).trim();
-        } else if (typeof maps !== 'undefined' && maps.includes(lw)) {
-          _rawMapStr = lw;
-          map = lw;
+          map = _resolved;
           line = line.slice(0, lastWord.index).trim();
         }
       }
@@ -915,11 +936,10 @@ function renderPastePreview(results, errors) {
     const _savableForTeam = results.filter(r => r.wPlayer && r.lPlayer);
     const _univA2 = {}, _univB2 = {};
     _savableForTeam.forEach(r => {
-      const ln = r.leftName || r.winName || '';
-      const rn = r.rightName || r.loseName || '';
-      // A칸 선수 대학
-      const ap = (r.wPlayer?.name === ln) ? r.wPlayer : (r.lPlayer?.name === ln) ? r.lPlayer : r.wPlayer;
-      const bp = (r.lPlayer?.name === rn) ? r.lPlayer : (r.wPlayer?.name === rn) ? r.wPlayer : r.lPlayer;
+      // A칸=좌측선수, B칸=우측선수 → 좌측이 승자면 ap=wPlayer, 패자면 ap=lPlayer
+      const _leftIsWinT = (r.leftName||r.winName) === r.winName;
+      const ap = _leftIsWinT ? r.wPlayer : r.lPlayer;
+      const bp = _leftIsWinT ? r.lPlayer : r.wPlayer;
       const ua = ap?.univ||''; const ub = bp?.univ||'';
       if(ua && ua!=='무소속') _univA2[ua] = (_univA2[ua]||0)+1;
       if(ub && ub!=='무소속') _univB2[ub] = (_univB2[ub]||0)+1;
@@ -943,7 +963,6 @@ function renderPastePreview(results, errors) {
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:76px">세트</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:90px">맵</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamALabel}</th>
-      <th style="text-align:center;padding:6px 4px;font-size:11px;width:32px">↔</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamBLabel}</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:70px">상태</th>
       <th style="text-align:center;padding:6px 8px;font-size:11px;width:52px">관리</th>
@@ -973,7 +992,7 @@ function renderPastePreview(results, errors) {
               `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
                 style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
                 onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
-                ${c.name}</button>`
+                ${c.name}${c.univ?`<span style="font-size:9px;opacity:.7;margin-left:2px">(${c.univ})</span>`:''}</button>`
             ).join('') + `</div>`;
         } else {
           // 미등록: 유사 이름 제안 + +등록 버튼
@@ -1002,46 +1021,73 @@ function renderPastePreview(results, errors) {
         return cell;
       };
 
-      // A칸/B칸 배정: leftName(텍스트 왼쪽)=A칸, rightName(텍스트 오른쪽)=B칸
-      // leftName 없으면 winName=A칸(기존 방식)
-      const _leftRaw  = r.leftName  || r.winName  || '';
-      const _rightRaw = r.rightName || r.loseName || '';
-      const _leftIsWinner = (_leftRaw === r.winName);
-      // A칸 선수 객체
-      const aPlayer = (wOk && r.wPlayer.name === _leftRaw) ? r.wPlayer
-                    : (lOk && r.lPlayer?.name === _leftRaw) ? r.lPlayer
-                    : (wOk ? r.wPlayer : null);
-      // B칸 선수 객체
-      const bPlayer = (lOk && r.lPlayer.name === _rightRaw) ? r.lPlayer
-                    : (wOk && r.wPlayer?.name === _rightRaw) ? r.wPlayer
-                    : (lOk ? r.lPlayer : null);
-      const aIsWin = _leftIsWinner;
-      const bIsWin = !_leftIsWinner;
-      // A칸 파라미터
-      const aOk     = !!aPlayer;
-      const aName   = aPlayer ? aPlayer.name : _leftRaw;
-      const aAmbig  = !aOk && (_leftIsWinner ? wAmbig : lAmbig);
-      const aCands  = _leftIsWinner ? (r.wCandidates||[]) : (r.lCandidates||[]);
-      const aSim    = _leftIsWinner ? (r.wSimilar||[]) : (r.lSimilar||[]);
-      const aRole   = _leftIsWinner ? 'w' : 'l';
-      // B칸 파라미터
-      const bOk     = !!bPlayer;
-      const bName   = bPlayer ? bPlayer.name : _rightRaw;
-      const bAmbig  = !bOk && (!_leftIsWinner ? wAmbig : lAmbig);
-      const bCands  = !_leftIsWinner ? (r.wCandidates||[]) : (r.lCandidates||[]);
-      const bSim    = !_leftIsWinner ? (r.wSimilar||[]) : (r.lSimilar||[]);
-      const bRole   = _leftIsWinner ? 'l' : 'w';
-      const aWon    = aIsWin;
-      const aCell = buildCell(aIsWin, aName, aOk, aAmbig, aCands, aSim, aRole);
-      const bCell = buildCell(bIsWin, bName, bOk, bAmbig, bCands, bSim, bRole);
-      // 호환성
-      const wCell = aCell;
-      const lCell = bCell;
-      // A팀/B팀 결과 뱃지
-      const _winBadge = '<span style="background:#2563eb;color:#fff;font-size:9px;font-weight:900;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle">이겼다</span>';
-      const _loseBadge = '<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:900;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle">졌다</span>';
-      const aResultBadge = ok ? (aWon ? _winBadge : _loseBadge) : '';
-      const bResultBadge = ok ? (!aWon ? _winBadge : _loseBadge) : '';
+      // A칸/B칸 배정: 로스터 있으면 로스터 소속 기반, 없으면 leftName 텍스트 위치 기반
+      const _rosterA = window._pasteRosterA;
+      const _rosterB = window._pasteRosterB;
+      const _isRosterMode = !!(_rosterA && _rosterB);
+      const _inRA = (nm) => _rosterA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+      const _inRB = (nm) => _rosterB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+      let aPlayer, bPlayer, aIsWin;
+      let aOk, aName, aAmbig, aCands, aSim, aRole;
+      let bOk, bName, bAmbig, bCands, bSim, bRole;
+      if (_isRosterMode) {
+        // 승자(winName)가 rosterA 소속이면 A칸=승자, rosterB면 A칸=패자
+        const _wInA = _inRA(r.winName), _wInB = _inRB(r.winName);
+        aIsWin  = _wInA ? true : _wInB ? false : ((r.leftName||r.winName) === r.winName);
+        aPlayer = aIsWin ? r.wPlayer : r.lPlayer;
+        bPlayer = aIsWin ? r.lPlayer : r.wPlayer;
+        aOk     = !!aPlayer;
+        bOk     = !!bPlayer;
+        aName   = aPlayer ? aPlayer.name : (aIsWin ? r.winName : r.loseName);
+        bName   = bPlayer ? bPlayer.name : (aIsWin ? r.loseName : r.winName);
+        aAmbig  = !aOk && (aIsWin ? wAmbig : lAmbig);
+        bAmbig  = !bOk && (aIsWin ? lAmbig : wAmbig);
+        aCands  = aIsWin ? (r.wCandidates||[]) : (r.lCandidates||[]);
+        bCands  = aIsWin ? (r.lCandidates||[]) : (r.wCandidates||[]);
+        aSim    = aIsWin ? (r.wSimilar||[]) : (r.lSimilar||[]);
+        bSim    = aIsWin ? (r.lSimilar||[]) : (r.wSimilar||[]);
+        aRole   = aIsWin ? 'w' : 'l';
+        bRole   = aIsWin ? 'l' : 'w';
+      } else {
+        // 기존 방식: leftName(텍스트 왼쪽)=A칸, rightName(텍스트 오른쪽)=B칸
+        // wPlayer=항상승자, lPlayer=항상패자 → _leftIsWin에 따라 직접 배정
+        const _leftRaw  = r.leftName  || r.winName  || '';
+        const _rightRaw = r.rightName || r.loseName || '';
+        const _leftIsWin = (_leftRaw === r.winName);
+        // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우)
+        let _univBased = false;
+        if (r.wPlayer?.univ && r.lPlayer?.univ &&
+            teamAPreview && teamAPreview !== 'A팀' &&
+            teamBPreview && teamBPreview !== 'B팀') {
+          const _wInA = r.wPlayer.univ === teamAPreview;
+          const _lInA = r.lPlayer.univ === teamAPreview;
+          if (_wInA || _lInA) { aIsWin = _wInA; _univBased = true; }
+        }
+        if (!_univBased) aIsWin = _leftIsWin;
+        aPlayer = aIsWin ? (wOk ? r.wPlayer : null) : (lOk ? r.lPlayer : null);
+        bPlayer = aIsWin ? (lOk ? r.lPlayer : null) : (wOk ? r.wPlayer : null);
+        aOk     = aIsWin ? wOk : lOk;
+        bOk     = aIsWin ? lOk : wOk;
+        aName   = aPlayer ? aPlayer.name : (aIsWin ? r.winName : r.loseName);
+        bName   = bPlayer ? bPlayer.name : (aIsWin ? r.loseName : r.winName);
+        aAmbig  = !aOk && (aIsWin ? wAmbig : lAmbig);
+        bAmbig  = !bOk && (!aIsWin ? wAmbig : lAmbig);
+        aCands  = aIsWin ? (r.wCandidates||[]) : (r.lCandidates||[]);
+        bCands  = !aIsWin ? (r.wCandidates||[]) : (r.lCandidates||[]);
+        aSim    = aIsWin ? (r.wSimilar||[]) : (r.lSimilar||[]);
+        bSim    = !aIsWin ? (r.wSimilar||[]) : (r.lSimilar||[]);
+        aRole   = aIsWin ? 'w' : 'l';
+        bRole   = aIsWin ? 'l' : 'w';
+      }
+      const bIsWin = !aIsWin;
+      const aWon   = aIsWin;
+      const aCell  = buildCell(aIsWin, aName, aOk, aAmbig, aCands, aSim, aRole);
+      const bCell  = buildCell(bIsWin, bName, bOk, bAmbig, bCands, bSim, bRole);
+      // A팀/B팀 결과 뱃지 (클릭으로 승패 반전, 선수 위치는 고정)
+      const _winBadge  = (idx) => `<button class="paste-flip-btn" data-idx="${idx}" style="background:#2563eb;color:#fff;font-size:9px;font-weight:900;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;border:none;cursor:pointer">이겼다</button>`;
+      const _loseBadge = (idx) => `<button class="paste-flip-btn" data-idx="${idx}" style="background:#dc2626;color:#fff;font-size:9px;font-weight:900;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;border:none;cursor:pointer">졌다</button>`;
+      const aResultBadge = ok ? (aWon ? _winBadge(i) : _loseBadge(i)) : '';
+      const bResultBadge = ok ? (!aWon ? _winBadge(i) : _loseBadge(i)) : '';
       const wSim = !wOk && !wAmbig && (r.wSimilar||[]).length > 0;
       const lSim = !lOk && !lAmbig && (r.lSimilar||[]).length > 0;
       const statusBadge = ok
@@ -1067,10 +1113,6 @@ function renderPastePreview(results, errors) {
         style="font-size:11px;border:1px solid ${mapVal?'#7dd3fc':'var(--border2)'};border-radius:5px;padding:2px 4px;background:${mapVal?'#e0f2fe':'var(--white)'};color:${mapVal?'#0369a1':'var(--gray-l)'};cursor:pointer;max-width:88px"
         onchange="pasteChangeMap(${i},this.value)">${mapOpts}</select>`;
 
-      // ── 승패반전 버튼 ──
-      const flipBtn = `<button class="paste-flip-btn" data-idx="${i}" title="승패 반전"
-        style="padding:2px 6px;border-radius:4px;border:1px solid var(--border2);background:var(--surface);font-size:12px;cursor:pointer;transition:.12s;line-height:1.4"
-        onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='var(--surface)'">🔄</button>`;
 
       // ── 행 삭제 버튼 ──
       const delBtn = `<button class="paste-del-btn" data-idx="${i}" title="이 행 삭제"
@@ -1082,7 +1124,6 @@ function renderPastePreview(results, errors) {
         <td style="padding:4px 6px">${setCell}</td>
         <td style="padding:4px 6px">${mapCell}</td>
         <td style="padding:4px 8px">${aCell}${aResultBadge}</td>
-        <td style="padding:4px 2px;text-align:center">${flipBtn}</td>
         <td style="padding:4px 8px">${bCell}${bResultBadge}</td>
         <td style="padding:4px 6px">${statusBadge}</td>
         <td style="padding:4px 6px;text-align:center">${delBtn}</td>
@@ -1091,12 +1132,26 @@ function renderPastePreview(results, errors) {
     html += `</tbody></table></div>`;
 
     // ── 세트 결과 요약 미리보기 ──
-    // 세트별 집계 - wPlayer는 항상 A팀
+    // 로스터 기반이면 소속으로, 없으면 leftName 기준으로 A/B 판단
+    const _sprRA = window._pasteRosterA, _sprRB = window._pasteRosterB;
+    const _sprInA = (nm) => _sprRA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+    const _sprInB = (nm) => _sprRB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
     const setPreviewMap = {};
     savable.forEach(r => {
       const sn = r.setNum || 1;
       if(!setPreviewMap[sn]) setPreviewMap[sn] = {A:0, B:0};
-      setPreviewMap[sn].A++; // wPlayer는 항상 승자=A칸
+      let aWins;
+      if (_sprRA && _sprRB) {
+        aWins = !!_sprInA(r.winName);
+        if (!aWins && !_sprInB(r.winName)) aWins = ((r.leftName||r.winName) === r.winName);
+      } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
+                 teamAPreview && teamAPreview !== 'A팀' &&
+                 teamBPreview && teamBPreview !== 'B팀') {
+        aWins = r.wPlayer.univ === teamAPreview;
+      } else {
+        aWins = ((r.leftName||r.winName) === r.winName);
+      }
+      setPreviewMap[sn][aWins ? 'A' : 'B']++;
     });
     const multiSetPreview = Object.keys(setPreviewMap).length > 1;
     let setScoreA = 0, setScoreB = 0;
@@ -1118,9 +1173,22 @@ function renderPastePreview(results, errors) {
     if(savable.length > 0) {
       const _matchModePreview = window._pasteMatchMode || 'game';
       const _useSetScore = _matchModePreview === 'set' || multiSetPreview;
-      // wPlayer는 항상 A팀 승자
-      const teamAWins = savable.length;
-      const teamBWins = 0;
+      // A/B팀 게임 승리 수
+      let teamAWins = 0, teamBWins = 0;
+      savable.forEach(r => {
+        let aW;
+        if (_sprRA && _sprRB) {
+          aW = !!_sprInA(r.winName);
+          if (!aW && !_sprInB(r.winName)) aW = ((r.leftName||r.winName) === r.winName);
+        } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
+                   teamAPreview && teamAPreview !== 'A팀' &&
+                   teamBPreview && teamBPreview !== 'B팀') {
+          aW = r.wPlayer.univ === teamAPreview;
+        } else {
+          aW = ((r.leftName||r.winName) === r.winName);
+        }
+        aW ? teamAWins++ : teamBWins++;
+      });
       const totalA = _useSetScore ? setScoreA : teamAWins;
       const totalB = _useSetScore ? setScoreB : teamBWins;
       const _dA='A팀';
@@ -1421,17 +1489,37 @@ function pasteApply() {
 
   const matchId = genId();
 
-  // ── A팀/B팀 결정: leftName(텍스트 왼쪽)=A팀, rightName(텍스트 오른쪽)=B팀 ──
-  // leftName/rightName이 없으면 wPlayer(승자)=A팀, lPlayer(패자)=B팀 fallback
+  // ── A팀/B팀 결정: 로스터 있으면 소속 기반, 없으면 leftName 위치 기반 ──
+  const _applyRA = window._pasteRosterA, _applyRB = window._pasteRosterB;
+  const _applyInRA = (nm) => _applyRA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+  const _applyInRB = (nm) => _applyRB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
   const resolveAB = (r) => {
-    const ln = r.leftName || null;
-    const rn = r.rightName || null;
-    if (ln && rn) {
-      const ap = (r.wPlayer?.name === ln) ? r.wPlayer : (r.lPlayer?.name === ln) ? r.lPlayer : r.wPlayer;
-      const bp = (r.lPlayer?.name === rn) ? r.lPlayer : (r.wPlayer?.name === rn) ? r.wPlayer : r.lPlayer;
-      return { playerA: ap, playerB: bp, winner: (ln === r.winName) ? 'A' : 'B' };
+    if (_applyRA && _applyRB) {
+      const wInA = _applyInRA(r.winName), wInB = _applyInRB(r.winName);
+      const winnerIsA = wInA ? true : wInB ? false : ((r.leftName||r.winName) === r.winName);
+      return winnerIsA
+        ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
+        : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
     }
-    return { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' };
+    // 선수 DB 소속 기반 배정 시도 (미리보기에서 인식된 팀명 사용)
+    const _paTA = window._previewTeamA, _paTB = window._previewTeamB;
+    if (r.wPlayer?.univ && r.lPlayer?.univ &&
+        _paTA && _paTA !== 'A팀' && _paTB && _paTB !== 'B팀') {
+      const _wInA = r.wPlayer.univ === _paTA;
+      const _lInA = r.lPlayer.univ === _paTA;
+      if (_wInA || _lInA) {
+        return _wInA
+          ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
+          : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
+      }
+    }
+    // leftName 기준: 좌측이 승자면 playerA=wPlayer, 패자면 playerA=lPlayer
+    const leftIsWin = (r.leftName||r.winName) === r.winName;
+    return {
+      playerA: leftIsWin ? r.wPlayer : r.lPlayer,
+      playerB: leftIsWin ? r.lPlayer : r.wPlayer,
+      winner:  leftIsWin ? 'A' : 'B'
+    };
   };
 
   // A팀/B팀 소속 대학 결정 (빈도 기반, 겹치지 않도록)

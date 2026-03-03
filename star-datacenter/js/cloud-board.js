@@ -2,7 +2,7 @@
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
 
 function gsSetStatus(msg, color='var(--gray-l)'){
@@ -18,44 +18,44 @@ window.cloudLoad = async function(){
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
     let d=null;
     const baseUrl=GITHUB_JSON_URL;
-    // 다중 URL 시도 (raw → jsdelivr → CORS proxy 순서)
-    // GitHub API - base64 인코딩으로 반환 (CORS 완전 허용)
-    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/data.json';
+    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
     const urls=[
-      baseUrl+'?nocache='+Date.now(),                    // 1. raw 직접 (가장 빠름)
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json', // 2. jsdelivr CDN
-      ghApiUrl,                                           // 3. GitHub API
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl), // 4. CORS proxy
+      baseUrl+'?nocache='+Date.now(),
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
+      ghApiUrl,
+      'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
     ];
-    let lastErr='';
-    for(const url of urls){
+
+    // 각 URL을 파싱까지 완료한 데이터 객체로 변환하는 함수
+    const tryUrl = async (url) => {
+      const ctrl=new AbortController();
+      const timer=setTimeout(()=>ctrl.abort(),12000);
       try{
-        const res=await Promise.race([
-          fetch(url,{cache:'no-store',mode:'cors'}),
-          new Promise((_,r)=>setTimeout(()=>r(new Error('타임아웃(10s)')),10000))
-        ]);
-        if(res&&res.ok){
-          const text=await res.text();
-          try{
-            const raw=JSON.parse(text);
-            // GitHub API 응답 처리 (base64 content 필드가 있으면 디코딩)
-            if(raw&&raw.content&&raw.encoding==='base64'){
-              const b64=raw.content.replace(/\s/g,'');
-              const bin=atob(b64);
-              const bytes=new Uint8Array(bin.length);
-              for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-              const decoded=new TextDecoder('utf-8').decode(bytes);
-              d=JSON.parse(decoded);
-            } else {
-              d=raw;
-            }
-          }catch(e){ lastErr='JSON 형식 오류: '+e.message; continue; }
-          break;
+        const res=await fetch(url,{cache:'no-store',mode:'cors',signal:ctrl.signal});
+        clearTimeout(timer);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const text=(await res.text()).replace(/^\uFEFF/,'').trim();
+        if(text.startsWith('<')) throw new Error('HTML 응답');
+        const raw=JSON.parse(text);
+        if(raw&&raw.content&&raw.encoding==='base64'){
+          const bin=atob(raw.content.replace(/\s/g,''));
+          const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+          return JSON.parse(new TextDecoder('utf-8').decode(bytes));
         }
-        lastErr='HTTP '+(res?res.status:'오류');
-      }catch(e){ lastErr=e.message||String(e); }
+        return raw;
+      }catch(e){ clearTimeout(timer); throw e; }
+    };
+
+    // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용
+    const results=await Promise.allSettled(urls.map(tryUrl));
+    const ok=results.find(r=>r.status==='fulfilled');
+    if(ok){ d=ok.value; }
+    else{
+      const errs=results.map((r,i)=>`[${i+1}] ${r.reason?.message||r.reason}`).join('\n');
+      throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
     }
-    if(!d) throw new Error('데이터를 불러올 수 없습니다.\n원인: '+lastErr+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
     // 필드명 별칭 지원 (파싱 유연성)
@@ -137,7 +137,7 @@ function toggleBoardUniv(name){
 function _updateBoardSaveLabel(){
   const lbl = document.getElementById('btn-img-save-label');
   const brdLbl = document.getElementById('brd-save-btn-label');
-  const text = (boardSelUniv && boardSelUniv!=='전체') ? boardSelUniv+' 저장' : '전체 저장';
+  const text = (boardSelUniv && boardSelUniv!=='전체') ? boardSelUniv+' 이미지저장' : '이미지저장';
   if(lbl) lbl.textContent = text;
   if(brdLbl) brdLbl.textContent = text;
 }
@@ -234,7 +234,7 @@ function rBoard(C,T){
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <button class="brd-tbtn brd-tbtn-img" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
-        📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 저장':'전체 저장'}</span>
+        📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
     </div>
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
@@ -899,6 +899,8 @@ async function _imgToDataUrls(container) {
     if (!src || src.startsWith('data:') || src.startsWith('blob:')) { resolve(); return; }
     const loader = new Image();
     loader.crossOrigin = 'anonymous';
+    // 실패 시 숨기고 src 제거 — html2canvas가 외부 URL을 읽어 캔버스를 taint하지 않도록
+    const _hide = () => { img.style.display = 'none'; img.removeAttribute('src'); };
     loader.onload = () => {
       try {
         const cv = document.createElement('canvas');
@@ -906,12 +908,26 @@ async function _imgToDataUrls(container) {
         cv.height = loader.naturalHeight || 1;
         cv.getContext('2d').drawImage(loader, 0, 0);
         img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
-      } catch {
-        img.style.display = 'none'; // CORS 실패: 이미지 숨김
-      }
+      } catch { _hide(); }
       resolve();
     };
-    loader.onerror = () => { img.style.display = 'none'; resolve(); };
+    loader.onerror = () => {
+      // CORS 프록시로 재시도 (Discord CDN 등 CORS 미지원 이미지 대응)
+      const proxy = 'https://images.weserv.nl/?url=' + encodeURIComponent(src) + '&n=-1';
+      const fb = new Image();
+      fb.crossOrigin = 'anonymous';
+      fb.onload = () => {
+        try {
+          const cv2 = document.createElement('canvas');
+          cv2.width = fb.naturalWidth || 1; cv2.height = fb.naturalHeight || 1;
+          cv2.getContext('2d').drawImage(fb, 0, 0);
+          img.src = cv2.toDataURL('image/png');
+        } catch { _hide(); }
+        resolve();
+      };
+      fb.onerror = () => { _hide(); resolve(); };
+      fb.src = proxy;
+    };
     // 캐시 우회: 쿼리스트링 추가로 CORS 헤더 포함 재요청 강제
     loader.src = src + (src.includes('?') ? '&_x=' : '?_x=') + Date.now();
   })));
@@ -951,24 +967,35 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
   // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
   await _imgToDataUrls(tmpDiv);
 
-  const canvas = await html2canvas(tmpDiv, {
-    scale: 2, useCORS: false, allowTaint: false,
-    backgroundColor: '#f0f2f5', logging: false,
-    imageTimeout: 20000,
-    width: w, height: h,
-    windowWidth: w + 100, windowHeight: h + 100,
-    x: 0, y: 0, scrollX: 0, scrollY: 0
-  });
+  // 다크모드 CSS(body.dark .brd-card filter 등)가 export에 적용되지 않도록 일시 해제
+  const wasDark = document.body.classList.contains('dark');
+  if (wasDark) document.body.classList.remove('dark');
 
-  if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-  _dlCanvasBoard(canvas, filename);
+  try {
+    // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
+    const MAX_DIM = 16000;
+    const safeScale = Math.max(1, Math.min(2, Math.floor(MAX_DIM / Math.max(w, h))));
+    const canvas = await html2canvas(tmpDiv, {
+      scale: safeScale, useCORS: false, allowTaint: false,
+      backgroundColor: '#f0f2f5', logging: false,
+      imageTimeout: 20000,
+      width: w, height: h,
+      windowWidth: w + 100, windowHeight: h + 100,
+      x: 0, y: 0, scrollX: 0, scrollY: 0
+    });
+    if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
+    _dlCanvasBoard(canvas, filename);
+  } finally {
+    // 다크모드 클래스 복원
+    if (wasDark) document.body.classList.add('dark');
+  }
 }
 
-// 전체저장: 세로 나열
+// 전체저장: 각 카드 개별 캡처 후 스티칭 (html2canvas 렌더링 오류 방지)
 async function downloadBoardAll(){
   const btn=event?.currentTarget;
   if(btn){btn.disabled=true;btn._ot=btn.textContent;btn.textContent='⏳...';}
-  const tmpDiv=document.createElement('div');
+  const tmpDivs=[];
   try{
     // DOM에 표시된 현재 순서 및 선수 순서를 먼저 동기화
     const boardWrap=document.getElementById('board-wrap');
@@ -990,29 +1017,88 @@ async function downloadBoardAll(){
     } else {
       univs=_getBoardUnivs();
     }
-    const cardW=900, gap=16, padH=16;
-    const totalW=cardW+padH*2;
-    tmpDiv.style.cssText=`position:fixed;left:-9999px;top:0;width:${totalW}px;background:#f0f2f5;padding:${padH}px;display:flex;flex-direction:column;gap:${gap}px;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;min-height:10px;`;
-    univs.forEach(u=>{
-      const html=buildUnivBoardCard(u, true);
-      if(!html)return;
-      const wrapper=document.createElement('div');
-      wrapper.innerHTML=html;
-      const card=wrapper.firstElementChild;
-      if(!card)return;
-      card.style.width=cardW+'px';
-      card.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
-      tmpDiv.appendChild(card);
-    });
-    document.body.appendChild(tmpDiv);
-    injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,2000));
-    void tmpDiv.getBoundingClientRect();
-    const totalH = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
-    await _captureAndSave(tmpDiv, totalW, totalH, '현황판_전체저장.jpg');
+    // 숨김 대학은 이미지에 포함하지 않음 (관리자 로그인 여부 무관)
+    univs = univs.filter(u => !u.hidden);
+    if(!univs.length){alert('표시 중인 대학이 없습니다.');return;}
+
+    const SCALE = 2;
+    const cardW = 900;
+    const gap = 16;
+    const padH = 16;
+
+    // 다크모드 일시 해제 (전체 캡처 과정 동안)
+    const wasDark = document.body.classList.contains('dark');
+    if (wasDark) document.body.classList.remove('dark');
+
+    const cardCanvases = [];
+    try {
+      // 각 대학 카드를 개별 tmpDiv에 렌더링 → 캡처
+      for (const u of univs) {
+        const html = buildUnivBoardCard(u, true);
+        if (!html) continue;
+        const tmpDiv = document.createElement('div');
+        tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:${cardW}px;background:#f0f2f5;padding:12px;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;`;
+        tmpDiv.innerHTML = html;
+        tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
+        document.body.appendChild(tmpDiv);
+        tmpDivs.push(tmpDiv);
+        injectUnivIcons(tmpDiv);
+        await new Promise(r=>setTimeout(r,300));
+        void tmpDiv.getBoundingClientRect();
+
+        await _imgToDataUrls(tmpDiv);
+        // 혹시 변환 안 된 외부 src가 남아있으면 제거 (taint 완전 차단)
+        tmpDiv.querySelectorAll('img').forEach(im => {
+          const s = im.getAttribute('src') || '';
+          if (s && !s.startsWith('data:') && !s.startsWith('blob:')) {
+            im.style.display = 'none'; im.removeAttribute('src');
+          }
+        });
+
+        const w = tmpDiv.offsetWidth || cardW;
+        const h = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
+        const canvas = await html2canvas(tmpDiv, {
+          scale: SCALE, useCORS: false, allowTaint: false,
+          backgroundColor: '#f0f2f5', logging: false,
+          imageTimeout: 20000,
+          width: w, height: h,
+          windowWidth: w + 100, windowHeight: h + 100,
+          x: 0, y: 0, scrollX: 0, scrollY: 0
+        });
+        if (canvas && canvas.width > 0 && canvas.height > 0) {
+          cardCanvases.push(canvas);
+        }
+        document.body.removeChild(tmpDiv);
+        tmpDivs.pop();
+      }
+    } finally {
+      if (wasDark) document.body.classList.add('dark');
+    }
+
+    if (!cardCanvases.length) throw new Error('캡처된 카드가 없습니다.');
+
+    // 모든 카드 캔버스를 세로로 스티칭
+    const scaledGap = gap * SCALE;
+    const scaledPadH = padH * SCALE;
+    const totalW = cardCanvases[0].width + scaledPadH * 2;
+    const totalH = cardCanvases.reduce((sum, c) => sum + c.height, 0)
+                   + scaledGap * (cardCanvases.length - 1)
+                   + scaledPadH * 2;
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = totalW;
+    finalCanvas.height = totalH;
+    const ctx = finalCanvas.getContext('2d');
+    ctx.fillStyle = '#f0f2f5';
+    ctx.fillRect(0, 0, totalW, totalH);
+    let y = scaledPadH;
+    for (const c of cardCanvases) {
+      ctx.drawImage(c, scaledPadH, y);
+      y += c.height + scaledGap;
+    }
+    _dlCanvasBoard(finalCanvas, '현황판_전체저장.jpg');
   }catch(e){alert('다운로드 실패: '+e.message);}
   finally{
-    if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
+    tmpDivs.forEach(d=>{if(d.parentNode)document.body.removeChild(d);});
     if(btn){btn.disabled=false;btn.textContent=btn._ot||btn.textContent;}
   }
 }
