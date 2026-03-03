@@ -910,13 +910,17 @@ async function _imgToDataUrls(container, timeoutMs=4000) {
     loader.crossOrigin = 'anonymous';
     loader.onload = () => {
       clearTimeout(_timer);
-      try {
-        const cv = document.createElement('canvas');
-        cv.width  = loader.naturalWidth  || 1;
-        cv.height = loader.naturalHeight || 1;
-        cv.getContext('2d').drawImage(loader, 0, 0);
-        img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
-      } catch { _hide(); }
+      // naturalWidth/Height이 0이면 drawImage 자체가 에러 상태 유발 → 즉시 숨김
+      if (loader.naturalWidth > 0 && loader.naturalHeight > 0) {
+        try {
+          const cv = document.createElement('canvas');
+          cv.width  = loader.naturalWidth;
+          cv.height = loader.naturalHeight;
+          const ctx2d = cv.getContext('2d');
+          ctx2d.drawImage(loader, 0, 0);
+          img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
+        } catch { _hide(); }
+      } else { _hide(); }
       _resolve();
     };
     loader.onerror = () => {
@@ -926,12 +930,15 @@ async function _imgToDataUrls(container, timeoutMs=4000) {
       fb.crossOrigin = 'anonymous';
       fb.onload = () => {
         clearTimeout(_timer);
-        try {
-          const cv2 = document.createElement('canvas');
-          cv2.width = fb.naturalWidth || 1; cv2.height = fb.naturalHeight || 1;
-          cv2.getContext('2d').drawImage(fb, 0, 0);
-          img.src = cv2.toDataURL('image/png');
-        } catch { _hide(); }
+        if (fb.naturalWidth > 0 && fb.naturalHeight > 0) {
+          try {
+            const cv2 = document.createElement('canvas');
+            cv2.width = fb.naturalWidth; cv2.height = fb.naturalHeight;
+            const ctx2d2 = cv2.getContext('2d');
+            ctx2d2.drawImage(fb, 0, 0);
+            img.src = cv2.toDataURL('image/png');
+          } catch { _hide(); }
+        } else { _hide(); }
         _resolve();
       };
       fb.onerror = () => { clearTimeout(_timer); _hide(); _resolve(); };
@@ -1059,10 +1066,10 @@ async function downloadBoardAll(){
         injectUnivIcons(tmpDiv);
 
         // 렌더링 대기 (폰트·레이아웃 확정)
-        await new Promise(r=>setTimeout(r,150));
+        await new Promise(r=>setTimeout(r,50));
         const rect = tmpDiv.getBoundingClientRect();
 
-        await _imgToDataUrls(tmpDiv, 4000); // 이미지당 최대 4초
+        await _imgToDataUrls(tmpDiv, 2000); // 이미지당 최대 2초
         // 변환 안 된 외부 img 완전 제거 (src 숨김만으로는 html2canvas가 여전히 처리 시도)
         tmpDiv.querySelectorAll('img').forEach(im => {
           const s = im.getAttribute('src') || '';
@@ -1127,10 +1134,12 @@ async function downloadBoardAll(){
     ctx.fillRect(0, 0, totalW, totalH);
     let y = scaledPadH;
     for (const { img, height } of validImgs) {
-      ctx.drawImage(img, scaledPadH, y);
+      if (img.complete && img.naturalWidth > 0) {
+        try { ctx.drawImage(img, scaledPadH, y); } catch(e) { console.warn('[board stitch] drawImage 실패:', e?.message); }
+      }
       y += height + scaledGap;
     }
-    _dlCanvasBoard(finalCanvas, '현황판_전체저장.jpg');
+    _dlCanvasBoard(finalCanvas, '현황판_전체저장.png');
   }catch(e){alert('다운로드 실패: '+e.message);}
   finally{
     tmpDivs.forEach(d=>{if(d.parentNode)document.body.removeChild(d);});
@@ -1155,19 +1164,58 @@ async function downloadBoardSel(){
         if(domOrder.length>0) boardPlayerOrder[boardSelUniv]=domOrder;
       }
     }
-    tmpDiv.style.cssText='position:fixed;left:-9999px;top:0;width:900px;background:#f0f2f5;padding:12px;font-family:\'Noto Sans KR\',sans-serif;box-sizing:border-box;';
+    tmpDiv.style.cssText='position:absolute;left:-9999px;top:0;width:900px;background:#f0f2f5;padding:12px;font-family:\'Noto Sans KR\',sans-serif;box-sizing:border-box;';
     tmpDiv.innerHTML=buildUnivBoardCard(u, true);
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,1200));
+    await new Promise(r=>setTimeout(r,400));
     void tmpDiv.getBoundingClientRect();
     const selW = tmpDiv.offsetWidth || 900;
     const selH = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
-    await _captureAndSave(tmpDiv, selW, selH, '현황판_'+boardSelUniv+'.jpg');
+    await _captureAndSave(tmpDiv, selW, selH, '현황판_'+boardSelUniv+'.png');
   }catch(e){alert('다운로드 실패: '+e.message);}
   finally{
     if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
     if(btn){btn.disabled=false;btn.textContent=btn._ot||btn.textContent;}
+  }
+}
+
+/* ══════════════════════════════════════
+   GitHub data.json 자동 반영
+══════════════════════════════════════ */
+const _GH_API = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+
+async function cloudSave() {
+  const token = localStorage.getItem('su_gh_token');
+  if (!token || !isLoggedIn) return;
+
+  // 1. 현재 파일 SHA 가져오기
+  const getResp = await fetch(_GH_API, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!getResp.ok) throw new Error(`GitHub SHA 조회 실패 (${getResp.status})`);
+  const fileInfo = await getResp.json();
+  const sha = fileInfo.sha;
+
+  // 2. 현재 상태 직렬화 → UTF-8 safe base64
+  const dataObj = { players, univCfg, maps, tourD, miniM, univM, comps, ckM,
+                    compNames, curComp, proM, tiers: TIERS, members, tourneys };
+  const jsonStr = JSON.stringify(dataObj, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+
+  // 3. PUT으로 업데이트
+  const putResp = await fetch(_GH_API, {
+    method: 'PUT',
+    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json',
+               Accept: 'application/vnd.github.v3+json' },
+    body: JSON.stringify({
+      message: `data: admin update ${new Date().toISOString().slice(0,16).replace('T',' ')}`,
+      content: encoded, sha, branch: 'main'
+    })
+  });
+  if (!putResp.ok) {
+    const errBody = await putResp.json().catch(()=>({message:''}));
+    throw new Error(`GitHub 저장 실패 (${putResp.status}): ${errBody.message||''}`);
   }
 }

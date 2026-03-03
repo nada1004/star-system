@@ -221,8 +221,8 @@ async function doJpg(){
     ctx.fillStyle='#f1f5f9';ctx.fillRect(0,0,out.width,out.height);
     ctx.drawImage(canvas,pad,pad);
     const tabNames={total:'스트리머',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
-    const fname=`스타대학_${tabNames[curTab]||curTab}_${new Date().toISOString().slice(0,10)}.jpg`;
-    await _saveCanvasImage(out,fname,'jpg');
+    const fname=`스타대학_${tabNames[curTab]||curTab}_${new Date().toISOString().slice(0,10)}.png`;
+    await _saveCanvasImage(out,fname,'png');
   }catch(e){
     restoreAll();
     alert('이미지 저장 오류: '+e.message);
