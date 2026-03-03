@@ -410,5 +410,55 @@
 
 
 <script>document.write('<sc'+'ript src="js/modal-drag.js'+_cbv+'"><\/sc'+'ript>')</script>
+
+
+<script>
+  // 입력 폼에서 데이터를 가져와서 저장하는 함수 예시
+async function saveData() {
+    const GITHUB_TOKEN = "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"; // 주의: 공개된 곳에 올리지 마세요!
+    const REPO_OWNER = "nada1004";
+    const REPO_NAME = "star-system";
+    const FILE_PATH = "star-datacenter/data.json";
+    
+    // 1. 현재 화면에 입력된 데이터 준비 (예시)
+    const newData = {
+        name: document.getElementById('nameInput').value,
+        date: new Date().toISOString()
+    };
+
+    try {
+        // 2. 파일의 현재 상태(SHA)를 먼저 조회해야 수정이 가능함
+        const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const response = await fetch(getUrl, {
+            headers: { "Authorization": `token ${GITHUB_TOKEN}` }
+        });
+        const fileInfo = await response.json();
+
+        // 3. GitHub API로 데이터 전송 (PUT 방식)
+        const updateResponse = await fetch(getUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${GITHUB_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: "Update data from web",
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2)))), // 한글 깨짐 방지 인코딩
+                sha: fileInfo.sha // 기존 파일의 고유 ID
+            })
+        });
+
+        if (updateResponse.ok) {
+            alert("성공적으로 저장되었습니다!");
+        } else {
+            alert("저장 실패!");
+        }
+    } catch (error) {
+        console.error("에러 발생:", error);
+    }
+}
+</script>
+
+  
 </body>
 </html>
