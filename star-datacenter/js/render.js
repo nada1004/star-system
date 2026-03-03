@@ -100,9 +100,12 @@ function openPlayerModal(name){
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
   injectUnivIcons(document.getElementById('playerModalBody'));
-  // 어드민 전용 수정 버튼
+  // 어드민 전용 수정 버튼 (이름을 data 속성에 직접 저장 → openEP 호출 시 신뢰성 향상)
   const editBtn=document.getElementById('playerModalEditBtn');
-  if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
+  if(editBtn){
+    editBtn.style.display=isLoggedIn?'inline-flex':'none';
+    editBtn.dataset.playerName=name;
+  }
   // 현재 모달에 표시 중인 선수명 저장
   window._playerModalCurrentName=name;
   om('playerModal');

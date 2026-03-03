@@ -867,15 +867,18 @@ function openEP(name){
     </div>`;
   om('emModal');
 }
-// 스트리머 상세 모달 → 수정창 열기 (openEP와 같은 파일에 정의해 ReferenceError 방지)
-function openEPFromModal(){
-  const name=window._playerModalCurrentName;
-  if(!name)return;
+// 스트리머 상세 모달 → 수정창 열기
+// emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
+// 그 위에 emModal을 열기만 함 → cm/om 순서 경쟁조건 완전 제거
+function openEPFromModal(nameArg){
+  const name=nameArg||window._playerModalCurrentName;
+  if(!name){alert('선수 이름을 확인할 수 없습니다.');return;}
+  const p=players.find(x=>x.name===name);
+  if(!p){alert('선수 정보를 찾을 수 없습니다: '+name);return;}
   try{
     openEP(name);
-    cm('playerModal');
   }catch(e){
-    console.error('openEP 오류:',e);
+    console.error('[openEP] 오류:',e);
     alert('수정창 열기 실패: '+e.message);
   }
 }
@@ -944,11 +947,9 @@ function savePlayer(){
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
   p.channelUrl=_channel||undefined;
   save();render();cm('emModal');
-  // playerModal 열려있으면 메모 즉시 갱신
-  const _pm=document.getElementById('playerModal');
-  if(_pm&&_pm.style.display!=='none'&&window._playerModalCurrentName===editName){
-    const _pmb=document.getElementById('playerModalBody');
-    if(_pmb) setTimeout(()=>{const _p2=players.find(x=>x.name===editName);if(_p2&&typeof buildPlayerModalHTML==='function')_pmb.innerHTML=buildPlayerModalHTML(_p2);},50);
+  // playerModal이 열려있으면 저장된 내용으로 갱신 후 다시 표시
+  if(typeof openPlayerModal==='function'){
+    setTimeout(()=>openPlayerModal(p.name),30);
   }
 }
 function setAllFemale(){
@@ -959,7 +960,7 @@ function setAllFemale(){
 }
 
 function delPlayer(){
-  if(confirm(`"${editName}" 선수를 삭제할까요?`)){const idx=players.findIndex(p=>p.name===editName);if(idx>=0)players.splice(idx,1);save();render();cm('emModal');}
+  if(confirm(`"${editName}" 선수를 삭제할까요?`)){const idx=players.findIndex(p=>p.name===editName);if(idx>=0)players.splice(idx,1);save();render();cm('emModal');cm('playerModal');}
 }
 
 function openRE(mode,idx){

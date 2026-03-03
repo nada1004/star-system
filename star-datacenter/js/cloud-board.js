@@ -141,6 +141,11 @@ function _updateBoardSaveLabel(){
   if(brdLbl) brdLbl.textContent = text;
 }
 
+// 하단 이미지저장 버튼: 현재 보이는 화면을 그대로 캡처 (현황판 전체/개별 저장은 현황판 탭 내 버튼 사용)
+function saveCurrentView(){
+  if(typeof doJpg==='function') doJpg();
+}
+
 
 // 대학 내 선수 정렬 (boardPlayerOrder 우선, 없으면 기본 정렬)
 function _getBoardPlayers(univName){
@@ -889,18 +894,22 @@ function initBoardPlayerDrag(body){
   });
 }
 
-// ── 외부 img를 data URL로 변환 (CORS 지원 이미지만, 실패 시 숨김) ──
-async function _imgToDataUrls(container) {
+// ── 외부 img를 data URL로 변환 (CORS 지원 이미지만, 실패/타임아웃 시 숨김) ──
+async function _imgToDataUrls(container, timeoutMs=4000) {
   const imgs = [...container.querySelectorAll('img')];
   await Promise.all(imgs.map(img => new Promise(resolve => {
     const src = img.getAttribute('src') || '';
     // data URL / blob URL은 이미 안전
     if (!src || src.startsWith('data:') || src.startsWith('blob:')) { resolve(); return; }
+    const _hide = () => { img.style.display = 'none'; img.removeAttribute('src'); };
+    // 전체 타임아웃: 직접+프록시 합산 timeoutMs 내에 완료 안되면 숨김 처리
+    let _resolved = false;
+    const _resolve = () => { if(!_resolved){ _resolved=true; resolve(); } };
+    const _timer = setTimeout(() => { _hide(); _resolve(); }, timeoutMs);
     const loader = new Image();
     loader.crossOrigin = 'anonymous';
-    // 실패 시 숨기고 src 제거 — html2canvas가 외부 URL을 읽어 캔버스를 taint하지 않도록
-    const _hide = () => { img.style.display = 'none'; img.removeAttribute('src'); };
     loader.onload = () => {
+      clearTimeout(_timer);
       try {
         const cv = document.createElement('canvas');
         cv.width  = loader.naturalWidth  || 1;
@@ -908,7 +917,7 @@ async function _imgToDataUrls(container) {
         cv.getContext('2d').drawImage(loader, 0, 0);
         img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
       } catch { _hide(); }
-      resolve();
+      _resolve();
     };
     loader.onerror = () => {
       // CORS 프록시로 재시도 (Discord CDN 등 CORS 미지원 이미지 대응)
@@ -916,15 +925,16 @@ async function _imgToDataUrls(container) {
       const fb = new Image();
       fb.crossOrigin = 'anonymous';
       fb.onload = () => {
+        clearTimeout(_timer);
         try {
           const cv2 = document.createElement('canvas');
           cv2.width = fb.naturalWidth || 1; cv2.height = fb.naturalHeight || 1;
           cv2.getContext('2d').drawImage(fb, 0, 0);
           img.src = cv2.toDataURL('image/png');
         } catch { _hide(); }
-        resolve();
+        _resolve();
       };
-      fb.onerror = () => { _hide(); resolve(); };
+      fb.onerror = () => { clearTimeout(_timer); _hide(); _resolve(); };
       fb.src = proxy;
     };
     // 캐시 우회: 쿼리스트링 추가로 CORS 헤더 포함 재요청 강제
@@ -1031,53 +1041,58 @@ async function downloadBoardAll(){
 
     const cardCanvases = [];
     try {
-      // 1단계: 모든 카드를 DOM에 한꺼번에 추가 (개별 대기 없이 일괄 렌더링)
-      const cardDivs = [];
+      // 카드 1장씩 순차 처리: 추가 → 렌더링 대기 → 캡처 → 즉시 제거
+      let doneCount = 0;
       for (const u of univs) {
-        const html = buildUnivBoardCard(u, true);
+        doneCount++;
+        if(btn) btn.textContent=`⏳ ${doneCount}/${univs.length}`;
+        let html;
+        try { html = buildUnivBoardCard(u, true); } catch { continue; }
         if (!html) continue;
         const tmpDiv = document.createElement('div');
-        tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:${cardW}px;background:#f0f2f5;padding:12px;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;`;
+        // position:absolute + left:-9999px : fixed와 달리 스크롤 영향 없고 offsetHeight 안정적
+        tmpDiv.style.cssText = `position:absolute;left:-9999px;top:0;width:${cardW}px;background:#f0f2f5;padding:12px;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;`;
         tmpDiv.innerHTML = html;
         tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
         document.body.appendChild(tmpDiv);
-        tmpDivs.push(tmpDiv);
+        tmpDivs.push(tmpDiv); // 에러 시 finally에서 정리용
         injectUnivIcons(tmpDiv);
-        cardDivs.push({ u, tmpDiv });
-      }
-      // 모든 카드가 한 번에 렌더링되도록 한 번만 대기
-      await new Promise(r=>setTimeout(r,600));
 
-      // 2단계: 각 카드 이미지 변환 → html2canvas 캡처 (순차)
-      for (const { tmpDiv } of cardDivs) {
-        void tmpDiv.getBoundingClientRect();
-        await _imgToDataUrls(tmpDiv);
-        // 변환 안 된 외부 src 제거 (taint 방지)
+        // 렌더링 대기 (폰트·레이아웃 확정)
+        await new Promise(r=>setTimeout(r,150));
+        const rect = tmpDiv.getBoundingClientRect();
+
+        await _imgToDataUrls(tmpDiv, 4000); // 이미지당 최대 4초
+        // 변환 안 된 외부 src 제거 (canvas taint 방지)
         tmpDiv.querySelectorAll('img').forEach(im => {
           const s = im.getAttribute('src') || '';
           if (s && !s.startsWith('data:') && !s.startsWith('blob:')) {
             im.style.display = 'none'; im.removeAttribute('src');
           }
         });
+
         const w = tmpDiv.offsetWidth || cardW;
-        const h = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
+        const h = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, rect.height, 200);
         let canvas = null;
         try {
           canvas = await html2canvas(tmpDiv, {
-            scale: SCALE, useCORS: false, allowTaint: true,
+            scale: SCALE, useCORS: false, allowTaint: false,
             backgroundColor: '#f0f2f5', logging: false,
-            imageTimeout: 20000,
+            imageTimeout: 10000,
             width: w, height: h,
-            windowWidth: w + 100, windowHeight: h + 100,
-            x: 0, y: 0, scrollX: 0, scrollY: 0
+            windowWidth: w + 200, windowHeight: h + 200,
           });
-        } catch { /* 이 카드 캡처 실패 → 건너뜀 */ }
+        } catch(e) { console.warn('[board export] html2canvas 실패:', u.name, e?.message); }
+
         if (canvas && canvas.width > 0 && canvas.height > 0) {
           try {
             const dataUrl = canvas.toDataURL('image/png');
             cardCanvases.push({ dataUrl, width: canvas.width, height: canvas.height });
-          } catch { /* taint → 건너뜀 */ }
+          } catch(e) { console.warn('[board export] toDataURL 실패:', u.name, e?.message); }
         }
+
+        // 캡처 완료 즉시 DOM에서 제거 (다음 카드와 겹치지 않도록)
+        if (tmpDiv.parentNode) document.body.removeChild(tmpDiv);
       }
     } finally {
       if (wasDark) document.body.classList.add('dark');

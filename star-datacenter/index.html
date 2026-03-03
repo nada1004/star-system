@@ -103,7 +103,7 @@
 <!-- 하단 액션 버튼 바 -->
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
 <div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
-  <button class="btn btn-b" id="btn-img-save" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">이미지저장</span></button>
+  <button class="btn btn-b" id="btn-img-save" onclick="saveCurrentView()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">이미지저장</span></button>
   <button id="btnCloudLoad" class="btn btn-g" onclick="cloudLoad()" style="display:flex;align-items:center;gap:5px;"><span>☁️</span> 데이터 불러오기</button>
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
   <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
@@ -152,7 +152,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
       <div class="mtitle" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
       <div style="display:flex;gap:6px;align-items:center">
-        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();openEPFromModal()">✏️ 수정</button>
+        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();openEPFromModal(this.dataset.playerName)">✏️ 수정</button>
         <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
         <button class="btn btn-w btn-sm" onclick="cm('playerModal')">✕ 닫기</button>
