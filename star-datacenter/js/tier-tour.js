@@ -741,60 +741,17 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
-  <div class="ssec"><h4>🔗 GitHub 자동 반영 설정</h4>
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">
-      데이터 저장 시 GitHub <code style="background:var(--surface);padding:1px 5px;border-radius:4px">data.json</code>에 자동으로 반영됩니다.<br>
-      Personal Access Token(Fine-grained) 발급: <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--blue)">github.com/settings/tokens</a><br>
-      <span style="color:#d97706;font-weight:600">권한: Repository contents → Read and write</span>
-    </p>
-    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">현재 저장된 토큰</div>
-      <div id="gh-token-status" style="font-size:12px;font-family:monospace;color:var(--gray-l)">—</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-      <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:280px;font-family:monospace" autocomplete="off">
-      <button class="btn btn-b" onclick="saveGhToken()">💾 토큰 저장</button>
-      <button class="btn btn-r btn-xs" onclick="clearGhToken()">🗑️ 삭제</button>
-    </div>
-    <div id="gh-token-msg" style="font-size:12px;min-height:18px"></div>
-  </div>`;
+  `;
   // 관리자 수 표시 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     if(el){const h=getAdminHashes();el.textContent=h.length;}
     if(listEl){listEl.textContent='※ 보안상 계정 목록은 표시되지 않습니다.';}
-    // GitHub 토큰 상태 표시
-    const ghStat=document.getElementById('gh-token-status');
-    if(ghStat){
-      const tok=localStorage.getItem('su_gh_token')||'';
-      ghStat.textContent=tok?`${tok.slice(0,6)}${'*'.repeat(Math.max(0,tok.length-9))}${tok.slice(-3)} (${tok.length}자)`:'설정되지 않음';
-      ghStat.style.color=tok?'var(--blue)':'var(--gray-l)';
-    }
   },50);
   C.innerHTML=h;
   // alias-list는 C.innerHTML 세팅 후 렌더링
   setTimeout(_refreshAliasList, 10);
-}
-function saveGhToken(){
-  const inp=document.getElementById('cfg-gh-token');
-  const msg=document.getElementById('gh-token-msg');
-  const val=(inp?.value||'').trim();
-  if(!val){if(msg)msg.textContent='토큰을 입력하세요.';return;}
-  if(!val.startsWith('ghp_')&&!val.startsWith('github_pat_')){if(msg){msg.textContent='⚠️ 유효하지 않은 토큰 형식입니다.';msg.style.color='#d97706';}return;}
-  localStorage.setItem('su_gh_token',val);
-  if(inp)inp.value='';
-  if(msg){msg.textContent='✅ 토큰이 저장되었습니다.';msg.style.color='#16a34a';}
-  const ghStat=document.getElementById('gh-token-status');
-  if(ghStat){ghStat.textContent=`${val.slice(0,6)}${'*'.repeat(Math.max(0,val.length-9))}${val.slice(-3)} (${val.length}자)`;ghStat.style.color='var(--blue)';}
-}
-function clearGhToken(){
-  if(!confirm('GitHub 토큰을 삭제할까요?'))return;
-  localStorage.removeItem('su_gh_token');
-  const msg=document.getElementById('gh-token-msg');
-  const ghStat=document.getElementById('gh-token-status');
-  if(msg){msg.textContent='토큰이 삭제되었습니다.';msg.style.color='var(--gray-l)';}
-  if(ghStat){ghStat.textContent='설정되지 않음';ghStat.style.color='var(--gray-l)';}
 }
 function reCfg(){
   const tabs=document.querySelectorAll('.stab');

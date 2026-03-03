@@ -205,19 +205,6 @@ function save(){
   localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
   localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
-  // GitHub 자동 반영 (관리자 + 토큰 설정된 경우)
-  if (typeof cloudSave === 'function' && isLoggedIn && localStorage.getItem('su_gh_token')) {
-    const statusEl = document.getElementById('cloudStatus');
-    if (statusEl) statusEl.textContent = '⏫ GitHub 저장 중...';
-    cloudSave()
-      .then(() => {
-        if (statusEl) { statusEl.textContent = '✅ GitHub 저장됨'; setTimeout(()=>{ if(statusEl)statusEl.textContent=''; }, 3000); }
-      })
-      .catch(e => {
-        if (statusEl) statusEl.textContent = '❌ GitHub 저장 실패';
-        console.error('[cloudSave]', e);
-      });
-  }
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;
