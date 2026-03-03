@@ -48,12 +48,11 @@ window.cloudLoad = async function(){
       }catch(e){ clearTimeout(timer); throw e; }
     };
 
-    // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용
-    const results=await Promise.allSettled(urls.map(tryUrl));
-    const ok=results.find(r=>r.status==='fulfilled');
-    if(ok){ d=ok.value; }
-    else{
-      const errs=results.map((r,i)=>`[${i+1}] ${r.reason?.message||r.reason}`).join('\n');
+    // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용 (Promise.any)
+    try{
+      d=await Promise.any(urls.map(tryUrl));
+    }catch(aggErr){
+      const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
       throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
     }
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
@@ -1057,21 +1056,27 @@ async function downloadBoardAll(){
 
         const w = tmpDiv.offsetWidth || cardW;
         const h = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
-        const canvas = await html2canvas(tmpDiv, {
-          scale: SCALE, useCORS: false, allowTaint: false,
-          backgroundColor: '#f0f2f5', logging: false,
-          imageTimeout: 20000,
-          width: w, height: h,
-          windowWidth: w + 100, windowHeight: h + 100,
-          x: 0, y: 0, scrollX: 0, scrollY: 0
-        });
+        // allowTaint:true — _imgToDataUrls로 img를 data URL로 변환했으므로
+        // 실제 taint는 발생하지 않으며, false 시 Firefox에서 canvas error state로
+        // html2canvas promise 자체가 reject되는 문제를 방지함
+        let canvas = null;
+        try {
+          canvas = await html2canvas(tmpDiv, {
+            scale: SCALE, useCORS: false, allowTaint: true,
+            backgroundColor: '#f0f2f5', logging: false,
+            imageTimeout: 20000,
+            width: w, height: h,
+            windowWidth: w + 100, windowHeight: h + 100,
+            x: 0, y: 0, scrollX: 0, scrollY: 0
+          });
+        } catch { /* 이 카드 캡처 실패 → 건너뜀 */ }
         if (canvas && canvas.width > 0 && canvas.height > 0) {
-          // 캔버스를 즉시 dataURL로 추출 — 에러 상태 캔버스를 ctx.drawImage에
+          // 캔버스를 즉시 dataURL로 추출 — taint 상태 캔버스를 ctx.drawImage에
           // 직접 넘기면 대상 ctx 전체가 에러 상태가 되므로 Image 경유로 우회
           try {
             const dataUrl = canvas.toDataURL('image/png');
             cardCanvases.push({ dataUrl, width: canvas.width, height: canvas.height });
-          } catch { /* 캔버스 에러/taint → 이 카드 건너뜀 */ }
+          } catch { /* taint → 이 카드 건너뜀 */ }
         }
         document.body.removeChild(tmpDiv);
         tmpDivs.pop();

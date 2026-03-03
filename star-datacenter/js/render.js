@@ -111,8 +111,14 @@ function openPlayerModal(name){
 function openEPFromModal(){
   const name=window._playerModalCurrentName;
   if(!name)return;
-  cm('playerModal');
-  openEP(name);
+  // openEP를 먼저 호출 — 실패 시 playerModal이 유지되어 사용자가 인식 가능
+  try{
+    openEP(name);
+    cm('playerModal');
+  }catch(e){
+    console.error('openEP 오류:',e);
+    alert('수정창 열기 실패: '+e.message);
+  }
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
