@@ -1,33 +1,10 @@
 ﻿function rHist(C,T){
   T.innerText='📅 대전 기록';
 
-  // ── 이번달 요약 배너 ──
-  let _bannerHTML='';
-  (()=>{
-    const now=new Date();
-    const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const allM=[...miniM,...univM,...ckM,...comps];
-    const thisMonth=allM.filter(m=>(m.d||'').startsWith(ym)&&m.sa!=null&&m.sb!=null);
-    if(!thisMonth.length) return;
-    const total=thisMonth.length;
-    const pCount={};
-    thisMonth.forEach(m=>{
-      (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
-        if(g.playerA)pCount[g.playerA]=(pCount[g.playerA]||0)+1;
-        if(g.playerB)pCount[g.playerB]=(pCount[g.playerB]||0)+1;
-      }));
-    });
-    const mvp=Object.entries(pCount).sort((a,b)=>b[1]-a[1])[0];
-    _bannerHTML=`<div style="background:linear-gradient(90deg,#1e40af,#3b82f6);color:#fff;border-radius:12px;padding:10px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 4px 14px #3b82f644">
-      <span style="font-size:20px">📅</span>
-      <span style="font-size:13px;font-weight:700">${now.getMonth()+1}월 현재 <b style="font-size:18px">${total}</b>경기 진행</span>
-      ${mvp?`<span style="font-size:12px;background:rgba(255,255,255,.18);border-radius:8px;padding:3px 12px">🔥 최다출전 <b>${mvp[0]}</b> (${mvp[1]}게임)</span>`:''}
-      <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:auto">${ym}</span>
-    </div>`;
-  })();
   const tabs=[
     {id:'race',lbl:'🧬 종족승률'},
     {id:'mini',lbl:'⚡ 미니대전'},
+    {id:'ind',lbl:'🎮 개인전'},
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
     {id:'tourney',lbl:'🎖️ 대회'},
@@ -38,7 +15,7 @@
     {id:'player',lbl:'👤 선수별'},
     {id:'vs',lbl:'⚔️ 1:1 상대전적'}
   ];
-  let h=_bannerHTML+`<div class="stabs no-export">`;
+  let h=`<div class="stabs no-export">`;
   tabs.forEach(t=>{h+=`<button class="stab ${histSub===t.id?'on':''}" onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()">${t.lbl}</button>`;});
   h+=`</div>`;
   const needDateFilter=['mini','ck','univm','comp','tourney','pro','player'].includes(histSub);
@@ -83,6 +60,7 @@
     return;
   }
   if(histSub==='mini') h+=recSummaryListHTML(miniM,'mini','hist');
+  else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');

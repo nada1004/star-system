@@ -1027,10 +1027,11 @@ function renderPastePreview(results, errors) {
       const _isRosterMode = !!(_rosterA && _rosterB);
       const _inRA = (nm) => _rosterA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
       const _inRB = (nm) => _rosterB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+      const _isCKPreview = window._forcedPasteMode === 'ck';
       let aPlayer, bPlayer, aIsWin;
       let aOk, aName, aAmbig, aCands, aSim, aRole;
       let bOk, bName, bAmbig, bCands, bSim, bRole;
-      if (_isRosterMode) {
+      if (_isRosterMode && !_isCKPreview) {
         // 승자(winName)가 rosterA 소속이면 A칸=승자, rosterB면 A칸=패자
         const _wInA = _inRA(r.winName), _wInB = _inRB(r.winName);
         aIsWin  = _wInA ? true : _wInB ? false : ((r.leftName||r.winName) === r.winName);
@@ -1054,9 +1055,9 @@ function renderPastePreview(results, errors) {
         const _leftRaw  = r.leftName  || r.winName  || '';
         const _rightRaw = r.rightName || r.loseName || '';
         const _leftIsWin = (_leftRaw === r.winName);
-        // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우)
+        // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우, CK 모드 제외)
         let _univBased = false;
-        if (r.wPlayer?.univ && r.lPlayer?.univ &&
+        if (!_isCKPreview && r.wPlayer?.univ && r.lPlayer?.univ &&
             teamAPreview && teamAPreview !== 'A팀' &&
             teamBPreview && teamBPreview !== 'B팀') {
           const _wInA = r.wPlayer.univ === teamAPreview;
@@ -1141,7 +1142,9 @@ function renderPastePreview(results, errors) {
       const sn = r.setNum || 1;
       if(!setPreviewMap[sn]) setPreviewMap[sn] = {A:0, B:0};
       let aWins;
-      if (_sprRA && _sprRB) {
+      if (window._forcedPasteMode === 'ck') {
+        aWins = ((r.leftName||r.winName) === r.winName);
+      } else if (_sprRA && _sprRB) {
         aWins = !!_sprInA(r.winName);
         if (!aWins && !_sprInB(r.winName)) aWins = ((r.leftName||r.winName) === r.winName);
       } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
