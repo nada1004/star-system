@@ -1596,13 +1596,34 @@ function pasteApply() {
     proM.unshift({_id:matchId,d:dateVal,sa:proSA,sb:proSB,
       teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{}});
   } else if (mode === 'ck') {
+    // CK: 좌측=A팀, 우측=B팀 절대 고정 (resolveAB 우회)
+    const ckAB = (r) => {
+      const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
+      return {
+        playerA: leftIsWin ? r.wPlayer : r.lPlayer,
+        playerB: leftIsWin ? r.lPlayer : r.wPlayer,
+        winner:  leftIsWin ? 'A' : 'B'
+      };
+    };
+    const ckSetsSnap = Object.keys(setMap).sort((a,b)=>a-b).map(sn=>{
+      const rows=setMap[sn];
+      const games=rows.map(r=>{
+        const ab=ckAB(r);
+        return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map||'-',winner:ab.winner};
+      });
+      const scoreA=games.filter(g=>g.winner==='A').length;
+      const scoreB=games.filter(g=>g.winner==='B').length;
+      return {scoreA,scoreB,winner:scoreA>scoreB?'A':scoreB>scoreA?'B':'A',games};
+    });
     const mA=[], mB=[];
     savable.forEach(r=>{
-      const ab=resolveAB(r);
+      const ab=ckAB(r);
       if(ab.playerA && !mA.find(x=>x.name===ab.playerA.name)) mA.push({name:ab.playerA.name,univ:ab.playerA.univ||'',race:ab.playerA.race||'',tier:ab.playerA.tier||''});
       if(ab.playerB && !mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
-    ckM.unshift({_id:matchId,d:dateVal,sa,sb,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{}});
+    const ckSA=ckSetsSnap.filter(s=>s.winner==='A').length;
+    const ckSB=ckSetsSnap.filter(s=>s.winner==='B').length;
+    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{}});
   } else if (mode === 'comp') {
     if (compName && !compNames.includes(compName)) compNames.push(compName);
     curComp = compName;
