@@ -732,6 +732,13 @@ function parseSetSeparator(line) {
     return n !== null ? n : 0;
   }
 
+  // 패턴 5: 이모지 등 접두어 + "N SET" 형식 (경기결과 마커 없는 경우만)
+  // 예: "🔥 1 SET", "🔥 2 SET", "🔥 3 SET SUPER ACE"
+  if (!t.includes('🆚') && !t.includes('✅') && !t.includes('❌') && !t.includes('⬜') && !t.includes('⭕')) {
+    const m5 = t.match(/(\d+)\s*SET/i);
+    if (m5) return parseInt(m5[1]);
+  }
+
   return null;
 }
 

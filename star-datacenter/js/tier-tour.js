@@ -1020,6 +1020,12 @@ function openRE(mode,idx){
       <label>A팀 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
       <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+  } else if(mode==='ck'){
+    const m=ckM[idx];tit='🤝 대학CK 수정';
+    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
+      <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
+      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   }
   document.getElementById('reTitle').innerText=tit;
   document.getElementById('reBody').innerHTML=body;om('reModal');
@@ -1051,6 +1057,10 @@ function saveRow(){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttn')?.value;
     if(ttn!==undefined){m.n=ttn;m.t=ttn;}
+    m.sa=parseInt(document.getElementById('re-sa').value)||0;
+    m.sb=parseInt(document.getElementById('re-sb').value)||0;
+  } else if(reMode==='ck'){
+    const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   }
