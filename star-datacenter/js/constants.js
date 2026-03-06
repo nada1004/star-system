@@ -185,7 +185,7 @@ function fixPoints(){
   });
 }
 
-function save(){
+function localSave(){
   localStorage.setItem('su_tiers',JSON.stringify(TIERS));
   localStorage.setItem('su_p', JSON.stringify(players));
   localStorage.setItem('su_u', JSON.stringify(univCfg));
@@ -205,6 +205,17 @@ function save(){
   localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
   localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
+}
+
+function save(){
+  localSave();
+  if (typeof fbCloudSave === 'function' && typeof isLoggedIn !== 'undefined' && isLoggedIn && localStorage.getItem('su_fb_pw')) {
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) statusEl.textContent = '⏫ 저장 중...';
+    fbCloudSave()
+      .then(() => { if(statusEl){statusEl.textContent='✅ 저장됨'; setTimeout(()=>{if(statusEl)statusEl.textContent='';},3000);} })
+      .catch(e => { if(statusEl) statusEl.textContent='❌ 저장 실패'; console.error('[fbCloudSave]',e); });
+  }
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;

@@ -4,6 +4,54 @@
 ══════════════════════════════════════ */
 const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
+/* ══════════════════════════════════════
+   Firebase 연동 (실시간 동기화)
+══════════════════════════════════════ */
+// 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
+function _applyCloudData(d) {
+  players=d.players||d.player||[];
+  univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
+  maps=d.maps||d.map||maps;
+  tourD=d.tourD||d.tournamentDates||Array(15).fill('');
+  miniM=d.miniM||d.mini||d.miniMatches||[];
+  univM=d.univM||d.univ||d.univMatches||[];
+  comps=d.comps||d.comp||d.competitions||[];
+  ckM=d.ckM||d.ck||d.ckMatches||[];
+  compNames=d.compNames||d.competitionNames||[];
+  curComp=d.curComp||d.currentComp||'';
+  proM=d.proM||d.pro||d.proMatches||[];
+  members=d.members||d.member||[];
+  tourneys=d.tourneys||d.tournaments||d.tourney||[];
+  ttM=d.ttM||d.tt||[];
+  if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
+}
+
+// Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
+// - 비관리자: 항상 실시간 업데이트 적용 + 재렌더링
+// - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
+// - 로컬 데이터 없음 (첫 접속): 항상 적용
+window.onFirebaseLoad = function(data) {
+  const { admin_pw: _, ...clean } = data; // Firebase write 시 포함된 비밀번호 필드 제거
+  const hasLocal = typeof players !== 'undefined' && players && players.length > 0;
+  if (hasLocal && typeof isLoggedIn !== 'undefined' && isLoggedIn) return; // 관리자 편집 중 간섭 방지
+  _applyCloudData(clean);
+  if (typeof localSave === 'function') localSave(); else if (typeof save === 'function') save();
+  if (typeof fixPoints === 'function') fixPoints();
+  window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
+  if (typeof render === 'function') render();
+};
+
+// Firebase에 현재 데이터 저장 (관리자 전용)
+async function fbCloudSave() {
+  const pw = localStorage.getItem('su_fb_pw');
+  if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
+  const dataObj = {
+    players, univCfg, maps, tourD, miniM, univM, comps, ckM,
+    compNames, curComp, proM, tiers: TIERS, members, tourneys, ttM
+  };
+  await window.fbSet(dataObj, pw);
+}
+
 
 function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
@@ -58,21 +106,7 @@ window.cloudLoad = async function(){
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
     // 필드명 별칭 지원 (파싱 유연성)
-    players=d.players||d.player||[];
-    univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
-    maps=d.maps||d.map||maps;
-    tourD=d.tourD||d.tournamentDates||Array(15).fill('');
-    miniM=d.miniM||d.mini||d.miniMatches||[];
-    univM=d.univM||d.univ||d.univMatches||[];
-    comps=d.comps||d.comp||d.competitions||[];
-    ckM=d.ckM||d.ck||d.ckMatches||[];
-    compNames=d.compNames||d.competitionNames||[];
-    curComp=d.curComp||d.currentComp||'';
-    proM=d.proM||d.pro||d.proMatches||[];
-    members=d.members||d.member||[];
-    tourneys=d.tourneys||d.tournaments||d.tourney||[];
-    ttM=d.ttM||d.tt||[];
-    if(d.tiers&&d.tiers.length && typeof TIERS!=='undefined'){ TIERS.splice(0,TIERS.length,...d.tiers); }
+    _applyCloudData(d);
     console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
     save();

@@ -741,6 +741,19 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
+  <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
+    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
+        <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
+        <button class="btn btn-r btn-xs" onclick="clearFbPw()">지우기</button>
+      </div>
+      <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
+    </div>
+  </div>
   `;
   // 관리자 수 표시 + 맵 약자 목록 렌더링
   setTimeout(()=>{
@@ -1135,6 +1148,21 @@ async function clearAllAdmins(){
   localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([h]));
   alert('초기화 완료. 기본 계정(admin99 / 99admin)으로 로그인하세요.');
   doLogout();
+}
+
+function saveFbPw(){
+  const pw = document.getElementById('cfg-fb-pw')?.value.trim();
+  const statusEl = document.getElementById('fb-pw-status');
+  if (!pw) { if(statusEl) statusEl.textContent = '⚠️ 비밀번호를 입력하세요.'; return; }
+  localStorage.setItem('su_fb_pw', pw);
+  if (statusEl) statusEl.textContent = '✅ 비밀번호 저장됨';
+  const input = document.getElementById('cfg-fb-pw');
+  if (input) input.value = '';
+}
+function clearFbPw(){
+  localStorage.removeItem('su_fb_pw');
+  const statusEl = document.getElementById('fb-pw-status');
+  if (statusEl) statusEl.textContent = '미설정';
 }
 
 /* ══════════════════════════════════════
