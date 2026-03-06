@@ -4,6 +4,7 @@
   const tabs=[
     {id:'race',lbl:'🧬 종족승률'},
     {id:'ind',lbl:'🎮 개인전'},
+    {id:'gj',lbl:'⚔️ 끝장전'},
     {id:'mini',lbl:'⚡ 미니대전'},
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
@@ -61,6 +62,7 @@
   }
   if(histSub==='mini') h+=recSummaryListHTML(miniM,'mini','hist');
   else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
+  else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');

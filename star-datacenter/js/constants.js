@@ -103,6 +103,7 @@ let members    = J('su_mb') || [];
 let tourneys   = J('su_tn') || [];
 let ttM        = J('su_ttm') || [];
 let indM       = J('su_indm') || [];
+let gjM        = J('su_gjm')  || [];
 
 let BLD = {};
 let openDetails = {};
@@ -204,6 +205,7 @@ function localSave(){
   localStorage.setItem('su_tn',JSON.stringify(tourneys));
   localStorage.setItem('su_ttm',JSON.stringify(ttM));
   localStorage.setItem('su_indm',JSON.stringify(indM));
+  localStorage.setItem('su_gjm',JSON.stringify(gjM));
   localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
   localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
@@ -230,7 +232,7 @@ const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
-let miniSub='input', univmSub='input', ckSub='input', indSub='input', compSub='league', histSub='mini';
+let miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
 let histUniv='';
 let searchTarget='';
 let recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순

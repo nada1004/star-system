@@ -98,6 +98,67 @@ function indRecordsHTML(){
 }
 
 /* ══════════════════════════════════════
+   끝장전
+══════════════════════════════════════ */
+function rGJ(C,T){
+  T.innerText='⚔️ 끝장전';
+  if(!isLoggedIn && gjSub==='input') gjSub='records';
+  const subOpts=[
+    {id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},
+    {id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}
+  ];
+  let h=stabs(gjSub,subOpts);
+  if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
+  if(gjSub==='input'&&isLoggedIn){
+    h+=`<div class="match-builder"><h3>⚔️ 끝장전 입력</h3>
+      <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openGJPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
+      <div style="font-size:12px;color:var(--gray-l);padding:16px;text-align:center;border:1.5px dashed var(--border);border-radius:10px">붙여넣기 버튼으로 경기 결과를 일괄 입력하세요</div>
+    </div>`;
+  } else if(gjSub==='rank'){
+    h+=gjRankHTML();
+  } else {
+    h+=gjRecordsHTML();
+  }
+  C.innerHTML=h;
+}
+
+function gjRankHTML(){
+  const sc={};
+  players.forEach(p=>{sc[p.name]={w:0,l:0};});
+  gjM.forEach(m=>{
+    if(!sc[m.wName])sc[m.wName]={w:0,l:0};
+    if(!sc[m.lName])sc[m.lName]={w:0,l:0};
+    sc[m.wName].w++; sc[m.lName].l++;
+  });
+  const sorted=Object.entries(sc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
+  if(!sorted.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  let h=`<table><thead><tr><th>순위</th><th style="text-align:left">선수</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
+  sorted.forEach(([name,s],i)=>{
+    const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
+    const p=players.find(x=>x.name===name);
+    h+=`<tr><td style="font-weight:900">${i+1}</td><td style="text-align:left"><span style="font-weight:700">${name}</span><span style="font-size:11px;color:var(--gray-l);margin-left:4px">${p?.univ||''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
+  });
+  return h+`</tbody></table>`;
+}
+
+function gjRecordsHTML(){
+  if(!gjM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  let h=`<div style="max-height:500px;overflow-y:auto"><table><thead><tr><th style="text-align:left">날짜</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
+  gjM.forEach((m,i)=>{
+    const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
+    h+=`<tr>
+      <td style="font-size:11px;color:var(--gray-l)">${m.d||''}</td>
+      <td><span class="wt" style="font-weight:700">${m.wName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${wp?.univ||''}</span></td>
+      <td><span class="lt" style="font-weight:700">${m.lName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${lp?.univ||''}</span></td>
+      <td style="font-size:11px">${m.map||'-'}</td>
+      ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="gjM.splice(${i},1);save();render()">삭제</button></td>`:''}
+    </tr>`;
+  });
+  return h+`</tbody></table></div>`;
+}
+
+/* ══════════════════════════════════════
    대학CK
 ══════════════════════════════════════ */
 function rCK(C,T){

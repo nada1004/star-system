@@ -1648,6 +1648,10 @@ function pasteApply() {
     savable.forEach(r => {
       indM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map||'-' });
     });
+  } else if (mode === 'gj') {
+    savable.forEach(r => {
+      gjM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map||'-' });
+    });
   }
   // individual: 개인 전적만 (이미 applyGameResult 처리됨)
 
@@ -1661,7 +1665,7 @@ function pasteApply() {
   window._pasteErrors  = null;
 
   // 저장 형식에 따라 해당 탭으로 자동 이동
-  const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind' };
+  const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind', gj:'gj' };
   if (tabMap[mode]) {
     const tabBtn = document.querySelector(`.tab[onclick*="sw('${tabMap[mode]}'"]`);
     if (tabBtn) tabBtn.click();
@@ -1844,6 +1848,18 @@ function openIndPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎮 개인전 경기 결과 입력 모드</span>';
+}
+
+/* ── 끝장전 전용 붙여넣기 ── */
+function openGJPasteModal() {
+  openPasteModal();
+  window._forcedPasteMode = 'gj';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'ind'; sel.style.display = 'none'; onPasteModeChange('ind'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">⚔️ 끝장전 경기 결과 입력 모드</span>';
 }
 
 /* ── 대학대전 전용 붙여넣기 ── */

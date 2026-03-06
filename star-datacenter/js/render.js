@@ -6,6 +6,7 @@ function sw(t,el){
   if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
   if(t==='mini') miniSub='records';
   if(t==='ind') indSub='records';
+  if(t==='gj') gjSub='records';
   if(t==='univck') ckSub='records';
   if(t==='univm') univmSub='records';
   if(t==='pro') proSub='records';
@@ -45,6 +46,7 @@ function render(){
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'mini':    if(typeof rMini==='function')    rMini(C,T);    break;
     case 'ind':     if(typeof rInd==='function')     rInd(C,T);     break;
+    case 'gj':      if(typeof rGJ==='function')      rGJ(C,T);      break;
     case 'univck':  if(typeof rCK==='function')      rCK(C,T);      break;
     case 'univm':   if(typeof rUnivM==='function')   rUnivM(C,T);   break;
     case 'comp':    if(typeof rComp==='function')    rComp(C,T);    break;
