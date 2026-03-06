@@ -862,16 +862,17 @@ function pastePreview() {
     results.forEach((r, i) => {
       const prev = window._pasteResults[i];
       if (!prev) return;
+      // 같은 경기인지 확인 (인덱스 오정렬 방지)
+      if (prev.winName !== r.winName || prev.loseName !== r.loseName) return;
       // 이미 단일 선수로 확정된 경우(중복 해소됨) → 유지
+      // winName/loseName은 덮어쓰지 않음 (leftName 비교에 사용되므로)
       if (prev.wPlayer && prev.wCandidates.length === 1) {
         r.wPlayer     = prev.wPlayer;
-        r.winName     = prev.wPlayer.name;
         r.wCandidates = [prev.wPlayer];
         r.wSimilar    = [];
       }
       if (prev.lPlayer && prev.lCandidates.length === 1) {
         r.lPlayer     = prev.lPlayer;
-        r.loseName    = prev.lPlayer.name;
         r.lCandidates = [prev.lPlayer];
         r.lSimilar    = [];
       }
