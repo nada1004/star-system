@@ -3,8 +3,8 @@
 
   const tabs=[
     {id:'race',lbl:'🧬 종족승률'},
-    {id:'mini',lbl:'⚡ 미니대전'},
     {id:'ind',lbl:'🎮 개인전'},
+    {id:'mini',lbl:'⚡ 미니대전'},
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
     {id:'tourney',lbl:'🎖️ 대회'},

@@ -783,8 +783,9 @@ function pastePreview() {
     const trimmed = line.trim();
     if (!trimmed) return;
 
-    // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." ──
-    if (!trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜')) {
+    // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
+    if (window._forcedPasteMode !== 'ck' &&
+        !trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜')) {
       const rosterM = trimmed.match(/^([^\s:：][^:：]{0,20}?)\s*[：:]\s*(\S+(?:\s+\S+){1,})$/);
       if (rosterM) {
         const tName = rosterM[1].trim();
@@ -952,11 +953,12 @@ function renderPastePreview(results, errors) {
     if (_autoTeamA && _autoTeamA === _autoTeamB) {
       _autoTeamB = _rB2.find(([u])=>u!==_autoTeamA)?.[0] || _rA2.find(([u])=>u!==_autoTeamA)?.[0] || '';
     }
-    teamAPreview = window._pasteForceTeamA || _autoTeamA || 'A팀';
-    teamBPreview = window._pasteForceTeamB || _autoTeamB || 'B팀';
-    // 테이블 헤더: 소속 대학명 표시 (확인된 경우) 아니면 A팀/B팀
-    const _teamALabel = teamAPreview && teamAPreview !== 'A팀' ? '🔵 ' + teamAPreview : '🔵 A팀';
-    const _teamBLabel = teamBPreview && teamBPreview !== 'B팀' ? '🔴 ' + teamBPreview : '🔴 B팀';
+    const _isCKMode = window._forcedPasteMode === 'ck';
+    teamAPreview = _isCKMode ? 'A조' : (window._pasteForceTeamA || _autoTeamA || 'A팀');
+    teamBPreview = _isCKMode ? 'B조' : (window._pasteForceTeamB || _autoTeamB || 'B팀');
+    // 테이블 헤더
+    const _teamALabel = '🔵 ' + teamAPreview;
+    const _teamBLabel = '🔴 ' + teamBPreview;
 
     html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
     html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
@@ -1180,7 +1182,9 @@ function renderPastePreview(results, errors) {
       let teamAWins = 0, teamBWins = 0;
       savable.forEach(r => {
         let aW;
-        if (_sprRA && _sprRB) {
+        if (_isCKMode) {
+          aW = ((r.leftName||r.winName) === r.winName);
+        } else if (_sprRA && _sprRB) {
           aW = !!_sprInA(r.winName);
           if (!aW && !_sprInB(r.winName)) aW = ((r.leftName||r.winName) === r.winName);
         } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
@@ -1626,7 +1630,7 @@ function pasteApply() {
     });
     const ckSA=ckSetsSnap.filter(s=>s.winner==='A').length;
     const ckSB=ckSetsSnap.filter(s=>s.winner==='B').length;
-    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{}});
+    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{}});
   } else if (mode === 'comp') {
     if (compName && !compNames.includes(compName)) compNames.push(compName);
     curComp = compName;

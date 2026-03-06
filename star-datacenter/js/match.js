@@ -384,7 +384,7 @@ function saveMatch(mode){
             if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
         });
 
-        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:'A팀', teamBLabel:'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
+        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:mode==='ck'?'A조':'A팀', teamBLabel:mode==='ck'?'B조':'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
 
         if(mode==='ck') ckM.unshift(matchData);
         else if (mode==='pro') proM.unshift(matchData);
@@ -453,8 +453,8 @@ function saveMatch(mode){
       });
     });
     ckM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A팀',
-      teamBLabel:'B팀',
+      teamALabel:'A조',
+      teamBLabel:'B조',
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
       univWins:univW,univLosses:univL
     });
