@@ -1598,8 +1598,9 @@ function pasteApply() {
   } else if (mode === 'ck') {
     const mA=[], mB=[];
     savable.forEach(r=>{
-      if(!mA.find(x=>x.name===r.wPlayer.name)) mA.push({name:r.wPlayer.name,univ:r.wPlayer.univ||'',race:r.wPlayer.race||'',tier:r.wPlayer.tier||''});
-      if(!mB.find(x=>x.name===r.lPlayer.name)) mB.push({name:r.lPlayer.name,univ:r.lPlayer.univ||'',race:r.lPlayer.race||'',tier:r.lPlayer.tier||''});
+      const ab=resolveAB(r);
+      if(ab.playerA && !mA.find(x=>x.name===ab.playerA.name)) mA.push({name:ab.playerA.name,univ:ab.playerA.univ||'',race:ab.playerA.race||'',tier:ab.playerA.tier||''});
+      if(ab.playerB && !mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
     ckM.unshift({_id:matchId,d:dateVal,sa,sb,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{}});
   } else if (mode === 'comp') {
