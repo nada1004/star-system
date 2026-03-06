@@ -55,6 +55,7 @@
   <button class="tab"     onclick="sw('tier',this)">📊 티어 순위표</button>
   <button class="tab"     onclick="sw('hist',this)">📅 대전 기록</button>
   <button class="tab"     onclick="sw('mini',this)">⚡ 미니대전</button>
+  <button class="tab"     onclick="sw('ind',this)">🎮 개인전</button>
   <button class="tab"     onclick="sw('univck',this)">🤝 대학CK</button>
   <button class="tab"     onclick="sw('univm',this)">🏟️ 대학대전</button>
   <button class="tab"     onclick="sw('comp',this)">🎖️ 대회</button>
@@ -262,6 +263,8 @@
       <select id="paste-mode" onchange="onPasteModeChange(this.value)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
         <option value="mini">⚡ 미니대전으로 저장</option>
         <option value="univm">🏟️ 대학대전으로 저장</option>
+        <option value="ck">🤝 대학CK로 저장</option>
+        <option value="ind">🎮 개인전으로 저장</option>
         <option value="comp">🎖️ 대회 기록으로 저장</option>
       </select>
       <div id="paste-comp-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">

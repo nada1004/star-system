@@ -5,12 +5,13 @@ function sw(t,el){
   // 탭 변경 시 서브탭 초기화
   if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
   if(t==='mini') miniSub='records';
+  if(t==='ind') indSub='records';
   if(t==='univck') ckSub='records';
   if(t==='univm') univmSub='records';
   if(t==='pro') proSub='records';
   if(t==='hist') histSub='mini'; // 대전 기록 탭으로 돌아올 때 초기화
   // 탭 전환 시 해당 탭 검색어 초기화
-  if(window._recQ){const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro'};const m=tabModeMap[t];if(m)window._recQ[m]='';}
+  if(window._recQ){const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};const m=tabModeMap[t];if(m)window._recQ[m]='';}
   if(t==='total')totalSearch='';
   curTab=t;openDetails={};
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
@@ -43,6 +44,7 @@ function render(){
     case 'tier':    if(typeof rTier==='function')    rTier(C,T);    break;
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'mini':    if(typeof rMini==='function')    rMini(C,T);    break;
+    case 'ind':     if(typeof rInd==='function')     rInd(C,T);     break;
     case 'univck':  if(typeof rCK==='function')      rCK(C,T);      break;
     case 'univm':   if(typeof rUnivM==='function')   rUnivM(C,T);   break;
     case 'comp':    if(typeof rComp==='function')    rComp(C,T);    break;
