@@ -2720,7 +2720,7 @@ function csvDownloadMaps(){
 /* ══════════════════════════════════════
    9. 선수 검색 고급 필터
 ══════════════════════════════════════ */
-let _advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo'};
+let _advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};
 function statsAdvSearchHTML(){
   const f=_advFilter;
   const univs=getAllUnivs();
@@ -2748,6 +2748,7 @@ function statsAdvSearchHTML(){
   else if(f.sort==='rate') list.sort((a,b)=>b._rate-a._rate||b._tot-a._tot);
   else if(f.sort==='games') list.sort((a,b)=>b._tot-a._tot);
   else if(f.sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(f.sort==='shuffle') list.sort(()=>Math.random()-0.5);
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec" id="stats-advsearch-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -2784,8 +2785,9 @@ function statsAdvSearchHTML(){
         <option value="rate"${f.sort==='rate'?' selected':''}>승률순</option>
         <option value="games"${f.sort==='games'?' selected':''}>경기수순</option>
         <option value="name"${f.sort==='name'?' selected':''}>이름순</option>
+        <option value="shuffle"${f.sort==='shuffle'?' selected':''}>무작위</option>
       </select>
-      <button class="btn btn-w btn-sm" onclick="_advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo'};render()">초기화</button>
+      <button class="btn btn-w btn-sm" onclick="_advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};render()">초기화</button>
     </div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">검색 결과: <strong>${list.length}명</strong></div>
     ${list.length===0?'<p style="color:var(--gray-l);padding:20px;text-align:center">조건에 맞는 선수가 없습니다.</p>':`

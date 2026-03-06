@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    종족 승률
 ══════════════════════════════════════ */
 function rRace(C,T){
@@ -349,17 +349,17 @@ function saveMatch(mode){
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
   // 세트 없는 방식 처리
   if(bld.noSetMode){
-    if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
     const freeGames=bld.freeGames||[];
     const date=bld.date||new Date().toISOString().slice(0,10);
     const matchId=genId();
-    // 선수 지정된 경기 결과를 개인 history에 반영
+
     freeGames.forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       applyGameResult(wName,lName,date,g.map||'-',matchId);
     });
+    
     let totalA=0,totalB=0;
     if(bld.directSA!=null||bld.directSB!=null){
       totalA=bld.directSA||0;
@@ -367,22 +367,54 @@ function saveMatch(mode){
     } else {
       freeGames.forEach(g=>{if(g.winner==='A')totalA++;else if(g.winner==='B')totalB++;});
     }
-    // freeGames를 단일 세트로 저장 (sets 없이도 표시 가능하도록)
     const setsSnap=freeGames.length?[{scoreA:totalA,scoreB:totalB,winner:totalA>totalB?'A':totalB>totalA?'B':'',games:freeGames.map(g=>({...g}))}]:[];
-    const matchObj={_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,noSetMode:true};
-    if(mode==='mini') miniM.unshift(matchObj);
-    else if(mode==='univm') univM.unshift(matchObj);
-    else if(mode==='comp'){
-      const cn=bld.compName||document.getElementById('comp-name-input')?.value||curComp||'';
-      if(!cn)return alert('대회명을 입력하세요.');
-      if(cn&&!compNames.includes(cn))compNames.push(cn);
-      curComp=cn;
-      comps.unshift({...matchObj,n:cn,hostUniv:bld.teamA,u:bld.teamA});
+
+    if(mode==='ck' || mode==='pro' || mode ==='tt'){
+        const mA=bld.membersA||[];const mB=bld.membersB||[];
+        if(!mA.length||!mB.length)return alert('팀 멤버를 추가하세요.');
+
+        const univW={},univL={};
+        freeGames.forEach(g=>{
+            if(!g.playerA||!g.playerB||!g.winner)return;
+            const wName=g.winner==='A'?g.playerA:g.playerB;
+            const lName=g.winner==='A'?g.playerB:g.playerA;
+            const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
+            const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
+            if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
+            if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        });
+
+        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:'A팀', teamBLabel:'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
+
+        if(mode==='ck') ckM.unshift(matchData);
+        else if (mode==='pro') proM.unshift(matchData);
+        else if (mode==='tt') {
+            const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
+            ttM.unshift({...matchData, tierLabel: tLabel});
+        }
+    } else {
+        if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
+        const matchObj={_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,noSetMode:true};
+        if(mode==='mini') miniM.unshift(matchObj);
+        else if(mode==='univm') univM.unshift(matchObj);
+        else if(mode==='comp'){
+          const cn=bld.compName||document.getElementById('comp-name-input')?.value||curComp||'';
+          if(!cn)return alert('대회명을 입력하세요.');
+          if(cn&&!compNames.includes(cn))compNames.push(cn);
+          curComp=cn;
+          comps.unshift({...matchObj,n:cn,hostUniv:bld.teamA,u:bld.teamA});
+        }
     }
+    
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
     if(mode==='mini')miniSub='records';
     else if(mode==='univm')univmSub='records';
-    render();return;
+    else if(mode==='ck')ckSub='records';
+    else if(mode==='pro')proSub='records';
+    else if(mode==='comp')compSub='records';
+    else if(mode==='tt'){_ttSub='records';compSub='tiertour';}
+    render();
+    return;
   }
   if(!bld.sets.length)return alert('세트를 추가하세요.');
   let totalA=0,totalB=0;
