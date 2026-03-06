@@ -784,7 +784,8 @@ function pastePreview() {
     if (!trimmed) return;
 
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
-    if (window._forcedPasteMode !== 'ck' &&
+    const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
+    if (_curMode !== 'ck' &&
         !trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜')) {
       const rosterM = trimmed.match(/^([^\s:：][^:：]{0,20}?)\s*[：:]\s*(\S+(?:\s+\S+){1,})$/);
       if (rosterM) {
@@ -953,7 +954,7 @@ function renderPastePreview(results, errors) {
     if (_autoTeamA && _autoTeamA === _autoTeamB) {
       _autoTeamB = _rB2.find(([u])=>u!==_autoTeamA)?.[0] || _rA2.find(([u])=>u!==_autoTeamA)?.[0] || '';
     }
-    const _isCKMode = window._forcedPasteMode === 'ck';
+    const _isCKMode = !!(window._forcedPasteMode === 'ck' || document.getElementById('paste-mode')?.value === 'ck');
     teamAPreview = _isCKMode ? 'A조' : (window._pasteForceTeamA || _autoTeamA || 'A팀');
     teamBPreview = _isCKMode ? 'B조' : (window._pasteForceTeamB || _autoTeamB || 'B팀');
     // 테이블 헤더
@@ -1029,7 +1030,7 @@ function renderPastePreview(results, errors) {
       const _isRosterMode = !!(_rosterA && _rosterB);
       const _inRA = (nm) => _rosterA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
       const _inRB = (nm) => _rosterB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
-      const _isCKPreview = window._forcedPasteMode === 'ck';
+      const _isCKPreview = _isCKMode;
       let aPlayer, bPlayer, aIsWin;
       let aOk, aName, aAmbig, aCands, aSim, aRole;
       let bOk, bName, bAmbig, bCands, bSim, bRole;
@@ -1060,8 +1061,8 @@ function renderPastePreview(results, errors) {
         // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우, CK 모드 제외)
         let _univBased = false;
         if (!_isCKPreview && r.wPlayer?.univ && r.lPlayer?.univ &&
-            teamAPreview && teamAPreview !== 'A팀' &&
-            teamBPreview && teamBPreview !== 'B팀') {
+            teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
+            teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
           const _wInA = r.wPlayer.univ === teamAPreview;
           const _lInA = r.lPlayer.univ === teamAPreview;
           if (_wInA || _lInA) { aIsWin = _wInA; _univBased = true; }
@@ -1144,14 +1145,14 @@ function renderPastePreview(results, errors) {
       const sn = r.setNum || 1;
       if(!setPreviewMap[sn]) setPreviewMap[sn] = {A:0, B:0};
       let aWins;
-      if (window._forcedPasteMode === 'ck') {
+      if (_isCKMode) {
         aWins = ((r.leftName||r.winName) === r.winName);
       } else if (_sprRA && _sprRB) {
         aWins = !!_sprInA(r.winName);
         if (!aWins && !_sprInB(r.winName)) aWins = ((r.leftName||r.winName) === r.winName);
-      } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
-                 teamAPreview && teamAPreview !== 'A팀' &&
-                 teamBPreview && teamBPreview !== 'B팀') {
+      } else if (!_isCKMode && r.wPlayer?.univ && r.lPlayer?.univ &&
+                 teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
+                 teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
         aWins = r.wPlayer.univ === teamAPreview;
       } else {
         aWins = ((r.leftName||r.winName) === r.winName);
@@ -1188,8 +1189,8 @@ function renderPastePreview(results, errors) {
           aW = !!_sprInA(r.winName);
           if (!aW && !_sprInB(r.winName)) aW = ((r.leftName||r.winName) === r.winName);
         } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
-                   teamAPreview && teamAPreview !== 'A팀' &&
-                   teamBPreview && teamBPreview !== 'B팀') {
+                   teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
+                   teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
           aW = r.wPlayer.univ === teamAPreview;
         } else {
           aW = ((r.leftName||r.winName) === r.winName);
