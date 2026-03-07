@@ -153,10 +153,9 @@ function parseFormatC(line, prevScore) {
   }
 
   // 맵 이름 확정
-  const alias = getMapAlias();
   let map = '-';
   if (mapRaw) {
-    map = alias[mapRaw] || mapRaw;
+    map = resolveMapName(mapRaw);
     // 맵 자동 등록 금지 (저장 시에만 반영)
   }
 
@@ -844,7 +843,8 @@ function pastePreview() {
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
-        !trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜')) {
+        !trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜') &&
+        !/^\d+\s*(?:세트|셋)\s/.test(trimmed)) {
       const rosterM = trimmed.match(/^([^\s:：][^:：]{0,20}?)\s*[：:]\s*(\S+(?:\s+\S+){1,})$/);
       if (rosterM) {
         const tName = rosterM[1].trim();
@@ -1042,7 +1042,7 @@ function renderPastePreview(results, errors) {
 
       // ── 선수 셀 빌더 ──
       const buildCell = (isWin, displayName, resolved, isAmbig, candidates, similar, role) => {
-        const style = resolved ? (isWin ? 'color:#16a34a;font-weight:700' : 'color:#dc2626;font-weight:700') : 'color:#b45309;font-weight:700';
+        const style = resolved ? (isWin ? 'color:#ea580c;font-weight:700' : 'color:#dc2626;font-weight:700') : 'color:#b45309;font-weight:700';
         let cell = `<span style="${style}">${displayName}</span>`;
         if (resolved) {
           const p = isWin ? r.wPlayer : r.lPlayer;
