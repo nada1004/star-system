@@ -655,14 +655,44 @@ function proRankHTML(){
 /* ══════════════════════════════════════
    끝장전 공유카드
 ══════════════════════════════════════ */
+function _gjPlayerCardHTML(name, wins, isWinner) {
+  const p = players.find(x => x.name === name) || {};
+  const RCOLOR = { T:'#dbeafe', Z:'#ede9fe', P:'#fef3c7' };
+  const RTXT   = { T:'#1e3a8a', Z:'#4c1d95', P:'#78350f' };
+  const photoBg = RCOLOR[p.race] || '#334155';
+  const photoTxt = RTXT[p.race] || '#94a3b8';
+  const photoHTML = p.photo
+    ? `<img src="${p.photo}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;display:block;border:${isWinner?'4px solid #4ade80':'3px solid #334155'};box-shadow:${isWinner?'0 0 0 2px #16a34a':'none'}">`
+    : `<div style="width:104px;height:104px;border-radius:50%;background:${photoBg};color:${photoTxt};display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;border:${isWinner?'4px solid #4ade80':'3px solid #334155'}">${p.race||'?'}</div>`;
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:180px">
+    ${photoHTML}
+    <div style="font-size:20px;font-weight:900;color:${isWinner?'#4ade80':'#f1f5f9'}">${name}</div>
+    <div style="font-size:12px;color:#64748b">${p.univ||''}</div>
+    <div style="font-size:56px;font-weight:900;color:${isWinner?'#4ade80':'#475569'};line-height:1.1">${wins}</div>
+  </div>`;
+}
+
 function openGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   const existing = document.getElementById('gj-share-modal');
   if (existing) existing.remove();
 
-  const W = 600, H = 320;
-  const canvas = document.createElement('canvas');
-  canvas.width = W; canvas.height = H;
-  canvas.style.cssText = 'border-radius:12px;max-width:100%;display:block;margin:0 auto 14px';
+  const cardHTML = `
+    <div id="gj-share-card" style="width:560px;background:#0f172a;border-radius:14px;overflow:hidden;font-family:'Noto Sans KR','Malgun Gothic',sans-serif">
+      <div style="height:5px;background:linear-gradient(90deg,#7c3aed,#2563eb)"></div>
+      <div style="padding:22px 28px 20px">
+        <div style="text-align:center;color:#f1f5f9;font-size:20px;font-weight:900;margin-bottom:4px">⚔️ 끝장전 결과</div>
+        <div style="text-align:center;color:#475569;font-size:13px;margin-bottom:20px">${date||''}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          ${_gjPlayerCardHTML(p1, p1wins, p1===winner)}
+          <div style="font-size:32px;font-weight:900;color:#3b82f6;flex-shrink:0">VS</div>
+          ${_gjPlayerCardHTML(p2, p2wins, p2===winner)}
+        </div>
+        <div style="border-top:1px solid #1e3a5f;margin-top:18px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:15px;font-weight:900;color:${winner?'#4ade80':'#64748b'}">${winner?'🏆 '+winner+' 최종 승리':'무승부'}</div>
+          <div style="font-size:11px;color:#1e3a5f">스타대학 데이터 센터</div>
+        </div>
+      </div>
+    </div>`;
 
   const modal = document.createElement('div');
   modal.id = 'gj-share-modal';
@@ -677,127 +707,31 @@ function openGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   closeBtn.style.cssText = 'position:absolute;top:10px;right:12px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1';
   closeBtn.onclick = () => modal.remove();
 
+  const cardWrap = document.createElement('div');
+  cardWrap.style.cssText = 'margin-bottom:14px;display:inline-block';
+  cardWrap.innerHTML = cardHTML;
+
   const dlBtn = document.createElement('button');
   dlBtn.textContent = '⬇️ 이미지 저장';
-  dlBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px';
+  dlBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer';
   dlBtn.onclick = () => {
-    canvas.toBlob(blob => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `끝장전_${p1}vs${p2}_${date||''}.png`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
+    dlBtn.disabled = true; dlBtn.textContent = '생성 중...';
+    const card = document.getElementById('gj-share-card');
+    html2canvas(card, { useCORS: true, allowTaint: true, scale: 2, backgroundColor: null }).then(canvas => {
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `끝장전_${p1}vs${p2}_${date||''}.png`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        dlBtn.disabled = false; dlBtn.textContent = '⬇️ 이미지 저장';
+      });
+    }).catch(() => { dlBtn.disabled = false; dlBtn.textContent = '⬇️ 이미지 저장'; });
   };
 
   box.appendChild(closeBtn);
-  box.appendChild(canvas);
+  box.appendChild(cardWrap);
   box.appendChild(dlBtn);
   modal.appendChild(box);
   document.body.appendChild(modal);
-
-  _drawGJCard(canvas, p1, p2, p1wins, p2wins, date, winner);
-}
-
-async function _drawGJCard(canvas, p1, p2, p1wins, p2wins, date, winner) {
-  const W = canvas.width, H = canvas.height;
-  const ctx = canvas.getContext('2d');
-  const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
-
-  // 배경
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 0, W, H);
-
-  // 상단 그라디언트 바
-  const topGrad = ctx.createLinearGradient(0, 0, W, 0);
-  topGrad.addColorStop(0, '#7c3aed'); topGrad.addColorStop(1, '#2563eb');
-  ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, 5);
-
-  // 제목
-  ctx.font = `bold 20px ${FONT}`;
-  ctx.fillStyle = '#f1f5f9'; ctx.textAlign = 'center';
-  ctx.fillText('⚔️  끝장전 결과', W / 2, 36);
-
-  // 날짜
-  ctx.font = `13px ${FONT}`;
-  ctx.fillStyle = '#475569';
-  ctx.fillText(date || '', W / 2, 56);
-
-  // 이미지 로드 헬퍼
-  const loadImg = (url) => new Promise(resolve => {
-    if (!url) return resolve(null);
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
-
-  const pp1 = players.find(x => x.name === p1);
-  const pp2 = players.find(x => x.name === p2);
-  const [img1, img2] = await Promise.all([loadImg(pp1?.photo), loadImg(pp2?.photo)]);
-
-  // 선수 그리기 함수
-  const drawPlayer = (img, pObj, cx, wins, isWinner) => {
-    const cy = 158, r = 52;
-    const RCOLOR = { T: { bg: '#dbeafe', txt: '#1e3a8a' }, Z: { bg: '#ede9fe', txt: '#4c1d95' }, P: { bg: '#fef3c7', txt: '#78350f' } };
-    const rc = RCOLOR[pObj?.race] || { bg: '#334155', txt: '#94a3b8' };
-
-    // 원형 클리핑 & 사진 or 폴백
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath();
-    if (img) {
-      ctx.clip();
-      ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-    } else {
-      ctx.fillStyle = rc.bg; ctx.fill();
-      ctx.font = `bold ${Math.round(r * 0.7)}px ${FONT}`;
-      ctx.fillStyle = rc.txt; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(pObj?.race || '?', cx, cy);
-    }
-    ctx.restore();
-
-    // 승자 링
-    if (isWinner) {
-      ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 3; ctx.stroke();
-    }
-
-    // 이름
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = `bold 18px ${FONT}`;
-    ctx.fillStyle = isWinner ? '#4ade80' : '#f1f5f9';
-    ctx.textAlign = 'center';
-    ctx.fillText(pObj?.name || '', cx, cy + r + 26);
-
-    // 대학
-    ctx.font = `12px ${FONT}`; ctx.fillStyle = '#64748b';
-    ctx.fillText(pObj?.univ || '', cx, cy + r + 44);
-
-    // 승수
-    ctx.font = `bold 52px ${FONT}`;
-    ctx.fillStyle = isWinner ? '#4ade80' : '#475569';
-    ctx.fillText(String(wins), cx, cy + r + 96);
-  };
-
-  drawPlayer(img1, pp1, W * 0.22, p1wins, p1 === winner);
-  drawPlayer(img2, pp2, W * 0.78, p2wins, p2 === winner);
-
-  // 중앙 VS
-  ctx.font = `bold 28px ${FONT}`;
-  ctx.fillStyle = '#3b82f6'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('VS', W / 2, 168);
-
-  // 구분선
-  ctx.strokeStyle = '#1e3a5f'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(40, H - 36); ctx.lineTo(W - 40, H - 36); ctx.stroke();
-
-  // 승자 배너
-  ctx.font = `bold 14px ${FONT}`;
-  ctx.fillStyle = winner ? '#4ade80' : '#64748b';
-  ctx.fillText(winner ? `🏆  ${winner} 최종 승리` : '무승부', W / 2, H - 16);
-
-  // 워터마크
-  ctx.font = `11px ${FONT}`; ctx.fillStyle = '#1e3a5f'; ctx.textAlign = 'right';
-  ctx.fillText('스타대학 데이터 센터', W - 12, H - 40);
 }
