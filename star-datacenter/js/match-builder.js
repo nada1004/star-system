@@ -187,6 +187,7 @@ function gjRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="gjM=gjM.filter(m=>!${JSON.stringify(s.ids)}.includes(m._id));save();render()">전체삭제</button>`:'';
+    const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
         <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
@@ -195,7 +196,7 @@ function gjRecordsHTML(){
         <span style="font-weight:700">${s.p2}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto">${delBtn}</span>
+        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
       </summary>
       <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
@@ -649,4 +650,154 @@ function proRankHTML(){
     </tr>`;
   });
   return h+`</tbody></table>`;
+}
+
+/* ══════════════════════════════════════
+   끝장전 공유카드
+══════════════════════════════════════ */
+function openGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
+  const existing = document.getElementById('gj-share-modal');
+  if (existing) existing.remove();
+
+  const W = 600, H = 320;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  canvas.style.cssText = 'border-radius:12px;max-width:100%;display:block;margin:0 auto 14px';
+
+  const modal = document.createElement('div');
+  modal.id = 'gj-share-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#1e293b;border-radius:16px;padding:20px;max-width:640px;width:100%;text-align:center;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.5)';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'position:absolute;top:10px;right:12px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1';
+  closeBtn.onclick = () => modal.remove();
+
+  const dlBtn = document.createElement('button');
+  dlBtn.textContent = '⬇️ 이미지 저장';
+  dlBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px';
+  dlBtn.onclick = () => {
+    canvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `끝장전_${p1}vs${p2}_${date||''}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  };
+
+  box.appendChild(closeBtn);
+  box.appendChild(canvas);
+  box.appendChild(dlBtn);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  _drawGJCard(canvas, p1, p2, p1wins, p2wins, date, winner);
+}
+
+async function _drawGJCard(canvas, p1, p2, p1wins, p2wins, date, winner) {
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
+
+  // 배경
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // 상단 그라디언트 바
+  const topGrad = ctx.createLinearGradient(0, 0, W, 0);
+  topGrad.addColorStop(0, '#7c3aed'); topGrad.addColorStop(1, '#2563eb');
+  ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, 5);
+
+  // 제목
+  ctx.font = `bold 20px ${FONT}`;
+  ctx.fillStyle = '#f1f5f9'; ctx.textAlign = 'center';
+  ctx.fillText('⚔️  끝장전 결과', W / 2, 36);
+
+  // 날짜
+  ctx.font = `13px ${FONT}`;
+  ctx.fillStyle = '#475569';
+  ctx.fillText(date || '', W / 2, 56);
+
+  // 이미지 로드 헬퍼
+  const loadImg = (url) => new Promise(resolve => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+
+  const pp1 = players.find(x => x.name === p1);
+  const pp2 = players.find(x => x.name === p2);
+  const [img1, img2] = await Promise.all([loadImg(pp1?.photo), loadImg(pp2?.photo)]);
+
+  // 선수 그리기 함수
+  const drawPlayer = (img, pObj, cx, wins, isWinner) => {
+    const cy = 158, r = 52;
+    const RCOLOR = { T: { bg: '#dbeafe', txt: '#1e3a8a' }, Z: { bg: '#ede9fe', txt: '#4c1d95' }, P: { bg: '#fef3c7', txt: '#78350f' } };
+    const rc = RCOLOR[pObj?.race] || { bg: '#334155', txt: '#94a3b8' };
+
+    // 원형 클리핑 & 사진 or 폴백
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath();
+    if (img) {
+      ctx.clip();
+      ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+    } else {
+      ctx.fillStyle = rc.bg; ctx.fill();
+      ctx.font = `bold ${Math.round(r * 0.7)}px ${FONT}`;
+      ctx.fillStyle = rc.txt; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(pObj?.race || '?', cx, cy);
+    }
+    ctx.restore();
+
+    // 승자 링
+    if (isWinner) {
+      ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    // 이름
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillStyle = isWinner ? '#4ade80' : '#f1f5f9';
+    ctx.textAlign = 'center';
+    ctx.fillText(pObj?.name || '', cx, cy + r + 26);
+
+    // 대학
+    ctx.font = `12px ${FONT}`; ctx.fillStyle = '#64748b';
+    ctx.fillText(pObj?.univ || '', cx, cy + r + 44);
+
+    // 승수
+    ctx.font = `bold 52px ${FONT}`;
+    ctx.fillStyle = isWinner ? '#4ade80' : '#475569';
+    ctx.fillText(String(wins), cx, cy + r + 96);
+  };
+
+  drawPlayer(img1, pp1, W * 0.22, p1wins, p1 === winner);
+  drawPlayer(img2, pp2, W * 0.78, p2wins, p2 === winner);
+
+  // 중앙 VS
+  ctx.font = `bold 28px ${FONT}`;
+  ctx.fillStyle = '#3b82f6'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('VS', W / 2, 168);
+
+  // 구분선
+  ctx.strokeStyle = '#1e3a5f'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(40, H - 36); ctx.lineTo(W - 40, H - 36); ctx.stroke();
+
+  // 승자 배너
+  ctx.font = `bold 14px ${FONT}`;
+  ctx.fillStyle = winner ? '#4ade80' : '#64748b';
+  ctx.fillText(winner ? `🏆  ${winner} 최종 승리` : '무승부', W / 2, H - 16);
+
+  // 워터마크
+  ctx.font = `11px ${FONT}`; ctx.fillStyle = '#1e3a5f'; ctx.textAlign = 'right';
+  ctx.fillText('스타대학 데이터 센터', W - 12, H - 40);
 }
