@@ -1122,8 +1122,8 @@ function renderShareCardByMatchObj(m){
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
-        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`vertical-align:middle;flex-shrink:0${!aW&&bW?';filter:blur(2px) grayscale(.7);opacity:.35':''}`):'';
-        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`vertical-align:middle;flex-shrink:0${!bW&&aW?';filter:blur(2px) grayscale(.7);opacity:.35':''}`):'';
+        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`vertical-align:middle;flex-shrink:0${!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':''}`):'';
+        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`vertical-align:middle;flex-shrink:0${!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':''}`):'';
 
         return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 0;border-bottom:1px solid ${theme.divider}">
           <span style="color:${theme.textDim};min-width:42px;font-size:10px">경기${gi+1}</span>
