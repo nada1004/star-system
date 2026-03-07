@@ -1122,13 +1122,15 @@ function renderShareCardByMatchObj(m){
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
+        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px','vertical-align:middle;flex-shrink:0'):'';
+        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px','vertical-align:middle;flex-shrink:0'):'';
         return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 0;border-bottom:1px solid ${theme.divider}">
           <span style="color:${theme.textDim};min-width:42px;font-size:10px">경기${gi+1}</span>
-          <span style="flex:1;font-weight:${aW?'800':'400'};color:${aW?theme.text:theme.textDim};text-align:right">${g.playerA||'?'}</span>
+          <span style="flex:1;font-weight:${aW?'800':'400'};color:${aW?theme.text:theme.textDim};text-align:right;display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${photoA}${g.playerA||'?'}</span>
           ${aW?`<span style="background:${ca};color:#fff;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:34px;flex-shrink:0"></span>'}
           <span style="color:${theme.textDim};font-size:10px;flex-shrink:0">vs</span>
           ${bW?`<span style="background:${cb};color:#fff;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:34px;flex-shrink:0"></span>'}
-          <span style="flex:1;font-weight:${bW?'800':'400'};color:${bW?theme.text:theme.textDim}">${g.playerB||'?'}</span>
+          <span style="flex:1;font-weight:${bW?'800':'400'};color:${bW?theme.text:theme.textDim};display:inline-flex;align-items:center;gap:4px">${photoB}${g.playerB||'?'}</span>
           ${g.map?`<span style="color:${theme.textDim};font-size:9px;flex-shrink:0">📍${g.map}</span>`:''}
         </div>`;
       }).join('');

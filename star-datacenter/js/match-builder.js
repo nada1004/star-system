@@ -191,9 +191,9 @@ function gjRecordsHTML(){
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
         <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
-        <span style="font-weight:700">${s.p1}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
-        <span style="font-weight:700">${s.p2}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
@@ -655,83 +655,46 @@ function proRankHTML(){
 /* ══════════════════════════════════════
    끝장전 공유카드
 ══════════════════════════════════════ */
-function _gjPlayerCardHTML(name, wins, isWinner) {
-  const p = players.find(x => x.name === name) || {};
-  const RCOLOR = { T:'#dbeafe', Z:'#ede9fe', P:'#fef3c7' };
-  const RTXT   = { T:'#1e3a8a', Z:'#4c1d95', P:'#78350f' };
-  const photoBg = RCOLOR[p.race] || '#334155';
-  const photoTxt = RTXT[p.race] || '#94a3b8';
-  const photoHTML = p.photo
-    ? `<img src="${p.photo}" style="width:104px;height:104px;border-radius:50%;object-fit:cover;display:block;border:${isWinner?'4px solid #4ade80':'3px solid #334155'};box-shadow:${isWinner?'0 0 0 2px #16a34a':'none'}">`
-    : `<div style="width:104px;height:104px;border-radius:50%;background:${photoBg};color:${photoTxt};display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;border:${isWinner?'4px solid #4ade80':'3px solid #334155'}">${p.race||'?'}</div>`;
-  return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:180px">
-    ${photoHTML}
-    <div style="font-size:20px;font-weight:900;color:${isWinner?'#4ade80':'#f1f5f9'}">${name}</div>
-    <div style="font-size:12px;color:#64748b">${p.univ||''}</div>
-    <div style="font-size:56px;font-weight:900;color:${isWinner?'#4ade80':'#475569'};line-height:1.1">${wins}</div>
-  </div>`;
+function openGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
+  _shareMode = 'match';
+  openShareCardModal();
+  setTimeout(() => renderGJShareCard(p1, p2, p1wins, p2wins, date, winner), 80);
 }
 
-function openGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
-  const existing = document.getElementById('gj-share-modal');
-  if (existing) existing.remove();
+function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
+  const card = document.getElementById('share-card');
+  if (!card) return;
+  const pp1 = players.find(x => x.name === p1) || {};
+  const pp2 = players.find(x => x.name === p2) || {};
+  const col1 = gc(pp1.univ || '');
+  const col2 = gc(pp2.univ || '');
+  const winnerCol = p1 === winner ? col1 : p2 === winner ? col2 : '#475569';
 
-  const cardHTML = `
-    <div id="gj-share-card" style="width:560px;background:#0f172a;border-radius:14px;overflow:hidden;font-family:'Noto Sans KR','Malgun Gothic',sans-serif">
-      <div style="height:5px;background:linear-gradient(90deg,#7c3aed,#2563eb)"></div>
-      <div style="padding:22px 28px 20px">
-        <div style="text-align:center;color:#f1f5f9;font-size:20px;font-weight:900;margin-bottom:4px">⚔️ 끝장전 결과</div>
-        <div style="text-align:center;color:#475569;font-size:13px;margin-bottom:20px">${date||''}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          ${_gjPlayerCardHTML(p1, p1wins, p1===winner)}
-          <div style="font-size:32px;font-weight:900;color:#3b82f6;flex-shrink:0">VS</div>
-          ${_gjPlayerCardHTML(p2, p2wins, p2===winner)}
-        </div>
-        <div style="border-top:1px solid #1e3a5f;margin-top:18px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:15px;font-weight:900;color:${winner?'#4ade80':'#64748b'}">${winner?'🏆 '+winner+' 최종 승리':'무승부'}</div>
-          <div style="font-size:11px;color:#1e3a5f">스타대학 데이터 센터</div>
-        </div>
-      </div>
+  const playerBlock = (name, pObj, wins, isWinner, side) => {
+    const col = gc(pObj.univ || '');
+    const photoSize = '72px';
+    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? '#4ade80' : 'rgba(255,255,255,.3)'};box-shadow:${isWinner ? '0 0 0 2px #16a34a' : 'none'}`);
+    const align = side === 'left' ? 'flex-end' : 'flex-start';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:${align};gap:6px;min-width:0">
+      ${photo}
+      <div style="font-size:17px;font-weight:900;color:${isWinner?'#fff':'rgba(255,255,255,.7)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${name}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55)">${pObj.univ||''}</div>
+      <div style="font-size:50px;font-weight:900;color:${isWinner?'#4ade80':'rgba(255,255,255,.35)'};line-height:1">${wins}</div>
+      ${isWinner?`<span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px">🏆 승리</span>`:`<div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">패배</div>`}
     </div>`;
-
-  const modal = document.createElement('div');
-  modal.id = 'gj-share-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-
-  const box = document.createElement('div');
-  box.style.cssText = 'background:#1e293b;border-radius:16px;padding:20px;max-width:640px;width:100%;text-align:center;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.5)';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕';
-  closeBtn.style.cssText = 'position:absolute;top:10px;right:12px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1';
-  closeBtn.onclick = () => modal.remove();
-
-  const cardWrap = document.createElement('div');
-  cardWrap.style.cssText = 'margin-bottom:14px;display:inline-block';
-  cardWrap.innerHTML = cardHTML;
-
-  const dlBtn = document.createElement('button');
-  dlBtn.textContent = '⬇️ 이미지 저장';
-  dlBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer';
-  dlBtn.onclick = () => {
-    dlBtn.disabled = true; dlBtn.textContent = '생성 중...';
-    const card = document.getElementById('gj-share-card');
-    html2canvas(card, { useCORS: true, allowTaint: true, scale: 2, backgroundColor: null }).then(canvas => {
-      canvas.toBlob(blob => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `끝장전_${p1}vs${p2}_${date||''}.png`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        dlBtn.disabled = false; dlBtn.textContent = '⬇️ 이미지 저장';
-      });
-    }).catch(() => { dlBtn.disabled = false; dlBtn.textContent = '⬇️ 이미지 저장'; });
   };
 
-  box.appendChild(closeBtn);
-  box.appendChild(cardWrap);
-  box.appendChild(dlBtn);
-  modal.appendChild(box);
-  document.body.appendChild(modal);
+  card.innerHTML = `<div style="background:linear-gradient(135deg,${col1}cc,${winnerCol}99,${col2}cc);padding:24px;color:#fff;position:relative;overflow:hidden;border-radius:18px;font-family:'Noto Sans KR',sans-serif">
+    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9);background:rgba(255,255,255,.15);padding:2px 12px;border-radius:20px">⚔️ 끝장전</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.6)">${date||''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      ${playerBlock(p1, pp1, p1wins, p1===winner, 'left')}
+      <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.5);flex-shrink:0;text-align:center">VS</div>
+      ${playerBlock(p2, pp2, p2wins, p2===winner, 'right')}
+    </div>
+    <div style="margin-top:14px;text-align:right;font-size:9px;opacity:.35;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+  </div>`;
 }
