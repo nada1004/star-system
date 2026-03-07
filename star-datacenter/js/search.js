@@ -282,6 +282,19 @@ function findPlayerByPartialName(namePart) {
       if (nsPartial.length === 1) return { player: nsPartial[0], candidates: nsPartial, similar: [] };
       if (nsPartial.length > 1)   return { player: null, candidates: nsPartial, similar: [] };
     }
+
+    // 4.7) 문자 포함 검색: noSpace의 모든 글자가 선수 이름에 포함된 경우
+    // 예: "안아" → 이름에 '안'과 '아'가 모두 있는 선수
+    const searchStr = noSpace.length >= 2 ? noSpace : trimmed;
+    if (searchStr.length >= 2) {
+      const chars = [...new Set([...searchStr])];
+      const charMatch = players.filter(p => {
+        const pn = p.name.replace(/\s+/g,'');
+        return chars.every(ch => pn.includes(ch));
+      });
+      if (charMatch.length === 1) return { player: charMatch[0], candidates: charMatch, similar: [] };
+      if (charMatch.length > 1)   return { player: null, candidates: charMatch, similar: [] };
+    }
   }
   // 5) 미인식 → 유사 이름 후보 제안 (Levenshtein 기반)
   const similar = _findSimilarPlayers(trimmed);
