@@ -695,18 +695,20 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   };
 
   const gameRows = games.map((m, gi) => {
-    const wIsP1 = m.wName === p1;
-    const wPhoto = getPlayerPhotoHTML(m.wName, '18px', 'flex-shrink:0');
-    const lPhoto = getPlayerPhotoHTML(m.lName, '18px', 'flex-shrink:0;filter:blur(1px) grayscale(.2);opacity:.55');
+    const p1win = m.wName === p1;
+    const p1filter = p1win ? '' : ';filter:blur(1px) grayscale(.2);opacity:.55';
+    const p2filter = p1win ? ';filter:blur(1px) grayscale(.2);opacity:.55' : '';
+    const p1Photo = getPlayerPhotoHTML(p1, '18px', `flex-shrink:0${p1filter}`);
+    const p2Photo = getPlayerPhotoHTML(p2, '18px', `flex-shrink:0${p2filter}`);
     const mapTxt = m.map && m.map !== '-' ? `<span style="color:#aaa;font-size:9px;margin-left:4px">📍${m.map}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:#f8fafc;margin-bottom:4px">
       <span style="font-size:9px;color:#bbb;min-width:32px">${gi+1}경기</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
-        ${wPhoto}<span style="font-size:11px;font-weight:900;color:${WC}">${m.wName}</span>
+        ${p1Photo}<span style="font-size:11px;font-weight:${p1win?'900':'400'};color:${p1win?WC:LC}">${p1}</span>
       </span>
-      <span style="font-size:10px;color:#ccc;flex-shrink:0">승</span>
+      <span style="font-size:10px;color:#ccc;flex-shrink:0">vs</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
-        ${lPhoto}<span style="font-size:11px;color:${LC}">${m.lName}</span>
+        ${p2Photo}<span style="font-size:11px;font-weight:${p1win?'400':'900'};color:${p1win?LC:WC}">${p2}</span>
       </span>
       ${mapTxt}
     </div>`;
