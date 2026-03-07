@@ -198,13 +198,17 @@ function gjRecordsHTML(){
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
       </summary>
-      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
+      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
       const origIdx=gjM.findIndex(x=>x._id===m._id);
+      const p1win=m.wName===s.p1;
+      const p1photo=getPlayerPhotoHTML(s.p1,'18px','vertical-align:middle;flex-shrink:0');
+      const p2photo=getPlayerPhotoHTML(s.p2,'18px','vertical-align:middle;flex-shrink:0');
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
-        <td><span style="font-weight:900;color:#111">${m.wName}</span></td>
-        <td><span style="font-weight:400;color:#999">${m.lName}</span></td>
+        <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'#111':'#aaa'}">${s.p1}</span></span></td>
+        <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
+        <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'#111'}">${s.p2}</span></span></td>
         <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
         ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
       </tr>`;
