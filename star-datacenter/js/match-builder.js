@@ -673,7 +673,8 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   const playerBlock = (name, pObj, wins, isWinner, side) => {
     const col = gc(pObj.univ || '');
     const photoSize = '72px';
-    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? '#4ade80' : 'rgba(255,255,255,.3)'};box-shadow:${isWinner ? '0 0 0 2px #16a34a' : 'none'}`);
+    const loserFilter = !isWinner && winner ? ';filter:blur(2px) grayscale(.7);opacity:.4' : '';
+    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? '#4ade80' : 'rgba(255,255,255,.3)'};box-shadow:${isWinner ? '0 0 0 2px #16a34a' : 'none'}${loserFilter}`);
     const align = side === 'left' ? 'flex-end' : 'flex-start';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:${align};gap:6px;min-width:0">
       ${photo}
