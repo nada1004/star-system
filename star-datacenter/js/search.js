@@ -597,6 +597,57 @@ function parsePasteLine(line) {
     };
   }
 
+  // ── 형식 E: 맵약자 선수A[WIN][LOSE]선수B (🆚 없음, 마크 인접) ──
+  // 예: "녹 예리✅⬜복실" → map=녹두전선, 예리승 / "도 상문⬜✅병구" → 병구승
+  {
+    const WIN_MARKS_E  = ['✅', '⭕', '☑'];
+    const LOSE_MARKS_E = ['❌', '⬜'];
+    let markPairIdx = -1, markPairLen = 2, leftIsWin = false;
+    for (let i = 0; i < line.length - 1; i++) {
+      const c1 = line[i], c2 = line[i + 1];
+      if (WIN_MARKS_E.includes(c1) && LOSE_MARKS_E.includes(c2)) {
+        markPairIdx = i; leftIsWin = true; break;
+      }
+      if (LOSE_MARKS_E.includes(c1) && WIN_MARKS_E.includes(c2)) {
+        markPairIdx = i; leftIsWin = false; break;
+      }
+    }
+    if (markPairIdx > 0) {
+      const beforePart = line.slice(0, markPairIdx).trim();
+      const afterPart  = line.slice(markPairIdx + markPairLen).trim();
+      let mapAlias = '', leftPlayerStr = beforePart;
+      const spaceIdx = beforePart.indexOf(' ');
+      if (spaceIdx > 0) {
+        const candidate = beforePart.slice(0, spaceIdx).trim();
+        const resolved  = resolveMapName(candidate);
+        if (resolved !== candidate) {
+          mapAlias = candidate;
+          leftPlayerStr = beforePart.slice(spaceIdx + 1).trim();
+        }
+      }
+      const eMap = mapAlias ? resolveMapName(mapAlias) : '-';
+      const splitNR_E = (s) => {
+        const prefixM = s.match(/^([TZP])(.+)$/);
+        if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
+        const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
+        if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
+        const simpleM = s.match(/^(.+?)([TZP])$/);
+        if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
+        return { name: s.trim(), race: '' };
+      };
+      const left  = splitNR_E(leftPlayerStr);
+      const right = splitNR_E(afterPart);
+      if (left.name && right.name) {
+        return {
+          winName:  leftIsWin ? left.name  : right.name,
+          loseName: leftIsWin ? right.name : left.name,
+          map: eMap, _rawMapStr: mapAlias,
+          leftName: left.name, rightName: right.name
+        };
+      }
+    }
+  }
+
   // ── 형식 A: [맵] 이름(승/패) vs (승/패)이름 ──
   // 맵 추출: 줄 맨 앞 [xxx] 또는 줄 끝 [xxx] 또는 줄 끝 단어(약자/등록맵)
   let map = '-';
