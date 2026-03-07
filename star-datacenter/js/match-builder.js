@@ -203,8 +203,8 @@ function gjRecordsHTML(){
       const origIdx=gjM.findIndex(x=>x._id===m._id);
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
-        <td><span class="wt" style="font-weight:700">${m.wName}</span></td>
-        <td><span class="lt" style="font-weight:700">${m.lName}</span></td>
+        <td><span style="font-weight:900;color:#111">${m.wName}</span></td>
+        <td><span style="font-weight:400;color:#999">${m.lName}</span></td>
         <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
         ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
       </tr>`;
@@ -677,36 +677,36 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     return (m.d||'') === date && mp[0] === pair[0] && mp[1] === pair[1];
   });
 
-  const WC = '#fbbf24';   // 승자 강조색 (골드)
-  const LC = 'rgba(255,255,255,.55)'; // 패자 색
+  const WC = '#111';   // 승자: 볼드 검정
+  const LC = '#aaa';   // 패자: 연한 회색
 
   const playerBlock = (name, pObj, wins, isWinner, side) => {
     const photoSize = '72px';
-    const loserFilter = !isWinner && winner ? ';filter:blur(1px) grayscale(.2);opacity:.6' : '';
-    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? WC : 'rgba(255,255,255,.25)'};box-shadow:${isWinner ? `0 0 0 2px rgba(251,191,36,.5)` : 'none'}${loserFilter}`);
+    const loserFilter = !isWinner && winner ? ';filter:blur(1px) grayscale(.2);opacity:.55' : '';
+    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? winnerCol : '#e2e8f0'};box-shadow:${isWinner ? `0 0 0 2px ${winnerCol}66` : 'none'}${loserFilter}`);
     const align = side === 'left' ? 'flex-end' : 'flex-start';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:${align};gap:6px;min-width:0">
       ${photo}
-      <div style="font-size:17px;font-weight:900;color:${isWinner?'#fff':LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${name}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.5)">${pObj.univ||''}</div>
+      <div style="font-size:17px;font-weight:${isWinner?'900':'400'};color:${isWinner?WC:LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${name}</div>
+      <div style="font-size:11px;color:#888">${pObj.univ||''}</div>
       <div style="font-size:50px;font-weight:900;color:${isWinner?WC:LC};line-height:1">${wins}</div>
-      ${isWinner?`<span style="background:rgba(251,191,36,.25);border:1px solid rgba(251,191,36,.6);color:${WC};font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px">🏆 승리</span>`:`<div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:600">패배</div>`}
+      ${isWinner?`<span style="background:${winnerCol}18;border:1px solid ${winnerCol}55;color:${winnerCol};font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px">🏆 승리</span>`:`<div style="font-size:10px;color:${LC};font-weight:400">패배</div>`}
     </div>`;
   };
 
   const gameRows = games.map((m, gi) => {
     const wIsP1 = m.wName === p1;
     const wPhoto = getPlayerPhotoHTML(m.wName, '18px', 'flex-shrink:0');
-    const lPhoto = getPlayerPhotoHTML(m.lName, '18px', 'flex-shrink:0;filter:blur(1px) grayscale(.2);opacity:.6');
-    const mapTxt = m.map && m.map !== '-' ? `<span style="color:rgba(255,255,255,.4);font-size:9px;margin-left:4px">📍${m.map}</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.07);margin-bottom:4px">
-      <span style="font-size:9px;color:rgba(255,255,255,.4);min-width:32px">${gi+1}경기</span>
+    const lPhoto = getPlayerPhotoHTML(m.lName, '18px', 'flex-shrink:0;filter:blur(1px) grayscale(.2);opacity:.55');
+    const mapTxt = m.map && m.map !== '-' ? `<span style="color:#aaa;font-size:9px;margin-left:4px">📍${m.map}</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:#f8fafc;margin-bottom:4px">
+      <span style="font-size:9px;color:#bbb;min-width:32px">${gi+1}경기</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
         ${wIsP1?wPhoto:''}
-        <span style="font-size:11px;font-weight:800;color:${WC}">${m.wName}</span>
+        <span style="font-size:11px;font-weight:900;color:${WC}">${m.wName}</span>
         ${!wIsP1?wPhoto:''}
       </span>
-      <span style="font-size:10px;color:rgba(255,255,255,.3);flex-shrink:0">승</span>
+      <span style="font-size:10px;color:#ccc;flex-shrink:0">승</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
         ${wIsP1?lPhoto:''}
         <span style="font-size:11px;color:${LC}">${m.lName}</span>
@@ -716,21 +716,21 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     </div>`;
   }).join('');
 
-  card.innerHTML = `<div style="background:linear-gradient(135deg,${col1}cc,${winnerCol}99,${col2}cc);padding:24px;color:#fff;position:relative;overflow:hidden;border-radius:18px;font-family:'Noto Sans KR',sans-serif">
-    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+  card.innerHTML = `<div style="background:#fff;border:1px solid #e2e8f0;padding:24px;color:#111;position:relative;overflow:hidden;border-radius:18px;font-family:'Noto Sans KR',sans-serif">
+    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:${winnerCol}0d;pointer-events:none"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9);background:rgba(255,255,255,.15);padding:2px 12px;border-radius:20px">⚔️ 끝장전</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.6)">${date||''}</div>
+      <div style="font-size:13px;font-weight:800;color:${winnerCol};background:${winnerCol}15;padding:2px 12px;border-radius:20px">⚔️ 끝장전</div>
+      <div style="font-size:11px;color:#999">${date||''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:${games.length?'16':'0'}px">
       ${playerBlock(p1, pp1, p1wins, p1===winner, 'left')}
-      <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.5);flex-shrink:0;text-align:center">VS</div>
+      <div style="font-size:22px;font-weight:900;color:#ccc;flex-shrink:0;text-align:center">VS</div>
       ${playerBlock(p2, pp2, p2wins, p2===winner, 'right')}
     </div>
-    ${games.length ? `<div style="border-top:1px solid rgba(255,255,255,.15);padding-top:12px">
-      <div style="font-size:10px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:6px;letter-spacing:.5px">경기 상세</div>
+    ${games.length ? `<div style="border-top:1px solid #e2e8f0;padding-top:12px">
+      <div style="font-size:10px;color:#999;font-weight:700;margin-bottom:6px;letter-spacing:.5px">경기 상세</div>
       ${gameRows}
     </div>` : ''}
-    <div style="margin-top:14px;text-align:right;font-size:9px;opacity:.35;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+    <div style="margin-top:14px;text-align:right;font-size:9px;color:#ccc;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
   </div>`;
 }
