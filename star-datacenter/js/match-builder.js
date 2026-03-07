@@ -202,8 +202,8 @@ function gjRecordsHTML(){
     s.games.forEach((m,gi)=>{
       const origIdx=gjM.findIndex(x=>x._id===m._id);
       const p1win=m.wName===s.p1;
-      const p1photo=getPlayerPhotoHTML(s.p1,'18px','vertical-align:middle;flex-shrink:0');
-      const p2photo=getPlayerPhotoHTML(s.p2,'18px','vertical-align:middle;flex-shrink:0');
+      const p1photo=getPlayerPhotoHTML(s.p1,'18px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
+      const p2photo=getPlayerPhotoHTML(s.p2,'18px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'#111':'#aaa'}">${s.p1}</span></span></td>
