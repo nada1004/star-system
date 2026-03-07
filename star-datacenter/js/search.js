@@ -224,7 +224,8 @@ function _findSimilarPlayers(namePart, maxResults=5) {
 
 function findPlayerByPartialName(namePart) {
   if (!namePart) return { player: null, candidates: [], similar: [] };
-  const trimmed = namePart.trim();
+  // \u3164(한글 채움 문자), \u00A0(non-breaking), 기타 비표준 공백 → 일반 공백으로 정규화
+  const trimmed = namePart.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!trimmed) return { player: null, candidates: [], similar: [] };
 
   // 공백 정규화 버전: "안    아" → "안아"
@@ -503,7 +504,8 @@ function parseFormatD_blocks(raw) {
 }
 
 function parsePasteLine(line) {
-  line = line.trim();
+  // \u3164(한글 채움 문자) 등 비표준 공백 → 일반 공백으로 정규화
+  line = line.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!line) return null;
 
   // 앞쪽 번호/기호 제거
