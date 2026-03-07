@@ -702,15 +702,11 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:#f8fafc;margin-bottom:4px">
       <span style="font-size:9px;color:#bbb;min-width:32px">${gi+1}경기</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
-        ${wIsP1?wPhoto:''}
-        <span style="font-size:11px;font-weight:900;color:${WC}">${m.wName}</span>
-        ${!wIsP1?wPhoto:''}
+        ${wPhoto}<span style="font-size:11px;font-weight:900;color:${WC}">${m.wName}</span>
       </span>
       <span style="font-size:10px;color:#ccc;flex-shrink:0">승</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
-        ${wIsP1?lPhoto:''}
-        <span style="font-size:11px;color:${LC}">${m.lName}</span>
-        ${!wIsP1?lPhoto:''}
+        ${lPhoto}<span style="font-size:11px;color:${LC}">${m.lName}</span>
       </span>
       ${mapTxt}
     </div>`;
