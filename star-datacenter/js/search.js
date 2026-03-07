@@ -840,6 +840,9 @@ function pastePreview() {
     const trimmed = line.trim();
     if (!trimmed) return;
 
+    // ── 팀 스코어 라인 무시: "팀명 (승/패) N:M (승/패) 팀명" ──
+    if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
