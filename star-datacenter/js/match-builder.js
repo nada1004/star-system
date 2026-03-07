@@ -677,17 +677,20 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     return (m.d||'') === date && mp[0] === pair[0] && mp[1] === pair[1];
   });
 
+  const WC = '#fbbf24';   // 승자 강조색 (골드)
+  const LC = 'rgba(255,255,255,.55)'; // 패자 색
+
   const playerBlock = (name, pObj, wins, isWinner, side) => {
     const photoSize = '72px';
     const loserFilter = !isWinner && winner ? ';filter:blur(1px) grayscale(.2);opacity:.6' : '';
-    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? '#4ade80' : 'rgba(255,255,255,.3)'};box-shadow:${isWinner ? '0 0 0 2px #16a34a' : 'none'}${loserFilter}`);
+    const photo = getPlayerPhotoHTML(name, photoSize, `border:3px solid ${isWinner ? WC : 'rgba(255,255,255,.25)'};box-shadow:${isWinner ? `0 0 0 2px rgba(251,191,36,.5)` : 'none'}${loserFilter}`);
     const align = side === 'left' ? 'flex-end' : 'flex-start';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:${align};gap:6px;min-width:0">
       ${photo}
-      <div style="font-size:17px;font-weight:900;color:${isWinner?'#fff':'rgba(255,255,255,.7)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${name}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.55)">${pObj.univ||''}</div>
-      <div style="font-size:50px;font-weight:900;color:${isWinner?'#4ade80':'rgba(255,255,255,.35)'};line-height:1">${wins}</div>
-      ${isWinner?`<span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px">🏆 승리</span>`:`<div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">패배</div>`}
+      <div style="font-size:17px;font-weight:900;color:${isWinner?'#fff':LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${name}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5)">${pObj.univ||''}</div>
+      <div style="font-size:50px;font-weight:900;color:${isWinner?WC:LC};line-height:1">${wins}</div>
+      ${isWinner?`<span style="background:rgba(251,191,36,.25);border:1px solid rgba(251,191,36,.6);color:${WC};font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px">🏆 승리</span>`:`<div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:600">패배</div>`}
     </div>`;
   };
 
@@ -695,18 +698,18 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     const wIsP1 = m.wName === p1;
     const wPhoto = getPlayerPhotoHTML(m.wName, '18px', 'flex-shrink:0');
     const lPhoto = getPlayerPhotoHTML(m.lName, '18px', 'flex-shrink:0;filter:blur(1px) grayscale(.2);opacity:.6');
-    const mapTxt = m.map && m.map !== '-' ? `<span style="color:rgba(255,255,255,.45);font-size:9px;margin-left:4px">📍${m.map}</span>` : '';
+    const mapTxt = m.map && m.map !== '-' ? `<span style="color:rgba(255,255,255,.4);font-size:9px;margin-left:4px">📍${m.map}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.07);margin-bottom:4px">
       <span style="font-size:9px;color:rgba(255,255,255,.4);min-width:32px">${gi+1}경기</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
         ${wIsP1?wPhoto:''}
-        <span style="font-size:11px;font-weight:800;color:#4ade80">${m.wName}</span>
+        <span style="font-size:11px;font-weight:800;color:${WC}">${m.wName}</span>
         ${!wIsP1?wPhoto:''}
       </span>
-      <span style="font-size:10px;color:rgba(255,255,255,.35);flex-shrink:0">승</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.3);flex-shrink:0">승</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
         ${wIsP1?lPhoto:''}
-        <span style="font-size:11px;color:rgba(255,255,255,.5)">${m.lName}</span>
+        <span style="font-size:11px;color:${LC}">${m.lName}</span>
         ${!wIsP1?lPhoto:''}
       </span>
       ${mapTxt}
