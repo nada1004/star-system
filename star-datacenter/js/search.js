@@ -688,7 +688,7 @@ function parsePasteLine(line) {
   }
 
   // ── 형식 F: 이모지 마크 + vs 형식 ──
-  // 예: "⭕라박이 vs 영주❌", "❌라박이 vs 영주⭕", "라박이⭕ vs ❌영주"
+  // 예: "⭕라박이 vs 영주❌", "❌라박이 vs 영주⭕ (폴)", "라박이⭕ vs ❌영주 [라]"
   {
     const vsMatchF = line.match(/^(.+?)\s+vs\s+(.+)$/i);
     if (vsMatchF) {
@@ -697,6 +697,16 @@ function parsePasteLine(line) {
       const ALL_F  = [...WIN_F, ...LOSE_F];
       let lp = vsMatchF[1].replace(/️/g, '').trim();
       let rp = vsMatchF[2].replace(/️/g, '').trim();
+      // 맵을 마크 검사 전에 먼저 추출: [맵] 또는 (맵) 형식
+      let fMap = '-';
+      const mbF = rp.match(/\[([^\]]+)\]\s*$/) || rp.match(/\(([^)]+)\)\s*$/);
+      if (mbF) {
+        const cand = mbF[1].trim();
+        const res = resolveMapName(cand);
+        if (res !== cand || getMapAlias()[cand] || (typeof maps !== 'undefined' && maps.includes(cand))) {
+          fMap = res; rp = rp.slice(0, mbF.index).trim();
+        }
+      }
       let lMark = null, rMark = null;
       for (const mk of ALL_F) { if (lp.startsWith(mk)) { lMark = mk; lp = lp.slice(mk.length).trim(); break; } }
       if (!lMark) { for (const mk of ALL_F) { if (lp.endsWith(mk)) { lMark = mk; lp = lp.slice(0,-mk.length).trim(); break; } } }
@@ -705,16 +715,13 @@ function parsePasteLine(line) {
       if (lMark && rMark) {
         const lWin = WIN_F.includes(lMark), rWin = WIN_F.includes(rMark);
         if (lWin !== rWin) {
-          let fMap = '-', rClean = rp;
-          const mbF = rp.match(/\[([^\]]+)\]\s*$/);
-          if (mbF) { fMap = resolveMapName(mbF[1].trim()); rClean = rp.slice(0, mbF.index).trim(); }
           const splitNR_F = (s) => {
             const pm = s.match(/^([TZP])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
             const bm = s.match(/^(.+?)\[(\d*)([TZP])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
             const sm = s.match(/^(.+?)([TZP])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
             return { name: s.trim(), race: '' };
           };
-          const left = splitNR_F(lp), right = splitNR_F(rClean);
+          const left = splitNR_F(lp), right = splitNR_F(rp);
           if (left.name && right.name) {
             return { winName: lWin ? left.name : right.name, loseName: lWin ? right.name : left.name,
               map: fMap, leftName: left.name, rightName: right.name };
