@@ -223,7 +223,7 @@ function save(){
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;
-let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0}; // 대전기록 탭 페이지 상태
+let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0, ind:0, gj:0}; // 대전기록 탭 페이지 상태
 let playerHistPage=0; // 스트리머 상세 페이지 상태
 const HIST_PAGE_SIZE=20;
 const HIST_PAGE_SIZE_MOBILE=10;

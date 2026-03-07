@@ -83,18 +83,36 @@ function indRankHTML(){
 
 function indRecordsHTML(){
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  let h=`<div style="max-height:500px;overflow-y:auto"><table><thead><tr><th style="text-align:left">날짜</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
-  indM.forEach((m,i)=>{
+  const pageSize=getHistPageSize();
+  const total=indM.length;
+  const totalPages=Math.ceil(total/pageSize);
+  if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
+  const cur=histPage['ind'];
+  const slice=total>pageSize?indM.slice(cur*pageSize,(cur+1)*pageSize):indM;
+  let h=`<table><thead><tr><th style="text-align:left">날짜</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
+  slice.forEach((m)=>{
+    const origIdx=indM.indexOf(m);
     const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
     h+=`<tr>
       <td style="font-size:11px;color:var(--gray-l)">${m.d||''}</td>
       <td><span class="wt" style="font-weight:700">${m.wName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${wp?.univ||''}</span></td>
       <td><span class="lt" style="font-weight:700">${m.lName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${lp?.univ||''}</span></td>
       <td style="font-size:11px">${m.map||'-'}</td>
-      ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="indM.splice(${i},1);save();render()">삭제</button></td>`:''}
+      ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="indM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
     </tr>`;
   });
-  return h+`</tbody></table></div>`;
+  h+=`</tbody></table>`;
+  if(totalPages>1){
+    h+=`<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 0;flex-wrap:wrap">`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=0;render()" ${cur===0?'disabled':''}>«</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=Math.max(0,${cur}-1);render()" ${cur===0?'disabled':''}>‹</button>`;
+    let s=Math.max(0,cur-3),e=Math.min(totalPages-1,s+6);if(e-s<6)s=Math.max(0,e-6);
+    for(let p=s;p<=e;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['ind']=${p};render()">${p+1}</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=Math.min(${totalPages-1},${cur}+1);render()" ${cur===totalPages-1?'disabled':''}>›</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=${totalPages-1};render()" ${cur===totalPages-1?'disabled':''}>»</button>`;
+    h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
+  }
+  return h;
 }
 
 /* ══════════════════════════════════════
@@ -144,18 +162,66 @@ function gjRankHTML(){
 
 function gjRecordsHTML(){
   if(!gjM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  let h=`<div style="max-height:500px;overflow-y:auto"><table><thead><tr><th style="text-align:left">날짜</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
-  gjM.forEach((m,i)=>{
-    const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
-    h+=`<tr>
-      <td style="font-size:11px;color:var(--gray-l)">${m.d||''}</td>
-      <td><span class="wt" style="font-weight:700">${m.wName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${wp?.univ||''}</span></td>
-      <td><span class="lt" style="font-weight:700">${m.lName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${lp?.univ||''}</span></td>
-      <td style="font-size:11px">${m.map||'-'}</td>
-      ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="gjM.splice(${i},1);save();render()">삭제</button></td>`:''}
-    </tr>`;
+  // 세션 그룹화: (날짜, 정렬된 선수쌍) 기준
+  const sessions=[];
+  const sessionMap=new Map();
+  gjM.forEach((m)=>{
+    const pair=[m.wName,m.lName].sort();
+    const k=`${m.d||''}|${pair[0]}|${pair[1]}`;
+    if(!sessionMap.has(k)){
+      const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
+      sessionMap.set(k,s);sessions.push(s);
+    }
+    const s=sessionMap.get(k);s.games.push(m);s.ids.push(m._id);
   });
-  return h+`</tbody></table></div>`;
+  const pageSize=getHistPageSize();
+  const total=sessions.length;
+  const totalPages=Math.ceil(total/pageSize);
+  if(histPage['gj']>=totalPages) histPage['gj']=Math.max(0,totalPages-1);
+  const cur=histPage['gj'];
+  const slice=total>pageSize?sessions.slice(cur*pageSize,(cur+1)*pageSize):sessions;
+  let h='';
+  slice.forEach(s=>{
+    const p1wins=s.games.filter(m=>m.wName===s.p1).length;
+    const p2wins=s.games.filter(m=>m.wName===s.p2).length;
+    const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
+    const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
+    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="gjM=gjM.filter(m=>!${JSON.stringify(s.ids)}.includes(m._id));save();render()">전체삭제</button>`:'';
+    h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
+        <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
+        <span style="font-weight:700">${s.p1}</span>
+        <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
+        <span style="font-weight:700">${s.p2}</span>
+        ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
+        <span style="margin-left:auto">${delBtn}</span>
+      </summary>
+      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
+    s.games.forEach((m,gi)=>{
+      const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
+      const origIdx=gjM.findIndex(x=>x._id===m._id);
+      h+=`<tr>
+        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
+        <td><span class="wt" style="font-weight:700">${m.wName}</span></td>
+        <td><span class="lt" style="font-weight:700">${m.lName}</span></td>
+        <td style="font-size:11px">${m.map||'-'}</td>
+        ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
+      </tr>`;
+    });
+    h+=`</tbody></table></details>`;
+  });
+  if(totalPages>1){
+    h+=`<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 0;flex-wrap:wrap">`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=0;render()" ${cur===0?'disabled':''}>«</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=Math.max(0,${cur}-1);render()" ${cur===0?'disabled':''}>‹</button>`;
+    let s2=Math.max(0,cur-3),e2=Math.min(totalPages-1,s2+6);if(e2-s2<6)s2=Math.max(0,e2-6);
+    for(let p=s2;p<=e2;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['gj']=${p};render()">${p+1}</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=Math.min(${totalPages-1},${cur}+1);render()" ${cur===totalPages-1?'disabled':''}>›</button>`;
+    h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=${totalPages-1};render()" ${cur===totalPages-1?'disabled':''}>»</button>`;
+    h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
+  }
+  return h;
 }
 
 /* ══════════════════════════════════════
