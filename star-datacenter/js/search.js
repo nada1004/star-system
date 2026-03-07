@@ -1543,7 +1543,7 @@ function pasteApply() {
     return;
   }
 
-  const mode = document.getElementById('paste-mode')?.value || 'individual';
+  const mode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || 'individual';
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
