@@ -227,6 +227,9 @@ function findPlayerByPartialName(namePart) {
   const trimmed = namePart.trim();
   if (!trimmed) return { player: null, candidates: [], similar: [] };
 
+  // 공백 정규화 버전: "안    아" → "안아"
+  const noSpace = trimmed.replace(/\s+/g, '');
+
   // 1) 정확 일치 (이름)
   const exact = players.filter(p => p.name === trimmed);
   if (exact.length === 1) return { player: exact[0], candidates: exact, similar: [] };
@@ -240,6 +243,13 @@ function findPlayerByPartialName(namePart) {
   });
   if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
   if (memoExact.length > 1)   return { player: null, candidates: memoExact, similar: [] };
+
+  // 2.5) 공백 제거 후 정확 일치: "안    아" → "안아"
+  if (noSpace !== trimmed && noSpace.length >= 1) {
+    const nsExact = players.filter(p => p.name.replace(/\s+/g,'') === noSpace);
+    if (nsExact.length === 1) return { player: nsExact[0], candidates: nsExact, similar: [] };
+    if (nsExact.length > 1)   return { player: null, candidates: nsExact, similar: [] };
+  }
 
   // 3) 이름 부분 일치 — 2글자 이상
   if (trimmed.length >= 2) {
@@ -261,9 +271,22 @@ function findPlayerByPartialName(namePart) {
     });
     if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
     if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
+
+    // 4.5) 공백 제거 후 부분 일치
+    if (noSpace !== trimmed && noSpace.length >= 2) {
+      const nsPartial = players.filter(p => {
+        const pns = p.name.replace(/\s+/g,'');
+        return pns.includes(noSpace) || noSpace.includes(pns);
+      });
+      if (nsPartial.length === 1) return { player: nsPartial[0], candidates: nsPartial, similar: [] };
+      if (nsPartial.length > 1)   return { player: null, candidates: nsPartial, similar: [] };
+    }
   }
   // 5) 미인식 → 유사 이름 후보 제안 (Levenshtein 기반)
   const similar = _findSimilarPlayers(trimmed);
+  // 공백 제거 버전으로도 유사 검색
+  const similarNS = noSpace !== trimmed ? _findSimilarPlayers(noSpace) : [];
+  similarNS.forEach(p => { if (!similar.some(q => q.name === p.name)) similar.push(p); });
   return { player: null, candidates: [], similar };
 }
 
@@ -840,8 +863,13 @@ function pastePreview() {
     const trimmed = line.trim();
     if (!trimmed) return;
 
-    // ── 팀 스코어 라인 무시: "팀명 (승/패) N:M (승/패) 팀명" ──
+    // ── 무시할 라인 패턴 ──
+    // 팀 스코어: "팀명 (승/패) N:M (승/패) 팀명"
     if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+    // 메타 정보: "[nSET - ...]", "[슈 에] - ...", "밴" 등 대괄호 제목/주석 라인
+    if (/^\[.*\]\s*[-–—]/.test(trimmed)) return;
+    // 밴/엔트리 정보: "다린,애공 밴" 등 (승/패/🆚 없고, 쉼표+한글+밴으로 끝나는 라인)
+    if (/[,，]\s*\S+\s+밴\s*$/.test(trimmed) && !trimmed.includes('🆚') && !trimmed.includes('vs')) return;
 
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
