@@ -158,6 +158,7 @@ function buildTierTourInputHTML(){
   const addedNames=[...mA,...mB].map(m=>m.name);
 
   let h=`<div class="match-builder"><h3>🎯 티어대회 입력</h3>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['tt'].date=this.value">

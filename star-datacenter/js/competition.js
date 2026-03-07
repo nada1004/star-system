@@ -43,7 +43,7 @@ function rComp(C,T){
       {id:'grprank',lbl:'📊 조별 순위'},
       {id:'tour',lbl:'⚔️ 대진표'},
       {id:'comprank',lbl:'🏅 개인 순위'},
-      ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
+      ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'},{id:'input',lbl:'📝 경기 입력'}]:[]),
     ];
     if(compSub==='tiertour') compSub='league';
   }
@@ -65,6 +65,9 @@ function rComp(C,T){
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
   else if(compSub==='grpedit') h+=rCompGrpEdit();
   else if(compSub==='tiertour') h+=rTierTour();
+  else if(compSub==='input') h+=`<div class="match-builder"><h3>🎖️ 대회 경기 결과 입력</h3>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openCompPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
+    <div style="font-size:12px;color:var(--gray-l);padding:16px;text-align:center;border:1.5px dashed var(--border);border-radius:10px">붙여넣기 버튼으로 경기 결과를 일괄 입력하세요</div></div>`;
   C.innerHTML=h;
 }
 

@@ -1754,6 +1754,24 @@ function pasteApply() {
     savable.forEach(r => {
       gjM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map||'-' });
     });
+  } else if (mode === 'tt') {
+    const ttAB = (r) => {
+      const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
+      return { playerA: leftIsWin ? r.wPlayer : r.lPlayer, playerB: leftIsWin ? r.lPlayer : r.wPlayer, winner: leftIsWin ? 'A' : 'B' };
+    };
+    const ttSetsSnap = Object.keys(setMap).sort((a,b)=>a-b).map(sn=>{
+      const rows=setMap[sn];
+      const games=rows.map(r=>{ const ab=ttAB(r); return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map||'-',winner:ab.winner}; });
+      const scoreA=games.filter(g=>g.winner==='A').length, scoreB=games.filter(g=>g.winner==='B').length;
+      return {scoreA,scoreB,winner:scoreA>scoreB?'A':scoreB>scoreA?'B':'A',games};
+    });
+    const mA=[], mB=[];
+    savable.forEach(r=>{ const ab=ttAB(r);
+      if(ab.playerA&&!mA.find(x=>x.name===ab.playerA.name)) mA.push({name:ab.playerA.name,univ:ab.playerA.univ||'',race:ab.playerA.race||'',tier:ab.playerA.tier||''});
+      if(ab.playerB&&!mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
+    });
+    const ttSA=ttSetsSnap.filter(s=>s.winner==='A').length, ttSB=ttSetsSnap.filter(s=>s.winner==='B').length;
+    ttM.unshift({_id:matchId,d:dateVal,n:compName||'',sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{}});
   }
   // individual: 개인 전적만 (이미 applyGameResult 처리됨)
 
@@ -1962,6 +1980,30 @@ function openGJPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">⚔️ 끝장전 경기 결과 입력 모드</span>';
+}
+
+/* ── 티어대회 전용 붙여넣기 ── */
+function openTTPasteModal() {
+  openPasteModal();
+  window._forcedPasteMode = 'tt';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'mini'; sel.style.display = 'none'; onPasteModeChange('mini'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
+}
+
+/* ── 대회 전용 붙여넣기 ── */
+function openCompPasteModal() {
+  openPasteModal();
+  window._forcedPasteMode = 'comp';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'comp'; sel.style.display = 'none'; onPasteModeChange('comp'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎖️ 대회 경기 결과 입력 모드</span>';
 }
 
 /* ── 대학대전 전용 붙여넣기 ── */
