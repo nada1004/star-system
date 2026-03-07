@@ -24,7 +24,7 @@ function getAdminHashes(){
     return Array.isArray(parsed)?parsed:[parsed];
   }catch{return [];}
 }
-let isLoggedIn=false;
+let isLoggedIn=localStorage.getItem('su_session')==='1';
 
 async function doLogin(){
   const id=document.getElementById('li-id').value.trim();
@@ -35,6 +35,7 @@ async function doLogin(){
   const hashes=getAdminHashes();
   if(hashes.includes(inputHash)){
     isLoggedIn=true;
+    localStorage.setItem('su_session','1');
     cm('loginModal');
     document.getElementById('li-id').value='';
     document.getElementById('li-pw').value='';
@@ -48,6 +49,7 @@ async function doLogin(){
 
 function doLogout(){
   isLoggedIn=false;
+  localStorage.removeItem('su_session');
   if(['member','cfg'].includes(curTab)){curTab='total';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelector('.tab').classList.add('on');}
   if(['grpedit','input'].includes(compSub)) compSub='league';
   applyLoginState();
