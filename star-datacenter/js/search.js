@@ -1523,24 +1523,29 @@ function pasteSelectPlayer(idx, role, name) {
   }
 
   // 다른 모든 행에서 같은 선수를 가리키는 항목 자동 처리
-  // 조건 1: 원본이름 일치  OR  조건 2: candidates/similar 중 같은 선수 포함
+  // 조건 1: 원본이름 일치(공백 정규화 포함)  OR  조건 2: candidates/similar 중 같은 선수 포함
+  const origNoSpace = originalName ? originalName.replace(/\s+/g,'') : '';
+  const _sameOrig = (rawName) => {
+    if (!originalName || !rawName) return false;
+    if (rawName === originalName) return true;
+    // 공백 제거 후 비교: "안    아" vs "안아"
+    return rawName.replace(/\s+/g,'') === origNoSpace && origNoSpace.length >= 1;
+  };
   window._pasteResults.forEach((row, ri) => {
     if (ri === idx) return;
     // 승자 칸
     if (!row.wPlayer) {
-      const sameOriginal = (originalName && row.winName === originalName);
       const inCands = row.wCandidates?.some(c => c.name === p.name);
       const inSimilar = row.wSimilar?.some(c => c.name === p.name);
-      if (sameOriginal || inCands || inSimilar) {
+      if (_sameOrig(row.winName) || inCands || inSimilar) {
         row.winName = p.name; row.wPlayer = p; row.wCandidates = [p]; row.wSimilar = [];
       }
     }
     // 패자 칸
     if (!row.lPlayer) {
-      const sameOriginal = (originalName && row.loseName === originalName);
       const inCands = row.lCandidates?.some(c => c.name === p.name);
       const inSimilar = row.lSimilar?.some(c => c.name === p.name);
-      if (sameOriginal || inCands || inSimilar) {
+      if (_sameOrig(row.loseName) || inCands || inSimilar) {
         row.loseName = p.name; row.lPlayer = p; row.lCandidates = [p]; row.lSimilar = [];
       }
     }

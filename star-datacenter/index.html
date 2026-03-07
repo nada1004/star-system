@@ -31,7 +31,7 @@
 <div class="app">
 <div class="hdr">
   <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
-  <div class="hdr-title" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer" title="메인으로">스타대학 데이터 센터</div>
+  <div class="hdr-title">스타대학 데이터 센터</div>
   <div class="hdr-ver">V49.9</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
@@ -291,7 +291,7 @@
     </div>
 
     <div style="position:relative">
-      <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시 (형식A): 1. [도미] 도재욱P (승) vs (패) 유영진T&#10;예시 (형식B): 리나[4P]❌🆚⭕햇살[4T]🌐녹아"
+      <textarea id="paste-input" placeholder="여기에 경기 결과를 붙여넣기 하세요...&#10;&#10;예시 (형식A): 1. [도미] 도재욱P (승) vs (패) 유영진T&#10;예시 (형식B): 리나[4P]❌🆚⭕햇살[4T]🌐녹아&#10;예시 (형식C): 1세트 메트 박상현 1:0 도재욱&#10;&#10;※ 이름에 공백 포함 가능: 안    아 → 안아, 멍    이 → 멍이 자동 인식"
         style="width:100%;min-height:140px;font-size:13px;border:1.5px solid var(--border2);border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
         oninput="pastePreview()" onpaste="setTimeout(pastePreview,0)"></textarea>
       <button onclick="document.getElementById('paste-input').value='';pastePreview();"
