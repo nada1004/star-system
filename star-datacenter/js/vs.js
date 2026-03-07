@@ -404,7 +404,8 @@ async function downloadVsShareCard(fmt){
   const el=document.getElementById('vs-share-card-inner')||document.getElementById('share-card');
   if(!el){alert('카드를 먼저 생성하세요.');return;}
   try{
-    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:true,logging:false});
+    await _imgToDataUrls(el);
+    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:false,allowTaint:false,logging:false});
     const _fn=`vs_${vsNameA}_vs_${vsNameB}_${new Date().toISOString().slice(0,10)}.${fmt}`;
     await _saveCanvasImage(canvas,_fn,fmt);
   }catch(e){alert('저장 오류: '+e.message);}
@@ -414,7 +415,8 @@ async function captureVsCard(){
   const el=document.getElementById('vs-result-card');
   if(!el){alert('결과 카드가 없습니다.');return;}
   try{
-    const canvas=await html2canvas(el,{backgroundColor:null,scale:2,useCORS:true,logging:false,ignoreElements:e=>e.classList.contains('no-export')});
+    await _imgToDataUrls(el);
+    const canvas=await html2canvas(el,{backgroundColor:null,scale:2,useCORS:false,allowTaint:false,logging:false,ignoreElements:e=>e.classList.contains('no-export')});
     const a=document.createElement('a');
     a.download=`vs_${vsNameA}_vs_${vsNameB}_${new Date().toISOString().slice(0,10)}.jpg`;
     a.href=canvas.toDataURL('image/jpeg',0.95);

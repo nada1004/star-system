@@ -243,7 +243,8 @@ async function capturePlayerModal(){
   const body=document.getElementById('playerModalBody');
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+    await _imgToDataUrls(body);
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${window._playerModalCurrentName||'player'}_stat.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
 }
@@ -253,7 +254,8 @@ async function captureUnivModal(){
   const title=document.getElementById('univModalTitle');
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+    await _imgToDataUrls(body);
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
 }
@@ -262,7 +264,8 @@ async function captureDetail(id, filename){
   const el=document.getElementById(id);
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
-    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true});
+    await _imgToDataUrls(el);
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`경기상세_${filename}.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
 }

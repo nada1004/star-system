@@ -1369,7 +1369,8 @@ async function downloadShareCardJpg(){
   const el=document.getElementById('share-card');
   if(!el||el.querySelector('p')){alert('먼저 카드를 생성하세요.');return;}
   try{
-    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:true,logging:false});
+    await _imgToDataUrls(el);
+    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:false,allowTaint:false,logging:false});
     await _saveCanvasImage(canvas, `share_card_${new Date().toISOString().slice(0,10)}.jpg`, 'jpg');
   }catch(e){alert('저장 오류: '+e.message);}
 }
@@ -1386,7 +1387,8 @@ async function downloadShareCard(){
   const el=document.getElementById('share-card');
   if(!el||!el.children.length||el.querySelector('p')){alert('먼저 카드를 생성하세요.');return;}
   try{
-    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:true,logging:false});
+    await _imgToDataUrls(el);
+    const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:false,allowTaint:false,logging:false});
     await _saveCanvasImage(canvas, `share_card_${new Date().toISOString().slice(0,10)}.png`, 'png');
   }catch(e){alert('저장 오류: '+e.message);}
 }
