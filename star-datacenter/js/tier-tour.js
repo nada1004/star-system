@@ -1026,6 +1026,12 @@ function openRE(mode,idx){
       <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
       <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+  } else if(mode==='gj'){
+    const m=gjM[idx];tit='⚔️ 끝장전 수정';
+    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
+      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
   }
   document.getElementById('reTitle').innerText=tit;
   document.getElementById('reBody').innerHTML=body;om('reModal');
@@ -1063,6 +1069,11 @@ function saveRow(){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+  } else if(reMode==='gj'){
+    const m=gjM[reIdx];m.d=d;
+    m.wName=document.getElementById('re-gj-w').value.trim()||m.wName;
+    m.lName=document.getElementById('re-gj-l').value.trim()||m.lName;
+    m.map=document.getElementById('re-gj-map').value.trim()||m.map;
   }
   save();render();cm('reModal');
 }

@@ -197,16 +197,15 @@ function gjRecordsHTML(){
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto">${delBtn}</span>
       </summary>
-      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
+      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
-      const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
       const origIdx=gjM.findIndex(x=>x._id===m._id);
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td><span class="wt" style="font-weight:700">${m.wName}</span></td>
         <td><span class="lt" style="font-weight:700">${m.lName}</span></td>
         <td style="font-size:11px">${m.map||'-'}</td>
-        ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
+        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
       </tr>`;
     });
     h+=`</tbody></table></details>`;
