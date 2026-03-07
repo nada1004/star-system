@@ -97,7 +97,7 @@ function indRecordsHTML(){
       <td style="font-size:11px;color:var(--gray-l)">${m.d||''}</td>
       <td><span class="wt" style="font-weight:700">${m.wName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${wp?.univ||''}</span></td>
       <td><span class="lt" style="font-weight:700">${m.lName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${lp?.univ||''}</span></td>
-      <td style="font-size:11px">${m.map||'-'}</td>
+      <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
       ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="indM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
     </tr>`;
   });
@@ -204,7 +204,7 @@ function gjRecordsHTML(){
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td><span class="wt" style="font-weight:700">${m.wName}</span></td>
         <td><span class="lt" style="font-weight:700">${m.lName}</span></td>
-        <td style="font-size:11px">${m.map||'-'}</td>
+        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
         ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
       </tr>`;
     });

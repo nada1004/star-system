@@ -1728,7 +1728,7 @@ function pasteApply() {
     const rows = setMap[sn];
     const games = rows.map(r => {
       const ab = resolveAB(r);
-      return { playerA: ab.playerA?.name||'', playerB: ab.playerB?.name||'', map: r.map||'-', winner: ab.winner };
+      return { playerA: ab.playerA?.name||'', playerB: ab.playerB?.name||'', map: r.map && r.map !== '-' ? r.map : '', winner: ab.winner };
     });
     const scoreA = games.filter(g=>g.winner==='A').length;
     const scoreB = games.filter(g=>g.winner==='B').length;
@@ -1783,7 +1783,7 @@ function pasteApply() {
       const rows=setMap[sn];
       const games=rows.map(r=>{
         const ab=ckAB(r);
-        return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map||'-',winner:ab.winner};
+        return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map && r.map !== '-' ? r.map : '',winner:ab.winner};
       });
       const scoreA=games.filter(g=>g.winner==='A').length;
       const scoreB=games.filter(g=>g.winner==='B').length;
@@ -1804,11 +1804,13 @@ function pasteApply() {
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
     savable.forEach(r => {
-      indM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map||'-' });
+      const _m = r.map && r.map !== '-' ? r.map : '';
+      indM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: _m });
     });
   } else if (mode === 'gj') {
     savable.forEach(r => {
-      gjM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map||'-' });
+      const _m = r.map && r.map !== '-' ? r.map : '';
+      gjM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: _m });
     });
   } else if (mode === 'tt') {
     const ttAB = (r) => {
@@ -1817,7 +1819,7 @@ function pasteApply() {
     };
     const ttSetsSnap = Object.keys(setMap).sort((a,b)=>a-b).map(sn=>{
       const rows=setMap[sn];
-      const games=rows.map(r=>{ const ab=ttAB(r); return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map||'-',winner:ab.winner}; });
+      const games=rows.map(r=>{ const ab=ttAB(r); return {playerA:ab.playerA?.name||'',playerB:ab.playerB?.name||'',map:r.map && r.map !== '-' ? r.map : '',winner:ab.winner}; });
       const scoreA=games.filter(g=>g.winner==='A').length, scoreB=games.filter(g=>g.winner==='B').length;
       return {scoreA,scoreB,winner:scoreA>scoreB?'A':scoreB>scoreA?'B':'A',games};
     });
