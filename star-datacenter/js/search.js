@@ -520,6 +520,8 @@ function parsePasteLine(line) {
   // \u3164(한글 채움 문자) 등 비표준 공백 → 일반 공백으로 정규화
   line = line.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!line) return null;
+  // 꼬리 장식 이모지 제거 (예: [라] 👈 → [라])
+  line = line.replace(/\s*[\u{10000}-\u{10FFFF}]+\s*$/u, '').trimEnd();
 
   // 앞쪽 번호/기호 제거
   // "1.", "1)", "1경기", "1경기.", "①~⑳", "1️⃣", "-", "•", "▶" 등
@@ -685,6 +687,43 @@ function parsePasteLine(line) {
     }
   }
 
+  // ── 형식 F: 이모지 마크 + vs 형식 ──
+  // 예: "⭕라박이 vs 영주❌", "❌라박이 vs 영주⭕", "라박이⭕ vs ❌영주"
+  {
+    const vsMatchF = line.match(/^(.+?)\s+vs\s+(.+)$/i);
+    if (vsMatchF) {
+      const WIN_F  = ['✅', '⭕', '☑'];
+      const LOSE_F = ['❌', '⬜'];
+      const ALL_F  = [...WIN_F, ...LOSE_F];
+      let lp = vsMatchF[1].replace(/️/g, '').trim();
+      let rp = vsMatchF[2].replace(/️/g, '').trim();
+      let lMark = null, rMark = null;
+      for (const mk of ALL_F) { if (lp.startsWith(mk)) { lMark = mk; lp = lp.slice(mk.length).trim(); break; } }
+      if (!lMark) { for (const mk of ALL_F) { if (lp.endsWith(mk)) { lMark = mk; lp = lp.slice(0,-mk.length).trim(); break; } } }
+      for (const mk of ALL_F) { if (rp.startsWith(mk)) { rMark = mk; rp = rp.slice(mk.length).trim(); break; } }
+      if (!rMark) { for (const mk of ALL_F) { if (rp.endsWith(mk)) { rMark = mk; rp = rp.slice(0,-mk.length).trim(); break; } } }
+      if (lMark && rMark) {
+        const lWin = WIN_F.includes(lMark), rWin = WIN_F.includes(rMark);
+        if (lWin !== rWin) {
+          let fMap = '-', rClean = rp;
+          const mbF = rp.match(/\[([^\]]+)\]\s*$/);
+          if (mbF) { fMap = resolveMapName(mbF[1].trim()); rClean = rp.slice(0, mbF.index).trim(); }
+          const splitNR_F = (s) => {
+            const pm = s.match(/^([TZP])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
+            const bm = s.match(/^(.+?)\[(\d*)([TZP])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
+            const sm = s.match(/^(.+?)([TZP])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
+            return { name: s.trim(), race: '' };
+          };
+          const left = splitNR_F(lp), right = splitNR_F(rClean);
+          if (left.name && right.name) {
+            return { winName: lWin ? left.name : right.name, loseName: lWin ? right.name : left.name,
+              map: fMap, leftName: left.name, rightName: right.name };
+          }
+        }
+      }
+    }
+  }
+
   // ── 형식 A: [맵] 이름(승/패) vs (승/패)이름 ──
   // 맵 추출: 줄 맨 앞 [xxx] 또는 줄 끝 [xxx] 또는 줄 끝 단어(약자/등록맵)
   let map = '-';
@@ -825,6 +864,9 @@ function parseSetSeparator(line) {
   if (!t.includes('🆚') && !t.includes('✅') && !t.includes('❌') && !t.includes('⬜') && !t.includes('⭕')) {
     const m5 = t.match(/(\d+)\s*SET/i);
     if (m5) return parseInt(m5[1]);
+
+    // 패턴 5b: SUPER ACE / 슈퍼에이스 단독 줄 → 3세트
+    if (/SUPER\s*ACE|슈퍼\s*에이스/i.test(t)) return 3;
   }
 
   return null;
@@ -937,6 +979,20 @@ function pastePreview() {
     if (sepResult !== null) {
       if (sepResult === 0) currentSet++;
       else currentSet = sepResult;
+      // 같은 줄에 경기 결과가 있을 수 있음 (예: "1set ⭕선수A vs 선수B❌")
+      const setRem = trimmed.replace(/^\d+\s*(?:세트|셋|set)\s*/i, '').trim();
+      if (setRem && setRem !== trimmed) {
+        const r2 = parsePasteLine(setRem);
+        if (r2) {
+          const wM2 = findPlayerByPartialName(r2.winName);
+          const lM2 = findPlayerByPartialName(r2.loseName);
+          results.push({ ...r2, _rawMapStr: r2._rawMapStr||'', setNum: currentSet,
+            wPlayer: wM2.player, lPlayer: lM2.player,
+            wCandidates: wM2.candidates, lCandidates: lM2.candidates,
+            wSimilar: wM2.similar||[], lSimilar: lM2.similar||[],
+            lineNum: idx+1, rawLine: trimmed });
+        }
+      }
       return;
     }
 
@@ -2087,6 +2143,20 @@ function proPreview() {
     if (sepResult !== null) {
       if (sepResult === 0) currentSet++;
       else currentSet = sepResult;
+      const setRem = trimmed.replace(/^\d+\s*(?:세트|셋|set)\s*/i, '').trim();
+      if (setRem && setRem !== trimmed) {
+        const r2 = parsePasteLine(setRem);
+        if (r2) {
+          const wM2 = findPlayerByPartialName(r2.winName);
+          const lM2 = findPlayerByPartialName(r2.loseName);
+          results.push({ winName: r2.winName, loseName: r2.loseName,
+            leftName: r2.leftName||r2.winName, rightName: r2.rightName||r2.loseName,
+            map: r2.map||'-', setNum: currentSet,
+            wPlayer: wM2.player, lPlayer: lM2.player,
+            wCandidates: wM2.candidates, lCandidates: lM2.candidates,
+            wSimilar: wM2.similar||[], lSimilar: lM2.similar||[], lineNum: idx+1 });
+        }
+      }
       return;
     }
     const parsed = parsePasteLine(line);
