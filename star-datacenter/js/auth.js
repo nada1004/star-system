@@ -60,11 +60,6 @@ function applyLoginState(){
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
   document.getElementById('hdrLoginStatus').style.display=isLoggedIn?'':'none';
-  // 불러오기 버튼: 관리자 로그인 시만 표시
-  const _hdrLoad=document.getElementById('hdrCloudLoad');
-  if(_hdrLoad) _hdrLoad.style.display=isLoggedIn?'':'none';
-  const _barLoad=document.getElementById('btnCloudLoad');
-  if(_barLoad) _barLoad.style.display=isLoggedIn?'flex':'none';
   const _mobileBar=document.getElementById('mobileActionBar');
   if(_mobileBar && !isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='none'; }
   if(_mobileBar && isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='flex'; }
