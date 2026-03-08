@@ -264,23 +264,27 @@ async function captureStats(){
   const el=document.getElementById('stats-univ-sec');
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
+    _showSaveLoading();
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     const a=document.createElement('a');a.download=`stats_${new Date().toISOString().slice(0,10)}.jpg`;
     a.href=canvas.toDataURL('image/jpeg',.93);a.click();
   }catch(e){alert('이미지 저장 오류: '+e.message);}
+  finally{_hideSaveLoading();}
 }
 
 async function captureSection(sectionId, filename){
   const el=document.getElementById(sectionId);
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
+    _showSaveLoading();
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false,logging:false});
     const a=document.createElement('a');
     a.download=`${filename||sectionId}_${new Date().toISOString().slice(0,10)}.jpg`;
     a.href=canvas.toDataURL('image/jpeg',.93);a.click();
   }catch(e){alert('이미지 저장 오류: '+e.message);}
+  finally{_hideSaveLoading();}
 }
 
 /* ══ 모바일 헤더 검색 토글 ══ */

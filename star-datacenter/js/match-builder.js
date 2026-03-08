@@ -162,17 +162,17 @@ function gjRankHTML(){
 
 function gjRecordsHTML(){
   if(!gjM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  // 세션 그룹화: (날짜, 정렬된 선수쌍) 기준
+  // 세션 그룹화: 연속된 같은 선수쌍+날짜만 하나의 세션 (같은 날 두 번 경기해도 분리)
   const sessions=[];
-  const sessionMap=new Map();
+  let lastKey=null, lastSess=null;
   gjM.forEach((m)=>{
     const pair=[m.wName,m.lName].sort();
     const k=`${m.d||''}|${pair[0]}|${pair[1]}`;
-    if(!sessionMap.has(k)){
+    if(k!==lastKey||!lastSess){
       const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
-      sessionMap.set(k,s);sessions.push(s);
+      sessions.push(s);lastSess=s;lastKey=k;
     }
-    const s=sessionMap.get(k);s.games.push(m);s.ids.push(m._id);
+    lastSess.games.push(m);lastSess.ids.push(m._id);
   });
   const pageSize=getHistPageSize();
   const total=sessions.length;

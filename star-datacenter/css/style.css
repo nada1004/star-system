@@ -27,7 +27,7 @@ b,strong{font-weight:600;}
 
 /* 공유카드 모달 */
 .sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:5500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
-.sharecard-modal-box{background:var(--white);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:95vw;position:relative;}
+.sharecard-modal-box{background:var(--white);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:95vw;max-height:90vh;overflow-y:auto;position:relative;}
 .sharecard-modal-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-l);line-height:1;}
 .sharecard-modal-close:hover{color:var(--text);}
 .sharecard-modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;}
