@@ -409,8 +409,27 @@ function recSummaryListHTML(arr, mode, context){
   });
   filtered.sort((a,b)=>recSortDir==='asc'?(a.m.d||'').localeCompare(b.m.d||''):(b.m.d||'').localeCompare(a.m.d||''));
 
-  // ── 검색바 + 전체 렌더링 (DOM 실시간 필터링) ──
+  // ── 검색어 필터 (페이지네이션 전에 JS에서 처리) ──
+  const _sq=((window._recQ&&window._recQ[mode])||'').toLowerCase().trim();
+  if(_sq){
+    filtered=filtered.filter(({m})=>[
+      m.a||'',m.b||'',m.n||'',m.d||'',
+      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||''])).join(' '),
+      (m.teamAMembers||[]).map(x=>x.name||'').join(' '),
+      (m.teamBMembers||[]).map(x=>x.name||'').join(' ')
+    ].join(' ').toLowerCase().includes(_sq));
+  }
+
+  // ── 페이지네이션 계산 ──
   const totalItems=filtered.length;
+  const pageSize=getHistPageSize();
+  const pageKey=mode;
+  if(histPage[pageKey]===undefined) histPage[pageKey]=0;
+  const totalPages=Math.ceil(totalItems/pageSize)||1;
+  if(histPage[pageKey]>=totalPages) histPage[pageKey]=Math.max(0,totalPages-1);
+  const curPage=histPage[pageKey];
+  const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
+
   const initQ2=(window._recQ&&window._recQ[mode])||'';
   const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="font-size:11px;color:var(--text3)">날짜</span>
@@ -419,7 +438,7 @@ function recSummaryListHTML(arr, mode, context){
     <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
       <input type="text" id="rq-${mode}" placeholder="🔍 선수/대학 검색..." value="${initQ2}"
-        oninput="recFilterInPlace('${mode}',this.value)"
+        oninput="if(!window._recQ)window._recQ={};window._recQ['${mode}']=this.value;histPage['${mode}']=0;render()"
         style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:140px">
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ2?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
     </div>
@@ -430,10 +449,8 @@ function recSummaryListHTML(arr, mode, context){
     return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
   }
 
-  // filtered 전체(페이지 관계없이) data-hay로 렌더링 후 DOM 필터링
-  // → 페이지네이션 대신 전체 렌더링 + CSS display:none 방식
   let h=sortBar+`<div id="rec-list-${mode}">`;
-  filtered.forEach(({m,i})=>{
+  paged.forEach(({m,i})=>{
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
     const ca=isCK?'#2563eb':gc(m.a);
     const cb=isCK?'#dc2626':gc(m.b);
@@ -595,10 +612,6 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     h+=`</div>`;
   });
   h+=`</div>`;
-  if(typeof requestAnimationFrame!=='undefined'){
-    const _mode=mode, _q=(window._recQ&&window._recQ[_mode])||'';
-    if(_q) requestAnimationFrame(()=>recFilterInPlace(_mode,_q));
-  }
   return h;
 }
 
