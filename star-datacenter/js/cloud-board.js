@@ -258,12 +258,6 @@ function rBoard(C,T){
     .brd-tbtn-share:hover{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#6d28d9;}
     body.dark .brd-tbtn-img{background:linear-gradient(135deg,#1e3a5f,#1e3a8a);color:#93c5fd;border-color:#3b82f6;}
     body.dark .brd-tbtn-share{background:linear-gradient(135deg,#2e1f5e,#3b2080);color:#c4b5fd;border-color:#7c3aed;}
-    @media(max-width:768px){
-      #board-wrap{display:flex !important;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;gap:12px !important;padding:0 4px 14px;scrollbar-width:none;}
-      #board-wrap::-webkit-scrollbar{display:none;}
-      #board-wrap>.brd-card{min-width:calc(88vw);max-width:calc(88vw);flex-shrink:0;scroll-snap-align:start;}
-      #brd-dots{display:flex !important;}
-    }
   </style>
   <div class="no-export brd-toolbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)">
     <div style="display:flex;align-items:center;gap:8px;margin-right:2px">
@@ -289,13 +283,12 @@ function rBoard(C,T){
   const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
   targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
   h+=`</div>
-  <div id="brd-dots" style="display:none;justify-content:center;gap:6px;padding:6px 0 2px;flex-wrap:wrap"></div>`;
+`;
   C.innerHTML=h;
   injectUnivIcons(C);
   requestAnimationFrame(()=>{
     injectUnivIcons(C);
     initBoardDrag();
-    _initBoardDots();
   });
   // 팝업 닫기 이벤트 (한 번만 등록)
   if(!_brdPopupListenerAdded){
@@ -799,33 +792,6 @@ function boardCardMove(univName, dir){
   setTimeout(() => { cards[idx].style.outline = ''; }, 500);
 }
 
-/* ── 모바일 슬라이더 dots ── */
-function _initBoardDots(){
-  if(window.innerWidth > 768) return;
-  const wrap = document.getElementById('board-wrap');
-  const dotsEl = document.getElementById('brd-dots');
-  if(!wrap || !dotsEl) return;
-  const cards = [...wrap.querySelectorAll('.brd-card')];
-  if(cards.length <= 1){ dotsEl.style.display='none'; return; }
-
-  const mkDot = (i, active) => {
-    const d = document.createElement('span');
-    d.style.cssText = `width:${active?18:7}px;height:7px;border-radius:4px;background:${active?'var(--blue)':'#cbd5e1'};transition:all .2s;cursor:pointer;flex-shrink:0`;
-    d.onclick = () => { cards[i].scrollIntoView({behavior:'smooth', block:'nearest', inline:'start'}); };
-    return d;
-  };
-
-  const render = () => {
-    const scrollLeft = wrap.scrollLeft;
-    const cardW = cards[0].offsetWidth + 12;
-    const idx = Math.round(scrollLeft / cardW);
-    dotsEl.innerHTML = '';
-    cards.forEach((_, i) => dotsEl.appendChild(mkDot(i, i === idx)));
-  };
-
-  render();
-  wrap.addEventListener('scroll', render, {passive: true});
-}
 
 /* ── 카드 드래그 앤 드롭 ── */
 function initBoardDrag(){

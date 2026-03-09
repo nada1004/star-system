@@ -835,8 +835,8 @@ body.dark [style*="background:#f0fdf4"]{background:#0d2a1c!important;border-colo
 body.dark [style*="background:#f0fdf4"] [style*="color:#15803d"]{color:#4ade80!important;}
 /* ══ 다크모드 최종 통합 ══════════════════════════════════════════ */
 /* 현황판 카드 */
-body.dark .brd-card{filter:brightness(.82) saturate(.8);border-color:rgba(255,255,255,.08)!important;}
-body.dark .brd-card:hover{filter:brightness(.92) saturate(.9);}
+body.dark .brd-card{filter:saturate(.55) brightness(.78);border-color:rgba(255,255,255,.06)!important;}
+body.dark .brd-card:hover{filter:saturate(.65) brightness(.88);}
 body.dark .brd-univ-name-btn{color:#fff!important;text-shadow:0 1px 6px rgba(0,0,0,.5)!important;}
 body.dark .brd-name{color:#e2e8f0!important;}
 /* brd-row 다크 */
