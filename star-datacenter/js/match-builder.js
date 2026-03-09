@@ -137,7 +137,7 @@ function indRecordsHTML(){
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span></span></td>
         <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
-        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
+        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="_removeIndResult('${m.wName.replace(/'/g,"\\'")}','${m.lName.replace(/'/g,"\\'")}','${m.d||''}','${m.map||'-'}');indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
       </tr>`;
     });
     h+=`</tbody></table></details>`;
@@ -155,9 +155,24 @@ function indRecordsHTML(){
   return h;
 }
 
+function _removeIndResult(wName, lName, date, map){
+  const w=players.find(p=>p.name===wName);
+  const l=players.find(p=>p.name===lName);
+  if(!w||!l)return;
+  const nm=v=>(!v||v==='-')?'-':v;
+  const wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  let delta=0;
+  if(wi>=0){delta=w.history[wi].eloDelta||0;w.history.splice(wi,1);}
+  const li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  if(li>=0)l.history.splice(li,1);
+  if(w.win>0)w.win--;if(l.loss>0)l.loss--;
+  w.points-=3;l.points+=3;
+  if(delta){w.elo=(w.elo||1200)-delta;l.elo=(l.elo||1200)+delta;}
+}
 function deleteIndSession(ids){
   if(!confirm(`${ids.length}경기를 삭제하시겠습니까?`))return;
-  ids.forEach(id=>{ const i=indM.findIndex(x=>x._id===id); if(i>=0) indM.splice(i,1); });
+  indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-'));
+  indM=indM.filter(m=>!ids.includes(m._id));
   save();render();
 }
 
