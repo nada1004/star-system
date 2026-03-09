@@ -1122,16 +1122,36 @@ function renderShareCardByMatchObj(m){
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
-        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`vertical-align:middle;flex-shrink:0${!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':''}`):'';
-        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`vertical-align:middle;flex-shrink:0${!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':''}`):'';
+        const pA=g.playerA?players.find(p=>p.name===g.playerA):null;
+        const pB=g.playerB?players.find(p=>p.name===g.playerB):null;
+        const rlA=pA?(pA.race==='T'?'테란':pA.race==='Z'?'저그':pA.race==='P'?'프로토스':''):'';
+        const rlB=pB?(pB.race==='T'?'테란':pB.race==='Z'?'저그':pB.race==='P'?'프로토스':''):'';
+        const infoA=[pA?.univ,pA?.tier,rlA].filter(Boolean).join(' · ');
+        const infoB=[pB?.univ,pB?.tier,rlB].filter(Boolean).join(' · ');
+        const loserStyleA=!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
+        const loserStyleB=!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
+        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'22px',`border-radius:6px;flex-shrink:0${loserStyleA}`):'';
+        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'22px',`border-radius:6px;flex-shrink:0${loserStyleB}`):'';
 
-        return`<div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 0;border-bottom:1px solid ${theme.divider}">
-          <span style="color:${theme.textDim};min-width:42px;font-size:10px">경기${gi+1}</span>
-          <span style="flex:1;font-weight:${aW?'800':'400'};color:${aW?theme.text:theme.textDim};text-align:right;display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${photoA}${g.playerA||'?'}</span>
-          ${aW?`<span style="background:${ca};color:#fff;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:34px;flex-shrink:0"></span>'}
-          <span style="color:${theme.textDim};font-size:10px;flex-shrink:0">vs</span>
-          ${bW?`<span style="background:${cb};color:#fff;padding:1px 7px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:34px;flex-shrink:0"></span>'}
-          <span style="flex:1;font-weight:${bW?'800':'400'};color:${bW?theme.text:theme.textDim};display:inline-flex;align-items:center;gap:4px">${photoB}${g.playerB||'?'}</span>
+        return`<div style="display:flex;align-items:center;gap:4px;padding:4px 0;border-bottom:1px solid ${theme.divider}">
+          <span style="color:${theme.textDim};min-width:36px;font-size:9px;text-align:center;flex-shrink:0">경기${gi+1}</span>
+          <div style="flex:1;display:flex;align-items:center;gap:4px;justify-content:flex-end;min-width:0">
+            <div style="text-align:right;flex:1;min-width:0;${aW?'':'opacity:.6'}">
+              ${infoA?`<div style="font-size:9px;color:${theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${infoA}</div>`:''}
+              <div style="font-weight:${aW?'800':'400'};color:${aW?theme.text:theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px">${g.playerA||'?'}</div>
+            </div>
+            <div style="flex-shrink:0">${photoA}</div>
+          </div>
+          ${aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:28px;flex-shrink:0"></span>'}
+          <span style="color:${theme.textDim};font-size:9px;flex-shrink:0">vs</span>
+          ${bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:28px;flex-shrink:0"></span>'}
+          <div style="flex:1;display:flex;align-items:center;gap:4px;min-width:0">
+            <div style="flex-shrink:0">${photoB}</div>
+            <div style="text-align:left;flex:1;min-width:0;${bW?'':'opacity:.6'}">
+              ${infoB?`<div style="font-size:9px;color:${theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${infoB}</div>`:''}
+              <div style="font-weight:${bW?'800':'400'};color:${bW?theme.text:theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px">${g.playerB||'?'}</div>
+            </div>
+          </div>
           ${g.map?`<span style="color:${theme.textDim};font-size:9px;flex-shrink:0">📍${g.map}</span>`:''}
         </div>`;
       }).join('');

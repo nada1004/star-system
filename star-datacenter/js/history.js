@@ -578,30 +578,40 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
         {
-          // ── PC/모바일 통합: 선수 vs 선수 가로 레이아웃 ──
-          const bgA = hasWinner ? (aIsWinner ? `background:${winBgA};border:1.5px solid ${winBorderA};` : `background:#f8fafc;border:1px solid #e2e8f0;opacity:.5;filter:grayscale(.6);`) : `background:var(--surface);border:1px solid var(--border);`;
-          const bgB = hasWinner ? (bIsWinner ? `background:${winBgB};border:1.5px solid ${winBorderB};` : `background:#f8fafc;border:1px solid #e2e8f0;opacity:.5;filter:grayscale(.6);`) : `background:var(--surface);border:1px solid var(--border);`;
-          const winTagApc = aIsWinner&&hasWinner ? `<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0">WIN</span>` : '';
-          const winTagBpc = bIsWinner&&hasWinner ? `<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0">WIN</span>` : '';
-          const teamBadgeA = `<span style="font-size:10px;font-weight:700;color:${ca};background:${ca}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelA}</span>`;
-          const teamBadgeB = `<span style="font-size:10px;font-weight:700;color:${cb};background:${cb}18;padding:1px 6px;border-radius:4px;flex-shrink:0">${labelB}</span>`;
-          const mapDotPc = g.map ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span><span style="font-size:10px;color:var(--text3);white-space:nowrap">${g.map}</span>` : '';
+          // ── 격투게임 스타일: [소속/종족/이름 우측정렬][사진] vs [사진][이름/종족/소속 좌측정렬] ──
+          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.5;filter:grayscale(.5);' : '';
+          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.5;filter:grayscale(.5);' : '';
+          const winTagApc = aIsWinner&&hasWinner ? `<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>` : '';
+          const winTagBpc = bIsWinner&&hasWinner ? `<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>` : '';
+          const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">📍${g.map}</span>` : '';
+          const photoAi = pA ? getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+ca) : '';
+          const photoBi = pB ? getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+cb) : '';
           h+=`<div style="display:flex;align-items:center;gap:6px;padding:6px 2px;">
             <span style="color:var(--gray-l);font-size:11px;min-width:44px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
-            <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;${bgA}flex:1;min-width:0;">
-              ${photoA}${raceA}
-              <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0" ${clickA}>${g.playerA||'?'}</strong>
-              ${teamBadgeA}
-              ${winTagApc}
+            <div style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:${aIsWinner?ca+'18':'#f8fafc'};border:${aIsWinner?'1.5px solid '+ca+'55':'1px solid #e2e8f0'};min-width:0;justify-content:flex-end;${loserStyleA}">
+              <div style="text-align:right;flex:1;min-width:0">
+                ${pA?.univ?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pA.univ}</div>`:''}
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap">
+                  ${raceA}
+                  <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" ${clickA}>${g.playerA||'?'}</strong>
+                  ${winTagApc}
+                </div>
+              </div>
+              ${photoAi}
             </div>
-            <span style="color:var(--gray-l);font-size:13px;font-weight:800;flex-shrink:0;padding:0 4px">vs</span>
-            <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;${bgB}flex:1;min-width:0;">
-              ${photoB}${raceB}
-              <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0" ${clickB}>${g.playerB||'?'}</strong>
-              ${teamBadgeB}
-              ${winTagBpc}
+            <span style="color:var(--gray-l);font-size:13px;font-weight:800;flex-shrink:0;padding:0 2px">vs</span>
+            <div style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:${bIsWinner?cb+'18':'#f8fafc'};border:${bIsWinner?'1.5px solid '+cb+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleB}">
+              ${photoBi}
+              <div style="text-align:left;flex:1;min-width:0">
+                ${pB?.univ?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pB.univ}</div>`:''}
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  ${winTagBpc}
+                  <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" ${clickB}>${g.playerB||'?'}</strong>
+                  ${raceB}
+                </div>
+              </div>
             </div>
-            ${g.map?`<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">${mapDotPc}</div>`:''}
+            ${mapDot}
             ${editBtn}
           </div>`;
         }
