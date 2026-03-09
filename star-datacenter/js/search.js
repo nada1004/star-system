@@ -1779,7 +1779,10 @@ function pasteApply() {
   // 모드별 기록 추가
   if (mode === 'mini') {
     const _mType = window._miniPasteType || 'mini';
-    miniM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap, type: _mType });
+    let _a = finalTeamA || 'A팀';
+    let _b = finalTeamB || (_mType === 'civil' ? 'B팀' : '?');
+    if (_mType === 'civil' && (!_b || _a === _b)) { _a = 'A팀'; _b = 'B팀'; }
+    miniM.unshift({ _id: matchId, d: dateVal, a: _a, b: _b, sa, sb, sets: setsSnap, type: _mType });
   } else if (mode === 'univm') {
     univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap });
   } else if (mode === 'pro') {

@@ -9,11 +9,10 @@ function rMini(C,T){
     <button class="btn btn-sm ${miniType==='mini'?'btn-b':'btn-w'}" onclick="miniType='mini';miniSub='records';render()">⚡ 미니대전</button>
     <button class="btn btn-sm ${miniType==='civil'?'btn-b':'btn-w'}" onclick="miniType='civil';miniSub='records';render()">⚔️ 시빌워</button>
   </div>`;
-  const subOpts=[
-    {id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},
-    {id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},
-    {id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}
-  ];
+  if(miniType==='civil' && miniSub==='rank') miniSub='records';
+  const subOpts = miniType==='civil'
+    ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
+    : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
   let h=typeToggle+stabs(miniSub,subOpts);
   if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('mini');
