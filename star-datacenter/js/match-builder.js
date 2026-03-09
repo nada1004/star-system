@@ -709,25 +709,25 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     return (m.d||'') === date && mp[0] === pair[0] && mp[1] === pair[1];
   });
 
-  const WC = '#f1f5f9';
-  const LC = '#475569';
+  const WC = '#111';
+  const LC = '#94a3b8';
 
   const raceLabel = r => r==='T'?'테란':r==='Z'?'저그':r==='P'?'프로토스':'';
   const ct = t => t ? t.replace(/티어$/,'') : '';
   const playerInfoBlock = (name, pObj, isWinner, side) => {
-    const photo = getPlayerPhotoHTML(name, '64px', `border-radius:50%;border:3px solid ${isWinner?winnerCol:'#334155'};box-shadow:${isWinner?`0 0 12px ${winnerCol}55`:'none'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
+    const photo = getPlayerPhotoHTML(name, '64px', `border-radius:50%;border:3px solid ${isWinner?'#a855f7':'#e9d5ff'};box-shadow:${isWinner?'0 4px 16px rgba(168,85,247,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
     const race = raceLabel(pObj.race||'');
-    const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#334155'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
-    const raceSpan = race ? `<span style="font-size:10px;color:${isWinner?'#94a3b8':'#334155'}">${race}</span>` : '';
+    const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
+    const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
     const isRight = side === 'right';
     const badges = isRight ? `${raceSpan}${tier}` : `${tier}${raceSpan}`;
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:${isRight?'flex-end':'flex-start'};gap:6px;min-width:0">
       <div style="flex-shrink:0;position:relative">
         ${photo}
-        ${isWinner&&winner?`<div style="position:absolute;bottom:-2px;${isRight?'left:-2px':'right:-2px'};font-size:12px">🏆</div>`:''}
+        ${isWinner&&winner?`<div style="position:absolute;bottom:-2px;${isRight?'left:-2px':'right:-2px'};font-size:13px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))">🏆</div>`:''}
       </div>
       <div style="text-align:${isRight?'right':'left'};width:100%;min-width:0">
-        <div style="font-size:13px;font-weight:${isWinner?'800':'400'};color:${isWinner?WC:LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="font-size:13px;font-weight:${isWinner?'800':'500'};color:${isWinner?WC:LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
         <div style="display:flex;align-items:center;justify-content:${isRight?'flex-end':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:3px">${badges}</div>
       </div>
     </div>`;
@@ -735,15 +735,15 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
 
   const gameRows = games.map((m, gi) => {
     const p1win = m.wName === p1;
-    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;border-radius:50%;${!p1win?'opacity:.3;filter:grayscale(.6)':''}`);
-    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;border-radius:50%;${p1win?'opacity:.3;filter:grayscale(.6)':''}`);
-    const mapTxt = m.map && m.map !== '-' ? `<span style="color:#475569;font-size:9px;margin-left:2px">📍${m.map}</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);margin-bottom:3px">
-      <span style="font-size:9px;color:#334155;min-width:30px;font-weight:600">${gi+1}G</span>
+    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;border-radius:50%;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;border-radius:50%;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const mapTxt = m.map && m.map !== '-' ? `<span style="color:#94a3b8;font-size:9px;margin-left:2px">📍${m.map}</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;background:${p1win?'rgba(168,85,247,.08)':'rgba(255,255,255,.5)'};margin-bottom:3px">
+      <span style="font-size:9px;color:#a78bfa;min-width:26px;font-weight:700">${gi+1}G</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
         ${p1Photo}<span style="font-size:11px;font-weight:${p1win?'700':'400'};color:${p1win?WC:LC}">${p1}</span>
       </span>
-      <span style="font-size:9px;color:#334155;flex-shrink:0;font-weight:700">vs</span>
+      <span style="font-size:9px;color:#ddd6fe;flex-shrink:0">vs</span>
       <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
         ${p2Photo}<span style="font-size:11px;font-weight:${p1win?'400':'700'};color:${p1win?LC:WC}">${p2}</span>
       </span>
@@ -751,29 +751,30 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     </div>`;
   }).join('');
 
-  card.innerHTML = `<div style="background:linear-gradient(145deg,#0f172a 0%,#1a2744 50%,#0f172a 100%);border-radius:20px;padding:20px 18px;font-family:'Noto Sans KR',sans-serif;color:#fff;overflow:hidden;position:relative;min-width:280px">
-    <div style="position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:${winnerCol}12;pointer-events:none"></div>
-    <div style="position:absolute;bottom:-40px;left:-40px;width:140px;height:140px;border-radius:50%;background:${winnerCol}08;pointer-events:none"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:relative">
-      <div style="font-size:11px;font-weight:800;color:${winnerCol};background:${winnerCol}22;padding:3px 12px;border-radius:20px;border:1px solid ${winnerCol}33;letter-spacing:.5px">⚔️ 끝장전</div>
-      <div style="font-size:10px;color:#64748b">${date||''}</div>
+  card.innerHTML = `<div style="background:linear-gradient(135deg,#f0f7ff 0%,#fdf4ff 50%,#fff7ed 100%);border-radius:22px;padding:20px 18px;font-family:'Noto Sans KR',sans-serif;color:#111;overflow:hidden;position:relative;box-shadow:0 8px 40px rgba(99,102,241,.15)">
+    <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#6366f1,#a855f7,#ec4899);border-radius:22px 22px 0 0"></div>
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#a855f720,#ec489910);pointer-events:none"></div>
+    <div style="position:absolute;bottom:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#6366f115,#38bdf810);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;margin-top:4px">
+      <div style="font-size:11px;font-weight:800;color:#7c3aed;background:linear-gradient(90deg,#ede9fe,#fae8ff);padding:4px 12px;border-radius:20px;border:1.5px solid #c4b5fd">⚔️ 끝장전</div>
+      <div style="font-size:10px;color:#a78bfa;font-weight:600">${date||''}</div>
     </div>
-    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:${games.length?'14':'0'}px;position:relative">
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:${games.length?'14':'0'}px">
       ${playerInfoBlock(p1, pp1, p1===winner, 'left')}
       <div style="text-align:center;flex-shrink:0;padding:10px 2px 0">
-        <div style="font-size:38px;font-weight:900;line-height:1;letter-spacing:-2px">
-          <span style="color:${p1===winner?winnerCol:'#334155'}">${p1wins}</span>
-          <span style="color:#1e293b;font-size:22px;margin:0 1px">:</span>
-          <span style="color:${p2===winner?winnerCol:'#334155'}">${p2wins}</span>
+        <div style="font-size:40px;font-weight:900;line-height:1;letter-spacing:-2px">
+          <span style="color:${p1===winner?'#7c3aed':'#c4b5fd'}">${p1wins}</span>
+          <span style="color:#ddd6fe;font-size:22px;margin:0 1px">:</span>
+          <span style="color:${p2===winner?'#7c3aed':'#c4b5fd'}">${p2wins}</span>
         </div>
-        ${winner?`<div style="font-size:8px;color:${winnerCol};font-weight:700;margin-top:4px;letter-spacing:.5px;opacity:.8">WINNER</div>`:''}
+        ${winner?`<div style="font-size:8px;background:linear-gradient(90deg,#6366f1,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;margin-top:5px;letter-spacing:1px">WIN</div>`:''}
       </div>
       ${playerInfoBlock(p2, pp2, p2===winner, 'right')}
     </div>
-    ${games.length ? `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px;position:relative">
-      <div style="font-size:9px;color:#334155;font-weight:700;margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase">경기 상세</div>
+    ${games.length ? `<div style="background:rgba(255,255,255,.7);backdrop-filter:blur(4px);border-radius:14px;padding:10px;border:1px solid rgba(196,181,253,.3)">
+      <div style="font-size:9px;color:#a78bfa;font-weight:700;margin-bottom:8px;letter-spacing:.5px">경기 상세</div>
       ${gameRows}
     </div>` : ''}
-    <div style="margin-top:12px;text-align:right;font-size:8px;color:#1e293b;letter-spacing:.3px;position:relative">⭐ 스타대학 데이터 센터</div>
+    <div style="margin-top:12px;text-align:right;font-size:8px;color:#c4b5fd;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
   </div>`;
 }
