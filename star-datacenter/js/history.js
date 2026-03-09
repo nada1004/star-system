@@ -138,7 +138,7 @@ function histTourneyHTML(context){
             </span>`:''}
           </div>
           <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
+            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
             ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
             ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
             ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">수정</button>`):''}
@@ -273,7 +273,7 @@ function rHistUnivStat(){
             ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
             <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+histUniv+' 승':aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}</span>
           </div>
-          <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button></div>
+          <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button></div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
           ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin)}
@@ -357,7 +357,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
           <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
-          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
+          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
           ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
         </div>
@@ -486,9 +486,9 @@ function recSummaryListHTML(arr, mode, context){
           </span>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📋</button>
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           <div style="display:flex;gap:4px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세</button>
+            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
             ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`)}
             ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
           </div>
@@ -573,43 +573,40 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const clickB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
         const raceA=pA?`<span class="rbadge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
         const raceB=pB?`<span class="rbadge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
-        const photoA=pA?getPlayerPhotoHTML(pA.name,'40px','margin-right:5px;flex-shrink:0;border:2.5px solid '+ca+';box-shadow:0 1px 6px '+ca+'66'):'';
-        const photoB=pB?getPlayerPhotoHTML(pB.name,'40px','margin-right:5px;flex-shrink:0;border:2.5px solid '+cb+';box-shadow:0 1px 6px '+cb+'66'):'';
+        const photoA=pA?getPlayerPhotoHTML(pA.name,'38px','flex-shrink:0;border:2px solid '+ca+';box-shadow:0 1px 6px '+ca+'44'):'';
+        const photoB=pB?getPlayerPhotoHTML(pB.name,'38px','flex-shrink:0;border:2px solid '+cb+';box-shadow:0 1px 6px '+cb+'44'):'';
         const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
         {
-          // ── 격투게임 스타일: [소속/종족/이름 우측정렬][사진] vs [사진][이름/종족/소속 좌측정렬] ──
-          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.5;filter:grayscale(.5);' : '';
-          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.5;filter:grayscale(.5);' : '';
-          const winTagApc = aIsWinner&&hasWinner ? `<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>` : '';
-          const winTagBpc = bIsWinner&&hasWinner ? `<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>` : '';
+          // ── [WIN] [소속 종족 이름] [사진] vs [사진] [이름 종족 소속] [WIN] ──
+          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.45;filter:grayscale(.5);' : '';
+          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.45;filter:grayscale(.5);' : '';
+          const winA = aIsWinner&&hasWinner;
+          const winB = bIsWinner&&hasWinner;
+          const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
           const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">📍${g.map}</span>` : '';
-          const photoAi = pA ? getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+ca) : '';
-          const photoBi = pB ? getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+cb) : '';
-          h+=`<div style="display:flex;align-items:center;gap:6px;padding:6px 2px;">
-            <span style="color:var(--gray-l);font-size:11px;min-width:44px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
-            <div style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:${aIsWinner?ca+'18':'#f8fafc'};border:${aIsWinner?'1.5px solid '+ca+'55':'1px solid #e2e8f0'};min-width:0;justify-content:flex-end;${loserStyleA}">
-              <div style="text-align:right;flex:1;min-width:0">
-                ${pA?.univ?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pA.univ}</div>`:''}
-                <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap">
-                  ${raceA}
-                  <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" ${clickA}>${g.playerA||'?'}</strong>
-                  ${winTagApc}
-                </div>
+          const univA = pA?.univ ? `<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${pA.univ}</span>` : '';
+          const univB = pB?.univ ? `<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${pB.univ}</span>` : '';
+          h+=`<div style="display:flex;align-items:center;gap:5px;padding:5px 2px;">
+            <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
+            <!-- 좌측 선수: [WIN] [소속 종족 이름] [사진] -->
+            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:12px;background:${winA?ca+'18':'#f8fafc'};border:${winA?'1.5px solid '+ca+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleA}">
+              ${winA ? winBadge(ca) : ''}
+              <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
+                ${univA}${raceA}
+                <strong style="font-size:13px;color:var(--text);white-space:nowrap" ${clickA}>${g.playerA||'?'}</strong>
               </div>
-              ${photoAi}
+              ${photoA}
             </div>
-            <span style="color:var(--gray-l);font-size:13px;font-weight:800;flex-shrink:0;padding:0 2px">vs</span>
-            <div style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:${bIsWinner?cb+'18':'#f8fafc'};border:${bIsWinner?'1.5px solid '+cb+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleB}">
-              ${photoBi}
-              <div style="text-align:left;flex:1;min-width:0">
-                ${pB?.univ?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pB.univ}</div>`:''}
-                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-                  ${winTagBpc}
-                  <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" ${clickB}>${g.playerB||'?'}</strong>
-                  ${raceB}
-                </div>
+            <span style="color:var(--gray-l);font-size:12px;font-weight:800;flex-shrink:0">vs</span>
+            <!-- 우측 선수: [사진] [이름 종족 소속] [WIN] -->
+            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:12px;background:${winB?cb+'18':'#f8fafc'};border:${winB?'1.5px solid '+cb+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleB}">
+              ${photoB}
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
+                <strong style="font-size:13px;color:var(--text);white-space:nowrap" ${clickB}>${g.playerB||'?'}</strong>
+                ${raceB}${univB}
               </div>
+              ${winB ? winBadge(cb) : ''}
             </div>
             ${mapDot}
             ${editBtn}
@@ -694,9 +691,9 @@ function compSummaryListHTML(context){
           </span>`:''}
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${a.replace(/'/g,"\\'")}',${m.sa||0},'${b.replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','comp',${rIdx>=0?rIdx:'null'})" title="결과 복사" style="padding:3px 8px;font-size:14px">📋</button>
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${a.replace(/'/g,"\\'")}',${m.sa||0},'${b.replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','comp',${rIdx>=0?rIdx:'null'})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           <div style="display:flex;gap:4px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">▼ 상세 열기</button>
+            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
             ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
             ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
             ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">수정</button>`):''}
@@ -977,7 +974,7 @@ function toggleDetail(key){
   } else {
     openDetails[key]=!openDetails[key];
     area.classList.toggle('open',!!openDetails[key]);
-    if(btn){btn.classList.toggle('open',!!openDetails[key]);btn.textContent=openDetails[key]?'▲ 상세 닫기':'▼ 상세 보기';}
+    if(btn){btn.classList.toggle('open',!!openDetails[key]);btn.textContent=openDetails[key]?'🔼 닫기':'📂 상세';}
   }
 }
 

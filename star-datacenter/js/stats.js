@@ -1133,24 +1133,29 @@ function renderShareCardByMatchObj(m){
         const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'22px',`border-radius:6px;flex-shrink:0${loserStyleA}`):'';
         const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'22px',`border-radius:6px;flex-shrink:0${loserStyleB}`):'';
 
+        // [WIN] [소속·티어·종족 이름] [사진] vs [사진] [이름 종족·티어·소속] [WIN]
+        const winBadgeA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
+        const winBadgeB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         return`<div style="display:flex;align-items:center;gap:4px;padding:4px 0;border-bottom:1px solid ${theme.divider}">
-          <span style="color:${theme.textDim};min-width:36px;font-size:9px;text-align:center;flex-shrink:0">경기${gi+1}</span>
-          <div style="flex:1;display:flex;align-items:center;gap:4px;justify-content:flex-end;min-width:0">
-            <div style="text-align:right;flex:1;min-width:0;${aW?'':'opacity:.6'}">
+          <span style="color:${theme.textDim};min-width:34px;font-size:9px;text-align:center;flex-shrink:0">경기${gi+1}</span>
+          <!-- 좌측: [WIN] [소속·종족 이름] [사진] -->
+          <div style="flex:1;display:flex;align-items:center;gap:4px;min-width:0;${aW?'':'opacity:.6'}">
+            ${winBadgeA}
+            <div style="flex:1;min-width:0;text-align:right;overflow:hidden">
               ${infoA?`<div style="font-size:9px;color:${theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${infoA}</div>`:''}
               <div style="font-weight:${aW?'800':'400'};color:${aW?theme.text:theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px">${g.playerA||'?'}</div>
             </div>
             <div style="flex-shrink:0">${photoA}</div>
           </div>
-          ${aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:28px;flex-shrink:0"></span>'}
           <span style="color:${theme.textDim};font-size:9px;flex-shrink:0">vs</span>
-          ${bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'<span style="width:28px;flex-shrink:0"></span>'}
-          <div style="flex:1;display:flex;align-items:center;gap:4px;min-width:0">
+          <!-- 우측: [사진] [이름 종족·소속] [WIN] -->
+          <div style="flex:1;display:flex;align-items:center;gap:4px;min-width:0;${bW?'':'opacity:.6'}">
             <div style="flex-shrink:0">${photoB}</div>
-            <div style="text-align:left;flex:1;min-width:0;${bW?'':'opacity:.6'}">
+            <div style="flex:1;min-width:0;text-align:left;overflow:hidden">
               ${infoB?`<div style="font-size:9px;color:${theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${infoB}</div>`:''}
               <div style="font-weight:${bW?'800':'400'};color:${bW?theme.text:theme.textDim};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px">${g.playerB||'?'}</div>
             </div>
+            ${winBadgeB}
           </div>
           ${g.map?`<span style="color:${theme.textDim};font-size:9px;flex-shrink:0">📍${g.map}</span>`:''}
         </div>`;
