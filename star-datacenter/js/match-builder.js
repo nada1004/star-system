@@ -116,6 +116,33 @@ function indRecordsHTML(){
 }
 
 /* ══════════════════════════════════════
+   끝장전 — 삭제 헬퍼
+══════════════════════════════════════ */
+function _removeGjResult(wName, lName, date, map){
+  const w=players.find(p=>p.name===wName);
+  const l=players.find(p=>p.name===lName);
+  if(!w||!l)return;
+  const nm=v=>(!v||v==='-')?'-':v;
+  const wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  let delta=0;
+  if(wi>=0){delta=w.history[wi].eloDelta||0;w.history.splice(wi,1);}
+  const li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  if(li>=0)l.history.splice(li,1);
+  if(w.win>0)w.win--;if(l.loss>0)l.loss--;
+  w.points-=3;l.points+=3;
+  if(delta){w.elo=(w.elo||1200)-delta;l.elo=(l.elo||1200)+delta;}
+}
+function deleteGjGame(idx){
+  const m=gjM[idx];if(!m)return;
+  _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-');
+  gjM.splice(idx,1);save();render();
+}
+function deleteGjSession(idsArr){
+  gjM.filter(m=>idsArr.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-'));
+  gjM=gjM.filter(m=>!idsArr.includes(m._id));save();render();
+}
+
+/* ══════════════════════════════════════
    끝장전
 ══════════════════════════════════════ */
 function rGJ(C,T){
@@ -186,7 +213,7 @@ function gjRecordsHTML(){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="gjM=gjM.filter(m=>!${idsJson}.includes(m._id));save();render()">전체삭제</button>`:'';
+    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">전체삭제</button>`:'';
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
@@ -210,7 +237,7 @@ function gjRecordsHTML(){
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'#111'}">${s.p2}</span></span></td>
         <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
-        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="gjM.splice(${origIdx},1);save();render()">삭제</button></td>`:''}
+        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">수정</button><button class="btn btn-r btn-xs" onclick="deleteGjGame(${origIdx})">삭제</button></td>`:''}
       </tr>`;
     });
     h+=`</tbody></table></details>`;
