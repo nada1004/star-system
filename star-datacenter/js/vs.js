@@ -327,6 +327,14 @@ function openVsShareCard(){
     :`<span style="display:inline-block;width:22px;height:22px;background:#475569;color:#fff;font-size:10px;border-radius:5px;text-align:center;line-height:22px">-</span>`
   ).join('');
 
+  // 종족 라벨
+  const raceA=pA?(pA.race==='T'?'테란':pA.race==='Z'?'저그':pA.race==='P'?'프로토스':''):'';
+  const raceB=pB?(pB.race==='T'?'테란':pB.race==='Z'?'저그':pB.race==='P'?'프로토스':''):'';
+  const infoA=[pA?.tier,raceA].filter(Boolean).join(' · ');
+  const infoB=[pB?.tier,raceB].filter(Boolean).join(' · ');
+  const photoA=getPlayerPhotoHTML(vsNameA,'52px',`border-radius:12px;border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
+  const photoB=getPlayerPhotoHTML(vsNameB,'52px',`border-radius:12px;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
+
   // 카드 HTML
   const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:380px;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">
     <div style="position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:${winCol};opacity:.08;pointer-events:none"></div>
@@ -335,27 +343,36 @@ function openVsShareCard(){
       <div style="font-size:10px;color:${vsDimColor};letter-spacing:1px;margin-bottom:4px">⚔️ 1:1 상대 전적</div>
       <div style="font-size:11px;color:${vsDimColor}">${new Date().toLocaleDateString('ko-KR')} 기준</div>
     </div>
-    <!-- 두 선수 대결 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
-      <div style="text-align:center;flex:1">
-        <div style="width:48px;height:48px;border-radius:12px;background:${colA};margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;border:${aLead?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.25)'};${aLead?'box-shadow:0 0 16px '+colA+'99':''}">${vsNameA[0]}</div>
-        <div style="font-size:13px;font-weight:800;${aLead?'':'opacity:.65'}">${vsNameA}</div>
-        ${pA?`<div style="font-size:9px;opacity:.6;margin-top:1px">${pA.univ} · ${pA.tier}</div>`:''}
-        ${aLead?`<div style="margin-top:5px;font-size:10px;font-weight:800;color:${colA};background:rgba(255,255,255,.15);border-radius:20px;padding:2px 9px;display:inline-block">🏆 우세</div>`:''}
-      </div>
-      <div style="text-align:center;flex-shrink:0">
-        <div style="font-size:42px;font-weight:900;letter-spacing:3px;line-height:1">
-          <span style="color:${aLead?'#4ade80':'rgba(255,255,255,.5)'}">${aWins}</span>
-          <span style="color:rgba(255,255,255,.2);font-size:26px;margin:0 4px">:</span>
-          <span style="color:${bLead?'#4ade80':'rgba(255,255,255,.5)'}">${bWins}</span>
+    <!-- 두 선수 대결 (격투게임 스타일) -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <!-- A: 우측정렬 텍스트 + 프로필 -->
+      <div style="flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-end;min-width:0">
+        <div style="text-align:right;flex:1;min-width:0;${aLead?'':'opacity:.7'}">
+          ${pA?.univ?`<div style="font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pA.univ}</div>`:''}
+          ${infoA?`<div style="font-size:10px;opacity:.6">${infoA}</div>`:''}
+          <div style="font-size:14px;font-weight:${aLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${vsNameA}</div>
+          ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:2px">🏆 우세</div>`:''}
         </div>
-        <div style="font-size:9px;color:${vsDimColor};margin-top:3px">총 ${total}게임</div>
+        <div style="flex-shrink:0">${photoA}</div>
       </div>
-      <div style="text-align:center;flex:1">
-        <div style="width:48px;height:48px;border-radius:12px;background:${colB};margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;border:${bLead?'3px solid rgba(255,255,255,.7)':'2px solid rgba(255,255,255,.25)'};${bLead?'box-shadow:0 0 16px '+colB+'99':''}">${vsNameB[0]}</div>
-        <div style="font-size:13px;font-weight:800;${bLead?'':'opacity:.65'}">${vsNameB}</div>
-        ${pB?`<div style="font-size:9px;opacity:.6;margin-top:1px">${pB.univ} · ${pB.tier}</div>`:''}
-        ${bLead?`<div style="margin-top:5px;font-size:10px;font-weight:800;color:${colB};background:rgba(255,255,255,.15);border-radius:20px;padding:2px 9px;display:inline-block">🏆 우세</div>`:''}
+      <!-- 스코어 -->
+      <div style="text-align:center;flex-shrink:0;padding:0 4px">
+        <div style="font-size:38px;font-weight:900;letter-spacing:2px;line-height:1">
+          <span style="color:${aLead?colA:vsTextColor};${aLead?'':'opacity:.5'}">${aWins}</span>
+          <span style="opacity:.25;font-size:22px;margin:0 1px">:</span>
+          <span style="color:${bLead?colB:vsTextColor};${bLead?'':'opacity:.5'}">${bWins}</span>
+        </div>
+        <div style="font-size:9px;color:${vsDimColor};margin-top:2px">총 ${total}게임</div>
+      </div>
+      <!-- B: 프로필 + 좌측정렬 텍스트 -->
+      <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0">
+        <div style="flex-shrink:0">${photoB}</div>
+        <div style="text-align:left;flex:1;min-width:0;${bLead?'':'opacity:.7'}">
+          ${pB?.univ?`<div style="font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pB.univ}</div>`:''}
+          ${infoB?`<div style="font-size:10px;opacity:.6">${infoB}</div>`:''}
+          <div style="font-size:14px;font-weight:${bLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${vsNameB}</div>
+          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:2px">🏆 우세</div>`:''}
+        </div>
       </div>
     </div>
     <!-- 승률 바 -->
