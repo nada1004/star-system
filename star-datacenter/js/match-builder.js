@@ -189,16 +189,24 @@ function gjRankHTML(){
 
 function gjRecordsHTML(){
   if(!gjM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  // 세션 그룹화: 연속된 같은 선수쌍+날짜만 하나의 세션 (같은 날 두 번 경기해도 분리)
+  // 세션 그룹화
+  // - sid 있음: sid+페어 기준 (비연속이어도 같은 페어끼리 합침 → 여러 쌍 동시 붙여넣기 지원)
+  // - sid 없음: 연속된 같은 날짜+페어 기준 (기존 방식)
   const sessions=[];
+  const sidPairMap=new Map(); // sid+pair→session (비연속 병합용)
   let lastKey=null, lastSess=null;
   gjM.forEach((m)=>{
     const pair=[m.wName,m.lName].sort();
-    // sid 있으면 sid 기준 그룹핑, 없으면 기존 연속 방식
-    const k = m.sid ? m.sid : `${m.d||''}|${pair[0]}|${pair[1]}`;
+    const k = m.sid ? `${m.sid}|${pair[0]}|${pair[1]}` : `${m.d||''}|${pair[0]}|${pair[1]}`;
     if(k!==lastKey||!lastSess){
-      const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
-      sessions.push(s);lastSess=s;lastKey=k;
+      if(m.sid && sidPairMap.has(k)){
+        // 같은 sid+페어 세션이 이미 존재하면 (비연속) 그쪽에 병합
+        lastSess=sidPairMap.get(k);lastKey=k;
+      } else {
+        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
+        sessions.push(s);lastSess=s;lastKey=k;
+        if(m.sid) sidPairMap.set(k,s);
+      }
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
