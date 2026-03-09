@@ -28,10 +28,10 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
 
@@ -106,16 +106,16 @@ function rTotal(C,T){
             <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${(p.win+p.loss)?wr+'%':'-'}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px" class="${pC(p.points)}">${pS(p.points)}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px" class="${pC(p.points)}">${pS(p.points)}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?8:7}" style="padding:30px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다.</td></tr>`;
+    tableHTML+=`<tr><td colspan="${isLoggedIn?8:7}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 

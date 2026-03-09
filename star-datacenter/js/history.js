@@ -67,7 +67,7 @@
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
-  else if(histSub==='tiertour') h+=ttM&&ttM.length?recSummaryListHTMLFiltered(ttM,'tt','hist'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회 기록이 없습니다.</div>';
+  else if(histSub==='tiertour') h+=ttM&&ttM.length?recSummaryListHTMLFiltered(ttM,'tt','hist'):'<div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">티어대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>';
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   C.innerHTML=h;
 }
@@ -93,7 +93,7 @@ function histTourneyHTML(context){
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
   </div>`;
-  if(!allItems.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">대회 경기 기록이 없습니다.</div>`;
+  if(!allItems.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🏆</div><div class="empty-state-title">대회 경기 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
 
   // 대회명별로 그룹화
   const groups={};
@@ -323,7 +323,7 @@ function statCard(label,w,l,d,col){
 }
 
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
-  if(!arr.length)return`<div style="padding:20px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
+  if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   let h='';
   arr.forEach(m=>{
@@ -393,7 +393,7 @@ function recSummaryListHTML(arr, mode, context){
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
     </div>
   </div>`;
-    return emptyBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
+    return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
   // 날짜 필터만 적용 (검색어 필터는 DOM에서 실시간 처리)
   let filtered=arr.map((m,i)=>({m,i})).filter(({m})=>{
@@ -443,10 +443,10 @@ function recSummaryListHTML(arr, mode, context){
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ2?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
     </div>
   </div>
-  <div id="rq-empty-${mode}" style="display:none;padding:24px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다. <button onclick="recClearSearch('${mode}')" style="margin-left:6px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;cursor:pointer">🔄 초기화</button></div>`;
+  <div id="rq-empty-${mode}" style="display:none"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어를 사용해보세요</div><button class="btn btn-w" onclick="recClearSearch('${mode}')">🔄 초기화</button></div></div>`;
 
   if(!totalItems){
-    return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+    return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
   }
 
   let h=sortBar+`<div id="rec-list-${mode}">`;
@@ -529,7 +529,7 @@ function recSummaryListHTML(arr, mode, context){
     h+=pager;
   }
 
-  return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+  return h||`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
 }
 
 /* 모바일 시트용 레지스트리 */
@@ -653,7 +653,7 @@ function compSummaryListHTML(context){
   const tourItems=getTourneyMatches();
   const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
   const allItems=[...tourItems,...compItems];
-  if(!allItems.length)return`<div style="padding:40px;text-align:center;color:var(--gray-l);">기록이 없습니다.</div>`;
+  if(!allItems.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   // 날짜 필터 적용 후 정렬
   const filtered=allItems.filter(m=>
     typeof passDateFilter!=='function'||passDateFilter(m.d||'')
@@ -667,7 +667,7 @@ function compSummaryListHTML(context){
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${filtered.length}건</span>
   </div>`;
-  if(!filtered.length)return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+  if(!filtered.length)return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
   let h=sortBar;
   filtered.forEach((m,listIdx)=>{
     const a=m.a||m.hostUniv||m.u||'';const b=m.b||'';
@@ -719,7 +719,7 @@ function compSummaryListHTML(context){
       </div>
     </div>`;
   });
-  return h||`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
+  return h||`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
 }
 // 공유카드용 - context별 캐시된 filtered 배열에서 m 객체 반환 헬퍼
 window._compListCache={};
