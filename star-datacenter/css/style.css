@@ -385,7 +385,16 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-sum-score { font-size: 16px; }
   .rec-sum-vs { flex-wrap: wrap !important; gap: 4px !important; }
   .rec-summary { min-height: 44px; }
-  .rec-detail-area { padding: 8px 10px !important; }
+  .rec-detail-area { padding: 6px 8px !important; }
+  /* 경기 상세 게임 행: 모바일에서 사진 작게, 텍스트 압축 */
+  .rec-detail-area strong { font-size: 12px !important; }
+  .rec-detail-area .tbadge { font-size: 9px !important; padding: 2px 5px !important; }
+  .rec-detail-area .rbadge { font-size: 9px !important; padding: 1px 4px !important; }
+  /* 공유카드 모달 모바일 최적화 */
+  .sharecard-modal-box { padding: 14px 12px !important; border-radius: 12px !important; }
+  .sharecard-modal-actions { flex-wrap: wrap !important; gap: 6px !important; }
+  .sharecard-modal-actions .btn { flex: 1; min-width: 80px; font-size: 13px !important; padding: 10px 8px !important; }
+  #modal-share-card { max-height: 60vh !important; overflow-y: auto !important; }
 
   /* ── 경기 빌더 ── */
   .match-builder { padding: 12px 10px; border-radius: 10px; }

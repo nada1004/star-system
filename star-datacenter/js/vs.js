@@ -336,7 +336,7 @@ function openVsShareCard(){
   const photoB=getPlayerPhotoHTML(vsNameB,'52px',`border-radius:12px;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
 
   // 카드 HTML
-  const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:380px;font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">
+  const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:min(380px,calc(100vw - 48px));font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">
     <div style="position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:${winCol};opacity:.08;pointer-events:none"></div>
     <!-- 제목 -->
     <div style="text-align:center;margin-bottom:16px">

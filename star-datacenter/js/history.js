@@ -585,26 +585,26 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
           const winB = bIsWinner&&hasWinner;
           const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
           const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">📍${g.map}</span>` : '';
-          const univA = pA?.univ ? `<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${pA.univ}</span>` : '';
-          const univB = pB?.univ ? `<span style="font-size:10px;color:var(--gray-l);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${pB.univ}</span>` : '';
+          const tierA = pA?.tier ? getTierBadge(pA.tier) : '';
+          const tierB = pB?.tier ? getTierBadge(pB.tier) : '';
           h+=`<div style="display:flex;align-items:center;gap:5px;padding:5px 2px;">
             <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
-            <!-- 좌측 선수: [WIN] [소속 종족 이름] [사진] -->
-            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:12px;background:${winA?ca+'18':'#f8fafc'};border:${winA?'1.5px solid '+ca+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleA}">
+            <!-- 좌측 선수: [WIN] [티어 종족 이름] [사진] -->
+            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?ca+'18':'var(--surface)'};border:${winA?'1.5px solid '+ca+'55':'1px solid var(--border)'};min-width:0;${loserStyleA}">
               ${winA ? winBadge(ca) : ''}
               <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
-                ${univA}${raceA}
+                ${tierA}${raceA}
                 <strong style="font-size:13px;color:var(--text);white-space:nowrap" ${clickA}>${g.playerA||'?'}</strong>
               </div>
               ${photoA}
             </div>
             <span style="color:var(--gray-l);font-size:12px;font-weight:800;flex-shrink:0">vs</span>
-            <!-- 우측 선수: [사진] [이름 종족 소속] [WIN] -->
-            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:12px;background:${winB?cb+'18':'#f8fafc'};border:${winB?'1.5px solid '+cb+'55':'1px solid #e2e8f0'};min-width:0;${loserStyleB}">
+            <!-- 우측 선수: [사진] [이름 종족 티어] [WIN] -->
+            <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?cb+'18':'var(--surface)'};border:${winB?'1.5px solid '+cb+'55':'1px solid var(--border)'};min-width:0;${loserStyleB}">
               ${photoB}
               <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
                 <strong style="font-size:13px;color:var(--text);white-space:nowrap" ${clickB}>${g.playerB||'?'}</strong>
-                ${raceB}${univB}
+                ${raceB}${tierB}
               </div>
               ${winB ? winBadge(cb) : ''}
             </div>
