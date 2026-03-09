@@ -1778,7 +1778,8 @@ function pasteApply() {
 
   // 모드별 기록 추가
   if (mode === 'mini') {
-    miniM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap });
+    const _mType = window._miniPasteType || 'mini';
+    miniM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap, type: _mType });
   } else if (mode === 'univm') {
     univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap });
   } else if (mode === 'pro') {
@@ -2015,6 +2016,7 @@ function openPasteModal() {
 
 /* ── 미니대전 전용 붙여넣기 ── */
 function openMiniPasteModal() {
+  window._miniPasteType = (typeof miniType !== 'undefined' ? miniType : 'mini');
   openPasteModal();
   window._forcedPasteMode = 'mini';
   const sel = document.getElementById('paste-mode');
@@ -2022,7 +2024,8 @@ function openMiniPasteModal() {
   if (sel) { sel.value = 'mini'; sel.style.display = 'none'; onPasteModeChange('mini'); }
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
-  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">⚡ 미니대전 경기 결과 입력 모드</span>';
+  const isCivil = window._miniPasteType === 'civil';
+  if (hint) hint.innerHTML = `<span style="color:#7c3aed;font-weight:700">${isCivil?'⚔️ 시빌워':'⚡ 미니대전'} 경기 결과 입력 모드</span>`;
 }
 
 /* ── 대학CK 전용 붙여넣기 ── */

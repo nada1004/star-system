@@ -233,6 +233,7 @@ let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='m
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
 let miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
+let miniType='mini'; // 'mini' | 'civil'
 let histUniv='';
 let searchTarget='';
 let recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순

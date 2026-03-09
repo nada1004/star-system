@@ -433,7 +433,7 @@ function saveMatch(mode){
   });
   if(mode==='mini'){
     if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
-    miniM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap});
+    miniM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,type:(typeof miniType!=='undefined'?miniType:'mini')});
   } else if(mode==='univm'){
     if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
     univM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap});

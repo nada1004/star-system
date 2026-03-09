@@ -2,30 +2,48 @@
    미니대전
 ══════════════════════════════════════ */
 function rMini(C,T){
-  T.innerText='⚡ 미니대전';
+  T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   if(!isLoggedIn && miniSub==='input') miniSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
-  let h=stabs(miniSub,subOpts);
+  // 타입 토글
+  const typeToggle=`<div style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="btn btn-sm ${miniType==='mini'?'btn-b':'btn-w'}" onclick="miniType='mini';miniSub='records';render()">⚡ 미니대전</button>
+    <button class="btn btn-sm ${miniType==='civil'?'btn-b':'btn-w'}" onclick="miniType='civil';miniSub='records';render()">⚔️ 시빌워</button>
+  </div>`;
+  const subOpts=[
+    {id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},
+    {id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}
+  ];
+  let h=typeToggle+stabs(miniSub,subOpts);
   if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('mini');
   }
-  if(miniSub==='input'&&isLoggedIn){if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>⚡ 미니대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;}
-  else if(miniSub==='rank'){h+=miniRankHTML();}
-  else{h+=recSummaryListHTML(miniM,'mini','tab');}
+  const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
+  const filteredMini = miniM.filter(m=>(m.type||'mini')===miniType);
+  if(miniSub==='input'&&isLoggedIn){
+    if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};
+    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
+  } else if(miniSub==='rank'){
+    h+=miniRankHTML(filteredMini);
+  } else {
+    h+=recSummaryListHTML(filteredMini,'mini','tab');
+  }
   C.innerHTML=h;
 }
 
-function miniRankHTML(){
+function miniRankHTML(data){
+  data=data||miniM.filter(m=>(m.type||'mini')==='mini');
   const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
-  miniM.forEach(m=>{
+  data.forEach(m=>{
     if(!sc[m.a])sc[m.a]={w:0,l:0,pts:0,total:0};if(!sc[m.b])sc[m.b]={w:0,l:0,pts:0,total:0};
     sc[m.a].total++;sc[m.b].total++;
     if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;}
     else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;}
   });
   const sorted=Object.entries(sc).filter(([,s])=>s.total>0).sort((a,b)=>b[1].pts-a[1].pts);
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 미니대전 대학별 순위</div>
+  const rankTitle = miniType==='civil'?'⚔️ 시빌워 팀별 순위':'🏆 미니대전 대학별 순위';
+  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">${rankTitle}</div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th></tr></thead><tbody>`;
   if(!sorted.length)h+=`<tr><td colspan="5" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
