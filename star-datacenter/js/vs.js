@@ -345,36 +345,36 @@ function openVsShareCard(){
       <div style="font-size:11px;color:${vsDimColor}">${new Date().toLocaleDateString('ko-KR')} 기준</div>
     </div>
     <!-- 두 선수 대결 -->
-    <div style="display:flex;align-items:center;gap:4px;margin-bottom:16px">
-      <!-- A: 수직 레이아웃 -->
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;${aLead?'':'opacity:.7'}">
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:16px">
+      <!-- A: 왼쪽 정렬 -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;${aLead?'':'opacity:.7'}">
         <div style="flex-shrink:0">${photoA}</div>
-        <div style="text-align:center;width:100%;min-width:0">
+        <div style="text-align:left;width:100%;min-width:0">
           <div style="font-size:13px;font-weight:${aLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${vsNameA}</div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:3px">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:3px">
             ${tierBadgeVS(pA?.tier)}${raceBadgeVS(raceA)}
           </div>
           ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:4px">🏆 우세</div>`:''}
         </div>
       </div>
       <!-- 스코어 -->
-      <div style="text-align:center;flex-shrink:0;padding:0 6px">
-        <div style="font-size:38px;font-weight:900;letter-spacing:2px;line-height:1">
+      <div style="text-align:center;flex-shrink:0;padding:0 4px;padding-top:6px">
+        <div style="font-size:36px;font-weight:900;letter-spacing:2px;line-height:1">
           <span style="color:${aLead?colA:vsTextColor};${aLead?'':'opacity:.5'}">${aWins}</span>
-          <span style="opacity:.25;font-size:22px;margin:0 1px">:</span>
+          <span style="opacity:.25;font-size:20px;margin:0 1px">:</span>
           <span style="color:${bLead?colB:vsTextColor};${bLead?'':'opacity:.5'}">${bWins}</span>
         </div>
         <div style="font-size:9px;color:${vsDimColor};margin-top:2px">총 ${total}게임</div>
       </div>
-      <!-- B: 수직 레이아웃 -->
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;${bLead?'':'opacity:.7'}">
+      <!-- B: 오른쪽 정렬 -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0;${bLead?'':'opacity:.7'}">
         <div style="flex-shrink:0">${photoB}</div>
-        <div style="text-align:center;width:100%;min-width:0">
+        <div style="text-align:right;width:100%;min-width:0">
           <div style="font-size:13px;font-weight:${bLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${vsNameB}</div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:3px">
-            ${tierBadgeVS(pB?.tier)}${raceBadgeVS(raceB)}
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap;margin-top:3px">
+            ${raceBadgeVS(raceB)}${tierBadgeVS(pB?.tier)}
           </div>
-          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:4px">🏆 우세</div>`:''}
+          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:4px">우세 🏆</div>`:''}
         </div>
       </div>
     </div>

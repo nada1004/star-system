@@ -266,6 +266,13 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 .sort-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 .sort-btn:hover:not(.on){border-color:var(--blue);color:var(--blue);}
 
+/* 티어 표시: PC=풀텍스트, 모바일=코드만 */
+.tier-mob { display: none; }
+@media (max-width: 768px) {
+  .tier-pc { display: none; }
+  .tier-mob { display: inline; }
+}
+
 /* ══════════════════════════════════════
    📱 모바일 UI 개선
 ══════════════════════════════════════ */
