@@ -83,36 +83,174 @@ function indRankHTML(){
 
 function indRecordsHTML(){
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  // 세션 그룹화: sid+페어 기준 (비연속 병합), 없으면 연속+날짜+페어 기준
+  const sessions=[];
+  const sidPairMap=new Map();
+  let lastKey=null, lastSess=null;
+  indM.forEach((m)=>{
+    const pair=[m.wName,m.lName].sort();
+    const k = m.sid ? `${m.sid}|${pair[0]}|${pair[1]}` : `${m.d||''}|${pair[0]}|${pair[1]}`;
+    if(k!==lastKey||!lastSess){
+      if(m.sid && sidPairMap.has(k)){
+        lastSess=sidPairMap.get(k);lastKey=k;
+      } else {
+        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
+        sessions.push(s);lastSess=s;lastKey=k;
+        if(m.sid) sidPairMap.set(k,s);
+      }
+    }
+    lastSess.games.push(m);lastSess.ids.push(m._id);
+  });
   const pageSize=getHistPageSize();
-  const total=indM.length;
-  const totalPages=Math.ceil(total/pageSize);
+  const total=sessions.length;
+  const totalPages=Math.ceil(total/pageSize)||1;
   if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
   const cur=histPage['ind'];
-  const slice=total>pageSize?indM.slice(cur*pageSize,(cur+1)*pageSize):indM;
-  let h=`<table><thead><tr><th style="text-align:left">날짜</th><th style="text-align:left">승자</th><th style="text-align:left">패자</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>삭제</th>':''}</tr></thead><tbody>`;
-  slice.forEach((m)=>{
-    const origIdx=indM.indexOf(m);
-    const wp=players.find(x=>x.name===m.wName);const lp=players.find(x=>x.name===m.lName);
-    h+=`<tr>
-      <td style="font-size:11px;color:var(--gray-l)">${m.d||''}</td>
-      <td><span class="wt" style="font-weight:700">${m.wName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${wp?.univ||''}</span></td>
-      <td><span class="lt" style="font-weight:700">${m.lName}</span><span style="font-size:10px;color:var(--gray-l);margin-left:3px">${lp?.univ||''}</span></td>
-      <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
-      ${isLoggedIn?`<td><button class="btn btn-r btn-xs" onclick="indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
-    </tr>`;
+  const slice=total>pageSize?sessions.slice(cur*pageSize,(cur+1)*pageSize):sessions;
+  let h='';
+  slice.forEach(s=>{
+    const p1wins=s.games.filter(m=>m.wName===s.p1).length;
+    const p2wins=s.games.filter(m=>m.wName===s.p2).length;
+    const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
+    const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
+    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">전체삭제</button>`:'';
+    const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
+    h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
+        <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
+        <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
+        ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
+        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
+      </summary>
+      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
+    s.games.forEach((m,gi)=>{
+      const origIdx=indM.findIndex(x=>x._id===m._id);
+      const p1win=m.wName===s.p1;
+      const p1photo=getPlayerPhotoHTML(s.p1,'18px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
+      const p2photo=getPlayerPhotoHTML(s.p2,'18px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
+      h+=`<tr>
+        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
+        <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
+        <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
+        <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span></span></td>
+        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
+        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
+      </tr>`;
+    });
+    h+=`</tbody></table></details>`;
   });
-  h+=`</tbody></table>`;
   if(totalPages>1){
     h+=`<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 0;flex-wrap:wrap">`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=0;render()" ${cur===0?'disabled':''}>«</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=Math.max(0,${cur}-1);render()" ${cur===0?'disabled':''}>‹</button>`;
-    let s=Math.max(0,cur-3),e=Math.min(totalPages-1,s+6);if(e-s<6)s=Math.max(0,e-6);
-    for(let p=s;p<=e;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['ind']=${p};render()">${p+1}</button>`;
+    let s2=Math.max(0,cur-3),e2=Math.min(totalPages-1,s2+6);if(e2-s2<6)s2=Math.max(0,e2-6);
+    for(let p=s2;p<=e2;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['ind']=${p};render()">${p+1}</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=Math.min(${totalPages-1},${cur}+1);render()" ${cur===totalPages-1?'disabled':''}>›</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=${totalPages-1};render()" ${cur===totalPages-1?'disabled':''}>»</button>`;
     h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
   }
   return h;
+}
+
+function deleteIndSession(ids){
+  if(!confirm(`${ids.length}경기를 삭제하시겠습니까?`))return;
+  ids.forEach(id=>{ const i=indM.findIndex(x=>x._id===id); if(i>=0) indM.splice(i,1); });
+  save();render();
+}
+
+/* ══════════════════════════════════════
+   개인전 공유카드
+══════════════════════════════════════ */
+function openIndShareCard(p1, p2, p1wins, p2wins, date, winner) {
+  _shareMode = 'match';
+  openShareCardModal();
+  setTimeout(() => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner), 80);
+}
+
+function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner) {
+  const card = document.getElementById('share-card');
+  if (!card) return;
+  const pp1 = players.find(x => x.name === p1) || {};
+  const pp2 = players.find(x => x.name === p2) || {};
+
+  const games = indM.filter(m => {
+    const pair = [m.wName, m.lName].sort();
+    const pair2 = [p1, p2].sort();
+    return (m.d||'') === date && pair[0] === pair2[0] && pair[1] === pair2[1];
+  });
+
+  const WC = '#111';
+  const LC = '#94a3b8';
+
+  const raceLabel = r => r==='T'?'테란':r==='Z'?'저그':r==='P'?'프로토스':'';
+  const ct = t => t ? t.replace(/티어$/,'') : '';
+
+  const playerInfoBlock = (name, pObj, isWinner, side) => {
+    const photo = getPlayerPhotoHTML(name, '64px', `border-radius:50%;border:3px solid ${isWinner?'#f59e0b':'#fde68a'};box-shadow:${isWinner?'0 4px 16px rgba(245,158,11,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
+    const race = raceLabel(pObj.race||'');
+    const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
+    const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
+    const isRight = side === 'right';
+    const badges = isRight ? `${raceSpan}${tier}` : `${tier}${raceSpan}`;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:${isRight?'flex-end':'flex-start'};gap:6px;min-width:0">
+      <div style="flex-shrink:0;position:relative">
+        ${photo}
+        ${isWinner&&winner?`<div style="position:absolute;bottom:-2px;${isRight?'left:-2px':'right:-2px'};font-size:13px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))">🏆</div>`:''}
+      </div>
+      <div style="text-align:${isRight?'right':'left'};width:100%;min-width:0">
+        <div style="font-size:13px;font-weight:${isWinner?'800':'500'};color:${isWinner?WC:LC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="display:flex;align-items:center;justify-content:${isRight?'flex-end':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:3px">${badges}</div>
+      </div>
+    </div>`;
+  };
+
+  const gameRows = games.map((m, gi) => {
+    const p1win = m.wName === p1;
+    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;border-radius:50%;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;border-radius:50%;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const mapTxt = m.map && m.map !== '-' ? `<span style="color:#94a3b8;font-size:9px;margin-left:2px">📍${m.map}</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;background:${p1win?'rgba(245,158,11,.08)':'rgba(255,255,255,.5)'};margin-bottom:3px">
+      <span style="font-size:9px;color:#f59e0b;min-width:26px;font-weight:700">${gi+1}G</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;flex:1;justify-content:flex-end">
+        ${p1Photo}<span style="font-size:11px;font-weight:${p1win?'700':'400'};color:${p1win?WC:LC}">${p1}</span>
+      </span>
+      <span style="font-size:9px;color:#fde68a;flex-shrink:0">vs</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;flex:1">
+        ${p2Photo}<span style="font-size:11px;font-weight:${p1win?'400':'700'};color:${p1win?LC:WC}">${p2}</span>
+      </span>
+      ${mapTxt}
+    </div>`;
+  }).join('');
+
+  card.innerHTML = `<div style="background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 40%,#fff7ed 100%);border-radius:22px;padding:20px 18px;font-family:'Noto Sans KR',sans-serif;color:#111;overflow:hidden;position:relative;box-shadow:0 8px 40px rgba(245,158,11,.18)">
+    <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#f59e0b,#f97316,#ef4444);border-radius:22px 22px 0 0"></div>
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#fcd34d20,#f9731610);pointer-events:none"></div>
+    <div style="position:absolute;bottom:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#fbbf2415,#f9731610);pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;margin-top:4px">
+      <div style="font-size:11px;font-weight:800;color:#b45309;background:linear-gradient(90deg,#fef3c7,#ffedd5);padding:4px 12px;border-radius:20px;border:1.5px solid #fcd34d">🎮 개인전</div>
+      <div style="font-size:10px;color:#f59e0b;font-weight:600">${date||''}</div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:${games.length?'14':'0'}px">
+      ${playerInfoBlock(p1, pp1, p1===winner, 'left')}
+      <div style="text-align:center;flex-shrink:0;padding:10px 2px 0">
+        <div style="font-size:40px;font-weight:900;line-height:1;letter-spacing:-2px">
+          <span style="color:${p1===winner?'#b45309':'#fcd34d'}">${p1wins}</span>
+          <span style="color:#fde68a;font-size:22px;margin:0 1px">:</span>
+          <span style="color:${p2===winner?'#b45309':'#fcd34d'}">${p2wins}</span>
+        </div>
+        ${winner?`<div style="font-size:8px;background:linear-gradient(90deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;margin-top:5px;letter-spacing:1px">WIN</div>`:''}
+      </div>
+      ${playerInfoBlock(p2, pp2, p2===winner, 'right')}
+    </div>
+    ${games.length ? `<div style="background:rgba(255,255,255,.7);backdrop-filter:blur(4px);border-radius:14px;padding:10px;border:1px solid rgba(252,211,77,.4)">
+      <div style="font-size:9px;color:#f59e0b;font-weight:700;margin-bottom:8px;letter-spacing:.5px">경기 상세</div>
+      ${gameRows}
+    </div>` : ''}
+    <div style="margin-top:12px;text-align:right;font-size:8px;color:#fcd34d;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+  </div>`;
 }
 
 /* ══════════════════════════════════════

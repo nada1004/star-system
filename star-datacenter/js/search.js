@@ -1826,10 +1826,9 @@ function pasteApply() {
     curComp = compName;
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
-    savable.forEach(r => {
-      const _m = r.map && r.map !== '-' ? r.map : '';
-      indM.unshift({ _id: genId(), d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: _m });
-    });
+    const indSid = genId();
+    const indGames = savable.map(r => ({ _id: genId(), sid: indSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
+    indM.unshift(...indGames);
   } else if (mode === 'gj') {
     const gjSid = genId(); // 같은 붙여넣기 세션은 동일 sid로 묶음
     const gjGames = savable.map(r => ({ _id: genId(), sid: gjSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
