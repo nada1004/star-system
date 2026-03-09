@@ -330,10 +330,11 @@ function openVsShareCard(){
   // 종족 라벨
   const raceA=pA?(pA.race==='T'?'테란':pA.race==='Z'?'저그':pA.race==='P'?'프로토스':''):'';
   const raceB=pB?(pB.race==='T'?'테란':pB.race==='Z'?'저그':pB.race==='P'?'프로토스':''):'';
-  const infoA=[pA?.tier,raceA].filter(Boolean).join(' · ');
-  const infoB=[pB?.tier,raceB].filter(Boolean).join(' · ');
-  const photoA=getPlayerPhotoHTML(vsNameA,'52px',`border-radius:12px;border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
-  const photoB=getPlayerPhotoHTML(vsNameB,'52px',`border-radius:12px;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
+  const ct=t=>t?t.replace(/티어$/,''):'';
+  const tierBadgeVS=(tier,lead)=>tier?`<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(tier)}</span>`:'';
+  const raceBadgeVS=race=>race?`<span style="font-size:10px;opacity:.8">${race}</span>`:'';
+  const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border-radius:50%;border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
+  const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border-radius:50%;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
 
   // 카드 HTML
   const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:min(380px,calc(100vw - 48px));font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">
@@ -343,20 +344,21 @@ function openVsShareCard(){
       <div style="font-size:10px;color:${vsDimColor};letter-spacing:1px;margin-bottom:4px">⚔️ 1:1 상대 전적</div>
       <div style="font-size:11px;color:${vsDimColor}">${new Date().toLocaleDateString('ko-KR')} 기준</div>
     </div>
-    <!-- 두 선수 대결 (격투게임 스타일) -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-      <!-- A: 우측정렬 텍스트 + 프로필 -->
-      <div style="flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-end;min-width:0">
-        <div style="text-align:right;flex:1;min-width:0;${aLead?'':'opacity:.7'}">
-          ${pA?.univ?`<div style="font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pA.univ}</div>`:''}
-          ${infoA?`<div style="font-size:10px;opacity:.6">${infoA}</div>`:''}
-          <div style="font-size:14px;font-weight:${aLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${vsNameA}</div>
-          ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:2px">🏆 우세</div>`:''}
-        </div>
+    <!-- 두 선수 대결 -->
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:16px">
+      <!-- A: 수직 레이아웃 -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;${aLead?'':'opacity:.7'}">
         <div style="flex-shrink:0">${photoA}</div>
+        <div style="text-align:center;width:100%;min-width:0">
+          <div style="font-size:13px;font-weight:${aLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${vsNameA}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:3px">
+            ${tierBadgeVS(pA?.tier)}${raceBadgeVS(raceA)}
+          </div>
+          ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:4px">🏆 우세</div>`:''}
+        </div>
       </div>
       <!-- 스코어 -->
-      <div style="text-align:center;flex-shrink:0;padding:0 4px">
+      <div style="text-align:center;flex-shrink:0;padding:0 6px">
         <div style="font-size:38px;font-weight:900;letter-spacing:2px;line-height:1">
           <span style="color:${aLead?colA:vsTextColor};${aLead?'':'opacity:.5'}">${aWins}</span>
           <span style="opacity:.25;font-size:22px;margin:0 1px">:</span>
@@ -364,14 +366,15 @@ function openVsShareCard(){
         </div>
         <div style="font-size:9px;color:${vsDimColor};margin-top:2px">총 ${total}게임</div>
       </div>
-      <!-- B: 프로필 + 좌측정렬 텍스트 -->
-      <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0">
+      <!-- B: 수직 레이아웃 -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;${bLead?'':'opacity:.7'}">
         <div style="flex-shrink:0">${photoB}</div>
-        <div style="text-align:left;flex:1;min-width:0;${bLead?'':'opacity:.7'}">
-          ${pB?.univ?`<div style="font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pB.univ}</div>`:''}
-          ${infoB?`<div style="font-size:10px;opacity:.6">${infoB}</div>`:''}
-          <div style="font-size:14px;font-weight:${bLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${vsNameB}</div>
-          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:2px">🏆 우세</div>`:''}
+        <div style="text-align:center;width:100%;min-width:0">
+          <div style="font-size:13px;font-weight:${bLead?'900':'700'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${vsNameB}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:3px">
+            ${tierBadgeVS(pB?.tier)}${raceBadgeVS(raceB)}
+          </div>
+          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:4px">🏆 우세</div>`:''}
         </div>
       </div>
     </div>

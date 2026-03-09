@@ -585,8 +585,10 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
           const winB = bIsWinner&&hasWinner;
           const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
           const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">📍${g.map}</span>` : '';
-          const tierA = pA?.tier ? getTierBadge(pA.tier) : '';
-          const tierB = pB?.tier ? getTierBadge(pB.tier) : '';
+          const _ct = t => t ? t.replace(/티어$/,'') : '';
+          const _tierBadge = (tier) => tier ? `<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;flex-shrink:0">${_ct(tier)}</span>` : '';
+          const tierA = _tierBadge(pA?.tier);
+          const tierB = _tierBadge(pB?.tier);
           h+=`<div style="display:flex;align-items:center;gap:5px;padding:5px 2px;">
             <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
             <!-- 좌측 선수: [WIN] [티어 종족 이름] [사진] -->
