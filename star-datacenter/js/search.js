@@ -577,6 +577,22 @@ function parsePasteLine(line) {
       if (rightPart.startsWith(mk)) { rightMark = mk; rightPart = rightPart.slice(mk.length).trim(); break; }
     }
 
+    // (승)/(패) 텍스트 마크 폴백 (예: "P마토 (승) 🆚️ T뚜미 (패) [폴리]")
+    if (!leftMark) {
+      const mL = leftPart.match(/\((승|패)\)\s*$/);
+      if (mL) {
+        leftMark = mL[1]==='승' ? '✅' : '❌';
+        leftPart = leftPart.slice(0, leftPart.lastIndexOf('('+mL[1]+')')).trim();
+      }
+    }
+    if (!rightMark) {
+      const mR = rightPart.match(/\((승|패)\)/);
+      if (mR) {
+        rightMark = mR[1]==='승' ? '✅' : '❌';
+        rightPart = rightPart.replace(mR[0], ' ').trim();
+      }
+    }
+
     if (!leftMark || !rightMark) return null;
 
     const leftWin  = WIN_MARKS.includes(leftMark);
