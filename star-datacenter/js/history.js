@@ -548,16 +548,16 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const swA=set.scoreA||0, swB=set.scoreB||0;
     const setAWin=swA>swB, setBWin=swB>swA;
     h+=`<div class="set-row">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:7px 12px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
-        <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0">${sLabel}</span>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
+        <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:12px">${sLabel}</span>
         <span class="ubadge${setAWin?'':' loser'}" style="background:${ca};font-size:10px">${labelA}</span>
-        <span style="font-weight:800;font-size:15px">
+        <span style="font-weight:800;font-size:14px">
           <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
           <span style="color:var(--border2)"> : </span>
           <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
         </span>
         <span class="ubadge${setBWin?'':' loser'}" style="background:${cb};font-size:10px">${labelB}</span>
-        ${setAWin?`<span style="font-size:11px;font-weight:800;color:${ca};margin-left:4px">▶ ${labelA} 세트 승</span>`:setBWin?`<span style="font-size:11px;font-weight:800;color:${cb};margin-left:4px">▶ ${labelB} 세트 승</span>`:'<span style="font-size:11px;color:var(--gray-l)">무승부</span>'}
+        ${setAWin?`<span style="font-size:10px;font-weight:700;color:${ca}">▶ ${labelA} 승</span>`:setBWin?`<span style="font-size:10px;font-weight:700;color:${cb}">▶ ${labelB} 승</span>`:''}
       </div>`;
     if(set.games&&set.games.length){
       set.games.forEach((g,gi)=>{
@@ -579,8 +579,8 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 
         {
           // ── [WIN] [소속 종족 이름] [사진] vs [사진] [이름 종족 소속] [WIN] ──
-          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.45;filter:grayscale(.5);' : '';
-          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.45;filter:grayscale(.5);' : '';
+          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.4;' : '';
+          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.4;' : '';
           const winA = aIsWinner&&hasWinner;
           const winB = bIsWinner&&hasWinner;
           const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
