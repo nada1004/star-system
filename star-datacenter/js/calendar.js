@@ -178,7 +178,7 @@
             <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tB}</span>
             ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>'}
             <div style="margin-left:auto;display:flex;gap:4px;align-items:center" class="no-export">
-            <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">▼ 상세 보기</button>
+            <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">📂 상세</button>
             <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>
           </div>
           </div>
@@ -224,7 +224,7 @@ function calToggleDetail(key){
   _calDetailState[key]=!_calDetailState[key];
   const isOpen=!!_calDetailState[key];
   area.style.display=isOpen?'block':'none';
-  if(btn){btn.classList.toggle('open',isOpen);btn.textContent=isOpen?'▲ 닫기':'▼ 상세';}
+  if(btn){btn.classList.toggle('open',isOpen);btn.textContent=isOpen?'🔼 닫기':'📂 상세';}
 }
 
 function calShowDay(ds){
@@ -276,7 +276,7 @@ function calShowDay(ds){
       +'<span style="font-size:12px;font-weight:700;color:'+winColor+'">'+winLabel+'</span>'
       +'</div>'
       +'<div class="no-export" style="margin-left:auto;display:flex;gap:4px;align-items:center">'
-      +'<button id="detbtn-'+detKey+'" class="btn-detail" onclick="event.stopPropagation();calToggleDetail(\''+detKey+'\')">▼ 상세</button>'
+      +'<button id="detbtn-'+detKey+'" class="btn-detail" onclick="event.stopPropagation();calToggleDetail(\''+detKey+'\')">📂 상세</button>'
       +'</div>'
       +'</div>'
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'

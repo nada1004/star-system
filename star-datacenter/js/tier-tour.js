@@ -431,7 +431,7 @@ function rMember(C,T){
       <td>${catObj.lbl?`<span style="font-size:11px">${catObj.lbl}</span>`:'-'}</td>
       <td><span style="font-size:11px;font-weight:700;color:${isActive?'var(--red)':banLabel.startsWith('✅')?'var(--green)':'var(--gray-l)'}">${banLabel||'-'}</span></td>
       <td><span style="font-size:11px;font-weight:700;color:${banHistCount>0?'var(--red)':'var(--gray-l)'}">${banHistCount}건</span></td>
-      <td><button class="btn-detail" style="font-size:11px" onclick="memberOpenDetail('${m.id}')">상세보기</button></td>
+      <td><button class="btn-detail" style="font-size:11px" onclick="memberOpenDetail('${m.id}')">📂 상세</button></td>
       <td style="color:var(--gray-l);font-size:11px">${(m.createdAt||'').slice(0,10)}</td>
       <td class="no-export">${adminOk?`<button class="btn btn-o btn-xs" onclick="memberOpenEdit('${m.id}')">수정</button> <button class="btn btn-r btn-xs" onclick="memberDel('${m.id}')">삭제</button>`:'-'}</td>
     </tr>`;

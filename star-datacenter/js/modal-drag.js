@@ -117,7 +117,7 @@ function closeMobileMatchSheet(e){
         spans.forEach(s => {
           const t=s.textContent.trim();
           if(/^\d{4}-\d{2}-\d{2}/.test(t)) dateStr=t;
-          else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세') && !t.includes(':')) nameStr=nameStr||t;
+          else if(t.length>1 && t.length<30 && !t.includes('▼') && !t.includes('상세') && !t.includes('닫기') && !t.includes(':')) nameStr=nameStr||t;
         });
         if(badges.length>=2){
           titleText = (dateStr?`<span style="font-size:11px;opacity:.7">${dateStr}</span><br>`:'') +
@@ -158,7 +158,7 @@ function closeMobileMatchSheet(e){
       openDetails[key] = false;
       detEl.classList.remove('open');
       const btn = document.getElementById('detbtn-' + key);
-      if(btn){ btn.classList.remove('open'); btn.textContent = '▼ 상세 보기'; }
+      if(btn){ btn.classList.remove('open'); btn.textContent = '📂 상세'; }
     }
   };
 

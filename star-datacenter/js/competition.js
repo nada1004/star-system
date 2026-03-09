@@ -146,7 +146,7 @@ function rCompLeague(tn){
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="leagueToggleDet('${detId}',document.getElementById('detbtn-${detId}'))"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
             <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
-            ${isDone?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">상세 ▼</button>`:''}
+            ${isDone?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">📂 상세</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -179,7 +179,7 @@ function leagueToggleDet(id,btn){
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
   const detBtn=btn||document.getElementById('detbtn-'+id);
-  if(detBtn){detBtn.textContent=open?'닫기 ▲':'상세 보기 ▼';detBtn.classList.toggle('open',open);}
+  if(detBtn){detBtn.textContent=open?'🔼 닫기':'📂 상세';detBtn.classList.toggle('open',open);}
 }
 
 function leagueEditMatch(tnId,gi,mi){
