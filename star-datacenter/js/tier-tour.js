@@ -433,7 +433,7 @@ function rMember(C,T){
       <td><span style="font-size:11px;font-weight:700;color:${banHistCount>0?'var(--red)':'var(--gray-l)'}">${banHistCount}건</span></td>
       <td><button class="btn-detail" style="font-size:11px" onclick="memberOpenDetail('${m.id}')">📂 상세</button></td>
       <td style="color:var(--gray-l);font-size:11px">${(m.createdAt||'').slice(0,10)}</td>
-      <td class="no-export">${adminOk?`<button class="btn btn-o btn-xs" onclick="memberOpenEdit('${m.id}')">수정</button> <button class="btn btn-r btn-xs" onclick="memberDel('${m.id}')">삭제</button>`:'-'}</td>
+      <td class="no-export">${adminOk?`<button class="btn btn-o btn-xs" onclick="memberOpenEdit('${m.id}')">✏️ 수정</button> <button class="btn btn-r btn-xs" onclick="memberDel('${m.id}')">🗑️ 삭제</button>`:'-'}</td>
     </tr>`;
   });
   h+=`</tbody></table>`;
@@ -641,7 +641,7 @@ function rCfg(C,T){
       <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
         onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();reCfg();if(typeof renderBoard==='function')renderBoard()">
         ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
-      <button class="btn btn-r btn-xs" onclick="delUniv(${i})">삭제</button>
+      <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
   });
   h+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -654,7 +654,7 @@ function rCfg(C,T){
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
       <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
-      <button class="btn btn-r btn-xs" onclick="delMap(${i})">삭제</button>
+      <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
   h+=`<div style="margin-top:12px;display:flex;gap:8px">
@@ -719,7 +719,7 @@ function rCfg(C,T){
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
         ${getTierBadge(t)}
         <div style="font-size:10px;color:var(--gray-l)">${i+1}순위</div>
-        ${!['G','K','JA','J','S','0티어'].includes(t)?`<button class="btn btn-r btn-xs" onclick="delTier('${t}')">삭제</button>`:''}
+        ${!['G','K','JA','J','S','0티어'].includes(t)?`<button class="btn btn-r btn-xs" onclick="delTier('${t}')">🗑️ 삭제</button>`:''}
       </div>`).join('')}
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1097,7 +1097,7 @@ function _refreshAliasList(){
       <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:50px;text-align:center">${k}</code>
       <span style="color:var(--gray-l)">→</span>
       <span style="font-weight:600;font-size:13px">${v}</span>
-      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">삭제</button>
+      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">🗑️ 삭제</button>
     </div>`).join('');
 }
 

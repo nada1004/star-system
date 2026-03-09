@@ -110,7 +110,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${(p.win+p.loss)?wr+'%':'-'}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px" class="${pC(p.points)}">${pS(p.points)}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">수정</button>`)}</td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });

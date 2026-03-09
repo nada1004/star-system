@@ -1632,7 +1632,7 @@ function statsTierWinHTML(){
         <option value="M"${f.gender==='M'?' selected':''}>👨 남자</option>
         <option value="F"${f.gender==='F'?' selected':''}>👩 여자</option>
       </select>
-      <button class="btn btn-w btn-sm" onclick="_tierWinFilter={race:'',univ:'',gender:''};render()">초기화</button>
+      <button class="btn btn-w btn-sm" onclick="_tierWinFilter={race:'',univ:'',gender:''};render()">🔄 초기화</button>
     </div>
     ${data.length===0?'<p style="color:var(--gray-l);padding:20px;text-align:center">조건에 맞는 데이터 없음</p>':`
     <div style="overflow-x:auto"><table>
@@ -2166,7 +2166,7 @@ function statsSeasonalHTML(){
           <option value="Z"${f.race==='Z'?' selected':''}>저그</option>
           <option value="P"${f.race==='P'?' selected':''}>프로토스</option>
         </select>
-        <button class="btn btn-w btn-sm" onclick="_seasonalFilter={gender:'',univ:'',race:''};render()">초기화</button>
+        <button class="btn btn-w btn-sm" onclick="_seasonalFilter={gender:'',univ:'',race:''};render()">🔄 초기화</button>
       </div>
     </div>
     <h4 style="font-size:13px;margin-bottom:10px">🗓️ 요일별 승률</h4>
@@ -2805,7 +2805,7 @@ function statsAdvSearchHTML(){
         <option value="name"${f.sort==='name'?' selected':''}>이름순</option>
         <option value="shuffle"${f.sort==='shuffle'?' selected':''}>무작위</option>
       </select>
-      <button class="btn btn-w btn-sm" onclick="_advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};render()">초기화</button>
+      <button class="btn btn-w btn-sm" onclick="_advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};render()">🔄 초기화</button>
     </div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">검색 결과: <strong>${list.length}명</strong></div>
     ${list.length===0?'<p style="color:var(--gray-l);padding:20px;text-align:center">조건에 맞는 선수가 없습니다.</p>':`

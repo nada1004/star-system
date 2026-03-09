@@ -139,9 +139,9 @@ function histTourneyHTML(context){
           </div>
           <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
-            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
-            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">수정</button>`):''}
+            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">✏️ 수정</button>`):''}
+            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">🗑️ 삭제</button>`):''}
+            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
           </div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
@@ -153,7 +153,7 @@ function histTourneyHTML(context){
               <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
               ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
               <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
-              ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">삭제</button>`:''}`:''}
+              ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
             </div>
           </div>
         </div>
@@ -358,8 +358,8 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-          ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`):''}
-          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
+          ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`):''}
+          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
@@ -443,7 +443,7 @@ function recSummaryListHTML(arr, mode, context){
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ2?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
     </div>
   </div>
-  <div id="rq-empty-${mode}" style="display:none;padding:24px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다. <button onclick="recClearSearch('${mode}')" style="margin-left:6px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;cursor:pointer">초기화</button></div>`;
+  <div id="rq-empty-${mode}" style="display:none;padding:24px;text-align:center;color:var(--gray-l)">검색 결과가 없습니다. <button onclick="recClearSearch('${mode}')" style="margin-left:6px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;cursor:pointer">🔄 초기화</button></div>`;
 
   if(!totalItems){
     return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);">해당 기간에 기록이 없습니다.</div>`;
@@ -489,8 +489,8 @@ function recSummaryListHTML(arr, mode, context){
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           <div style="display:flex;gap:4px;align-items:center" class="no-export">
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">수정</button>`)}
-            ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">삭제</button>`)}
+            ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
+            ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
           </div>
         </div>
       </div>
@@ -503,7 +503,7 @@ function recSummaryListHTML(arr, mode, context){
             <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
             ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
-            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">삭제</button>`:''}`:''}
+            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}`:''}
           </div>
         </div>
       </div>
@@ -698,9 +698,9 @@ function compSummaryListHTML(context){
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${a.replace(/'/g,"\\'")}',${m.sa||0},'${b.replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','comp',${rIdx>=0?rIdx:'null'})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           <div style="display:flex;gap:4px;align-items:center" class="no-export">
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">수정</button>`):''}
-            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">삭제</button>`):''}
-            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">수정</button>`):''}
+            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">✏️ 수정</button>`):''}
+            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">🗑️ 삭제</button>`):''}
+            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
           </div>
         </div>
       </div>
@@ -713,7 +713,7 @@ function compSummaryListHTML(context){
             <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
-            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">삭제</button>`:''}`:''}
+            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
           </div>
         </div>
       </div>
@@ -932,8 +932,8 @@ function doSearch(val){
         <td style="color:var(--gray-l);font-size:11px">${lg.map}</td>
         <td style="color:var(--gray-l);font-size:10px" id="detbtn-${detKey}">▼</td>
         ${isLoggedIn&&editIdx>=0&&(editMode==='mini'||editMode==='univm'||editMode==='comp')?`<td class="no-export" style="text-align:center" onclick="event.stopPropagation()">
-          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${editMode}',${editIdx})">수정</button>`)}
-          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${editMode}',${editIdx})">삭제</button>`)}
+          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${editMode}',${editIdx})">✏️ 수정</button>`)}
+          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${editMode}',${editIdx})">🗑️ 삭제</button>`)}
         </td>`:isLoggedIn?'<td class="no-export"></td>':''}
       </tr>
       <tr id="det-${detKey}" style="display:none">

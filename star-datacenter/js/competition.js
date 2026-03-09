@@ -158,7 +158,7 @@ function rCompLeague(tn){
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="leagueEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
-          <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">삭제</button>
+          <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
         </div>`:''}
       </div>
       <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:14px 16px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
@@ -205,14 +205,18 @@ function grpMatchDetail(m){
       if(!g.playerA&&!g.playerB)return;
       const pa=players.find(p=>p.name===g.playerA);const pb=players.find(p=>p.name===g.playerB);
       const wA=g.winner==='A';const wB=g.winner==='B';
-      h+=`<div style="font-size:11px;background:var(--white);padding:5px 10px;border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;gap:4px">
-        <span style="font-size:10px;color:var(--gray-l);min-width:14px">${gi+1}</span>
-        <span style="font-weight:${wA?'800':'400'};color:${wA?'var(--green)':'var(--text)'}">${g.playerA||'?'}</span>
+      const _ct=t=>t?t.replace(/티어$/,''):'';
+      const _tb=tier=>tier?`<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;flex-shrink:0"><span class="tier-pc">${tier}</span><span class="tier-mob">${_ct(tier)}</span></span>`:'';
+      h+=`<div style="font-size:11px;background:var(--white);padding:5px 10px;border-radius:6px;border:1px solid ${wA?'var(--green)33':wB?'var(--red)33':'var(--border)'};display:flex;align-items:center;gap:4px">
+        <span style="font-size:10px;color:var(--gray-l);min-width:14px;flex-shrink:0">${gi+1}</span>
+        <span style="font-weight:${wA?'800':'400'};color:${wA?'var(--green)':'var(--text)'};white-space:nowrap">${g.playerA||'?'}</span>
         ${pa?`<span class="rbadge r${pa.race}" style="font-size:9px;padding:0 3px">${pa.race||''}</span>`:''}
-        <span style="color:var(--gray-l);font-size:10px">vs</span>
-        <span style="font-weight:${wB?'800':'400'};color:${wB?'var(--green)':'var(--text)'}">${g.playerB||'?'}</span>
+        ${_tb(pa?.tier)}
+        <span style="color:var(--gray-l);font-size:10px;flex-shrink:0">vs</span>
+        <span style="font-weight:${wB?'800':'400'};color:${wB?'var(--green)':'var(--text)'};white-space:nowrap">${g.playerB||'?'}</span>
         ${pb?`<span class="rbadge r${pb.race}" style="font-size:9px;padding:0 3px">${pb.race||''}</span>`:''}
-        ${g.map?`<span style="color:var(--gray-l);font-size:10px;margin-left:2px">[${g.map}]</span>`:''}
+        ${_tb(pb?.tier)}
+        ${g.map?`<span style="color:var(--gray-l);font-size:10px;margin-left:2px;flex-shrink:0">📍${g.map}</span>`:''}
       </div>`;
     });
     h+=`</div></div>`;
@@ -643,7 +647,7 @@ function rCompGrpEdit(){
         <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
           ${!isActive?`<button class="btn btn-b btn-xs" onclick="curComp='${tn.name}';save();render()">현재 대회로 설정</button>`:'<span style="font-size:11px;color:var(--blue);font-weight:700">📌 현재 대회</span>'}
           <button class="btn btn-w btn-xs" onclick="grpEditId='${tn.id}';grpSub='edit';render()">📝 조편성 입력</button>
-          <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})">삭제</button>
+          <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})">🗑️ 삭제</button>
         </div>
       </div>
       ${tn.groups.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${tn.groups.map((g,gi)=>{const gl='ABCDEFGHIJ'[gi];const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];return `<span style="background:${col};color:#fff;padding:2px 12px;border-radius:20px;font-size:11px;font-weight:700">GROUP ${gl}조 (${g.univs.length}팀, ${(g.matches||[]).length}경기)</span>`;}).join('')}</div>`:'<span style="font-size:11px;color:var(--gray-l)">조 없음</span>'}
@@ -834,7 +838,7 @@ function grpRefreshSets(){
         <select onchange="grpSetGame(${si},${gi2},'map',this.value)" style="max-width:100px"><option value="">맵</option>${mapOpts}</select>
         <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','A');grpRefreshSets()">A 승</button>
         <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','B');grpRefreshSets()">B 승</button>
-        <button class="btn btn-r btn-xs" onclick="grpDelGame(${si},${gi2})">삭제</button>
+        <button class="btn btn-r btn-xs" onclick="grpDelGame(${si},${gi2})">🗑️ 삭제</button>
       </div>`;
     });
     h+=`<button class="btn btn-w btn-sm" onclick="grpAddGame(${si})">+ 경기 추가</button></div>`;

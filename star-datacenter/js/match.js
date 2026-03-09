@@ -280,13 +280,13 @@ function setBuilderHTML(bld, mode){
           <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
           <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
           <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='B';render()">B 승</button>
-          <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].freeGames.splice(${gi},1);render()">삭제</button>
+          <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].freeGames.splice(${gi},1);render()">🗑️ 삭제</button>
         </div>`;
       });
       h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button>`;
       h+=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">초기화</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
       </div>`;
     } else {
       h+=`<div class="score-board">
@@ -318,7 +318,7 @@ function setBuilderHTML(bld, mode){
             <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
             <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
             <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>
-            <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">삭제</button>
+            <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">🗑️ 삭제</button>
           </div>`;
         });
         h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button></div>`;
@@ -329,7 +329,7 @@ function setBuilderHTML(bld, mode){
       }
       h+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">초기화</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
       </div>`;
     }
   }

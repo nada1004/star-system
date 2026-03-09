@@ -454,7 +454,7 @@ function buildPlayerDetailHTML(p){
     ${isLoggedIn?`<textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="선수 메모...">${p.memo||''}</textarea>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn btn-b btn-sm" onclick="savePlayerMemo('${p.name}')">💾 저장</button>
-      ${p.memo?`<button class="btn btn-r btn-sm" onclick="savePlayerMemo('${p.name}',true)">삭제</button>`:''}
+      ${p.memo?`<button class="btn btn-r btn-sm" onclick="savePlayerMemo('${p.name}',true)">🗑️ 삭제</button>`:''}
     </div>`:''}
   </div>`;
   return h;
