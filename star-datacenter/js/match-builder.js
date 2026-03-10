@@ -120,6 +120,7 @@ function indRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
+  sessions.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const pageSize=getHistPageSize();
   const total=sessions.length;
   const totalPages=Math.ceil(total/pageSize)||1;
@@ -382,6 +383,7 @@ function gjRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
+  sessions.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const pageSize=getHistPageSize();
   const total=sessions.length;
   const totalPages=Math.ceil(total/pageSize);
