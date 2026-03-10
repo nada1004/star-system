@@ -641,9 +641,9 @@ function rCfg(C,T){
           <span style="font-weight:700;flex:1;font-size:13px">${n.title||'(제목 없음)'}</span>
           <span style="font-size:11px;color:var(--gray-l)">${n.date||''}</span>
           <button class="btn btn-xs" style="background:${n.active?'#f0fdf4':'#f1f5f9'};color:${n.active?'#16a34a':'#64748b'};border:1px solid ${n.active?'#86efac':'#cbd5e1'};min-width:52px"
-            onclick="notices[${i}].active=!notices[${i}].active;save();reCfg()">
+            onclick="notices[${i}].active=!notices[${i}].active;save();render()">
             ${n.active?'✅ 활성':'⭕ 비활성'}</button>
-          <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();reCfg()}">🗑️</button>
+          <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();render()}">🗑️</button>
         </div>
         <div style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden;text-overflow:ellipsis">${(n.body||'').slice(0,120)}${(n.body||'').length>120?'...':''}</div>
       </div>`).join('')
@@ -669,7 +669,7 @@ function rCfg(C,T){
           const ac=document.getElementById('new-notice-active').checked;
           if(!t){alert('제목을 입력하세요');return;}
           notices.unshift({id:Date.now(),type:tp,title:t,body:b,active:ac,date:new Date().toLocaleDateString('ko-KR')});
-          save();reCfg();">📢 공지 등록</button>
+          save();render();">📢 공지 등록</button>
       </div>
     </div>
   </div>

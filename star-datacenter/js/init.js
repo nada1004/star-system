@@ -2,9 +2,11 @@
   if(typeof notices==='undefined'||!notices.length) return;
   const active=notices.filter(n=>n.active);
   if(!active.length) return;
-  const n=active[0];
-  const todayKey='su_notice_hide_'+new Date().toLocaleDateString('ko-KR').replace(/\./g,'').replace(/ /g,'');
-  if(localStorage.getItem(todayKey)) return;
+  const today=new Date().toLocaleDateString('ko-KR').replace(/\./g,'').replace(/ /g,'');
+  // 공지별 개별 숨김 키 — 새 공지는 독립적으로 팝업됨
+  const n=active.find(n=>!localStorage.getItem('su_nhide_'+n.id+'_'+today));
+  if(!n) return;
+  const todayKey='su_nhide_'+n.id+'_'+today;
   const titleEl=document.getElementById('notice-popup-title');
   const bodyEl=document.getElementById('notice-popup-body');
   const dateEl=document.getElementById('notice-popup-date');
@@ -18,13 +20,13 @@
   // 타입별 헤더 색상
   const colors={'🔥':'linear-gradient(135deg,#991b1b,#dc2626)','⚠️':'linear-gradient(135deg,#92400e,#d97706)','🎉':'linear-gradient(135deg,#065f46,#059669)'};
   if(headerEl) headerEl.style.background=colors[n.type]||'linear-gradient(135deg,#1e3a8a,#2563eb)';
-  window._noticePopupTodayKey=todayKey;
+  window._noticePopupHideKey=todayKey;
   om('noticePopupModal');
 }
 function closeNoticePopup(){
   const chk=document.getElementById('notice-no-show-today');
-  if(chk&&chk.checked&&window._noticePopupTodayKey){
-    localStorage.setItem(window._noticePopupTodayKey,'1');
+  if(chk&&chk.checked&&window._noticePopupHideKey){
+    localStorage.setItem(window._noticePopupHideKey,'1');
   }
   cm('noticePopupModal');
 }
