@@ -150,6 +150,7 @@ window.cloudLoad = async function(){
 
 /* ════ 현황판 탭 rBoard ════ */
 let boardSelUniv='전체';
+let boardCompactMode=false; // 소형 칩 보기
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
 
@@ -276,6 +277,7 @@ function rBoard(C,T){
       <button class="brd-tbtn brd-tbtn-img" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
+      <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'🔲 소형':'⬛ 대형'}</button>
     </div>
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
   </div>
@@ -300,14 +302,13 @@ function rBoard(C,T){
 function buildUnivBoardCard(u, forExport){
   if(!u)return'';
   const col=gc(u.name);
-  const univPlayers=players.filter(p=>p.univ===u.name);
-  if(!univPlayers.length)return'';
-  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
-  const cnt=univPlayers.length;
   const sorted=_getBoardPlayers(u.name);
+  if(!sorted.length&&!forExport)return'';
+  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
+  const cnt=sorted.length;
   const allUnivs=getAllUnivs();
 
-  const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'}};
+  const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'},N:{bg:'#f1f5f9',col:'#475569',txt:'?'}};
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   // 파스텔 변환: 원색을 흰색과 mix=60% 블렌딩
   const toPastel=(hex,mix=0.72)=>{
@@ -361,6 +362,7 @@ function buildUnivBoardCard(u, forExport){
           </span>
         </span>`;
       }
+      const compact=!forExport&&boardCompactMode;
       const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const totalInUniv=sorted.length;
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
@@ -377,16 +379,23 @@ function buildUnivBoardCard(u, forExport){
       const cBgH=hexToRgba(col,.28);
       const cBd=hexToRgba(col,.45);
       const rTxt=rc.txt||p.race||'?';
-      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:12px;background:${cBgL};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
+      const photoSz=compact?'36px':'64px';
+      const photoFs=compact?'14px':'26px';
+      const chipPad=compact?'5px 10px 5px 6px':'10px 18px 10px 10px';
+      const chipGap=compact?'7px':'12px';
+      const nameFs=compact?'13px':'16px';
+      const badgeFs=compact?'10px':'12px';
+      const tierBadgeFs=compact?'9px':'11px';
+      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${photoSrcChip
-          ?`<img src="${photoSrcChip}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}" onerror="this.style.display='none'">`
-          :`<span style="width:64px;height:64px;border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:3px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
-        <span style="display:inline-flex;flex-direction:column;gap:3px;min-width:0">
-          ${isMain?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
-          <span style="font-weight:900;color:#111;font-size:16px;line-height:1.3;white-space:nowrap">${p.name}${getStatusIconHTML(p.name)}</span>
-          <span style="display:inline-flex;align-items:center;gap:5px;line-height:1.2">
-            <span style="font-size:12px;font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:2px 8px">${rTxt}</span>
-            ${p.tier?`<span style="font-size:11px;font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:2px 8px">${p.tier}</span>`:''}
+          ?`<img src="${photoSrcChip}" style="width:${photoSz};height:${photoSz};border-radius:50%;object-fit:cover;flex-shrink:0;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}" onerror="this.style.display='none'">`
+          :`<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
+        <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
+          ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
+          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}</span>
+          <span style="display:inline-flex;align-items:center;gap:${compact?'3px':'5px'};line-height:1.2">
+            <span style="font-size:${badgeFs};font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${rTxt}</span>
+            ${p.tier?`<span style="font-size:${tierBadgeFs};font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${p.tier}</span>`:''}
           </span>
         </span>
       </span>`;    };
@@ -434,7 +443,7 @@ function buildUnivBoardCard(u, forExport){
           <div style="flex:1;min-width:0">
             <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"`)}>
               ${u.name}${(!forExport&&boardSelUniv===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
-            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명${isLoggedIn&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">숨김</span>`:''}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${isLoggedIn&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
             ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">◀</button>
