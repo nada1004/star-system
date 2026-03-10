@@ -2,8 +2,8 @@
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
 let TIERS = J('su_tiers') || ['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];
-const RACES=['T','Z','P'];
-const RNAME={T:'테란',Z:'저그',P:'프로토스'};
+const RACES=['T','Z','P','N'];
+const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
 
 function getTierBadge(tier){

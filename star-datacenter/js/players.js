@@ -7,7 +7,7 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
-  const raceOpts=['전체','T','Z','P'];
+  const raceOpts=['전체','T','Z','P','N'];
   let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
     <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}

@@ -873,7 +873,7 @@ function openEP(name){
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
     <label>대학</label><select id="ed-u">${getAllUnivs().map(u=>`<option value="${u.name}"${p.univ===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-    <label>종족</label><select id="ed-r"><option value="T"${p.race==='T'?' selected':''}>테란</option><option value="Z"${p.race==='Z'?' selected':''}>저그</option><option value="P"${p.race==='P'?' selected':''}>프로토스</option></select>
+    <label>종족</label><select id="ed-r"><option value="T"${p.race==='T'?' selected':''}>테란</option><option value="Z"${p.race==='Z'?' selected':''}>저그</option><option value="P"${p.race==='P'?' selected':''}>프로토스</option><option value="N"${p.race==='N'?' selected':''}>종족미정</option></select>
     <label>성별</label><select id="ed-g"><option value="F"${(p.gender||'F')==='F'?' selected':''}>👩 여자</option><option value="M"${p.gender==='M'?' selected':''}>👨 남자</option></select>
     <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용)</span></label>
     <input type="text" id="ed-role" value="${p.role||''}" placeholder="예: 이사장, 총장, 부총장, 총괄, 교수, 코치, 학생회장, 오락부장 등" style="width:100%">

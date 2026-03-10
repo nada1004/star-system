@@ -116,6 +116,7 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .rT{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}
 .rZ{background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe;}
 .rP{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
+.rN{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;}
 .ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);}
 .ubadge.loser{opacity:0.32;filter:grayscale(100%);box-shadow:none;}
 .tbadge{display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;vertical-align:middle;line-height:1.4;}
