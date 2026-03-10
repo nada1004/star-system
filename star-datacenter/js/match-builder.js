@@ -18,14 +18,16 @@ function rMini(C,T){
     h+=buildYearMonthFilter('mini');
   }
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
-  const filteredMini = miniM.filter(m=>(m.type||'mini')===miniType);
+  const _miniTypeFilter = m=>(m.type||'mini')===miniType;
+  const filteredMini = miniM.filter(_miniTypeFilter);
   if(miniSub==='input'&&isLoggedIn){
     if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};
     h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
   } else if(miniSub==='rank'){
     h+=miniRankHTML(filteredMini);
   } else {
-    h+=recSummaryListHTML(filteredMini,'mini','tab');
+    // miniM 전체(원본 인덱스 보존) + extraFilter로 타입 분리 → 공유카드 인덱스 오류 방지
+    h+=recSummaryListHTML(miniM,'mini','tab',_miniTypeFilter);
   }
   C.innerHTML=h;
 }

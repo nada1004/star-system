@@ -376,7 +376,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   return h;
 }
 
-function recSummaryListHTML(arr, mode, context){
+function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   if(!window._recQ)window._recQ={};
   if(!arr.length){
@@ -397,6 +397,7 @@ function recSummaryListHTML(arr, mode, context){
   }
   // 날짜 필터만 적용 (검색어 필터는 DOM에서 실시간 처리)
   let filtered=arr.map((m,i)=>({m,i})).filter(({m})=>{
+    if(extraFilter&&!extraFilter(m)) return false;
     if(isCKmode){
       if(!m.teamAMembers||!m.teamBMembers) return false;
     } else {
