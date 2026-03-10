@@ -309,7 +309,7 @@ function openUnivModal(univName){
 
 function buildPlayerDetailHTML(p){
   const col=gc(p.univ);
-  const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
+  const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
   p.history.forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
@@ -380,7 +380,7 @@ function buildPlayerDetailHTML(p){
   h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">`;
   RACES.forEach(r=>{
     const s=rv[r];const t=s.w+s.l;const w=t?Math.round(s.w/t*100):0;
-    const raceColors={T:'#3b82f6',Z:'#7c3aed',P:'#d97706'};
+    const raceColors={T:'#3b82f6',Z:'#7c3aed',P:'#d97706',N:'#6b7280'};
     const rc=raceColors[r]||'#6b7280';
     h+=`<div class="rscard" style="border-color:${rc}55;background:${rc}12;flex:1;min-width:80px">
       <div style="margin-bottom:6px"><span class="rbadge r${r}" style="font-size:11px">${r} ${RNAME[r]||''}</span></div>
