@@ -1,4 +1,35 @@
-﻿function init(){
+﻿function showNoticePopup(){
+  if(typeof notices==='undefined'||!notices.length) return;
+  const active=notices.filter(n=>n.active);
+  if(!active.length) return;
+  const n=active[0];
+  const todayKey='su_notice_hide_'+new Date().toLocaleDateString('ko-KR').replace(/\./g,'').replace(/ /g,'');
+  if(localStorage.getItem(todayKey)) return;
+  const titleEl=document.getElementById('notice-popup-title');
+  const bodyEl=document.getElementById('notice-popup-body');
+  const dateEl=document.getElementById('notice-popup-date');
+  const iconEl=document.getElementById('notice-popup-type-icon');
+  const headerEl=document.getElementById('notice-popup-header');
+  if(!titleEl||!bodyEl) return;
+  titleEl.textContent=n.title||'공지';
+  bodyEl.textContent=n.body||'';
+  dateEl.textContent=n.date||'';
+  iconEl.textContent=n.type||'📢';
+  // 타입별 헤더 색상
+  const colors={'🔥':'linear-gradient(135deg,#991b1b,#dc2626)','⚠️':'linear-gradient(135deg,#92400e,#d97706)','🎉':'linear-gradient(135deg,#065f46,#059669)'};
+  if(headerEl) headerEl.style.background=colors[n.type]||'linear-gradient(135deg,#1e3a8a,#2563eb)';
+  window._noticePopupTodayKey=todayKey;
+  om('noticePopupModal');
+}
+function closeNoticePopup(){
+  const chk=document.getElementById('notice-no-show-today');
+  if(chk&&chk.checked&&window._noticePopupTodayKey){
+    localStorage.setItem(window._noticePopupTodayKey,'1');
+  }
+  cm('noticePopupModal');
+}
+
+function init(){
   fixPoints();
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
@@ -12,6 +43,7 @@
   initLoginHash();
   applyLoginState();
   render();
+  setTimeout(showNoticePopup, 800);
 }
 init();
 initDark();
@@ -72,6 +104,7 @@ initDark();
       members  = d.members  || d.member  || [];
       tourneys = d.tourneys || d.tournaments || d.tourney || [];
       ttM      = d.ttM      || d.tt      || [];
+      if(d.notices && d.notices.length) notices = d.notices;
       if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
       const allD=[...miniM,...univM,...comps,...ckM,...proM];
       const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));

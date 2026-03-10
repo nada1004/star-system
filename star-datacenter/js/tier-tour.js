@@ -630,7 +630,50 @@ function memberOpenDetail(id){
 ══════════════════════════════════════ */
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
-  let h=`<div class="ssec"><h4>🏛️ 대학 관리</h4>
+  const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
+  let h=`<div class="ssec"><h4>📢 공지 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
+    <div id="notice-list-area" style="margin-bottom:16px">
+    ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
+      notices.map((n,i)=>`<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:${n.active?'var(--white)':'var(--surface)'};opacity:${n.active?1:0.6}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">${n.type||'📢'}</span>
+          <span style="font-weight:700;flex:1;font-size:13px">${n.title||'(제목 없음)'}</span>
+          <span style="font-size:11px;color:var(--gray-l)">${n.date||''}</span>
+          <button class="btn btn-xs" style="background:${n.active?'#f0fdf4':'#f1f5f9'};color:${n.active?'#16a34a':'#64748b'};border:1px solid ${n.active?'#86efac':'#cbd5e1'};min-width:52px"
+            onclick="notices[${i}].active=!notices[${i}].active;save();reCfg()">
+            ${n.active?'✅ 활성':'⭕ 비활성'}</button>
+          <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();reCfg()}">🗑️</button>
+        </div>
+        <div style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden;text-overflow:ellipsis">${(n.body||'').slice(0,120)}${(n.body||'').length>120?'...':''}</div>
+      </div>`).join('')
+    }
+    </div>
+    <div style="border:1.5px dashed var(--border2);border-radius:12px;padding:16px;background:var(--surface)">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">+ 새 공지 작성</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <select id="new-notice-type" style="width:140px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
+          ${typeOpts.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}
+        </select>
+        <input type="text" id="new-notice-title" placeholder="공지 제목" style="flex:1;min-width:180px">
+      </div>
+      <textarea id="new-notice-body" placeholder="공지 내용을 입력하세요..." style="width:100%;height:80px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="new-notice-active" checked> 즉시 활성화
+        </label>
+        <button class="btn btn-b" style="margin-left:auto" onclick="
+          const t=document.getElementById('new-notice-title').value.trim();
+          const b=document.getElementById('new-notice-body').value.trim();
+          const tp=document.getElementById('new-notice-type').value;
+          const ac=document.getElementById('new-notice-active').checked;
+          if(!t){alert('제목을 입력하세요');return;}
+          notices.unshift({id:Date.now(),type:tp,title:t,body:b,active:ac,date:new Date().toLocaleDateString('ko-KR')});
+          save();reCfg();">📢 공지 등록</button>
+      </div>
+    </div>
+  </div>
+  <div class="ssec"><h4>🏛️ 대학 관리</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
@@ -729,16 +772,22 @@ function rCfg(C,T){
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 기본 티어(G/K/JA/J/S/0티어)는 삭제할 수 없습니다.</div>
   </div>
   <div class="ssec"><h4>👤 관리자 계정 관리</h4>
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자를 여러 명 등록할 수 있습니다. 기존 계정은 유지되고 새 계정이 추가됩니다.</p>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>관리자</b>: 모든 기능 + 설정 접근 가능</div>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">• <b>부관리자</b>: 경기 기록 입력만 가능 (설정/회원관리 불가)</div>
     <div style="margin-bottom:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">현재 등록된 관리자 계정 수: <span id="adm-count">-</span>명</div>
-      <div id="adm-list" style="font-size:11px;color:var(--gray-l)"></div>
-      <button class="btn btn-r btn-xs" style="margin-top:8px" onclick="clearAllAdmins()">⚠️ 전체 계정 초기화 (기본값으로 리셋)</button>
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">등록된 계정 (<span id="adm-count">-</span>명)</div>
+      <div id="adm-list"></div>
+      <button class="btn btn-r btn-xs" style="margin-top:10px" onclick="clearAllAdmins()">⚠️ 전체 초기화 (기본값 리셋)</button>
     </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">+ 새 계정 추가</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-      <input type="text" id="adm-id" placeholder="새 관리자 아이디" style="width:180px" autocomplete="off">
-      <input type="password" id="adm-pw" placeholder="새 비밀번호 (4자 이상)" style="width:180px" autocomplete="new-password">
-      <button class="btn btn-p" onclick="addAdminAccount()">👤 관리자 추가</button>
+      <input type="text" id="adm-id" placeholder="아이디" style="width:140px" autocomplete="off">
+      <input type="password" id="adm-pw" placeholder="비밀번호 (4자 이상)" style="width:150px" autocomplete="new-password">
+      <select id="adm-role" style="border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
+        <option value="admin">👑 관리자</option>
+        <option value="sub-admin">🔰 부관리자</option>
+      </select>
+      <button class="btn btn-p" onclick="addAdminAccount()">+ 추가</button>
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
@@ -756,12 +805,21 @@ function rCfg(C,T){
     </div>
   </div>
   `;
-  // 관리자 수 표시 + 맵 약자 목록 렌더링
+  // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
-    if(el){const h=getAdminHashes();el.textContent=h.length;}
-    if(listEl){listEl.textContent='※ 보안상 계정 목록은 표시되지 않습니다.';}
+    const accounts=getAdminAccounts();
+    if(el)el.textContent=accounts.length;
+    if(listEl){
+      if(!accounts.length){listEl.innerHTML='<div style="font-size:12px;color:var(--gray-l)">등록된 계정 없음</div>';return;}
+      listEl.innerHTML=accounts.map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="flex:1;font-size:13px;font-weight:600">${a.label||'(이름없음)'}</span>
+          <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'🔰 부관리자':'👑 관리자'}</span>
+          <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">🗑️ 삭제</button>
+        </div>`).join('');
+    }
   },50);
   C.innerHTML=h;
   // alias-list는 C.innerHTML 세팅 후 렌더링
@@ -1147,27 +1205,28 @@ function delTier(t){
 async function addAdminAccount(){
   const id=document.getElementById('adm-id').value.trim();
   const pw=document.getElementById('adm-pw').value;
+  const roleEl=document.getElementById('adm-role');
+  const role=roleEl?roleEl.value:'admin';
   const msg=document.getElementById('adm-msg');
   if(!id||!pw){msg.style.color='var(--red)';msg.textContent='아이디와 비밀번호를 모두 입력하세요.';return;}
   if(pw.length<4){msg.style.color='var(--red)';msg.textContent='비밀번호는 4자 이상이어야 합니다.';return;}
   const h=await sha256(id+':'+pw);
-  const hashes=getAdminHashes();
-  if(hashes.includes(h)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 계정이 등록되어 있습니다.';return;}
-  hashes.push(h);
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(hashes));
+  const accounts=getAdminAccounts();
+  if(accounts.some(a=>a.hash===h)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 계정이 등록되어 있습니다.';return;}
+  accounts.push({hash:h,role,label:id});
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
   msg.style.color='var(--green)';
-  msg.textContent=`✅ 관리자 계정이 추가되었습니다. (아이디: ${id}) 현재 총 ${hashes.length}명`;
+  const roleLabel=role==='sub-admin'?'부관리자':'관리자';
+  msg.textContent=`✅ ${roleLabel} 계정이 추가되었습니다. (${id}) 총 ${accounts.length}명`;
   document.getElementById('adm-id').value='';
   document.getElementById('adm-pw').value='';
-  // 카운트 갱신
-  const el=document.getElementById('adm-count');
-  if(el)el.textContent=hashes.length;
+  reCfg();
 }
 
 async function clearAllAdmins(){
   if(!confirm('모든 관리자 계정을 초기화하고 기본 계정(admin99)으로 리셋하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))return;
   const h=await sha256('admin99:99admin');
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([h]));
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([{hash:h,role:'admin',label:'admin99'}]));
   alert('초기화 완료. 기본 계정(admin99 / 99admin)으로 로그인하세요.');
   doLogout();
 }

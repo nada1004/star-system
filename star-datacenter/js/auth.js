@@ -6,25 +6,48 @@ async function sha256(str){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-const ADMIN_HASH_KEY='su_admin_hashes'; // 배열로 저장 (다중 관리자)
+const ADMIN_HASH_KEY='su_admin_hashes'; // [{hash,role,label}] 배열
 async function initLoginHash(){
-  if(!localStorage.getItem(ADMIN_HASH_KEY)){
+  const raw=localStorage.getItem(ADMIN_HASH_KEY);
+  if(!raw){
     const h=await sha256('admin99:99admin');
-    // 기존 단일키도 마이그레이션
     const oldH=localStorage.getItem('su_admin_hash');
-    const arr=oldH?[oldH,h]:[h];
+    const arr=oldH?[{hash:oldH,role:'admin',label:'(기존관리자)'},{hash:h,role:'admin',label:'admin99'}]:[{hash:h,role:'admin',label:'admin99'}];
     localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(arr));
+    return;
   }
+  // 구 포맷 마이그레이션: 문자열 배열 → 객체 배열
+  try{
+    const parsed=JSON.parse(raw);
+    if(Array.isArray(parsed)&&parsed.length>0&&typeof parsed[0]==='string'){
+      const migrated=parsed.map((h,i)=>({hash:h,role:'admin',label:`관리자${i+1}`}));
+      localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(migrated));
+    }
+  }catch{}
 }
-function getAdminHashes(){
+function getAdminAccounts(){
   try{
     const raw=localStorage.getItem(ADMIN_HASH_KEY);
     if(!raw)return [];
     const parsed=JSON.parse(raw);
-    return Array.isArray(parsed)?parsed:[parsed];
+    if(!Array.isArray(parsed))return [];
+    // 구 포맷 호환
+    return parsed.map((item,i)=>typeof item==='string'?{hash:item,role:'admin',label:`관리자${i+1}`}:item);
   }catch{return [];}
 }
+function getAdminHashes(){
+  return getAdminAccounts().map(a=>a.hash);
+}
+function deleteAdminAccount(idx){
+  if(!confirm('이 계정을 삭제할까요?'))return;
+  const accounts=getAdminAccounts();
+  if(accounts.length<=1){alert('마지막 관리자 계정은 삭제할 수 없습니다.');return;}
+  accounts.splice(idx,1);
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
+  if(typeof reCfg==='function')reCfg();
+}
 let isLoggedIn=localStorage.getItem('su_session')==='1';
+let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
 
 async function doLogin(){
   const id=document.getElementById('li-id').value.trim();
@@ -32,10 +55,13 @@ async function doLogin(){
   const err=document.getElementById('li-err');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
   const inputHash=await sha256(id+':'+pw);
-  const hashes=getAdminHashes();
-  if(hashes.includes(inputHash)){
+  const accounts=getAdminAccounts();
+  const found=accounts.find(a=>a.hash===inputHash);
+  if(found){
     isLoggedIn=true;
+    isSubAdmin=(found.role==='sub-admin');
     localStorage.setItem('su_session','1');
+    localStorage.setItem('su_session_role',found.role||'admin');
     cm('loginModal');
     document.getElementById('li-id').value='';
     document.getElementById('li-pw').value='';
@@ -49,7 +75,9 @@ async function doLogin(){
 
 function doLogout(){
   isLoggedIn=false;
+  isSubAdmin=false;
   localStorage.removeItem('su_session');
+  localStorage.removeItem('su_session_role');
   if(['member','cfg'].includes(curTab)){curTab='total';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelector('.tab').classList.add('on');}
   if(['grpedit','input'].includes(compSub)) compSub='league';
   applyLoginState();
@@ -67,11 +95,10 @@ function applyLoginState(){
   document.querySelectorAll('.lock-admin').forEach(el=>{
     el.classList.toggle('locked',!isLoggedIn);
   });
-  // 관리자 전용 탭 (회원관리, 설정)
-  const ADMIN_TABS=['tabMember','tabCfg'];
-  ADMIN_TABS.forEach(id=>{
+  // 관리자 전용 탭 (회원관리, 설정) - 부관리자는 접근 불가
+  ['tabMember','tabCfg'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.style.display=isLoggedIn?'':'none';
+    if(el) el.style.display=(isLoggedIn&&!isSubAdmin)?'':'none';
   });
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');

@@ -1052,7 +1052,8 @@ function renderShareCardByMatchObj(m){
   const card=document.getElementById('share-card');if(!card)return;
   if(!m){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">경기를 선택하세요</p>';return;}
   const a=m.a||'A팀',b=m.b||'B팀';
-  const ca=gc(a),cb=gc(b);
+  const isCivil=m.type==='civil'||(a==='A팀'&&b==='B팀');
+  const ca=isCivil?'#e03030':gc(a), cb=isCivil?'#2563eb':gc(b);
   const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
   const draw=!aWin&&!bWin;
 

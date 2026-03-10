@@ -104,6 +104,7 @@ let tourneys   = J('su_tn') || [];
 let ttM        = J('su_ttm') || [];
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
+let notices    = J('su_notices') || [];
 
 let BLD = {};
 let openDetails = {};
@@ -209,6 +210,7 @@ function localSave(){
   localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
   localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
+  localStorage.setItem('su_notices',JSON.stringify(notices));
 }
 
 function save(){
