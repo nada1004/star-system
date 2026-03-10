@@ -564,8 +564,8 @@ function parsePasteLine(line) {
     leftPart  = leftPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
     rightPart = rightPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
 
-    const WIN_MARKS  = ['✅', '⭕', '☑'];
-    const LOSE_MARKS = ['❌', '⬜'];
+    const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦'];
+    const LOSE_MARKS = ['❌', '⬜', '🔴', '🟥'];
     const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
 
     let leftMark = null;
@@ -575,6 +575,22 @@ function parsePasteLine(line) {
     let rightMark = null;
     for (const mk of ALL_MARKS) {
       if (rightPart.startsWith(mk)) { rightMark = mk; rightPart = rightPart.slice(mk.length).trim(); break; }
+    }
+
+    // (이모지마크) 괄호 형태 폴백: (❌) (🔵) 등
+    if (!leftMark) {
+      for (const mk of ALL_MARKS) {
+        if (leftPart.endsWith('('+mk+')')) {
+          leftMark = mk; leftPart = leftPart.slice(0, -(mk.length+2)).trim(); break;
+        }
+      }
+    }
+    if (!rightMark) {
+      for (const mk of ALL_MARKS) {
+        if (rightPart.startsWith('('+mk+')')) {
+          rightMark = mk; rightPart = rightPart.slice(mk.length+2).trim(); break;
+        }
+      }
     }
 
     // (승)/(패) 텍스트 마크 폴백 (예: "P마토 (승) 🆚️ T뚜미 (패) [폴리]")
@@ -617,6 +633,18 @@ function parsePasteLine(line) {
       const alias = mapBracket[1].trim();
       map = resolveMapName(alias);
       rightClean = rightPart.slice(0, mapBracket.index).trim();
+    } else {
+      // (맵약자) 소괄호 방식 (우측 끝): 선수명 P (라데)
+      const mapParen = rightPart.match(/\(([^)]+)\)\s*$/);
+      if (mapParen) {
+        const alias = mapParen[1].trim();
+        // 마크 이모지가 아닌 경우만 맵으로 처리
+        const isMarkEmoji = ALL_MARKS.includes(alias);
+        if (!isMarkEmoji) {
+          map = resolveMapName(alias);
+          rightClean = rightPart.slice(0, mapParen.index).trim();
+        }
+      }
     }
 
     // 좌측 앞 [맵약자] 방식: [폴리] 이지다⬜🆚✅경콩이
