@@ -1167,7 +1167,7 @@ function confirmDissolve(){
   u.hidden = true;
   u.dissolvedDate = date;
   if(movePlayers){
-    players.forEach(p=>{ if(p.univ===u.name) p.univ='무소속'; });
+    players.forEach(p=>{ if(p.univ===u.name){ p.univ='무소속'; p.role=undefined; } });
   }
   save();
   cm('dissolveModal');
