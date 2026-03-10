@@ -59,6 +59,7 @@ function rTotal(C,T){
     totalShown+=up.length;
     tableHTML+=`<tr class="ugrp" style="--c:${u.color}"><td colspan="${isLoggedIn?8:7}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
+      ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
     const sorted=(typeof _getBoardPlayers==='function')

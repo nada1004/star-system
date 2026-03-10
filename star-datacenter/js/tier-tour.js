@@ -677,13 +677,19 @@ function rCfg(C,T){
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
-    h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px">
+    const isDissolved = !!u.dissolved;
+    h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
-      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
-      <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-        onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();reCfg();if(typeof renderBoard==='function')renderBoard()">
-        ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
+      ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
+      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
+      ${isDissolved
+        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
+        : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();reCfg();if(typeof renderBoard==='function')renderBoard()">
+            ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
+          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
+      }
       <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -1139,6 +1145,35 @@ function saveRow(){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
+
+let _dissolveIdx = -1;
+function openDissolveModal(i){
+  _dissolveIdx = i;
+  const u = univCfg[i];
+  document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('dissolve-date').value = today;
+  const cnt = players.filter(p=>p.univ===u.name).length;
+  document.getElementById('dissolve-player-count').textContent = cnt ? `현재 소속 선수 ${cnt}명` : '소속 선수 없음';
+  document.getElementById('dissolve-move-players').checked = cnt > 0;
+  om('dissolveModal');
+}
+function confirmDissolve(){
+  if(_dissolveIdx < 0) return;
+  const u = univCfg[_dissolveIdx];
+  const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
+  const movePlayers = document.getElementById('dissolve-move-players').checked;
+  u.dissolved = true;
+  u.hidden = true;
+  u.dissolvedDate = date;
+  if(movePlayers){
+    players.forEach(p=>{ if(p.univ===u.name) p.univ='무소속'; });
+  }
+  save();
+  cm('dissolveModal');
+  render();
+  if(typeof renderBoard==='function') renderBoard();
+}
 function addMap(){const n=document.getElementById('nm').value.trim();if(!n)return;maps.push(n);save();render();refreshSel();}
 function delMap(i){maps.splice(i,1);save();render();refreshSel();}
 

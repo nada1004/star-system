@@ -32,6 +32,35 @@
   </div>
 </div>
 
+<!-- 대학 해체 모달 -->
+<div id="dissolveModal" class="modal no-export" style="display:none;z-index:6000">
+  <div class="mbox" style="width:min(420px,96vw);padding:0;border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:18px 22px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">🏚️</span>
+      <div style="flex:1">
+        <div id="dissolve-title" style="font-size:16px;font-weight:800;color:#fff"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">해체 처리 시 대학은 숨김 처리됩니다. 기록은 보존됩니다.</div>
+      </div>
+      <button onclick="cm('dissolveModal')" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div style="padding:20px 22px">
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">📅 해체 날짜</label>
+        <input type="date" id="dissolve-date" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text1);cursor:pointer;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <input type="checkbox" id="dissolve-move-players" checked style="width:16px;height:16px;cursor:pointer">
+        <span>소속 선수를 <b>무소속</b>으로 이동</span>
+      </label>
+      <div id="dissolve-player-count" style="font-size:11px;color:var(--gray-l);margin-top:6px;padding-left:4px"></div>
+    </div>
+    <div style="padding:0 22px 20px;display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="cm('dissolveModal')" class="btn" style="padding:9px 20px">취소</button>
+      <button onclick="confirmDissolve()" class="btn" style="padding:9px 20px;background:#dc2626;color:#fff;border-color:#dc2626">🏚️ 해체 처리</button>
+    </div>
+  </div>
+</div>
+
 <!-- 로그인 모달 (헤더 버튼 클릭 시) -->
 <div id="loginModal" class="modal no-export" style="display:none">
   <div class="mbox" style="width:340px;text-align:center;padding:32px 28px">

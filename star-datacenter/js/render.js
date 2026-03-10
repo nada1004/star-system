@@ -490,7 +490,10 @@ function buildUnivDetailHTML(univName){
         ${gUI(univName,'32px')}
       </div>
       <div>
-        <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">${univName}</div>
+        <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
+          ${univName}
+          ${univCfg.find(u=>u.name===univName)?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${univCfg.find(u=>u.name===univName).dissolvedDate?' '+univCfg.find(u=>u.name===univName).dissolvedDate:''}</span>`:''}
+        </div>
         <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 선수 ${members.length}명</div>
       </div>
     </div>
