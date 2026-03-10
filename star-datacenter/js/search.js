@@ -564,8 +564,8 @@ function parsePasteLine(line) {
     leftPart  = leftPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
     rightPart = rightPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
 
-    const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦'];
-    const LOSE_MARKS = ['❌', '⬜', '🔴', '🟥'];
+    const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦', '○'];
+    const LOSE_MARKS = ['❌', '⬜', '🔴', '🟥', '●'];
     const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
 
     let leftMark = null;
