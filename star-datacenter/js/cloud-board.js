@@ -184,8 +184,8 @@ function saveCurrentView(){
 
 
 // 대학 내 선수 정렬 (boardPlayerOrder 우선, 없으면 기본 정렬)
-function _getBoardPlayers(univName){
-  const univPlayers = players.filter(p=>p.univ===univName);
+function _getBoardPlayers(univName, includeRetired=false){
+  const univPlayers = players.filter(p=>p.univ===univName&&(includeRetired||!p.retired));
   const order = boardPlayerOrder[univName] || [];
   if(!order.length){
     // 기본: MAIN_ROLES → 티어 → 포인트

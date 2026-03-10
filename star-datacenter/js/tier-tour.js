@@ -942,6 +942,12 @@ function openEP(name){
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">※ 승패 초기화 시 개인 경기 기록(히스토리)도 함께 삭제됩니다. 대전 기록(미니/대학대전 등)은 유지됩니다.</div>
     </div>
+    <div style="margin-top:14px;padding:12px 14px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;margin:0">
+        <input type="checkbox" id="ed-retired" ${p.retired?'checked':''} style="width:16px;height:16px;cursor:pointer">
+        🎗️ 은퇴 (현황판에서만 숨김, 경기 기록은 유지)
+      </label>
+    </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
@@ -1023,6 +1029,8 @@ function savePlayer(){
   p.win=parseInt(document.getElementById('ed-win').value)||0;
   p.loss=parseInt(document.getElementById('ed-loss').value)||0;
   p.points=parseInt(document.getElementById('ed-pts').value)||0;
+  p.retired=document.getElementById('ed-retired')?.checked||false;
+  if(!p.retired) p.retired=undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
