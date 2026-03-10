@@ -563,9 +563,12 @@ function parsePasteLine(line) {
     let rightPart = line.slice(vsIdx + '🆚'.length).trim();
     leftPart  = leftPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
     rightPart = rightPart.replace(/️/g, '').replace(/\u3164/g, ' ').trim();
+    // 장식용 이모지 제거 (👊 등)
+    leftPart  = leftPart.replace(/👊/g, '').trim();
+    rightPart = rightPart.replace(/👊/g, '').trim();
 
     const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦', '○'];
-    const LOSE_MARKS = ['❌', '⬜', '🔴', '🟥', '●'];
+    const LOSE_MARKS = ['❌', '✖', '⬜', '🔴', '🟥', '●'];
     const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
 
     let leftMark = null;
@@ -657,10 +660,13 @@ function parsePasteLine(line) {
     }
 
     const splitNR = (s) => {
+      // [Z]이름 형식 (종족 브라켓이 앞에, 앞에 장식 있어도 허용)
+      const frontBracketM = s.match(/^[^\[]*\[([TZPN])\](.+)$/);
+      if (frontBracketM && frontBracketM[2].trim()) return { name: frontBracketM[2].trim(), race: frontBracketM[1] };
       // 앞 종족 접두사 제거: Z조이, P마토, T주양 → 조이, 마토, 주양
-      const prefixM = s.match(/^([TZP])(.+)$/);
+      const prefixM = s.match(/^([TZPN])(.+)$/);
       if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
-      const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
+      const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
       if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
       const simpleM = s.match(/^(.+?)([TZP])$/);
       if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
