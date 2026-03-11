@@ -1761,8 +1761,8 @@ function pasteApply() {
   });
   const _rA = Object.entries(_univA).sort((a,b)=>b[1]-a[1]);
   const _rB = Object.entries(_univB).sort((a,b)=>b[1]-a[1]);
-  let finalTeamA = _rA[0]?.[0] || '';
-  let finalTeamB = _rB[0]?.[0] || '';
+  let finalTeamA = window._pasteForceTeamA || _rA[0]?.[0] || '';
+  let finalTeamB = window._pasteForceTeamB || _rB[0]?.[0] || '';
   if (finalTeamA && finalTeamA === finalTeamB) {
     finalTeamB = _rB.find(([u])=>u!==finalTeamA)?.[0] || _rA.find(([u])=>u!==finalTeamA)?.[0] || '';
   }
@@ -1805,9 +1805,12 @@ function pasteApply() {
     sb = setsSnap.reduce((acc,s)=>acc+s.scoreB,0);
   }
 
-  // 개인 전적 반영
+  // 개인 전적 반영 (경기 시점 대학도 저장)
   savable.forEach(r => {
-    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId);
+    const _ab = resolveAB(r);
+    const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
+    const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL);
   });
 
   // 모드별 기록 추가

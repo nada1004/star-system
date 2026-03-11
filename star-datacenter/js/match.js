@@ -33,16 +33,16 @@ function rUnivBodyHTML(){
     uS[p.univ].cnt++;
   });
   // 연/월 필터를 적용한 경기 결과로 승/패/포인트 집계 (프로리그 제외)
+  // h.univ: 경기 시점 대학 (선수가 이후 대학 이동해도 당시 소속 대학으로 집계)
   players.forEach(p=>{
-    const univ=p.univ;
-    const bucket=uS[univ];
-    if(!bucket)return;
     (p.history||[]).forEach(h=>{
       if(proMatchIds.has(h.matchId)) return; // 프로리그 제외
       const d=h.date||'';
       if(typeof passDateFilter==='function' && !passDateFilter(d)) return;
-      if(h.result==='승') bucket.w++;
-      else if(h.result==='패') bucket.l++;
+      const univKey=h.univ||p.univ; // 저장된 대학 우선, 없으면 현재 대학
+      if(!uS[univKey])return;
+      if(h.result==='승') uS[univKey].w++;
+      else if(h.result==='패') uS[univKey].l++;
     });
   });
   Object.values(uS).forEach(s=>{
@@ -357,7 +357,9 @@ function saveMatch(mode){
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
-      applyGameResult(wName,lName,date,g.map||'-',matchId);
+      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
+      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
+      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL);
     });
     
     let totalA=0,totalB=0;
@@ -428,7 +430,9 @@ function saveMatch(mode){
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
-      applyGameResult(wName,lName,date,g.map||'-',matchId);
+      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
+      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
+      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL);
     });
   });
   if(mode==='mini'){
