@@ -111,9 +111,15 @@ function _grpPasteApplyLogic(savable){
   const dateEl = document.getElementById('paste-date');
   if(dateEl&&dateEl.value) m.d=dateEl.value;
 
-  // 개인 전적 반영
+  // 개인 전적 반영 (경기 시점 대학 저장)
   const matchId = genId();
-  savable.forEach(r=>{ applyGameResult(r.wPlayer.name, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId); });
+  savable.forEach(r=>{
+    const wn=r.wPlayer.name;
+    const inA=teamANamesSet.has(wn);
+    const univW=inA?teamA:teamB;
+    const univL=inA?teamB:teamA;
+    applyGameResult(wn, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId, univW, univL);
+  });
 
   save();
   grpRefreshSets();

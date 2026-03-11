@@ -904,12 +904,14 @@ function grpSaveMatch(){
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
   m.sa=sa;m.sb=sb;
-  // 선수 개인 전적 자동 반영
+  // 선수 개인 전적 자동 반영 (경기 시점 대학 저장)
   (m.sets||[]).forEach(set=>{
     (set.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-      applyGameResult(wn,ln,m.d,g.map||'',matchId);
+      const univW=g.winner==='A'?(m.a||''):(m.b||'');
+      const univL=g.winner==='A'?(m.b||''):(m.a||'');
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL);
     });
   });
   save();cm('grpMatchModal');render();
