@@ -1278,7 +1278,8 @@ function renderPastePreview(results, errors) {
         const _leftIsWin = (_leftRaw === r.winName);
         // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우, CK 모드 제외)
         let _univBased = false;
-        if (!_isCKPreview && r.wPlayer?.univ && r.lPlayer?.univ &&
+        if (!_isCKPreview && r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
+            r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
             teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
             teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
           const _wInA = r.wPlayer.univ === teamAPreview;
@@ -1368,7 +1369,8 @@ function renderPastePreview(results, errors) {
       } else if (_sprRA && _sprRB) {
         aWins = !!_sprInA(r.winName);
         if (!aWins && !_sprInB(r.winName)) aWins = ((r.leftName||r.winName) === r.winName);
-      } else if (!_isCKMode && r.wPlayer?.univ && r.lPlayer?.univ &&
+      } else if (!_isCKMode && r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
+                 r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                  teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
                  teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
         aWins = r.wPlayer.univ === teamAPreview;
@@ -1406,7 +1408,8 @@ function renderPastePreview(results, errors) {
         } else if (_sprRA && _sprRB) {
           aW = !!_sprInA(r.winName);
           if (!aW && !_sprInB(r.winName)) aW = ((r.leftName||r.winName) === r.winName);
-        } else if (r.wPlayer?.univ && r.lPlayer?.univ &&
+        } else if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
+                   r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                    teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
                    teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
           aW = r.wPlayer.univ === teamAPreview;
@@ -1732,7 +1735,8 @@ function pasteApply() {
     }
     // 선수 DB 소속 기반 배정 시도 (미리보기에서 인식된 팀명 사용)
     const _paTA = window._previewTeamA, _paTB = window._previewTeamB;
-    if (r.wPlayer?.univ && r.lPlayer?.univ &&
+    if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
+        r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
         _paTA && _paTA !== 'A팀' && _paTB && _paTB !== 'B팀') {
       const _wInA = r.wPlayer.univ === _paTA;
       const _lInA = r.lPlayer.univ === _paTA;
