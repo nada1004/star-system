@@ -143,6 +143,25 @@ function deletePlayerHist(playerName, histIdx){
     }
   }
   p.history.splice(histIdx,1);
+  // univM 세트 게임에서도 해당 경기 제거 → 순위 재계산 반영
+  if(hh.matchId){
+    const um=univM.find(m=>m._id===hh.matchId);
+    if(um&&um.sets){
+      um.sets.forEach(s=>{
+        if(!s.games)return;
+        const gi=s.games.findIndex(g=>(g.playerA===playerName||g.playerB===playerName)&&(g.playerA===hh.opp||g.playerB===hh.opp));
+        if(gi>=0){
+          s.games.splice(gi,1);
+          s.scoreA=s.games.filter(g=>g.winner==='A').length;
+          s.scoreB=s.games.filter(g=>g.winner==='B').length;
+          s.winner=s.scoreA>s.scoreB?'A':s.scoreB>s.scoreA?'B':'';
+        }
+      });
+      um.sets=um.sets.filter(s=>s.games&&s.games.length>0);
+      um.sa=um.sets.filter(s=>s.winner==='A').length;
+      um.sb=um.sets.filter(s=>s.winner==='B').length;
+    }
+  }
   if(typeof fixPoints==='function')fixPoints();
   save();
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
@@ -416,11 +435,15 @@ function buildPlayerDetailHTML(p){
     const totalGames=p.history.length;
     const pageSize=20;
     const showAll=totalGames<=pageSize;
-    const displayHist=p.history.slice(0,pageSize);
+    // 날짜 최신순 정렬 (원본 인덱스 보존)
+    const displayHist=[...p.history.map((h,i)=>({...h,_origIdx:i}))]
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0))
+      .slice(0,pageSize);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · 최근 ${Math.min(pageSize,totalGames)}개 표시)</span></div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
-    displayHist.forEach((hh,hi)=>{
+    displayHist.forEach((hh)=>{
+      const hi=hh._origIdx;
       const isWin=hh.result==='승';
       const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
