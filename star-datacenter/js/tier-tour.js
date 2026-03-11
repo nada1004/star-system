@@ -96,10 +96,18 @@ function _grpPasteApplyLogic(savable){
   if(!set.games) set.games=[];
 
   const teamANamesSet = new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet = new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  // 팀 배정: 소속 대학 우선, 무소속 등 어느 팀에도 없으면 붙여넣기 좌측 위치(leftName)로 판단
+  const _isWinnerInA = (r) => {
+    const wn = r.wPlayer.name;
+    if(teamANamesSet.has(wn)) return true;
+    if(teamBNamesSet.has(wn)) return false;
+    return (r.leftName||r.winName) === wn; // 무소속: 붙여넣기 좌측=A팀 기준
+  };
   savable.forEach(r=>{
     const wn = r.wPlayer.name; const ln = r.lPlayer.name;
     let pA='', pB='', winner='';
-    if(teamANamesSet.has(wn)){ pA=wn; pB=ln; winner='A'; }
+    if(_isWinnerInA(r)){ pA=wn; pB=ln; winner='A'; }
     else { pA=ln; pB=wn; winner='B'; }
     set.games.push({playerA:pA, playerB:pB, winner:winner, map:r.map||''});
   });
@@ -114,11 +122,10 @@ function _grpPasteApplyLogic(savable){
   // 개인 전적 반영 (경기 시점 대학 저장)
   const matchId = genId();
   savable.forEach(r=>{
-    const wn=r.wPlayer.name;
-    const inA=teamANamesSet.has(wn);
-    const univW=inA?teamA:teamB;
-    const univL=inA?teamB:teamA;
-    applyGameResult(wn, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId, univW, univL);
+    const wInA=_isWinnerInA(r);
+    const univW=wInA?teamA:teamB;
+    const univL=wInA?teamB:teamA;
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId, univW, univL);
   });
 
   save();
