@@ -219,6 +219,10 @@ function _bktPasteApplyLogic(savable, tn){
   if(!m.a)m.a=teamA;if(!m.b)m.b=teamB;
   const dateEl=document.getElementById('paste-date');
   if(dateEl&&dateEl.value)m.d=dateEl.value;
+  // 전체 세트 집계로 경기 최종 스코어 갱신 (경기 일정 완료 표시에 필요)
+  let mSA=0,mSB=0;
+  (m.sets||[]).forEach(s=>{if(s.winner==='A')mSA++;else if(s.winner==='B')mSB++;});
+  m.sa=mSA;m.sb=mSB;
   const matchId=genId();
   savable.forEach(r=>{
     const wInA=_isWinnerInA(r);
@@ -226,7 +230,12 @@ function _bktPasteApplyLogic(savable, tn){
     applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL);
   });
   save();
-  bktRefreshSets();
+  const _matchModal=document.getElementById('grpMatchModal');
+  if(_matchModal&&_matchModal.style.display!=='none'&&_matchModal.offsetParent!==null){
+    bktRefreshSets();
+  } else {
+    render();
+  }
   const toast=document.createElement('div');
   toast.textContent=`✅ ${savable.length}건 ${setIdx===2?'에이스전':(setIdx+1)+'세트'}에 추가됨!`;
   toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
