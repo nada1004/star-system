@@ -1111,13 +1111,37 @@ function savePlayer(){
     renameInMatches(miniM);renameInMatches(univM);renameInMatches(comps);
     renameInMatches(ckM);renameInMatches(proM);
     tourneys.forEach(tn=>{
-      tn.groups.forEach(grp=>{
+      (tn.groups||[]).forEach(grp=>{
         (grp.matches||[]).forEach(m=>{
           (m.sets||[]).forEach(set=>{
             (set.games||[]).forEach(g=>{
               if(g.playerA===oldName)g.playerA=newName;
               if(g.playerB===oldName)g.playerB=newName;
             });
+          });
+        });
+      });
+      // 브라켓 경기 이름 갱신
+      const br=tn.bracket||{};
+      Object.values(br.matchDetails||{}).forEach(m=>{
+        if(!m)return;
+        if(m.a===oldName)m.a=newName;
+        if(m.b===oldName)m.b=newName;
+        (m.sets||[]).forEach(set=>{
+          (set.games||[]).forEach(g=>{
+            if(g.playerA===oldName)g.playerA=newName;
+            if(g.playerB===oldName)g.playerB=newName;
+          });
+        });
+      });
+      (br.manualMatches||[]).forEach(m=>{
+        if(!m)return;
+        if(m.a===oldName)m.a=newName;
+        if(m.b===oldName)m.b=newName;
+        (m.sets||[]).forEach(set=>{
+          (set.games||[]).forEach(g=>{
+            if(g.playerA===oldName)g.playerA=newName;
+            if(g.playerB===oldName)g.playerB=newName;
           });
         });
       });
