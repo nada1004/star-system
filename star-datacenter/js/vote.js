@@ -155,7 +155,7 @@ function cm(id){
   if(el)el.style.display='none';
 }
 window.addEventListener('click',e=>{
-  if(e.target.classList.contains('modal')){
+  if(e.target.classList.contains('modal') && !e.target.dataset.noClose){
     e.target.style.display='none';
   }
   if(!e.target.closest('.swrap'))document.querySelectorAll('.sdrop').forEach(d=>d.style.display='none');
