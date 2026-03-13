@@ -879,6 +879,40 @@ function doSearch(val){
       map:h.map||'-',setLabel:'',mObj:null,si:-1,gi:-1
     });
   });
+  // 팀 단위 경기 보완: 개별 게임 기록이 없어도 소속 팀 경기를 표시
+  const _playerTeams=new Set([p.univ||'']);
+  (p.history||[]).forEach(h=>{if(h.univ)_playerTeams.add(h.univ);});
+  const _teamMatchSeen=new Set();
+  function scanByTeam(arr,modeLabel,getLabel){
+    arr.forEach(m=>{
+      if(!m.a||!m.b||m.sa==null||m.sb==null)return;
+      const isA=_playerTeams.has(m.a),isB=_playerTeams.has(m.b);
+      if(!isA&&!isB)return;
+      const d=m.d||'';
+      if(typeof passDateFilter==='function'&&!passDateFilter(d))return;
+      // 이미 개별 게임 기록이 있으면 스킵
+      const hasIndiv=(m.sets||[]).some(s=>(s.games||[]).some(g=>g.playerA===p.name||g.playerB===p.name));
+      if(hasIndiv)return;
+      const _k=`${d}|${m.a}|${m.b}|${modeLabel}`;
+      if(_teamMatchSeen.has(_k))return;
+      _teamMatchSeen.add(_k);
+      const sa=isA?m.sa:m.sb,sb=isA?m.sb:m.sa;
+      const oppTeam=isA?m.b:m.a;
+      matchLog.push({
+        date:d,mode:modeLabel,label:getLabel(m),
+        result:sa>sb?'승':sa<sb?'패':'무',
+        opp:oppTeam,oppRace:'?',map:'-',
+        setLabel:`팀전 ${sa}:${sb}`,mObj:m,si:-1,gi:-1
+      });
+    });
+  }
+  scanByTeam(miniM,'미니대전',m=>m.t||'미니대전');
+  scanByTeam(univM,'대학대전',m=>m.n||`${m.a} vs ${m.b}`);
+  scanByTeam(comps,'대회',m=>m.n||'대회');
+  scanByTeam(ckM,'대학CK',m=>'대학CK');
+  scanByTeam(proM||[],'프로리그',m=>m.n||'프로리그');
+  scanByTeam(ttM||[],'티어대회',m=>m.n||'티어대회');
+  scanByTeam(getTourneyMatches(),'대회(토너먼트)',m=>m.n||'토너먼트');
   matchLog.sort((a,b)=>b.date.localeCompare(a.date));
 
   // 필터에 따른 기간별 전적 집계
