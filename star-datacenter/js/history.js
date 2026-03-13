@@ -824,6 +824,7 @@ function doSearch(val){
     else{opps[h.opp].l++;if(rv[h.oppRace])rv[h.oppRace].l++;}
   });
   const matchLog=[];
+  const _seenKeys=new Set();
   function scanMatches(arr, modeLabel, getLabel){
     arr.forEach(m=>{
       if(!m.sets)return;
@@ -837,6 +838,8 @@ function doSearch(val){
           const oppP=players.find(x=>x.name===opp);
           const d=m.d||'';
           if(typeof passDateFilter==='function' && !passDateFilter(d)) return;
+          const _k=`${d}|${opp||''}|${isWin?'승':'패'}|${g.map||'-'}`;
+          _seenKeys.add(_k);
           matchLog.push({
             date:d,
             mode:modeLabel,
@@ -859,7 +862,23 @@ function doSearch(val){
   scanMatches(comps,'대회',m=>m.n||'대회');
   scanMatches(ckM,'대학CK',m=>'대학CK');
   scanMatches(proM||[],'프로리그',m=>m.n||'프로리그');
+  scanMatches(ttM||[],'티어대회',m=>m.n||'티어대회');
+  scanMatches(indM||[],'개인전',m=>m.n||'개인전');
+  scanMatches(gjM||[],'관전',m=>m.n||'관전');
   scanMatches(getTourneyMatches(),'대회(토너먼트)',m=>m.n||'토너먼트');
+  // p.history 기반 보완: sets/games 데이터 없어도 모든 기록 표시
+  (p.history||[]).forEach(h=>{
+    const d=h.date||'';
+    if(typeof passDateFilter==='function' && !passDateFilter(d)) return;
+    const _k=`${d}|${h.opp||''}|${h.result||''}|${h.map||'-'}`;
+    if(_seenKeys.has(_k))return;
+    const oppP=players.find(x=>x.name===h.opp);
+    matchLog.push({
+      date:d,mode:'기록',label:'',
+      result:h.result||'?',opp:h.opp||'?',oppRace:oppP?.race||h.oppRace||'?',
+      map:h.map||'-',setLabel:'',mObj:null,si:-1,gi:-1
+    });
+  });
   matchLog.sort((a,b)=>b.date.localeCompare(a.date));
 
   // 필터에 따른 기간별 전적 집계
@@ -875,7 +894,7 @@ function doSearch(val){
 
   const col=gc(p.univ);
 
-  const modeBg={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','대회(토너먼트)':'#16a34a'};
+  const modeBg={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','대회(토너먼트)':'#16a34a','티어대회':'#f59e0b','개인전':'#8b5cf6','관전':'#6b7280','기록':'#64748b'};
   let h=`<div class="ipanel" style="border-color:${col}66;background:${col}0d;">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
       <span class="ubadge clickable-univ" style="background:${col};font-size:13px;padding:5px 14px" onclick="openUnivModal('${p.univ}')">${p.univ}</span>
@@ -937,11 +956,11 @@ function doSearch(val){
       const detKey=`psearch-${globalLi}`;
       const mObj=lg.mObj;
       const isCK=(lg.mode==='대학CK');
-      const ca=isCK?'#2563eb':(mObj.a?gc(mObj.a):'#888');
-      const cb=isCK?'#dc2626':(mObj.b?gc(mObj.b):'#888');
-      const labelA=isCK?'A팀':(mObj.a||'A');
-      const labelB=isCK?'B팀':(mObj.b||'B');
-      const singleSetHTML=buildSingleSetHTML(mObj,lg.si,labelA,labelB,ca,cb);
+      const ca=isCK?'#2563eb':(mObj?.a?gc(mObj.a):'#888');
+      const cb=isCK?'#dc2626':(mObj?.b?gc(mObj.b):'#888');
+      const labelA=isCK?'A팀':(mObj?.a||'A');
+      const labelB=isCK?'B팀':(mObj?.b||'B');
+      const singleSetHTML=mObj?buildSingleSetHTML(mObj,lg.si,labelA,labelB,ca,cb):'';
       // REQ4: 수정/삭제 버튼 - mObj 원본 배열 인덱스 계산
       let editMode='',editIdx=-1;
       if(lg.mode==='미니대전'){editMode='mini';editIdx=miniM.indexOf(mObj);}
