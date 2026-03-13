@@ -192,8 +192,25 @@ function _grpPasteApplyLogic(savable){
 function _bktPasteApplyLogic(savable, tn){
   const {rnd,mi}=_grpPasteState;
   const m=getBktMatch(tn.id,rnd,mi);if(!m)return false;
-  const teamA=document.getElementById('gm-a')?.value||document.getElementById('bkt-paste-ta')?.value||m.a||bracketMatchState?.teamA||'';
-  const teamB=document.getElementById('gm-b')?.value||document.getElementById('bkt-paste-tb')?.value||m.b||bracketMatchState?.teamB||'';
+  let teamA=document.getElementById('gm-a')?.value||document.getElementById('bkt-paste-ta')?.value||m.a||bracketMatchState?.teamA||'';
+  let teamB=document.getElementById('gm-b')?.value||document.getElementById('bkt-paste-tb')?.value||m.b||bracketMatchState?.teamB||'';
+  // 팀명 미설정 시 선수 소속 대학으로 자동 감지 (붙여넣기 좌측=A팀, 우측=B팀)
+  if(!teamA&&!teamB&&savable.length>0){
+    const leftCnt={},rightCnt={};
+    savable.forEach(r=>{
+      const isWinLeft=(r.leftName||r.winName)===r.wPlayer.name;
+      const lpName=isWinLeft?r.wPlayer.name:r.lPlayer.name;
+      const rpName=isWinLeft?r.lPlayer.name:r.wPlayer.name;
+      const lu=players.find(p=>p.name===lpName)?.univ;
+      const ru=players.find(p=>p.name===rpName)?.univ;
+      if(lu)leftCnt[lu]=(leftCnt[lu]||0)+1;
+      if(ru)rightCnt[ru]=(rightCnt[ru]||0)+1;
+    });
+    const topL=Object.entries(leftCnt).sort((a,b)=>b[1]-a[1])[0];
+    const topR=Object.entries(rightCnt).sort((a,b)=>b[1]-a[1])[0];
+    if(topL)teamA=topL[0];
+    if(topR&&topR[0]!==teamA)teamB=topR[0];
+  }
   let setIdxEl=document.getElementById('grp-paste-set-sel');
   let setIdx=setIdxEl?setIdxEl.value:'new';
   if(!m.sets)m.sets=[];
