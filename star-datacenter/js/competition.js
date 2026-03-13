@@ -391,7 +391,7 @@ function rBracketSchedule(tn){
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div style="padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span></div>
             <div style="margin-top:4px;font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'}">${winner?winner+' 승':''}</div>
-            <button class="btn btn-p btn-xs no-export" style="margin-top:4px" onclick="_shareMode='match';window._shareMatchObj={a:'${(teamA||'').replace(/'/g,"\\'")}',b:'${(teamB||'').replace(/'/g,"\\'")}',sa:${detail?.sa??0},sb:${detail?.sb??0},d:'${(detail?.d||'').replace(/'/g,"\\'")}',n:'${rLabel.replace(/'/g,"\\'")}',sets:${JSON.stringify(detail?.sets||[])}};openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+            <button class="btn btn-p btn-xs no-export" style="margin-top:4px" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>
             ${hasGames?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
           </div>

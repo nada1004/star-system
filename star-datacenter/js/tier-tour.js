@@ -29,11 +29,17 @@ function openBktPasteModal(){
   const modeLabel=document.getElementById('paste-mode-label');
   if(modeLabel)modeLabel.style.display='none';
   const hintEl=document.getElementById('paste-mode-hint');
-  if(hintEl)hintEl.innerHTML=`<span style="color:#1d4ed8;font-weight:700">⚔️ 브라켓 경기 입력 모드</span> — <b>팀A: ${tA}</b> vs <b>팀B: ${tB}</b>`;
+  if(hintEl)hintEl.innerHTML=`<span style="color:#1d4ed8;font-weight:700">⚔️ 브라켓 경기 입력 모드</span>${tA||tB?` — <b>팀A: ${tA}</b> vs <b>팀B: ${tB}</b>`:''}`;
   const compWrap=document.getElementById('paste-comp-wrap');
   if(compWrap){
     const setOpts=(m.sets||[]).map((s,i)=>{const lbl=i===2?'🎯 에이스전':`${i+1}세트`;return`<option value="${i}">${lbl}</option>`;}).join('');
-    compWrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    const teamInputs=(!tA&&!tB)?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <label style="font-size:12px;font-weight:700">팀A:</label>
+      <input id="bkt-paste-ta" placeholder="대학명 입력" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
+      <label style="font-size:12px;font-weight:700">팀B:</label>
+      <input id="bkt-paste-tb" placeholder="대학명 입력" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
+    </div>`:'';
+    compWrap.innerHTML=teamInputs+`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700">적용 세트:</label>
       <select id="grp-paste-set-sel" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px">
         <option value="new">새 세트 추가</option>${setOpts}
@@ -186,8 +192,8 @@ function _grpPasteApplyLogic(savable){
 function _bktPasteApplyLogic(savable, tn){
   const {rnd,mi}=_grpPasteState;
   const m=getBktMatch(tn.id,rnd,mi);if(!m)return false;
-  const teamA=document.getElementById('gm-a')?.value||m.a||bracketMatchState?.teamA||'';
-  const teamB=document.getElementById('gm-b')?.value||m.b||bracketMatchState?.teamB||'';
+  const teamA=document.getElementById('gm-a')?.value||document.getElementById('bkt-paste-ta')?.value||m.a||bracketMatchState?.teamA||'';
+  const teamB=document.getElementById('gm-b')?.value||document.getElementById('bkt-paste-tb')?.value||m.b||bracketMatchState?.teamB||'';
   let setIdxEl=document.getElementById('grp-paste-set-sel');
   let setIdx=setIdxEl?setIdxEl.value:'new';
   if(!m.sets)m.sets=[];
