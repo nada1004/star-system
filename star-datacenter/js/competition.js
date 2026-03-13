@@ -528,7 +528,7 @@ function resetBracket(tnId){
   tn.bracket={slots:{},winners:{},champ:''};save();render();
 }
 
-/* ── 동적 브라켓 시각화 (수정 가능 버전) ── */
+/* ── 동적 브라켓 시각화 (스포츠 대진표 스타일) ── */
 function rCompTourDynamic(tn){
   function getGrpRank(grp){
     const stat={};
@@ -539,8 +539,8 @@ function rCompTourDynamic(tn){
       if(!stat[m.b])stat[m.b]={w:0,l:0,sw:0,sl:0};
       if(m.sa>m.sb){stat[m.a].w++;stat[m.b].l++;}
       else if(m.sb>m.sa){stat[m.b].w++;stat[m.a].l++;}
-      stat[m.a].sw+=m.sa; stat[m.a].sl+=m.sb;
-      stat[m.b].sw+=m.sb; stat[m.b].sl+=m.sa;
+      stat[m.a].sw+=m.sa;stat[m.a].sl+=m.sb;
+      stat[m.b].sw+=m.sb;stat[m.b].sl+=m.sa;
     });
     return Object.entries(stat).map(([u,s])=>({u,w:s.w,l:s.l,sw:s.sw,sl:s.sl}))
       .sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);
@@ -549,13 +549,12 @@ function rCompTourDynamic(tn){
   const grpRanks=(tn.groups&&tn.groups.length>=2)?tn.groups.map((grp,gi)=>{
     const gl='ABCDEFGHIJ'[gi]||String(gi+1);
     const color=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-    const ranked=getGrpRank(grp);
-    return{grpName:grp.name||('조'+gl),color,ranked};
+    return{grpName:grp.name||('조'+gl),color,ranked:getGrpRank(grp)};
   }):[];
 
   const numGroups=grpRanks.length;
   const pairCount=Math.floor(numGroups/2)*2;
-  const r1teams=[]; // 1라운드 팀 목록 순서대로 (조편성 자동 배치)
+  const r1teams=[];
   for(let i=0;i<pairCount;i+=2){
     const gA=grpRanks[i],gB=grpRanks[i+1]||grpRanks[0];
     r1teams.push(
@@ -572,194 +571,204 @@ function rCompTourDynamic(tn){
       {univ:'',grpName:'와일드카드',color:'#6b7280',rank:'-'}
     );
   }
-  // 그룹 없으면 기본 4경기(8강) 수동 브라켓
-  const numR1=r1teams.length>0?Math.ceil(r1teams.length/2):4;
-  let bracketN=numR1; let totalRounds=0;
-  let n=bracketN; while(n>1){n=Math.ceil(n/2);totalRounds++;}
-  if(totalRounds===0)totalRounds=1;
-  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
 
+  const overrideSize=tn.bracketOverrideSize||0;
+  const numTeams=overrideSize>1?overrideSize:(r1teams.length>0?r1teams.length:8);
+  let totalRounds=0;
+  {let n=numTeams;while(n>1){n=Math.ceil(n/2);totalRounds++;}}
+  if(!totalRounds)totalRounds=1;
+
+  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
   const br=getBracket(tn);
   const allU=getAllUnivs();
   const tnId=tn.id;
+  const BASE_H=100; // px per R0 match slot
 
-  // 브라켓 전체 팀 상태 계산 (수동 override + 자동 승자 전파)
-  // rounds[r][mi] = {a,b} (각각 {univ,color,...} or null)
-  const rounds=[]; // rounds[0] = 1라운드
+  // Build rounds data
+  const rounds=[];
   for(let r=0;r<totalRounds;r++){
-    const matchCount=Math.ceil(numR1/Math.pow(2,r));
+    const matchCount=Math.ceil(numTeams/Math.pow(2,r+1));
     const pairs=[];
     for(let mi=0;mi<matchCount;mi++){
-      let teamA=null,teamB=null;
+      let tA=null,tB=null;
       if(r===0){
-        // 1라운드: 조 순위에서 기본값, 수동 override 우선
-        const baseA=r1teams[mi*2]||null;
-        const baseB=r1teams[mi*2+1]||null;
-        const slotA=br.slots[`0-${mi}-a`];
-        const slotB=br.slots[`0-${mi}-b`];
-        teamA=slotA!==undefined?(slotA?{univ:slotA,color:gc(slotA)}:null):(baseA?.univ?baseA:null);
-        teamB=slotB!==undefined?(slotB?{univ:slotB,color:gc(slotB)}:null):(baseB?.univ?baseB:null);
+        const bA=r1teams[mi*2]||null,bB=r1teams[mi*2+1]||null;
+        const sA=br.slots[`0-${mi}-a`],sB=br.slots[`0-${mi}-b`];
+        tA=sA!==undefined?(sA?{univ:sA,color:gc(sA)}:null):(bA?.univ?bA:null);
+        tB=sB!==undefined?(sB?{univ:sB,color:gc(sB)}:null):(bB?.univ?bB:null);
       }else{
-        // 이후 라운드: 이전 라운드 승자 또는 수동 override
-        const prevMiA=mi*2, prevMiB=mi*2+1;
-        const autoA=br.winners[`${r-1}-${prevMiA}`]||null;
-        const autoB=br.winners[`${r-1}-${prevMiB}`]||null;
-        const slotA=br.slots[`${r}-${mi}-a`];
-        const slotB=br.slots[`${r}-${mi}-b`];
-        teamA=slotA!==undefined?(slotA?{univ:slotA,color:gc(slotA)}:null):(autoA?{univ:autoA,color:gc(autoA)}:null);
-        teamB=slotB!==undefined?(slotB?{univ:slotB,color:gc(slotB)}:null):(autoB?{univ:autoB,color:gc(autoB)}:null);
+        const pA=br.winners[`${r-1}-${mi*2}`]||null,pB=br.winners[`${r-1}-${mi*2+1}`]||null;
+        const sA=br.slots[`${r}-${mi}-a`],sB=br.slots[`${r}-${mi}-b`];
+        tA=sA!==undefined?(sA?{univ:sA,color:gc(sA)}:null):(pA?{univ:pA,color:gc(pA)}:null);
+        tB=sB!==undefined?(sB?{univ:sB,color:gc(sB)}:null):(pB?{univ:pB,color:gc(pB)}:null);
       }
-      pairs.push({a:teamA,b:teamB,winner:br.winners[`${r}-${mi}`]||null});
+      pairs.push({a:tA,b:tB,winner:br.winners[`${r}-${mi}`]||null});
     }
     rounds.push(pairs);
   }
 
-  function teamSlot(team,isWinner,tnId,rnd,mi,side){
-    const col=team?gc(team.univ):'#94a3b8';
-    const univName=team?.univ||'';
-    const isTbd=!univName;
-    const winMark=isWinner?'<span style="font-size:13px;margin-left:2px">✅</span>':'';
-
-    // 편집모드면 셀렉트
+  // === 팀 슬롯 행 HTML ===
+  function teamRow(team,isWin,rnd,mi,side){
+    const col=team?gc(team.univ):'#e2e8f0';
+    const name=team?.univ||'';
+    const tbd=!name;
+    const bg=isWin?col+'22':'transparent';
+    const bc=isWin?col:tbd?'#e2e8f0':col+'66';
     if(isLoggedIn){
-      const grpBadge=team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:'';
-      const winMarkInner=isWinner?`<span style="font-size:11px;flex-shrink:0">✅</span>`:'';
-      return `<div style="display:flex;align-items:center;gap:3px;height:38px">
-        ${grpBadge}
-        <select style="flex:1;height:32px;font-size:12px;font-weight:${isWinner?'800':'600'};padding:0 6px;border-radius:6px;border:${isWinner?'2px':'1px'} solid ${isWinner?col:isTbd?'#cbd5e1':col+'55'};background:${isWinner?col+'15':isTbd?'#f8fafc':'var(--white)'};color:${isWinner?col:isTbd?'#94a3b8':'var(--text)'};cursor:pointer;min-width:0"
-          onchange="setBracketSlot('${tnId}',${rnd},${mi},'${side}',this.value)">
+      return `<div style="display:flex;align-items:center;height:38px;background:${bg};border-left:4px solid ${bc}">
+        ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;margin:0 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:'<span style="width:4px;flex-shrink:0"></span>'}
+        <select onchange="setBracketSlot('${tnId}',${rnd},${mi},'${side}',this.value)"
+          style="flex:1;height:100%;border:none;background:transparent;font-size:12px;font-weight:${isWin?800:600};color:${tbd?'#94a3b8':isWin?col:'var(--text)'};padding:0 6px;cursor:pointer;outline:none;min-width:0">
           <option value="">— 미정 —</option>
-          ${allU.map(u=>`<option value="${u.name}"${univName===u.name?' selected':''}>${u.name}</option>`).join('')}
+          ${allU.map(u=>`<option value="${u.name}"${name===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
-        ${winMarkInner}
+        ${isWin?`<span style="padding-right:8px;color:${col};font-size:13px;flex-shrink:0">✓</span>`:''}
       </div>`;
     }
-    return `<div style="height:38px;padding:0 8px;border-radius:6px;border:${isWinner?'2px':'1px'} solid ${isWinner?col:isTbd?'#cbd5e1':col+'55'};background:${isWinner?col+'22':isTbd?'#f8fafc':'var(--white)'};display:flex;align-items:center;gap:4px;font-size:12px;font-weight:${isWinner?'800':'600'};color:${isWinner?col:isTbd?'#94a3b8':'var(--text)'};overflow:hidden;white-space:nowrap">
-      ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
-      <span style="overflow:hidden;text-overflow:ellipsis;flex:1">${isTbd?'미정':univName}</span>
-      ${winMark}
+    return `<div style="display:flex;align-items:center;height:38px;padding:0 10px;gap:6px;background:${bg};border-left:4px solid ${bc}">
+      ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
+      <span style="flex:1;font-size:12px;font-weight:${isWin?800:600};color:${tbd?'#94a3b8':isWin?col:'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tbd?'미정':name}</span>
+      ${isWin?`<span style="color:${col};font-size:13px;flex-shrink:0">✓</span>`:''}
     </div>`;
   }
 
-  function matchCard(pair, rLabel, rnd, mi){
+  // === 매치 카드 HTML ===
+  function matchCard(pair,rnd,mi){
     const {a,b,winner}=pair;
-    const aIsWin=winner&&winner===a?.univ;
-    const bIsWin=winner&&winner===b?.univ;
-    const canSetWinner=isLoggedIn&&a?.univ&&b?.univ;
+    const aC=a?gc(a.univ):'#e2e8f0',bC=b?gc(b.univ):'#e2e8f0';
+    const aWin=!!(winner&&winner===a?.univ),bWin=!!(winner&&winner===b?.univ);
     const isDone=!!winner;
-
-    // 브라켓 경기 상세 데이터
     const bktKey=`${rnd}-${mi}`;
-    const bktDetail=br.matchDetails&&br.matchDetails[bktKey];
-    const bktDone=bktDetail&&bktDetail.sa!=null;
-    const bktSA=bktDetail?.sa??'';const bktSB=bktDetail?.sb??'';
-    const hasGames=bktDetail?.sets?.some(s=>(s.games||[]).some(g=>g.playerA||g.playerB));
-
-    // 승자 버튼
-    let winBtns='';
-    if(canSetWinner){
-      winBtns=`<div style="display:flex;gap:4px;margin-top:5px">
+    const det=br.matchDetails?.[bktKey];
+    const detDone=det&&det.sa!=null;
+    const hasGames=det?.sets?.some(s=>(s.games||[]).some(g=>g.playerA||g.playerB));
+    const detId=`bkt-det-${rnd}-${mi}`;
+    let footer='';
+    if(isLoggedIn&&a?.univ&&b?.univ){
+      footer=`<div style="display:flex;gap:3px;padding:4px;background:var(--surface);border-top:1px solid var(--border)">
         <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${a.univ}')"
-          style="flex:1;padding:3px 0;border-radius:5px;border:1.5px solid ${aIsWin?gc(a.univ):'var(--border2)'};background:${aIsWin?gc(a.univ)+'22':'var(--white)'};font-size:10px;font-weight:700;color:${aIsWin?gc(a.univ):'var(--text3)'};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          ${aIsWin?'✅ ':''}${a.univ.length>6?a.univ.slice(0,5)+'…':a.univ} 승
+          style="flex:1;padding:2px 0;border-radius:4px;border:1.5px solid ${aWin?aC:'#e2e8f0'};background:${aWin?aC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${aWin?aC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${aWin?'✅ ':''}${(a.univ).slice(0,4)}승
         </button>
+        <button onclick="openBracketMatchModal('${tnId}',${rnd},${mi},'${a.univ}','${b.univ}')"
+          style="padding:2px 6px;border-radius:4px;border:1px solid #2563eb;background:#eff6ff;font-size:10px;color:#2563eb;cursor:pointer">✏️</button>
+        ${detDone?`<button onclick="openBktShareCard('${tnId}',${rnd},${mi})" style="padding:2px 6px;border-radius:4px;border:1px solid #7c3aed;background:#f5f3ff;font-size:10px;color:#7c3aed;cursor:pointer">🎴</button>`:''}
         <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${b.univ}')"
-          style="flex:1;padding:3px 0;border-radius:5px;border:1.5px solid ${bIsWin?gc(b.univ):'var(--border2)'};background:${bIsWin?gc(b.univ)+'22':'var(--white)'};font-size:10px;font-weight:700;color:${bIsWin?gc(b.univ):'var(--text3)'};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          ${bIsWin?'✅ ':''}${b.univ.length>6?b.univ.slice(0,5)+'…':b.univ} 승
+          style="flex:1;padding:2px 0;border-radius:4px;border:1.5px solid ${bWin?bC:'#e2e8f0'};background:${bWin?bC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${bWin?bC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${bWin?'✅ ':''}${(b.univ).slice(0,4)}승
         </button>
       </div>`;
     }else if(!a?.univ||!b?.univ){
-      winBtns=`<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px">팀 배정 후 결과 입력</div>`;
+      footer=`<div style="font-size:9px;color:#94a3b8;text-align:center;padding:4px;border-top:1px solid #f1f5f9">팀 배정 후 입력</div>`;
     }
-
-    // 스코어 표시
-    const scoreHTML=bktDone?`<div style="text-align:center;margin-top:4px;font-size:11px;font-weight:800;color:var(--blue)">${bktSA} : ${bktSB}</div>`:'';
-
-    // 관리자 버튼
-    const adminBtns=isLoggedIn&&a?.univ&&b?.univ?`<div style="display:flex;gap:3px;margin-top:5px;flex-wrap:wrap">
-      <button onclick="openBracketMatchModal('${tnId}',${rnd},${mi},'${a.univ}','${b.univ}')" style="flex:1;padding:2px 0;border-radius:5px;border:1px solid #2563eb;background:#eff6ff;font-size:9px;font-weight:700;color:#2563eb;cursor:pointer">✏️ 경기입력</button>
-      ${bktDone?`<button onclick="openBktShareCard('${tnId}',${rnd},${mi})" style="padding:2px 6px;border-radius:5px;border:1px solid #7c3aed;background:#f5f3ff;font-size:9px;font-weight:700;color:#7c3aed;cursor:pointer">🎴</button>`:''}
-    </div>`:'';
-
-    // 상세 토글 (게임 기록 있을 때만)
-    const detId=`bkt-det-${rnd}-${mi}`;
-    const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;margin-top:3px;padding:2px 0;border-radius:5px;border:1px solid var(--border);background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
-    const detDiv=hasGames?`<div id="${detId}" style="display:none;margin-top:4px;padding:8px;background:var(--surface);border-radius:6px;border:1px solid var(--border);font-size:10px">${buildDetailHTML(bktDetail,'comp',a?.univ||'A팀',b?.univ||'B팀',gc(a?.univ||''),gc(b?.univ||''),aIsWin,bIsWin)}</div>`:'';
-
-    return `<div style="background:var(--white);border:${isDone?'2px':'1px'} solid ${isDone?'var(--blue)':'var(--border)'};border-radius:10px;padding:8px 10px;min-width:190px;max-width:210px;box-shadow:${isDone?'0 2px 10px rgba(37,99,235,.12)':'0 1px 4px rgba(0,0,0,.06)'}">
-      <div style="font-size:9px;color:${isDone?'var(--blue)':'var(--gray-l)'};font-weight:700;margin-bottom:5px;text-align:center;letter-spacing:.5px">${rLabel} ${mi+1}경기${isDone?' ✓':''}</div>
-      ${teamSlot(a,aIsWin,tnId,rnd,mi,'a')}
-      <div style="text-align:center;font-size:9px;color:var(--gray-l);font-weight:700;margin:3px 0">VS</div>
-      ${teamSlot(b,bIsWin,tnId,rnd,mi,'b')}
-      ${scoreHTML}
-      ${winBtns}
-      ${adminBtns}
-      ${detBtn}
-      ${detDiv}
+    const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
+    const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
+    return `<div style="background:var(--white);border:${isDone?'2px solid var(--blue)':'1.5px solid var(--border)'};border-radius:8px;overflow:hidden;min-width:170px;max-width:220px;box-shadow:${isDone?'0 2px 12px rgba(37,99,235,.12)':'0 1px 4px rgba(0,0,0,.06)'}">
+      ${teamRow(a,aWin,rnd,mi,'a')}
+      <div style="height:1px;background:var(--border)"></div>
+      ${teamRow(b,bWin,rnd,mi,'b')}
+      ${detDone?`<div style="text-align:center;padding:2px 0;font-size:11px;font-weight:800;color:var(--blue);border-top:1px solid var(--border)">${det.sa} : ${det.sb}</div>`:''}
+      ${footer}${detBtn}${detDiv}
     </div>`;
   }
 
-  let allRoundsHTML='';
+  // 팀 수 선택
+  let sizeHTML='';
+  if(isLoggedIn){
+    sizeHTML=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span style="font-size:12px;font-weight:700;color:var(--text3)">⚙️ 참가 팀 수:</span>
+      ${[2,4,8,16].map(s=>`<button onclick="setBracketSize('${tnId}',${s})"
+        style="padding:3px 10px;border-radius:6px;border:1.5px solid ${numTeams===s&&overrideSize>0?'var(--blue)':'var(--border2)'};background:${numTeams===s&&overrideSize>0?'var(--blue)':'var(--white)'};color:${numTeams===s&&overrideSize>0?'#fff':'var(--text3)'};font-size:12px;font-weight:700;cursor:pointer">${s}팀</button>`).join('')}
+      ${overrideSize>0?`<button onclick="setBracketSize('${tnId}',0)" style="padding:3px 10px;border-radius:6px;border:1.5px solid #6b7280;background:var(--white);color:#6b7280;font-size:12px;cursor:pointer">🔄 자동</button>`:''}
+      <span style="font-size:11px;color:var(--gray-l)">현재 ${numTeams}팀 / ${totalRounds}라운드</span>
+      <button class="btn btn-w btn-xs" onclick="resetBracket('${tnId}')" title="브라켓 초기화">🔄 초기화</button>
+    </div>`;
+  }
+
+  // 조별 순위 요약
+  const grpSummary=grpRanks.length>0?`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+    ${grpRanks.map(g=>`<div style="background:${g.color}10;border:1px solid ${g.color}44;border-radius:8px;padding:7px 11px;min-width:120px">
+      <div style="font-size:11px;font-weight:800;color:${g.color};margin-bottom:5px">${g.grpName}</div>
+      ${g.ranked.slice(0,2).map((s,ri)=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+        <span style="font-size:10px">${ri===0?'🥇':'🥈'}</span>
+        <span style="background:${gc(s.u)};color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px">${s.u}</span>
+        <span style="font-size:9px;color:var(--gray-l)">${s.w}승${s.l}패</span>
+      </div>`).join('')}
+    </div>`).join('')}
+  </div>`:`<div style="font-size:11px;color:var(--gray-l);margin-bottom:10px;padding:6px 10px;background:var(--surface);border-radius:6px">💡 조편성이 없습니다. 팀 수를 선택하고 슬롯에서 직접 팀을 배치하세요.</div>`;
+
+  // 브라켓 레이아웃
+  let bracketHTML=`<div style="display:inline-flex;align-items:flex-start;gap:0;padding-bottom:8px">`;
   for(let r=0;r<totalRounds;r++){
     const rNum=totalRounds-r;
     const rLabel=roundLabels[rNum]||(rNum+'강');
-    const pairs=rounds[r];
-    const colH=pairs.length>1?`${pairs.length*110+pairs.length*14}px`:'auto';
-    allRoundsHTML+=`<div style="display:flex;flex-direction:column;justify-content:space-around;gap:14px;min-width:200px;padding-top:28px;align-items:center">
-      <div style="font-size:11px;font-weight:800;color:var(--blue);text-align:center;letter-spacing:.5px;white-space:nowrap;width:100%">${rLabel}</div>
-      ${pairs.map((p,mi)=>matchCard(p,rLabel,r,mi)).join('')}
-    </div>`;
-    if(r<totalRounds-1){
-      const connH=Math.max(1,pairs.length);
-      allRoundsHTML+=`<div style="display:flex;flex-direction:column;justify-content:space-around;min-width:28px;padding-top:52px;gap:${connH>1?Math.floor(100/connH):0}px">
-        ${pairs.map(()=>'<div style="height:2px;background:linear-gradient(90deg,#cbd5e1,#93c5fd);min-width:28px"></div>').join('')}
+    const unitH=BASE_H*Math.pow(2,r);
+    const matchCount=rounds[r].length;
+    bracketHTML+=`<div style="display:flex;flex-direction:column">
+      <div style="text-align:center;font-size:11px;font-weight:800;color:var(--blue);padding:5px 12px 10px;letter-spacing:.5px;white-space:nowrap">${rLabel}</div>`;
+    for(let mi=0;mi<matchCount;mi++){
+      bracketHTML+=`<div style="height:${unitH}px;display:flex;align-items:center;justify-content:center;padding:0 8px">
+        ${matchCard(rounds[r][mi],r,mi)}
       </div>`;
     }
+    bracketHTML+=`</div>`;
+    // 연결선
+    if(r<totalRounds-1){
+      const connUnitH=unitH*2;
+      bracketHTML+=`<div style="display:flex;flex-direction:column;width:24px;padding-top:31px">`;
+      for(let ci=0;ci<matchCount;ci+=2){
+        bracketHTML+=`<div style="height:${connUnitH}px;display:flex;flex-direction:column">
+          <div style="flex:1;border-right:2.5px solid #93c5fd;border-bottom:2.5px solid #93c5fd;border-bottom-right-radius:4px"></div>
+          <div style="flex:1;border-right:2.5px solid #93c5fd;border-top:2.5px solid #93c5fd;border-top-right-radius:4px"></div>
+        </div>`;
+      }
+      if(matchCount%2===1){
+        bracketHTML+=`<div style="height:${unitH}px;border-right:2.5px solid #93c5fd"></div>`;
+      }
+      bracketHTML+=`</div>`;
+    }
   }
-
-  // 챔피언 박스
+  // 챔피언 박스 연결선
   const finalPairs=rounds[totalRounds-1]||[];
   const finalWinner=finalPairs[0]?.winner||br.champ||'';
   const cc=finalWinner?gc(finalWinner):'#d97706';
-  allRoundsHTML+=`<div style="display:flex;align-items:center;min-width:24px;padding-top:52px">
-    <div style="height:2px;width:24px;background:linear-gradient(90deg,#93c5fd,${cc})"></div>
-  </div>
-  <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding-top:28px;min-width:140px">
-    <div style="font-size:10px;font-weight:800;color:#d97706;text-align:center;margin-bottom:8px;letter-spacing:2px">🏆 CHAMPION</div>
-    <div style="background:${cc}15;border:2px solid ${cc};border-radius:12px;padding:14px 18px;text-align:center;min-width:130px">
-      <div style="font-size:22px;margin-bottom:4px">🏆</div>
-      <div style="font-weight:900;font-size:14px;color:${cc};white-space:nowrap">${finalWinner||'?'}</div>
+  const champUnitH=BASE_H*Math.pow(2,totalRounds-1);
+  bracketHTML+=`<div style="display:flex;flex-direction:column;width:32px;padding-top:31px">
+    <div style="height:${champUnitH}px;display:flex;align-items:center">
+      <div style="width:100%;height:2.5px;background:linear-gradient(90deg,#93c5fd,${cc})"></div>
     </div>
-    ${isLoggedIn?`<select style="margin-top:7px;font-size:11px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;max-width:130px" onchange="setBracketChamp('${tnId}',this.value)">
-      <option value="">챔피언 직접 지정...</option>
-      ${allU.map(u=>`<option value="${u.name}"${finalWinner===u.name?' selected':''}>${u.name}</option>`).join('')}
-    </select>`:''}
   </div>`;
+  // 챔피언 박스
+  bracketHTML+=`<div style="display:flex;flex-direction:column;padding-top:31px">
+    <div style="height:${champUnitH}px;display:flex;align-items:center;padding:0 8px">
+      <div style="background:${cc}18;border:2.5px solid ${cc};border-radius:14px;padding:18px 22px;text-align:center;min-width:120px">
+        <div style="font-size:9px;font-weight:800;color:#d97706;letter-spacing:2px;margin-bottom:6px">🏆 CHAMPION</div>
+        <div style="font-size:28px;margin-bottom:6px">🏆</div>
+        <div style="font-weight:900;font-size:15px;color:${cc};white-space:nowrap">${finalWinner||'?'}</div>
+        ${isLoggedIn?`<select onchange="setBracketChamp('${tnId}',this.value)" style="margin-top:8px;font-size:11px;padding:3px 6px;border:1px solid ${cc}44;border-radius:6px;background:transparent;color:${cc};max-width:120px">
+          <option value="">직접 지정...</option>
+          ${allU.map(u=>`<option value="${u.name}"${finalWinner===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>`:''}
+      </div>
+    </div>
+  </div>`;
+  bracketHTML+=`</div>`;
 
   return `<div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
       <span style="font-weight:900;font-size:15px;color:var(--blue)">⚔️ ${tn.name} — 토너먼트 브라켓</span>
-      ${isLoggedIn?`<button class="btn btn-w btn-xs" onclick="resetBracket('${tnId}')" title="브라켓 초기화">🔄 초기화</button>`:''}
-      ${isLoggedIn?`<span style="font-size:11px;color:var(--gray-l);margin-left:4px">💡 팀 슬롯 클릭으로 변경 · 승 버튼으로 결과 입력</span>`:''}
+      ${isLoggedIn?`<span class="no-export" style="font-size:11px;color:var(--gray-l)">💡 슬롯 클릭으로 팀 변경 · 승 버튼으로 결과 입력</span>`:''}
     </div>
-    <!-- 조별 순위 요약 (그룹 있는 경우만) -->
-    ${grpRanks.length>0?`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
-      ${grpRanks.map(g=>`<div style="background:${g.color}10;border:1px solid ${g.color}44;border-radius:8px;padding:7px 11px;min-width:120px">
-        <div style="font-size:11px;font-weight:800;color:${g.color};margin-bottom:5px">${g.grpName}</div>
-        ${g.ranked.slice(0,2).map((s,ri)=>`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
-          <span style="font-size:10px">${ri===0?'🥇':'🥈'}</span>
-          <span style="background:${gc(s.u)};color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px">${s.u}</span>
-          <span style="font-size:9px;color:var(--gray-l)">${s.w}승${s.l}패</span>
-        </div>`).join('')}
-      </div>`).join('')}
-    </div>`:`<div style="font-size:11px;color:var(--gray-l);margin-bottom:10px;padding:6px 10px;background:var(--surface);border-radius:6px">💡 조편성이 없습니다. 아래 드롭다운에서 직접 팀을 배치하세요.</div>`}
-    <!-- 브라켓 -->
-    <div style="overflow-x:auto;padding-bottom:8px">
-      <div style="display:flex;align-items:center;gap:0;min-width:fit-content;padding:8px 0">
-        ${allRoundsHTML}
-      </div>
-    </div>
+    ${sizeHTML}
+    ${grpSummary}
+    <div style="overflow-x:auto;padding-bottom:8px">${bracketHTML}</div>
   </div>`;
+}
+
+function setBracketSize(tnId,size){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  if(size>0)tn.bracketOverrideSize=size;else delete tn.bracketOverrideSize;
+  save();render();
 }
 
 function rCompPlayerRank(tn){
