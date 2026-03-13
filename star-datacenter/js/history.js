@@ -31,7 +31,7 @@
     return;
   }
   if(histSub==='player'){
-    h+=`<input type="text" id="hs" placeholder="🔍 스트리머 검색..." onkeyup="doSearch(this.value)"
+    h+=`<input type="text" id="hs" placeholder="🔍 스트리머 검색..." oninput="doSearch(this.value)" onkeyup="doSearch(this.value)"
       style="width:100%;max-width:320px;padding:10px 16px;border:2px solid var(--blue);border-radius:8px;font-size:13px;margin-bottom:16px;">
       <div id="hres"></div>`;
     C.innerHTML=h;
@@ -863,6 +863,23 @@ function doSearch(val){
   scanMatches(indM||[],'개인전',m=>m.n||'개인전');
   scanMatches(gjM||[],'관전',m=>m.n||'관전');
   scanMatches(getTourneyMatches(),'대회(토너먼트)',m=>m.n||'토너먼트');
+  // indM/gjM은 sets.games 구조가 없고 wName/lName만 있어서 별도 스캔
+  function scanWLArr(arr,modeLabel){
+    arr.forEach(m=>{
+      const isWin=(m.wName===p.name),isLose=(m.lName===p.name);
+      if(!isWin&&!isLose)return;
+      const d=m.d||'';
+      if(typeof passDateFilter==='function'&&!passDateFilter(d))return;
+      const opp=isWin?(m.lName||'?'):(m.wName||'?');
+      const oppP=players.find(x=>x.name===opp);
+      const _k=`${d}|${opp}|${isWin?'승':'패'}|${m.map||'-'}`;
+      if(_seenKeys.has(_k))return;
+      _seenKeys.add(_k);
+      matchLog.push({date:d,mode:modeLabel,label:'',result:isWin?'승':'패',opp:opp,oppRace:oppP?.race||'?',map:m.map||'-',setLabel:'',mObj:null,si:-1,gi:-1});
+    });
+  }
+  scanWLArr(indM||[],'개인전');
+  scanWLArr(gjM||[],'관전');
   // p.history 기반 보완: sets/games 데이터 없어도 모든 기록 표시
   (p.history||[]).forEach(h=>{
     const d=h.date||'';
