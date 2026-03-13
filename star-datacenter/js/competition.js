@@ -582,7 +582,7 @@ function rCompTourDynamic(tn){
   const br=getBracket(tn);
   const allU=getAllUnivs();
   const tnId=tn.id;
-  const BASE_H=100; // px per R0 match slot
+  const BASE_H=130; // px per R0 match slot
 
   // Build rounds data
   const rounds=[];
