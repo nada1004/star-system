@@ -1083,8 +1083,9 @@ function openEPFromModal(nameArg){
   }
 }
 function savePlayer(){
+  try{
   const p=players.find(x=>x.name===editName);
-  if(!p){alert('선수를 찾을 수 없습니다. 모달을 닫고 다시 시도하세요.');return;}
+  if(!p){alert('선수를 찾을 수 없습니다.\n현재 editName: "'+editName+'"');return;}
   const newName=(document.getElementById('ed-n')?.value||'').trim();
   if(!newName){alert('이름을 입력하세요.');return;}
   const oldName=editName;
@@ -1092,41 +1093,30 @@ function savePlayer(){
   // 이름 변경 시 모든 기록 자동 갱신
   if(newName !== oldName){
     if(players.some(x=>x.name===newName)){alert(`"${newName}"은(는) 이미 존재하는 이름입니다.`);return;}
-
-    // 히스토리 내 상대방 이름 갱신
     players.forEach(other=>{
-      (other.history||[]).forEach(h=>{
-        if(h.opp===oldName) h.opp=newName;
-      });
+      (other.history||[]).forEach(h=>{if(h.opp===oldName)h.opp=newName;});
     });
-    // 히스토리 내 본인 이름은 p.name 변경으로 자동 처리
-    // 미니대전/대학대전/대회/CK/프로 경기 내 선수명 갱신
     const renameInMatches=(arr)=>{
-      arr.forEach(m=>{
+      (arr||[]).forEach(m=>{
         (m.sets||[]).forEach(set=>{
           (set.games||[]).forEach(g=>{
-            if(g.playerA===oldName) g.playerA=newName;
-            if(g.playerB===oldName) g.playerB=newName;
-            // g.winner는 'A'/'B' 값이므로 이름 비교 불필요
+            if(g.playerA===oldName)g.playerA=newName;
+            if(g.playerB===oldName)g.playerB=newName;
           });
         });
         (m.teamAMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
         (m.teamBMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
       });
     };
-    renameInMatches(miniM);
-    renameInMatches(univM);
-    renameInMatches(comps);
-    renameInMatches(ckM);
-    renameInMatches(proM);
-    // 조편성 대회
+    renameInMatches(miniM);renameInMatches(univM);renameInMatches(comps);
+    renameInMatches(ckM);renameInMatches(proM);
     tourneys.forEach(tn=>{
       tn.groups.forEach(grp=>{
         (grp.matches||[]).forEach(m=>{
           (m.sets||[]).forEach(set=>{
             (set.games||[]).forEach(g=>{
-              if(g.playerA===oldName) g.playerA=newName;
-              if(g.playerB===oldName) g.playerB=newName;
+              if(g.playerA===oldName)g.playerA=newName;
+              if(g.playerB===oldName)g.playerB=newName;
             });
           });
         });
@@ -1136,27 +1126,35 @@ function savePlayer(){
 
   p.name=newName;
   editName=p.name;
-  p.tier=document.getElementById('ed-t').value;
-  p.univ=document.getElementById('ed-u').value;
-  p.race=document.getElementById('ed-r').value;
-  p.gender=document.getElementById('ed-g').value;
+  p.tier=document.getElementById('ed-t')?.value||p.tier||'';
+  p.univ=document.getElementById('ed-u')?.value||p.univ||'';
+  p.race=document.getElementById('ed-r')?.value||p.race||'N';
+  p.gender=document.getElementById('ed-g')?.value||p.gender||'F';
   const _rv=(document.getElementById('ed-role')?.value||'').trim();
   p.role=_rv||undefined;
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
   p.photo=_photo||undefined;
-  p.win=parseInt(document.getElementById('ed-win').value)||0;
-  p.loss=parseInt(document.getElementById('ed-loss').value)||0;
-  p.points=parseInt(document.getElementById('ed-pts').value)||0;
+  const _win=document.getElementById('ed-win');
+  const _loss=document.getElementById('ed-loss');
+  const _pts=document.getElementById('ed-pts');
+  if(_win)p.win=parseInt(_win.value)||0;
+  if(_loss)p.loss=parseInt(_loss.value)||0;
+  if(_pts)p.points=parseInt(_pts.value)||0;
   p.retired=document.getElementById('ed-retired')?.checked||false;
-  if(!p.retired) p.retired=undefined;
+  if(!p.retired)p.retired=undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
   p.channelUrl=_channel||undefined;
-  save();render();cm('emModal');
-  // playerModal이 열려있으면 저장된 내용으로 갱신 후 다시 표시
+  save();
+  cm('emModal');
+  render();
   if(typeof openPlayerModal==='function'){
-    setTimeout(()=>openPlayerModal(p.name),30);
+    setTimeout(()=>openPlayerModal(p.name),50);
+  }
+  }catch(e){
+    console.error('[savePlayer] 오류:',e);
+    alert('저장 중 오류가 발생했습니다:\n'+e.message+'\n\nF12 콘솔에서 자세한 내용을 확인하세요.');
   }
 }
 function setAllFemale(){
