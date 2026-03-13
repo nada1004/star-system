@@ -801,20 +801,17 @@ function doSearch(val){
   if(!matched.length){R.innerHTML=`<div style="color:var(--gray-l);padding:20px">검색 결과 없음</div>`;return;}
   // 완전 일치 우선, 아니면 첫 번째
   const p=matched.find(x=>x.name.toLowerCase()===v)||matched[0];
-  // 여러 결과일 때 선택 버튼 표시
-  if(matched.length>1&&matched[0].name.toLowerCase()!==v){
-    let pick=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">`;
+  // 여러 결과일 때 선택 버튼 표시 (항상 첫 번째 선수 기록도 즉시 표시)
+  let _pickHTML='';
+  if(matched.length>1){
+    _pickHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">`;
     matched.slice(0,10).forEach(m=>{
       const col=gc(m.univ);
-      pick+=`<button onclick="searchTarget='${m.name.replace(/'/g,"\\'")}';doSearch('${m.name.replace(/'/g,"\\'")}');document.getElementById('hs').value='${m.name.replace(/'/g,"\\'")}'"
-        style="padding:4px 12px;border-radius:20px;background:${col};color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer">${m.name}</button>`;
+      const isSelected=(m===p);
+      _pickHTML+=`<button onclick="searchTarget='${m.name.replace(/'/g,"\\'")}';doSearch('${m.name.replace(/'/g,"\\'")}');document.getElementById('hs').value='${m.name.replace(/'/g,"\\'")}'"
+        style="padding:4px 12px;border-radius:20px;background:${col};color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;${isSelected?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+col:''}">${m.name}</button>`;
     });
-    pick+=`</div>`;
-    if(p===matched[0]&&matched.length>1){
-      R.innerHTML=pick;
-      // 완전 일치가 없으면 여기서 멈춤
-      if(matched[0].name.toLowerCase()!==v) return;
-    }
+    _pickHTML+=`</div>`;
   }
   searchTarget=p.name;
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
@@ -1042,7 +1039,7 @@ function doSearch(val){
   } else {
     h+=`<div style="padding:20px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:8px;border:1px solid var(--border)">대전 기록에서 이 선수의 경기를 찾을 수 없습니다.</div>`;
   }
-  R.innerHTML=h;
+  R.innerHTML=_pickHTML+h;
 }
 
 function toggleDetail(key){
