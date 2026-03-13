@@ -720,8 +720,8 @@ function rCompTourDynamic(tn){
       const CL='2px solid #93c5fd';
       const nextMatchCount=rounds[r+1].length;
       // 연결선 컬럼
-      bracketHTML+=`<div style="display:flex;flex-direction:column;width:20px;padding-top:30px">`;
-      for(let ci=0;ci<matchCount;ci+=2){
+      bracketHTML+=`<div style="display:flex;flex-direction:column;width:20px;padding-top:31px">`;
+      for(let ci=0;ci<matchCount-1;ci+=2){
         // 4분할: 빈칸(상) / 꺾임선(하) / 꺾임선(상) / 빈칸(하)
         bracketHTML+=`<div style="height:${unitH}px;display:flex;flex-direction:column">
           <div style="flex:1"></div>
@@ -743,7 +743,7 @@ function rCompTourDynamic(tn){
       }
       bracketHTML+=`</div>`;
       // bridge 컬럼 (다음 라운드 매치 입력선)
-      bracketHTML+=`<div style="display:flex;flex-direction:column;width:14px;padding-top:30px">`;
+      bracketHTML+=`<div style="display:flex;flex-direction:column;width:14px;padding-top:31px">`;
       for(let ni=0;ni<nextMatchCount;ni++){
         bracketHTML+=`<div style="height:${unitH*2}px;display:flex;align-items:center">
           <div style="width:100%;border-top:${CL}"></div>
@@ -798,7 +798,7 @@ function setBracketSize(tnId,size){
 function rCompPlayerRank(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   const pStats={};
-  tn.groups.forEach(grp=>{
+  (tn.groups||[]).forEach(grp=>{
     (grp.matches||[]).forEach(m=>{
       if(m.sa==null)return;
       (m.sets||[]).forEach(set=>{
