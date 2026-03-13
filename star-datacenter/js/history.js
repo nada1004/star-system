@@ -13,7 +13,7 @@
     {id:'univstat',lbl:'🏛️ 대학별'},
     {id:'univrank',lbl:'🏛️ 대학별 포인트 순위'},
     {id:'pro',lbl:'🏅 프로리그'},
-    {id:'player',lbl:'👤 선수별'},
+    {id:'player',lbl:'👤 스트리머별'},
     {id:'vs',lbl:'⚔️ 1:1 상대전적'}
   ];
   let h=`<div class="stabs no-export">`;
@@ -790,7 +790,8 @@ function doSearch(val){
   const _toks3=v.split(/\s+/).filter(Boolean);
   let _rf3='',_gf3='',_nts3=[];
   _toks3.forEach(t=>{if(_RMAP3[t])_rf3=_RMAP3[t];else if(_GMAP3[t])_gf3=_GMAP3[t];else _nts3.push(t);});
-  const matched=players.filter(x=>{
+  const matched=(players||[]).filter(x=>{
+    if(!x||!x.name)return false;
     const nm=_nts3.length===0||_nts3.every(t=>
       x.name.toLowerCase().includes(t)||(x.univ||'').toLowerCase().includes(t)||
       (x.tier||'').toLowerCase().includes(t)||(x.role||'').toLowerCase().includes(t)
@@ -817,7 +818,7 @@ function doSearch(val){
   }
   searchTarget=p.name;
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
-  p.history.forEach(h=>{
+  (p.history||[]).forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
     else{opps[h.opp].l++;if(rv[h.oppRace])rv[h.oppRace].l++;}
