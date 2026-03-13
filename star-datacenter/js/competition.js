@@ -608,27 +608,30 @@ function rCompTourDynamic(tn){
   }
 
   // === 팀 슬롯 행 HTML ===
-  function teamRow(team,isWin,rnd,mi,side){
+  function teamRow(team,isWin,isLose,rnd,mi,side,score){
     const col=team?gc(team.univ):'#e2e8f0';
     const name=team?.univ||'';
     const tbd=!name;
-    const bg=isWin?col+'22':'transparent';
-    const bc=isWin?col:tbd?'#e2e8f0':col+'66';
+    const bg=isWin?col+'1a':isLose?'#f8fafc':'var(--white)';
+    const bc=isWin?col:tbd?'#e2e8f0':col+'55';
+    const textCol=tbd?'#b0bec5':isLose?'#94a3b8':isWin?col:'var(--text)';
+    const fw=isWin?800:isLose?500:600;
+    const scoreEl=score!=null?`<span style="min-width:18px;text-align:center;font-size:13px;font-weight:800;color:${isWin?col:isLose?'#cbd5e1':'var(--text3)'};padding-right:8px">${score}</span>`:'';
     if(isLoggedIn){
-      return `<div style="display:flex;align-items:center;height:38px;background:${bg};border-left:4px solid ${bc}">
-        ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;margin:0 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:'<span style="width:4px;flex-shrink:0"></span>'}
+      return `<div style="display:flex;align-items:center;height:36px;background:${bg};border-left:4px solid ${bc}">
+        ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;margin:0 3px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:'<span style="width:3px;flex-shrink:0"></span>'}
         <select onchange="setBracketSlot('${tnId}',${rnd},${mi},'${side}',this.value)"
-          style="flex:1;height:100%;border:none;background:transparent;font-size:12px;font-weight:${isWin?800:600};color:${tbd?'#94a3b8':isWin?col:'var(--text)'};padding:0 6px;cursor:pointer;outline:none;min-width:0">
+          style="flex:1;height:100%;border:none;background:transparent;font-size:12px;font-weight:${fw};color:${textCol};padding:0 5px;cursor:pointer;outline:none;min-width:0">
           <option value="">— 미정 —</option>
           ${allU.map(u=>`<option value="${u.name}"${name===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
-        ${isWin?`<span style="padding-right:8px;color:${col};font-size:13px;flex-shrink:0">✓</span>`:''}
+        ${scoreEl}
       </div>`;
     }
-    return `<div style="display:flex;align-items:center;height:38px;padding:0 10px;gap:6px;background:${bg};border-left:4px solid ${bc}">
-      ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
-      <span style="flex:1;font-size:12px;font-weight:${isWin?800:600};color:${tbd?'#94a3b8':isWin?col:'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tbd?'미정':name}</span>
-      ${isWin?`<span style="color:${col};font-size:13px;flex-shrink:0">✓</span>`:''}
+    return `<div style="display:flex;align-items:center;height:36px;padding:0 0 0 8px;gap:5px;background:${bg};border-left:4px solid ${bc}">
+      ${team?.grpName?`<span style="background:${team.color||col};color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0">${team.rank}</span>`:''}
+      <span style="flex:1;font-size:12px;font-weight:${fw};color:${textCol};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tbd?'미정':name}</span>
+      ${scoreEl}
     </div>`;
   }
 
@@ -663,11 +666,11 @@ function rCompTourDynamic(tn){
     }
     const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
     const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
-    return `<div style="background:var(--white);border:${isDone?'2px solid var(--blue)':'1.5px solid var(--border)'};border-radius:8px;overflow:hidden;min-width:170px;max-width:220px;box-shadow:${isDone?'0 2px 12px rgba(37,99,235,.12)':'0 1px 4px rgba(0,0,0,.06)'}">
-      ${teamRow(a,aWin,rnd,mi,'a')}
+    const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
+    return `<div style="background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;min-width:160px;max-width:210px;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+      ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc)}
       <div style="height:1px;background:var(--border)"></div>
-      ${teamRow(b,bWin,rnd,mi,'b')}
-      ${detDone?`<div style="text-align:center;padding:2px 0;font-size:11px;font-weight:800;color:var(--blue);border-top:1px solid var(--border)">${det.sa} : ${det.sb}</div>`:''}
+      ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc)}
       ${footer}${detBtn}${detDiv}
     </div>`;
   }
@@ -712,18 +715,39 @@ function rCompTourDynamic(tn){
       </div>`;
     }
     bracketHTML+=`</div>`;
-    // 연결선
+    // 연결선 (매치 중심점에서 정확히 연결)
     if(r<totalRounds-1){
-      const connUnitH=unitH*2;
-      bracketHTML+=`<div style="display:flex;flex-direction:column;width:24px;padding-top:31px">`;
+      const CL='2px solid #93c5fd';
+      const nextMatchCount=rounds[r+1].length;
+      // 연결선 컬럼
+      bracketHTML+=`<div style="display:flex;flex-direction:column;width:20px;padding-top:30px">`;
       for(let ci=0;ci<matchCount;ci+=2){
-        bracketHTML+=`<div style="height:${connUnitH}px;display:flex;flex-direction:column">
-          <div style="flex:1;border-right:2.5px solid #93c5fd;border-bottom:2.5px solid #93c5fd;border-bottom-right-radius:4px"></div>
-          <div style="flex:1;border-right:2.5px solid #93c5fd;border-top:2.5px solid #93c5fd;border-top-right-radius:4px"></div>
+        // 4분할: 빈칸(상) / 꺾임선(하) / 꺾임선(상) / 빈칸(하)
+        bracketHTML+=`<div style="height:${unitH}px;display:flex;flex-direction:column">
+          <div style="flex:1"></div>
+          <div style="flex:1;border-right:${CL};border-bottom:${CL};border-bottom-right-radius:3px"></div>
+        </div>
+        <div style="height:${unitH}px;display:flex;flex-direction:column">
+          <div style="flex:1;border-right:${CL};border-top:${CL};border-top-right-radius:3px"></div>
+          <div style="flex:1"></div>
         </div>`;
+        if(ci+2<matchCount&&ci+2!==matchCount-1+(matchCount%2)){
+          // 짝수 쌍 사이 여백 없음 (연속)
+        }
       }
       if(matchCount%2===1){
-        bracketHTML+=`<div style="height:${unitH}px;border-right:2.5px solid #93c5fd"></div>`;
+        // 홀수 매치: 직선 연결
+        bracketHTML+=`<div style="height:${unitH}px;display:flex;align-items:center">
+          <div style="width:100%;border-top:${CL}"></div>
+        </div>`;
+      }
+      bracketHTML+=`</div>`;
+      // bridge 컬럼 (다음 라운드 매치 입력선)
+      bracketHTML+=`<div style="display:flex;flex-direction:column;width:14px;padding-top:30px">`;
+      for(let ni=0;ni<nextMatchCount;ni++){
+        bracketHTML+=`<div style="height:${unitH*2}px;display:flex;align-items:center">
+          <div style="width:100%;border-top:${CL}"></div>
+        </div>`;
       }
       bracketHTML+=`</div>`;
     }
