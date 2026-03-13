@@ -8,6 +8,7 @@ let grpSub='list';
 let grpEditId=null;
 let grpMatchState={tnId:null,gi:null,mi:null};
 let bracketMatchState={tnId:null,rnd:null,mi:null,teamA:'',teamB:''};
+let bktSchedRound='전체';
 
 function getCurrentTourney(){
   return tourneys.find(t=>t.name===curComp)||tourneys[0]||null;
@@ -402,8 +403,8 @@ function rBracketSchedule(tn){
           </div>
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 결과</button>
-          ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:''}
+          <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 수정</button>
+          ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:`<button class="btn btn-r btn-xs" onclick="bktClearMatchResult('${tn.id}',${r},${mi})">🗑️ 초기화</button>`}
         </div>`:''}
       </div>
       ${hasGames?`<div id="${detId}" style="display:none;padding:12px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none;margin-top:-1px">
@@ -412,14 +413,24 @@ function rBracketSchedule(tn){
     </div>`;
   }
 
-  const done=matches.filter(m=>m.isDone);
-  const pending=matches.filter(m=>!m.isDone);
+  // 라운드 필터 버튼용 라운드 목록
+  const _roundOrder=['결승','준결승','4강','8강','16강','32강'];
+  const _roundSet=new Set(matches.map(m=>m.rLabel));
+  const _availRounds=['전체',..._roundOrder.filter(r=>_roundSet.has(r))];
+  _roundSet.forEach(r=>{if(!_roundOrder.includes(r)&&r!=='전체')_availRounds.push(r);});
+
+  // 필터 적용
+  const _filtered=bktSchedRound==='전체'?matches:matches.filter(m=>m.rLabel===bktSchedRound);
+  const done=_filtered.filter(m=>m.isDone);
+  const pending=_filtered.filter(m=>!m.isDone);
 
   let h=`<div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">⚔️ 토너먼트 경기 일정</span>
       ${isLoggedIn?`<button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>`:''}
-    </div>`;
+    </div>
+    ${_availRounds.length>2?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_availRounds.map(rv=>`<button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>`).join('')}</div>`:''}
+    `;
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){
     h+=`<div style="padding:30px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px">
@@ -468,6 +479,19 @@ function bktDelManualMatch(tnId,idx){
     revertMatchRecord(br.manualMatches[idx]);
     br.manualMatches.splice(idx,1);
   }
+  save();render();
+}
+
+function bktClearMatchResult(tnId,r,mi){
+  if(!confirm('경기 결과를 초기화하시겠습니까?\n⚠️ 선수 개인 전적도 롤백됩니다.'))return;
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const br=getBracket(tn);
+  const key=`${r}-${mi}`;
+  if(br.matchDetails&&br.matchDetails[key]){
+    revertMatchRecord(br.matchDetails[key]);
+    delete br.matchDetails[key];
+  }
+  if(br.winners&&br.winners[key])delete br.winners[key];
   save();render();
 }
 
