@@ -857,6 +857,8 @@ function doSearch(val){
   scanMatches(univM,'대학대전',m=>m.n||`${m.a} vs ${m.b}`);
   scanMatches(comps,'대회',m=>m.n||'대회');
   scanMatches(ckM,'대학CK',m=>'대학CK');
+  scanMatches(proM||[],'프로리그',m=>m.n||'프로리그');
+  scanMatches(getTourneyMatches(),'대회(토너먼트)',m=>m.n||'토너먼트');
   matchLog.sort((a,b)=>b.date.localeCompare(a.date));
 
   // 필터에 따른 기간별 전적 집계
@@ -872,7 +874,7 @@ function doSearch(val){
 
   const col=gc(p.univ);
 
-  const modeBg={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626'};
+  const modeBg={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','대회(토너먼트)':'#16a34a'};
   let h=`<div class="ipanel" style="border-color:${col}66;background:${col}0d;">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
       <span class="ubadge clickable-univ" style="background:${col};font-size:13px;padding:5px 14px" onclick="openUnivModal('${p.univ}')">${p.univ}</span>
