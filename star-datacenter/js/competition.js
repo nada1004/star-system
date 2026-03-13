@@ -7,6 +7,7 @@ let grpRankFilter='';
 let grpSub='list';
 let grpEditId=null;
 let grpMatchState={tnId:null,gi:null,mi:null};
+let bracketMatchState={tnId:null,rnd:null,mi:null,teamA:'',teamB:''};
 
 function getCurrentTourney(){
   return tourneys.find(t=>t.name===curComp)||tourneys[0]||null;
@@ -500,6 +501,13 @@ function rCompTourDynamic(tn){
     const canSetWinner=isLoggedIn&&a?.univ&&b?.univ;
     const isDone=!!winner;
 
+    // 브라켓 경기 상세 데이터
+    const bktKey=`${rnd}-${mi}`;
+    const bktDetail=br.matchDetails&&br.matchDetails[bktKey];
+    const bktDone=bktDetail&&bktDetail.sa!=null;
+    const bktSA=bktDetail?.sa??'';const bktSB=bktDetail?.sb??'';
+    const hasGames=bktDetail?.sets?.some(s=>(s.games||[]).some(g=>g.playerA||g.playerB));
+
     // 승자 버튼
     let winBtns='';
     if(canSetWinner){
@@ -517,12 +525,30 @@ function rCompTourDynamic(tn){
       winBtns=`<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:4px">팀 배정 후 결과 입력</div>`;
     }
 
+    // 스코어 표시
+    const scoreHTML=bktDone?`<div style="text-align:center;margin-top:4px;font-size:11px;font-weight:800;color:var(--blue)">${bktSA} : ${bktSB}</div>`:'';
+
+    // 관리자 버튼
+    const adminBtns=isLoggedIn&&a?.univ&&b?.univ?`<div style="display:flex;gap:3px;margin-top:5px;flex-wrap:wrap">
+      <button onclick="openBracketMatchModal('${tnId}',${rnd},${mi},'${a.univ}','${b.univ}')" style="flex:1;padding:2px 0;border-radius:5px;border:1px solid #2563eb;background:#eff6ff;font-size:9px;font-weight:700;color:#2563eb;cursor:pointer">✏️ 경기입력</button>
+      ${bktDone?`<button onclick="openBktShareCard('${tnId}',${rnd},${mi})" style="padding:2px 6px;border-radius:5px;border:1px solid #7c3aed;background:#f5f3ff;font-size:9px;font-weight:700;color:#7c3aed;cursor:pointer">🎴</button>`:''}
+    </div>`:'';
+
+    // 상세 토글 (게임 기록 있을 때만)
+    const detId=`bkt-det-${rnd}-${mi}`;
+    const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;margin-top:3px;padding:2px 0;border-radius:5px;border:1px solid var(--border);background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
+    const detDiv=hasGames?`<div id="${detId}" style="display:none;margin-top:4px;padding:8px;background:var(--surface);border-radius:6px;border:1px solid var(--border);font-size:10px">${buildDetailHTML(bktDetail,'comp',a?.univ||'A팀',b?.univ||'B팀',gc(a?.univ||''),gc(b?.univ||''),aIsWin,bIsWin)}</div>`:'';
+
     return `<div style="background:var(--white);border:${isDone?'2px':'1px'} solid ${isDone?'var(--blue)':'var(--border)'};border-radius:10px;padding:8px 10px;min-width:190px;max-width:210px;box-shadow:${isDone?'0 2px 10px rgba(37,99,235,.12)':'0 1px 4px rgba(0,0,0,.06)'}">
       <div style="font-size:9px;color:${isDone?'var(--blue)':'var(--gray-l)'};font-weight:700;margin-bottom:5px;text-align:center;letter-spacing:.5px">${rLabel} ${mi+1}경기${isDone?' ✓':''}</div>
       ${teamSlot(a,aIsWin,tnId,rnd,mi,'a')}
       <div style="text-align:center;font-size:9px;color:var(--gray-l);font-weight:700;margin:3px 0">VS</div>
       ${teamSlot(b,bIsWin,tnId,rnd,mi,'b')}
+      ${scoreHTML}
       ${winBtns}
+      ${adminBtns}
+      ${detBtn}
+      ${detDiv}
     </div>`;
   }
 
@@ -923,4 +949,194 @@ function grpSaveMatch(){
     });
   });
   save();cm('grpMatchModal');render();
+}
+
+/* ══════════════════════════════════════
+   브라켓 경기 상세 입력
+══════════════════════════════════════ */
+function getBktMatch(tnId,rnd,mi){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return null;
+  const br=getBracket(tn);
+  if(!br.matchDetails)br.matchDetails={};
+  const key=`${rnd}-${mi}`;
+  if(!br.matchDetails[key])br.matchDetails[key]={a:'',b:'',d:new Date().toISOString().slice(0,10),sa:null,sb:null,sets:[],_id:null};
+  return br.matchDetails[key];
+}
+
+function bktToggleDet(id,btn){
+  const el=document.getElementById(id);if(!el)return;
+  const open=el.style.display==='none'||!el.style.display;
+  el.style.display=open?'block':'none';
+  if(btn){btn.textContent=open?'🔼 닫기':'📂 상세';}
+}
+
+function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
+  bracketMatchState={tnId,rnd,mi,teamA,teamB};
+  const m=getBktMatch(tnId,rnd,mi);if(!m)return;
+  if(!m.a&&teamA)m.a=teamA;
+  if(!m.b&&teamB)m.b=teamB;
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const totalRounds=(()=>{const n=Math.max(1,Math.ceil((tn.groups&&tn.groups.length>=2)?Math.ceil(tn.groups.length/2)*2:4));let r=0,x=n;while(x>1){x=Math.ceil(x/2);r++;}return r||1;})();
+  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
+  const rNum=totalRounds-rnd;
+  const rLabel=roundLabels[rNum]||(rNum+'강');
+  const allU=getAllUnivs();
+  const uOpts=`<option value="">— 대학 선택 —</option>`+allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('');
+  const uOptsB=`<option value="">— 대학 선택 —</option>`+allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('');
+  window._bracketMatchMode=true;
+  document.getElementById('grpMatchTitle').textContent=`${rLabel} ${mi+1}경기 결과 입력`;
+  document.getElementById('grpMatchBody').innerHTML=`
+    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:130px">
+          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">🔵 팀 A</div>
+          <select id="gm-a" onchange="bktRefreshSets();" style="width:100%">${uOpts}</select>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--gray-l);padding-top:22px">VS</div>
+        <div style="flex:1;min-width:130px">
+          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🔴 팀 B</div>
+          <select id="gm-b" onchange="bktRefreshSets();" style="width:100%">${uOptsB}</select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">📅 날짜</div>
+          <input type="date" id="gm-date" value="${m.d||new Date().toISOString().slice(0,10)}" style="width:145px">
+        </div>
+      </div>
+    </div>
+    <div id="gm-sets"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-b btn-sm" onclick="bktAddSet()">+ 1세트</button>
+      <button class="btn btn-w btn-sm" onclick="bktAddSet2()">+ 2세트</button>
+      <button class="btn btn-w btn-sm" onclick="bktAddSet3()">🎯 에이스전</button>
+      <button class="btn btn-p btn-sm" onclick="openBktPasteModal()">📋 붙여넣기</button>
+      <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="bktSaveMatch()">✅ 저장</button>
+      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
+    </div>`;
+  om('grpMatchModal');
+  bktRefreshSets();
+}
+
+function bktRefreshSets(){
+  const {tnId,rnd,mi}=bracketMatchState;
+  const m=getBktMatch(tnId,rnd,mi);if(!m)return;
+  const aEl=document.getElementById('gm-a');const bEl=document.getElementById('gm-b');
+  if(!aEl)return;
+  const teamA=aEl.value,teamB=bEl?bEl.value:'';
+  const tfs=window._grpTierFilters||[];
+  const mA=players.filter(p=>p.univ===teamA&&(tfs.length===0||tfs.includes(p.tier)));
+  const mB=players.filter(p=>p.univ===teamB&&(tfs.length===0||tfs.includes(p.tier)));
+  const tfLabel=tfs.length?` [${tfs.join('+')}]`:'';
+  const optsA=`<option value="">A팀 선수${tfLabel}</option>`+mA.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsB=`<option value="">B팀 선수${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const setsEl=document.getElementById('gm-sets');if(!setsEl)return;
+  if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
+  let h='';
+  m.sets.forEach((set,si)=>{
+    const lbl=si===2?'🎯 에이스전':`${si+1}세트`;
+    const sA=set.scoreA||0,sB=set.scoreB||0;
+    h+=`<div class="set-block${si===2?' ace':''}">
+      <div class="set-title">
+        <span class="set-badge${si===2?' ace':''}">${lbl}</span>
+        <span style="font-size:12px;color:var(--gray-l)">경기 ${(set.games||[]).length}개 · <span class="${sA>sB?'wt':''}">${sA}</span>:<span class="${sB>sA?'wt':''}">${sB}</span></span>
+        <button class="btn btn-r btn-xs" onclick="bktDelSet(${si})">세트 삭제</button>
+      </div>`;
+    (set.games||[]).forEach((g,gi2)=>{
+      const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
+      const selA=optsA.replace(`value="${g.playerA}"`,`value="${g.playerA}" selected`);
+      const selB=optsB.replace(`value="${g.playerB}"`,`value="${g.playerB}" selected`);
+      h+=`<div class="game-row">
+        <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi2+1}</span>
+        <select onchange="bktSetGame(${si},${gi2},'playerA',this.value)">${selA}</select>
+        <span style="font-size:11px;color:var(--gray-l)">vs</span>
+        <select onchange="bktSetGame(${si},${gi2},'playerB',this.value)">${selB}</select>
+        <select onchange="bktSetGame(${si},${gi2},'map',this.value)" style="max-width:100px"><option value="">맵</option>${mapOpts}</select>
+        <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="bktSetGame(${si},${gi2},'winner','A');bktRefreshSets()">A 승</button>
+        <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="bktSetGame(${si},${gi2},'winner','B');bktRefreshSets()">B 승</button>
+        <button class="btn btn-r btn-xs" onclick="bktDelGame(${si},${gi2})">🗑️</button>
+      </div>`;
+    });
+    h+=`<button class="btn btn-w btn-sm" onclick="bktAddGame(${si})">+ 경기 추가</button></div>`;
+  });
+  setsEl.innerHTML=h;
+}
+
+function bktSetGame(si,gi,field,val){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  if(m.sets[si]&&m.sets[si].games[gi])m.sets[si].games[gi][field]=val;
+}
+function bktAddSet(){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;if(!m.sets)m.sets=[];
+  if(m.sets.length>=3){alert('최대 3세트(에이스전 포함)까지 가능합니다.');return;}
+  m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});bktRefreshSets();
+}
+function bktAddSet2(){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;if(!m.sets)m.sets=[];
+  if(m.sets.length>=3){alert('이미 최대 세트입니다.');return;}
+  if(m.sets.length<1)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
+  if(m.sets.length<2)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
+  bktRefreshSets();
+}
+function bktAddSet3(){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;if(!m.sets)m.sets=[];
+  if(m.sets.length>=3){alert('에이스전이 이미 있습니다.');return;}
+  while(m.sets.length<3)m.sets.push({games:[{playerA:'',playerB:'',winner:'',map:''}],scoreA:0,scoreB:0,winner:''});
+  bktRefreshSets();
+}
+function bktDelSet(si){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  m.sets.splice(si,1);bktRefreshSets();
+}
+function bktAddGame(si){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  if(!m.sets[si].games)m.sets[si].games=[];
+  m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:''});bktRefreshSets();
+}
+function bktDelGame(si,gi2){
+  const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  m.sets[si].games.splice(gi2,1);bktRefreshSets();
+}
+
+function bktSaveMatch(){
+  const {tnId,rnd,mi}=bracketMatchState;
+  const m=getBktMatch(tnId,rnd,mi);if(!m)return;
+  m.d=document.getElementById('gm-date')?.value||'';
+  m.a=document.getElementById('gm-a')?.value||'';
+  m.b=document.getElementById('gm-b')?.value||'';
+  if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
+  if(m._id)revertMatchRecord({...m,_id:m._id});
+  const matchId=genId();m._id=matchId;
+  let sa=0,sb=0;
+  (m.sets||[]).forEach(set=>{
+    let sA=0,sB=0;
+    (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+    set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
+    if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
+  });
+  m.sa=sa;m.sb=sb;
+  // 브라켓 승자 자동 업데이트
+  const tn=tourneys.find(t=>t.id===tnId);
+  if(tn){
+    const br=getBracket(tn);
+    const w=sa>sb?m.a:sb>sa?m.b:'';
+    if(w)br.winners[`${rnd}-${mi}`]=w;
+  }
+  (m.sets||[]).forEach(set=>{
+    (set.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+      const univW=g.winner==='A'?(m.a||''):(m.b||'');
+      const univL=g.winner==='A'?(m.b||''):(m.a||'');
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL);
+    });
+  });
+  window._bracketMatchMode=false;
+  save();cm('grpMatchModal');render();
+}
+
+function openBktShareCard(tnId,rnd,mi){
+  const m=getBktMatch(tnId,rnd,mi);if(!m||m.sa==null)return;
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  window._shareMatchObj={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+  _shareMode='match';
+  if(typeof openShareCardModal==='function'){openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);}
 }

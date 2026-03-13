@@ -1,11 +1,51 @@
 ﻿/* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */
-let _grpPasteState = null; // {tnId, gi, mi}
+let _grpPasteState = null; // {mode:'grp', tnId, gi, mi} or {mode:'bkt', tnId, rnd, mi}
+
+/* ── 브라켓 경기 붙여넣기 ── */
+function openBktPasteModal(){
+  const {tnId,rnd,mi,teamA,teamB}=bracketMatchState;
+  _grpPasteState={mode:'bkt',tnId,rnd,mi};
+  const m=getBktMatch(tnId,rnd,mi);if(!m)return;
+  const tA=document.getElementById('gm-a')?.value||teamA||m.a||'';
+  const tB=document.getElementById('gm-b')?.value||teamB||m.b||'';
+  window._grpPasteMode=true;
+  const textarea=document.getElementById('paste-input');
+  const previewEl=document.getElementById('paste-preview');
+  const applyBtn=document.getElementById('paste-apply-btn');
+  const badge=document.getElementById('paste-summary-badge');
+  const pendWarn=document.getElementById('paste-pending-warn');
+  if(textarea)textarea.value='';
+  if(previewEl)previewEl.innerHTML='';
+  if(applyBtn){applyBtn.style.display='none';applyBtn.textContent='✅ 세트에 적용';}
+  if(badge)badge.style.display='none';
+  if(pendWarn)pendWarn.style.display='none';
+  window._pasteResults=null;window._pasteErrors=null;
+  const dateInput=document.getElementById('paste-date');
+  if(dateInput)dateInput.value=m.d||new Date().toISOString().slice(0,10);
+  const modeSel=document.getElementById('paste-mode');
+  if(modeSel){modeSel.value='comp';modeSel.style.display='none';}
+  const modeLabel=document.getElementById('paste-mode-label');
+  if(modeLabel)modeLabel.style.display='none';
+  const hintEl=document.getElementById('paste-mode-hint');
+  if(hintEl)hintEl.innerHTML=`<span style="color:#1d4ed8;font-weight:700">⚔️ 브라켓 경기 입력 모드</span> — <b>팀A: ${tA}</b> vs <b>팀B: ${tB}</b>`;
+  const compWrap=document.getElementById('paste-comp-wrap');
+  if(compWrap){
+    const setOpts=(m.sets||[]).map((s,i)=>{const lbl=i===2?'🎯 에이스전':`${i+1}세트`;return`<option value="${i}">${lbl}</option>`;}).join('');
+    compWrap.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <label style="font-size:12px;font-weight:700">적용 세트:</label>
+      <select id="grp-paste-set-sel" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px">
+        <option value="new">새 세트 추가</option>${setOpts}
+      </select></div>`;
+    compWrap.style.display='block';
+  }
+  om('pasteModal');
+}
 
 /* ── 대회 경기 붙여넣기: 일반 pasteModal을 재활용 ── */
 function openGrpPasteModal(){
-  _grpPasteState = {...grpMatchState};
+  _grpPasteState = {...grpMatchState, mode:'grp'};
   const tn = tourneys.find(t=>t.id===grpMatchState.tnId); if(!tn) return;
   const grp = tn.groups[grpMatchState.gi];
   const m = grp.matches[grpMatchState.mi];
@@ -78,6 +118,10 @@ function grpPasteApply(){
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
+  // 브라켓 모드 분기
+  if(_grpPasteState.mode==='bkt'){
+    return _bktPasteApplyLogic(savable,tn);
+  }
   const m = tn.groups[_grpPasteState.gi].matches[_grpPasteState.mi];
   const teamA = document.getElementById('gm-a')?.value||m.a||'';
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
@@ -131,6 +175,58 @@ function _grpPasteApplyLogic(savable){
   save();
   grpRefreshSets();
 
+  const toast=document.createElement('div');
+  toast.textContent=`✅ ${savable.length}건 ${setIdx===2?'에이스전':(setIdx+1)+'세트'}에 추가됨!`;
+  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(),2500);
+  return true;
+}
+
+function _bktPasteApplyLogic(savable, tn){
+  const {rnd,mi}=_grpPasteState;
+  const m=getBktMatch(tn.id,rnd,mi);if(!m)return false;
+  const teamA=document.getElementById('gm-a')?.value||m.a||'';
+  const teamB=document.getElementById('gm-b')?.value||m.b||'';
+  let setIdxEl=document.getElementById('grp-paste-set-sel');
+  let setIdx=setIdxEl?setIdxEl.value:'new';
+  if(!m.sets)m.sets=[];
+  if(setIdx==='new'||setIdx===undefined){
+    if(m.sets.length>=3){alert('최대 3세트까지만 가능합니다.');return false;}
+    m.sets.push({games:[],scoreA:0,scoreB:0,winner:''});
+    setIdx=m.sets.length-1;
+  } else {setIdx=parseInt(setIdx);}
+  const set=m.sets[setIdx];
+  if(!set.games)set.games=[];
+  const teamANamesSet=new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet=new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  const _isWinnerInA=(r)=>{
+    const wn=r.wPlayer.name;
+    if(teamANamesSet.has(wn))return true;
+    if(teamBNamesSet.has(wn))return false;
+    return (r.leftName||r.winName)===wn;
+  };
+  savable.forEach(r=>{
+    const wn=r.wPlayer.name;const ln=r.lPlayer.name;
+    let pA='',pB='',winner='';
+    if(_isWinnerInA(r)){pA=wn;pB=ln;winner='A';}
+    else{pA=ln;pB=wn;winner='B';}
+    set.games.push({playerA:pA,playerB:pB,winner:winner,map:r.map||''});
+  });
+  let sA=0,sB=0;
+  set.games.forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+  set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
+  if(!m.a)m.a=teamA;if(!m.b)m.b=teamB;
+  const dateEl=document.getElementById('paste-date');
+  if(dateEl&&dateEl.value)m.d=dateEl.value;
+  const matchId=genId();
+  savable.forEach(r=>{
+    const wInA=_isWinnerInA(r);
+    const univW=wInA?teamA:teamB;const univL=wInA?teamB:teamA;
+    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL);
+  });
+  save();
+  bktRefreshSets();
   const toast=document.createElement('div');
   toast.textContent=`✅ ${savable.length}건 ${setIdx===2?'에이스전':(setIdx+1)+'세트'}에 추가됨!`;
   toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
