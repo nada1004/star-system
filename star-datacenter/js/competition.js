@@ -42,12 +42,11 @@ function rComp(C,T){
     subOpts=[
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
-      {id:'tour',lbl:'⚔️ 대진표'},
       {id:'tourschedule',lbl:'📋 토너먼트 경기 일정'},
       {id:'comprank',lbl:'🏅 개인 순위'},
       ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
     ];
-    if(compSub==='tiertour'||compSub==='input') compSub='league';
+    if(compSub==='tiertour'||compSub==='input'||compSub==='tour') compSub='league';
   }
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${compSub===o.id?'on':''}" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
 
