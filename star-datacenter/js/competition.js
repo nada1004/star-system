@@ -476,7 +476,15 @@ function bktDelManualMatch(tnId,idx){
 }
 
 function openBktBulkPaste(tnId){
-  if(typeof openCompPasteModal==='function')openCompPasteModal();
+  // 새 수동 매치 생성 후 바로 붙여넣기 모달 열기
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const br=getBracket(tn);
+  if(!br.manualMatches)br.manualMatches=[];
+  br.manualMatches.push({a:'',b:'',d:new Date().toISOString().slice(0,10),rndLabel:'',sa:null,sb:null,sets:[],_id:null});
+  const idx=br.manualMatches.length-1;
+  save();
+  bracketMatchState={tnId,rnd:-1,mi:idx,teamA:'',teamB:''};
+  openBktPasteModal();
 }
 
 /* ══════════════════════════════════════
