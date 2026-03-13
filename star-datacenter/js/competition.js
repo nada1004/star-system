@@ -43,10 +43,11 @@ function rComp(C,T){
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
       {id:'tour',lbl:'⚔️ 대진표'},
+      {id:'tourschedule',lbl:'📋 토너먼트 경기 일정'},
       {id:'comprank',lbl:'🏅 개인 순위'},
-      ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'},{id:'input',lbl:'📝 경기 입력'}]:[]),
+      ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
     ];
-    if(compSub==='tiertour') compSub='league';
+    if(compSub==='tiertour'||compSub==='input') compSub='league';
   }
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${compSub===o.id?'on':''}" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
 
@@ -63,12 +64,10 @@ function rComp(C,T){
   if(compSub==='league') h+=rCompLeague(tn);
   else if(compSub==='grprank') h+=rCompGrpRankFull(tn);
   else if(compSub==='tour') h+=rCompTour();
+  else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
   else if(compSub==='grpedit') h+=rCompGrpEdit();
   else if(compSub==='tiertour') h+=rTierTour();
-  else if(compSub==='input') h+=`<div class="match-builder"><h3>🎖️ 대회 경기 결과 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openCompPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-    <div style="font-size:12px;color:var(--gray-l);padding:16px;text-align:center;border:1.5px dashed var(--border);border-radius:10px">붙여넣기 버튼으로 경기 결과를 일괄 입력하세요</div></div>`;
   C.innerHTML=h;
 }
 
@@ -286,10 +285,7 @@ function rCompGrpRankFull(tn){
 function rCompTour(){
   const tn=getCurrentTourney();
   if(tn){
-    return `<div>
-      ${rCompTourDynamic(tn)}
-      ${rBracketSchedule(tn)}
-    </div>`;
+    return rCompTourDynamic(tn);
   }
   // fallback: tourney 없을 때 기존 수동 8강 (레거시)
   const allU=getAllUnivs();
@@ -423,7 +419,7 @@ function rBracketSchedule(tn){
   const done=matches.filter(m=>m.isDone);
   const pending=matches.filter(m=>!m.isDone);
 
-  let h=`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
+  let h=`<div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">⚔️ 토너먼트 경기 일정</span>
       ${isLoggedIn?`<button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>`:''}

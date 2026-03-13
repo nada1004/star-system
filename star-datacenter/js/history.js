@@ -632,6 +632,7 @@ function getTourneyMatches(){
   const result=[];
   if(!Array.isArray(tourneys))return result;
   (tourneys||[]).forEach(tn=>{
+    // 조별리그 경기
     (tn.groups||[]).forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi]||String(gi);
       const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
@@ -644,6 +645,27 @@ function getTourneyMatches(){
           sa:m.sa,sb:m.sb,sets:m.sets||[],
           grpName:grp.name,grpLetter:gl,grpColor:col
         });
+      });
+    });
+    // 브라켓 경기 (matchDetails)
+    const br=tn.bracket||{};
+    Object.entries(br.matchDetails||{}).forEach(([key,m])=>{
+      if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
+      result.push({
+        _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
+        d:m.d||'',n:tn.name,a:m.a,b:m.b,
+        sa:m.sa,sb:m.sb,sets:m.sets||[],
+        grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
+      });
+    });
+    // 수동 추가 브라켓 경기 (manualMatches)
+    (br.manualMatches||[]).forEach((m,idx)=>{
+      if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
+      result.push({
+        _src:'tour_manual',_tnId:tn.id,_manualIdx:idx,
+        d:m.d||'',n:tn.name,a:m.a,b:m.b,
+        sa:m.sa,sb:m.sb,sets:m.sets||[],
+        grpName:m.rndLabel||'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
       });
     });
   });
