@@ -376,43 +376,39 @@ function rBracketSchedule(tn){
     const detId=`bsched-det-${r==-1?'m'+mi:r+'-'+mi}`;
     const hasGames=detail?.sets?.some(s=>(s.games||[]).some(g=>g.playerA||g.playerB));
     const dateStr=detail?.d||'';
-    return `<div class="grp-match-card" style="border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
-        <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
-        ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}
-        ${isDone?`<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #86efac">✓ 완료</span>`:`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`}
-      </div>
-      <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
-        <div style="text-align:center;min-width:100px">
-          <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${ca||'#888'};padding:10px 16px;border-radius:12px;${aWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+ca:isDone?'opacity:.5;filter:saturate(0.6)':''}">
-            <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamA||'미정'}</span>
+    return `<div style="margin-bottom:8px">
+      <div class="grp-match-card" style="border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);margin-bottom:0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
+          <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
+          ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}
+          ${isDone?`<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #86efac">✓ 완료</span>`:`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`}
+        </div>
+        <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+          <div style="text-align:center;min-width:100px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${ca||'#888'};padding:10px 16px;border-radius:12px;${aWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+ca:isDone?'opacity:.5;filter:saturate(0.6)':''}">
+              <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamA||'미정'}</span>
+            </div>
+          </div>
+          <div style="text-align:center;min-width:80px">
+            ${isDone?`<div style="padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span></div>
+            <div style="margin-top:4px;font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'}">${winner?winner+' 승':''}</div>
+            ${hasGames?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:''}
+            `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
+          </div>
+          <div style="text-align:center;min-width:100px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${cb||'#888'};padding:10px 16px;border-radius:12px;${bWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+cb:isDone?'opacity:.5;filter:saturate(0.6)':''}">
+              <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamB||'미정'}</span>
+            </div>
           </div>
         </div>
-        <div style="text-align:center;min-width:80px">
-          ${isDone?`<div style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="bktToggleDet('${detId}',document.getElementById('detbtn-${detId}'))"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span></div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'}">${winner?winner+' 승':''}</div>
-          <button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="bktToggleDet('${detId}',this)">📂 상세</button>
-          `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
-        </div>
-        <div style="text-align:center;min-width:100px">
-          <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${cb||'#888'};padding:10px 16px;border-radius:12px;${bWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+cb:isDone?'opacity:.5;filter:saturate(0.6)':''}">
-            <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamB||'미정'}</span>
-          </div>
-        </div>
-      </div>
-      ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 결과</button>
-        <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openBktSchedulePaste('${tn.id}',${r},${mi},'${teamA}','${teamB}')">📋 붙여넣기</button>
-        ${isDone?`<button class="btn btn-xs" style="background:#f5f3ff;border:1px solid #7c3aed;color:#7c3aed;white-space:nowrap" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유카드</button>`:''}
-        ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:''}
-      </div>`:''}
-      <div id="${detId}" style="display:none;margin-top:8px;padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-        ${isDone&&detail?buildDetailHTML(detail,'comp',teamA||'A팀',teamB||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">상세 기록이 없습니다.</div>'}
-        ${isDone?`<div style="margin-top:8px;display:flex;gap:6px" class="no-export">
-          <button class="btn-capture btn-xs" onclick="captureDetail('${detId}','토너먼트_${(detail?.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
-          <button class="btn btn-p btn-xs" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>
+        ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
+          <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 결과</button>
+          ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:''}
         </div>`:''}
       </div>
+      ${hasGames?`<div id="${detId}" style="display:none;padding:12px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none;margin-top:-1px">
+        ${buildDetailHTML(detail,'comp',teamA||'A팀',teamB||'B팀',ca,cb,aWin,bWin)}
+      </div>`:''}
     </div>`;
   }
 
