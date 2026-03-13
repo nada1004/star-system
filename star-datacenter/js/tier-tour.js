@@ -186,8 +186,8 @@ function _grpPasteApplyLogic(savable){
 function _bktPasteApplyLogic(savable, tn){
   const {rnd,mi}=_grpPasteState;
   const m=getBktMatch(tn.id,rnd,mi);if(!m)return false;
-  const teamA=document.getElementById('gm-a')?.value||m.a||'';
-  const teamB=document.getElementById('gm-b')?.value||m.b||'';
+  const teamA=document.getElementById('gm-a')?.value||m.a||bracketMatchState?.teamA||'';
+  const teamB=document.getElementById('gm-b')?.value||m.b||bracketMatchState?.teamB||'';
   let setIdxEl=document.getElementById('grp-paste-set-sel');
   let setIdx=setIdxEl?setIdxEl.value:'new';
   if(!m.sets)m.sets=[];
