@@ -894,8 +894,12 @@ function openEP(name){
     <label>대학</label><select id="ed-u">${getAllUnivs().map(u=>`<option value="${u.name}"${p.univ===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
     <label>종족</label><select id="ed-r"><option value="T"${p.race==='T'?' selected':''}>테란</option><option value="Z"${p.race==='Z'?' selected':''}>저그</option><option value="P"${p.race==='P'?' selected':''}>프로토스</option><option value="N"${p.race==='N'?' selected':''}>종족미정</option></select>
     <label>성별</label><select id="ed-g"><option value="F"${(p.gender||'F')==='F'?' selected':''}>👩 여자</option><option value="M"${p.gender==='M'?' selected':''}>👨 남자</option></select>
-    <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용)</span></label>
-    <input type="text" id="ed-role" value="${p.role||''}" placeholder="예: 이사장, 총장, 부총장, 총괄, 교수, 코치, 학생회장, 오락부장 등" style="width:100%">
+    <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/선장/동아리장/반장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용)</span></label>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+      ${MAIN_ROLES.map(r=>{const ic=ROLE_ICONS[r]||'🏷️';const col=ROLE_COLORS[r]||'#6b7280';return `<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${r}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${col};background:${p.role===r?col+'22':'var(--white)'};color:${col};font-size:11px;font-weight:700;cursor:pointer">${ic} ${r}</button>`;}).join('')}
+      <button type="button" onclick="document.getElementById('ed-role').value=''" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">✕ 없음</button>
+    </div>
+    <input type="text" id="ed-role" value="${p.role||''}" placeholder="직책 직접 입력 또는 위 버튼 클릭" style="width:100%">
     <label>🖼 프로필 사진 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시 · 비워두면 기본 아이콘)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="const v=this.value.trim();const img=document.getElementById('ed-photo-preview');if(v){img.src=v;img.style.display='block';}else{img.style.display='none';}">
@@ -984,11 +988,15 @@ function openEPFromModal(nameArg){
 }
 function savePlayer(){
   const p=players.find(x=>x.name===editName);
-  const newName=document.getElementById('ed-n').value.trim();
+  if(!p){alert('선수를 찾을 수 없습니다. 모달을 닫고 다시 시도하세요.');return;}
+  const newName=(document.getElementById('ed-n')?.value||'').trim();
+  if(!newName){alert('이름을 입력하세요.');return;}
   const oldName=editName;
 
   // 이름 변경 시 모든 기록 자동 갱신
-  if(newName && newName !== oldName){
+  if(newName !== oldName){
+    if(players.some(x=>x.name===newName)){alert(`"${newName}"은(는) 이미 존재하는 이름입니다.`);return;}
+
     // 히스토리 내 상대방 이름 갱신
     players.forEach(other=>{
       (other.history||[]).forEach(h=>{
@@ -1030,7 +1038,8 @@ function savePlayer(){
     });
   }
 
-  p.name=newName||oldName;
+  p.name=newName;
+  editName=p.name;
   p.tier=document.getElementById('ed-t').value;
   p.univ=document.getElementById('ed-u').value;
   p.race=document.getElementById('ed-r').value;

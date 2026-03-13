@@ -44,13 +44,16 @@ function miniRankHTML(data){
   });
   const sorted=Object.entries(sc).filter(([,s])=>s.total>0).sort((a,b)=>b[1].pts-a[1].pts);
   const rankTitle = miniType==='civil'?'⚔️ 시빌워 팀별 순위':'🏆 미니대전 대학별 순위';
+  const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">${rankTitle}</div>
-  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th></tr></thead><tbody>`;
-  if(!sorted.length)h+=`<tr><td colspan="5" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
+  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
+  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${name}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td></tr>`;
+    const sn=name.replace(/'/g,"\\'");
+    const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','mini')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 미니대전 기록 삭제">🗑</button></td>`:'';
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   return h+`</tbody></table>`;
 }
@@ -615,13 +618,16 @@ function univMRankHTML(){
     else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;}
   });
   const sorted=Object.entries(sc).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts);
+  const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 대학대전 대학별 순위</div>
-  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th></tr></thead><tbody>`;
-  if(!sorted.length)h+=`<tr><td colspan="5" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
+  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
+  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${name}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td></tr>`;
+    const sn=name.replace(/'/g,"\\'");
+    const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','univm')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 대학대전 기록 삭제">🗑</button></td>`:'';
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   return h+`</tbody></table>`;
 }
@@ -959,4 +965,19 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
     </div>` : ''}
     <div style="margin-top:12px;text-align:right;font-size:8px;color:#c4b5fd;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
   </div>`;
+}
+
+/* ══════════════════════════════════════
+   대학 순위 삭제 (관리자 전용)
+══════════════════════════════════════ */
+function deleteUnivFromRank(name, mode){
+  if(!isLoggedIn) return;
+  const label = mode==='univm'?'대학대전':'미니대전';
+  if(!confirm(`"${name}" 대학의 모든 ${label} 경기 기록을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if(mode==='univm'){
+    univM = univM.filter(m=>m.a!==name&&m.b!==name);
+  } else {
+    miniM = miniM.filter(m=>m.a!==name&&m.b!==name);
+  }
+  save(); render();
 }

@@ -286,7 +286,15 @@ function rCompTour(){
   const tn=getCurrentTourney();
   // tourney가 있으면 항상 동적 브라켓 사용 (그룹 없어도 수동 팀 선택 가능)
   if(tn){
-    return rCompTourDynamic(tn);
+    // 2-패널 레이아웃: 좌측 조별리그 일정 + 우측 브라켓
+    const schedulePanel=`<div style="flex:0 0 340px;max-width:340px;min-width:260px;overflow-y:auto;max-height:760px;border-right:2px solid var(--border);padding-right:16px;margin-right:0">
+      <div style="font-weight:900;font-size:13px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">📅 조별리그 일정</div>
+      ${rCompLeague(tn)}
+    </div>`;
+    const bracketPanel=`<div style="flex:1;overflow-x:auto;padding-left:16px">
+      ${rCompTourDynamic(tn)}
+    </div>`;
+    return `<div style="display:flex;gap:0;align-items:flex-start;flex-wrap:wrap">${schedulePanel}${bracketPanel}</div>`;
   }
   // fallback: tourney 없을 때 기존 수동 8강 (레거시)
   const allU=getAllUnivs();
