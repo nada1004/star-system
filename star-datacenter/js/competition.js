@@ -401,8 +401,8 @@ function rBracketSchedule(tn){
         </div>
       </div>
       ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 결과</button>
-        <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openBktSchedulePaste('${tn.id}',${r},${mi},'${teamA}','${teamB}')">📋 붙여넣기</button>
+        ${!isDone?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 결과</button>
+        <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openBktSchedulePaste('${tn.id}',${r},${mi},'${teamA}','${teamB}')">📋 붙여넣기</button>`:''}
         ${isDone?`<button class="btn btn-xs" style="background:#f5f3ff;border:1px solid #7c3aed;color:#7c3aed;white-space:nowrap" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유카드</button>`:''}
         ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:''}
       </div>`:''}
