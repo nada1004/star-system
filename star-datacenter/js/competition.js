@@ -45,7 +45,7 @@ function rComp(C,T){
       <option value="">— 대회를 선택하세요 —</option>
       ${tourneys.map(t=>`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}${t.type==='tier'?' 🎯':''}</option>`).join('')}
     </select>
-    ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="grpNewLeagueTourney()">+ 일반 대회</button><button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 티어 대회</button>`:''}
+    ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="grpNewLeagueTourney()">+ 일반 대회</button>`:''}
     ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="grpDelCurTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
     ${tn?`<span style="font-size:11px;color:var(--gray-l)">${tnType==='tier'?'🎯 티어대회':('🏆 '+tn.groups.length+'개 조 · '+tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0)+'경기')}</span>`:''}
   </div>`;
@@ -74,7 +74,7 @@ function rComp(C,T){
       <div style="font-size:44px;margin-bottom:14px">🏆</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:8px">등록된 대회가 없습니다</div>
       <div style="color:var(--gray-l);margin-bottom:20px">새 대회를 만들어 조편성을 시작하세요.</div>
-      ${isLoggedIn?`<button class="btn btn-b" onclick="grpNewLeagueTourney()">+ 일반 대회 만들기</button> <button class="btn btn-p" onclick="grpNewTierTourney()">+ 티어 대회 만들기</button>`:''}
+      ${isLoggedIn?`<button class="btn btn-b" onclick="grpNewLeagueTourney()">+ 일반 대회 만들기</button>`:''}
     </div>`;
     C.innerHTML=h; return;
   }

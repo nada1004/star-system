@@ -499,7 +499,7 @@ function saveMatch(mode){
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:curComp||''
+      compName:(curTab==='tiertour'?_ttCurComp:curComp)||''
     });
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
