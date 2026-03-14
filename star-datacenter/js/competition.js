@@ -36,6 +36,8 @@ function rComp(C,T){
   T.innerText='🎖️ 대회';
   if(!isLoggedIn && compSub==='grpedit') compSub='league';
 
+  // tier 타입 대회가 curComp에 선택되어 있으면 초기화
+  if(curComp && tourneys.find(t=>t.name===curComp&&t.type==='tier')) curComp='';
   const tn=getCurrentTourney();
   const tnType=tn?tn.type||'league':'league'; // 'league' or 'tier'
 
@@ -43,7 +45,7 @@ function rComp(C,T){
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tourneys.map(t=>`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}${t.type==='tier'?' 🎯':''}</option>`).join('')}
+      ${tourneys.filter(t=>t.type!=='tier').map(t=>`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}</option>`).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="grpNewLeagueTourney()">+ 일반 대회</button>`:''}
     ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="grpDelCurTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
