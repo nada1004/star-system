@@ -1,6 +1,22 @@
 ﻿/* ══════════════════════════════════════
    대회 (조별리그 + 조편성 관리 + 대진표 + 개인순위)
 ══════════════════════════════════════ */
+
+// 조별 순위 계산 공통 함수 (rBracketSchedule, rCompTourDynamic 공유)
+function _calcGrpRank(grp){
+  const st={};
+  (grp.univs||[]).forEach(u=>{st[u]={w:0,l:0,sw:0,sl:0};});
+  (grp.matches||[]).forEach(m=>{
+    if(!m.a||!m.b||m.sa==null||m.sb==null)return;
+    if(!st[m.a])st[m.a]={w:0,l:0,sw:0,sl:0};
+    if(!st[m.b])st[m.b]={w:0,l:0,sw:0,sl:0};
+    if(m.sa>m.sb){st[m.a].w++;st[m.b].l++;}
+    else if(m.sb>m.sa){st[m.b].w++;st[m.a].l++;}
+    st[m.a].sw+=m.sa;st[m.a].sl+=m.sb;
+    st[m.b].sw+=m.sb;st[m.b].sl+=m.sa;
+  });
+  return Object.entries(st).map(([u,s])=>({u,...s})).sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);
+}
 let leagueFilterDate='';
 let leagueFilterGrp='';
 let grpRankFilter='';
@@ -295,10 +311,8 @@ function rCompGrpRankFull(tn){
 function rBracketSchedule(tn){
   if(!tn)return '';
   const br=getBracket(tn);
-  // 조별 순위에서 진출팀 자동 계산 (대진표와 동일 로직)
-  function _grpRankBS(grp){const st={};(grp.univs||[]).forEach(u=>{st[u]={w:0,l:0,sw:0,sl:0};});(grp.matches||[]).forEach(m=>{if(!m.a||!m.b||m.sa==null||m.sb==null)return;if(!st[m.a])st[m.a]={w:0,l:0,sw:0,sl:0};if(!st[m.b])st[m.b]={w:0,l:0,sw:0,sl:0};if(m.sa>m.sb){st[m.a].w++;st[m.b].l++;}else if(m.sb>m.sa){st[m.b].w++;st[m.a].l++;}st[m.a].sw+=m.sa;st[m.a].sl+=m.sb;st[m.b].sw+=m.sb;st[m.b].sl+=m.sa;});return Object.entries(st).map(([u,s])=>({u,...s})).sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);}
   const _grpsB=(tn.groups&&tn.groups.length>=2)?tn.groups:[];
-  const _rankedB=_grpsB.map(grp=>_grpRankBS(grp));
+  const _rankedB=_grpsB.map(grp=>_calcGrpRank(grp));
   const _pcB=Math.floor(_rankedB.length/2)*2;
   const _r1teamsB=[];
   for(let _i=0;_i<_pcB;_i+=2){const gA=_rankedB[_i],gB=_rankedB[_i+1];_r1teamsB.push(gA?.[0]?.u||'',gB?.[0]?.u||'',gB?.[1]?.u||'',gA?.[1]?.u||'');}
@@ -414,7 +428,7 @@ function rBracketSchedule(tn){
         <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';render()">오래된순</button>
       </div>
     </div>
-    ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delBtn=isLoggedIn&&rv!=='전체'&&_ri?`<button onclick="bktDelRound('${tn.id}',${_ri.r},${_ri.matchCount},'${rv}')" style="padding:2px 5px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:9px;cursor:pointer;line-height:1" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
+    ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:2px 5px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:9px;cursor:pointer;line-height:1" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
     `;
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){
@@ -553,26 +567,10 @@ function resetBracket(tnId){
 
 /* ── 동적 브라켓 시각화 (스포츠 대진표 스타일) ── */
 function rCompTourDynamic(tn){
-  function getGrpRank(grp){
-    const stat={};
-    (grp.univs||[]).forEach(u=>{stat[u]={w:0,l:0,sw:0,sl:0};});
-    (grp.matches||[]).forEach(m=>{
-      if(!m.a||!m.b||m.sa==null||m.sb==null)return;
-      if(!stat[m.a])stat[m.a]={w:0,l:0,sw:0,sl:0};
-      if(!stat[m.b])stat[m.b]={w:0,l:0,sw:0,sl:0};
-      if(m.sa>m.sb){stat[m.a].w++;stat[m.b].l++;}
-      else if(m.sb>m.sa){stat[m.b].w++;stat[m.a].l++;}
-      stat[m.a].sw+=m.sa;stat[m.a].sl+=m.sb;
-      stat[m.b].sw+=m.sb;stat[m.b].sl+=m.sa;
-    });
-    return Object.entries(stat).map(([u,s])=>({u,w:s.w,l:s.l,sw:s.sw,sl:s.sl}))
-      .sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);
-  }
-
   const grpRanks=(tn.groups&&tn.groups.length>=2)?tn.groups.map((grp,gi)=>{
     const gl='ABCDEFGHIJ'[gi]||String(gi+1);
     const color=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-    return{grpName:grp.name||('조'+gl),color,ranked:getGrpRank(grp)};
+    return{grpName:grp.name||('조'+gl),color,ranked:_calcGrpRank(grp)};
   }):[];
 
   const numGroups=grpRanks.length;

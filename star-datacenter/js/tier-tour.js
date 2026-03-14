@@ -495,9 +495,6 @@ function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
-function bindLeagueDateBtns(){}
-
-
 /* ══════════════════════════════════════
    회원 관리 (rMember)
 ══════════════════════════════════════ */
