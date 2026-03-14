@@ -108,6 +108,7 @@ let notices    = J('su_notices') || [];
 
 let BLD = {};
 let openDetails = {};
+let tierRankModeFilter = '전체';
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
 let playerStatusIcons = J('su_psi') || {};

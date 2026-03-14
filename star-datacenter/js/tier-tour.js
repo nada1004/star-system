@@ -218,6 +218,10 @@ function _grpPasteApplyLogic(savable){
   set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
   if(!m.a) m.a=teamA;
   if(!m.b) m.b=teamB;
+  // 경기 팀 점수 (세트 승수) 업데이트 → 조별리그 일정에 결과 표시
+  let mSA=0,mSB=0;
+  (m.sets||[]).forEach(s=>{ if(s.winner==='A')mSA++; else if(s.winner==='B')mSB++; });
+  m.sa=mSA; m.sb=mSB;
   const dateEl = document.getElementById('paste-date');
   if(dateEl&&dateEl.value) m.d=dateEl.value;
 

@@ -409,6 +409,26 @@ function buildPlayerDetailHTML(p){
   });
   h+=`</div>`;
 
+  // ── 모드별 전적 ──
+  const modeBdColors={'미니대전':'#7c3aed','대학대전':'#7c3aed','대학CK':'#dc2626','조별리그':'#2563eb','토너먼트':'#16a34a','대회':'#d97706','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6'};
+  const modeOrder=['미니대전','대학대전','대학CK','대회','조별리그','토너먼트','프로리그','티어대회','끝장전'];
+  const modeStats={};
+  (p.history||[]).forEach(hh=>{if(hh.mode){if(!modeStats[hh.mode])modeStats[hh.mode]={w:0,l:0};if(hh.result==='승')modeStats[hh.mode].w++;else modeStats[hh.mode].l++;}});
+  const modeEntries=modeOrder.filter(m=>modeStats[m]&&(modeStats[m].w+modeStats[m].l)>0);
+  if(modeEntries.length){
+    h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">`;
+    modeEntries.forEach(m=>{
+      const s=modeStats[m];const t=s.w+s.l;const wr=Math.round(s.w/t*100);
+      const mc=modeBdColors[m]||'#6b7280';
+      h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;min-width:80px;text-align:center">
+        <div style="font-size:10px;color:${mc};font-weight:700;margin-bottom:2px">${m}</div>
+        <div><span class="wt">${s.w}승</span> <span class="lt">${s.l}패</span></div>
+        <div style="font-size:11px;font-weight:700;color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
   // ── 상대 전적 ──
   const oppList=Object.entries(opps).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
   if(oppList.length){
