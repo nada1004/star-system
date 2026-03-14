@@ -1902,7 +1902,7 @@ function pasteApply() {
       if(ab.playerB&&!mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
     const ttSA=ttSetsSnap.filter(s=>s.winner==='A').length, ttSB=ttSetsSnap.filter(s=>s.winner==='B').length;
-    ttM.unshift({_id:matchId,d:dateVal,n:compName||'',sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{}});
+    ttM.unshift({_id:matchId,d:dateVal,n:compName||'',sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:compName||''});
   }
   // individual: 개인 전적만 (이미 applyGameResult 처리됨)
 
@@ -2128,6 +2128,12 @@ function openTTPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) {
+    const inp = compWrap.querySelector('#paste-comp-name');
+    if (inp) inp.placeholder = '티어대회명 입력 (선택)';
+    compWrap.style.display = 'flex';
+  }
 }
 
 /* ── 대회 전용 붙여넣기 ── */
