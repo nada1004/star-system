@@ -84,7 +84,11 @@ function rComp(C,T){
   else if(compSub==='tour') h+=tn?rCompTourDynamic(tn):'';
   else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
-  else if(compSub==='grpedit') h+=rCompGrpEdit();
+  else if(compSub==='grpedit'){
+    // 현재 선택된 대회가 있으면 바로 그 대회 편집 화면으로 이동
+    if(tn){grpEditId=tn.id;grpSub='edit';}
+    h+=rCompGrpEdit();
+  }
   else if(compSub==='tiertour') h+=rTierTour();
   C.innerHTML=h;
 }

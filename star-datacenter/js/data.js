@@ -5,9 +5,23 @@
    - 어떤 경우에도 win/loss/points 차감
 ══════════════════════════════════════ */
 function revertMatchRecord(matchObj){
-  if(!matchObj||!matchObj.sets)return;
+  if(!matchObj)return;
   const mid=matchObj._id||null;
   const mdate=matchObj.d||'';
+  // sets 없는 경우(스코어만 입력된 경기): matchId 기반으로 history에서 직접 제거
+  if(!matchObj.sets||!matchObj.sets.length){
+    if(!mid)return;
+    players.forEach(p=>{
+      const idx=p.history.findIndex(h=>h.matchId===mid);
+      if(idx>=0){
+        const hr=p.history[idx];
+        if(hr.result==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;if(hr.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)-hr.eloDelta;}
+        else if(hr.result==='패'){p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;if(hr.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)-hr.eloDelta;}
+        p.history.splice(idx,1);
+      }
+    });
+    return;
+  }
 
   matchObj.sets.forEach(set=>{
     if(!set.games)return;
