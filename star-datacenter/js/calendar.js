@@ -185,7 +185,6 @@
           <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">
             ${detHTML}
             ${hasResult?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px" class="no-export">
-              <button class="btn-capture btn-xs" onclick="captureDetail('det-${detKey}','${calDayDate}_match')">📷 이미지 저장</button>
               <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>
             </div>`:''}
           </div>
@@ -282,7 +281,6 @@ function calShowDay(ds){
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'
       +detHTML
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-      +'<button class="btn-capture btn-xs no-export" onclick="captureDetail(\'det-'+detKey+'\',\''+ds+'_match\')">📷 이미지 저장</button>'
       +' <button class="btn btn-p btn-xs no-export" onclick="openCalMatchShareCardByCache(\''+ds+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
       +'</div>'
       +'</div>'

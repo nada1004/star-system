@@ -18,7 +18,7 @@
   let h=`<div class="stabs no-export">`;
   tabs.forEach(t=>{h+=`<button class="stab ${histSub===t.id?'on':''}" onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()">${t.lbl}</button>`;});
   h+=`</div>`;
-  const needDateFilter=['mini','ck','univm','comp','tourney','pro'].includes(histSub);
+  const needDateFilter=['mini','ck','univm','comp','tourney','pro','race'].includes(histSub);
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
@@ -137,7 +137,6 @@ function histTourneyHTML(context){
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
             ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <button class="btn-capture btn-xs" onclick="captureDetail('det-${key}','대회_${(m.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
               <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
               ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
               <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
@@ -267,7 +266,6 @@ function rHistUnivStat(){
           ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin)}
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','대회_${m.d||'match'}')">📷 이미지 저장</button>
               <button class="btn btn-p btn-xs no-export" onclick="_shareMode='match';window._shareMatchObj={a:'${a.replace(/'/g,"\\'")}',b:'${b.replace(/'/g,"\\'")}',sa:${m.sa||0},sb:${m.sb||0},d:'${(m.d||'').replace(/'/g,"\\'")}',n:'${(m.n||'대회').replace(/'/g,"\\'")}',sets:[]};openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             </div>
           </div>
@@ -354,7 +352,6 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
             <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
           </div>
         </div>
@@ -488,7 +485,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn-capture btn-xs no-export" onclick="captureDetail('det-${key}','${m.d||'match'}')">📷 이미지 저장</button>
             <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
             ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
@@ -720,7 +716,6 @@ function compSummaryListHTML(context){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:#fffbeb;border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn-capture btn-xs" onclick="captureDetail('det-${key}','대회_${(m.d||'match').replace(/\\//g,'-')}')">📷 이미지 저장</button>
             <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
             ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>

@@ -250,7 +250,9 @@ function openShareCardFromUniv(){
 }
 function openShareCardFromMatch(mode,idx){
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:mode==='tt'?ttM:miniM;
-  window._shareMatchObj=arr[idx]||null;
+  const m=arr[idx]||null;
+  const isCKorPro=(mode==='ck'||mode==='pro');
+  window._shareMatchObj=m?{...m,_noUnivIcon:isCKorPro}:null;
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{
