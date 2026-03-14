@@ -294,15 +294,19 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner) {
 /* ══════════════════════════════════════
    끝장전 — 삭제 헬퍼
 ══════════════════════════════════════ */
-function _removeGjResult(wName, lName, date, map){
+function _removeGjResult(wName, lName, date, map, matchId){
   const w=players.find(p=>p.name===wName);
   const l=players.find(p=>p.name===lName);
   if(!w||!l)return;
   const nm=v=>(!v||v==='-')?'-':v;
-  const wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  const wi=matchId
+    ? w.history.findIndex(h=>h.matchId===matchId)
+    : w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
   let delta=0;
   if(wi>=0){delta=w.history[wi].eloDelta||0;w.history.splice(wi,1);}
-  const li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  const li=matchId
+    ? l.history.findIndex(h=>h.matchId===matchId)
+    : l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
   if(li>=0)l.history.splice(li,1);
   if(w.win>0)w.win--;if(l.loss>0)l.loss--;
   w.points-=3;l.points+=3;
@@ -310,11 +314,11 @@ function _removeGjResult(wName, lName, date, map){
 }
 function deleteGjGame(idx){
   const m=gjM[idx];if(!m)return;
-  _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-');
+  _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined);
   gjM.splice(idx,1);save();render();
 }
 function deleteGjSession(idsArr){
-  gjM.filter(m=>idsArr.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-'));
+  gjM.filter(m=>idsArr.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined));
   gjM=gjM.filter(m=>!idsArr.includes(m._id));save();render();
 }
 

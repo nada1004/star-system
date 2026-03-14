@@ -237,7 +237,6 @@ let fUniv='전체', fTier='전체';
 let miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
 let miniType='mini'; // 'mini' | 'civil'
 let histUniv='';
-let searchTarget='';
 let recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
 let vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 
@@ -349,7 +348,7 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
-function applyGameResult(winName, loseName, date, map, matchId, univW, univL){
+function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   const w=players.find(p=>p.name===winName);
   const l=players.find(p=>p.name===loseName);
   if(!w||!l||w===l)return;
@@ -366,6 +365,6 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL){
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu});
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }

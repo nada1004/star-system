@@ -175,7 +175,7 @@ function _grpPasteApplyLogic(savable){
     const wInA=_isWinnerInA(r);
     const univW=wInA?teamA:teamB;
     const univL=wInA?teamB:teamA;
-    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId, univW, univL);
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateEl?.value||'', r.map||'-', matchId, univW, univL, '조별리그');
   });
 
   save();
@@ -250,7 +250,7 @@ function _bktPasteApplyLogic(savable, tn){
   savable.forEach(r=>{
     const wInA=_isWinnerInA(r);
     const univW=wInA?teamA:teamB;const univL=wInA?teamB:teamA;
-    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL);
+    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL,'토너먼트');
   });
   save();
   const _matchModal=document.getElementById('grpMatchModal');
@@ -1008,7 +1008,7 @@ function recMatch(){
   const w=players.find(p=>p.name===wN);const l=players.find(p=>p.name===lN);
   if(!w||!l||w===l)return alert('선수를 올바르게 선택하세요.');
   const m=document.getElementById('m-map').value;const d=document.getElementById('m-date').value;
-  applyGameResult(wN,lN,d,m,genId());
+  applyGameResult(wN,lN,d,m,genId(),'','','개인전');
   document.getElementById('ws').value='';document.getElementById('ls').value='';save();render();
 }
 function openEP(name){

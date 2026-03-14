@@ -1810,11 +1810,12 @@ function pasteApply() {
   }
 
   // 개인 전적 반영 (경기 시점 대학도 저장)
+  const _pasteModeLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',pro:'프로리그',comp:'조별리그',individual:'개인전'}[mode]||'';
   savable.forEach(r => {
     const _ab = resolveAB(r);
     const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
     const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
-    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL);
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL, _pasteModeLabel);
   });
 
   // 모드별 기록 추가
@@ -2717,7 +2718,7 @@ function proApply() {
   }
 
   // 개인 전적 반영 (승자=wPlayer 그대로)
-  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId));
+  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
 
   // A조/B조 멤버 목록 (팀 배정 기준으로)
   const mA=[], mB=[];

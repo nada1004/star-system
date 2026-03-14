@@ -347,6 +347,7 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
+  const _modeLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그'}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
     const freeGames=bld.freeGames||[];
@@ -359,7 +360,7 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL);
+      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
     });
     
     let totalA=0,totalB=0;
@@ -432,7 +433,7 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL);
+      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
     });
   });
   if(mode==='mini'){

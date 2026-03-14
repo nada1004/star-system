@@ -62,11 +62,10 @@ function rComp(C,T){
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
       {id:'tourschedule',lbl:'📋 토너먼트 경기 일정'},
-      {id:'tour',lbl:'⚔️ 대진표'},
       {id:'comprank',lbl:'🏅 개인 순위'},
       ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
     ];
-    if(compSub==='tiertour'||compSub==='input') compSub='league';
+    if(compSub==='tiertour'||compSub==='input'||compSub==='tour') compSub='league';
   }
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${compSub===o.id?'on':''}" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
 
@@ -104,6 +103,7 @@ function rCompLeague(tn){
   const dates=[...new Set(allMatches.map(m=>m.d).filter(Boolean))].sort();
   let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
+    ${isLoggedIn?`<button class="btn btn-p btn-sm no-export" onclick="openGrpPasteModal()">📋 결과 붙여넣기</button>`:''}
     <div style="margin-left:auto;display:flex;gap:4px">
       <button class="pill ${leagueSortDir==='desc'?'on':''}" onclick="leagueSortDir='desc';render()">최신순</button>
       <button class="pill ${leagueSortDir==='asc'?'on':''}" onclick="leagueSortDir='asc';render()">오래된순</button>
@@ -422,7 +422,11 @@ function rBracketSchedule(tn){
   let h=`<div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">⚔️ 토너먼트 경기 일정</span>
-      ${isLoggedIn?`<button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>`:''}
+      ${isLoggedIn?`<button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','16강')">16강</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','8강')">8강</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','4강')">4강</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','결승')">결승</button>`:''}
       <div style="margin-left:auto;display:flex;gap:4px">
         <button class="pill ${bktSchedSortDir==='desc'?'on':''}" onclick="bktSchedSortDir='desc';render()">최신순</button>
         <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';render()">오래된순</button>
@@ -512,12 +516,12 @@ function bktClearMatchResult(tnId,r,mi){
   save();render();
 }
 
-function openBktBulkPaste(tnId){
+function openBktBulkPaste(tnId, roundLabel){
   // 새 수동 매치 생성 후 바로 붙여넣기 모달 열기
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const br=getBracket(tn);
   if(!br.manualMatches)br.manualMatches=[];
-  br.manualMatches.push({a:'',b:'',d:new Date().toISOString().slice(0,10),rndLabel:'',sa:null,sb:null,sets:[],_id:null});
+  br.manualMatches.push({a:'',b:'',d:new Date().toISOString().slice(0,10),rndLabel:roundLabel||'',sa:null,sb:null,sets:[],_id:null});
   const idx=br.manualMatches.length-1;
   save();
   bracketMatchState={tnId,rnd:-1,mi:idx,teamA:'',teamB:''};
@@ -1151,7 +1155,7 @@ function grpSaveMatch(){
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL);
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'조별리그');
     });
   });
   save();cm('grpMatchModal');render();
@@ -1351,7 +1355,7 @@ function bktSaveMatch(){
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL);
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'토너먼트');
     });
   });
   window._bracketMatchMode=false;

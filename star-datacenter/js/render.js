@@ -441,7 +441,7 @@ function buildPlayerDetailHTML(p){
       .slice(0,pageSize);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · 최근 ${Math.min(pageSize,totalGames)}개 표시)</span></div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
-    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
+    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
@@ -451,8 +451,13 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:'';
+      const modeLbl=hh.mode||'';
+      const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
+      const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
+      const modeCellHTML=modeLbl?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`:'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
+        <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${hh.opp}'),100)"><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:16px;height:16px;border-radius:4px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp}</span></span></td>
         <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace}</span></td>
@@ -464,7 +469,7 @@ function buildPlayerDetailHTML(p){
     h+=`</tbody></table>`;
     if(!showAll){
       h+=`<div style="text-align:center;padding:8px;background:var(--surface);border-top:1px solid var(--border)">
-        <button class="btn btn-w btn-sm" onclick="goToPlayer('${p.name}')">📋 전체 ${totalGames}개 기록 보기 →</button>
+        <span style="font-size:12px;color:var(--gray-l)">총 ${totalGames}게임 · 최근 ${pageSize}개 표시</span>
       </div>`;
     }
     h+=`</div>`;

@@ -267,10 +267,11 @@ function saveGameEdit(editRef, si, gi, btn){
 
   // pro 외 모드: 새 결과 선수 history에 반영
   if(mode!=='pro' && newPA && newPB && newWinner){
+    const _geLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',tt:'티어대회',comp:'조별리그'}[mode]||'';
     applyGameResult(
       newWinner==='A'?newPA:newPB,
       newWinner==='A'?newPB:newPA,
-      m.d||'', newMap||'-', m._id||''
+      m.d||'', newMap||'-', m._id||'', '', '', _geLabel
     );
   }
 
