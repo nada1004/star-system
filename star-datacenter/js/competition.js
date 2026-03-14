@@ -107,12 +107,21 @@ function rCompLeague(tn){
   const dates=[...new Set(allMatches.map(m=>m.d).filter(Boolean))].sort();
   let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
-    ${isLoggedIn?`<button class="btn btn-p btn-sm no-export" onclick="openGrpPasteModal()">📋 결과 붙여넣기</button>`:''}
     <div style="margin-left:auto;display:flex;gap:4px">
       <button class="pill ${leagueSortDir==='desc'?'on':''}" onclick="leagueSortDir='desc';render()">최신순</button>
       <button class="pill ${leagueSortDir==='asc'?'on':''}" onclick="leagueSortDir='asc';render()">오래된순</button>
     </div>
   </div>`;
+  if(isLoggedIn&&tn.groups.length){
+    h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추가:</span>`;
+    tn.groups.forEach((grp,gi)=>{
+      const gl='ABCDEFGHIJ'[gi];
+      const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+      h+=`<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
+    });
+    h+=`</div>`;
+  }
   h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
     <button class="pill ${!leagueFilterDate?'on':''}" onclick="leagueFilterDate='';render()">전체</button>`;
   dates.forEach(d=>{
@@ -187,6 +196,7 @@ function rCompLeague(tn){
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="leagueEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
+          <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openLeaguePaste('${tn.id}',${m.grpIdx},${m.matchNum-1})">📋 붙여넣기</button>
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
         </div>`:''}
       </div>
@@ -215,6 +225,13 @@ function leagueEditMatch(tnId,gi,mi){
   grpMatchState={tnId,gi,mi};
   const tn=tourneys.find(t=>t.id===tnId);
   if(tn)grpOpenMatchModal(tn,gi,mi);
+}
+function openLeaguePaste(tnId,gi,mi){
+  grpMatchState={tnId,gi,mi};
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const m=tn.groups[gi].matches[mi];if(!m)return;
+  if(!m.sets)m.sets=[];
+  openGrpPasteModal();
 }
 
 function grpMatchDetail(m){
