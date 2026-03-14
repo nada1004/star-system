@@ -348,7 +348,7 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
-  const _modeLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그'}[mode]||'';
+  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그'}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
     const freeGames=bld.freeGames||[];
