@@ -469,12 +469,14 @@ function buildPlayerDetailHTML(p){
   if(p.history.length){
     const totalGames=p.history.length;
     const pageSize=20;
-    const showAll=totalGames<=pageSize;
+    const totalPages=Math.ceil(totalGames/pageSize);
+    const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));
     // 날짜 최신순 정렬 (원본 인덱스 보존)
-    const displayHist=[...p.history.map((h,i)=>({...h,_origIdx:i}))]
-      .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0))
-      .slice(0,pageSize);
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · 최근 ${Math.min(pageSize,totalGames)}개 표시)</span></div>`;
+    const sortedHist=[...p.history.map((h,i)=>({...h,_origIdx:i}))]
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+    const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
+    const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
+    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span></div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
@@ -502,9 +504,11 @@ function buildPlayerDetailHTML(p){
       </tr>`;
     });
     h+=`</tbody></table>`;
-    if(!showAll){
-      h+=`<div style="text-align:center;padding:8px;background:var(--surface);border-top:1px solid var(--border)">
-        <span style="font-size:12px;color:var(--gray-l)">총 ${totalGames}게임 · 최근 ${pageSize}개 표시</span>
+    if(totalPages>1){
+      h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
+        <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="playerHistPage=${curPage-1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name}'));injectUnivIcons(document.getElementById('playerModalBody'))">◀ 이전</button>
+        <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
+        <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="playerHistPage=${curPage+1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name}'));injectUnivIcons(document.getElementById('playerModalBody'))">다음 ▶</button>
       </div>`;
     }
     h+=`</div>`;
