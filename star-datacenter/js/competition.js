@@ -114,7 +114,8 @@ function rCompLeague(tn){
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추가:</span>`;
+      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')">📋 결과 붙여넣기 (자동인식)</button>
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">경기 추가:</span>`;
     tn.groups.forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi];
       const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
@@ -231,6 +232,11 @@ function openLeaguePaste(tnId,gi,mi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const m=tn.groups[gi].matches[mi];if(!m)return;
   if(!m.sets)m.sets=[];
+  openGrpPasteModal();
+}
+// 상단 버튼: 조/팀 자동인식 모드
+function openCompAutoDetectPaste(tnId){
+  grpMatchState={tnId,gi:null,mi:null};
   openGrpPasteModal();
 }
 

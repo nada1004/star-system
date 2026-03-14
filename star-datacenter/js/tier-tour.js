@@ -53,10 +53,11 @@ function openBktPasteModal(){
 function openGrpPasteModal(){
   _grpPasteState = {...grpMatchState, mode:'grp'};
   const tn = tourneys.find(t=>t.id===grpMatchState.tnId); if(!tn) return;
-  const grp = tn.groups[grpMatchState.gi];
-  const m = grp.matches[grpMatchState.mi];
-  const teamA = document.getElementById('gm-a')?.value||m.a||'';
-  const teamB = document.getElementById('gm-b')?.value||m.b||'';
+  const autoDetect = (grpMatchState.gi===null||grpMatchState.gi===undefined);
+  const grp = autoDetect ? null : tn.groups[grpMatchState.gi];
+  const m = (grp&&grpMatchState.mi!=null) ? grp.matches[grpMatchState.mi] : null;
+  const teamA = document.getElementById('gm-a')?.value||(m?m.a:'')||'';
+  const teamB = document.getElementById('gm-b')?.value||(m?m.b:'')||'';
 
   // 일반 pasteModal을 열되 대회 세트 적용 모드로 표시
   window._grpPasteMode = true; // pasteApply에서 대회 세트 적용으로 분기
@@ -76,7 +77,7 @@ function openGrpPasteModal(){
   window._pasteErrors  = null;
 
   const dateInput = document.getElementById('paste-date');
-  if (dateInput) dateInput.value = m.d || new Date().toISOString().slice(0,10);
+  if (dateInput) dateInput.value = (m&&m.d) || new Date().toISOString().slice(0,10);
 
   // 저장형식 영역에 대회 팀 정보 안내로 대체 (숨김 처리)
   const modeWrap = document.querySelector('#pasteModal [id="paste-mode"]')?.closest('div');
@@ -86,32 +87,40 @@ function openGrpPasteModal(){
   const modeLabel = document.getElementById('paste-mode-label');
   if(modeLabel) modeLabel.style.display='none';
   const hintEl = document.getElementById('paste-mode-hint');
-  if(hintEl) hintEl.innerHTML = `<span style="color:#1d4ed8;font-weight:700">🏆 대회 경기 입력 모드</span> — <b>팀A: ${teamA}</b> vs <b>팀B: ${teamB}</b> · 붙여넣기 후 [세트에 적용]을 누르면 세트에 자동 추가됩니다.`;
-
-  // 세트 선택 드롭다운을 paste-comp-wrap 영역에 삽입
-  const compWrap = document.getElementById('paste-comp-wrap');
-  if(compWrap){
-    const setOpts = (m.sets||[]).map((s,i)=>{
-      const lbl = i===2?'🎯 에이스전':`${i+1}세트`;
-      return `<option value="${i}">${lbl}</option>`;
-    }).join('');
-    compWrap.style.display='flex';
-    compWrap.innerHTML = `
-      <label style="font-size:12px;font-weight:700;white-space:nowrap">추가할 세트:</label>
-      <select id="grp-paste-set-sel" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);font-size:12px">
-        ${setOpts||'<option value="new">새 세트 자동 추가</option>'}
-        <option value="new">+ 새 세트 추가</option>
-      </select>`;
+  if(hintEl){
+    if(autoDetect)
+      hintEl.innerHTML=`<span style="color:#16a34a;font-weight:700">🤖 자동 인식 모드</span> — 붙여넣기하면 대학(팀)·조를 자동으로 인식하여 저장합니다.`;
+    else
+      hintEl.innerHTML=`<span style="color:#1d4ed8;font-weight:700">🏆 대회 경기 입력 모드</span> — <b>팀A: ${teamA}</b> vs <b>팀B: ${teamB}</b> · 붙여넣기 후 저장하면 자동 추가됩니다.`;
   }
 
-  // 불필요한 섹션 숨기기 (대회 붙여넣기 모드에선 단순하게)
+  // 세트 선택 드롭다운 (특정 경기 지정 시만 표시)
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if(compWrap){
+    if(!autoDetect&&m){
+      const setOpts = (m.sets||[]).map((s,i)=>{
+        const lbl = i===2?'🎯 에이스전':`${i+1}세트`;
+        return `<option value="${i}">${lbl}</option>`;
+      }).join('');
+      compWrap.style.display='flex';
+      compWrap.innerHTML = `
+        <label style="font-size:12px;font-weight:700;white-space:nowrap">추가할 세트:</label>
+        <select id="grp-paste-set-sel" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);font-size:12px">
+          ${setOpts||'<option value="new">새 세트 자동 추가</option>'}
+          <option value="new">+ 새 세트 추가</option>
+        </select>`;
+    } else {
+      compWrap.style.display='none';
+    }
+  }
+
+  // 불필요한 섹션 숨기기
   const _pasteDetails=document.querySelector('#pasteModal details');
   if(_pasteDetails)_pasteDetails.style.display='none';
   const _matchModeDiv=document.getElementById('paste-match-mode-game')?.closest('div[style]');
   if(_matchModeDiv)_matchModeDiv.style.display='none';
-  // 타이틀 변경
   const _pTitle=document.querySelector('#pasteModal .mtitle');
-  if(_pTitle)_pTitle.textContent=`📋 경기 결과 붙여넣기 — ${teamA} vs ${teamB}`;
+  if(_pTitle)_pTitle.textContent=autoDetect?'📋 결과 붙여넣기 (자동인식)':'📋 경기 결과 붙여넣기';
 
   om('pasteModal');
 }
@@ -137,7 +146,41 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
   }
-  const m = tn.groups[_grpPasteState.gi].matches[_grpPasteState.mi];
+
+  // 자동인식 모드: gi가 null이면 선수 소속 대학으로 팀/조 자동 탐지
+  let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
+  const autoDetect = (gi===null||gi===undefined);
+  if(autoDetect){
+    // 1. 선수 소속 대학에서 팀A/B 추출
+    const univCount={};
+    savable.forEach(r=>{
+      [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
+    });
+    const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
+    if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+    const autoA=univRanked[0][0], autoB=univRanked[1][0];
+    // 2. 두 팀이 같은 조에 있는지 확인
+    const groupIdx=tn.groups.findIndex(g=>g.univs.includes(autoA)&&g.univs.includes(autoB));
+    if(groupIdx<0){
+      // 조에 없으면 각 팀의 조라도 찾기
+      const giA=tn.groups.findIndex(g=>g.univs.includes(autoA));
+      const giB=tn.groups.findIndex(g=>g.univs.includes(autoB));
+      alert(`"${autoA}"(${giA>=0?'ABCDEFGHIJ'[giA]+'조':'조 미편성'})와 "${autoB}"(${giB>=0?'ABCDEFGHIJ'[giB]+'조':'조 미편성'})는 같은 조가 아닙니다.`);
+      return false;
+    }
+    gi=groupIdx;
+    // 3. 기존 경기 찾기 또는 새로 생성
+    const grpM=tn.groups[gi].matches;
+    let existIdx=grpM.findIndex(m=>(m.a===autoA&&m.b===autoB)||(m.a===autoB&&m.b===autoA));
+    if(existIdx<0){
+      grpM.push({a:autoA,b:autoB,sa:null,sb:null,sets:[]});
+      existIdx=grpM.length-1;
+    }
+    mi=existIdx;
+    _grpPasteState.gi=gi;_grpPasteState.mi=mi;
+  }
+
+  const m = tn.groups[gi].matches[mi];
   const teamA = document.getElementById('gm-a')?.value||m.a||'';
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
 
