@@ -104,6 +104,15 @@ function openGrpPasteModal(){
       </select>`;
   }
 
+  // 불필요한 섹션 숨기기 (대회 붙여넣기 모드에선 단순하게)
+  const _pasteDetails=document.querySelector('#pasteModal details');
+  if(_pasteDetails)_pasteDetails.style.display='none';
+  const _matchModeDiv=document.getElementById('paste-match-mode-game')?.closest('div[style]');
+  if(_matchModeDiv)_matchModeDiv.style.display='none';
+  // 타이틀 변경
+  const _pTitle=document.querySelector('#pasteModal .mtitle');
+  if(_pTitle)_pTitle.textContent=`📋 경기 결과 붙여넣기 — ${teamA} vs ${teamB}`;
+
   om('pasteModal');
 }
 

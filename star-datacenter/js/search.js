@@ -1503,6 +1503,11 @@ function renderPastePreview(results, errors) {
       pasteDeleteRow(parseInt(this.dataset.idx));
     });
   });
+
+  // grp 붙여넣기 모드: 모두 인식되면 자동 저장
+  if(window._grpPasteMode && results && results.length>0 && savable.length===results.length && !ambig.length){
+    setTimeout(()=>{ if(window._grpPasteMode) pasteApply(); }, 500);
+  }
 }
 
 // ── 승패 반전 ──
@@ -1994,6 +1999,9 @@ function closePasteModal() {
   // 대회 세트 모드였다면 UI 원복
   if (window._grpPasteMode) {
     window._grpPasteMode = false;
+    const _pd=document.querySelector('#pasteModal details');if(_pd)_pd.style.display='';
+    const _md=document.getElementById('paste-match-mode-game')?.closest('div[style]');if(_md)_md.style.display='';
+    const _pt=document.querySelector('#pasteModal .mtitle');if(_pt)_pt.textContent='📋 경기 결과 붙여넣기 입력';
     const compWrap = document.getElementById('paste-comp-wrap');
     if(compWrap) {
       compWrap.style.display='none';
