@@ -1206,6 +1206,11 @@ function renderPastePreview(results, errors) {
         if (resolved) {
           const p = isWin ? r.wPlayer : r.lPlayer;
           if (p?.univ) cell += `<span style="font-size:10px;color:var(--gray-l);margin-left:4px">(${p.univ})</span>`;
+          // 닉네임(메모) 매칭 표시: 입력한 이름과 실제 선수 이름이 다를 때
+          const inputName = isWin ? r.winName : r.loseName;
+          if (inputName && inputName !== displayName) {
+            cell += ` <span style="font-size:10px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:4px;padding:1px 5px;margin-left:2px" title="닉네임 매칭">🏷️ ${inputName}</span>`;
+          }
         } else if (isAmbig) {
           cell += `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
             <span style="font-size:10px;color:#b45309;font-weight:600">선택:</span>` +
