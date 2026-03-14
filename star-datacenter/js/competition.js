@@ -107,7 +107,23 @@ function rCompLeague(tn){
   });
   allMatches.sort((a,b)=>leagueSortDir==='asc'?(a.d||'9999').localeCompare(b.d||'9999'):(b.d||'').localeCompare(a.d||''));
   const dates=[...new Set(allMatches.map(m=>m.d).filter(Boolean))].sort();
-  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+  const _totalM=allMatches.length, _doneM=allMatches.filter(m=>m.sa!=null&&m.sb!=null).length;
+  const _pct=_totalM?Math.round(_doneM/_totalM*100):0;
+  const _pctColor=_pct===100?'#16a34a':_pct>=50?'#2563eb':'#d97706';
+  let h=``;
+  if(_totalM>0){
+    h+=`<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:${_pctColor}">📊 진행률</span>
+        <span style="font-size:12px;color:var(--gray-l)">${_doneM}/${_totalM}경기 완료</span>
+        <span style="margin-left:auto;font-size:13px;font-weight:800;color:${_pctColor}">${_pct}%</span>
+      </div>
+      <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${_pct}%;background:${_pctColor};border-radius:4px;transition:.3s"></div>
+      </div>
+    </div>`;
+  }
+  h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
     <div style="margin-left:auto;display:flex;gap:4px">
       <button class="pill ${leagueSortDir==='desc'?'on':''}" onclick="leagueSortDir='desc';render()">최신순</button>
@@ -116,7 +132,7 @@ function rCompLeague(tn){
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')">📋 결과 붙여넣기</button>
+      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')" title="선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장">📋 자동인식 붙여넣기</button>
       <span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">경기 추가:</span>`;
     tn.groups.forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi];
@@ -199,7 +215,7 @@ function rCompLeague(tn){
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="leagueEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
-          <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openLeaguePaste('${tn.id}',${m.grpIdx},${m.matchNum-1})">📋 붙여넣기</button>
+          <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="openLeaguePaste('${tn.id}',${m.grpIdx},${m.matchNum-1})" title="이 경기에 세트별로 결과 입력">📋 세트입력</button>
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
         </div>`:''}
       </div>
@@ -698,18 +714,24 @@ function rCompTourDynamic(tn){
     const detId=`bkt-det-${rnd}-${mi}`;
     let footer='';
     if(isLoggedIn&&a?.univ&&b?.univ){
-      footer=`<div style="display:flex;gap:3px;padding:4px;background:var(--surface);border-top:1px solid var(--border)">
-        <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${a.univ}')"
-          style="flex:1;padding:2px 0;border-radius:4px;border:1.5px solid ${aWin?aC:'#e2e8f0'};background:${aWin?aC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${aWin?aC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-          ${aWin?'✅ ':''}${(a.univ).slice(0,4)}승
-        </button>
-        <button onclick="openBracketMatchModal('${tnId}',${rnd},${mi},'${a.univ}','${b.univ}')"
-          style="padding:2px 6px;border-radius:4px;border:1px solid #2563eb;background:#eff6ff;font-size:10px;color:#2563eb;cursor:pointer">✏️</button>
-        ${detDone?`<button onclick="openBktShareCard('${tnId}',${rnd},${mi})" style="padding:2px 6px;border-radius:4px;border:1px solid #7c3aed;background:#f5f3ff;font-size:10px;color:#7c3aed;cursor:pointer">🎴</button>`:''}
-        <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${b.univ}')"
-          style="flex:1;padding:2px 0;border-radius:4px;border:1.5px solid ${bWin?bC:'#e2e8f0'};background:${bWin?bC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${bWin?bC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-          ${bWin?'✅ ':''}${(b.univ).slice(0,4)}승
-        </button>
+      footer=`<div style="display:flex;gap:2px;padding:4px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap">
+        <div style="display:flex;gap:2px;flex:1;min-width:0">
+          <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${a.univ}')"
+            style="flex:1;padding:2px 4px;border-radius:4px;border:1.5px solid ${aWin?aC:'#e2e8f0'};background:${aWin?aC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${aWin?aC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">
+            ${aWin?'✅ ':''}${a.univ}승
+          </button>
+          <button onclick="setBracketWinner('${tnId}',${rnd},${mi},'${b.univ}')"
+            style="flex:1;padding:2px 4px;border-radius:4px;border:1.5px solid ${bWin?bC:'#e2e8f0'};background:${bWin?bC+'22':'var(--white)'};font-size:10px;font-weight:700;color:${bWin?bC:'#94a3b8'};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">
+            ${bWin?'✅ ':''}${b.univ}승
+          </button>
+        </div>
+        <div style="display:flex;gap:2px">
+          <button onclick="openBracketMatchModal('${tnId}',${rnd},${mi},'${a.univ}','${b.univ}')"
+            style="padding:2px 5px;border-radius:4px;border:1px solid #2563eb;background:#eff6ff;font-size:10px;color:#2563eb;cursor:pointer" title="결과 직접 입력">✏️</button>
+          <button onclick="bracketMatchState={tnId:'${tnId}',rnd:${rnd},mi:${mi},teamA:'${a.univ}',teamB:'${b.univ}'};openBktPasteModal()"
+            style="padding:2px 5px;border-radius:4px;border:1px solid #16a34a;background:#f0fdf4;font-size:10px;color:#16a34a;cursor:pointer" title="붙여넣기로 입력">📋</button>
+          ${detDone?`<button onclick="openBktShareCard('${tnId}',${rnd},${mi})" style="padding:2px 5px;border-radius:4px;border:1px solid #7c3aed;background:#f5f3ff;font-size:10px;color:#7c3aed;cursor:pointer">🎴</button>`:''}
+        </div>
       </div>`;
     }else if(!a?.univ||!b?.univ){
       footer=`<div style="font-size:9px;color:#94a3b8;text-align:center;padding:4px;border-top:1px solid #f1f5f9">팀 배정 후 입력</div>`;
@@ -717,7 +739,7 @@ function rCompTourDynamic(tn){
     const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
     const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
-    return `<div style="background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;min-width:160px;max-width:210px;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+    return `<div style="background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;min-width:170px;max-width:260px;box-shadow:0 1px 6px rgba(0,0,0,.07)">
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc)}
       <div style="height:1px;background:var(--border)"></div>
       ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc)}
@@ -835,7 +857,7 @@ function rCompTourDynamic(tn){
     </div>
     ${sizeHTML}
     ${grpSummary}
-    <div style="overflow-x:auto;padding-bottom:8px">${bracketHTML}</div>
+    <div style="overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;touch-action:pan-x">${bracketHTML}</div>
   </div>`;
 }
 
