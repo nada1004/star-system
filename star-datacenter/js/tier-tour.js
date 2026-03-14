@@ -381,7 +381,7 @@ function rTierTourTab(C, T){
       ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 티어대회 추가</button>`:''}
-    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
+    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
   </div>`;
   if(!tierTourneys.length){
     h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
@@ -587,6 +587,18 @@ function grpNewTierTourney(){
   const name=prompt('티어 대회명을 입력하세요:');if(!name||!name.trim())return;
   const id=genId();tourneys.unshift({id,name:name.trim(),type:'tier',groups:[],createdAt:new Date().toISOString()});
   _ttCurComp=name.trim();curTab='tiertour';save();render();
+}
+function grpRenameTierTourney(){
+  const tn=tourneys.find(t=>t.name===_ttCurComp&&t.type==='tier');
+  if(!tn){alert('대회를 먼저 선택하세요.');return;}
+  const newName=prompt('새 대회명을 입력하세요:',tn.name);
+  if(!newName||!newName.trim()||newName.trim()===tn.name)return;
+  const trimmed=newName.trim();
+  if(tourneys.find(t=>t.name===trimmed&&t.id!==tn.id)){alert('이미 같은 이름의 대회가 있습니다.');return;}
+  ttM.forEach(m=>{if(m.compName===tn.name)m.compName=trimmed;});
+  tn.name=trimmed;
+  _ttCurComp=trimmed;
+  save();render();
 }
 function grpDelTierTourney(){
   const tn=tourneys.find(t=>t.name===_ttCurComp&&t.type==='tier');
