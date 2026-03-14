@@ -365,6 +365,41 @@ function _bktPasteApplyLogic(savable, tn){
    🎯 티어대회 - CK 방식 경기 입력
 ══════════════════════════════════════ */
 let _ttSub = 'input'; // input | records
+let _ttCurComp = '';
+
+function rTierTourTab(C, T){
+  T.innerText = '🎯 티어대회';
+  if(!isLoggedIn && _ttSub==='input') _ttSub='records';
+  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
+  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
+  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
+  let h='';
+  h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
+    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
+    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
+      <option value="">— 대회를 선택하세요 —</option>
+      ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
+    </select>
+    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney();curTab='tiertour'">+ 티어대회 추가</button>`:''}
+  </div>`;
+  if(!tierTourneys.length){
+    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
+    C.innerHTML=h; return;
+  }
+  const subOpts=[
+    {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
+    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
+  ];
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
+  if(_ttSub==='input' && isLoggedIn){
+    if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
+    h+=buildTierTourInputHTML();
+  } else {
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>!m.compName||m.compName===_ttCurComp) : ttM;
+    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
+  }
+  C.innerHTML=h;
+}
 
 function rTierTour(){
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';

@@ -49,6 +49,7 @@ function render(){
     case 'gj':      if(typeof rGJ==='function')      rGJ(C,T);      break;
     case 'univck':  if(typeof rCK==='function')      rCK(C,T);      break;
     case 'univm':   if(typeof rUnivM==='function')   rUnivM(C,T);   break;
+    case 'tiertour':if(typeof rTierTourTab==='function')rTierTourTab(C,T);break;
     case 'comp':    if(typeof rComp==='function')    rComp(C,T);    break;
     case 'pro':     if(typeof rPro==='function')     rPro(C,T);     break;
     case 'member':  if(typeof rMember==='function')  rMember(C,T);  break;
