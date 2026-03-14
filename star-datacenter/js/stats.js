@@ -1059,7 +1059,15 @@ function renderShareCardByMatchObj(m){
     outer:for(const s of(m.sets||[])){for(const g of(s.games||[])){const pn=g.playerA||g.playerB;if(pn){const p=players.find(x=>x.name===pn);if(p?.univ){civUniv=p.univ;break outer;}}}}
   }
   const civColor=civUniv?gc(civUniv):'#6366f1';
-  const ca=isCivil?civColor:gc(a), cb=isCivil?civColor:gc(b);
+  // 경기 타입별 전용 색상 (대학 색상 사용 안함)
+  const _TYPE_COLORS={
+    pro:{a:'#1d4ed8',b:'#be123c'},   // 프로리그: 딥블루 vs 크림슨
+    tt: {a:'#7c3aed',b:'#047857'},   // 티어대회: 바이올렛 vs 에메랄드
+    ck: {a:'#0e7490',b:'#b45309'},   // 대학CK:  시안 vs 앰버
+  };
+  const _tc=m._matchType&&_TYPE_COLORS[m._matchType]?_TYPE_COLORS[m._matchType]:null;
+  let ca=_tc?_tc.a:(isCivil?civColor:gc(a));
+  let cb=_tc?_tc.b:(isCivil?civColor:gc(b));
   const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
   const draw=!aWin&&!bWin;
 
@@ -1188,7 +1196,11 @@ function renderShareCardByMatchObj(m){
 
       <!-- 대회명 + 날짜 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        ${m.n?`<div style="font-size:11px;color:rgba(255,255,255,.9);font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 12px;border-radius:20px">🎖️ ${m.n}</div>`:'<div></div>'}
+        ${(()=>{
+          const _typeLbl={pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK'}[m._matchType]||'';
+          const lbl=_typeLbl||(m.n?`🎖️ ${m.n}`:'');
+          return lbl?`<div style="font-size:11px;color:rgba(255,255,255,.9);font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 12px;border-radius:20px">${lbl}</div>`:'<div></div>';
+        })()}
         <div style="font-size:11px;color:rgba(255,255,255,.65)">${m.d||''}</div>
       </div>
 
@@ -1239,8 +1251,9 @@ function openRCalMatchShareCard(ds, mi){
   const dayMatches=all.filter(m=>m.d===ds&&m.sa!=null&&m.sa!=='');
   const m=dayMatches[mi];
   if(!m)return;
-  const isCKorPro=ckM.includes(m)||proM.includes(m);
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
+  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':ttM.includes(m)?'tt':'';
+  const isCKorPro=!!_mt&&_mt!=='';
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro, _matchType:_mt};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
@@ -1252,8 +1265,9 @@ function openCalMatchShareCardByCache(ds, mi){
   if(!matches||mi>=matches.length)return;
   const m=matches[mi];
   if(!m)return;
-  const isCKorPro=ckM.includes(m)||proM.includes(m);
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
+  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':ttM.includes(m)?'tt':'';
+  const isCKorPro=!!_mt;
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro, _matchType:_mt};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
@@ -1279,8 +1293,8 @@ function openCalMatchShareCard(mode, idx){
   }
   const m=arr[idx];
   if(!m)return;
-  const isCKorPro=(mode==='ck'||mode==='pro');
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
+  const isCKorPro=(mode==='ck'||mode==='pro'||mode==='tt');
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro, _matchType:isCKorPro?mode:''};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
