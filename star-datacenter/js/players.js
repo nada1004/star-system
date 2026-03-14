@@ -151,8 +151,23 @@ function rTier(C,T){
     {id:'revstreak',lbl:'❄️ 역승차순'},
     {id:'recent',lbl:'🕐 최근 경기'},
   ];
+  const modeSortBtns=[
+    {id:'mini_win',lbl:'⚡ 미니대전 승순',color:'#7c3aed'},
+    {id:'mini_loss',lbl:'⚡ 미니대전 패순',color:'#7c3aed'},
+    {id:'ck_win',lbl:'🤝 대학CK 승순',color:'#dc2626'},
+    {id:'ck_loss',lbl:'🤝 대학CK 패순',color:'#dc2626'},
+    {id:'comp_win',lbl:'🏆 대회 승순',color:'#d97706'},
+    {id:'comp_loss',lbl:'🏆 대회 패순',color:'#d97706'},
+  ];
+  const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
   let fh=`<div class="fbar"><strong>보기:</strong>`;
   modes.forEach(m=>{fh+=`<button class="pill ${tierRankMode===m.id?'on':''}" onclick="tierRankMode='${m.id}';render()">${m.lbl}</button>`;});
+  fh+=`</div>`;
+  fh+=`<div class="fbar"><strong>유형별:</strong>`;
+  modeSortBtns.forEach(m=>{
+    const on=tierRankMode===m.id;
+    fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="tierRankMode='${m.id}';render()">${m.lbl}</button>`;
+  });
   fh+=`</div>`;
   if(tierRankMode!=='recent'){
     fh+=`<div class="fbar"><strong>대학:</strong><button class="pill ${fUniv==='전체'?'on':''}" onclick="sf('전체','${fTier}')">전체</button>`;
