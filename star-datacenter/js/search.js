@@ -1504,10 +1504,6 @@ function renderPastePreview(results, errors) {
     });
   });
 
-  // grp 붙여넣기 모드: 모두 인식되면 자동 저장
-  if(window._grpPasteMode && results && results.length>0 && savable.length===results.length && !ambig.length){
-    setTimeout(()=>{ if(window._grpPasteMode) pasteApply(); }, 500);
-  }
 }
 
 // ── 승패 반전 ──

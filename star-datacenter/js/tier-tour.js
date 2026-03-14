@@ -180,6 +180,7 @@ function _grpPasteApplyLogic(savable){
 
   // 개인 전적 반영 (경기 시점 대학 저장)
   const matchId = genId();
+  m._id = matchId; // grpSaveMatch에서 revert 가능하도록 matchId 저장
   savable.forEach(r=>{
     const wInA=_isWinnerInA(r);
     const univW=wInA?teamA:teamB;
@@ -188,6 +189,8 @@ function _grpPasteApplyLogic(savable){
   });
 
   save();
+  cm('grpMatchModal'); // 붙여넣기 완료 후 경기 편집 모달도 닫기 (이중저장 방지)
+  render();
   grpRefreshSets();
 
   const toast=document.createElement('div');
