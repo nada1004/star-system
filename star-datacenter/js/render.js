@@ -410,7 +410,7 @@ function buildPlayerDetailHTML(p){
   h+=`</div>`;
 
   // ── 모드별 전적 ──
-  const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','대회':'#d97706','프로리그':'#16a34a'};
+  const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
   const _histModeStats={};
   (p.history||[]).forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
   // 대회: 조별리그+토너먼트+대회 통합
@@ -425,6 +425,7 @@ function buildPlayerDetailHTML(p){
     {key:'대학CK',w:_histModeStats['대학CK']?.w||0,l:_histModeStats['대학CK']?.l||0},
     {key:'끝장전',w:_gjW,l:_gjL},
     {key:'개인전',w:_histModeStats['개인전']?.w||0,l:_histModeStats['개인전']?.l||0},
+    {key:'티어대회',w:_histModeStats['티어대회']?.w||0,l:_histModeStats['티어대회']?.l||0},
     {key:'대회',w:_compW,l:_compL},
     {key:'프로리그',w:_histModeStats['프로리그']?.w||0,l:_histModeStats['프로리그']?.l||0},
   ];

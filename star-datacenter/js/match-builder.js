@@ -451,7 +451,8 @@ function gjRecordsHTML(){
 function rCK(C,T){
   T.innerText='🤝 대학CK';
   if(!isLoggedIn && ckSub==='input') ckSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'rank',lbl:'🏆 대학 순위',fn:`ckSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`}];
+  if(ckSub==='rank') ckSub='records';
+  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`}];
   let h=stabs(ckSub,subOpts);
   if(ckSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('ck');

@@ -173,7 +173,7 @@ function rCompLeague(tn){
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
-          ${isDone?`<span style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #86efac">✓ 완료</span>`:`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`}
+          ${!isDone?`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:100px">
@@ -185,7 +185,7 @@ function rCompLeague(tn){
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="leagueToggleDet('${detId}',document.getElementById('detbtn-${detId}'))"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
             <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
-            ${isDone?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="leagueToggleDet('${detId}',this)">📂 상세</button>`:''}
+            ${isDone?`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px"><button id="detbtn-${detId}" class="btn-detail" style="font-size:10px" onclick="leagueToggleDet('${detId}',this)">📂 상세</button><button class="btn btn-p" style="font-size:10px;padding:3px 7px;border-radius:7px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴</button></div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -203,10 +203,6 @@ function rCompLeague(tn){
       </div>
       <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:14px 16px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
         ${isDone?buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">아직 경기가 진행되지 않았습니다.</div>'}
-        ${isDone?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap" class="no-export">
-          <button class="btn-capture btn-xs" onclick="captureDetail('${detId}','대회_${(m.d||'match').replace(/\//g,'-')}')">📷 이미지 저장</button>
-          <button class="btn btn-p btn-xs" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button>
-        </div>`:''}
       </div>`;
     });
     h+=`</div>`;
@@ -400,7 +396,7 @@ function rBracketSchedule(tn){
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}
-          ${isDone?`<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #86efac">✓ 완료</span>`:`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`}
+          ${!isDone?`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:100px">
@@ -475,7 +471,7 @@ function rBracketSchedule(tn){
     }
     if(_sortedDone.length){
       h+=`<div>
-        <div style="font-size:12px;font-weight:700;color:var(--gray-l);margin-bottom:8px;padding:4px 10px;background:var(--surface);border-radius:6px;display:inline-block">✅ 완료 경기</div>`;
+        `;
       _sortedDone.forEach(m=>{h+=matchCard(m);});
       h+=`</div>`;
     }
@@ -1090,7 +1086,7 @@ function grpRefreshSets(){
   if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
   let h='';
   m.sets.forEach((set,si)=>{
-    const lbl=si===2?'🎯 에이스전':`${si+1}세트`;
+    const lbl=set.label||(si===2?'🎯 에이스전':`${si+1}세트`);
     const sA=set.scoreA||0,sB=set.scoreB||0;
     h+=`<div class="set-block${si===2?' ace':''}">
       <div class="set-title">

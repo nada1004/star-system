@@ -1196,9 +1196,9 @@ function renderShareCardByMatchObj(m){
       <div style="display:flex;align-items:center;justify-content:center;gap:10px">
         <!-- A팀 -->
         <div style="text-align:center;flex:1;min-width:0">
-          <div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
+          ${!m._noUnivIcon?`<div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
             ${univIconHTML(isCivil&&civUniv?civUniv:a,'40px')}
-          </div>
+          </div>`:'<div style="height:12px"></div>'}
           <div style="font-size:13px;font-weight:${aWin?900:600};color:${aWin?'#fff':'rgba(255,255,255,.65)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'⚔️ A팀':a}</div>
           ${aWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
@@ -1213,9 +1213,9 @@ function renderShareCardByMatchObj(m){
 
         <!-- B팀 -->
         <div style="text-align:center;flex:1;min-width:0">
-          <div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
+          ${!m._noUnivIcon?`<div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
             ${univIconHTML(isCivil&&civUniv?civUniv:b,'40px')}
-          </div>
+          </div>`:'<div style="height:12px"></div>'}
           <div style="font-size:13px;font-weight:${bWin?900:600};color:${bWin?'#fff':'rgba(255,255,255,.65)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'🛡️ B팀':b}</div>
           ${bWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
@@ -1240,7 +1240,7 @@ function openRCalMatchShareCard(ds, mi){
   const m=dayMatches[mi];
   if(!m)return;
   const isCKorPro=ckM.includes(m)||proM.includes(m);
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
@@ -1253,7 +1253,7 @@ function openCalMatchShareCardByCache(ds, mi){
   const m=matches[mi];
   if(!m)return;
   const isCKorPro=ckM.includes(m)||proM.includes(m);
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
@@ -1280,7 +1280,7 @@ function openCalMatchShareCard(mode, idx){
   const m=arr[idx];
   if(!m)return;
   const isCKorPro=(mode==='ck'||mode==='pro');
-  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||'')};
+  window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro};
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);

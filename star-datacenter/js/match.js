@@ -498,7 +498,8 @@ function saveMatch(mode){
     const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
-      teamAMembers:mA,teamBMembers:mB,sets:setsSnap
+      teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
+      compName:curComp||''
     });
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
