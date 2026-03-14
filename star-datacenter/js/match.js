@@ -94,8 +94,9 @@ function raceSummaryHTML(){
     });
   });
   const RC={T:'#1d4ed8',Z:'#7c3aed',P:'#b45309'};
+  const MAIN_RACES=['T','Z','P'];
   let h=`<div class="scards">`;
-  RACES.forEach(r=>{
+  MAIN_RACES.forEach(r=>{
     const s=rs[r];const tot=s.w+s.l;const wr=tot?Math.round(s.w/tot*100):0;
     h+=`<div class="scard" style="border-top:4px solid ${RC[r]}">
       <div class="sv" style="color:${RC[r]}">${tot?wr+'%':'-'}</div>
@@ -104,9 +105,9 @@ function raceSummaryHTML(){
     </div>`;
   });
   h+=`</div><table><thead><tr><th style="text-align:left">내 종족</th><th>vs 테란(T)</th><th>vs 저그(Z)</th><th>vs 프로토스(P)</th></tr></thead><tbody>`;
-  RACES.forEach(my=>{
+  MAIN_RACES.forEach(my=>{
     h+=`<tr><td style="text-align:left"><span class="rbadge r${my}">${my} ${RNAME[my]}</span></td>`;
-    RACES.forEach(op=>{
+    MAIN_RACES.forEach(op=>{
       const s=vs[my][op];const t=s.w+s.l;const w=t?Math.round(s.w/t*100):0;
       h+=`<td><span class="wt">${s.w}승</span> <span class="lt">${s.l}패</span>${t?` <span style="color:${w>=50?'var(--green)':'var(--red)'};font-weight:700">(${w}%)</span>`:''}`;
     });

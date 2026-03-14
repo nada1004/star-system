@@ -114,7 +114,7 @@ function rCompLeague(tn){
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')">📋 결과 붙여넣기 (자동인식)</button>
+      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')">📋 결과 붙여넣기</button>
       <span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">경기 추가:</span>`;
     tn.groups.forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi];
@@ -1075,6 +1075,7 @@ function grpUpdateMemberList(){
 
 function grpRefreshSets(){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
+  if(grpMatchState.gi==null||grpMatchState.mi==null)return;
   const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
   const aEl=document.getElementById('gm-a');const bEl=document.getElementById('gm-b');
   if(!aEl)return;

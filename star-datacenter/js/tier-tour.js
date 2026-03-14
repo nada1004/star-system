@@ -120,7 +120,7 @@ function openGrpPasteModal(){
   const _matchModeDiv=document.getElementById('paste-match-mode-game')?.closest('div[style]');
   if(_matchModeDiv)_matchModeDiv.style.display='none';
   const _pTitle=document.querySelector('#pasteModal .mtitle');
-  if(_pTitle)_pTitle.textContent=autoDetect?'📋 결과 붙여넣기 (자동인식)':'📋 경기 결과 붙여넣기';
+  if(_pTitle)_pTitle.textContent='📋 결과 붙여넣기';
 
   om('pasteModal');
 }

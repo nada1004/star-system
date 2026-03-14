@@ -410,24 +410,35 @@ function buildPlayerDetailHTML(p){
   h+=`</div>`;
 
   // ── 모드별 전적 ──
-  const modeBdColors={'미니대전':'#7c3aed','대학대전':'#7c3aed','대학CK':'#dc2626','조별리그':'#2563eb','토너먼트':'#16a34a','대회':'#d97706','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6'};
-  const modeOrder=['미니대전','대학대전','대학CK','대회','조별리그','토너먼트','프로리그','티어대회','끝장전'];
-  const modeStats={};
-  (p.history||[]).forEach(hh=>{if(hh.mode){if(!modeStats[hh.mode])modeStats[hh.mode]={w:0,l:0};if(hh.result==='승')modeStats[hh.mode].w++;else modeStats[hh.mode].l++;}});
-  const modeEntries=modeOrder.filter(m=>modeStats[m]&&(modeStats[m].w+modeStats[m].l)>0);
-  if(modeEntries.length){
-    h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">`;
-    modeEntries.forEach(m=>{
-      const s=modeStats[m];const t=s.w+s.l;const wr=Math.round(s.w/t*100);
-      const mc=modeBdColors[m]||'#6b7280';
-      h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;min-width:80px;text-align:center">
-        <div style="font-size:10px;color:${mc};font-weight:700;margin-bottom:2px">${m}</div>
-        <div><span class="wt">${s.w}승</span> <span class="lt">${s.l}패</span></div>
-        <div style="font-size:11px;font-weight:700;color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
+  const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','대회':'#d97706','프로리그':'#16a34a'};
+  const _histModeStats={};
+  (p.history||[]).forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
+  // 대회: 조별리그+토너먼트+대회 통합
+  const _compW=(_histModeStats['대회']?.w||0)+(_histModeStats['조별리그']?.w||0)+(_histModeStats['토너먼트']?.w||0);
+  const _compL=(_histModeStats['대회']?.l||0)+(_histModeStats['조별리그']?.l||0)+(_histModeStats['토너먼트']?.l||0);
+  // 끝장전: gjM에서 직접 집계
+  const _gjW=(gjM||[]).filter(g=>g.wName===p.name).length;
+  const _gjL=(gjM||[]).filter(g=>g.lName===p.name).length;
+  const _fixedModes=[
+    {key:'미니대전',w:_histModeStats['미니대전']?.w||0,l:_histModeStats['미니대전']?.l||0},
+    {key:'대학대전',w:_histModeStats['대학대전']?.w||0,l:_histModeStats['대학대전']?.l||0},
+    {key:'대학CK',w:_histModeStats['대학CK']?.w||0,l:_histModeStats['대학CK']?.l||0},
+    {key:'끝장전',w:_gjW,l:_gjL},
+    {key:'개인전',w:_histModeStats['개인전']?.w||0,l:_histModeStats['개인전']?.l||0},
+    {key:'대회',w:_compW,l:_compL},
+    {key:'프로리그',w:_histModeStats['프로리그']?.w||0,l:_histModeStats['프로리그']?.l||0},
+  ];
+  h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">`;
+  _fixedModes.forEach(({key,w,l})=>{
+    const t=w+l;const wr=t?Math.round(w/t*100):0;
+    const mc=_modeColors[key]||'#6b7280';
+    h+=`<div style="background:var(--surface);border:1.5px solid ${mc}33;border-radius:10px;padding:8px 6px;text-align:center">
+      <div style="font-size:10px;color:${mc};font-weight:700;margin-bottom:4px">${key}</div>
+      <div style="font-size:11px"><span class="wt">${w}승</span> <span class="lt">${l}패</span></div>
+      <div style="font-size:12px;font-weight:800;color:${t?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${t?wr+'%':'-'}</div>
+    </div>`;
+  });
+  h+=`</div>`;
 
   // ── 상대 전적 ──
   const oppList=Object.entries(opps).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));

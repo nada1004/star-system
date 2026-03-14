@@ -2769,7 +2769,10 @@ function statsAdvSearchHTML(){
       const hh=statsNonProHist(p);
       w=hh.filter(x=>x.result==='승').length;l=hh.filter(x=>x.result==='패').length;
     } else if(tierRankModeFilter==='대회(조별리그)'){
-      const mh=(p.history||[]).filter(x=>x.mode==='대회'||x.mode==='조별리그');
+      const mh=(p.history||[]).filter(x=>x.mode==='대회'||x.mode==='조별리그'||x.mode==='토너먼트');
+      w=mh.filter(x=>x.result==='승').length;l=mh.filter(x=>x.result==='패').length;
+    } else if(tierRankModeFilter==='대학CK'){
+      const mh=(p.history||[]).filter(x=>x.mode==='대학CK');
       w=mh.filter(x=>x.result==='승').length;l=mh.filter(x=>x.result==='패').length;
     } else {
       const mh=(p.history||[]).filter(x=>x.mode===tierRankModeFilter);
@@ -2780,6 +2783,7 @@ function statsAdvSearchHTML(){
   });
   if(f.sort==='elo') list.sort((a,b)=>b._elo-a._elo);
   else if(f.sort==='win') list.sort((a,b)=>b._w-a._w);
+  else if(f.sort==='loss') list.sort((a,b)=>b._l-a._l);
   else if(f.sort==='rate') list.sort((a,b)=>b._rate-a._rate||b._tot-a._tot);
   else if(f.sort==='games') list.sort((a,b)=>b._tot-a._tot);
   else if(f.sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
@@ -2790,8 +2794,14 @@ function statsAdvSearchHTML(){
       <h4 style="margin:0">🔍 선수 고급 검색 필터</h4>
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-advsearch-sec','advsearch')">📷 이미지 저장</button>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-      ${['전체','미니대전','대학대전','대회(조별리그)','프로리그'].map(m=>`<button onclick="tierRankModeFilter='${m}';render()" style="padding:5px 14px;border-radius:20px;border:2px solid ${tierRankModeFilter===m?'var(--blue)':'var(--border2)'};background:${tierRankModeFilter===m?'var(--blue)':'var(--white)'};color:${tierRankModeFilter===m?'#fff':'var(--text3)'};font-size:12px;font-weight:${tierRankModeFilter===m?'700':'500'};cursor:pointer;transition:.12s">${m}</button>`).join('')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      ${['전체','미니대전','대학대전','대학CK','대회(조별리그)','프로리그'].map(m=>`<button onclick="tierRankModeFilter='${m}';render()" style="padding:5px 14px;border-radius:20px;border:2px solid ${tierRankModeFilter===m?'var(--blue)':'var(--border2)'};background:${tierRankModeFilter===m?'var(--blue)':'var(--white)'};color:${tierRankModeFilter===m?'#fff':'var(--text3)'};font-size:12px;font-weight:${tierRankModeFilter===m?'700':'500'};cursor:pointer;transition:.12s">${m}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+      ${[['미니대전','win','미니대전 승순','#7c3aed'],['미니대전','loss','미니대전 패순','#7c3aed'],['대학CK','win','대학CK 승순','#dc2626'],['대학CK','loss','대학CK 패순','#dc2626'],['대회(조별리그)','win','대회 승순','#d97706'],['대회(조별리그)','loss','대회 패순','#d97706']].map(([mode,sort,lbl,col])=>{
+        const on=tierRankModeFilter===mode&&_advFilter.sort===sort;
+        return`<button onclick="tierRankModeFilter='${mode}';_advFilter.sort='${sort}';render()" style="padding:3px 10px;border-radius:14px;border:1.5px solid ${on?col:'var(--border2)'};background:${on?col+'22':'var(--white)'};color:${on?col:'var(--text3)'};font-size:11px;font-weight:${on?'700':'500'};cursor:pointer;transition:.12s">${lbl}</button>`;
+      }).join('')}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" placeholder="🔍 이름 검색..." value="${f.name}" oninput="_advFilter.name=this.value;render()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
@@ -2820,6 +2830,7 @@ function statsAdvSearchHTML(){
       <select onchange="_advFilter.sort=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="elo"${f.sort==='elo'?' selected':''}>ELO순</option>
         <option value="win"${f.sort==='win'?' selected':''}>승수순</option>
+        <option value="loss"${f.sort==='loss'?' selected':''}>패수순</option>
         <option value="rate"${f.sort==='rate'?' selected':''}>승률순</option>
         <option value="games"${f.sort==='games'?' selected':''}>경기수순</option>
         <option value="name"${f.sort==='name'?' selected':''}>이름순</option>
