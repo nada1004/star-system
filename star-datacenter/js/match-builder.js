@@ -325,6 +325,8 @@ function deleteGjSession(idsArr){
 /* ══════════════════════════════════════
    끝장전
 ══════════════════════════════════════ */
+let _gjInput={date:'',playerA:'',playerB:'',games:[]};
+
 function rGJ(C,T){
   T.innerText='⚔️ 끝장전';
   if(!isLoggedIn && gjSub==='input') gjSub='records';
@@ -336,10 +338,7 @@ function rGJ(C,T){
   let h=stabs(gjSub,subOpts);
   if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
   if(gjSub==='input'&&isLoggedIn){
-    h+=`<div class="match-builder"><h3>⚔️ 끝장전 입력</h3>
-      <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openGJPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-      <div style="font-size:12px;color:var(--gray-l);padding:16px;text-align:center;border:1.5px dashed var(--border);border-radius:10px">붙여넣기 버튼으로 경기 결과를 일괄 입력하세요</div>
-    </div>`;
+    h+=gjInputHTML();
   } else if(gjSub==='rank'){
     h+=gjRankHTML();
   } else {
@@ -348,21 +347,150 @@ function rGJ(C,T){
   C.innerHTML=h;
 }
 
+function gjInputHTML(){
+  const gi=_gjInput;
+  const pA=gi.playerA, pB=gi.playerB;
+  const pList=players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const pOpts=name=>`<option value="">— 스트리머 선택 —</option>`+pList.map(p=>`<option value="${p.name}"${p.name===name?' selected':''}>${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
+  const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
+  const pAObj=players.find(p=>p.name===pA)||{};
+  const pBObj=players.find(p=>p.name===pB)||{};
+  const aCol=gc(pAObj.univ)||'#2563eb', bCol=gc(pBObj.univ)||'#dc2626';
+
+  let gameRows='';
+  gi.games.forEach((w,i)=>{
+    const wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
+    gameRows+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--surface);border-radius:6px;margin-bottom:4px">
+      <span style="font-size:11px;color:var(--gray-l);min-width:20px">${i+1}G</span>
+      <span style="font-weight:700;color:${w==='A'?aCol:bCol};flex:1">${wName} 승</span>
+      <span style="font-size:10px;color:var(--gray-l)">${lName} 패</span>
+      ${isLoggedIn?`<button onclick="_gjInput.games.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 4px">✕</button>`:''}
+    </div>`;
+  });
+
+  return `<div class="match-builder"><h3>⚔️ 끝장전 입력</h3>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openGJPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:12px;font-weight:700">날짜</label>
+          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pA,'28px')}
+            <span style="font-weight:800;color:${aCol}">${pA}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
+            <button onclick="_gjInput.playerA='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+          </div>`:`<select onchange="_gjInput.playerA=this.value;_gjInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pA)}</select>`}
+        </div>
+        <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pB,'28px')}
+            <span style="font-weight:800;color:${bCol}">${pB}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
+            <button onclick="_gjInput.playerB='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+          </div>`:`<select onchange="_gjInput.playerB=this.value;_gjInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pB)}</select>`}
+        </div>
+      </div>
+    </div>
+    ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="_gjInput.games.push('A');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
+          ${getPlayerPhotoHTML(pA,'20px')} ${pA} 승 (+1)
+        </button>
+        <button onclick="_gjInput.games.push('B');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
+          ${getPlayerPhotoHTML(pB,'20px')} ${pB} 승 (+1)
+        </button>
+      </div>
+      ${gi.games.length?`<div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:6px">현재 스코어: <span style="color:${aCol};font-weight:900">${pA} ${aWins}</span> : <span style="color:${bCol};font-weight:900">${bWins} ${pB}</span></div>
+        ${gameRows}
+      </div>`:'<div style="font-size:11px;color:var(--gray-l);padding:10px 0">위 버튼으로 경기 결과를 추가하세요</div>'}
+      ${gi.games.length?`<div style="display:flex;gap:8px">
+        <button onclick="gjDirectSave()" class="btn btn-b" style="flex:1">✅ 저장 (${gi.games.length}경기)</button>
+        <button onclick="_gjInput.games=[];render()" class="btn btn-r btn-xs">초기화</button>
+      </div>`:''}
+    </div>`:''}
+  </div>`;
+}
+
+function gjDirectSave(){
+  const gi=_gjInput;
+  if(!gi.playerA||!gi.playerB){alert('스트리머 두 명을 선택하세요.');return;}
+  if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
+  const sid=genId();
+  const dateVal=gi.date||new Date().toISOString().slice(0,10);
+  const newGames=gi.games.map(w=>({
+    _id:genId(),sid,d:dateVal,
+    wName:w==='A'?gi.playerA:gi.playerB,
+    lName:w==='A'?gi.playerB:gi.playerA,
+    map:''
+  }));
+  // 개인 전적 반영
+  newGames.forEach(m=>{
+    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','','끝장전');
+  });
+  gjM.unshift(...newGames);
+  const p1w=gi.games.filter(g=>g==='A').length, p2w=gi.games.filter(g=>g==='B').length;
+  const winner=p1w>p2w?gi.playerA:p2w>p1w?gi.playerB:'';
+  _gjInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
+  save();
+  gjSub='records';
+  render();
+  // 저장 직후 공유카드 열기 제안
+  setTimeout(()=>{
+    if(confirm(`✅ ${gi.games.length}경기 저장 완료!\n공유카드를 열겠습니까?`)){
+      openGJShareCard(gi.playerA,gi.playerB,p1w,p2w,dateVal,winner);
+    }
+  },200);
+}
+
 function gjRankHTML(){
+  // 개인 승패 집계
   const sc={};
-  players.forEach(p=>{sc[p.name]={w:0,l:0};});
+  const vs={}; // vs[name][opp] = {w,l}
   gjM.forEach(m=>{
     if(!sc[m.wName])sc[m.wName]={w:0,l:0};
     if(!sc[m.lName])sc[m.lName]={w:0,l:0};
     sc[m.wName].w++; sc[m.lName].l++;
+    if(!vs[m.wName])vs[m.wName]={};
+    if(!vs[m.wName][m.lName])vs[m.wName][m.lName]={w:0,l:0};
+    vs[m.wName][m.lName].w++;
+    if(!vs[m.lName])vs[m.lName]={};
+    if(!vs[m.lName][m.wName])vs[m.lName][m.wName]={w:0,l:0};
+    vs[m.lName][m.wName].l++;
   });
   const sorted=Object.entries(sc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
   if(!sorted.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  let h=`<table><thead><tr><th>순위</th><th style="text-align:left">선수</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
+  let h=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>승</th><th>패</th><th>승률</th><th style="text-align:left">상대 전적</th></tr></thead><tbody>`;
   sorted.forEach(([name,s],i)=>{
-    const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
+    const total=s.w+s.l; const rate=total?Math.round(s.w/total*100):0;
     const p=players.find(x=>x.name===name);
-    h+=`<tr><td style="font-weight:900">${i+1}</td><td style="text-align:left"><span style="font-weight:700">${name}</span><span style="font-size:11px;color:var(--gray-l);margin-left:4px">${p?.univ||''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
+    const vsEntries=Object.entries(vs[name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
+    const vsHTML=vsEntries.map(([opp,r])=>{
+      const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">
+        ${getPlayerPhotoHTML(opp,'14px')}
+        <span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span>
+        <span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span>
+      </span>`;
+    }).join('');
+    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    h+=`<tr>
+      <td>${rnk}</td>
+      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(name,'28px')}<span style="font-weight:700">${name}</span><span style="font-size:11px;color:var(--gray-l)">${p?.univ||''}</span></span></td>
+      <td class="wt">${s.w}</td><td class="lt">${s.l}</td>
+      <td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td>
+      <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
+    </tr>`;
   });
   return h+`</tbody></table>`;
 }
@@ -404,10 +532,10 @@ function gjRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">전체삭제</button>`:'';
-    const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
+    const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">🎴 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
-        <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
+        <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
