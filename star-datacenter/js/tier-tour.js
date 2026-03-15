@@ -326,7 +326,15 @@ function _bktPasteApplyLogic(savable, tn){
     if(m.sets.length>=3){alert('최대 3세트까지만 가능합니다.');return false;}
     m.sets.push({games:[],scoreA:0,scoreB:0,winner:''});
     setIdx=m.sets.length-1;
-  } else {setIdx=parseInt(setIdx);}
+  } else {
+    setIdx=parseInt(setIdx);
+    // 기존 세트에 데이터가 있으면 덮어쓰기 확인 후 초기화
+    const existSet=m.sets[setIdx];
+    if(existSet&&existSet.games&&existSet.games.length>0){
+      if(!confirm(`${setIdx===2?'에이스전':(setIdx+1)+'세트'}에 이미 ${existSet.games.length}게임이 있습니다.\n기존 기록을 지우고 새로 입력하시겠습니까?`))return false;
+      existSet.games=[];
+    }
+  }
   const set=m.sets[setIdx];
   if(!set.games)set.games=[];
   const teamANamesSet=new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
@@ -350,7 +358,7 @@ function _bktPasteApplyLogic(savable, tn){
   if(!m.a)m.a=teamA;if(!m.b)m.b=teamB;
   const dateEl=document.getElementById('paste-date');
   if(dateEl&&dateEl.value)m.d=dateEl.value;
-  // 전체 세트 집계로 경기 최종 스코어 갱신 (경기 일정 완료 표시에 필요)
+  // 전체 세트 집계로 경기 최종 스코어 갱신
   let mSA=0,mSB=0;
   (m.sets||[]).forEach(s=>{if(s.winner==='A')mSA++;else if(s.winner==='B')mSB++;});
   m.sa=mSA;m.sb=mSB;
@@ -359,11 +367,20 @@ function _bktPasteApplyLogic(savable, tn){
     const _bw=mSA>mSB?m.a:mSB>mSA?m.b:'';
     if(_bw){const _bbr=getBracket(tn);_bbr.winners[`${_grpPasteState.rnd}-${_grpPasteState.mi}`]=_bw;}
   }
+  // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (이중저장 방지)
+  if(m._id) revertMatchRecord({...m, _id:m._id});
   const matchId=genId();
-  savable.forEach(r=>{
-    const wInA=_isWinnerInA(r);
-    const univW=wInA?teamA:teamB;const univL=wInA?teamB:teamA;
-    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL,'대회');
+  m._id=matchId;
+  const dateStr=dateEl?.value||m.d||'';
+  (m.sets||[]).forEach(s=>{
+    (s.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;
+      const ln=g.winner==='A'?g.playerB:g.playerA;
+      const univW=g.winner==='A'?(m.a||''):(m.b||'');
+      const univL=g.winner==='A'?(m.b||''):(m.a||'');
+      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'대회');
+    });
   });
   save();
   const _matchModal=document.getElementById('grpMatchModal');
