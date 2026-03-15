@@ -179,24 +179,38 @@ function rTier(C,T){
   let fh=`<div class="fbar"><strong>보기:</strong>`;
   modes.forEach(m=>{fh+=`<button class="pill ${tierRankMode===m.id&&(!window._tierTypeSet||window._tierTypeSet.size===0)?'on':''}" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;});
   fh+=`</div>`;
-  fh+=`<div class="fbar"><strong>유형별:</strong>`;
-  fh+=`<button class="pill ${(!window._tierTypeSet||window._tierTypeSet.size===0)?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
-  modeSortBtns.forEach(m=>{
+  // 유형별 필터 - 접기/펼치기
+  if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
+  const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
+  fh+=`<div class="fbar" style="gap:6px"><strong>유형별:</strong>
+    <button class="pill ${(!_hasTypeFilter)?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
+  if(_hasTypeFilter){
     if(!window._tierTypeSet)window._tierTypeSet=new Set();
-    const on=window._tierTypeSet.has(m.id);
-    fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
-  });
+    window._tierTypeSet.forEach(id=>{
+      const mb=modeSortBtns.find(m=>m.id===id);
+      if(mb) fh+=`<button class="pill on" style="background:${mb.color};border-color:${mb.color};color:#fff" onclick="window._tierTypeSet.delete('${id}');render()">${mb.lbl} ✕</button>`;
+    });
+  }
+  fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)">${window._tierTypeFilterOpen?'▲ 접기':'▼ 더보기'}</button>`;
   fh+=`</div>`;
-  if(tierRankMode!=='recent'){
-    fh+=`<div class="fbar"><strong>대학:</strong><button class="pill ${fUniv==='전체'?'on':''}" onclick="sf('전체','${fTier}')">전체</button>`;
-    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
-    fh+=`</div><div class="fbar"><strong>티어:</strong><button class="pill ${fTier==='전체'?'on':''}" onclick="sf('${fUniv}','전체')">전체</button>`;
-    TIERS.forEach(t=>{
-    const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
-    fh+=`<button class="pill" style="border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onmouseover="if(!${_sel})this.style.background='${_bc}22'" onmouseout="if(!${_sel})this.style.background=''" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
-  });
+  if(window._tierTypeFilterOpen){
+    fh+=`<div class="fbar" style="flex-wrap:wrap">`;
+    modeSortBtns.forEach(m=>{
+      if(!window._tierTypeSet)window._tierTypeSet=new Set();
+      const on=window._tierTypeSet.has(m.id);
+      fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
+    });
     fh+=`</div>`;
-    // 종족 필터 + 전적없는 선수 숨기기
+  }
+  if(tierRankMode!=='recent'){
+    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch"><strong style="flex-shrink:0">대학:</strong><button class="pill ${fUniv==='전체'?'on':''}" onclick="sf('전체','${fTier}')">전체</button>`;
+    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
+    fh+=`</div><div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch"><strong style="flex-shrink:0">티어:</strong><button class="pill ${fTier==='전체'?'on':''}" onclick="sf('${fUniv}','전체')">전체</button>`;
+    TIERS.forEach(t=>{
+      const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
+      fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
+    });
+    fh+=`</div>`;
     if(!window._tierRaceFilter) window._tierRaceFilter='전체';
     if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
     fh+=`<div class="fbar"><strong>종족:</strong>`;
