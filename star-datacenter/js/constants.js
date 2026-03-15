@@ -212,6 +212,7 @@ function localSave(){
   localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
   localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
   localStorage.setItem('su_notices',JSON.stringify(notices));
+  if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
 }
 
 function save(){

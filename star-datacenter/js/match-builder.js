@@ -55,12 +55,41 @@ function miniRankHTML(data){
     const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','mini')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 미니대전 기록 삭제">🗑</button></td>`:'';
     h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
-  return h+`</tbody></table>`;
+  h+=`</tbody></table>`;
+  // 개인 기여도 (sets.games 집계)
+  const psc={};
+  data.forEach(m=>{
+    (m.sets||[]).forEach(st=>{
+      (st.games||[]).forEach(g=>{
+        if(!g.wName||!g.lName)return;
+        if(!psc[g.wName])psc[g.wName]={w:0,l:0,univ:''};
+        if(!psc[g.lName])psc[g.lName]={w:0,l:0,univ:''};
+        psc[g.wName].w++;psc[g.lName].l++;
+        if(!psc[g.wName].univ){const p=players.find(x=>x.name===g.wName);if(p)psc[g.wName].univ=p.univ||'';}
+        if(!psc[g.lName].univ){const p=players.find(x=>x.name===g.lName);if(p)psc[g.lName].univ=p.univ||'';}
+      });
+    });
+  });
+  const psorted=Object.entries(psc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
+  if(psorted.length){
+    h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue);margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-ll)">👤 개인 기여도</div>
+    <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
+    psorted.forEach(([name,s],i)=>{
+      const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
+      const col=gc(s.univ);
+      let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+      h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(name,'22px')}<span style="font-weight:700">${name}</span>${s.univ?`<span class="ubadge" style="background:${col};font-size:9px">${s.univ}</span>`:''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
+    });
+    h+=`</tbody></table>`;
+  }
+  return h;
 }
 
 /* ══════════════════════════════════════
    개인전
 ══════════════════════════════════════ */
+let _indInput={date:'',playerA:'',playerB:'',games:[]};
+
 function rInd(C,T){
   T.innerText='🎮 개인전';
   if(!isLoggedIn && indSub==='input') indSub='records';
@@ -72,10 +101,7 @@ function rInd(C,T){
   let h=stabs(indSub,subOpts);
   if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
   if(indSub==='input'&&isLoggedIn){
-    h+=`<div class="match-builder"><h3>🎮 개인전 입력</h3>
-      <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-      <div style="font-size:12px;color:var(--gray-l);padding:16px;text-align:center;border:1.5px dashed var(--border);border-radius:10px">붙여넣기 버튼으로 경기 결과를 일괄 입력하세요</div>
-    </div>`;
+    h+=indInputHTML();
   } else if(indSub==='rank'){
     h+=indRankHTML();
   } else {
@@ -85,20 +111,38 @@ function rInd(C,T){
 }
 
 function indRankHTML(){
-  const sc={};
+  const sc={};const vs={};
   players.forEach(p=>{sc[p.name]={w:0,l:0};});
   indM.forEach(m=>{
     if(!sc[m.wName])sc[m.wName]={w:0,l:0};
     if(!sc[m.lName])sc[m.lName]={w:0,l:0};
     sc[m.wName].w++; sc[m.lName].l++;
+    if(!vs[m.wName])vs[m.wName]={};
+    if(!vs[m.wName][m.lName])vs[m.wName][m.lName]={w:0,l:0};
+    vs[m.wName][m.lName].w++;
+    if(!vs[m.lName])vs[m.lName]={};
+    if(!vs[m.lName][m.wName])vs[m.lName][m.wName]={w:0,l:0};
+    vs[m.lName][m.wName].l++;
   });
   const sorted=Object.entries(sc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
   if(!sorted.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  let h=`<table><thead><tr><th>순위</th><th style="text-align:left">선수</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
+  let h=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>승</th><th>패</th><th>승률</th><th style="text-align:left">상대 전적</th></tr></thead><tbody>`;
   sorted.forEach(([name,s],i)=>{
     const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
     const p=players.find(x=>x.name===name);
-    h+=`<tr><td style="font-weight:900">${i+1}</td><td style="text-align:left"><span style="font-weight:700">${name}</span><span style="font-size:11px;color:var(--gray-l);margin-left:4px">${p?.univ||''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
+    const vsEntries=Object.entries(vs[name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
+    const vsHTML=vsEntries.map(([opp,r])=>{
+      const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
+    }).join('');
+    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    h+=`<tr>
+      <td>${rnk}</td>
+      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(name,'28px')}<span style="font-weight:700">${name}</span><span style="font-size:11px;color:var(--gray-l)">${p?.univ||''}</span></span></td>
+      <td class="wt">${s.w}</td><td class="lt">${s.l}</td>
+      <td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td>
+      <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
+    </tr>`;
   });
   return h+`</tbody></table>`;
 }
@@ -140,7 +184,7 @@ function indRecordsHTML(){
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
-        <span style="font-size:11px;color:var(--gray-l);min-width:80px">${s.d}</span>
+        <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
@@ -197,6 +241,106 @@ function deleteIndSession(ids){
   indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-'));
   indM=indM.filter(m=>!ids.includes(m._id));
   save();render();
+}
+
+/* ══════════════════════════════════════
+   개인전 직접 입력
+══════════════════════════════════════ */
+function indInputHTML(){
+  const gi=_indInput;
+  const pA=gi.playerA, pB=gi.playerB;
+  const pList=players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const pOpts=name=>`<option value="">— 스트리머 선택 —</option>`+pList.map(p=>`<option value="${p.name}"${p.name===name?' selected':''}>${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
+  const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
+  const pAObj=players.find(p=>p.name===pA)||{};
+  const pBObj=players.find(p=>p.name===pB)||{};
+  const aCol=gc(pAObj.univ)||'#2563eb', bCol=gc(pBObj.univ)||'#dc2626';
+  let gameRows='';
+  gi.games.forEach((w,i)=>{
+    const wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
+    gameRows+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--surface);border-radius:6px;margin-bottom:4px">
+      <span style="font-size:11px;color:var(--gray-l);min-width:20px">${i+1}G</span>
+      <span style="font-weight:700;color:${w==='A'?aCol:bCol};flex:1">${wName} 승</span>
+      <span style="font-size:10px;color:var(--gray-l)">${lName} 패</span>
+      <button onclick="_indInput.games.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 4px">✕</button>
+    </div>`;
+  });
+  return `<div class="match-builder"><h3>🎮 개인전 입력</h3>
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button>
+      <span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#166534">
+      💡 <strong>개인전</strong>: 선수 1:1 단순 승패 기록 &nbsp;|&nbsp; <strong>끝장전</strong>: 동일 대전 상대 연속 시리즈 (세트 승패 추적)
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700">날짜</label>
+        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
+            <button onclick="_indInput.playerA='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+          </div>`:`<select onchange="_indInput.playerA=this.value;_indInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pA)}</select>`}
+        </div>
+        <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
+            <button onclick="_indInput.playerB='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+          </div>`:`<select onchange="_indInput.playerB=this.value;_indInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pB)}</select>`}
+        </div>
+      </div>
+    </div>
+    ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="_indInput.games.push('A');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
+          ${getPlayerPhotoHTML(pA,'20px')} ${pA} 승 (+1)
+        </button>
+        <button onclick="_indInput.games.push('B');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
+          ${getPlayerPhotoHTML(pB,'20px')} ${pB} 승 (+1)
+        </button>
+      </div>
+      ${gi.games.length?`<div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:6px">현재 스코어: <span style="color:${aCol};font-weight:900">${pA} ${aWins}</span> : <span style="color:${bCol};font-weight:900">${bWins} ${pB}</span></div>
+        ${gameRows}
+      </div>`:'<div style="font-size:11px;color:var(--gray-l);padding:10px 0">위 버튼으로 경기 결과를 추가하세요</div>'}
+      ${gi.games.length?`<div style="display:flex;gap:8px">
+        <button onclick="indDirectSave()" class="btn btn-b" style="flex:1">✅ 저장 (${gi.games.length}경기)</button>
+        <button onclick="_indInput.games=[];render()" class="btn btn-r btn-xs">초기화</button>
+      </div>`:''}
+    </div>`:''}
+  </div>`;
+}
+
+function indDirectSave(){
+  const gi=_indInput;
+  if(!gi.playerA||!gi.playerB){alert('스트리머 두 명을 선택하세요.');return;}
+  if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
+  const sid=genId();
+  const dateVal=gi.date||'';
+  const newGames=gi.games.map(w=>({
+    _id:genId(),sid,d:dateVal,
+    wName:w==='A'?gi.playerA:gi.playerB,
+    lName:w==='A'?gi.playerB:gi.playerA,
+    map:''
+  }));
+  newGames.forEach(m=>{
+    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','','개인전');
+  });
+  indM.unshift(...newGames);
+  _indInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
+  save();
+  indSub='records';
+  render();
 }
 
 /* ══════════════════════════════════════
@@ -585,7 +729,10 @@ function rCK(C,T){
   if(ckSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('ck');
   }
-  if(ckSub==='input'&&isLoggedIn){if(!BLD['ck'])BLD['ck']={date:'',membersA:[],membersB:[],sets:[]};h+=buildCKInputHTML();}
+  if(ckSub==='input'&&isLoggedIn){
+    if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
+    h+=buildCKInputHTML();
+  }
   else if(ckSub==='rank'){h+=ckRankHTML();}
   else{h+=recSummaryListHTML(ckM,'ck','tab');}
   C.innerHTML=h;
@@ -742,25 +889,32 @@ function rUnivM(C,T){
 }
 
 function univMRankHTML(){
-  const sc={};
+  const sc={};const vs={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
   univM.forEach(m=>{
     if(!sc[m.a])sc[m.a]={w:0,l:0,pts:0,total:0};if(!sc[m.b])sc[m.b]={w:0,l:0,pts:0,total:0};
     sc[m.a].total++;sc[m.b].total++;
-    if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;}
-    else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;}
+    if(!vs[m.a])vs[m.a]={};if(!vs[m.b])vs[m.b]={};
+    if(!vs[m.a][m.b])vs[m.a][m.b]={w:0,l:0};if(!vs[m.b][m.a])vs[m.b][m.a]={w:0,l:0};
+    if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;vs[m.a][m.b].w++;vs[m.b][m.a].l++;}
+    else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;vs[m.b][m.a].w++;vs[m.a][m.b].l++;}
   });
   const sorted=Object.entries(sc).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts);
   const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 대학대전 대학별 순위</div>
-  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
-  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
+  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th><th style="text-align:left">상대 전적</th>${delCol}</tr></thead><tbody>`;
+  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?7:6}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
     const sn=name.replace(/'/g,"\\'");
+    const vsEntries=Object.entries(vs[name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
+    const vsHTML=vsEntries.map(([opp,r])=>{
+      const vc=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px;white-space:nowrap"><span class="ubadge" style="background:${gc(opp)};padding:1px 4px;font-size:9px;cursor:pointer" onclick="openUnivModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${vc}">${r.w}승${r.l}패</span></span>`;
+    }).join('');
     const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','univm')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 대학대전 기록 삭제">🗑</button></td>`:'';
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td><td style="text-align:left;min-width:100px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>${delBtn}</tr>`;
   });
   return h+`</tbody></table>`;
 }
