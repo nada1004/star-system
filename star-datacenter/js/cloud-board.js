@@ -278,17 +278,12 @@ function rBoard(C,T){
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
       <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'🔲 소형':'⬛ 대형'}</button>
-      <button class="brd-tbtn" onclick="window._boardRankView=!window._boardRankView;render()" style="${window._boardRankView?'background:#fef9c3;border-color:#ca8a04;color:#92400e;':''}" title="포인트 순 전체 랭킹 보기">🏅 랭킹뷰</button>
     </div>
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
   </div>
   <div id="board-wrap" style="display:grid;grid-template-columns:1fr;gap:14px;align-items:start">`;
-  if(window._boardRankView){
-    h+=buildBoardRankViewHTML(visUnivs);
-  } else {
-    const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
-    targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
-  }
+  const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
+  targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
   h+=`</div>
 `;
   C.innerHTML=h;

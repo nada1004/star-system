@@ -56,32 +56,37 @@ function miniRankHTML(data){
     h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   h+=`</tbody></table>`;
-  // 개인 기여도 (sets.games 집계)
+  // 개인 순위 (sets.games 집계 — wName/lName 및 playerA/playerB/winner 형식 모두 지원)
+  if(!window._rankSort)window._rankSort={};
+  const msk=window._rankSort['mini']||'rate';
+  const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
   const psc={};
   data.forEach(m=>{
     (m.sets||[]).forEach(st=>{
       (st.games||[]).forEach(g=>{
-        if(!g.wName||!g.lName)return;
-        if(!psc[g.wName])psc[g.wName]={w:0,l:0,univ:''};
-        if(!psc[g.lName])psc[g.lName]={w:0,l:0,univ:''};
-        psc[g.wName].w++;psc[g.lName].l++;
-        if(!psc[g.wName].univ){const p=players.find(x=>x.name===g.wName);if(p)psc[g.wName].univ=p.univ||'';}
-        if(!psc[g.lName].univ){const p=players.find(x=>x.name===g.lName);if(p)psc[g.lName].univ=p.univ||'';}
+        let wn,ln;
+        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+        else return;
+        if(!psc[wn])psc[wn]={w:0,l:0,univ:''};
+        if(!psc[ln])psc[ln]={w:0,l:0,univ:''};
+        psc[wn].w++;psc[ln].l++;
+        if(!psc[wn].univ){const p=players.find(x=>x.name===wn);if(p)psc[wn].univ=p.univ||'';}
+        if(!psc[ln].univ){const p=players.find(x=>x.name===ln);if(p)psc[ln].univ=p.univ||'';}
       });
     });
   });
-  const psorted=Object.entries(psc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
-  if(psorted.length){
-    h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue);margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-ll)">👤 개인 기여도</div>
-    <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
-    psorted.forEach(([name,s],i)=>{
-      const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
-      const col=gc(s.univ);
-      let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
-      h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(name,'22px')}<span style="font-weight:700">${name}</span>${s.univ?`<span class="ubadge" style="background:${col};font-size:9px">${s.univ}</span>`:''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
-    });
-    h+=`</tbody></table>`;
-  }
+  const pEntries=Object.entries(psc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:s.univ}));
+  pEntries.sort((a,b)=>msk==='w'?b.w-a.w||b.rate-a.rate:msk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
+  h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue);margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-ll)">🏅 개인 순위</div>${msortBar}`;
+  if(!pEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
+  h+=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
+  pEntries.forEach((p,i)=>{
+    const col=gc(p.univ);
+    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
+  });
+  h+=`</tbody></table>`;
   return h;
 }
 
@@ -944,7 +949,39 @@ function univMRankHTML(){
     const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','univm')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 대학대전 기록 삭제">🗑</button></td>`:'';
     h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
-  return h+`</tbody></table>`;
+  h+=`</tbody></table>`;
+  // 개인 순위
+  if(!window._rankSort)window._rankSort={};
+  const usk=window._rankSort['univm']||'rate';
+  const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
+  const upsc={};
+  univM.forEach(m=>{
+    (m.sets||[]).forEach(st=>{
+      (st.games||[]).forEach(g=>{
+        let wn,ln;
+        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+        else return;
+        if(!upsc[wn])upsc[wn]={w:0,l:0,univ:''};
+        if(!upsc[ln])upsc[ln]={w:0,l:0,univ:''};
+        upsc[wn].w++;upsc[ln].l++;
+        if(!upsc[wn].univ){const p=players.find(x=>x.name===wn);if(p)upsc[wn].univ=p.univ||'';}
+        if(!upsc[ln].univ){const p=players.find(x=>x.name===ln);if(p)upsc[ln].univ=p.univ||'';}
+      });
+    });
+  });
+  const upEntries=Object.entries(upsc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:s.univ}));
+  upEntries.sort((a,b)=>usk==='w'?b.w-a.w||b.rate-a.rate:usk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
+  h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학대전 개인 순위</div>${usortBar}`;
+  if(!upEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
+  h+=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
+  upEntries.forEach((p,i)=>{
+    const col=gc(p.univ);
+    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${p.name}</span></span></td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col};font-size:10px" onclick="openUnivModal('${(p.univ||'').replace(/'/g,"\\'")}')">${p.univ||'-'}</span></td><td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
+  });
+  h+=`</tbody></table>`;
+  return h;
 }
 
 /* ══════════════════════════════════════

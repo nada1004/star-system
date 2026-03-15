@@ -6,6 +6,7 @@
     {id:'race',lbl:'🧬 종족승률'},
     {id:'ind',lbl:'🎮 개인전'},
     {id:'gj',lbl:'⚔️ 끝장전'},
+    {id:'civil',lbl:'⚔️ 시빌워'},
     {id:'mini',lbl:'⚡ 미니대전'},
     {id:'ck',lbl:'🤝 대학CK'},
     {id:'univm',lbl:'🏟️ 대학대전'},
@@ -19,7 +20,7 @@
   let h=`<div class="stabs no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:thin">`;
   tabs.forEach(t=>{h+=`<button class="stab ${histSub===t.id?'on':''}" style="flex-shrink:0" onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()">${t.lbl}</button>`;});
   h+=`</div>`;
-  const needDateFilter=['mini','ck','univm','comp','tourney','pro','race','ind','gj','tiertour','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','tiertour','all'].includes(histSub);
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
@@ -50,7 +51,8 @@
     return;
   }
   if(histSub==='all') h+=histAllHTML();
-  else if(histSub==='mini') h+=recSummaryListHTML(miniM,'mini','hist');
+  else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
+  else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');

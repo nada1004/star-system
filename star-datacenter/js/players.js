@@ -290,6 +290,7 @@ function rTier(C,T){
   // 전적없는 선수 숨기기
   if(window._tierHideNoRecord) list=list.filter(p=>(p.win+p.loss)>0);
 
+  let _modePStats=null;
   if(tierRankMode==='tier') list.sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
   else if(tierRankMode==='wins') list.sort((a,b)=>b.win-a.win||a.loss-b.loss);
   else if(tierRankMode==='winrate'){
@@ -307,9 +308,50 @@ function rTier(C,T){
   else if(tierRankMode==='elo'){
     list.sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   }
+  else if(tierRankMode==='mini_win'||tierRankMode==='mini_loss'){
+    const _ps={};
+    (miniM||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
+      let wn,ln;
+      if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+      else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+      else return;
+      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
+      _ps[wn].w++;_ps[ln].l++;
+    });});});
+    _modePStats=_ps;
+    list.sort((a,b)=>tierRankMode==='mini_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
+  }
+  else if(tierRankMode==='ck_win'||tierRankMode==='ck_loss'){
+    const _ps={};
+    (ckM||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
+      _ps[wn].w++;_ps[ln].l++;
+    });});});
+    _modePStats=_ps;
+    list.sort((a,b)=>tierRankMode==='ck_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
+  }
+  else if(tierRankMode==='comp_win'||tierRankMode==='comp_loss'){
+    const _ps={};
+    function _cntGame(g){
+      if(!g.playerA||!g.playerB||!g.winner)return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
+      _ps[wn].w++;_ps[ln].l++;
+    }
+    (tourneys||[]).forEach(tn=>{
+      (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cntGame);});});});
+      const _br=typeof getBracket==='function'?getBracket(tn):{};
+      Object.values(_br.matchDetails||{}).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cntGame);});});
+    });
+    _modePStats=_ps;
+    list.sort((a,b)=>tierRankMode==='comp_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
+  }
 
   const modeHeaders={
-    tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차'
+    tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',
+    mini_win:'미니승',mini_loss:'미니패',ck_win:'CK승',ck_loss:'CK패',comp_win:'대회승',comp_loss:'대회패'
   };
   if(tierRankMode==='elo') tierRankMode='tier'; // ELO 제거 후 fallback
   const extraHeader=modeHeaders[tierRankMode]||'포인트';
@@ -339,6 +381,12 @@ function rTier(C,T){
     else if(tierRankMode==='winstreak'){const diff=p.win-p.loss;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
     else if(tierRankMode==='revstreak'){const diff=p.loss-p.win;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--red)':diff<0?'var(--green)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
     else if(tierRankMode==='elo'){const e=p.elo||ELO_DEFAULT;extraVal=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${e>=1400?'#7c3aed':e>=1300?'var(--gold)':e>=1200?'var(--green)':'var(--red)'}">${e}</span>`;}
+    else if(['mini_win','mini_loss','ck_win','ck_loss','comp_win','comp_loss'].includes(tierRankMode)){
+      const _v=_modePStats?_modePStats[p.name]:null;
+      const isWin=tierRankMode.endsWith('_win');
+      const cnt=_v?(isWin?_v.w:_v.l):0;
+      extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
+    }
     const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
