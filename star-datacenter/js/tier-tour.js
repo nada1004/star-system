@@ -354,6 +354,11 @@ function _bktPasteApplyLogic(savable, tn){
   let mSA=0,mSB=0;
   (m.sets||[]).forEach(s=>{if(s.winner==='A')mSA++;else if(s.winner==='B')mSB++;});
   m.sa=mSA;m.sb=mSB;
+  // 브라켓 승자 자동 업데이트 (수동 추가 경기 rnd===-1은 스킵)
+  if(_grpPasteState.rnd!==-1){
+    const _bw=mSA>mSB?m.a:mSB>mSA?m.b:'';
+    if(_bw){const _bbr=getBracket(tn);_bbr.winners[`${_grpPasteState.rnd}-${_grpPasteState.mi}`]=_bw;}
+  }
   const matchId=genId();
   savable.forEach(r=>{
     const wInA=_isWinnerInA(r);
