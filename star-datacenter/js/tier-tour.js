@@ -358,7 +358,7 @@ function _bktPasteApplyLogic(savable, tn){
   savable.forEach(r=>{
     const wInA=_isWinnerInA(r);
     const univW=wInA?teamA:teamB;const univL=wInA?teamB:teamA;
-    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL,'토너먼트');
+    applyGameResult(r.wPlayer.name,r.lPlayer.name,dateEl?.value||'',r.map||'-',matchId,univW,univL,'대회');
   });
   save();
   const _matchModal=document.getElementById('grpMatchModal');

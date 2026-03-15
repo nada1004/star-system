@@ -450,14 +450,6 @@ function rTier(C,T){
   const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
   const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
 
-  // 페이지네이션 (20명 단위)
-  if(!window._tierRankPage)window._tierRankPage=0;
-  const _PAGE=20;
-  const _totalItems=list.length;
-  const _totalPages=Math.ceil(_totalItems/_PAGE)||1;
-  if(window._tierRankPage>=_totalPages)window._tierRankPage=0;
-  const _pagedList=_totalItems>_PAGE?list.slice(window._tierRankPage*_PAGE,(window._tierRankPage+1)*_PAGE):list;
-
   let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><thead><tr>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
@@ -469,14 +461,13 @@ function rTier(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">${extraHeader}</th>
   </tr></thead><tbody>`;
-  _pagedList.forEach((p,i)=>{
-    const _globalIdx=window._tierRankPage*_PAGE+i;
+  list.forEach((p,i)=>{
     const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
     let rnkHTML;
-    if(_globalIdx===0) rnkHTML=`<span class="rk1">1등</span>`;
-    else if(_globalIdx===1) rnkHTML=`<span class="rk2">2등</span>`;
-    else if(_globalIdx===2) rnkHTML=`<span class="rk3">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${_globalIdx+1}위</span>`;
+    if(i===0) rnkHTML=`<span class="rk1">1등</span>`;
+    else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;
+    else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
     let extraVal='';
     if(_typeSum!==null){
       const sv=_typeSum[p.name]||0;
@@ -507,14 +498,5 @@ function rTier(C,T){
     </tr>`;
   });
   h+=`</tbody></table></div>`;
-  if(_totalItems>_PAGE){
-    const _prevPage=window._tierRankPage-1;
-    const _nextPage=window._tierRankPage+1;
-    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
-      <button class="btn btn-sm" ${window._tierRankPage===0?'disabled':''} onclick="window._tierRankPage=${_prevPage};render()">← 이전</button>
-      <span style="font-size:12px;color:var(--gray-l)">${window._tierRankPage+1} / ${_totalPages} (총 ${_totalItems}명)</span>
-      <button class="btn btn-sm" ${window._tierRankPage>=_totalPages-1?'disabled':''} onclick="window._tierRankPage=${_nextPage};render()">다음 →</button>
-    </div>`;
-  }
   C.innerHTML=h;
 }

@@ -63,7 +63,7 @@ function rComp(C,T){
     subOpts=[
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
-      {id:'tour',lbl:'🗂️ 브라켓 시각화'},
+      {id:'tour',lbl:'🗂️ 대진표'},
       {id:'tourschedule',lbl:'📋 토너먼트 경기 일정'},
       {id:'comprank',lbl:'🏅 개인 순위'},
       ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
@@ -1425,7 +1425,7 @@ function bktSaveMatch(){
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'토너먼트');
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'대회');
     });
   });
   window._bracketMatchMode=false;
