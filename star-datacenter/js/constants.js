@@ -184,35 +184,44 @@ function fixPoints(){
     if(!p.history)p.history=[];
     if(p.points===undefined)p.points=0;
     if(!p.win)p.win=0; if(!p.loss)p.loss=0;
-    if(!p.gender || !['M','F'].includes(p.gender))p.gender='F';
+    if(!p.gender || !['M','F'].includes(p.gender))p.gender='M';
     if(tierMap[p.tier])p.tier=tierMap[p.tier]; // 기존 데이터 자동 변환
   });
 }
 
 function localSave(){
-  localStorage.setItem('su_tiers',JSON.stringify(TIERS));
-  localStorage.setItem('su_p', JSON.stringify(players));
-  localStorage.setItem('su_u', JSON.stringify(univCfg));
-  localStorage.setItem('su_m', JSON.stringify(maps));
-  localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
-  localStorage.setItem('su_t', JSON.stringify(tourD));
-  localStorage.setItem('su_mm',JSON.stringify(miniM));
-  localStorage.setItem('su_um',JSON.stringify(univM));
-  localStorage.setItem('su_cm',JSON.stringify(comps));
-  localStorage.setItem('su_ck',JSON.stringify(ckM));
-  localStorage.setItem('su_cn',JSON.stringify(compNames));
-  localStorage.setItem('su_cc',JSON.stringify(curComp));
-  localStorage.setItem('su_pro',JSON.stringify(proM));
-  localStorage.setItem('su_mb',JSON.stringify(members));
-  localStorage.setItem('su_tn',JSON.stringify(tourneys));
-  localStorage.setItem('su_ttm',JSON.stringify(ttM));
-  localStorage.setItem('su_indm',JSON.stringify(indM));
-  localStorage.setItem('su_gjm',JSON.stringify(gjM));
-  localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
-  localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
-  localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
-  localStorage.setItem('su_notices',JSON.stringify(notices));
-  if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
+  try{
+    localStorage.setItem('su_tiers',JSON.stringify(TIERS));
+    localStorage.setItem('su_p', JSON.stringify(players));
+    localStorage.setItem('su_u', JSON.stringify(univCfg));
+    localStorage.setItem('su_m', JSON.stringify(maps));
+    localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
+    localStorage.setItem('su_t', JSON.stringify(tourD));
+    localStorage.setItem('su_mm',JSON.stringify(miniM));
+    localStorage.setItem('su_um',JSON.stringify(univM));
+    localStorage.setItem('su_cm',JSON.stringify(comps));
+    localStorage.setItem('su_ck',JSON.stringify(ckM));
+    localStorage.setItem('su_cn',JSON.stringify(compNames));
+    localStorage.setItem('su_cc',JSON.stringify(curComp));
+    localStorage.setItem('su_pro',JSON.stringify(proM));
+    localStorage.setItem('su_mb',JSON.stringify(members));
+    localStorage.setItem('su_tn',JSON.stringify(tourneys));
+    localStorage.setItem('su_ttm',JSON.stringify(ttM));
+    localStorage.setItem('su_indm',JSON.stringify(indM));
+    localStorage.setItem('su_gjm',JSON.stringify(gjM));
+    localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
+    localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
+    localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
+    localStorage.setItem('su_notices',JSON.stringify(notices));
+    if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
+  }catch(e){
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
+      if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
+      else alert('⚠️ 저장 공간이 부족합니다! 브라우저 저장소를 정리해 주세요.');
+    }else{
+      console.error('[localSave error]',e);
+    }
+  }
 }
 
 function save(){

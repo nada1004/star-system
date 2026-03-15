@@ -209,7 +209,7 @@ function eloSearchFilter(q){
 }
 function statsEloHTML(){
   const allWithHist=players.filter(p=>p.history&&p.history.length>0)
-    .sort((a,b)=>(b.elo||1200)-(a.elo||1200));
+    .sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   const top20=allWithHist.slice(0,30);
   if(!_eloSelPlayer&&allWithHist.length)_eloSelPlayer=allWithHist[0].name;
   const selP=players.find(p=>p.name===_eloSelPlayer);
@@ -268,7 +268,7 @@ function initEloChart(){
   canvas.style.display='block';
   const hist=[...p.history].reverse();
   // ELO 재구성: eloAfter 필드 사용
-  const pts=[];let elo=1200;
+  const pts=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
     if(h.eloAfter!=null)pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||''});
     else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||''});}
@@ -561,7 +561,7 @@ function statsRecordsHTML(){
     let curStreak=0,curStreakType='';
     for(const x of h){if(!curStreakType||x.result===curStreakType){curStreak++;curStreakType=x.result;}else break;}
     return{...p,w,l,tot,rate:tot?Math.round(w/tot*100):0,maxStreak,
-      curStreak,curStreakType,elo:p.elo||1200,proGames:ph.length,points:p.points||0};
+      curStreak,curStreakType,elo:p.elo||ELO_DEFAULT,proGames:ph.length,points:p.points||0};
   }).filter(p=>p.tot>0||p.proGames>0);
   if(!withStats.length)return`<div class="ssec"><p style="color:var(--gray-l)">기록이 없습니다.</p></div>`;
   const cats=[
@@ -777,7 +777,7 @@ function statsMismatchHTML(){
         const pA=players.find(x=>x.name===g.playerA);
         const pB=players.find(x=>x.name===g.playerB);
         if(!pA||!pB)return;
-        const eA=pA.elo||1200,eB=pB.elo||1200;
+        const eA=pA.elo||ELO_DEFAULT,eB=pB.elo||ELO_DEFAULT;
         const diff=Math.abs(eA-eB);
         if(diff<100)return;
         const winner=g.winner==='A'?g.playerA:g.playerB;
@@ -793,7 +793,7 @@ function statsMismatchHTML(){
   function matchRow(m){
     const winner=players.find(p=>p.name===m.winner);
     const loser=players.find(p=>p.name===(m.winner===m.pA?m.pB:m.pA));
-    const wElo=winner?.elo||1200;const lElo=loser?.elo||1200;
+    const wElo=winner?.elo||ELO_DEFAULT;const lElo=loser?.elo||ELO_DEFAULT;
     const wCol=gc(winner?.univ||'');const lCol=gc(loser?.univ||'');
     return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--gray-l);min-width:68px">${m.date}</span>

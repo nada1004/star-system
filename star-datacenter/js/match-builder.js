@@ -263,25 +263,27 @@ function indRecordsHTML(){
   return h;
 }
 
-function _removeIndResult(wName, lName, date, map){
+function _removeIndResult(wName, lName, date, map, matchId){
   const w=players.find(p=>p.name===wName);
   const l=players.find(p=>p.name===lName);
   if(!w||!l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
   const nm=v=>(!v||v==='-')?'-':v;
-  const wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  let wi=matchId?w.history.findIndex(h=>h.matchId===matchId&&h.result==='승'&&h.opp===lName):-1;
+  if(wi<0)wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
   let delta=0;
   if(wi>=0){delta=w.history[wi].eloDelta||0;w.history.splice(wi,1);}
-  const li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
+  let li=matchId?l.history.findIndex(h=>h.matchId===matchId&&h.result==='패'&&h.opp===wName):-1;
+  if(li<0)li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
   if(li>=0)l.history.splice(li,1);
   if(w.win>0)w.win--;if(l.loss>0)l.loss--;
   w.points-=3;l.points+=3;
-  if(delta){w.elo=(w.elo||1200)-delta;l.elo=(l.elo||1200)+delta;}
+  if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
 }
 function deleteIndSession(ids){
   if(!confirm(`${ids.length}경기를 삭제하시겠습니까?`))return;
-  indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-'));
+  indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
   indM=indM.filter(m=>!ids.includes(m._id));
   save();render();
 }
@@ -499,7 +501,7 @@ function _removeGjResult(wName, lName, date, map, matchId){
   if(li>=0)l.history.splice(li,1);
   if(w.win>0)w.win--;if(l.loss>0)l.loss--;
   w.points-=3;l.points+=3;
-  if(delta){w.elo=(w.elo||1200)-delta;l.elo=(l.elo||1200)+delta;}
+  if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
 }
 function deleteGjGame(idx){
   const m=gjM[idx];if(!m)return;

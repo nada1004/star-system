@@ -88,8 +88,8 @@ function render(){
       if(tsi&&typeof totalSearch!=='undefined'&&totalSearch&&document.activeElement!==tsi){tsi.focus();tsi.setSelectionRange(tsi.value.length,tsi.value.length);}
     };
     _restoreFocus();
-    // 모바일: 첫 rAF 후 한 프레임 더
-    requestAnimationFrame(()=>{injectUnivIcons(C);_restoreFocus();});
+    // 모바일: 첫 rAF 후 한 프레임 더 (포커스 복원만, 아이콘은 앞에서 완료)
+    requestAnimationFrame(()=>{_restoreFocus();});
   });
 }
 

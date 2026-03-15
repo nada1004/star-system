@@ -404,10 +404,17 @@ function copyMatchResult(a, sa, b, sb, date, mode, idx){
   navigator.clipboard.writeText(text).then(()=>{
     showToast('📋 상세 결과 복사됐습니다!');
   }).catch(()=>{
-    const ta=document.createElement('textarea');
-    ta.value=text;document.body.appendChild(ta);ta.select();
-    document.execCommand('copy');document.body.removeChild(ta);
-    showToast('📋 복사됐습니다!');
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok)showToast('📋 복사됐습니다!');
+      else showToast('❌ 복사 실패 — 직접 선택 후 복사해 주세요.',3500);
+    }catch(e2){
+      showToast('❌ 복사를 지원하지 않는 브라우저입니다.',3500);
+    }
   });
 }
 
