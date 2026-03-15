@@ -15,7 +15,8 @@
     {id:'univstat',lbl:'🏛️ 대학별'},
     {id:'univrank',lbl:'🏛️ 대학별 포인트 순위'},
     {id:'pro',lbl:'🏅 프로리그'},
-    {id:'vs',lbl:'⚔️ 1:1 상대전적'}
+    {id:'vs',lbl:'⚔️ 1:1 상대전적'},
+    {id:'psearch',lbl:'🔍 선수별 검색'}
   ];
   let h=`<div class="stabs no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:thin">`;
   tabs.forEach(t=>{h+=`<button class="stab ${histSub===t.id?'on':''}" style="flex-shrink:0" onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()">${t.lbl}</button>`;});
@@ -61,6 +62,7 @@
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='tiertour') h+=ttM&&ttM.length?recSummaryListHTMLFiltered(ttM,'tt','hist'):'<div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">티어대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>';
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
+  else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
 }
 
@@ -118,11 +120,10 @@ function histAllHTML(){
 
   // 검색어 필터
   const _sq=((window._recQ&&window._recQ['all'])||'').toLowerCase().trim();
-  const filtered=_sq?allItems.filter(({m,type})=>{
-    const isCK=(type==='ck'||type==='pro');
+  const filtered=_sq?allItems.filter(({m})=>{
     return [
       m.a||'',m.b||'',m.d||'',m.wName||'',m.lName||'',m.compName||'',
-      isCK?(m.teamAMembers||[]).map(x=>x.name||'').join(' '):'',(isCK?(m.teamBMembers||[]).map(x=>x.name||'').join(' '):''),
+      (m.teamAMembers||[]).map(x=>x.name||'').join(' '),(m.teamBMembers||[]).map(x=>x.name||'').join(' '),
       (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.wName||'',g.lName||''])).join(' ')
     ].join(' ').toLowerCase().includes(_sq);
   }):allItems;
@@ -752,6 +753,77 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     h+=`</div>`;
   });
   h+=`</div>`;
+  return h;
+}
+
+/* ══════════════════════════════════════
+   대전 기록 > 선수별 검색 탭
+══════════════════════════════════════ */
+function histPlayerSearchHTML(){
+  const q=(window._histPSearchQ||'').trim();
+  const modeBadgeColors={'조별리그':'#2563eb','대회':'#b45309','미니대전':'#2563eb','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','개인':'#8b5cf6'};
+
+  let h=`<div style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <input type="text" id="hist-psearch-input" placeholder="🔍 선수 이름 입력..." value="${q.replace(/"/g,'&quot;')}"
+        oninput="window._histPSearchQ=this.value;window._histPSearchPage=0;render()"
+        style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:600;outline:none">
+      ${q?`<button onclick="window._histPSearchQ='';window._histPSearchPage=0;render()" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:18px;line-height:1;padding:0 2px">✕</button>`:''}
+    </div>
+  </div>`;
+
+  if(!q){
+    h+=`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">선수 이름을 입력하세요</div><div class="empty-state-desc">모든 종목의 경기 기록을 한번에 확인할 수 있습니다</div></div>`;
+    return h;
+  }
+
+  const ql=q.toLowerCase();
+  const matched=players.filter(p=>p.name.toLowerCase().includes(ql));
+  if(!matched.length){
+    h+=`<div class="empty-state"><div class="empty-state-icon">😅</div><div class="empty-state-title">선수를 찾을 수 없습니다</div><div class="empty-state-desc">"${q}"와 일치하는 선수가 없습니다</div></div>`;
+    return h;
+  }
+
+  matched.forEach(p=>{
+    const hist=(p.history||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+    if(!hist.length)return;
+    const col=gc(p.univ)||'#6b7280';
+    const wins=hist.filter(h=>h.result==='승').length;
+    const losses=hist.length-wins;
+    const wr=hist.length?Math.round(wins/hist.length*100):0;
+    h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">
+        <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+        <span style="font-weight:800;font-size:15px;color:var(--text)">${p.name}</span>
+        <span style="font-size:12px;color:var(--gray-l)">${p.univ||''}</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--text3)">${hist.length}게임</span>
+        <span style="font-size:12px;font-weight:700;color:#16a34a">${wins}승</span>
+        <span style="font-size:12px;font-weight:700;color:#dc2626">${losses}패</span>
+        <span style="font-size:12px;padding:2px 8px;border-radius:20px;background:${wr>=50?'#dcfce7':'#fee2e2'};color:${wr>=50?'#16a34a':'#dc2626'};font-weight:800">${wr}%</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="margin:0;border:none;border-radius:0;font-size:12px"><thead><tr>
+          <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>
+        </tr></thead><tbody>`;
+    hist.slice(0,50).forEach(hh=>{
+      const isWin=hh.result==='승';
+      const mc=modeBadgeColors[hh.mode||'']||'#6b7280';
+      const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
+      const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
+      h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+        <td style="color:var(--gray-l);font-size:11px;white-space:nowrap">${hh.date||''}</td>
+        <td><span style="background:${mc};color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${hh.mode||''}</span></td>
+        <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">LOSE</span>`}</td>
+        <td style="cursor:pointer;font-weight:700" onclick="openPlayerModal('${(hh.opp||'').replace(/'/g,"\\'")}')"><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:3px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp||''}</span></span></td>
+        <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace||''}</span></td>
+        <td style="color:var(--gray-l);font-size:11px">${hh.map&&hh.map!=='-'?hh.map:''}</td>
+        <td>${eloStr}</td>
+      </tr>`;
+    });
+    if(hist.length>50) h+=`<tr><td colspan="7" style="text-align:center;color:var(--gray-l);font-size:11px;padding:6px">... 최근 50게임만 표시 (전체 ${hist.length}게임은 선수 상세에서 확인)</td></tr>`;
+    h+=`</tbody></table></div></div>`;
+  });
+
   return h;
 }
 
