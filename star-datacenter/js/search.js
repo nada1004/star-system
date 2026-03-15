@@ -980,6 +980,8 @@ function pastePreview() {
     // ── 무시할 라인 패턴 ──
     // 팀 스코어: "팀명 (승/패) N:M (승/패) 팀명"
     if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+    // [승]/[패] 세트 결과 요약 라인: "[승] 수술대 3:1 늪지대" 등
+    if (/^\[(?:승|패)\]/.test(trimmed)) return;
     // 메타 정보: "[nSET - ...]", "[슈 에] - ...", "밴" 등 대괄호 제목/주석 라인
     if (/^\[.*\]\s*[-–—]/.test(trimmed)) return;
     // 밴/엔트리 정보: "다린,애공 밴" 등 (승/패/🆚 없고, 쉼표+한글+밴으로 끝나는 라인)
@@ -2225,6 +2227,9 @@ function proPreview() {
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
+    // [승]/[패] 세트 결과 요약 라인 무시
+    if (/^\[(?:승|패)\]/.test(trimmed)) return;
+    if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
     const sepResult = parseSetSeparator(trimmed);
     if (sepResult !== null) {
       if (sepResult === 0) currentSet++;
