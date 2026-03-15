@@ -405,62 +405,8 @@ function rHistUnivStat(){
     h+=`</tbody></table>`;
   }
 
-  if(myMini.length){h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">⚡ 미니대전 기록</div>`;h+=recSummaryListHTMLFiltered(myMini,'mini','ustat-mini',histUniv);}
-  if(myUnivM.length){h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid #ede9fe">🏟️ 대학대전 기록</div>`;h+=recSummaryListHTMLFiltered(myUnivM,'univm','ustat-univm',histUniv);}
-  if(myCK.length){h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#dc2626;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid #fee2e2">🤝 대학CK 기록</div>`;h+=recSummaryListHTMLFiltered(myCK,'ck','ustat-ck',histUniv);}
-  if(myComp.length){
-    h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--gold);margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--gold-b)">🎖️ 대회 기록</div>`;
-    myComp.forEach(m=>{
-      const rIdx=comps.indexOf(m);const a=m.a||m.hostUniv||m.u||'';const b=m.b||'';
-      const ca=gc(a);const cb=gc(b);const aWin=m.sa>m.sb;const bWin=m.sb>m.sa;
-      const isA=(a===histUniv),isB=(b===histUniv);const myWin=(isA&&aWin)||(isB&&bWin);
-      const key=`ustat-comp-${rIdx}`;
-      h+=`<div class="rec-summary">
-        <div class="rec-sum-header">
-          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
-          <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}</span>
-          <div class="rec-sum-vs">
-            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-            ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span></div>`:''}
-            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
-            <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+histUniv+' 승':aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}</span>
-          </div>
-          <div style="margin-left:auto" class="no-export"><button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button></div>
-        </div>
-        <div id="det-${key}" class="rec-detail-area">
-          ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin)}
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <button class="btn btn-p btn-xs no-export" onclick="_shareMode='match';window._shareMatchObj={a:'${a.replace(/'/g,"\\'")}',b:'${b.replace(/'/g,"\\'")}',sa:${m.sa||0},sb:${m.sb||0},d:'${(m.d||'').replace(/'/g,"\\'")}',n:'${(m.n||'대회').replace(/'/g,"\\'")}',sets:[]};openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    });
-  }
-  if(!myMini.length&&!myUnivM.length&&!myCK.length&&!myComp.length&&!myTourney.length)h+=`<div style="padding:40px;text-align:center;color:var(--gray-l)">이 대학의 대전 기록이 없습니다.</div>`;
-  // 조별대회 기록
-  if(myTourney.length){
-    h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#0891b2;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid #cffafe">🏆 조별대회 기록</div>`;
-    myTourney.forEach(m=>{
-      const a=m.a||'';const b=m.b||'';
-      const ca=gc(a);const cb=gc(b);const aWin=m.sa>m.sb;const bWin=m.sb>m.sa;
-      const isA=(a===histUniv),isB=(b===histUniv);const myWin=(isA&&aWin)||(isB&&bWin);
-      const key=`ustat-tour-${m._tnId||''}-${m._gi||0}-${m._mi||0}`;
-      h+=`<div class="rec-summary">
-        <div class="rec-sum-header">
-          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
-          <span style="font-weight:700;font-size:13px">🏆 ${m.n||'조별대회'} ${m.grpName?'GROUP '+m.grpLetter:''}</span>
-          <div class="rec-sum-vs">
-            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-            <div class="rec-sum-score"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span></div>
-            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
-            <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+histUniv+' 승':aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}</span>
-          </div>
-        </div>
-      </div>`;
-    });
-  }
+  const totalMatches=myMini.length+myUnivM.length+myCK.length+myComp.length+myTourney.length;
+  if(!totalMatches) h+=`<div style="padding:40px;text-align:center;color:var(--gray-l)">이 대학의 대전 기록이 없습니다.</div>`;
   return h;
 }
 
