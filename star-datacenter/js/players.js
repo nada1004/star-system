@@ -156,21 +156,35 @@ function rTier(C,T){
     {id:'recent',lbl:'🕐 최근 경기'},
   ];
   const modeSortBtns=[
-    {id:'mini_win',lbl:'⚡ 미니대전 승순',color:'#7c3aed'},
-    {id:'mini_loss',lbl:'⚡ 미니대전 패순',color:'#7c3aed'},
-    {id:'ck_win',lbl:'🤝 대학CK 승순',color:'#dc2626'},
-    {id:'ck_loss',lbl:'🤝 대학CK 패순',color:'#dc2626'},
-    {id:'comp_win',lbl:'🏆 대회 승순',color:'#d97706'},
-    {id:'comp_loss',lbl:'🏆 대회 패순',color:'#d97706'},
+    {id:'mini_win',lbl:'⚡ 미니 승',color:'#7c3aed'},
+    {id:'mini_loss',lbl:'⚡ 미니 패',color:'#7c3aed'},
+    {id:'ck_win',lbl:'🤝 CK 승',color:'#dc2626'},
+    {id:'ck_loss',lbl:'🤝 CK 패',color:'#dc2626'},
+    {id:'comp_win',lbl:'🏆 대회 승',color:'#d97706'},
+    {id:'comp_loss',lbl:'🏆 대회 패',color:'#d97706'},
+    {id:'ind_win',lbl:'🎮 개인전 승',color:'#16a34a'},
+    {id:'ind_loss',lbl:'🎮 개인전 패',color:'#16a34a'},
+    {id:'gj_win',lbl:'⚔️ 끝장전 승',color:'#8b5cf6'},
+    {id:'gj_loss',lbl:'⚔️ 끝장전 패',color:'#8b5cf6'},
+    {id:'civ_win',lbl:'⚔️ 시빌워 승',color:'#db2777'},
+    {id:'civ_loss',lbl:'⚔️ 시빌워 패',color:'#db2777'},
+    {id:'tt_win',lbl:'🎯 티어대회 승',color:'#f59e0b'},
+    {id:'tt_loss',lbl:'🎯 티어대회 패',color:'#f59e0b'},
+    {id:'pro_win',lbl:'🏅 프로리그 승',color:'#0891b2'},
+    {id:'pro_loss',lbl:'🏅 프로리그 패',color:'#0891b2'},
+    {id:'univm_win',lbl:'🏟️ 대학대전 승',color:'#7c3aed'},
+    {id:'univm_loss',lbl:'🏟️ 대학대전 패',color:'#7c3aed'},
   ];
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
   let fh=`<div class="fbar"><strong>보기:</strong>`;
-  modes.forEach(m=>{fh+=`<button class="pill ${tierRankMode===m.id?'on':''}" onclick="tierRankMode='${m.id}';render()">${m.lbl}</button>`;});
+  modes.forEach(m=>{fh+=`<button class="pill ${tierRankMode===m.id&&(!window._tierTypeSet||window._tierTypeSet.size===0)?'on':''}" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;});
   fh+=`</div>`;
   fh+=`<div class="fbar"><strong>유형별:</strong>`;
+  fh+=`<button class="pill ${(!window._tierTypeSet||window._tierTypeSet.size===0)?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
   modeSortBtns.forEach(m=>{
-    const on=tierRankMode===m.id;
-    fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="tierRankMode='${m.id}';render()">${m.lbl}</button>`;
+    if(!window._tierTypeSet)window._tierTypeSet=new Set();
+    const on=window._tierTypeSet.has(m.id);
+    fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
   });
   fh+=`</div>`;
   if(tierRankMode!=='recent'){
@@ -190,6 +204,7 @@ function rTier(C,T){
       fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
     fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()" style="${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 선수 숨기기</button>`;
+    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()" style="${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}">남자 제외</button>`;
     fh+=`</div>`;
   }
   F.innerHTML=fh;
@@ -289,9 +304,84 @@ function rTier(C,T){
   if(window._tierRaceFilter&&window._tierRaceFilter!=='전체') list=list.filter(p=>p.race===window._tierRaceFilter);
   // 전적없는 선수 숨기기
   if(window._tierHideNoRecord) list=list.filter(p=>(p.win+p.loss)>0);
+  // 남자 제외
+  if(window._tierExcludeMale) list=list.filter(p=>p.gender!=='M');
 
   let _modePStats=null;
-  if(tierRankMode==='tier') list.sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+  let _typeSum=null; // 다중선택 시 합산 스코어 맵 {name: number}
+
+  // 유형별 다중선택이 활성화된 경우
+  if(window._tierTypeSet && window._tierTypeSet.size>0){
+    // 각 유형별 데이터 집계 함수
+    function _collectPS(arr, useWL){
+      const _ps={};
+      (arr||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
+        let wn,ln;
+        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+        else return;
+        if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
+        _ps[wn].w++;_ps[ln].l++;
+      });});});
+      return _ps;
+    }
+    function _collectPSFromGames(games){
+      const _ps={};
+      (games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
+        _ps[wn].w++;_ps[ln].l++;
+      });
+      return _ps;
+    }
+    function _collectIndPS(arr){
+      const _ps={};
+      (arr||[]).forEach(m=>{
+        if(!m.wName||!m.lName)return;
+        if(!_ps[m.wName])_ps[m.wName]={w:0,l:0};if(!_ps[m.lName])_ps[m.lName]={w:0,l:0};
+        _ps[m.wName].w++;_ps[m.lName].l++;
+      });
+      return _ps;
+    }
+    function _collectCompPS(){
+      const _ps={};
+      function _cg(g){if(!g.playerA||!g.playerB||!g.winner)return;const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};_ps[wn].w++;_ps[ln].l++;}
+      (tourneys||[]).forEach(tn=>{
+        (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cg);});});});
+        const _br=typeof getBracket==='function'?getBracket(tn):{};
+        Object.values(_br.matchDetails||{}).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cg);});});
+      });
+      return _ps;
+    }
+
+    const typeDataMap={
+      mini_win:()=>_collectPS(miniM),mini_loss:()=>_collectPS(miniM),
+      ck_win:()=>_collectPS(ckM),ck_loss:()=>_collectPS(ckM),
+      comp_win:()=>_collectCompPS(),comp_loss:()=>_collectCompPS(),
+      ind_win:()=>_collectIndPS(indM),ind_loss:()=>_collectIndPS(indM),
+      gj_win:()=>_collectIndPS(gjM),gj_loss:()=>_collectIndPS(gjM),
+      civ_win:()=>_collectPS((miniM||[]).filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀'))),
+      civ_loss:()=>_collectPS((miniM||[]).filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀'))),
+      tt_win:()=>_collectPS(ttM),tt_loss:()=>_collectPS(ttM),
+      pro_win:()=>_collectPS(proM),pro_loss:()=>_collectPS(proM),
+      univm_win:()=>_collectPS(univM),univm_loss:()=>_collectPS(univM),
+    };
+    const sumMap={};
+    window._tierTypeSet.forEach(modeId=>{
+      const isWin=modeId.endsWith('_win');
+      const getter=typeDataMap[modeId];
+      if(!getter)return;
+      const ps=getter();
+      Object.keys(ps).forEach(name=>{
+        if(!sumMap[name])sumMap[name]=0;
+        sumMap[name]+=(isWin?ps[name].w:ps[name].l);
+      });
+    });
+    _typeSum=sumMap;
+    list.sort((a,b)=>(sumMap[b.name]||0)-(sumMap[a.name]||0));
+  }
+  else if(tierRankMode==='tier') list.sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
   else if(tierRankMode==='wins') list.sort((a,b)=>b.win-a.win||a.loss-b.loss);
   else if(tierRankMode==='winrate'){
     list=list.filter(p=>(p.win+p.loss)>=1);
@@ -351,10 +441,22 @@ function rTier(C,T){
 
   const modeHeaders={
     tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',
-    mini_win:'미니승',mini_loss:'미니패',ck_win:'CK승',ck_loss:'CK패',comp_win:'대회승',comp_loss:'대회패'
+    mini_win:'미니승',mini_loss:'미니패',ck_win:'CK승',ck_loss:'CK패',comp_win:'대회승',comp_loss:'대회패',
+    ind_win:'개인전승',ind_loss:'개인전패',gj_win:'끝장전승',gj_loss:'끝장전패',
+    civ_win:'시빌워승',civ_loss:'시빌워패',tt_win:'티어대회승',tt_loss:'티어대회패',
+    pro_win:'프로리그승',pro_loss:'프로리그패',univm_win:'대학대전승',univm_loss:'대학대전패'
   };
   if(tierRankMode==='elo') tierRankMode='tier'; // ELO 제거 후 fallback
-  const extraHeader=modeHeaders[tierRankMode]||'포인트';
+  const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
+  const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
+
+  // 페이지네이션 (20명 단위)
+  if(!window._tierRankPage)window._tierRankPage=0;
+  const _PAGE=20;
+  const _totalItems=list.length;
+  const _totalPages=Math.ceil(_totalItems/_PAGE)||1;
+  if(window._tierRankPage>=_totalPages)window._tierRankPage=0;
+  const _pagedList=_totalItems>_PAGE?list.slice(window._tierRankPage*_PAGE,(window._tierRankPage+1)*_PAGE):list;
 
   let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><thead><tr>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">순위</th>
@@ -367,21 +469,25 @@ function rTier(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">${extraHeader}</th>
   </tr></thead><tbody>`;
-  list.forEach((p,i)=>{
+  _pagedList.forEach((p,i)=>{
+    const _globalIdx=window._tierRankPage*_PAGE+i;
     const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
     let rnkHTML;
-    if(i===0) rnkHTML=`<span class="rk1">1등</span>`;
-    else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;
-    else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    if(_globalIdx===0) rnkHTML=`<span class="rk1">1등</span>`;
+    else if(_globalIdx===1) rnkHTML=`<span class="rk2">2등</span>`;
+    else if(_globalIdx===2) rnkHTML=`<span class="rk3">3등</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${_globalIdx+1}위</span>`;
     let extraVal='';
-    if(tierRankMode==='tier') extraVal=`<span class="${pC(p.points)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px">${pS(p.points)}</span>`;
+    if(_typeSum!==null){
+      const sv=_typeSum[p.name]||0;
+      extraVal=`<span style="font-weight:800;color:${sv>0?'#16a34a':sv<0?'#dc2626':'var(--gray-l)'}">${sv}</span>`;
+    } else if(tierRankMode==='tier') extraVal=`<span class="${pC(p.points)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px">${pS(p.points)}</span>`;
     else if(tierRankMode==='wins') extraVal=`<span class="wt" style="font-size:15px;font-weight:800">${p.win}</span>`;
     else if(tierRankMode==='winrate') extraVal=`<span style="font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>`;
     else if(tierRankMode==='winstreak'){const diff=p.win-p.loss;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
     else if(tierRankMode==='revstreak'){const diff=p.loss-p.win;extraVal=`<span style="font-weight:800;color:${diff>0?'var(--red)':diff<0?'var(--green)':'var(--gray-l)'}">${diff>0?'+':''}${diff}</span>`;}
     else if(tierRankMode==='elo'){const e=p.elo||ELO_DEFAULT;extraVal=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${e>=1400?'#7c3aed':e>=1300?'var(--gold)':e>=1200?'var(--green)':'var(--red)'}">${e}</span>`;}
-    else if(['mini_win','mini_loss','ck_win','ck_loss','comp_win','comp_loss'].includes(tierRankMode)){
+    else if(['mini_win','mini_loss','ck_win','ck_loss','comp_win','comp_loss','ind_win','ind_loss','gj_win','gj_loss','civ_win','civ_loss','tt_win','tt_loss','pro_win','pro_loss','univm_win','univm_loss'].includes(tierRankMode)){
       const _v=_modePStats?_modePStats[p.name]:null;
       const isWin=tierRankMode.endsWith('_win');
       const cnt=_v?(isWin?_v.w:_v.l):0;
@@ -400,5 +506,15 @@ function rTier(C,T){
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${extraVal}</td>
     </tr>`;
   });
-  C.innerHTML=h+`</tbody></table></div>`;
+  h+=`</tbody></table></div>`;
+  if(_totalItems>_PAGE){
+    const _prevPage=window._tierRankPage-1;
+    const _nextPage=window._tierRankPage+1;
+    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-sm" ${window._tierRankPage===0?'disabled':''} onclick="window._tierRankPage=${_prevPage};render()">← 이전</button>
+      <span style="font-size:12px;color:var(--gray-l)">${window._tierRankPage+1} / ${_totalPages} (총 ${_totalItems}명)</span>
+      <button class="btn btn-sm" ${window._tierRankPage>=_totalPages-1?'disabled':''} onclick="window._tierRankPage=${_nextPage};render()">다음 →</button>
+    </div>`;
+  }
+  C.innerHTML=h;
 }

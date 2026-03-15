@@ -80,13 +80,29 @@ function miniRankHTML(data){
   pEntries.sort((a,b)=>msk==='w'?b.w-a.w||b.rate-a.rate:msk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue);margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-ll)">🏅 개인 순위</div>${msortBar}`;
   if(!pEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
+  if(!window._rankPage)window._rankPage={};
+  const _PK_mini='mini_ind';
+  const _PAGE_mini=20;
+  if(window._rankPage[_PK_mini]===undefined)window._rankPage[_PK_mini]=0;
+  const _tot_mini=pEntries.length;
+  const _totP_mini=Math.ceil(_tot_mini/_PAGE_mini)||1;
+  if(window._rankPage[_PK_mini]>=_totP_mini)window._rankPage[_PK_mini]=0;
+  const _cp_mini=window._rankPage[_PK_mini];
+  const _paged_mini=_tot_mini>_PAGE_mini?pEntries.slice(_cp_mini*_PAGE_mini,(_cp_mini+1)*_PAGE_mini):pEntries;
   h+=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
-  pEntries.forEach((p,i)=>{
+  _paged_mini.forEach((p,i)=>{
     const col=gc(p.univ);
-    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    const _ri=_cp_mini*_PAGE_mini+i;
+    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   h+=`</tbody></table>`;
+  const _pageNav_mini=_tot_mini>_PAGE_mini?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp_mini===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_mini}']=${_cp_mini-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp_mini+1} / ${_totP_mini} (${_tot_mini}명)</span>
+  <button class="btn btn-sm" ${_cp_mini>=_totP_mini-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_mini}']=${_cp_mini+1};render()">다음 →</button>
+</div>`:'';
+  h+=_pageNav_mini;
   return h;
 }
 
@@ -135,15 +151,25 @@ function indRankHTML(){
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  if(!window._rankPage)window._rankPage={};
+  const _PK='ind';
+  const _PAGE=20;
+  if(window._rankPage[_PK]===undefined)window._rankPage[_PK]=0;
+  const _tot=entries.length;
+  const _totP=Math.ceil(_tot/_PAGE)||1;
+  if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
+  const _cp=window._rankPage[_PK];
+  const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
   let h=sortBar+`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>승</th><th>패</th><th>승률</th><th style="text-align:left">상대 전적</th></tr></thead><tbody>`;
-  entries.forEach((p,i)=>{
+  _paged.forEach((p,i)=>{
     const pl=players.find(x=>x.name===p.name);
     const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
     const vsHTML=vsEntries.map(([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
       return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
     }).join('');
-    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    const _ri=_cp*_PAGE+i;
+    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
       <td>${rnk}</td>
       <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'28px')}<span style="font-weight:700">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
@@ -152,7 +178,12 @@ function indRankHTML(){
       <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
     </tr>`;
   });
-  return h+`</tbody></table>`;
+  const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
+  <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
+</div>`:'';
+  return h+`</tbody></table>`+_pageNav;
 }
 
 function indRecordsHTML(){
@@ -627,15 +658,25 @@ function gjRankHTML(){
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  if(!window._rankPage)window._rankPage={};
+  const _PK='gj';
+  const _PAGE=20;
+  if(window._rankPage[_PK]===undefined)window._rankPage[_PK]=0;
+  const _tot=entries.length;
+  const _totP=Math.ceil(_tot/_PAGE)||1;
+  if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
+  const _cp=window._rankPage[_PK];
+  const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
   let h=sortBar+`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>승</th><th>패</th><th>승률</th><th style="text-align:left">상대 전적</th></tr></thead><tbody>`;
-  entries.forEach((p,i)=>{
+  _paged.forEach((p,i)=>{
     const pl=players.find(x=>x.name===p.name);
     const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
     const vsHTML=vsEntries.map(([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
       return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
     }).join('');
-    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    const _ri=_cp*_PAGE+i;
+    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
       <td>${rnk}</td>
       <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'28px')}<span style="font-weight:700">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
@@ -644,7 +685,12 @@ function gjRankHTML(){
       <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
     </tr>`;
   });
-  return h+`</tbody></table>`;
+  const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
+  <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
+</div>`:'';
+  return h+`</tbody></table>`+_pageNav;
 }
 
 function gjRecordsHTML(){
@@ -900,14 +946,29 @@ function ckRankHTML(){
   pEntries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학CK 개인 순위</div>${sortBar}`;
   if(!pEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
+  if(!window._rankPage)window._rankPage={};
+  const _PK_ck='ck_ind';
+  const _PAGE_ck=20;
+  if(window._rankPage[_PK_ck]===undefined)window._rankPage[_PK_ck]=0;
+  const _tot_ck=pEntries.length;
+  const _totP_ck=Math.ceil(_tot_ck/_PAGE_ck)||1;
+  if(window._rankPage[_PK_ck]>=_totP_ck)window._rankPage[_PK_ck]=0;
+  const _cp_ck=window._rankPage[_PK_ck];
+  const _paged_ck=_tot_ck>_PAGE_ck?pEntries.slice(_cp_ck*_PAGE_ck,(_cp_ck+1)*_PAGE_ck):pEntries;
   h+=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
-  pEntries.forEach((p,i)=>{
+  _paged_ck.forEach((p,i)=>{
     const pObj=players.find(x=>x.name===p.name)||{};
     const col=gc(pObj.univ);
-    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    const _ri=_cp_ck*_PAGE_ck+i;
+    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'24px')}<span style="font-weight:700">${p.name}</span></span></td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col};font-size:10px" onclick="openUnivModal('${(pObj.univ||'').replace(/'/g,"\\'")}')">${pObj.univ||'-'}</span></td><td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
-  h+=`</tbody></table>`;
+  const _pageNav_ck=_tot_ck>_PAGE_ck?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp_ck===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_ck}']=${_cp_ck-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp_ck+1} / ${_totP_ck} (${_tot_ck}명)</span>
+  <button class="btn btn-sm" ${_cp_ck>=_totP_ck-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_ck}']=${_cp_ck+1};render()">다음 →</button>
+</div>`:'';
+  h+=`</tbody></table>`+_pageNav_ck;
   return h;
 }
 
@@ -974,13 +1035,28 @@ function univMRankHTML(){
   upEntries.sort((a,b)=>usk==='w'?b.w-a.w||b.rate-a.rate:usk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학대전 개인 순위</div>${usortBar}`;
   if(!upEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
+  if(!window._rankPage)window._rankPage={};
+  const _PK_um='univm_ind';
+  const _PAGE_um=20;
+  if(window._rankPage[_PK_um]===undefined)window._rankPage[_PK_um]=0;
+  const _tot_um=upEntries.length;
+  const _totP_um=Math.ceil(_tot_um/_PAGE_um)||1;
+  if(window._rankPage[_PK_um]>=_totP_um)window._rankPage[_PK_um]=0;
+  const _cp_um=window._rankPage[_PK_um];
+  const _paged_um=_tot_um>_PAGE_um?upEntries.slice(_cp_um*_PAGE_um,(_cp_um+1)*_PAGE_um):upEntries;
   h+=`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
-  upEntries.forEach((p,i)=>{
+  _paged_um.forEach((p,i)=>{
     const col=gc(p.univ);
-    let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
+    const _ri=_cp_um*_PAGE_um+i;
+    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${p.name}</span></span></td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col};font-size:10px" onclick="openUnivModal('${(p.univ||'').replace(/'/g,"\\'")}')">${p.univ||'-'}</span></td><td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
-  h+=`</tbody></table>`;
+  const _pageNav_um=_tot_um>_PAGE_um?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp_um===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_um}']=${_cp_um-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp_um+1} / ${_totP_um} (${_tot_um}명)</span>
+  <button class="btn btn-sm" ${_cp_um>=_totP_um-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_um}']=${_cp_um+1};render()">다음 →</button>
+</div>`:'';
+  h+=`</tbody></table>`+_pageNav_um;
   return h;
 }
 
@@ -1202,18 +1278,28 @@ function proRankHTML(){
     .map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l===0?0:Math.round(s.w/(s.w+s.l)*100)}))
     .filter(p=>p.total>0)
     .sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
+  if(!window._rankPage)window._rankPage={};
+  const _PK='pro';
+  const _PAGE=20;
+  if(window._rankPage[_PK]===undefined)window._rankPage[_PK]=0;
+  const _tot=sorted.length;
+  const _totP=Math.ceil(_tot/_PAGE)||1;
+  if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
+  const _cp=window._rankPage[_PK];
+  const _paged=_tot>_PAGE?sorted.slice(_cp*_PAGE,(_cp+1)*_PAGE):sorted;
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 프로 순위</div>
   <div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['pro']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['pro']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['pro']='l';render()">패순</button></div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">선수</th><th style="text-align:left">대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
   if(!sorted.length)h+=`<tr><td colspan="7" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
-  sorted.forEach((p,i)=>{
+  _paged.forEach((p,i)=>{
     const pObj=players.find(x=>x.name===p.name)||{};
     const col=gc(pObj.univ);
+    const _ri=_cp*_PAGE+i;
     let rnkHTML;
-    if(i===0)rnkHTML=`<span class="rk1">1등</span>`;
-    else if(i===1)rnkHTML=`<span class="rk2">2등</span>`;
-    else if(i===2)rnkHTML=`<span class="rk3">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    if(_ri===0)rnkHTML=`<span class="rk1">1등</span>`;
+    else if(_ri===1)rnkHTML=`<span class="rk2">2등</span>`;
+    else if(_ri===2)rnkHTML=`<span class="rk3">3등</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${_ri+1}위</span>`;
     h+=`<tr>
       <td style="text-align:left">${rnkHTML}</td>
       <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${p.name}')"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}${p.name}${getStatusIconHTML(p.name)}</span></td>
@@ -1224,7 +1310,12 @@ function proRankHTML(){
       <td class="${p.rate>=50?'wt':'lt'}" style="font-weight:800">${p.rate}%</td>
     </tr>`;
   });
-  return h+`</tbody></table>`;
+  const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+  <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
+  <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
+  <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
+</div>`:'';
+  return h+`</tbody></table>`+_pageNav;
 }
 
 /* ══════════════════════════════════════
