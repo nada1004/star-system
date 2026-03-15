@@ -978,8 +978,9 @@ function pastePreview() {
     if (!trimmed) return;
 
     // ── 무시할 라인 패턴 ──
-    // 팀 스코어: "팀명 (승/패) N:M (승/패) 팀명"
+    // 팀 스코어: "(승) 수술대 3:1 늪지대 (패)" / "팀명 (승/패) N:M (승/패) 팀명" 등
     if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+    if (/^\((?:승|패)\)/.test(trimmed) && /\d+\s*[：:]\s*\d+/.test(trimmed) && /\((?:승|패)\)\s*$/.test(trimmed)) return;
     // [승]/[패] 세트 결과 요약 라인: "[승] 수술대 3:1 늪지대" 등
     if (/^\[(?:승|패)\]/.test(trimmed)) return;
     // 메타 정보: "[nSET - ...]", "[슈 에] - ...", "밴" 등 대괄호 제목/주석 라인
