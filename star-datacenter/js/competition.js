@@ -741,7 +741,7 @@ function rCompTourDynamic(tn){
     const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
     const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
-    return `<div style="background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;min-width:170px;max-width:260px;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+    return `<div style="background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc)}
       <div style="height:1px;background:var(--border)"></div>
       ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc)}

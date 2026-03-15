@@ -1,51 +1,45 @@
 ﻿function rHist(C,T){
   T.innerText='📅 대전 기록';
 
-  // 그룹1: 핵심(항상 표시), 그룹2: 개인경기, 그룹3: 팀경기, 그룹4: 통계
-  const tabGroups=[
-    {grp:'핵심', tabs:[
-      {id:'all',lbl:'📋 전체'},
-      {id:'psearch',lbl:'🔍 선수별'},
-      {id:'race',lbl:'🧬 종족'},
-      {id:'vs',lbl:'⚔️ 1:1'},
-    ]},
-    {grp:'개인', tabs:[
-      {id:'ind',lbl:'🎮 개인전'},
-      {id:'gj',lbl:'⚔️ 끝장전'},
-      {id:'civil',lbl:'⚔️ 시빌워'},
-    ]},
-    {grp:'팀/대회', tabs:[
-      {id:'mini',lbl:'⚡ 미니'},
-      {id:'ck',lbl:'🤝 대학CK'},
-      {id:'univm',lbl:'🏟️ 대학대전'},
-      {id:'pro',lbl:'🏅 프로리그'},
-      {id:'tourney',lbl:'🎖️ 대회'},
-      {id:'tiertour',lbl:'🎯 티어대회'},
-    ]},
-    {grp:'통계', tabs:[
-      {id:'univstat',lbl:'🏛️ 대학별'},
-      {id:'univrank',lbl:'🏛️ 포인트'},
-    ]},
+  const tabDefs=[
+    {id:'all',      grp:'종합',   lbl:'📋 전체 통합'},
+    {id:'psearch',  grp:'종합',   lbl:'🔍 선수별 검색'},
+    {id:'race',     grp:'종합',   lbl:'🧬 종족 승률'},
+    {id:'vs',       grp:'종합',   lbl:'⚔️ 1:1 상대전적'},
+    {id:'ind',      grp:'개인',   lbl:'🎮 개인전'},
+    {id:'gj',       grp:'개인',   lbl:'⚔️ 끝장전'},
+    {id:'civil',    grp:'개인',   lbl:'⚔️ 시빌워'},
+    {id:'mini',     grp:'팀경기', lbl:'⚡ 미니대전'},
+    {id:'ck',       grp:'팀경기', lbl:'🤝 대학CK'},
+    {id:'univm',    grp:'팀경기', lbl:'🏟️ 대학대전'},
+    {id:'pro',      grp:'팀경기', lbl:'🏅 프로리그'},
+    {id:'tourney',  grp:'대회',   lbl:'🎖️ 대회 (토너먼트)'},
+    {id:'tiertour', grp:'대회',   lbl:'🎯 티어대회'},
+    {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
+    {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
   ];
-  const activeGrp=tabGroups.find(g=>g.tabs.some(t=>t.id===histSub));
-  let h=`<div class="no-export" style="margin-bottom:6px">`;
-  // 그룹 선택 행
-  h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">`;
-  tabGroups.forEach(g=>{
-    const isOn=g===activeGrp;
-    h+=`<button onclick="histSub='${g.tabs[0].id}';openDetails={};render()" style="padding:4px 10px;border-radius:6px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">${g.grp}</button>`;
+  const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
+  const grps=[...new Set(tabDefs.map(t=>t.grp))];
+  // 상단: 그룹 pill + 드롭다운
+  let h=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
+  grps.forEach(g=>{
+    const isOn=curTab.grp===g;
+    const firstId=tabDefs.find(t=>t.grp===g).id;
+    h+=`<button onclick="histSub='${firstId}';openDetails={};if(histPage['${firstId}']!==undefined)histPage['${firstId}']=0;render()"
+      style="padding:5px 12px;border-radius:20px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">${g}</button>`;
   });
   h+=`</div>`;
-  // 선택된 그룹의 탭 행
-  if(activeGrp){
-    h+=`<div style="display:flex;gap:3px;flex-wrap:wrap">`;
-    activeGrp.tabs.forEach(t=>{
+  // 선택 그룹 내 탭 (가로 스크롤 pill 바)
+  const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
+  if(grpTabs.length>1){
+    h+=`<div class="no-export" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:6px">`;
+    grpTabs.forEach(t=>{
       const isOn=histSub===t.id;
-      h+=`<button class="stab ${isOn?'on':''}" style="flex-shrink:0;font-size:11px;padding:4px 9px" onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()">${t.lbl}</button>`;
+      h+=`<button onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()"
+        style="flex-shrink:0;padding:4px 12px;border-radius:16px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'#eff6ff':'var(--surface)'};color:${isOn?'var(--blue)':'var(--text3)'};font-size:12px;font-weight:${isOn?700:500};cursor:pointer;white-space:nowrap">${t.lbl}</button>`;
     });
     h+=`</div>`;
   }
-  h+=`</div>`;
   const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','tiertour','all'].includes(histSub);
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');

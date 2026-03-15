@@ -176,8 +176,14 @@ function rTier(C,T){
     {id:'univm_loss',lbl:'🏟️ 대학대전 패',color:'#7c3aed'},
   ];
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
-  let fh=`<div class="fbar"><strong>보기:</strong>`;
-  modes.forEach(m=>{fh+=`<button class="pill ${tierRankMode===m.id&&(!window._tierTypeSet||window._tierTypeSet.size===0)?'on':''}" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;});
+  // 보기 모드: 가로 스크롤 pill + select fallback
+  const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
+  let fh=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">
+    <strong style="flex-shrink:0;font-size:12px">보기:</strong>`;
+  modes.forEach(m=>{
+    const on=tierRankMode===m.id&&_curModeNoFilter;
+    fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
+  });
   fh+=`</div>`;
   // 유형별 필터 - 접기/펼치기
   if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
