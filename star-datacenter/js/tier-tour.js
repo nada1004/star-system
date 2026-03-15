@@ -404,7 +404,7 @@ function rTierTourTab(C, T){
   }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
-    {id:'rank',lbl:'🏆 선수 순위',fn:`_ttSub='rank';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
@@ -427,24 +427,30 @@ function ttPlayerRankHTML(compName){
   filtered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
       (st.games||[]).forEach(g=>{
-        if(!g.wName||!g.lName)return;
-        if(!sc[g.wName])sc[g.wName]={w:0,l:0,univ:''};
-        if(!sc[g.lName])sc[g.lName]={w:0,l:0,univ:''};
-        sc[g.wName].w++;sc[g.lName].l++;
-        if(!sc[g.wName].univ){const p=players.find(x=>x.name===g.wName);if(p)sc[g.wName].univ=p.univ||'';}
-        if(!sc[g.lName].univ){const p=players.find(x=>x.name===g.lName);if(p)sc[g.lName].univ=p.univ||'';}
+        let wn, ln;
+        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+        else return;
+        if(!sc[wn])sc[wn]={w:0,l:0,univ:''};
+        if(!sc[ln])sc[ln]={w:0,l:0,univ:''};
+        sc[wn].w++;sc[ln].l++;
+        if(!sc[wn].univ){const p=players.find(x=>x.name===wn);if(p)sc[wn].univ=p.univ||'';}
+        if(!sc[ln].univ){const p=players.find(x=>x.name===ln);if(p)sc[ln].univ=p.univ||'';}
       });
     });
   });
-  const sorted=Object.entries(sc).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
-  if(!sorted.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 선수 개인 순위${compName?` — ${compName}`:''}</div>
+  if(!window._rankSort)window._rankSort={};
+  const sk=window._rankSort['tt']||'rate';
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['tt']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['tt']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['tt']='l';render()">패순</button></div>`;
+  const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
+  entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
+  if(!entries.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
-  sorted.forEach(([name,s],i)=>{
-    const total=s.w+s.l;const rate=total?Math.round(s.w/total*100):0;
-    const col=gc(s.univ);
+  entries.forEach((p,i)=>{
+    const col=gc(p.univ);
     let rnk=i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${i+1}위</span>`;
-    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(name,'24px')}<span style="font-weight:700">${name}</span>${s.univ?`<span class="ubadge" style="background:${col};font-size:9px">${s.univ}</span>`:''}</span></td><td class="wt">${s.w}</td><td class="lt">${s.l}</td><td style="font-weight:700;color:${rate>=50?'#16a34a':'#dc2626'}">${rate}%</td></tr>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'24px')}<span style="font-weight:700">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   return h+`</tbody></table>`;
 }

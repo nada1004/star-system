@@ -889,20 +889,26 @@ function rCompPlayerRank(tn){
   const br=getBracket(tn);
   Object.values(br.matchDetails||{}).forEach(m=>countGames(m));
   (br.manualMatches||[]).forEach(m=>{if(m)countGames(m);});
-  const sorted=Object.entries(pStats).sort((a,b)=>{const da=a[1].w-a[1].l,db=b[1].w-b[1].l;return db!==da?db-da:b[1].w-a[1].w;});
-  if(!sorted.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px">⏳ 아직 기록된 경기 결과가 없습니다.</div>`;
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:14px">🏅 ${tn.name} 개인 순위</div>
+  if(!window._rankSort)window._rankSort={};
+  const sk=window._rankSort['comp']||'rate';
+  const sorted=Object.entries(pStats)
+    .map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}))
+    .filter(p=>p.total>0)
+    .sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['comp']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['comp']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['comp']='l';render()">패순</button></div>`;
+  if(!sorted.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px">⏳ 아직 기록된 경기 결과가 없습니다.</div>`;
+  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:14px">🏅 ${tn.name} 개인 순위</div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">이름</th><th style="text-align:left">소속</th><th>승</th><th>패</th><th>승차</th><th>승률</th></tr></thead><tbody>`;
-  sorted.forEach(([name,s],i)=>{
-    const p=players.find(x=>x.name===name);const col=p?gc(p.univ):'#888';
-    const tot=s.w+s.l;const wr=tot?Math.round(s.w/tot*100):0;const diff=s.w-s.l;
+  sorted.forEach((p,i)=>{
+    const pObj=players.find(x=>x.name===p.name);const col=pObj?gc(pObj.univ):'#888';
+    const diff=p.w-p.l;
     h+=`<tr>
       <td style="text-align:left">${i===0?`<span class="rk1">1등</span>`:i===1?`<span class="rk2">2등</span>`:i===2?`<span class="rk3">3등</span>`:`${i+1}위`}</td>
-      <td style="text-align:left"><span class="clickable-name" onclick="openPlayerModal('${name}')">${name}</span></td>
-      <td style="text-align:left">${p?`<span class="ubadge" style="background:${col};font-size:11px">${p.univ}</span>`:'-'}</td>
-      <td class="wt" style="font-weight:800">${s.w}</td><td class="lt" style="font-weight:800">${s.l}</td>
+      <td style="text-align:left"><span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span></td>
+      <td style="text-align:left">${pObj?`<span class="ubadge" style="background:${col};font-size:11px">${pObj.univ}</span>`:'-'}</td>
+      <td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td>
       <td style="font-weight:800;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--gray-l)'}">${diff>=0?'+':''}${diff}</td>
-      <td style="font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
+      <td style="font-weight:700;color:${p.rate>=50?'var(--green)':'var(--red)'}">${p.total?p.rate+'%':'-'}</td>
     </tr>`;
   });
   return h+`</tbody></table>`;
