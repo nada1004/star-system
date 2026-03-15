@@ -278,12 +278,17 @@ function rBoard(C,T){
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
       <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'🔲 소형':'⬛ 대형'}</button>
+      <button class="brd-tbtn" onclick="window._boardRankView=!window._boardRankView;render()" style="${window._boardRankView?'background:#fef9c3;border-color:#ca8a04;color:#92400e;':''}" title="포인트 순 전체 랭킹 보기">🏅 랭킹뷰</button>
     </div>
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
   </div>
   <div id="board-wrap" style="display:grid;grid-template-columns:1fr;gap:14px;align-items:start">`;
-  const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
-  targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
+  if(window._boardRankView){
+    h+=buildBoardRankViewHTML(visUnivs);
+  } else {
+    const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
+    targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
+  }
   h+=`</div>
 `;
   C.innerHTML=h;
@@ -1066,7 +1071,10 @@ async function downloadBoardAll(){
     if(!boardWrap||!boardWrap.children.length){alert('표시 중인 현황판이 없습니다.');return;}
     const bw=boardWrap.scrollWidth||900;
     tmpDiv.style.cssText=`position:absolute;left:-9999px;top:0;width:${bw}px;background:#f0f2f5;font-family:'Noto Sans KR',sans-serif;box-sizing:border-box;`;
-    tmpDiv.innerHTML=boardWrap.innerHTML;
+    // rcont의 <style> 블록도 클론에 포함 (brd-card 등 현황판 전용 스타일)
+    const rcont=document.getElementById('rcont');
+    const brdStyle=rcont?rcont.querySelector('style'):null;
+    tmpDiv.innerHTML=(brdStyle?brdStyle.outerHTML:'')+boardWrap.innerHTML;
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     await new Promise(r=>setTimeout(r,50));
@@ -1100,6 +1108,53 @@ async function downloadBoardAll(){
   }
 }
 
+// 포인트 순 전체 랭킹 뷰
+function buildBoardRankViewHTML(univs){
+  // 전체 선수 포인트 순 정렬
+  const univNames=new Set(univs.map(u=>u.name));
+  const allPlayers=(players||[]).filter(p=>p.univ&&univNames.has(p.univ)&&(p.win||0)+(p.loss||0)>0)
+    .map(p=>({...p,_univ:p.univ,_col:gc(p.univ)}));
+  allPlayers.sort((a,b)=>(b.points||0)-(a.points||0));
+  if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">선수 없음</div>`;
+  const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'🏆','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
+  let h=`<div style="background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden">
+    <div style="padding:14px 18px;font-weight:900;font-size:15px;color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--bg2)">
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">순위</th>
+        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">선수</th>
+        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">대학</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">티어</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">승</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">패</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">포인트</th>
+      </tr></thead><tbody>`;
+  allPlayers.forEach((p,i)=>{
+    const tierIcon=TIER_ICONS[p.tier]||'';
+    const rnk=i===0?`<span class="rk1">1</span>`:i===1?`<span class="rk2">2</span>`:i===2?`<span class="rk3">3</span>`:`<span style="font-weight:700">${i+1}</span>`;
+    const pts=p.points||0;
+    const ptsCol=pts>0?'#16a34a':pts<0?'#dc2626':'#64748b';
+    h+=`<tr style="border-top:1px solid var(--border)">
+      <td style="padding:7px 12px;text-align:center">${rnk}</td>
+      <td style="padding:7px 12px;text-align:left">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')">
+          ${getPlayerPhotoHTML(p.name,'24px')}
+          <span style="font-weight:700;font-size:13px">${p.name||''}</span>
+        </div>
+      </td>
+      <td style="padding:7px 12px">
+        <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${(p._univ||'').replace(/'/g,"\\'")}')">${p._univ||''}</span>
+      </td>
+      <td style="padding:7px 12px;text-align:center;font-size:12px">${tierIcon}${p.tier||''}</td>
+      <td style="padding:7px 12px;text-align:center;color:#16a34a;font-weight:700">${p.win||0}</td>
+      <td style="padding:7px 12px;text-align:center;color:#dc2626;font-weight:700">${p.loss||0}</td>
+      <td style="padding:7px 12px;text-align:center;font-weight:900;font-size:14px;color:${ptsCol}">${pts>0?'+':''}${pts}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
 // 대학별 다운
 async function downloadBoardSel(){
   const btn=event?.currentTarget;
@@ -1118,7 +1173,9 @@ async function downloadBoardSel(){
       }
     }
     tmpDiv.style.cssText='position:absolute;left:-9999px;top:0;width:900px;background:#f0f2f5;padding:12px;font-family:\'Noto Sans KR\',sans-serif;box-sizing:border-box;';
-    tmpDiv.innerHTML=buildUnivBoardCard(u, true);
+    const rcontSel=document.getElementById('rcont');
+    const brdStyleSel=rcontSel?rcontSel.querySelector('style'):null;
+    tmpDiv.innerHTML=(brdStyleSel?brdStyleSel.outerHTML:'')+buildUnivBoardCard(u, true);
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);

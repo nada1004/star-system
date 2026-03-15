@@ -2,7 +2,8 @@
   T.textContent='📅 경기 캘린더';
 
   // 모든 경기 데이터 맵 (날짜→경기 객체 배열)
-  const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
+  if(typeof window._calScheduled==='undefined') window._calScheduled=JSON.parse(localStorage.getItem('su_cal_sched')||'[]');
+  const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),...(typeof indM!=='undefined'?indM:[]),...(typeof gjM!=='undefined'?gjM:[]),...(typeof ttM!=='undefined'?ttM:[]),...window._calScheduled];
   window._rCalAllMatches=allMatches; // calView=day 공유카드용 전역 캐시
   const dateMatchMap={};
   allMatches.forEach(m=>{
@@ -14,6 +15,10 @@
 
   // 날짜 label 생성
   function matchLabel(m){
+    if(window._calScheduled&&window._calScheduled.includes(m)) return `📌 ${m.note||'예정'}`;
+    if(typeof indM!=='undefined'&&indM.includes(m)) return `🎮 개인전 ${m.wName||''} vs ${m.lName||''}`;
+    if(typeof gjM!=='undefined'&&gjM.includes(m)) return `⚔️ 끝장전 ${m.wName||''} vs ${m.lName||''}`;
+    if(typeof ttM!=='undefined'&&ttM.includes(m)) return `🎯 티어대회 ${m.compName||''}`;
     if(miniM.includes(m)) return `⚡ ${m.a||''} vs ${m.b||''}`;
     if(univM.includes(m)) return `🏟️ ${m.a||''} vs ${m.b||''}`;
     if(ckM.includes(m))   return `🤝 CK ${m.teamALabel||'A팀'} vs ${m.teamBLabel||'B팀'}`;
@@ -83,7 +88,7 @@
           >
             <div style="font-weight:${isToday?'900':'600'};font-size:12px;color:${isToday?'#fff':'var(--text)'};background:${isToday?'var(--blue)':'transparent'};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px">${day}</div>
             ${matches.slice(0,2).map(m=>`<div style="font-size:9px;background:${proM.includes(m)?'#7c3aed':miniM.includes(m)?'#2563eb':univM.includes(m)?'#059669':ckM.includes(m)?'#d97706':'#2563eb'};color:#fff;border-radius:3px;padding:1px 4px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${matchLabel(m)}</div>`).join('')}
-            ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700">+${matches.length-2}더</div>`:''}
+            ${matches.length>2?`<div style="font-size:9px;color:var(--blue);font-weight:700;cursor:pointer" onclick="event.stopPropagation();calDayDate='${ds}';calView='day';render()">+${matches.length-2}더 보기</div>`:''}
           </td>`;
           day++;
         }
@@ -193,6 +198,15 @@
     }
   }
 
+  const undatedMatches=allMatches.filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
+  const undatedHTML=undatedMatches.length?`<div style="margin-bottom:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
+  <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">📋 날짜 미정 경기 (${undatedMatches.length}건)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:4px">
+  ${undatedMatches.slice(0,10).map(m=>`<span style="font-size:10px;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:2px 7px;color:#92400e">${matchLabel(m)}</span>`).join('')}
+  ${undatedMatches.length>10?`<span style="font-size:10px;color:#92400e">... 외 ${undatedMatches.length-10}건</span>`:''}
+  </div>
+</div>`:'';
+
   C.innerHTML=`
   <div>
     <!-- 컨트롤 바 -->
@@ -202,11 +216,24 @@
         <button class="btn btn-sm ${calView==='month'?'btn-b':'btn-w'}" onclick="calView='month';render()">월간</button>
         <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
         <button class="btn btn-sm ${calView==='day'?'btn-b':'btn-w'}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
+        <button class="btn btn-w btn-sm no-export" onclick="(function(){const d=prompt('예정 경기 날짜 (YYYY-MM-DD):',todayStr||'');if(!d)return;const n=prompt('경기 메모:','');if(!n)return;window._calScheduled.push({d,note:n,_id:'s'+Date.now()});localStorage.setItem('su_cal_sched',JSON.stringify(window._calScheduled));render();})()">+ 예정</button>
       </div>
     </div>
+    ${undatedHTML}
     <!-- 캘린더 본문 -->
     <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;overflow-x:auto">
       ${calHTML}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;margin-top:10px;background:var(--surface);border-radius:8px;font-size:10px;color:var(--gray-l)">
+      <span style="font-weight:700">범례:</span>
+      <span style="background:#2563eb;color:#fff;border-radius:3px;padding:1px 6px">⚡ 미니대전</span>
+      <span style="background:#059669;color:#fff;border-radius:3px;padding:1px 6px">🏟️ 대학대전</span>
+      <span style="background:#d97706;color:#fff;border-radius:3px;padding:1px 6px">🤝 대학CK</span>
+      <span style="background:#7c3aed;color:#fff;border-radius:3px;padding:1px 6px">🏅 프로리그</span>
+      <span style="background:#2563eb;color:#fff;border-radius:3px;padding:1px 6px">🎖️ 대회</span>
+      <span style="background:#8b5cf6;color:#fff;border-radius:3px;padding:1px 6px">🎮 개인전</span>
+      <span style="background:#db2777;color:#fff;border-radius:3px;padding:1px 6px">⚔️ 끝장전</span>
+      <span style="background:#f59e0b;color:#fff;border-radius:3px;padding:1px 6px">🎯 티어대회</span>
     </div>
     <!-- 선택 날짜 경기 목록 (월간뷰용) -->
     <div id="calDayDetail" style="margin-top:14px"></div>

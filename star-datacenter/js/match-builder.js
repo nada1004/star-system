@@ -167,13 +167,15 @@ function indRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  // 날짜 필터 적용
+  const filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
+  filteredSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const pageSize=getHistPageSize();
-  const total=sessions.length;
+  const total=filteredSess.length;
   const totalPages=Math.ceil(total/pageSize)||1;
   if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
   const cur=histPage['ind'];
-  const slice=total>pageSize?sessions.slice(cur*pageSize,(cur+1)*pageSize):sessions;
+  const slice=total>pageSize?filteredSess.slice(cur*pageSize,(cur+1)*pageSize):filteredSess;
   let h='';
   slice.forEach(s=>{
     const p1wins=s.games.filter(m=>m.wName===s.p1).length;
@@ -662,13 +664,14 @@ function gjRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
-  sessions.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
+  filteredSessGj.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const pageSize=getHistPageSize();
-  const total=sessions.length;
+  const total=filteredSessGj.length;
   const totalPages=Math.ceil(total/pageSize);
   if(histPage['gj']>=totalPages) histPage['gj']=Math.max(0,totalPages-1);
   const cur=histPage['gj'];
-  const slice=total>pageSize?sessions.slice(cur*pageSize,(cur+1)*pageSize):sessions;
+  const slice=total>pageSize?filteredSessGj.slice(cur*pageSize,(cur+1)*pageSize):filteredSessGj;
   let h='';
   slice.forEach(s=>{
     const p1wins=s.games.filter(m=>m.wName===s.p1).length;
@@ -889,32 +892,25 @@ function rUnivM(C,T){
 }
 
 function univMRankHTML(){
-  const sc={};const vs={};
+  const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
   univM.forEach(m=>{
     if(!sc[m.a])sc[m.a]={w:0,l:0,pts:0,total:0};if(!sc[m.b])sc[m.b]={w:0,l:0,pts:0,total:0};
     sc[m.a].total++;sc[m.b].total++;
-    if(!vs[m.a])vs[m.a]={};if(!vs[m.b])vs[m.b]={};
-    if(!vs[m.a][m.b])vs[m.a][m.b]={w:0,l:0};if(!vs[m.b][m.a])vs[m.b][m.a]={w:0,l:0};
-    if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;vs[m.a][m.b].w++;vs[m.b][m.a].l++;}
-    else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;vs[m.b][m.a].w++;vs[m.a][m.b].l++;}
+    if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;}
+    else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;}
   });
   const sorted=Object.entries(sc).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts);
   const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 대학대전 대학별 순위</div>
-  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th><th style="text-align:left">상대 전적</th>${delCol}</tr></thead><tbody>`;
-  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?7:6}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
+  <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
+  if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
     const sn=name.replace(/'/g,"\\'");
-    const vsEntries=Object.entries(vs[name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
-    const vsHTML=vsEntries.map(([opp,r])=>{
-      const vc=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
-      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px;white-space:nowrap"><span class="ubadge" style="background:${gc(opp)};padding:1px 4px;font-size:9px;cursor:pointer" onclick="openUnivModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${vc}">${r.w}승${r.l}패</span></span>`;
-    }).join('');
     const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','univm')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 대학대전 기록 삭제">🗑</button></td>`:'';
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td><td style="text-align:left;min-width:100px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>${delBtn}</tr>`;
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   return h+`</tbody></table>`;
 }

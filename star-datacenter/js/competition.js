@@ -744,7 +744,7 @@ function rCompTourDynamic(tn){
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc)}
       <div style="height:1px;background:var(--border)"></div>
       ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc)}
-      ${footer}${detBtn}${detDiv}
+      ${footer}
     </div>`;
   }
 

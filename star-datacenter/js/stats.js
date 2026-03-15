@@ -1,29 +1,49 @@
 ﻿function rStats(C,T){
   T.textContent='📊 통계';
-  const subOpts=[
-    {id:'overview',    lbl:'🏛️ 종합'},
-    {id:'elo',         lbl:'📈 ELO 그래프'},
-    {id:'growth',      lbl:'📊 성장 곡선'},
-    {id:'award',       lbl:'🏆 이달의 선수'},
-    {id:'records',     lbl:'🎖️ 최다 기록'},
-    {id:'radar',       lbl:'🕸️ 대학 레이더'},
-    {id:'mismatch',    lbl:'⚡ 미스매치'},
-    {id:'heatmap',     lbl:'📅 활동 히트맵'},
-    {id:'tierwin',     lbl:'🎯 티어별 승률'},
-    {id:'maprank',     lbl:'🗺️ 맵별 특화'},
-    {id:'univmatrix',  lbl:'🏛️ 대학 매트릭스'},
-    {id:'racetrend',   lbl:'🔬 종족 트렌드'},
-    ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
-    {id:'sharecard',   lbl:'🎴 공유 카드'},
-    {id:'advsearch',   lbl:'🔍 고급 검색'},
-    {id:'killer',      lbl:'🗡️ 킬러/피해자'},
-    {id:'seasonal',    lbl:'📅 요일/시즌 승률'},
-    {id:'clutch',      lbl:'⚡ 클러치 지수'},
-    {id:'streakhist',  lbl:'🔥 역대 연속 기록'},
-    {id:'tiermatch',   lbl:'🎖️ 티어별 승률'},
-    {id:'univmatrix2', lbl:'🏛️ 대학 매트릭스+'},
+  // UX 3: 마지막 방문 서브탭 복원
+  const _savedSub=localStorage.getItem('su_statsSub');
+  if(_savedSub&&statsSub==='overview'&&_savedSub!=='overview') statsSub=_savedSub;
+  const _statsGroups=[
+    {label:'🏆 개인',tabs:[
+      {id:'overview',lbl:'🏛️ 종합'},
+      {id:'elo',lbl:'📈 ELO 그래프'},
+      {id:'growth',lbl:'📊 성장 곡선'},
+      {id:'award',lbl:'🏆 이달의 선수'},
+      {id:'records',lbl:'🎖️ 최다 기록'},
+      {id:'killer',lbl:'🗡️ 킬러/피해자'},
+      {id:'clutch',lbl:'⚡ 클러치 지수'},
+      {id:'streakhist',lbl:'🔥 역대 연속 기록'},
+    ]},
+    {label:'🏛️ 대학',tabs:[
+      {id:'radar',lbl:'🕸️ 대학 레이더'},
+      {id:'univmatrix',lbl:'🏛️ 대학 매트릭스'},
+      {id:'univmatrix2',lbl:'🏛️ 대학 매트릭스+'},
+    ]},
+    {label:'📊 경기',tabs:[
+      {id:'mismatch',lbl:'⚡ 미스매치'},
+      {id:'heatmap',lbl:'📅 활동 히트맵'},
+      {id:'tierwin',lbl:'🎯 티어별 승률(개인)'},
+      {id:'tiermatch',lbl:'🎖️ 티어별 승률(팀전)'},
+      {id:'maprank',lbl:'🗺️ 맵별 특화'},
+      {id:'racetrend',lbl:'🔬 종족 트렌드'},
+      {id:'seasonal',lbl:'📅 요일/시즌 승률'},
+    ]},
+    {label:'🔍 기록실',tabs:[
+      {id:'sharecard',lbl:'🎴 공유 카드'},
+      {id:'advsearch',lbl:'🔍 고급 검색'},
+      ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
+    ]},
   ];
-  let h=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${statsSub===o.id?'on':''}" onclick="statsSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+  let h=`<div class="no-export" style="margin-bottom:12px">`;
+  _statsGroups.forEach(grp=>{
+    h+=`<div style="margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;gap:3px">
+      <span style="font-size:10px;font-weight:800;color:var(--gray-l);min-width:52px;white-space:nowrap">${grp.label}</span>`;
+    grp.tabs.forEach(o=>{
+      h+=`<button class="stab ${statsSub===o.id?'on':''}" onclick="statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()" style="margin:1px 1px">${o.lbl}</button>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
   if(statsSub==='overview')    h+=statsOverviewHTML();
   else if(statsSub==='elo')    h+=statsEloHTML();
   else if(statsSub==='growth') h+=statsGrowthHTML();
