@@ -358,6 +358,7 @@ function _bktPasteApplyLogic(savable, tn){
   if(!m.a)m.a=teamA;if(!m.b)m.b=teamB;
   const dateEl=document.getElementById('paste-date');
   if(dateEl&&dateEl.value)m.d=dateEl.value;
+  if(!m.d)m.d=new Date().toISOString().slice(0,10);
   // 전체 세트 집계로 경기 최종 스코어 갱신
   let mSA=0,mSB=0;
   (m.sets||[]).forEach(s=>{if(s.winner==='A')mSA++;else if(s.winner==='B')mSB++;});
@@ -371,7 +372,7 @@ function _bktPasteApplyLogic(savable, tn){
   if(m._id) revertMatchRecord({...m, _id:m._id});
   const matchId=genId();
   m._id=matchId;
-  const dateStr=dateEl?.value||m.d||'';
+  const dateStr=m.d;
   (m.sets||[]).forEach(s=>{
     (s.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
@@ -637,7 +638,7 @@ function tierTourAutoGroup(){
   const eligible=players.filter(p=>st.tiers.length===0||st.tiers.includes(p.tier));
   const shuffled=[...eligible].sort(()=>Math.random()-0.5);
   st.groups.forEach(g=>g.players=[]);
-  shuffled.forEach((p,i)=>{
+  if(st.groups.length>0)shuffled.forEach((p,i)=>{
     st.groups[i%st.groups.length].players.push(p.name);
   });
   render();

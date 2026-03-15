@@ -191,12 +191,12 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--blue-l);border-radius:8px;margin-bottom:12px;flex-wrap:wrap;}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:26px;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;transition:box-shadow .15s;min-height:44px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow .15s;min-height:48px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:var(--sh);}
-.rec-sum-header{padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.rec-sum-vs{display:flex;align-items:center;gap:7px;flex:1;flex-wrap:wrap;}
-.rec-sum-score{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px;display:flex;align-items:center;gap:5px;}
+.rec-sum-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+.rec-sum-score{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;padding:4px 14px;white-space:nowrap;flex-shrink:0;}
 .rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);display:none;}
 .rec-detail-area.open{display:block;}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
@@ -276,7 +276,7 @@ body.dark [id^="vs-wrap-"]{background:var(--surface)!important;border-color:var(
 body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
 /* 날짜 정렬 */
-.sort-bar{display:flex;gap:5px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.sort-bar{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;}
 .sort-btn{padding:5px 11px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);color:var(--text3);font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);min-height:30px;display:inline-flex;align-items:center;}
 .sort-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 .sort-btn:hover:not(.on){border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
@@ -405,9 +405,10 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   /* ── 대전 카드 ── */
   .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
   .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
-  .rec-sum-score { font-size: 16px; }
-  .rec-sum-vs { flex-wrap: wrap !important; gap: 4px !important; }
-  .rec-summary { min-height: 44px; }
+  .rec-sum-score { font-size: 15px !important; padding: 3px 10px !important; }
+  .rec-sum-vs { flex-wrap: wrap !important; gap: 5px !important; }
+  .rec-summary { min-height: 44px; border-radius: 10px; }
+  .sort-bar { padding: 6px 10px !important; }
   .rec-detail-area { padding: 6px 8px !important; }
   /* 경기 상세 게임 행: 모바일에서 사진 작게, 텍스트 압축 */
   .rec-detail-area strong { font-size: 12px !important; }
@@ -771,7 +772,8 @@ body.dark .tier-filter-btn.on{background:#2563eb;color:#fff;border-color:#2563eb
 }
 body.dark .pill{background:#1e293b;border-color:#3a4f6a;color:#94a3b8;}
 body.dark .pill.on{background:#2563eb;color:#fff;}
-body.dark .sort-bar{background:#162032;border-color:#2d3f55;}
+body.dark .sort-bar{background:#1e293b;border-color:#2d3f55;}
+body.dark .rec-sum-score{background:#162032;border-color:#2d3f55;}
 body.dark .sort-btn{background:#1e293b;border-color:#3a4f6a;color:#94a3b8;}
 body.dark .sort-btn.on{background:#2563eb;color:#fff;}
 /* 다크모드 공유카드 모달 */
@@ -962,8 +964,8 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
    🖱️ 인터랙션 개선 (전역)
 ══════════════════════════════════════ */
 /* 클릭 가능한 행 hover */
-.rec-summary{transition:box-shadow var(--tr),background var(--tr);}
-.rec-summary:hover{box-shadow:var(--sh2);background:var(--blue-l);}
+.rec-summary{transition:box-shadow var(--tr),transform var(--tr);}
+.rec-summary:hover{box-shadow:0 4px 16px rgba(37,99,235,.10);transform:translateY(-1px);}
 /* 대전 카드 hover */
 .grp-match-card{transition:box-shadow var(--tr),transform var(--tr);}
 .grp-match-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}

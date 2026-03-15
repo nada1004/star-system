@@ -160,7 +160,7 @@ function histAllHTML(){
     const isInd=(type==='ind'||type==='gj');
     let teamA='',teamB='',scoreA='',scoreB='';
     if(isInd){
-      teamA=m.wName||''; teamB=m.lName||''; scoreA='✓'; scoreB='✗';
+      teamA=m.wName||''; teamB=m.lName||'';
     } else if(isCK){
       teamA=(m.teamAMembers||[]).map(x=>x.name||'').join(', ')||m.a||'';
       teamB=(m.teamBMembers||[]).map(x=>x.name||'').join(', ')||m.b||'';
@@ -169,15 +169,27 @@ function histAllHTML(){
       teamA=m.a||''; teamB=m.b||'';
       scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
     }
-    const winner=!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'';
-    const dLabel=d||'날짜 미정';
+    const winner=isInd?teamA:(!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
+    const dLabel=d?d.slice(5).replace('-','/'):'미정';
     const dColor=d?'var(--gray-l)':'#f59e0b';
-    h+=`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--white);flex-wrap:wrap">
-      <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${ti.col}18;color:${ti.col};white-space:nowrap">${ti.lbl}</span>
-      <span style="font-size:11px;color:${dColor};min-width:76px;white-space:nowrap">${dLabel}</span>
-      <span style="font-weight:700;font-size:13px;color:${winner===teamA?'#16a34a':'var(--text)'};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
-      <span style="font-size:14px;font-weight:900;color:var(--blue);white-space:nowrap">${scoreA}${isInd?'':''}${!isInd?' - ':''}${scoreB}</span>
-      <span style="font-weight:700;font-size:13px;color:${winner===teamB?'#16a34a':'var(--text)'};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${teamB}</span>
+    const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
+    h+=`<div class="rec-summary" style="border-left:3px solid ${ti.col}">
+      <div class="rec-sum-header" style="gap:6px">
+        <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
+          <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}</span>
+          <span style="font-size:10px;color:${dColor};white-space:nowrap">${dLabel}</span>
+        </div>
+        <span style="font-weight:800;font-size:13px;color:${winner===teamA?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
+        ${isInd
+          ?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;white-space:nowrap;flex-shrink:0">승</span>`
+          :`<div class="rec-sum-score" style="font-size:16px;padding:3px 12px">
+            <span style="color:${Number(scoreA)>Number(scoreB)?'#16a34a':Number(scoreB)>Number(scoreA)?'#dc2626':'var(--text)'}">${scoreA}</span>
+            <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+            <span style="color:${Number(scoreB)>Number(scoreA)?'#16a34a':Number(scoreA)>Number(scoreB)?'#dc2626':'var(--text)'}">${scoreB}</span>
+          </div>`}
+        <span style="font-weight:800;font-size:13px;color:${winner===teamB?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${teamB}</span>
+        ${winner&&!isInd?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${winCol}18;color:${winCol};border:1px solid ${winCol}33;white-space:nowrap;flex-shrink:0">🏆 ${winner}</span>`:''}
+      </div>
     </div>`;
   });
 
@@ -227,10 +239,11 @@ function histTourneyHTML(context){
     const firstDate=items[items.length-1]?.m?.d||'';
     const lastDate=items[0]?.m?.d||'';
     const dateRange=firstDate===lastDate?firstDate:(firstDate&&lastDate?`${lastDate} ~ ${firstDate}`:'');
-    h+=`<div style="background:linear-gradient(90deg,var(--blue-l),var(--white));border:1.5px solid var(--blue-ll);border-radius:12px;padding:10px 16px;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:var(--blue)">🎖️ ${compName}</span>
+    h+=`<div style="background:linear-gradient(135deg,var(--blue-l) 0%,var(--white) 100%);border:1.5px solid var(--blue-ll);border-left:4px solid var(--blue);border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:16px">🎖️</span>
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">${compName}</span>
       ${dateRange?`<span style="font-size:11px;color:var(--gray-l)">${dateRange}</span>`:''}
-      <span style="font-size:11px;color:var(--text3);background:var(--blue-ll);border-radius:20px;padding:1px 10px">${items.length}경기</span>
+      <span style="font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-ll);border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
     items.forEach(({m,idx})=>{
       const a=m.a||'',b=m.b||'';
@@ -240,21 +253,22 @@ function histTourneyHTML(context){
       const rIdx=(m._src==='comps')?m._origIdx:-1;
       const grpBadge=m._src==='tour'
         ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
-      h+=`<div class="rec-summary" style="margin-left:12px;border-left:3px solid var(--blue-ll)">
+      const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
+      const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
+      h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${_tBorderCol}">
         <div class="rec-sum-header">
-          <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
+          <span style="color:var(--gray-l);font-size:10px;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):'미정'}</span>
           ${grpBadge}
           <div class="rec-sum-vs">
             ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
             ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기">
-              <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
-              <span style="color:var(--gray-l);font-size:14px">:</span>
-              <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
+              <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa||0}</span>
+              <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+              <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb||0}</span>
             </div>`:''}
             ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
-            ${(a&&b)?`<span style="font-size:12px;font-weight:700;color:${aWin?ca:bWin?cb:'#888'}">
-              ${aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}
-            </span>`:''}
+            ${(a&&b)?(aWin||bWin)?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?a:b}</span>`:`<span style="font-size:10px;color:var(--gray-l)">무승부</span>`:''}
+
           </div>
           <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
@@ -432,10 +446,10 @@ function rHistUnivStat(){
 
 function statCard(label,w,l,d,col){
   const tot=w+l+d;const wr=tot?Math.round(w/tot*100):0;
-  return `<div style="background:var(--white);border:1px solid ${col}33;border-radius:10px;padding:12px 16px;min-width:120px;text-align:center;flex:1">
-    <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">${label}</div>
-    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px"><span class="wt">${w}승</span> <span class="lt">${l}패</span>${d?` <span style="color:var(--gray-l)">${d}무</span>`:''}</div>
-    <div style="font-size:12px;font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'};margin-top:4px">${tot?wr+'%':'-'}</div>
+  return `<div style="background:var(--white);border:1.5px solid ${col}33;border-radius:12px;padding:12px 14px;min-width:110px;text-align:center;flex:1;border-top:3px solid ${col}">
+    <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:7px;letter-spacing:.3px">${label}</div>
+    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;margin-bottom:4px"><span class="wt">${w}승</span> <span class="lt">${l}패</span>${d?` <span style="color:var(--gray-l);font-size:14px">${d}무</span>`:''}</div>
+    <div style="font-size:12px;font-weight:800;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</div>
   </div>`;
 }
 
@@ -587,20 +601,19 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
     const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    h+=`<div class="rec-summary" data-hay="${hayData}">
+    const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
+    h+=`<div class="rec-summary" data-hay="${hayData}" style="border-left:3px solid ${_wBorderCol}">
       <div class="rec-sum-header">
-        <span style="color:var(--gray-l);font-size:11px;min-width:72px">${m.d||''}</span>
+        <span style="color:var(--gray-l);font-size:10px;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):''}</span>
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
-            <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span>
-            <span style="color:var(--gray-l);font-size:14px">:</span>
-            <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span>
+            <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+            <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+            <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
           </div>
           <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
-          <span style="font-size:12px;color:${aWin?ca:bWin?cb:'#888'};font-weight:600">
-            ${aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}
-          </span>
+          ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l)">무승부</span>`}
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>

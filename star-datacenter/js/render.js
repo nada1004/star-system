@@ -332,7 +332,7 @@ function openUnivModal(univName){
 function buildPlayerDetailHTML(p){
   const col=gc(p.univ);
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
-  p.history.forEach(h=>{
+  (p.history||[]).forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
     else{opps[h.opp].l++;if(rv[h.oppRace])rv[h.oppRace].l++;}
@@ -466,7 +466,7 @@ function buildPlayerDetailHTML(p){
   }
 
   // ── 최근 기록 ──
-  if(p.history.length){
+  if((p.history||[]).length){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
     const allModes=[...new Set((p.history||[]).map(h=>h.mode||'').filter(Boolean))];
@@ -570,7 +570,7 @@ function buildUnivDetailHTML(univName){
       <div>
         <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
           ${univName}
-          ${univCfg.find(u=>u.name===univName)?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${univCfg.find(u=>u.name===univName).dissolvedDate?' '+univCfg.find(u=>u.name===univName).dissolvedDate:''}</span>`:''}
+          ${(()=>{const _u=univCfg.find(u=>u.name===univName);return _u?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${_u.dissolvedDate?' '+_u.dissolvedDate:''}</span>`:'';})()}
         </div>
         <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 선수 ${members.length}명</div>
       </div>

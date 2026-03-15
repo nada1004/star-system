@@ -12,6 +12,7 @@ function revertMatchRecord(matchObj){
   if(!matchObj.sets||!matchObj.sets.length){
     if(!mid)return;
     players.forEach(p=>{
+      if(!p.history)p.history=[];
       const idx=p.history.findIndex(h=>h.matchId===mid);
       if(idx>=0){
         const hr=p.history[idx];
@@ -33,6 +34,7 @@ function revertMatchRecord(matchObj){
       const l=players.find(p=>p.name===lName);
 
       if(w){
+        if(!w.history)w.history=[];
         w.win=Math.max(0,(w.win||0)-1);
         w.points=(w.points||0)-3;
         // matchId 우선, 없으면 날짜+결과+상대 방식 (찾는 즉시 1건만 제거)
@@ -43,6 +45,7 @@ function revertMatchRecord(matchObj){
         if(idx>=0){const hr=w.history[idx];if(hr.eloDelta!=null){w.elo=(w.elo||ELO_DEFAULT)-hr.eloDelta;}w.history.splice(idx,1);}
       }
       if(l){
+        if(!l.history)l.history=[];
         l.loss=Math.max(0,(l.loss||0)-1);
         l.points=(l.points||0)+3;
         let idx=-1;

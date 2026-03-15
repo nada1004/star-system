@@ -243,6 +243,7 @@ function saveGameEdit(editRef, si, gi, btn){
     const wP=players.find(p=>p.name===oldWin);
     const lP=players.find(p=>p.name===oldLose);
     if(wP){
+      if(!wP.history)wP.history=[];
       wP.win=Math.max(0,(wP.win||0)-1);
       wP.points=(wP.points||0)-3;
       let wi=mid?wP.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===oldLose):-1;
@@ -250,6 +251,7 @@ function saveGameEdit(editRef, si, gi, btn){
       if(wi>=0){const hr=wP.history[wi];if(hr.eloDelta!=null)wP.elo=(wP.elo||ELO_DEFAULT)-hr.eloDelta;wP.history.splice(wi,1);}
     }
     if(lP){
+      if(!lP.history)lP.history=[];
       lP.loss=Math.max(0,(lP.loss||0)-1);
       lP.points=(lP.points||0)+3;
       let li=mid?lP.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===oldWin):-1;

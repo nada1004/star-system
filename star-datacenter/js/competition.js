@@ -1058,6 +1058,7 @@ function grpEditMatch(tnId,gi,mi){
 function grpDelMatch(tnId,gi,mi){
   if(!confirm('경기를 삭제하시겠습니까?\n⚠️ 선수 개인 전적도 롤백됩니다.'))return;
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  if(!tn.groups||!tn.groups[gi]||!tn.groups[gi].matches||!tn.groups[gi].matches[mi])return;
   revertMatchRecord(tn.groups[gi].matches[mi]);
   tn.groups[gi].matches.splice(mi,1);save();render();
 }
@@ -1193,7 +1194,9 @@ function grpDelSet(si){
 }
 function grpAddGame(si){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
-  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];if(!m.sets[si].games)m.sets[si].games=[];
+  const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
+  if(!m||!m.sets||!m.sets[si])return;
+  if(!m.sets[si].games)m.sets[si].games=[];
   m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:''});grpRefreshSets();
 }
 function grpDelGame(si,gi2){
@@ -1384,18 +1387,20 @@ function bktDelSet(si){
 }
 function bktAddGame(si){
   const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  if(!m.sets||!m.sets[si])return;
   if(!m.sets[si].games)m.sets[si].games=[];
   m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:''});bktRefreshSets();
 }
 function bktDelGame(si,gi2){
   const m=getBktMatch(bracketMatchState.tnId,bracketMatchState.rnd,bracketMatchState.mi);if(!m)return;
+  if(!m.sets||!m.sets[si]||!m.sets[si].games)return;
   m.sets[si].games.splice(gi2,1);bktRefreshSets();
 }
 
 function bktSaveMatch(){
   const {tnId,rnd,mi}=bracketMatchState;
   const m=getBktMatch(tnId,rnd,mi);if(!m)return;
-  m.d=document.getElementById('gm-date')?.value||'';
+  m.d=document.getElementById('gm-date')?.value||new Date().toISOString().slice(0,10);
   m.a=document.getElementById('gm-a')?.value||'';
   m.b=document.getElementById('gm-b')?.value||'';
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}

@@ -267,6 +267,8 @@ function _removeIndResult(wName, lName, date, map){
   const w=players.find(p=>p.name===wName);
   const l=players.find(p=>p.name===lName);
   if(!w||!l)return;
+  if(!w.history)w.history=[];
+  if(!l.history)l.history=[];
   const nm=v=>(!v||v==='-')?'-':v;
   const wi=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===(date||'')&&nm(h.map)===nm(map));
   let delta=0;
@@ -483,6 +485,8 @@ function _removeGjResult(wName, lName, date, map, matchId){
   const w=players.find(p=>p.name===wName);
   const l=players.find(p=>p.name===lName);
   if(!w||!l)return;
+  if(!w.history)w.history=[];
+  if(!l.history)l.history=[];
   const nm=v=>(!v||v==='-')?'-':v;
   const wi=matchId
     ? w.history.findIndex(h=>h.matchId===matchId)

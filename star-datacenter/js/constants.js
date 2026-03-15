@@ -354,6 +354,8 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const w=players.find(p=>p.name===winName);
   const l=players.find(p=>p.name===loseName);
   if(!w||!l||w===l)return;
+  if(!w.history)w.history=[];
+  if(!l.history)l.history=[];
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
