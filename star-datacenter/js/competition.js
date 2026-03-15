@@ -364,7 +364,8 @@ function rBracketSchedule(tn){
   const pairCount=Math.floor(numGroups/2)*2;
   let numR1=pairCount>0?pairCount:4;
   if(numGroups%2===1)numR1++;
-  let totalRounds=0;let n=numR1;while(n>1){n=Math.ceil(n/2);totalRounds++;}
+  // totalRounds는 팀 수(=첫 라운드 경기수 × 2) 기준으로 계산 → rCompTourDynamic과 라운드 레이블 일치
+  let totalRounds=0;let n=numR1*2;while(n>1){n=Math.ceil(n/2);totalRounds++;}
   if(totalRounds===0)totalRounds=1;
   const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
 
@@ -1267,7 +1268,7 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
   if(isManual){
     rLabel=m.rndLabel||'토너먼트 경기';
   } else {
-    const totalRounds=(()=>{const n=Math.max(1,Math.ceil((tn.groups&&tn.groups.length>=2)?Math.ceil(tn.groups.length/2)*2:4));let r=0,x=n;while(x>1){x=Math.ceil(x/2);r++;}return r||1;})();
+    const totalRounds=(()=>{const _ng=(tn.groups&&tn.groups.length>=2)?tn.groups.length:0;const _pc=Math.floor(_ng/2)*2;let _nr1=_pc>0?_pc:4;if(_ng%2===1)_nr1++;let r=0,x=_nr1*2;while(x>1){x=Math.ceil(x/2);r++;}return r||1;})();
     const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
     rLabel=roundLabels[totalRounds-rnd]||((totalRounds-rnd)+'강');
   }
