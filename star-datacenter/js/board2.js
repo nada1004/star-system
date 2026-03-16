@@ -85,8 +85,8 @@ function _b2UnivBlock(univName, col, members) {
       ${labelEl}
       ${contentEl}
     </div>`;
-  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
-  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
+  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
   let body = '';
   roledMembers.forEach(p => {
@@ -140,7 +140,7 @@ function _b2FreeView() {
     <div style="background:#64748b0e;padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${defCol}18">${labelEl}${contentEl}</div>`;
-  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
   // 직책 그룹
   roledFree.forEach(p => {
@@ -164,8 +164,8 @@ function _b2NameTag(p, accentCol) {
       style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
-      ${_b2Avatar(p, accentCol, 32)}
-      <span style="font-weight:700;font-size:13px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
+      ${_b2Avatar(p, accentCol, 40)}
+      <span style="font-weight:700;font-size:14px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
     </div>`;
 }
 
@@ -179,7 +179,7 @@ function _b2PlayerRow(p, accentCol) {
       style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
       onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
-      ${_b2Avatar(p, accentCol, 46)}
+      ${_b2Avatar(p, accentCol, 40)}
       <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s">${p.name||''}</span>
       ${race ? `<span style="font-size:12px;color:var(--text3)">${race}</span>` : ''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
