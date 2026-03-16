@@ -320,7 +320,7 @@ function calShowDay(ds){
     +'<h4 style="margin:0;color:var(--blue)">📅 '+ds+' 경기 목록 <span style="font-size:12px;font-weight:400;color:var(--gray-l)">'+matches.length+'경기</span></h4>'
     +'<div style="display:flex;gap:6px">'
     +'<button class="btn btn-b btn-sm" onclick="calDayDate=\''+ds+'\';calView=\'day\';render()">📋 일간 상세보기</button>'
-    +'<button class="btn btn-w btn-sm" onclick="captureDetail(&quot;calDayDetail&quot;,&quot;캘린더_&quot;+(new Date().toLocaleDateString()))" style="margin-right:4px">📷 저장</button>'+'<button class="btn btn-w btn-sm" onclick="_calActiveDay=\'\';document.getElementById(\'calDayDetail\').innerHTML=\'\'">✕ 닫기</button>'
+    +'<button class="btn btn-w btn-sm" onclick="_calActiveDay=\'\';document.getElementById(\'calDayDetail\').innerHTML=\'\'">✕ 닫기</button>'
     +'</div></div>'
     +matches.map(buildMatchRow).join('')
     +'</div>';
