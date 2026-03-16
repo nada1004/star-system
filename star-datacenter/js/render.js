@@ -47,7 +47,7 @@ function render(){
     case 'mini':    if(typeof rMini==='function')    rMini(C,T);    break;
     case 'ind':     rMergedInd(C,T);   break;
     case 'gj':      rMergedInd(C,T);   break;
-    case 'univck':  if(typeof rCK==='function')      rCK(C,T);      break;
+    case 'univck':  rMergedUnivM(C,T); break;
     case 'univm':   rMergedUnivM(C,T); break;
     case 'tiertour':rMergedComp(C,T);  break;
     case 'comp':    rMergedComp(C,T);  break;
@@ -701,13 +701,15 @@ function rMergedInd(C, T) {
 
 function rMergedUnivM(C, T) {
   if(curTab==='mini') _mergedUnivSub='mini';
+  else if(curTab==='univck') _mergedUnivSub='univck';
   const bar = _mergedSubBar(
-    [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'}],
+    [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
     _mergedUnivSub, '_mergedUnivSub'
   );
   const sub = document.createElement('div');
-  if(_mergedUnivSub==='mini') { if(typeof rMini==='function')  rMini(sub,T); }
-  else                         { if(typeof rUnivM==='function') rUnivM(sub,T); }
+  if(_mergedUnivSub==='mini')        { if(typeof rMini==='function')  rMini(sub,T); }
+  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
+  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
