@@ -242,7 +242,7 @@ function rBoard(C,T){
     .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
-    .brd-side-panel{width:230px;flex-shrink:0;}
+    .brd-side-panel{float:right;width:230px;margin:0 0 6px 10px;}
     .brd-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}
     @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
@@ -506,7 +506,7 @@ function buildUnivBoardCard(u, forExport){
           const imgList=_bimgs.map(src=>`<img src="${src}" class="brd-bottom-section-img" style="max-width:130px;max-height:110px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">`).join('');
           bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${_bnote?'6px':'0'}">${imgList}</div>`:''}${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
         }
-        const mainLayout=`<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${roleSection}${tierRows}</div>${sidePanelHtml}</div>`;
+        const mainLayout=`<div style="overflow:hidden">${sidePanelHtml}${roleSection}${tierRows}</div>`;
         return mainLayout+bottomHtml;
       })()}</div>
     </div>`;
