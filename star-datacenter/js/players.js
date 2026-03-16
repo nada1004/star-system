@@ -222,22 +222,29 @@ function rTier(C,T){
   }
 
   // ── 3행: 유형별 필터 ──
-  fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap">
+  const _typeCount=window._tierTypeSet?window._tierTypeSet.size:0;
+  const _toggleBtnLabel=window._tierTypeFilterOpen?'▲ 접기':`▼ 선택${_typeCount>0?` (${_typeCount})`:''}`;
+  const _toggleBtnStyle=_typeCount>0&&!window._tierTypeFilterOpen
+    ?'padding:3px 10px;border-radius:12px;border:2px solid var(--blue);background:var(--blue);font-size:11px;cursor:pointer;color:#fff;font-weight:700'
+    :'padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)';
+  fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center">
     <span style="font-size:11px;font-weight:700;color:var(--text3);align-self:center">유형별</span>
-    <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
+    <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체</button>`;
   if(_hasTypeFilter){
     window._tierTypeSet.forEach(id=>{
       const mb=modeSortBtns.find(m=>m.id===id);
       if(mb) fh+=`<button class="pill on" style="background:${mb.color};border-color:${mb.color};color:#fff" onclick="window._tierTypeSet.delete('${id}');render()">${mb.lbl} ✕</button>`;
     });
   }
-  fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)">${window._tierTypeFilterOpen?'▲ 접기':'▼ 선택'}</button>`;
+  fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="${_toggleBtnStyle}">${_toggleBtnLabel}</button>`;
   if(window._tierTypeFilterOpen){
+    fh+=`<div style="width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:var(--surface);border-radius:10px;border:1px solid var(--border2);margin-top:2px">`;
     modeSortBtns.forEach(m=>{
       if(!window._tierTypeSet)window._tierTypeSet=new Set();
       const on=window._tierTypeSet.has(m.id);
       fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
     });
+    fh+=`</div>`;
   }
   fh+=`</div>`;
   F.innerHTML=fh;
