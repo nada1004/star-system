@@ -1071,6 +1071,11 @@ async function downloadBoardAll(){
     const brdStyle=rcont?rcont.querySelector('style'):null;
     tmpDiv.innerHTML=(brdStyle?brdStyle.outerHTML:'')+boardWrap.innerHTML;
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
+    // 숨김 대학 카드 제거 (이미지 저장 시 항상 제외)
+    tmpDiv.querySelectorAll('.brd-card').forEach(card=>{
+      const uObj=univCfg.find(x=>x.name===card.dataset.univ);
+      if(uObj&&uObj.hidden)card.remove();
+    });
     document.body.appendChild(tmpDiv);
     await new Promise(r=>setTimeout(r,50));
 
