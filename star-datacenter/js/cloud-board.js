@@ -467,23 +467,24 @@ function buildUnivBoardCard(u, forExport){
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
       <div class="brd-body" style="background:${toPastel(col,0.65)};overflow:hidden">${(()=>{
         const _memo=u.memo||'';
-        const _img=u.memoImg||'';
+        const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const imgHtml=_img?`<img src="${_img}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:'';
         const panelStyle=`border-radius:10px;padding:8px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
         // 사이드 패널 (PC only, .brd-side-panel 클래스로 모바일 숨김)
         let sidePanelHtml='';
         if(isLoggedIn&&!forExport){
+          const imgList=_imgs.map((src,i)=>`<div style="position:relative;margin-bottom:5px">
+            <img src="${src}" style="width:100%;border-radius:7px;display:block" onerror="this.style.display='none'">
+            <button onclick="event.stopPropagation();removeBoardMemoImg('${_uname}',${i})" style="position:absolute;top:3px;right:3px;font-size:9px;background:rgba(239,68,68,.75);border:none;border-radius:4px;padding:1px 5px;color:#fff;cursor:pointer">✕</button>
+          </div>`).join('');
           sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">
-            ${imgHtml}
-            <textarea placeholder="📝 사이드 메모..." rows="3" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:11px;background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)" onclick="event.stopPropagation()">${_memo}</textarea>
-            <div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap">
-              <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px" onclick="event.stopPropagation()">🖼️ 이미지<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
-              ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 5px;color:#dc2626;cursor:pointer">🗑️</button>`:''}
-            </div>
+            ${imgList}
+            <textarea placeholder="📝 사이드 메모..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:11px;background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222;margin-top:${_imgs.length?'2px':'0'}" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)" onclick="event.stopPropagation()">${_memo}</textarea>
+            <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px;margin-top:4px" onclick="event.stopPropagation()">🖼️ 이미지 추가<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
           </div>`;
-        } else if(_memo||_img){
-          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_img?'4px':'0'}">${_memo}</div>`:''}</div>`;
+        } else if(_memo||_imgs.length){
+          const imgList=_imgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
+          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">${imgList}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_imgs.length?'4px':'0'}">${_memo}</div>`:''}</div>`;
         }
         // 하단 메모 (bMemo + bMemoImgs 배열)
         const _bnote=u.bMemo||'';

@@ -48,7 +48,7 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  let h = `<style>.b2-side-panel{width:170px;flex-shrink:0;}.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}</style>`;
+  let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-bws{position:relative;}.b2-abs-side{position:absolute;top:4px;right:14px;width:160px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-abs-side{display:none!important;}.b2-bottom-img{display:none!important;}.b2-bws{padding-right:14px!important;}}</style>`;
   h += `<div style="display:flex;flex-direction:column;gap:12px">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
@@ -101,15 +101,17 @@ function _b2UnivBlock(univName, col, members) {
     tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
   });
 
-  // 사이드 패널 (memo + memoImg, PC only)
+  // 사이드 패널 (memoImgs 배열, position:absolute로 선 가리지 않음)
   const _sideMemo = uCfg.memo || '';
-  const _sideImg = uCfg.memoImg || '';
-  const sidePanelHtml = (_sideMemo||_sideImg) ? `<div class="b2-side-panel" style="width:170px;border-radius:10px;padding:8px;background:${col}14;border:1px solid ${col}28;align-self:flex-start">
-    ${_sideImg?`<img src="${_sideImg}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:''}
+  const _sideImgs = (uCfg.memoImgs||[]).length ? uCfg.memoImgs : (uCfg.memoImg ? [uCfg.memoImg] : []);
+  const sideImgHtml = _sideImgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
+  const hasSide = !!(_sideMemo||_sideImgs.length);
+  const absSideHtml = hasSide ? `<div class="b2-abs-side" style="background:${col}16;border:1px solid ${col}30">
+    ${sideImgHtml}
     ${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}
   </div>` : '';
 
-  const tierSection = `<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${roledBody}${tieredBody}</div>${sidePanelHtml}</div>`;
+  const tierSection = `<div class="${hasSide?'b2-bws':''}" style="padding:0;${hasSide?'padding-right:176px;':''}">${absSideHtml}${roledBody}${tieredBody}</div>`;
 
   // 하단 (bMemo + bMemoImgs 배열)
   const _bnote = uCfg.bMemo || '';

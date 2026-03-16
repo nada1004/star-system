@@ -1280,6 +1280,20 @@ function setBoardMemoImg(univName, dataUrl){
   u.memoImg=dataUrl;
   save();render();
 }
+function addBoardMemoImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(!u.memoImgs)u.memoImgs=[];
+  u.memoImgs.push(dataUrl);
+  save();render();
+}
+function removeBoardMemoImg(univName, idx){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(!u.memoImgs)u.memoImgs=[];
+  u.memoImgs.splice(idx,1);
+  save();render();
+}
 
 /* ══════════════════════════════════════
    선수 CRUD
