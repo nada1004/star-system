@@ -1248,6 +1248,18 @@ function setBoardMemo(univName, text){
   u.memo=text;
   save();
 }
+function setBoardMemo2(univName, text){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.memo2=text;
+  save();
+}
+function setBoardNote(univName, text){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bMemo=text;
+  save();
+}
 function setBoardMemoImg(univName, dataUrl){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;

@@ -242,6 +242,8 @@ function rBoard(C,T){
     .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
+    .brd-side-panel{width:150px;flex-shrink:0;}
+    @media(max-width:640px){.brd-side-panel{display:none!important;}}
     /* 이동 팝업 */
     .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
     .brd-move-popup-title{font-size:11px;font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
@@ -441,18 +443,23 @@ function buildUnivBoardCard(u, forExport){
             ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
-            <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"`)}>
-              ${u.name}${(!forExport&&boardSelUniv===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
-            ${(u.championships||0)>0?`<div style="display:flex;align-items:center;gap:2px;margin-top:2px">${'<span style="font-size:16px">⭐</span>'.repeat(u.championships||0)}</div>`:''}
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
+              <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"`)}>
+                ${u.name}${(!forExport&&boardSelUniv===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
+              ${(u.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(u.championships||0)}</span>`:''}
+              ${isLoggedIn&&!forExport?`<input type="text" placeholder="📌 메모..." value="${(u.memo2||'').replace(/"/g,'&quot;')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;flex:1" oninput="event.stopPropagation();setBoardMemo2('${u.name.replace(/'/g,"\\'")}',this.value)" onclick="event.stopPropagation()">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1">${u.memo2}</span>`:'')}
+            </div>
             <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${isLoggedIn&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-            ${isLoggedIn?`<button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">◀</button>
-            <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">▶</button>
-            <button onclick="event.stopPropagation();toggleBoardHide('${u.name}')" title="${u.hidden?'숨김 상태 (클릭: 표시)':'표시 상태 (클릭: 숨기기)'}" style="background:${u.hidden?'rgba(239,68,68,.55)':'rgba(255,255,255,.18)'};border:1px solid ${u.hidden?'rgba(239,68,68,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:12px;width:26px;height:22px;cursor:pointer;transition:.12s">${u.hidden?'🚫':'👁️'}</button>
-            <label title="대학 색상 변경" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:12px;width:26px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden" onclick="event.stopPropagation()">🎨<input type="color" value="${col}" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;top:0;left:0" onchange="event.stopPropagation();changeBoardUnivColor('${u.name}',this.value)"></label>
-            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" title="우승 추가" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">⭐+</button>
-            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" title="우승 제거" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">⭐-</button>`:''}
+            ${isLoggedIn?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end">
+              <button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="왼쪽 이동">◀</button>
+              <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="오른쪽 이동">▶</button>
+              <button onclick="event.stopPropagation();toggleBoardHide('${u.name}')" style="background:${u.hidden?'rgba(239,68,68,.55)':'rgba(255,255,255,.18)'};border:1px solid ${u.hidden?'rgba(239,68,68,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:12px;padding:0 7px;height:22px;cursor:pointer" title="${u.hidden?'숨김':'표시'}">${u.hidden?'🚫':'👁️'}</button>
+              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:12px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;position:relative;overflow:hidden" onclick="event.stopPropagation()" title="색상">🎨<input type="color" value="${col}" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;top:0;left:0" onchange="event.stopPropagation();changeBoardUnivColor('${u.name}',this.value)"></label>
+              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 추가">⭐+</button>
+              <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 제거">⭐-</button>
+            </div>`:''}
           </div>`:''}
         </div>
       </div>
@@ -461,27 +468,34 @@ function buildUnivBoardCard(u, forExport){
         const _memo=u.memo||'';
         const _img=u.memoImg||'';
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const hasMemo=_memo||_img||isLoggedIn;
-        const imgHtml=_img?`<img src="${_img}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block;opacity:0.8" onerror="this.style.display='none'">`:'';
-        const panelStyle=`float:right;clear:right;margin:0 0 6px 8px;border-radius:10px;padding:8px;width:140px;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
-        if(!hasMemo) return allRows;
-        if(forExport){
-          const panel=(_memo||_img)?`<div style="${panelStyle}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_memo}</div>`:''}</div>`:'';
-          return panel+allRows;
-        }
-        if(isLoggedIn){
-          const panel=`<div style="${panelStyle}">
+        const imgHtml=_img?`<img src="${_img}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:'';
+        const panelStyle=`border-radius:10px;padding:8px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
+        // 사이드 패널 (PC only, .brd-side-panel 클래스로 모바일 숨김)
+        let sidePanelHtml='';
+        if(isLoggedIn&&!forExport){
+          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">
             ${imgHtml}
-            <textarea placeholder="📝 메모..." rows="3" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:5px 7px;font-size:11px;background:rgba(255,255,255,.5);resize:vertical;outline:none;font-family:inherit;color:#222;min-height:50px" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
-            <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
-              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px">🖼️ 이미지<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
-              ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 6px;color:#dc2626;cursor:pointer">🗑️ 이미지삭제</button>`:''}
+            <textarea placeholder="📝 사이드 메모..." rows="3" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:11px;background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)" onclick="event.stopPropagation()">${_memo}</textarea>
+            <div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap">
+              <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px" onclick="event.stopPropagation()">🖼️ 이미지<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
+              ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 5px;color:#dc2626;cursor:pointer">🗑️</button>`:''}
             </div>
           </div>`;
-          return panel+allRows;
+        } else if(_memo||_img){
+          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_img?'4px':'0'}">${_memo}</div>`:''}</div>`;
         }
-        const panel=(_memo||_img)?`<div style="${panelStyle}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_memo}</div>`:''}</div>`:'';
-        return panel+allRows;
+        // 하단 메모 (별도 필드 bMemo, 모바일+PC 모두 표시)
+        const _bnote=u.bMemo||'';
+        let bottomHtml='';
+        if(isLoggedIn&&!forExport){
+          bottomHtml=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:5px">
+            <textarea placeholder="📋 하단 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.12);border-radius:7px;padding:5px 8px;font-size:11px;background:rgba(255,255,255,.55);resize:none;outline:none;font-family:inherit;color:#222" oninput="event.stopPropagation();setBoardNote('${_uname}',this.value)" onclick="event.stopPropagation()">${_bnote}</textarea>
+          </div>`;
+        } else if(_bnote){
+          bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35);font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`;
+        }
+        const mainLayout=`<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${roleSection}${tierRows}</div>${sidePanelHtml}</div>`;
+        return mainLayout+bottomHtml;
       })()}</div>
     </div>`;
   };

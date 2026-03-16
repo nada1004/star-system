@@ -101,11 +101,14 @@ function _b2UnivBlock(univName, col, members) {
 
   return `
     <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
-      <div style="background:${col};padding:10px 16px;display:flex;align-items:center;gap:8px">
-        ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
-        <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px">${univName}</span>
-        ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-        <span style="margin-left:auto;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+      <div style="background:${col};padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px">${univName}</span>
+          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+          <span style="margin-left:auto;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+        </div>
+        ${uCfg.memo2?`<div style="margin-top:4px;font-size:11px;color:${textCol}cc;padding:2px 0">${uCfg.memo2}</div>`:''}
       </div>
       <div style="background:${lightCol};padding:4px 14px 8px">
         ${body}
