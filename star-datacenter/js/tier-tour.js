@@ -504,10 +504,10 @@ function rTierTour(){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
   } else {
-    // 현재 선택된 대회의 기록만 표시 (compName 있는 신규 기록은 대회별, 없는 구 기록은 전체 표시)
+    // 현재 선택된 대회의 기록만 표시
     const _curTnName=curComp||'';
     const _ttFiltered=_curTnName
-      ? ttM.filter(m=>!m.compName||m.compName===_curTnName)
+      ? ttM.filter(m=>m.compName===_curTnName)
       : ttM;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
