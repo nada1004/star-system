@@ -443,7 +443,7 @@ function buildUnivBoardCard(u, forExport){
           <div style="flex:1;min-width:0">
             <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"`)}>
               ${u.name}${(!forExport&&boardSelUniv===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
-            ${(u.championships||0)>0?`<div style="display:flex;align-items:center;gap:2px;margin-top:2px">${'<span style="font-size:16px">🏆</span>'.repeat(u.championships||0)}</div>`:''}
+            ${(u.championships||0)>0?`<div style="display:flex;align-items:center;gap:2px;margin-top:2px">${'<span style="font-size:16px">⭐</span>'.repeat(u.championships||0)}</div>`:''}
             <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${isLoggedIn&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
@@ -451,13 +451,32 @@ function buildUnivBoardCard(u, forExport){
             <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">▶</button>
             <button onclick="event.stopPropagation();toggleBoardHide('${u.name}')" title="${u.hidden?'숨김 상태 (클릭: 표시)':'표시 상태 (클릭: 숨기기)'}" style="background:${u.hidden?'rgba(239,68,68,.55)':'rgba(255,255,255,.18)'};border:1px solid ${u.hidden?'rgba(239,68,68,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:12px;width:26px;height:22px;cursor:pointer;transition:.12s">${u.hidden?'🚫':'👁️'}</button>
             <label title="대학 색상 변경" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:12px;width:26px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden" onclick="event.stopPropagation()">🎨<input type="color" value="${col}" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;top:0;left:0" onchange="event.stopPropagation();changeBoardUnivColor('${u.name}',this.value)"></label>
-            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" title="우승 추가" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">🏆+</button>
-            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" title="우승 제거" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">🏆-</button>`:''}
+            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" title="우승 추가" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">⭐+</button>
+            <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" title="우승 제거" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;width:26px;height:22px;cursor:pointer;transition:.12s" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">⭐-</button>`:''}
           </div>`:''}
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-body" style="background:${toPastel(col,0.65)}">${allRows}${(()=>{const _memo=u.memo||'';if(forExport) return _memo?`<div style="margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.5);border-radius:7px;font-size:11px;color:#444;border-left:3px solid ${col}">${_memo}</div>`:'';return isLoggedIn?`<div style="margin-top:6px;border-top:1px solid ${hexToRgba(col,.2)};padding-top:5px"><textarea placeholder="메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid ${hexToRgba(col,.35)};border-radius:7px;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.65);resize:vertical;outline:none;font-family:inherit" oninput="event.stopPropagation();setBoardMemo('${u.name.replace(/'/g,"\\'")}',this.value)">${_memo}</textarea></div>`:_memo?`<div style="margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.5);border-radius:7px;font-size:11px;color:#444;border-left:3px solid ${col}">${_memo}</div>`:'';})()}</div>
+      <div class="brd-body" style="background:${toPastel(col,0.65)}">${allRows}</div>
+      ${(()=>{
+        const _memo=u.memo||'';
+        const _img=u.memoImg||'';
+        const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const imgHtml=_img?`<img src="${_img}" style="max-width:100%;border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`:'';
+        if(forExport) return (_memo||_img)?`<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap">${_memo}</div>`:''}</div>`:'';
+        if(isLoggedIn) return `<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">
+          ${imgHtml}
+          <textarea placeholder="📝 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid ${hexToRgba(col,.35)};border-radius:7px;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.75);resize:vertical;outline:none;font-family:inherit;display:block" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;color:${col};font-weight:700;background:rgba(255,255,255,.7);border:1px solid ${hexToRgba(col,.3)};border-radius:6px;padding:2px 8px">
+              🖼️ 이미지
+              <input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')">
+            </label>
+            ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:11px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:2px 8px;color:#dc2626;cursor:pointer">🗑️ 이미지 삭제</button>`:''}
+          </div>
+        </div>`;
+        return (_memo||_img)?`<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">${imgHtml}${_memo?`<div style="font-size:12px;color:#333;white-space:pre-wrap">${_memo}</div>`:''}</div>`:'';
+      })()}
     </div>`;
   };
 
@@ -1119,7 +1138,7 @@ function buildBoardRankViewHTML(univs){
     .map(p=>({...p,_univ:p.univ,_col:gc(p.univ)}));
   allPlayers.sort((a,b)=>(b.points||0)-(a.points||0));
   if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">선수 없음</div>`;
-  const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'🏆','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
+  const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'⭐','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
   let h=`<div style="background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden">
     <div style="padding:14px 18px;font-weight:900;font-size:15px;color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
     <table style="width:100%;border-collapse:collapse">

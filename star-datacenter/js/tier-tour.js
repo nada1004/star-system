@@ -1248,6 +1248,12 @@ function setBoardMemo(univName, text){
   u.memo=text;
   save();
 }
+function setBoardMemoImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.memoImg=dataUrl;
+  save();render();
+}
 
 /* ══════════════════════════════════════
    선수 CRUD
