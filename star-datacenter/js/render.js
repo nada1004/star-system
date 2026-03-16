@@ -9,6 +9,13 @@ function sw(t,el){
   if(t==='gj') gjSub='records';
   if(t==='univck') ckSub='records';
   if(t==='univm') univmSub='records';
+  // 통합탭 서브탭 초기값 (탭 진입 시에만 설정)
+  if(t==='ind')      _mergedIndSub='ind';
+  if(t==='gj')       _mergedIndSub='gj';
+  if(t==='univm'||t==='mini') _mergedUnivSub='mini';
+  if(t==='univck')   _mergedUnivSub='univck';
+  if(t==='comp')     _mergedCompSub='comp';
+  if(t==='tiertour') _mergedCompSub='tiertour';
   if(t==='pro') proSub='records';
   if(t==='hist') histSub='mini'; // 대전 기록 탭으로 돌아올 때 초기화
   // 탭 전환 시 해당 탭 검색어 초기화
@@ -685,9 +692,6 @@ function _mergedSubBar(tabs, curSub, setFn) {
 }
 
 function rMergedInd(C, T) {
-  // curTab이 'gj'로 진입 시 서브탭 자동 전환
-  if(curTab==='gj') _mergedIndSub='gj';
-  else if(curTab==='ind') _mergedIndSub='ind';
   const bar = _mergedSubBar(
     [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
     _mergedIndSub, '_mergedIndSub'
@@ -700,8 +704,6 @@ function rMergedInd(C, T) {
 }
 
 function rMergedUnivM(C, T) {
-  if(curTab==='mini') _mergedUnivSub='mini';
-  else if(curTab==='univck') _mergedUnivSub='univck';
   const bar = _mergedSubBar(
     [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
     _mergedUnivSub, '_mergedUnivSub'
@@ -715,8 +717,6 @@ function rMergedUnivM(C, T) {
 }
 
 function rMergedComp(C, T) {
-  if(curTab==='tiertour') _mergedCompSub='tiertour';
-  else if(curTab==='comp') _mergedCompSub='comp';
   const bar = _mergedSubBar(
     [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}],
     _mergedCompSub, '_mergedCompSub'
