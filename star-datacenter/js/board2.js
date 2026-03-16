@@ -115,15 +115,25 @@ function _b2UnivBlock(univName, col, members) {
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
 
+  const _bgPos = uCfg.bgImgPos || 'center center';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')center/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')${_bgPos}/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
     : '';
+  const _posGrid = uCfg.bgImg ? (() => {
+    const verts=['top','center','bottom'], horizs=['left','center','right'];
+    return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px;flex-shrink:0" title="배경 위치 선택">${
+      verts.map(v=>`<div style="display:flex;gap:1px">${horizs.map(h=>{
+        const p=`${v} ${h}`,active=_bgPos===p;
+        return `<button onclick="event.stopPropagation();setBoardBgImgPos('${univName.replace(/'/g,"\\'")}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${active?textCol+99:textCol+'33'};background:${active?textCol+'44':textCol+'11'};cursor:pointer;padding:0" title="${p}"></button>`;
+      }).join('')}</div>`).join('')
+    }</div>`;
+  })() : '';
   const adminBgBtn = isLoggedIn ? `
     <label title="배경 이미지 첨부" style="display:inline-flex;align-items:center;cursor:pointer;background:${textCol}22;border:1px solid ${textCol}44;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:700;color:${textCol};flex-shrink:0;gap:2px" onclick="event.stopPropagation()">
       🖼️${uCfg.bgImg?'':'배경'}
       <input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${univName.replace(/'/g,"\\'")}')">
     </label>
-    ${uCfg.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${univName.replace(/'/g,"\\'")}');" title="배경 이미지 제거" style="background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:2px 6px;font-size:11px;color:#b91c1c;cursor:pointer;flex-shrink:0">🗑️</button>`:''}
+    ${uCfg.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${univName.replace(/'/g,"\\'")}');" title="배경 이미지 제거" style="background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:2px 6px;font-size:11px;color:#b91c1c;cursor:pointer;flex-shrink:0">🗑️</button>${_posGrid}`:''}
   ` : '';
 
   return `

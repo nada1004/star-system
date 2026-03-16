@@ -444,7 +444,10 @@ function buildUnivBoardCard(u, forExport){
 
     const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
+    const _bgPos=u.bgImgPos||'center center';
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}')${_bgPos}/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0;border-radius:18px"></div>`:'';
     return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,0.9)};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+      ${_bgOverlay}
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')"` } title="클릭: 해당 대학만 보기 / 다시 클릭: 전체 보기">

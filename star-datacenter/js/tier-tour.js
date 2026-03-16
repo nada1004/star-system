@@ -1305,6 +1305,13 @@ function removeBoardBgImg(univName){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
   delete u.bgImg;
+  delete u.bgImgPos;
+  save();render();
+}
+function setBoardBgImgPos(univName, pos){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bgImgPos=pos;
   save();render();
 }
 
