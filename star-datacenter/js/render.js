@@ -679,7 +679,7 @@ let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
-    ${tabs.map(t=>`<button onclick="${setFn}('${t.id}');render()"
+    ${tabs.map(t=>`<button onclick="${setFn}='${t.id}';render()"
       style="padding:5px 16px;border-radius:20px;border:2px solid ${curSub===t.id?'var(--blue)':'var(--border2)'};background:${curSub===t.id?'var(--blue)':'var(--white)'};color:${curSub===t.id?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">${t.lbl}</button>`).join('')}
   </div>`;
 }
