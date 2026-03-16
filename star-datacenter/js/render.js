@@ -45,12 +45,12 @@ function render(){
     case 'tier':    if(typeof rTier==='function')    rTier(C,T);    break;
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'mini':    if(typeof rMini==='function')    rMini(C,T);    break;
-    case 'ind':     if(typeof rInd==='function')     rInd(C,T);     break;
-    case 'gj':      if(typeof rGJ==='function')      rGJ(C,T);      break;
+    case 'ind':     rMergedInd(C,T);   break;
+    case 'gj':      rMergedInd(C,T);   break;
     case 'univck':  if(typeof rCK==='function')      rCK(C,T);      break;
-    case 'univm':   if(typeof rUnivM==='function')   rUnivM(C,T);   break;
-    case 'tiertour':if(typeof rTierTourTab==='function')rTierTourTab(C,T);break;
-    case 'comp':    if(typeof rComp==='function')    rComp(C,T);    break;
+    case 'univm':   rMergedUnivM(C,T); break;
+    case 'tiertour':rMergedComp(C,T);  break;
+    case 'comp':    rMergedComp(C,T);  break;
     case 'pro':     if(typeof rPro==='function')     rPro(C,T);     break;
     case 'member':  if(typeof rMember==='function')  rMember(C,T);  break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
@@ -668,4 +668,60 @@ function buildUnivDetailHTML(univName){
     h+=`</tbody></table></div>`;
   }
   return h;
+}
+
+/* ══════════════════════════════════════
+   통합 탭 렌더 함수
+══════════════════════════════════════ */
+let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
+let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
+let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+
+function _mergedSubBar(tabs, curSub, setFn) {
+  return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+    ${tabs.map(t=>`<button onclick="${setFn}('${t.id}');render()"
+      style="padding:5px 16px;border-radius:20px;border:2px solid ${curSub===t.id?'var(--blue)':'var(--border2)'};background:${curSub===t.id?'var(--blue)':'var(--white)'};color:${curSub===t.id?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">${t.lbl}</button>`).join('')}
+  </div>`;
+}
+
+function rMergedInd(C, T) {
+  // curTab이 'gj'로 진입 시 서브탭 자동 전환
+  if(curTab==='gj') _mergedIndSub='gj';
+  else if(curTab==='ind') _mergedIndSub='ind';
+  const bar = _mergedSubBar(
+    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
+    _mergedIndSub, '_mergedIndSub'
+  );
+  const sub = document.createElement('div');
+  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
+  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
+  C.innerHTML = bar;
+  C.appendChild(sub);
+}
+
+function rMergedUnivM(C, T) {
+  if(curTab==='mini') _mergedUnivSub='mini';
+  const bar = _mergedSubBar(
+    [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'}],
+    _mergedUnivSub, '_mergedUnivSub'
+  );
+  const sub = document.createElement('div');
+  if(_mergedUnivSub==='mini') { if(typeof rMini==='function')  rMini(sub,T); }
+  else                         { if(typeof rUnivM==='function') rUnivM(sub,T); }
+  C.innerHTML = bar;
+  C.appendChild(sub);
+}
+
+function rMergedComp(C, T) {
+  if(curTab==='tiertour') _mergedCompSub='tiertour';
+  else if(curTab==='comp') _mergedCompSub='comp';
+  const bar = _mergedSubBar(
+    [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}],
+    _mergedCompSub, '_mergedCompSub'
+  );
+  const sub = document.createElement('div');
+  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
+  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  C.innerHTML = bar;
+  C.appendChild(sub);
 }
