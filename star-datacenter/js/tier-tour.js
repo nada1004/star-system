@@ -1295,6 +1295,19 @@ function removeBoardMemoImg(univName, idx){
   save();render();
 }
 
+function setBoardBgImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bgImg=dataUrl;
+  save();render();
+}
+function removeBoardBgImg(univName){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  delete u.bgImg;
+  save();render();
+}
+
 /* ══════════════════════════════════════
    선수 CRUD
 ══════════════════════════════════════ */

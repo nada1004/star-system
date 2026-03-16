@@ -115,21 +115,36 @@ function _b2UnivBlock(univName, col, members) {
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
 
+  const bgImgHtml = uCfg.bgImg
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')center/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    : '';
+  const adminBgBtn = isLoggedIn ? `
+    <label title="배경 이미지 첨부" style="display:inline-flex;align-items:center;cursor:pointer;background:${textCol}22;border:1px solid ${textCol}44;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:700;color:${textCol};flex-shrink:0;gap:2px" onclick="event.stopPropagation()">
+      🖼️${uCfg.bgImg?'':'배경'}
+      <input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${univName.replace(/'/g,"\\'")}')">
+    </label>
+    ${uCfg.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${univName.replace(/'/g,"\\'")}');" title="배경 이미지 제거" style="background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:2px 6px;font-size:11px;color:#b91c1c;cursor:pointer;flex-shrink:0">🗑️</button>`:''}
+  ` : '';
+
   return `
-    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
-      <div style="background:${col};padding:10px 16px">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
-          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0">${univName}</span>
-          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:'<span style="flex:1"></span>'}
-          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a;position:relative">
+      ${bgImgHtml}
+      <div style="position:relative;z-index:1">
+        <div style="background:${col};padding:10px 16px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
+            ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+            <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0">${univName}</span>
+            ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+            ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:'<span style="flex:1"></span>'}
+            ${adminBgBtn}
+            <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+          </div>
         </div>
+        <div style="background:${lightCol};padding:4px 14px 8px">
+          ${tierSection}
+        </div>
+        ${bottomSection}
       </div>
-      <div style="background:${lightCol};padding:4px 14px 8px">
-        ${tierSection}
-      </div>
-      ${bottomSection}
     </div>`;
 }
 
