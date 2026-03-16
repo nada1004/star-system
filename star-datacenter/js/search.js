@@ -882,6 +882,14 @@ function parseSetSeparator(line) {
     return n!==null?n:0;
   }
 
+  // ▶Nset 형식 (예: ▶1set 5/3 [ 0:3 팀명 승 ], ▶슈에, ▶슈퍼에이스)
+  if(/^[▶►▸]/.test(t)){
+    const inner=t.replace(/^[▶►▸]\s*/,'');
+    if(/슈에|슈퍼\s*에이스|super\s*ace/i.test(inner)) return 99;
+    const n=extractSetNum(inner);
+    return n!==null?n:0;
+  }
+
   // 구분선 문자 집합: ═ ─ = - ㅡ _ ~ * ·
   const SEP = /[═─=\-ㅡ_~*·]/;
 
@@ -983,15 +991,21 @@ function pastePreview() {
     if (/^\((?:승|패)\)/.test(trimmed) && /\d+\s*[：:]\s*\d+/.test(trimmed) && /\((?:승|패)\)\s*$/.test(trimmed)) return;
     // [승]/[패] 세트 결과 요약 라인: "[승] 수술대 3:1 늪지대" 등
     if (/^\[(?:승|패)\]/.test(trimmed)) return;
+    // [ 0 : 3 팀명 승 ] 형태 인라인 스코어 (▶Nset 헤더 안에 포함된 경우 별도 줄로 올 수도 있음)
+    if (/^\[\s*\d+\s*[：:]\s*\d+\s+\S+\s+(?:승|패)\s*\]$/.test(trimmed)) return;
     // 메타 정보: "[nSET - ...]", "[슈 에] - ...", "밴" 등 대괄호 제목/주석 라인
     if (/^\[.*\]\s*[-–—]/.test(trimmed)) return;
     // 밴/엔트리 정보: "다린,애공 밴" 등 (승/패/🆚 없고, 쉼표+한글+밴으로 끝나는 라인)
     if (/[,，]\s*\S+\s+밴\s*$/.test(trimmed) && !trimmed.includes('🆚') && !trimmed.includes('vs')) return;
 
+    // 무승부 라인: 🐱🆚🐱 → 무승부로 스킵
+    if (/🐱[^🆚]*🆚[^🐱]*🐱/.test(trimmed) || (trimmed.includes('🆚') && (trimmed.match(/🐱/g)||[]).length>=2 && !trimmed.includes('✅') && !trimmed.includes('❌'))) return;
+
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
         !trimmed.includes('🆚') && !trimmed.includes('✅') && !trimmed.includes('❌') && !trimmed.includes('⬜') &&
+        !/^[▶►▸]/.test(trimmed) &&
         !/^\d+\s*(?:세트|셋)\s/.test(trimmed)) {
       const rosterM = trimmed.match(/^([^\s:：][^:：]{0,20}?)\s*[：:]\s*(\S+(?:\s+\S+){1,})$/);
       if (rosterM) {
