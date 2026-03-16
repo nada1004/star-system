@@ -80,32 +80,25 @@ function _b2UnivBlock(univName, col, members) {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
-  // 직책별 그룹화
-  const roleGroups = {};
-  roledMembers.forEach(p => {
-    const r = p.role || '';
-    if (!roleGroups[r]) roleGroups[r] = [];
-    roleGroups[r].push(p);
-  });
-  const orderedRoleKeys = _B2_ROLE_ORDER.filter(r => roleGroups[r]);
-
   const _secHeader = (label, isRole) => `
-    <div style="padding:5px 0 3px;margin-top:4px">
-      <span style="font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:${isRole ? col : 'var(--text3)'}88;border-bottom:1.5px solid ${isRole ? col : 'var(--border)'}44;padding-bottom:2px">${label}</span>
+    <div style="padding:5px 0 2px;margin-top:4px">
+      <span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole ? col : 'var(--text3)'}99;border-bottom:1.5px solid ${isRole ? col : 'var(--border)'}44;padding-bottom:2px">${label}</span>
     </div>`;
 
   let body = '';
-  orderedRoleKeys.forEach(role => {
-    const group = roleGroups[role];
-    body += _secHeader(role, true);
-    body += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
+  roledMembers.forEach(p => {
+    body += `
+      <div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid ${col}14">
+        <span style="font-size:12px;font-weight:800;color:${col};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
+        ${_b2PlayerRow(p, col)}
+      </div>`;
   });
 
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     body += _secHeader(tier, false);
-    body += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
+    body += `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:3px 0 6px">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
   });
 
   return `
@@ -148,14 +141,14 @@ function _b2FreeView() {
     </div>
     <div style="background:#64748b0e;padding:6px 14px 12px">`;
 
-  const _sh = (label, isRole) => `<div style="padding:5px 0 3px;margin-top:4px"><span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole?defCol:'var(--text3)'}88;border-bottom:1.5px solid ${isRole?defCol:'var(--border)'}44;padding-bottom:2px">${label}</span></div>`;
+  const _sh = (label, isRole) => `<div style="padding:5px 0 2px;margin-top:4px"><span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole?defCol:'var(--text3)'}99;border-bottom:1.5px solid ${isRole?defCol:'var(--border)'}44;padding-bottom:2px">${label}</span></div>`;
 
   // 직책 그룹
-  const roleGroups2 = {};
-  roledFree.forEach(p => { const r=p.role||''; if(!roleGroups2[r])roleGroups2[r]=[]; roleGroups2[r].push(p); });
-  _B2_ROLE_ORDER.filter(r=>roleGroups2[r]).forEach(role => {
-    h += _sh(role, true);
-    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${roleGroups2[role].map(p=>_b2Chip(p,defCol)).join('')}</div>`;
+  roledFree.forEach(p => {
+    h += `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid ${defCol}14">
+      <span style="font-size:12px;font-weight:800;color:${defCol};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
+      ${_b2PlayerRow(p, defCol)}
+    </div>`;
   });
 
   orderedTierKeys.forEach(tier => {
@@ -163,13 +156,25 @@ function _b2FreeView() {
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     const col = getTierBtnColor(tier);
     h += _sh(tier, false);
-    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
+    h += `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:3px 0 6px">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
   });
   h += `</div></div>`;
   return h;
 }
 
-/* ── 직책 1행 표시 (미사용, 하위호환용) ── */
+/* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
+function _b2NameTag(p, accentCol) {
+  return `
+    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
+      onmouseover="this.style.background='${accentCol}14'"
+      onmouseout="this.style.background='transparent'">
+      ${_b2Avatar(p, accentCol, 32)}
+      <span style="font-weight:700;font-size:13px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
+    </div>`;
+}
+
+/* ── 직책 1행 표시 ── */
 function _b2PlayerRow(p, accentCol) {
   const race = {'T':'테란','Z':'저그','P':'프로토스'}[p.race||''] || '';
   const tierCol = getTierBtnColor(p.tier||'');
