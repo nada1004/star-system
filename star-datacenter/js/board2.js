@@ -48,7 +48,7 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-bws{position:relative;}.b2-abs-side{position:absolute;top:4px;right:14px;width:160px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-abs-side{display:none!important;}.b2-bottom-img{display:none!important;}.b2-bws{padding-right:14px!important;}}</style>`;
+  let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-bws{position:relative;}.b2-abs-side{position:absolute;top:4px;right:14px;width:230px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-abs-side{display:none!important;}.b2-bottom-img{display:none!important;}.b2-bws{padding-right:14px!important;}}</style>`;
   h += `<div style="display:flex;flex-direction:column;gap:12px">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
@@ -82,7 +82,7 @@ function _b2UnivBlock(univName, col, members) {
   );
 
   const _row = (labelEl, contentEl) => `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${col}18">
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${col}40">
       ${labelEl}
       ${contentEl}
     </div>`;
@@ -111,7 +111,7 @@ function _b2UnivBlock(univName, col, members) {
     ${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}
   </div>` : '';
 
-  const tierSection = `<div class="${hasSide?'b2-bws':''}" style="padding:0;${hasSide?'padding-right:176px;':''}">${absSideHtml}${roledBody}${tieredBody}</div>`;
+  const tierSection = `<div class="${hasSide?'b2-bws':''}" style="padding:0;${hasSide?'padding-right:246px;':''}">${absSideHtml}${roledBody}${tieredBody}</div>`;
 
   // 하단 (bMemo + bMemoImgs 배열)
   const _bnote = uCfg.bMemo || '';

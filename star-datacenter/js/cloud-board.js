@@ -242,7 +242,7 @@ function rBoard(C,T){
     .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
-    .brd-side-panel{width:170px;flex-shrink:0;}
+    .brd-side-panel{width:230px;flex-shrink:0;}
     .brd-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}
     @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
@@ -428,7 +428,7 @@ function buildUnivBoardCard(u, forExport){
       const ps=tierMap[tier];
       const tColor = _TIER_BG[tier] || col;
       const tText = _TIER_TEXT[tier] || '#fff';
-      return `<div style="margin-bottom:5px">
+      return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
         <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${tColor};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
         <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
       </div>`;
