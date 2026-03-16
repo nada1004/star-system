@@ -58,6 +58,7 @@ function render(){
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
     case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
+    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
     default: break;
   }
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
