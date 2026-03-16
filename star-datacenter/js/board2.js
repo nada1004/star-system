@@ -48,7 +48,8 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  let h = `<div style="display:flex;flex-direction:column;gap:12px">`;
+  let h = `<style>.b2-side-panel{width:140px;flex-shrink:0;}.b2-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}</style>`;
+  h += `<div style="display:flex;flex-direction:column;gap:12px">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
     if (!members.length) return;
@@ -88,16 +89,35 @@ function _b2UnivBlock(univName, col, members) {
   const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
   const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
-  let body = '';
+  let roledBody = '';
   roledMembers.forEach(p => {
-    body += _row(_roleLabel(p.role||''), _b2PlayerRow(p, col));
+    roledBody += _row(_roleLabel(p.role||''), _b2PlayerRow(p, col));
   });
 
+  let tieredBody = '';
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    body += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
+    tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
   });
+
+  // 사이드 패널 (memo + memoImg, PC only)
+  const _sideMemo = uCfg.memo || '';
+  const _sideImg = uCfg.memoImg || '';
+  const sidePanelHtml = (_sideMemo||_sideImg) ? `<div class="b2-side-panel" style="border-radius:10px;padding:8px;background:${col}14;border:1px solid ${col}28;align-self:flex-start">
+    ${_sideImg?`<img src="${_sideImg}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:''}
+    ${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}
+  </div>` : '';
+
+  const tierSection = `<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${tieredBody}</div>${sidePanelHtml}</div>`;
+
+  // 하단 (bMemo + bMemoImg)
+  const _bnote = uCfg.bMemo || '';
+  const _bimg = uCfg.bMemoImg || '';
+  const bottomSection = (_bnote||_bimg) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
+    ${_bimg?`<img class="b2-bottom-img" src="${_bimg}" style="border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`:''}
+    ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
+  </div>` : '';
 
   return `
     <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
@@ -111,12 +131,9 @@ function _b2UnivBlock(univName, col, members) {
         ${uCfg.memo2?`<div style="margin-top:4px;font-size:11px;color:${textCol}cc;padding:2px 0">${uCfg.memo2}</div>`:''}
       </div>
       <div style="background:${lightCol};padding:4px 14px 8px">
-        ${body}
+        ${roledBody}${tierSection}
       </div>
-      ${(uCfg.memo||uCfg.memoImg)?`<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
-        ${uCfg.memoImg?`<img src="${uCfg.memoImg}" style="max-width:100%;border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`:''}
-        ${uCfg.memo?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${uCfg.memo}</div>`:''}
-      </div>`:''}
+      ${bottomSection}
     </div>`;
 }
 

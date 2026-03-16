@@ -243,7 +243,8 @@ function rBoard(C,T){
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
     .brd-side-panel{width:150px;flex-shrink:0;}
-    @media(max-width:640px){.brd-side-panel{display:none!important;}}
+    .brd-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}
+    @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
     .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
     .brd-move-popup-title{font-size:11px;font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
@@ -487,7 +488,7 @@ function buildUnivBoardCard(u, forExport){
         // 하단 메모 (별도 필드 bMemo, 모바일+PC 모두 표시)
         const _bnote=u.bMemo||'';
         const _bimg=u.bMemoImg||'';
-        const _bimgHtml=_bimg?`<img src="${_bimg}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:'';
+        const _bimgHtml=_bimg?`<img src="${_bimg}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:'';
         let bottomHtml='';
         if(isLoggedIn&&!forExport){
           bottomHtml=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:5px">
