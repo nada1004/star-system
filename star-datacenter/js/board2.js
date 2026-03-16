@@ -80,25 +80,32 @@ function _b2UnivBlock(univName, col, members) {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
-  let body = '';
+  // 직책별 그룹화
+  const roleGroups = {};
   roledMembers.forEach(p => {
-    body += `
-      <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
-        <span style="font-size:13px;font-weight:700;color:${col};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
-        ${_b2PlayerRow(p, col)}
-      </div>`;
+    const r = p.role || '';
+    if (!roleGroups[r]) roleGroups[r] = [];
+    roleGroups[r].push(p);
+  });
+  const orderedRoleKeys = _B2_ROLE_ORDER.filter(r => roleGroups[r]);
+
+  const _secHeader = (label, isRole) => `
+    <div style="padding:5px 0 3px;margin-top:4px">
+      <span style="font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:${isRole ? col : 'var(--text3)'}88;border-bottom:1.5px solid ${isRole ? col : 'var(--border)'}44;padding-bottom:2px">${label}</span>
+    </div>`;
+
+  let body = '';
+  orderedRoleKeys.forEach(role => {
+    const group = roleGroups[role];
+    body += _secHeader(role, true);
+    body += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
   });
 
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    body += `
-      <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
-        <span style="font-size:13px;font-weight:700;min-width:52px;text-align:right;flex-shrink:0;padding-top:4px;color:var(--text3)">${tier}</span>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1">
-          ${group.map(p => _b2Chip(p, col)).join('')}
-        </div>
-      </div>`;
+    body += _secHeader(tier, false);
+    body += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
   });
 
   return `
@@ -119,8 +126,12 @@ function _b2FreeView() {
   const freeMembers = players.filter(p => (!p.univ || p.univ === '무소속') && !p.hidden);
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
+  const roledFree = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  roledFree.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
+  const tieredFree = freeMembers.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+
   const tierGroups = {};
-  freeMembers.forEach(p => {
+  tieredFree.forEach(p => {
     const t = p.tier || '?';
     if (!tierGroups[t]) tierGroups[t] = [];
     tierGroups[t].push(p);
@@ -129,28 +140,36 @@ function _b2FreeView() {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
-  let h = `<div style="display:flex;flex-direction:column;gap:10px">`;
+  const defCol = '#64748b';
+  let h = `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px #0002">
+    <div style="background:${defCol};padding:10px 16px;display:flex;align-items:center;gap:8px">
+      <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
+      <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #fff4">${freeMembers.length}명</span>
+    </div>
+    <div style="background:#64748b0e;padding:6px 14px 12px">`;
+
+  const _sh = (label, isRole) => `<div style="padding:5px 0 3px;margin-top:4px"><span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole?defCol:'var(--text3)'}88;border-bottom:1.5px solid ${isRole?defCol:'var(--border)'}44;padding-bottom:2px">${label}</span></div>`;
+
+  // 직책 그룹
+  const roleGroups2 = {};
+  roledFree.forEach(p => { const r=p.role||''; if(!roleGroups2[r])roleGroups2[r]=[]; roleGroups2[r].push(p); });
+  _B2_ROLE_ORDER.filter(r=>roleGroups2[r]).forEach(role => {
+    h += _sh(role, true);
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${roleGroups2[role].map(p=>_b2Chip(p,defCol)).join('')}</div>`;
+  });
+
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     const col = getTierBtnColor(tier);
-    const textCol = getTierBtnTextColor(tier) || '#fff';
-    h += `
-      <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 10px ${col}2a">
-        <div style="background:${col};padding:9px 16px;display:flex;align-items:center;gap:8px">
-          <span style="font-weight:900;font-size:14px;color:${textCol}">${tier}</span>
-          <span style="margin-left:auto;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${group.length}명</span>
-        </div>
-        <div style="background:${col}12;padding:10px 12px;display:flex;flex-wrap:wrap;gap:7px">
-          ${group.map(p => _b2Chip(p, col)).join('')}
-        </div>
-      </div>`;
+    h += _sh(tier, false);
+    h += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 6px">${group.map(p => _b2Chip(p, col)).join('')}</div>`;
   });
-  h += `</div>`;
+  h += `</div></div>`;
   return h;
 }
 
-/* ── 직책 1행 표시 ── */
+/* ── 직책 1행 표시 (미사용, 하위호환용) ── */
 function _b2PlayerRow(p, accentCol) {
   const race = {'T':'테란','Z':'저그','P':'프로토스'}[p.race||''] || '';
   const tierCol = getTierBtnColor(p.tier||'');
