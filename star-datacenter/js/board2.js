@@ -80,25 +80,23 @@ function _b2UnivBlock(univName, col, members) {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
-  const _secHeader = (label, isRole) => `
-    <div style="padding:5px 0 2px;margin-top:4px">
-      <span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole ? col : 'var(--text3)'}99;border-bottom:1.5px solid ${isRole ? col : 'var(--border)'}44;padding-bottom:2px">${label}</span>
+  const _row = (labelEl, contentEl) => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${col}18">
+      ${labelEl}
+      ${contentEl}
     </div>`;
+  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
+  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
 
   let body = '';
   roledMembers.forEach(p => {
-    body += `
-      <div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid ${col}14">
-        <span style="font-size:12px;font-weight:800;color:${col};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
-        ${_b2PlayerRow(p, col)}
-      </div>`;
+    body += _row(_roleLabel(p.role||''), _b2PlayerRow(p, col));
   });
 
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    body += _secHeader(tier, false);
-    body += `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:3px 0 6px">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
+    body += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
   });
 
   return `
@@ -141,22 +139,19 @@ function _b2FreeView() {
     </div>
     <div style="background:#64748b0e;padding:6px 14px 12px">`;
 
-  const _sh = (label, isRole) => `<div style="padding:5px 0 2px;margin-top:4px"><span style="font-size:11px;font-weight:900;letter-spacing:.5px;color:${isRole?defCol:'var(--text3)'}99;border-bottom:1.5px solid ${isRole?defCol:'var(--border)'}44;padding-bottom:2px">${label}</span></div>`;
+  const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${defCol}18">${labelEl}${contentEl}</div>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};min-width:52px;text-align:right;flex-shrink:0;padding-top:3px">${text}</span>`;
 
   // 직책 그룹
   roledFree.forEach(p => {
-    h += `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid ${defCol}14">
-      <span style="font-size:12px;font-weight:800;color:${defCol};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
-      ${_b2PlayerRow(p, defCol)}
-    </div>`;
+    h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
   });
 
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     const col = getTierBtnColor(tier);
-    h += _sh(tier, false);
-    h += `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:3px 0 6px">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
+    h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
   });
   h += `</div></div>`;
   return h;
