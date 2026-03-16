@@ -176,57 +176,70 @@ function rTier(C,T){
     {id:'univm_loss',lbl:'🏟️ 대학대전 패',color:'#7c3aed'},
   ];
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
-  // 보기 모드: 가로 스크롤 pill + select fallback
   const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
+  if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
+  if(!window._tierRaceFilter) window._tierRaceFilter='전체';
+  if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
+  const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
+
+  // ── 1행: 보기 모드 ──
   let fh=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">
-    <strong style="flex-shrink:0;font-size:12px">보기:</strong>`;
+    <span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">보기</span>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
   fh+=`</div>`;
-  // 유형별 필터 - 접기/펼치기
-  if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
-  const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
-  fh+=`<div class="fbar" style="gap:6px"><strong>유형별:</strong>
-    <button class="pill ${(!_hasTypeFilter)?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
+
+  if(tierRankMode!=='recent'){
+    // ── 2행: 대학 + 티어 + 종족 + 옵션 (한 줄 스크롤) ──
+    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
+    // 대학
+    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">대학</span>`;
+    fh+=`<button class="pill ${fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('전체','${fTier}')">전체</button>`;
+    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
+    // 구분선
+    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
+    // 티어
+    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">티어</span>`;
+    fh+=`<button class="pill ${fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('${fUniv}','전체')">전체</button>`;
+    TIERS.forEach(t=>{
+      const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
+      fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
+    });
+    // 구분선
+    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
+    // 종족
+    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">종족</span>`;
+    ['전체','T','Z','P'].forEach(r=>{
+      fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" style="flex-shrink:0" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
+    });
+    // 구분선
+    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
+    fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="flex-shrink:0;${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 선수 숨김</button>`;
+    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="flex-shrink:0;${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
+    fh+=`</div>`;
+  }
+
+  // ── 3행: 유형별 필터 ──
+  fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:var(--text3);align-self:center">유형별</span>
+    <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();render()">전체</button>`;
   if(_hasTypeFilter){
-    if(!window._tierTypeSet)window._tierTypeSet=new Set();
     window._tierTypeSet.forEach(id=>{
       const mb=modeSortBtns.find(m=>m.id===id);
       if(mb) fh+=`<button class="pill on" style="background:${mb.color};border-color:${mb.color};color:#fff" onclick="window._tierTypeSet.delete('${id}');render()">${mb.lbl} ✕</button>`;
     });
   }
-  fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)">${window._tierTypeFilterOpen?'▲ 접기':'▼ 더보기'}</button>`;
-  fh+=`</div>`;
+  fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)">${window._tierTypeFilterOpen?'▲ 접기':'▼ 선택'}</button>`;
   if(window._tierTypeFilterOpen){
-    fh+=`<div class="fbar" style="flex-wrap:wrap">`;
     modeSortBtns.forEach(m=>{
       if(!window._tierTypeSet)window._tierTypeSet=new Set();
       const on=window._tierTypeSet.has(m.id);
       fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
     });
-    fh+=`</div>`;
   }
-  if(tierRankMode!=='recent'){
-    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch"><strong style="flex-shrink:0">대학:</strong><button class="pill ${fUniv==='전체'?'on':''}" onclick="sf('전체','${fTier}')">전체</button>`;
-    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
-    fh+=`</div><div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch"><strong style="flex-shrink:0">티어:</strong><button class="pill ${fTier==='전체'?'on':''}" onclick="sf('${fUniv}','전체')">전체</button>`;
-    TIERS.forEach(t=>{
-      const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
-      fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
-    });
-    fh+=`</div>`;
-    if(!window._tierRaceFilter) window._tierRaceFilter='전체';
-    if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
-    fh+=`<div class="fbar"><strong>종족:</strong>`;
-    ['전체','T','Z','P'].forEach(r=>{
-      fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
-    });
-    fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()" style="${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 선수 숨기기</button>`;
-    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()" style="${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}">남자 제외</button>`;
-    fh+=`</div>`;
-  }
+  fh+=`</div>`;
   F.innerHTML=fh;
 
   if(tierRankMode==='recent'){
