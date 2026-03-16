@@ -277,9 +277,11 @@ function _removeIndResult(wName, lName, date, map, matchId){
   let li=matchId?l.history.findIndex(h=>h.matchId===matchId&&h.result==='패'&&h.opp===wName):-1;
   if(li<0)li=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===(date||'')&&nm(h.map)===nm(map));
   if(li>=0)l.history.splice(li,1);
-  if(w.win>0)w.win--;if(l.loss>0)l.loss--;
-  w.points-=3;l.points+=3;
-  if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
+  if(wi>=0||li>=0){
+    if(w.win>0)w.win--;if(l.loss>0)l.loss--;
+    w.points-=3;l.points+=3;
+    if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
+  }
 }
 function deleteIndSession(ids){
   if(!confirm(`${ids.length}경기를 삭제하시겠습니까?`))return;
@@ -499,9 +501,11 @@ function _removeGjResult(wName, lName, date, map, matchId){
     ? l.history.findIndex(h=>h.matchId===matchId)
     : l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
   if(li>=0)l.history.splice(li,1);
-  if(w.win>0)w.win--;if(l.loss>0)l.loss--;
-  w.points-=3;l.points+=3;
-  if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
+  if(wi>=0||li>=0){
+    if(w.win>0)w.win--;if(l.loss>0)l.loss--;
+    w.points-=3;l.points+=3;
+    if(delta){w.elo=(w.elo||ELO_DEFAULT)-delta;l.elo=(l.elo||ELO_DEFAULT)+delta;}
+  }
 }
 function deleteGjGame(idx){
   const m=gjM[idx];if(!m)return;
