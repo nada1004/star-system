@@ -104,31 +104,32 @@ function _b2UnivBlock(univName, col, members) {
   // 사이드 패널 (memo + memoImg, PC only)
   const _sideMemo = uCfg.memo || '';
   const _sideImg = uCfg.memoImg || '';
-  const sidePanelHtml = (_sideMemo||_sideImg) ? `<div class="b2-side-panel" style="border-radius:10px;padding:8px;background:${col}14;border:1px solid ${col}28;align-self:flex-start">
+  const sidePanelHtml = (_sideMemo||_sideImg) ? `<div class="b2-side-panel" style="width:170px;border-radius:10px;padding:8px;background:${col}14;border:1px solid ${col}28;align-self:flex-start">
     ${_sideImg?`<img src="${_sideImg}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:''}
     ${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}
   </div>` : '';
 
   const tierSection = `<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${tieredBody}</div>${sidePanelHtml}</div>`;
 
-  // 하단 (bMemo + bMemoImg)
+  // 하단 (bMemo + bMemoImgs 배열)
   const _bnote = uCfg.bMemo || '';
-  const _bimg = uCfg.bMemoImg || '';
-  const bottomSection = (_bnote||_bimg) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
-    ${_bimg?`<img class="b2-bottom-img" src="${_bimg}" style="border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`:''}
+  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`).join('');
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
+    ${_bimgHtmls}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
 
   return `
     <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
       <div style="background:${col};padding:10px 16px">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
           ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
-          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px">${univName}</span>
-          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-          <span style="margin-left:auto;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0">${univName}</span>
+          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:'<span style="flex:1"></span>'}
+          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
         </div>
-        ${uCfg.memo2?`<div style="margin-top:4px;font-size:11px;color:${textCol}cc;padding:2px 0">${uCfg.memo2}</div>`:''}
       </div>
       <div style="background:${lightCol};padding:4px 14px 8px">
         ${roledBody}${tierSection}

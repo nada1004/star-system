@@ -242,7 +242,7 @@ function rBoard(C,T){
     .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
-    .brd-side-panel{width:150px;flex-shrink:0;}
+    .brd-side-panel{width:170px;flex-shrink:0;}
     .brd-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}
     @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
@@ -485,22 +485,25 @@ function buildUnivBoardCard(u, forExport){
         } else if(_memo||_img){
           sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_img?'4px':'0'}">${_memo}</div>`:''}</div>`;
         }
-        // 하단 메모 (별도 필드 bMemo, 모바일+PC 모두 표시)
+        // 하단 메모 (bMemo + bMemoImgs 배열)
         const _bnote=u.bMemo||'';
-        const _bimg=u.bMemoImg||'';
-        const _bimgHtml=_bimg?`<img src="${_bimg}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`:'';
+        const _bimgs=(u.bMemoImgs||[]).concat(u.bMemoImg?[u.bMemoImg]:[]);
         let bottomHtml='';
         if(isLoggedIn&&!forExport){
+          const imgList=_bimgs.map((src,i)=>`<div style="display:inline-flex;flex-direction:column;gap:3px;margin-right:6px;vertical-align:top">
+            <img src="${src}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">
+            <button onclick="event.stopPropagation();removeBoardNoteImg('${_uname}',${i})" style="font-size:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:5px;padding:2px 6px;color:#dc2626;cursor:pointer">🗑️ 삭제</button>
+          </div>`).join('');
           bottomHtml=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:5px">
-            ${_bimgHtml}
+            ${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px">${imgList}</div>`:''}
             <textarea placeholder="📋 하단 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.12);border-radius:7px;padding:5px 8px;font-size:11px;background:rgba(255,255,255,.55);resize:none;outline:none;font-family:inherit;color:#222" oninput="event.stopPropagation();setBoardNote('${_uname}',this.value)" onclick="event.stopPropagation()">${_bnote}</textarea>
             <div style="display:flex;gap:5px;align-items:center">
-              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" onclick="event.stopPropagation()">🖼️ 이미지 첨부<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardNoteImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
-              ${_bimg?`<button onclick="event.stopPropagation();setBoardNoteImg('${_uname}','')" style="font-size:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:3px 8px;color:#dc2626;cursor:pointer">🗑️ 삭제</button>`:''}
+              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);border-radius:6px;padding:3px 8px" onclick="event.stopPropagation()">🖼️ 이미지 추가<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardNoteImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
             </div>
           </div>`;
-        } else if(_bnote||_bimg){
-          bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${_bimgHtml}${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
+        } else if(_bnote||_bimgs.length){
+          const imgList=_bimgs.map(src=>`<img src="${src}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">`).join('');
+          bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${_bnote?'6px':'0'}">${imgList}</div>`:''}${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
         }
         const mainLayout=roleSection+`<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${tierRows}</div>${sidePanelHtml}</div>`;
         return mainLayout+bottomHtml;

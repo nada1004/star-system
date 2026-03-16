@@ -1260,10 +1260,18 @@ function setBoardNote(univName, text){
   u.bMemo=text;
   save();
 }
-function setBoardNoteImg(univName, dataUrl){
+function addBoardNoteImg(univName, dataUrl){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
-  u.bMemoImg=dataUrl;
+  if(!u.bMemoImgs)u.bMemoImgs=[];
+  u.bMemoImgs.push(dataUrl);
+  save();render();
+}
+function removeBoardNoteImg(univName, idx){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(!u.bMemoImgs)u.bMemoImgs=[];
+  u.bMemoImgs.splice(idx,1);
   save();render();
 }
 function setBoardMemoImg(univName, dataUrl){
