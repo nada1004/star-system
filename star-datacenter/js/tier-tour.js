@@ -1260,6 +1260,12 @@ function setBoardNote(univName, text){
   u.bMemo=text;
   save();
 }
+function setBoardNoteImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bMemoImg=dataUrl;
+  save();render();
+}
 function setBoardMemoImg(univName, dataUrl){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
