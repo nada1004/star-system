@@ -457,26 +457,29 @@ function buildUnivBoardCard(u, forExport){
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-body" style="background:${toPastel(col,0.65)}">${allRows}</div>
-      ${(()=>{
+      <div class="brd-body" style="background:${toPastel(col,0.65)};display:flex;gap:8px;align-items:flex-start">${(()=>{
         const _memo=u.memo||'';
         const _img=u.memoImg||'';
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const imgHtml=_img?`<img src="${_img}" style="max-width:100%;border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`:'';
-        if(forExport) return (_memo||_img)?`<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap">${_memo}</div>`:''}</div>`:'';
-        if(isLoggedIn) return `<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">
-          ${imgHtml}
-          <textarea placeholder="📝 메모 입력..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid ${hexToRgba(col,.35)};border-radius:7px;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.75);resize:vertical;outline:none;font-family:inherit;display:block" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;color:${col};font-weight:700;background:rgba(255,255,255,.7);border:1px solid ${hexToRgba(col,.3)};border-radius:6px;padding:2px 8px">
-              🖼️ 이미지
-              <input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')">
-            </label>
-            ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:11px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:2px 8px;color:#dc2626;cursor:pointer">🗑️ 이미지 삭제</button>`:''}
-          </div>
-        </div>`;
-        return (_memo||_img)?`<div style="padding:6px 10px 8px;background:${toPastel(col,0.5)};border-top:1px solid ${hexToRgba(col,.2)}">${imgHtml}${_memo?`<div style="font-size:12px;color:#333;white-space:pre-wrap">${_memo}</div>`:''}</div>`:'';
-      })()}
+        const hasMemo=_memo||_img;
+        const imgHtml=_img?`<img src="${_img}" style="width:100%;border-radius:8px;margin-bottom:5px;display:block;opacity:0.82" onerror="this.style.display='none'">`:'';
+        const panelBase=`border-radius:10px;padding:8px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(6px);min-width:110px;max-width:160px;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.1)`;
+        if(forExport){
+          return `<div style="flex:1;min-width:0">${allRows}</div>`+(hasMemo?`<div style="${panelBase}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_memo}</div>`:''}</div>`:'');
+        }
+        if(isLoggedIn){
+          const memoPanel=`<div style="${panelBase}">
+            ${imgHtml}
+            <textarea placeholder="📝 메모..." rows="3" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.5);border-radius:7px;padding:5px 7px;font-size:11px;background:rgba(255,255,255,.5);resize:vertical;outline:none;font-family:inherit;color:#222;min-height:54px" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)">${_memo}</textarea>
+            <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+              <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.6);border-radius:5px;padding:2px 6px">🖼️ 이미지<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
+              ${_img?`<button onclick="event.stopPropagation();setBoardMemoImg('${_uname}','')" style="font-size:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:5px;padding:2px 6px;color:#dc2626;cursor:pointer;text-align:left">🗑️ 삭제</button>`:''}
+            </div>
+          </div>`;
+          return `<div style="flex:1;min-width:0">${allRows}</div>${memoPanel}`;
+        }
+        return `<div style="flex:1;min-width:0">${allRows}</div>`+(hasMemo?`<div style="${panelBase}">${imgHtml}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_memo}</div>`:''}</div>`:'');
+      })()}</div>
     </div>`;
   };
 
