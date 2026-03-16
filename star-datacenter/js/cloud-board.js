@@ -151,6 +151,7 @@ window.cloudLoad = async function(){
 /* ════ 현황판 탭 rBoard ════ */
 let boardSelUniv='전체';
 let boardCompactMode=false; // 소형 칩 보기
+let boardGridCols=1; // 1열/2열 보기
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
 
@@ -262,6 +263,11 @@ function rBoard(C,T){
     .brd-tbtn-share:hover{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#6d28d9;}
     body.dark .brd-tbtn-img{background:linear-gradient(135deg,#1e3a5f,#1e3a8a);color:#93c5fd;border-color:#3b82f6;}
     body.dark .brd-tbtn-share{background:linear-gradient(135deg,#2e1f5e,#3b2080);color:#c4b5fd;border-color:#7c3aed;}
+    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;}
+    .brd-tbtn-grid{border-color:#6366f1;color:#4338ca;background:linear-gradient(135deg,#eef2ff,#e0e7ff);}
+    .brd-tbtn-grid:hover{background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-color:#4338ca;}
+    body.dark .brd-tbtn-grid{background:linear-gradient(135deg,#1e1b4b,#312e81);color:#a5b4fc;border-color:#6366f1;}
+    @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
   </style>
   <div class="no-export brd-toolbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)">
     <div style="display:flex;align-items:center;gap:8px;margin-right:2px">
@@ -280,11 +286,12 @@ function rBoard(C,T){
       <button class="brd-tbtn brd-tbtn-img" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
-      <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'🔲 소형':'⬛ 대형'}</button>
+      <button class="brd-tbtn brd-tbtn-grid" onclick="boardGridCols=boardGridCols===2?1:2;render()" style="${boardGridCols===2?'background:#e0e7ff;border-color:#4338ca;color:#3730a3;':''}" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
+      <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
     </div>
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
   </div>
-  <div id="board-wrap" style="display:grid;grid-template-columns:1fr;gap:14px;align-items:start">`;
+  <div id="board-wrap" style="display:grid;grid-template-columns:${boardGridCols===2?'repeat(2,1fr)':'1fr'};gap:14px;align-items:start">`;
   const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
   targets.forEach(u=>{ h+=buildUnivBoardCard(u); });
   h+=`</div>
@@ -477,14 +484,14 @@ function buildUnivBoardCard(u, forExport){
             <img src="${src}" style="width:100%;border-radius:7px;display:block" onerror="this.style.display='none'">
             <button onclick="event.stopPropagation();removeBoardMemoImg('${_uname}',${i})" style="position:absolute;top:3px;right:3px;font-size:9px;background:rgba(239,68,68,.75);border:none;border-radius:4px;padding:1px 5px;color:#fff;cursor:pointer">✕</button>
           </div>`).join('');
-          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">
+          sidePanelHtml=`<div class="brd-side-panel no-export" style="${panelStyle}">
             ${imgList}
             <textarea placeholder="📝 사이드 메모..." rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.55);border-radius:7px;padding:4px 6px;font-size:11px;background:rgba(255,255,255,.45);resize:none;outline:none;font-family:inherit;color:#222;margin-top:${_imgs.length?'2px':'0'}" oninput="event.stopPropagation();setBoardMemo('${_uname}',this.value)" onclick="event.stopPropagation()">${_memo}</textarea>
             <label style="display:inline-flex;align-items:center;gap:2px;cursor:pointer;font-size:10px;font-weight:700;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.65);border-radius:5px;padding:2px 6px;margin-top:4px" onclick="event.stopPropagation()">🖼️ 이미지 추가<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){addBoardMemoImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uname}')"></label>
           </div>`;
-        } else if(_memo||_imgs.length){
+        } else if(!forExport&&(_memo||_imgs.length)){
           const imgList=_imgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
-          sidePanelHtml=`<div class="brd-side-panel" style="${panelStyle}">${imgList}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_imgs.length?'4px':'0'}">${_memo}</div>`:''}</div>`;
+          sidePanelHtml=`<div class="brd-side-panel no-export" style="${panelStyle}">${imgList}${_memo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_imgs.length?'4px':'0'}">${_memo}</div>`:''}</div>`;
         }
         // 하단 메모 (bMemo + bMemoImgs 배열)
         const _bnote=u.bMemo||'';

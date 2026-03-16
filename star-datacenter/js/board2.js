@@ -160,7 +160,7 @@ function _b2FreeView() {
     </div>
     <div style="background:#64748b0e;padding:6px 14px 12px">`;
 
-  const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px solid ${defCol}18">${labelEl}${contentEl}</div>`;
+  const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:flex-start;gap:10px">${labelEl}${contentEl}</div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
   // 직책 그룹
