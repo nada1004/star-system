@@ -48,7 +48,7 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  let h = `<style>.b2-side-panel{width:140px;flex-shrink:0;}.b2-bottom-img{max-width:200px;max-height:160px;object-fit:contain;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}</style>`;
+  let h = `<style>.b2-side-panel{width:170px;flex-shrink:0;}.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}</style>`;
   h += `<div style="display:flex;flex-direction:column;gap:12px">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
@@ -109,14 +109,14 @@ function _b2UnivBlock(univName, col, members) {
     ${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}
   </div>` : '';
 
-  const tierSection = `<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${tieredBody}</div>${sidePanelHtml}</div>`;
+  const tierSection = `<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${roledBody}${tieredBody}</div>${sidePanelHtml}</div>`;
 
   // 하단 (bMemo + bMemoImgs 배열)
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
-  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;margin-bottom:6px;display:block" onerror="this.style.display='none'">`).join('');
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
   const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
-    ${_bimgHtmls}
+    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
 
@@ -132,7 +132,7 @@ function _b2UnivBlock(univName, col, members) {
         </div>
       </div>
       <div style="background:${lightCol};padding:4px 14px 8px">
-        ${roledBody}${tierSection}
+        ${tierSection}
       </div>
       ${bottomSection}
     </div>`;

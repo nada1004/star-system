@@ -491,7 +491,7 @@ function buildUnivBoardCard(u, forExport){
         let bottomHtml='';
         if(isLoggedIn&&!forExport){
           const imgList=_bimgs.map((src,i)=>`<div style="display:inline-flex;flex-direction:column;gap:3px;margin-right:6px;vertical-align:top">
-            <img src="${src}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">
+            <img src="${src}" class="brd-bottom-section-img" style="max-width:130px;max-height:110px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">
             <button onclick="event.stopPropagation();removeBoardNoteImg('${_uname}',${i})" style="font-size:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:5px;padding:2px 6px;color:#dc2626;cursor:pointer">🗑️ 삭제</button>
           </div>`).join('');
           bottomHtml=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:5px">
@@ -502,10 +502,10 @@ function buildUnivBoardCard(u, forExport){
             </div>
           </div>`;
         } else if(_bnote||_bimgs.length){
-          const imgList=_bimgs.map(src=>`<img src="${src}" class="brd-bottom-section-img" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">`).join('');
+          const imgList=_bimgs.map(src=>`<img src="${src}" class="brd-bottom-section-img" style="max-width:130px;max-height:110px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">`).join('');
           bottomHtml=`<div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.35)">${imgList?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${_bnote?'6px':'0'}">${imgList}</div>`:''}${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}</div>`;
         }
-        const mainLayout=roleSection+`<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${tierRows}</div>${sidePanelHtml}</div>`;
+        const mainLayout=`<div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0">${roleSection}${tierRows}</div>${sidePanelHtml}</div>`;
         return mainLayout+bottomHtml;
       })()}</div>
     </div>`;
