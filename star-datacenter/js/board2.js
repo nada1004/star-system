@@ -5,7 +5,6 @@
 
 let _b2View = 'univ';
 
-// 직책 우선순위
 const _B2_ROLE_ORDER = ['이사장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
 
 function _b2RoleRank(p) {
@@ -13,32 +12,42 @@ function _b2RoleRank(p) {
   return i >= 0 ? i : 99;
 }
 
-function rBoard2(C, T) {
-  const filterBar = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
-      <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
-      <button onclick="_b2View='old';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='old'?'var(--blue)':'var(--border2)'};background:${_b2View==='old'?'var(--blue)':'var(--white)'};color:${_b2View==='old'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">📊 구현황판</button>
-    </div>`;
-
-  let html = filterBar;
-  if (_b2View === 'univ') html += _b2UnivView();
-  else if (_b2View === 'free') html += _b2FreeView();
-  else { C.innerHTML = html; if(typeof rBoard==='function') rBoard(C, T, true); return; }
-
-  C.innerHTML = html;
-  injectUnivIcons(C);
+// 숨김 대학 항상 제외 (로그인 여부 관계없이 board2에서는 hidden=true인 대학 숨김)
+function _b2VisUnivs() {
+  return getAllUnivs().filter(u => !u.hidden);
 }
 
-/* ── 숨김 대학 필터 (비로그인 시 hidden 제외) ── */
-function _b2VisUnivs() {
-  const all = getAllUnivs();
-  return isLoggedIn ? all : all.filter(u => !u.hidden);
+function rBoard2(C, T) {
+  const oldBtn = isLoggedIn
+    ? `<button onclick="_b2View='old';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='old'?'var(--blue)':'var(--border2)'};background:${_b2View==='old'?'var(--blue)':'var(--white)'};color:${_b2View==='old'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">📊 구현황판</button>`
+    : '';
+
+  const filterBar = `
+    <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
+      <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
+      ${oldBtn}
+    </div>
+    <div id="b2-content"></div>`;
+
+  C.innerHTML = filterBar;
+
+  const sub = document.getElementById('b2-content');
+  if (_b2View === 'univ') {
+    sub.innerHTML = _b2UnivView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'free') {
+    sub.innerHTML = _b2FreeView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'old') {
+    if (typeof rBoard === 'function') rBoard(sub, T);
+  }
 }
 
 /* ── 대학별 뷰 ── */
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
   let h = `<div style="display:flex;flex-direction:column;gap:12px">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
@@ -50,8 +59,8 @@ function _b2UnivView() {
 }
 
 function _b2UnivBlock(univName, col, members) {
-  const u = univCfg.find(x => x.name === univName) || {};
-  const iconUrl = u.icon || u.img || UNIV_ICONS[univName] || '';
+  const uCfg = univCfg.find(x => x.name === univName) || {};
+  const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
   const lightCol = col + '12';
 
@@ -59,7 +68,7 @@ function _b2UnivBlock(univName, col, members) {
   const roledMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
   roledMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
 
-  // 티어별 일반 멤버
+  // 티어 그룹 (직책 없는 일반 멤버)
   const tieredMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
   const tierGroups = {};
   tieredMembers.forEach(p => {
@@ -72,7 +81,6 @@ function _b2UnivBlock(univName, col, members) {
   );
 
   let body = '';
-
   roledMembers.forEach(p => {
     body += `
       <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
@@ -86,7 +94,7 @@ function _b2UnivBlock(univName, col, members) {
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     body += `
       <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
-        <span style="font-size:11px;font-weight:700;min-width:44px;text-align:right;flex-shrink:0;padding:2px 0;color:var(--text3)">${tier}</span>
+        <span style="font-size:11px;font-weight:700;min-width:44px;text-align:right;flex-shrink:0;padding-top:4px;color:var(--text3)">${tier}</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1">
           ${group.map(p => _b2Chip(p, col)).join('')}
         </div>
@@ -98,7 +106,6 @@ function _b2UnivBlock(univName, col, members) {
       <div style="background:${col};padding:10px 16px;display:flex;align-items:center;gap:8px">
         ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
         <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px">${univName}</span>
-        ${isLoggedIn && u.hidden ? `<span style="background:rgba(0,0,0,.35);font-size:10px;padding:1px 7px;border-radius:8px;color:#fca5a5">🚫 숨김</span>` : ''}
         <span style="margin-left:auto;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
       </div>
       <div style="background:${lightCol};padding:4px 14px 8px">
@@ -162,7 +169,6 @@ function _b2PlayerRow(p, accentCol) {
 
 /* ── 칩 ── */
 function _b2Chip(p, accentCol) {
-  const raceShort = {'T':'T','Z':'Z','P':'P'}[p.race||''] || '?';
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
       style="display:flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;border-radius:20px;background:var(--white);border:1.5px solid ${accentCol}44;cursor:pointer;box-shadow:0 1px 3px #0001;transition:transform .1s,box-shadow .1s"
@@ -173,12 +179,12 @@ function _b2Chip(p, accentCol) {
     </div>`;
 }
 
-/* ── 아바타: photo 있으면 이미지, 없으면 레이스 이니셜 원 ── */
+/* ── 아바타 ── */
 function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
   const s = size || 28;
   if (p.photo) {
-    return `<span style="position:relative;width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex">
+    return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex">
       <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
     </span>`;
   }
