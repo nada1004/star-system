@@ -84,7 +84,7 @@ function _b2UnivBlock(univName, col, members) {
   roledMembers.forEach(p => {
     body += `
       <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
-        <span style="font-size:11px;font-weight:700;color:${col};min-width:44px;text-align:right;flex-shrink:0">${p.role||''}</span>
+        <span style="font-size:13px;font-weight:700;color:${col};min-width:52px;text-align:right;flex-shrink:0">${p.role||''}</span>
         ${_b2PlayerRow(p, col)}
       </div>`;
   });
@@ -94,7 +94,7 @@ function _b2UnivBlock(univName, col, members) {
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     body += `
       <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid ${col}18">
-        <span style="font-size:11px;font-weight:700;min-width:44px;text-align:right;flex-shrink:0;padding-top:4px;color:var(--text3)">${tier}</span>
+        <span style="font-size:13px;font-weight:700;min-width:52px;text-align:right;flex-shrink:0;padding-top:4px;color:var(--text3)">${tier}</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1">
           ${group.map(p => _b2Chip(p, col)).join('')}
         </div>
@@ -160,10 +160,10 @@ function _b2PlayerRow(p, accentCol) {
       style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
       onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
-      ${_b2Avatar(p, accentCol, 34)}
-      <span class="b2name" style="font-weight:700;font-size:13px;color:var(--text1);transition:color .1s">${p.name||''}</span>
-      ${race ? `<span style="font-size:10px;color:var(--text3)">${race}</span>` : ''}
-      <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
+      ${_b2Avatar(p, accentCol, 46)}
+      <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s">${p.name||''}</span>
+      ${race ? `<span style="font-size:12px;color:var(--text3)">${race}</span>` : ''}
+      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
     </div>`;
 }
 
@@ -171,11 +171,11 @@ function _b2PlayerRow(p, accentCol) {
 function _b2Chip(p, accentCol) {
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;align-items:center;gap:5px;padding:3px 9px 3px 4px;border-radius:20px;background:var(--white);border:1.5px solid ${accentCol}44;cursor:pointer;box-shadow:0 1px 3px #0001;transition:transform .1s,box-shadow .1s"
+      style="display:flex;align-items:center;gap:7px;padding:5px 13px 5px 5px;border-radius:24px;background:var(--white);border:1.5px solid ${accentCol}44;cursor:pointer;box-shadow:0 1px 3px #0001;transition:transform .1s,box-shadow .1s"
       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 10px ${accentCol}33'"
       onmouseout="this.style.transform='';this.style.boxShadow='0 1px 3px #0001'">
-      ${_b2Avatar(p, accentCol, 26)}
-      <span style="font-weight:700;font-size:11px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
+      ${_b2Avatar(p, accentCol, 36)}
+      <span style="font-weight:700;font-size:13px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
     </div>`;
 }
 
