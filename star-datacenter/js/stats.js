@@ -138,8 +138,8 @@ function statsOverviewHTML(){
     const si=p.streak.type==='승'?'🔥':'❄️';
     return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px">
       <span style="font-weight:700;font-size:11px;color:var(--gray-l);min-width:20px;text-align:right">${pi+1}</span>
-      ${getPlayerPhotoHTML(p.name,'32px')}
-      <span style="font-weight:800;font-size:13px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${p.name}')">${p.name}${getStatusIconHTML(p.name)}</span>
+      ${getPlayerPhotoHTML(p.name,'38px')}
+      <span style="font-weight:800;font-size:14px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${p.name}')">${p.name}${getStatusIconHTML(p.name)}</span>
       <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:55px">${p.univ}</span>
       <span style="display:flex;gap:2px">${icons}</span>
       <span style="font-weight:800;font-size:12px;color:${sc};white-space:nowrap">${si} ${p.streak.n}연${p.streak.type==='승'?'승':'패'}</span>

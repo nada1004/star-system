@@ -166,13 +166,13 @@ function indRankHTML(){
     const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
     const vsHTML=vsEntries.map(([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
-      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:11px">${getPlayerPhotoHTML(opp,'18px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
     }).join('');
     const _ri=_cp*_PAGE+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
       <td>${rnk}</td>
-      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'28px')}<span style="font-weight:700">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
+      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'34px')}<span style="font-weight:700;font-size:14px">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
       <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
       <td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td>
       <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
@@ -226,9 +226,9 @@ function indRecordsHTML(){
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
         <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
@@ -237,8 +237,8 @@ function indRecordsHTML(){
     s.games.forEach((m,gi)=>{
       const origIdx=indM.findIndex(x=>x._id===m._id);
       const p1win=m.wName===s.p1;
-      const p1photo=getPlayerPhotoHTML(s.p1,'18px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
-      const p2photo=getPlayerPhotoHTML(s.p2,'18px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
+      const p1photo=getPlayerPhotoHTML(s.p1,'22px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
+      const p2photo=getPlayerPhotoHTML(s.p2,'22px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
@@ -685,7 +685,7 @@ function gjRankHTML(){
     const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l)||(b[1].w-b[1].l)-(a[1].w-a[1].l));
     const mkVsSpan=([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
-      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px;white-space:nowrap">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:11px;white-space:nowrap">${getPlayerPhotoHTML(opp,'18px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
     };
     const isOpen=!!window._gjVsOpen[p.name];
     const top3HTML=vsEntries.slice(0,3).map(mkVsSpan).join('');
@@ -696,7 +696,7 @@ function gjRankHTML(){
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
       <td>${rnk}</td>
-      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'28px')}<span style="font-weight:700">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
+      <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'34px')}<span style="font-weight:700;font-size:14px">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
       <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
       <td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td>
       <td style="text-align:left;max-width:260px">${vsHTML}</td>
@@ -752,9 +752,9 @@ function gjRecordsHTML(){
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
         <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'22px')}<span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'22px')}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
@@ -763,8 +763,8 @@ function gjRecordsHTML(){
     s.games.forEach((m,gi)=>{
       const origIdx=gjM.findIndex(x=>x._id===m._id);
       const p1win=m.wName===s.p1;
-      const p1photo=getPlayerPhotoHTML(s.p1,'18px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
-      const p2photo=getPlayerPhotoHTML(s.p2,'18px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
+      const p1photo=getPlayerPhotoHTML(s.p1,'22px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
+      const p2photo=getPlayerPhotoHTML(s.p2,'22px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
       h+=`<tr>
         <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
