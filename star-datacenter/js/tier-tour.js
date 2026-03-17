@@ -1082,7 +1082,7 @@ function rCfg(C,T){
       ${isDissolved
         ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();reCfg();if(typeof renderBoard==='function')renderBoard()">
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
             ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
           <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
       }
