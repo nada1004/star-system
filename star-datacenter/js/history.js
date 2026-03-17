@@ -494,7 +494,18 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
   // 날짜 필터만 적용 (검색어 필터는 DOM에서 실시간 처리)
-  let filtered=arr.map((m,i)=>({m,i})).filter(({m})=>{
+  // 필터된 부분 배열이 넘어올 수 있으므로 원본 배열에서 실제 인덱스를 구함
+  // (filter()는 같은 객체 참조를 반환하므로 indexOf로 정확한 원본 인덱스 확인 가능)
+  const _srcArr=(()=>{
+    if(mode==='mini') return miniM;
+    if(mode==='univm') return univM;
+    if(mode==='ck') return ckM;
+    if(mode==='pro') return proM;
+    if(mode==='tt') return ttM;
+    if(mode==='comp') return comps;
+    return arr;
+  })();
+  let filtered=arr.map((m,i)=>({m,i:_srcArr!==arr?_srcArr.indexOf(m):i})).filter(({m})=>{
     if(extraFilter&&!extraFilter(m)) return false;
     if(isCKmode){
       if(!m.teamAMembers||!m.teamBMembers) return false;
