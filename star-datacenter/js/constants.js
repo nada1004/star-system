@@ -99,6 +99,9 @@ let compNames  = J('su_cn') || [];
 let curComp    = J('su_cc') || '';
 // 프로리그 데이터
 let proM       = J('su_pro') || [];
+// 프로리그 개인 대회: [{id,name,groups:[{name,players:[],matches:[{a,b,winner,d,map}]}]}]
+let proTourneys = J('su_ptn') || [];
+let curProComp  = J('su_ptc') || '';
 // 회원 관리 데이터: [{id,nick,uid,status,banType,banEnd,banDone,category,memo,posts:[{url,savedAt,note}],comments:[{url,savedAt,note}],createdAt,updatedAt}]
 let members    = J('su_mb') || [];
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
@@ -216,6 +219,8 @@ function localSave(){
     localStorage.setItem('su_cn',JSON.stringify(compNames));
     localStorage.setItem('su_cc',JSON.stringify(curComp));
     localStorage.setItem('su_pro',JSON.stringify(proM));
+    localStorage.setItem('su_ptn',JSON.stringify(proTourneys));
+    localStorage.setItem('su_ptc',JSON.stringify(curProComp));
     localStorage.setItem('su_mb',JSON.stringify(members));
     localStorage.setItem('su_tn',JSON.stringify(tourneys));
     localStorage.setItem('su_ttm',JSON.stringify(ttM));
@@ -249,7 +254,7 @@ function save(){
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;
-let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0, ind:0, gj:0}; // 대전기록 탭 페이지 상태
+let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0, ind:0, gj:0, procomp:0}; // 대전기록 탭 페이지 상태
 let playerHistPage=0; // 스트리머 상세 페이지 상태
 const HIST_PAGE_SIZE=20;
 const HIST_PAGE_SIZE_MOBILE=10;

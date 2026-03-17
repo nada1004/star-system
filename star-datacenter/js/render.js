@@ -16,7 +16,7 @@ function sw(t,el){
   if(t==='univck')   _mergedUnivSub='univck';
   if(t==='comp')     _mergedCompSub='comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') proSub='records';
+  if(t==='pro') { proSub='records'; _mergedProSub='pro'; }
   if(t==='hist') histSub='mini'; // 대전 기록 탭으로 돌아올 때 초기화
   // 탭 전환 시 해당 탭 검색어 초기화
   if(window._recQ){const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};const m=tabModeMap[t];if(m)window._recQ[m]='';}
@@ -54,7 +54,7 @@ function render(){
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
-    case 'pro':     if(typeof rPro==='function')     rPro(C,T);     break;
+    case 'pro':     rMergedPro(C,T);     break;
     case 'member':  if(typeof rMember==='function')  rMember(C,T);  break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
@@ -679,6 +679,7 @@ function buildUnivDetailHTML(univName){
 let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
 let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
 let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+let _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -720,6 +721,18 @@ function rMergedComp(C, T) {
   const sub = document.createElement('div');
   if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
   else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  C.innerHTML = bar;
+  C.appendChild(sub);
+}
+
+function rMergedPro(C, T) {
+  const bar = _mergedSubBar(
+    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'}],
+    _mergedProSub, '_mergedProSub'
+  );
+  const sub = document.createElement('div');
+  if(_mergedProSub==='pro') { if(typeof rPro==='function')      rPro(sub,T); }
+  else                       { if(typeof rProComp==='function') rProComp(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
