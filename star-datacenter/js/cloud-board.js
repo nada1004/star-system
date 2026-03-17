@@ -312,6 +312,7 @@ function rBoard(C,T){
 function buildUnivBoardCard(u, forExport){
   if(!u)return'';
   const col=gc(u.name);
+  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const sorted=_getBoardPlayers(u.name);
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
@@ -321,7 +322,6 @@ function buildUnivBoardCard(u, forExport){
       <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
   }
-  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const cnt=sorted.length;
   const allUnivs=getAllUnivs();
 
