@@ -401,8 +401,7 @@ function _bktPasteApplyLogic(savable, tn){
 /* ══════════════════════════════════════
    🎯 티어대회 - CK 방식 경기 입력
 ══════════════════════════════════════ */
-let _ttSub = 'input'; // input | records
-let _ttCurComp = '';
+// _ttSub, _ttCurComp: constants.js에서 선언 및 localStorage 복원
 
 function rTierTourTab(C, T){
   T.innerText = '🎯 티어대회';
@@ -439,9 +438,23 @@ function rTierTourTab(C, T){
   } else {
     const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
+    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
+    const _orphans=ttM.filter(m=>!m.compName);
+    if(_ttCurComp&&isLoggedIn&&_orphans.length){
+      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
+        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}')">📎 현재 대회(${_ttCurComp})에 모두 연결</button>
+      </div>`;
+    }
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
+}
+
+function ttFixOrphanRecords(compName){
+  if(!confirm(`대회명 없는 티어대회 기록을 모두 "${compName}"에 연결하시겠습니까?`))return;
+  ttM.forEach(m=>{if(!m.compName){m.compName=compName;if(!m.n)m.n=compName;}});
+  save();render();
 }
 
 function ttPlayerRankHTML(compName){
@@ -686,7 +699,7 @@ function grpRenameTierTourney(){
   if(!newName||!newName.trim()||newName.trim()===tn.name)return;
   const trimmed=newName.trim();
   if(tourneys.find(t=>t.name===trimmed&&t.id!==tn.id)){alert('이미 같은 이름의 대회가 있습니다.');return;}
-  ttM.forEach(m=>{if(m.compName===tn.name)m.compName=trimmed;});
+  ttM.forEach(m=>{if(m.compName===tn.name){m.compName=trimmed;if(m.n===tn.name)m.n=trimmed;if(m.t===tn.name)m.t=trimmed;}});
   tn.name=trimmed;
   _ttCurComp=trimmed;
   save();render();
@@ -1669,7 +1682,7 @@ function openRE(mode,idx){
   } else if(mode==='tt'){
     const m=ttM[idx];tit='🎯 티어대회 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
-      <label>대회명/메모</label><input type="text" id="re-ttn" value="${m.n||m.t||''}">
+      <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
       <label>A팀 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
       <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
@@ -1714,8 +1727,8 @@ function saveRow(){
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='tt'){
     const m=ttM[reIdx];m.d=d;
-    const ttn=document.getElementById('re-ttn')?.value;
-    if(ttn!==undefined){m.n=ttn;m.t=ttn;}
+    const ttn=document.getElementById('re-ttcomp')?.value;
+    if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='ck'){

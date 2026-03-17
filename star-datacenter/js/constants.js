@@ -104,6 +104,8 @@ let members    = J('su_mb') || [];
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
 let tourneys   = J('su_tn') || [];
 let ttM        = J('su_ttm') || [];
+let _ttCurComp = J('su_ttcur') || '';
+let _ttSub     = 'records';
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
 let notices    = J('su_notices') || [];
@@ -217,6 +219,7 @@ function localSave(){
     localStorage.setItem('su_mb',JSON.stringify(members));
     localStorage.setItem('su_tn',JSON.stringify(tourneys));
     localStorage.setItem('su_ttm',JSON.stringify(ttM));
+    localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));
     localStorage.setItem('su_indm',JSON.stringify(indM));
     localStorage.setItem('su_gjm',JSON.stringify(gjM));
     localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
