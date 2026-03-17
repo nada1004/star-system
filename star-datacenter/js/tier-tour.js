@@ -1451,7 +1451,7 @@ function promptBoardNoteImgUrl(univName){
 function addPlayer(){
   const n=document.getElementById('p-name').value.trim();
   if(!n)return alert('이름을 입력하세요.');
-  if(players.find(p=>p.name===n))return alert('이미 존재합니다.');
+  if(players.find(p=>p.name===n)&&!confirm(`"${n}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 등록하시겠습니까?`))return;
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';save();render();
@@ -1584,7 +1584,7 @@ function savePlayer(){
 
   // 이름 변경 시 모든 기록 자동 갱신
   if(newName !== oldName){
-    if(players.some(x=>x.name===newName)){alert(`"${newName}"은(는) 이미 존재하는 이름입니다.`);return;}
+    if(players.some(x=>x.name===newName)&&!confirm(`"${newName}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 변경하시겠습니까?`))return;
     players.forEach(other=>{
       (other.history||[]).forEach(h=>{if(h.opp===oldName)h.opp=newName;});
     });
