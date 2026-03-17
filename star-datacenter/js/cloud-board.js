@@ -700,6 +700,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
         <input id="brd-role-custom-${_pnSafe}" type="text" placeholder="직접 입력..." style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
         <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()" style="font-size:11px">설정</button>
       </div>
+      ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘</div>
@@ -709,11 +710,10 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏫 대학 이동</div>
-      <div style="display:flex;gap:4px;margin-bottom:4px">
+      <div style="display:flex;gap:4px">
         <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
         <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${playerName}','${univName}')">이동</button>
       </div>
-      ${univName!=='무소속'?`<button class="btn btn-xs" style="width:100%;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:11px" onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';if(boardPlayerOrder[from]){boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');}save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}">🚶 무소속으로 이동</button>`:''}
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px">
       <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${univName}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
