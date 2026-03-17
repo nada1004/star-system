@@ -156,7 +156,7 @@ let boardGridCols=1; // 1열/2열 보기
 let boardPlayerOrder = J('su_bpo') || {};
 
 function _getBoardUnivs(){
-  const univs = getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const univs = getAllUnivs();
   if(!boardOrder.length) return univs;
   const ordered = [];
   boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u) ordered.push(u); });
@@ -313,7 +313,14 @@ function buildUnivBoardCard(u, forExport){
   if(!u)return'';
   const col=gc(u.name);
   const sorted=_getBoardPlayers(u.name);
-  if(!sorted.length&&!forExport)return'';
+  if(!sorted.length&&!forExport){
+    // 선수 없는 대학도 빈 카드로 표시
+    return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
+      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
+      <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
+    </div>`;
+  }
   const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const cnt=sorted.length;
   const allUnivs=getAllUnivs();

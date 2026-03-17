@@ -53,7 +53,6 @@ function _b2UnivView() {
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden);
-    if (!members.length) return;
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -65,6 +64,15 @@ function _b2UnivBlock(univName, col, members) {
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
   const lightCol = col + '12';
+
+  // 멤버 없을 때 빈 블록
+  if (!members.length) {
+    return `<div style="border-radius:14px;border:2px dashed ${col}66;padding:20px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
+      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      <span style="font-weight:900;font-size:15px;color:${col}">${univName}</span>
+      <span style="font-size:11px;color:var(--gray-l);margin-left:4px">등록된 선수 없음</span>
+    </div>`;
+  }
 
   // 직책 그룹
   const roledMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
