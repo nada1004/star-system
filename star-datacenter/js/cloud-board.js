@@ -674,7 +674,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   popup.className = 'brd-move-popup';
   _brdPopup = popup;
 
-  const otherUnivs = allUnivs.filter(u=>u.name!==univName);
+  const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
 
   const _pnSafe = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
