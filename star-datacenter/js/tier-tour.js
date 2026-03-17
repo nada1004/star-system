@@ -1366,6 +1366,34 @@ function setBoardBgImgSize(univName, size){
   u.bgImgSize=size;
   save();render();
 }
+function promptBoardBgImgUrl(univName){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  const cur=u.bgImg&&!u.bgImg.startsWith('data:')?u.bgImg:'';
+  const url=prompt('배경 이미지 URL을 입력하세요:\n(예: https://example.com/image.png)',cur);
+  if(url===null)return;
+  const trimmed=url.trim();
+  if(!trimmed){showToast('URL을 입력해주세요.');return;}
+  setBoardBgImg(univName,trimmed);
+}
+function promptBoardMemoImgUrl(univName){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  const url=prompt('사이드 이미지 URL을 입력하세요:\n(예: https://example.com/image.png)','');
+  if(url===null)return;
+  const trimmed=url.trim();
+  if(!trimmed){showToast('URL을 입력해주세요.');return;}
+  addBoardMemoImg(univName,trimmed);
+}
+function promptBoardNoteImgUrl(univName){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  const url=prompt('하단 이미지 URL을 입력하세요:\n(예: https://example.com/image.png)','');
+  if(url===null)return;
+  const trimmed=url.trim();
+  if(!trimmed){showToast('URL을 입력해주세요.');return;}
+  addBoardNoteImg(univName,trimmed);
+}
 
 /* ══════════════════════════════════════
    선수 CRUD
