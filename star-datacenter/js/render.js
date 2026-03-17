@@ -330,7 +330,72 @@ function openUnivModal(univName){
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
   injectUnivIcons(document.getElementById('univModalBody'));
   window._univModalCurrentName=univName;
+  window._univEditOpen=false;
+  const editBtn=document.getElementById('univEditBtn');
+  if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
   om('univModal');
+}
+
+function toggleUnivEdit(){
+  window._univEditOpen=!window._univEditOpen;
+  const btn=document.getElementById('univEditBtn');
+  if(window._univEditOpen){
+    if(btn) btn.textContent='✕ 닫기';
+    const univName=window._univModalCurrentName;
+    const u=univCfg.find(x=>x.name===univName)||{};
+    const editHTML=`<div id="univ-edit-panel" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
+      <input type="text" id="ue-name" value="${u.name||''}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box">
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대표 색상</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input type="color" id="ue-color" value="${u.color||'#6b7280'}" style="width:44px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+        <span style="font-size:12px;color:var(--text3)">현재: ${u.color||'미설정'}</span>
+      </div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=v;img.style.display='block';}else img.style.display='none'">
+        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-b" style="flex:1" onclick="saveUnivEdit()">💾 저장</button>
+        <button class="btn btn-w" onclick="toggleUnivEdit()">취소</button>
+      </div>
+    </div>`;
+    const body=document.getElementById('univModalBody');
+    body.insertAdjacentHTML('afterbegin',editHTML);
+  } else {
+    if(btn) btn.textContent='✏️ 수정';
+    const panel=document.getElementById('univ-edit-panel');
+    if(panel) panel.remove();
+  }
+}
+
+function saveUnivEdit(){
+  const univName=window._univModalCurrentName;
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u) return;
+  const newName=(document.getElementById('ue-name')?.value||'').trim();
+  const newColor=document.getElementById('ue-color')?.value||u.color;
+  const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
+  if(!newName){alert('이름을 입력하세요.');return;}
+  // 이름 변경 시 players univ 갱신
+  if(newName!==univName){
+    players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
+    [miniM,univM,comps,ckM].forEach(arr=>(arr||[]).forEach(m=>{if(m.a===univName)m.a=newName;if(m.b===univName)m.b=newName;}));
+  }
+  u.name=newName;
+  u.color=newColor;
+  if(newIcon) u.icon=newIcon; else delete u.icon;
+  save();render();
+  window._univModalCurrentName=newName;
+  document.getElementById('univModalTitle').innerText=`${newName} 대학 상세`;
+  document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);
+  injectUnivIcons(document.getElementById('univModalBody'));
+  window._univEditOpen=false;
+  const btn=document.getElementById('univEditBtn');
+  if(btn) btn.textContent='✏️ 수정';
 }
 
 function buildPlayerDetailHTML(p){
