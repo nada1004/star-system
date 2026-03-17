@@ -446,7 +446,7 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'cover';
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}')${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`:'';
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];

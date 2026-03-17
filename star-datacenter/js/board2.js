@@ -101,7 +101,7 @@ function _b2UnivBlock(univName, col, members) {
   // 사이드 패널 (memoImgs 배열, position:absolute로 선 가리지 않음)
   const _sideMemo = uCfg.memo || '';
   const _sideImgs = (uCfg.memoImgs||[]).length ? uCfg.memoImgs : (uCfg.memoImg ? [uCfg.memoImg] : []);
-  const sideImgHtml = _sideImgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
+  const sideImgHtml = _sideImgs.map(src=>`<img src="${src}" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
   const hasSide = !!(_sideMemo||_sideImgs.length);
   const floatSideHtml = hasSide ? `<div class="b2-side-panel" style="background:${col}16;border:1px solid ${col}30">${sideImgHtml}${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}</div>` : '';
 
@@ -119,7 +119,7 @@ function _b2UnivBlock(univName, col, members) {
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'cover';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
     : '';
 
   return `

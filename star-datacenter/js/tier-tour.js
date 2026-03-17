@@ -505,7 +505,7 @@ function rTierTour(){
     h+=buildTierTourInputHTML();
   } else {
     // 현재 선택된 대회의 기록만 표시
-    const _curTnName=curComp||'';
+    const _curTnName=_ttCurComp||'';
     const _ttFiltered=_curTnName
       ? ttM.filter(m=>m.compName===_curTnName)
       : ttM;
