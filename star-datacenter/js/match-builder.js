@@ -677,14 +677,21 @@ function gjRankHTML(){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
+  if(!window._gjVsOpen) window._gjVsOpen={};
   let h=sortBar+`<table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>승</th><th>패</th><th>승률</th><th style="text-align:left">상대 전적</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const pl=players.find(x=>x.name===p.name);
-    const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
-    const vsHTML=vsEntries.map(([opp,r])=>{
+    // 총 대결 수 내림차순 정렬
+    const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l)||(b[1].w-b[1].l)-(a[1].w-a[1].l));
+    const mkVsSpan=([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
-      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
-    }).join('');
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:10px;white-space:nowrap">${getPlayerPhotoHTML(opp,'14px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${opp.replace(/'/g,"\\'")}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
+    };
+    const isOpen=!!window._gjVsOpen[p.name];
+    const top3HTML=vsEntries.slice(0,3).map(mkVsSpan).join('');
+    const rest=vsEntries.slice(3);
+    const moreBtn=rest.length?`<span style="display:${isOpen?'inline':'none'}">${rest.map(mkVsSpan).join('')}</span><button onclick="event.stopPropagation();window._gjVsOpen['${p.name.replace(/'/g,"\\'")}'] =!window._gjVsOpen['${p.name.replace(/'/g,"\\'")}'];render()" style="font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--blue);margin-left:3px;white-space:nowrap">${isOpen?'▲ 접기':'▼ +'+rest.length+'명'}</button>`:'';
+    const vsHTML=(top3HTML||moreBtn)?top3HTML+moreBtn:'<span style="color:var(--gray-l);font-size:11px">—</span>';
     const _ri=_cp*_PAGE+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
@@ -692,7 +699,7 @@ function gjRankHTML(){
       <td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'28px')}<span style="font-weight:700">${p.name}</span><span style="font-size:11px;color:var(--gray-l)">${pl?.univ||''}</span></span></td>
       <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
       <td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td>
-      <td style="text-align:left;min-width:120px">${vsHTML||'<span style="color:var(--gray-l);font-size:11px">—</span>'}</td>
+      <td style="text-align:left;max-width:260px">${vsHTML}</td>
     </tr>`;
   });
   const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">

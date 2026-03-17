@@ -492,9 +492,6 @@ function rTier(C,T){
 
   let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><thead><tr>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">순위</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">대학</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
@@ -524,13 +521,16 @@ function rTier(C,T){
       const cnt=_v?(isWin?_v.w:_v.l):0;
       extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
     }
-    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
+    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
+      <td style="text-align:left;padding:7px 12px">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span></div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:3px;padding-left:38px">
+          <span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};font-size:10px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span>
+          ${getTierBadge(p.tier)}
+        </div>
+      </td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
