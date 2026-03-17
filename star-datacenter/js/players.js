@@ -192,32 +192,30 @@ function rTier(C,T){
   fh+=`</div>`;
 
   if(tierRankMode!=='recent'){
-    // ── 2행: 대학 + 티어 + 종족 + 옵션 (한 줄 스크롤) ──
+    // ── 2행: 대학 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
-    // 대학
     fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">대학</span>`;
     fh+=`<button class="pill ${fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('전체','${fTier}')">전체</button>`;
     allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
-    // 구분선
-    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
-    // 티어
+    fh+=`</div>`;
+    // ── 3행: 티어 (스크롤) ──
+    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
     fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">티어</span>`;
     fh+=`<button class="pill ${fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('${fUniv}','전체')">전체</button>`;
     TIERS.forEach(t=>{
       const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
       fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
     });
-    // 구분선
-    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
-    // 종족
-    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">종족</span>`;
+    fh+=`</div>`;
+    // ── 4행: 종족 + 옵션 (flex-wrap) ──
+    fh+=`<div class="fbar" style="flex-wrap:wrap;gap:6px">`;
+    fh+=`<span style="font-size:11px;font-weight:700;color:var(--text3);align-self:center">종족</span>`;
     ['전체','T','Z','P'].forEach(r=>{
-      fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" style="flex-shrink:0" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
+      fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
-    // 구분선
-    fh+=`<span style="flex-shrink:0;color:var(--border2);align-self:center">│</span>`;
-    fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="flex-shrink:0;${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 선수 숨김</button>`;
-    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="flex-shrink:0;${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
+    fh+=`<span style="color:var(--border2);align-self:center">│</span>`;
+    fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 선수 숨김</button>`;
+    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
     fh+=`</div>`;
   }
 
@@ -492,6 +490,9 @@ function rTier(C,T){
 
   let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><thead><tr>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">순위</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 10px">대학</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
@@ -521,16 +522,13 @@ function rTier(C,T){
       const cnt=_v?(isWin?_v.w:_v.l):0;
       extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
     }
-    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
+    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
-      <td style="text-align:left;padding:7px 12px">
-        <div style="display:flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span></div>
-        <div style="display:flex;align-items:center;gap:5px;margin-top:3px;padding-left:38px">
-          <span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};font-size:10px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span>
-          ${getTierBadge(p.tier)}
-        </div>
-      </td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
+      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
