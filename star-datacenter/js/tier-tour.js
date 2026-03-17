@@ -1069,6 +1069,43 @@ function rCfg(C,T){
       </div>
     </div>
   </div>
+  ${(()=>{
+    const seen={};const dupNames=[];
+    players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
+    const uniq=[...new Set(dupNames)];
+    if(!uniq.length) return '';
+    return `<div class="ssec" style="border:2px solid #fca5a5;background:#fff5f5">
+      <h4 style="color:#dc2626">⚠️ 동명이인 감지 (${uniq.length}건)</h4>
+      <div style="font-size:12px;color:#7f1d1d;margin-bottom:12px">중복 이름이 있으면 승패·기록이 뒤섞입니다. 한 명의 이름을 바꿔 구분하세요.</div>
+      ${uniq.map(name=>{
+        const dupes=players.map((p,i)=>({p,i})).filter(({p})=>p.name===name);
+        return `<div style="background:var(--white);border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+          <div style="font-weight:800;color:#dc2626;font-size:13px;margin-bottom:6px">👥 "${name}" — ${dupes.length}명 중복</div>
+          ${dupes.map(({p,i})=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:11px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 7px;font-weight:700">${p.univ||'무소속'}</span>
+            <span style="font-size:11px;color:var(--gray-l)">${p.tier||'-'} · ${p.race||'-'}</span>
+            <input type="text" id="dupfix-${i}" placeholder="새 이름..." style="flex:1;min-width:100px;padding:3px 7px;border-radius:5px;border:1px solid #fca5a5;font-size:12px">
+            <button class="btn btn-xs" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="(function(){
+              const inp=document.getElementById('dupfix-${i}');
+              const nw=(inp?.value||'').trim();
+              if(!nw){alert('새 이름을 입력하세요.');return;}
+              if(players.find((x,xi)=>x.name===nw&&xi!==${i})){alert('이미 존재하는 이름입니다.');return;}
+              editName=players[${i}].name;
+              document.getElementById('emBody').innerHTML='';
+              const oldN=players[${i}].name;
+              players[${i}].name=nw;
+              players.forEach(other=>{(other.history||[]).forEach(h=>{if(h.opp===oldN)h.opp=nw;});});
+              [miniM,univM,comps,ckM,proM,ttM].forEach(arr=>(arr||[]).forEach(m=>{
+                if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
+                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
+              }));
+              save();render();
+            })()">✅ 적용</button>
+          </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+  })()}
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{

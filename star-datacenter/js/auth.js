@@ -152,6 +152,11 @@ function doFile(inp){
       })();
       filterYear='전체';filterMonth='전체';
       fixPoints();save();init();
+      // 동명이인 감지
+      const _dupSeen={};const _dupFound=[];
+      players.forEach(p=>{if(_dupSeen[p.name])_dupFound.push(p.name);else _dupSeen[p.name]=true;});
+      const _dupUniq=[...new Set(_dupFound)];
+      if(_dupUniq.length) alert('⚠️ 동명이인 감지!\n중복 이름: '+_dupUniq.join(', ')+'\n\n설정 탭 > 데이터 진단에서 수정하세요.');
     }catch{alert('파일 읽기 오류');}
   };
   r.readAsText(inp.files[0]);
