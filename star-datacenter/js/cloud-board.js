@@ -593,24 +593,26 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   popup.className = 'brd-move-popup';
   _brdPopup = popup;
 
-  const otherUnivs = allUnivs.filter(u=>u.name!==univName);
+  const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const _pnSafeChip = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
 
   popup.innerHTML = `
     <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;padding:0 6px 4px">
-      ${['이사장','총장','부총장','총괄','교수','코치','학생회장','오락부장'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px">${r}</button>`).join('')}
+      ${['이사장','총장','부총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px">${r}</button>`).join('')}
       <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;color:#dc2626">해제</button>
     </div>
-    <div style="display:flex;gap:4px;padding:0 6px 6px;align-items:center">
-      <input id="brd-role-chip-${playerName.replace(/[^a-zA-Z0-9가-힣]/g,'')}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${playerName.replace(/[^a-zA-Z0-9가-힣]/g,'')}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
+    <div style="display:flex;gap:4px;padding:0 6px 4px;align-items:center">
+      <input id="brd-role-chip-${_pnSafeChip}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
+      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
     </div>
+    ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
-    <div style="display:flex;gap:6px;padding:0 6px 4px">
+    <div style="display:flex;gap:6px;padding:0 6px 6px">
       <select id="brd-chip-univ-target" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
       <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
     </div>
