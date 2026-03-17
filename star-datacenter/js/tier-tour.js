@@ -1180,6 +1180,10 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
+  <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
+    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
+    <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+  </div>
   <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -1196,6 +1200,7 @@ function rCfg(C,T){
   `;
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
+    renderStorageInfo();
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -1213,6 +1218,47 @@ function rCfg(C,T){
   C.innerHTML=h;
   // alias-list는 C.innerHTML 세팅 후 렌더링
   setTimeout(_refreshAliasList, 10);
+}
+function renderStorageInfo(){
+  const el=document.getElementById('cfg-storage-info');
+  if(!el)return;
+  try{
+    let total=0;const rows=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
+      const bytes=(k.length+v.length)*2;total+=bytes;
+      if(k.startsWith('su_'))rows.push({k,bytes});
+    }
+    rows.sort((a,b)=>b.bytes-a.bytes);
+    const limit=5*1024*1024;
+    const pct=Math.min(100,Math.round(total/limit*100));
+    const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
+    const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
+    const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
+    el.innerHTML=`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
+          <span style="font-weight:700;color:${barCol}">${pct}%</span>
+        </div>
+        <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:width .3s"></div>
+        </div>
+        ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
+      <div style="font-size:11px;line-height:1.8">
+        ${rows.slice(0,10).map(({k,bytes})=>{
+          const label=LABELS[k]||k;
+          const bpct=Math.min(100,Math.round(bytes/limit*100));
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span style="min-width:100px;color:var(--text2)">${label}</span>
+            <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
+            <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
 function reCfg(){
   const tabs=document.querySelectorAll('.stab');
@@ -1413,10 +1459,16 @@ function openEP(name){
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">※ 승패 초기화 시 개인 경기 기록(히스토리)도 함께 삭제됩니다. 대전 기록(미니/대학대전 등)은 유지됩니다.</div>
     </div>
-    <div style="margin-top:14px;padding:12px 14px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#475569;margin:0">
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-retired" ${p.retired?'checked':''} style="width:16px;height:16px;cursor:pointer">
         🎗️ 은퇴 (현황판에서만 숨김, 경기 기록은 유지)
+      </label>
+    </div>
+    <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+        <input type="checkbox" id="ed-inactive" ${p.inactive?'checked':''} style="width:16px;height:16px;cursor:pointer">
+        ⏸️ 임시 상태 (휴학/활동중단) — 현황판에서 반투명 표시, 은퇴와 달리 숨기지 않음
       </label>
     </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
@@ -1524,6 +1576,8 @@ function savePlayer(){
   if(_pts)p.points=parseInt(_pts.value)||0;
   p.retired=document.getElementById('ed-retired')?.checked||false;
   if(!p.retired)p.retired=undefined;
+  p.inactive=document.getElementById('ed-inactive')?.checked||false;
+  if(!p.inactive)p.inactive=undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();

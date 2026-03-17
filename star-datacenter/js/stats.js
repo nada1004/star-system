@@ -157,7 +157,7 @@ function statsOverviewHTML(){
         return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openUnivModal('${u.name}')">
           <span style="min-width:32px;font-weight:800;font-size:13px">${medal}</span>
           <span class="ubadge" style="background:${u.color};min-width:80px;text-align:center">${u.name}</span>
-          <div style="flex:1;background:#f1f5f9;border-radius:20px;height:14px;overflow:hidden">
+          <div style="flex:1;background:var(--border2);border-radius:20px;height:14px;overflow:hidden">
             <div style="width:${u.rate}%;background:${u.color};height:100%;border-radius:20px;transition:.3s"></div>
           </div>
           <span style="min-width:50px;text-align:right;font-weight:700;font-size:13px">${u.rate}%</span>
@@ -170,7 +170,7 @@ function statsOverviewHTML(){
     <thead><tr><th>내\상대</th>${['T','Z','P'].map(r=>`<th>${raceEmoji[r]} ${raceName[r]}</th>`).join('')}</tr></thead>
     <tbody>${['T','Z','P'].map(r=>`<tr><td style="font-weight:700;color:${raceColor[r]}">${raceEmoji[r]} ${raceName[r]}</td>${['T','Z','P'].map(o=>{
       const s=rv[r][o];const rate=s.w+s.l===0?'-':Math.round(s.w/(s.w+s.l)*100)+'%';
-      const bg=r===o?'background:#f1f5f9':s.w>s.l?'background:#f0fdf4':s.w<s.l?'background:#fef2f2':'';
+      const bg=r===o?'background:var(--border2)':s.w>s.l?'background:#16a34a22':s.w<s.l?'background:#dc262622':'';
       return`<td style="${bg}">${r===o?'<span style="color:var(--gray-l)">-</span>':`<span style="font-weight:700">${rate}</span><br><span style="font-size:10px;color:var(--gray-l)">${s.w}승${s.l}패</span>`}</td>`;
     }).join('')}</tr>`).join('')}</tbody>
   </table></div></div>
@@ -249,7 +249,7 @@ function statsEloHTML(){
           <span style="min-width:28px;font-weight:800;font-size:12px">${badge}</span>
           <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:70px">${p.name}</span>
           <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:60px">${p.univ}</span>
-          <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+          <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
             <div style="width:${bar}%;background:${eloColor};height:100%;border-radius:20px"></div>
           </div>
           <span style="font-weight:800;font-size:14px;color:${eloColor};min-width:48px;text-align:right">${elo}</span>
@@ -1589,7 +1589,7 @@ function statsHeatmapHTML(){
         return`<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:16px">${badge}</span>
           <span style="font-weight:700;font-size:13px;color:var(--blue);min-width:96px">${d}</span>
-          <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+          <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
             <div style="width:${Math.round(c/topDays[0][1]*100)}%;background:#16a34a;height:100%;border-radius:20px"></div>
           </div>
           <span style="font-weight:800;font-size:14px;color:#16a34a;min-width:40px;text-align:right">${c}게임</span>
@@ -1645,7 +1645,7 @@ function statsTierWinHTML(){
     const r=Math.round(w/t*100);
     return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px">
       <div style="font-weight:800;font-size:12px;color:${r>=50?color:'#94a3b8'}">${r}%</div>
-      <div style="width:48px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden">
+      <div style="width:48px;height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
         <div style="width:${r}%;height:100%;background:${r>=50?color:'#e2e8f0'};border-radius:3px"></div>
       </div>
       <div style="font-size:9px;color:var(--gray-l)">${w}W${l}L</div>
@@ -1799,7 +1799,7 @@ function statsMapRankHTML(){
           <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
           <td style="font-weight:800;color:${p.rate>=50?'var(--green)':'var(--red)'}">
             ${p.rate}%
-            <div style="width:48px;height:4px;background:#f1f5f9;border-radius:2px;display:inline-block;margin-left:4px;vertical-align:middle;overflow:hidden">
+            <div style="width:48px;height:4px;background:var(--border2);border-radius:2px;display:inline-block;margin-left:4px;vertical-align:middle;overflow:hidden">
               <div style="width:${p.rate}%;height:100%;background:${p.rate>=50?'var(--green)':'var(--red)'};border-radius:2px"></div>
             </div>
           </td>
@@ -1872,7 +1872,7 @@ function statsUnivMatrixHTML(){
             <span style="background:${gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${u.name}</span>
           </td>
           ${univRank.map(v=>{
-            if(u.name===v.name) return`<td style="background:#f1f5f9;border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
+            if(u.name===v.name) return`<td style="background:var(--border2);border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
             const s=matrix[u.name][v.name];
             const t=s.w+s.l; if(!t) return`<td style="background:#f8fafc;border:1px solid var(--border);text-align:center;color:var(--gray-l);font-size:11px">-</td>`;
             const r=Math.round(s.w/t*100);
@@ -2106,7 +2106,7 @@ function statsKillerHTML(){
       ${getPlayerPhotoHTML(e.name,'28px')}
       <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}${getStatusIconHTML(e.name)}</span>
       <span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span>
-      <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+      <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
         <div style="width:${myRate}%;background:${isKiller?'var(--red)':'var(--green)'};height:100%;border-radius:20px"></div>
       </div>
       <span style="font-weight:800;font-size:12px;color:${isKiller?'var(--red)':'var(--green)'};white-space:nowrap;min-width:52px">${myRate}% (${myW}W${myL}L)</span>
@@ -2219,7 +2219,7 @@ function statsSeasonalHTML(){
         return`<div style="flex:1;min-width:70px;text-align:center;background:${isWeekend?'#fef3c7':'var(--white)'};border:1px solid var(--border);border-radius:10px;padding:12px 8px">
           <div style="font-weight:800;font-size:15px;color:${isWeekend?'var(--gold)':'var(--text)'};margin-bottom:4px">${d.day}</div>
           <div style="font-size:22px;font-weight:900;color:${col};margin-bottom:2px">${tot?rate+'%':'-'}</div>
-          <div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin:4px 0">
+          <div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin:4px 0">
             <div style="width:${rate}%;background:${col};height:100%;border-radius:2px"></div>
           </div>
           <div style="font-size:10px;color:var(--gray-l)">${d.w}승 ${d.l}패</div>
@@ -2291,7 +2291,7 @@ function statsClutchHTML(){
       <span style="min-width:24px;font-size:15px">${badge}</span>
       <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}</span>
       <span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span>
-      <div style="flex:1;background:#f1f5f9;border-radius:20px;height:10px;overflow:hidden">
+      <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
         <div style="width:${e.rate}%;background:${rateCol};height:100%;border-radius:20px"></div>
       </div>
       <span style="font-weight:900;font-size:14px;color:${rateCol};min-width:40px;text-align:right">${e.rate}%</span>
@@ -2466,7 +2466,7 @@ function statsTierMatchHTML(){
               if(t1===t2){
                 const s=matrix[t1][t2];const tot=s.w+s.l;
                 const r=tot?Math.round(s.w/tot*100):null;
-                return`<td style="padding:6px 8px;border:1px solid var(--border);text-align:center;background:#f1f5f9">
+                return`<td style="padding:6px 8px;border:1px solid var(--border);text-align:center;background:var(--border2)">
                   <div style="font-size:9px;color:var(--gray-l);font-weight:600">동티어</div>
                   ${tot?`<div style="font-weight:800;font-size:12px;color:${r>=50?'var(--green)':'var(--red)'}">${r}%</div>
                   <div style="font-size:10px;color:var(--gray-l)">${s.w}W${s.l}L</div>`:'<div style="color:var(--gray-l);font-size:11px">-</div>'}
@@ -2499,7 +2499,7 @@ function statsTierMatchHTML(){
           <div style="background:${col};color:#fff;padding:2px 9px;border-radius:5px;font-weight:800;font-size:12px;display:inline-block;margin-bottom:6px">${getTierLabel(t.tier)}</div>
           <div style="font-size:24px;font-weight:900;color:${col}">${t.rate!==null?t.rate+'%':'-'}</div>
           <div style="font-size:10px;color:var(--gray-l);margin-top:3px">${t.w}승 ${t.l}패</div>
-          ${tot?`<div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin-top:5px">
+          ${tot?`<div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:5px">
             <div style="width:${t.rate||0}%;background:${col};height:100%;border-radius:2px"></div>
           </div>`:''}
         </div>`;
@@ -2634,7 +2634,7 @@ function statsUnivMatrix2HTML(){
             <span style="background:${gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${u.name}</span>
           </td>
           ${univRank.map(v=>{
-            if(u.name===v.name)return`<td style="background:#f1f5f9;border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
+            if(u.name===v.name)return`<td style="background:var(--border2);border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
             const s=matrix[u.name][v.name];const t=s.w+s.l;if(!t)return`<td style="background:#f8fafc;border:1px solid var(--border);text-align:center;color:var(--gray-l);font-size:11px">-</td>`;
             const r=Math.round(s.w/t*100);
             return`<td style="background:${cellBg(s.w,s.l)};border:1px solid var(--border);text-align:center;padding:5px 4px;cursor:pointer"

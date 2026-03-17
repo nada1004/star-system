@@ -402,7 +402,7 @@ function buildUnivBoardCard(u, forExport){
           :`<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
           ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
-          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}</span>
+          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}</span>
           <span style="display:inline-flex;align-items:center;gap:${compact?'3px':'5px'};line-height:1.2">
             <span style="font-size:${badgeFs};font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${rTxt}</span>
             ${p.tier?`<span style="font-size:${tierBadgeFs};font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${p.tier}</span>`:''}
@@ -1150,9 +1150,9 @@ async function downloadBoardAll(){
       if(uObj&&uObj.hidden)card.remove();
     });
     document.body.appendChild(tmpDiv);
-    await new Promise(r=>setTimeout(r,50));
+    await new Promise(r=>setTimeout(r,300));
 
-    await _imgToDataUrls(tmpDiv,2000);
+    await _imgToDataUrls(tmpDiv,3000);
     tmpDiv.querySelectorAll('img').forEach(im=>{
       const s=im.getAttribute('src')||'';
       if(!s||(!s.startsWith('data:')&&!s.startsWith('blob:')))im.parentNode&&im.parentNode.removeChild(im);

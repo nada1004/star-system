@@ -531,10 +531,10 @@ function buildPlayerDetailHTML(p){
 
   // ── 선수 메모 (관리자만) ──
   if(isLoggedIn){
-    h+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 16px">
-      <div style="font-weight:700;font-size:12px;color:#d97706;margin-bottom:8px">📝 선수 메모</div>
+    h+=`<div style="background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:12px;padding:14px 16px">
+      <div style="font-weight:700;font-size:12px;color:var(--gold);margin-bottom:8px">📝 선수 메모</div>
       ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
-      <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="선수 메모...">${p.memo||''}</textarea>
+      <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid var(--gold-b);border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="선수 메모...">${p.memo||''}</textarea>
       <div style="display:flex;gap:6px;margin-top:8px">
         <button class="btn btn-b btn-sm" onclick="savePlayerMemo('${p.name}')">💾 저장</button>
         ${p.memo?`<button class="btn btn-r btn-sm" onclick="savePlayerMemo('${p.name}',true)">🗑️ 삭제</button>`:''}

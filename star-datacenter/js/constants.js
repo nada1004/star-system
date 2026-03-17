@@ -84,6 +84,8 @@ function getRoleBadgeHTML(role, size='11px'){
 function J(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}}
 
 let players    = J('su_p')  || [];
+// 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
+(function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object')players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
@@ -192,7 +194,15 @@ function fixPoints(){
 function localSave(){
   try{
     localStorage.setItem('su_tiers',JSON.stringify(TIERS));
-    localStorage.setItem('su_p', JSON.stringify(players));
+    // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
+    const _pPhotoMap={};
+    const _pNoPhoto=players.map(p=>{
+      const c={...p};
+      if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+      return c;
+    });
+    localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
+    localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
     localStorage.setItem('su_u', JSON.stringify(univCfg));
     localStorage.setItem('su_m', JSON.stringify(maps));
     localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));

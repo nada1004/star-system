@@ -6,6 +6,8 @@
 ═══════════════════════════════ */
 // 검색 입력 상태 (렌더 사이 유지)
 let _vsInputA='', _vsInputB='';
+// 대학 대결 상태
+let _uvA='', _uvB='';
 
 function vsSearchHTML(){
   const colA=vsNameA?(gc((players.find(p=>p.name===vsNameA)||{}).univ||'')):'#2563eb';
@@ -246,7 +248,53 @@ function _vsRenderResult(){
         <td>${lg.aWon?`<span style="font-weight:700;color:${colA}">▶ ${vsNameA} 승</span>`:lg.bWon?`<span style="font-weight:700;color:${colB}">▶ ${vsNameB} 승</span>`:'<span style="color:var(--gray-l)">미정</span>'}</td>
       </tr>`).join('')}
       </tbody></table>
-    </div>`}
+    </div>
+
+    <!-- 선수 스탯 비교 -->
+    ${(()=>{
+      if(!pA||!pB)return '';
+      const eloA=pA.elo||ELO_DEFAULT, eloB=pB.elo||ELO_DEFAULT;
+      const wrA=(pA.win+pA.loss)?Math.round(pA.win/(pA.win+pA.loss)*100):0;
+      const wrB=(pB.win+pB.loss)?Math.round(pB.win/(pB.win+pB.loss)*100):0;
+      const raceA=pA.race==='T'?'테란':pA.race==='Z'?'저그':pA.race==='P'?'프로토스':'?';
+      const raceB=pB.race==='T'?'테란':pB.race==='Z'?'저그':pB.race==='P'?'프로토스':'?';
+      function statRow(label,va,vb,higherBetter=true){
+        const numA=parseFloat(va),numB=parseFloat(vb);
+        const aWins=!isNaN(numA)&&!isNaN(numB)&&(higherBetter?numA>numB:numA<numB);
+        const bWins=!isNaN(numA)&&!isNaN(numB)&&(higherBetter?numB>numA:numB<numA);
+        return `<tr>
+          <td style="font-weight:${aWins?'800':'600'};color:${aWins?colA:'var(--text)'};text-align:right;padding:5px 10px">${va}${aWins?` <span style="color:${colA}">◀</span>`:''}</td>
+          <td style="text-align:center;padding:5px 6px;color:var(--gray-l);font-size:11px;white-space:nowrap">${label}</td>
+          <td style="font-weight:${bWins?'800':'600'};color:${bWins?colB:'var(--text)'};text-align:left;padding:5px 10px">${bWins?`<span style="color:${colB}">▶</span> `:''}${vb}</td>
+        </tr>`;
+      }
+      return `<div style="margin-top:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 스탯 비교</div>
+        <div style="overflow-x:auto">
+          <table style="min-width:300px;table-layout:fixed">
+            <thead><tr>
+              <th style="text-align:right;color:${colA};width:40%">${vsNameA}</th>
+              <th style="text-align:center;color:var(--gray-l);width:20%">항목</th>
+              <th style="text-align:left;color:${colB};width:40%">${vsNameB}</th>
+            </tr></thead>
+            <tbody>
+              ${statRow('ELO',eloA,eloB)}
+              ${statRow('승률',wrA+'%',wrB+'%')}
+              ${statRow('승',pA.win,pB.win)}
+              ${statRow('패',pA.loss,pB.loss,false)}
+              ${statRow('경기수',pA.win+pA.loss,pB.win+pB.loss)}
+              ${statRow('포인트',pA.points||0,pB.points||0)}
+              ${statRow('티어',pA.tier||'?',pB.tier||'?',false)}
+              <tr>
+                <td style="text-align:right;padding:5px 10px;color:var(--text)">${raceA}</td>
+                <td style="text-align:center;padding:5px 6px;color:var(--gray-l);font-size:11px">종족</td>
+                <td style="text-align:left;padding:5px 10px;color:var(--text)">${raceB}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    })()}`}
   </div>`;
 }
 
@@ -431,6 +479,108 @@ async function downloadVsShareCard(fmt){
     await _saveCanvasImage(canvas,_fn,fmt);
   }catch(e){alert('저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
+}
+
+/* ══════════════════════════════════════
+   대학 대결 히스토리
+══════════════════════════════════════ */
+function univVsHTML(){
+  const univs=getAllUnivs().map(u=>u.name);
+  const selStyle='padding:7px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:13px;color:var(--text);font-family:\'Noto Sans KR\',sans-serif;flex:1;min-width:120px';
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px">🏟️ 대학 대결 히스토리</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <select id="uv-a" style="${selStyle}" onchange="_uvA=this.value;renderUnivVsResult()">
+        <option value="">대학 A 선택</option>
+        ${univs.map(u=>`<option value="${u}"${_uvA===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;color:var(--gray-l);flex-shrink:0">VS</div>
+      <select id="uv-b" style="${selStyle}" onchange="_uvB=this.value;renderUnivVsResult()">
+        <option value="">대학 B 선택</option>
+        ${univs.map(u=>`<option value="${u}"${_uvB===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      ${(_uvA||_uvB)?`<button onclick="_uvA='';_uvB='';renderUnivVsResult()" class="btn btn-w btn-sm" style="font-size:11px">🗑 초기화</button>`:''}
+    </div>
+    <div id="uvResult"></div>
+  </div>`;
+}
+
+function renderUnivVsResult(){
+  const r=document.getElementById('uvResult');
+  if(!r)return;
+  if(!_uvA||!_uvB||_uvA===_uvB){
+    r.innerHTML=(!_uvA&&!_uvB)?'<div style="font-size:11px;color:var(--gray-l);text-align:center">💡 두 대학을 선택하면 대결 기록이 표시됩니다</div>':'';
+    return;
+  }
+  const colA=gc(_uvA), colB=gc(_uvB);
+  let aWins=0,bWins=0;
+  const logs=[];
+
+  function scanUnivMatch(arr, modeLabel){
+    arr.forEach(m=>{
+      const matchA=m.a===_uvA&&m.b===_uvB, matchB=m.a===_uvB&&m.b===_uvA;
+      if(!matchA&&!matchB)return;
+      const sa=matchA?(m.sa||0):(m.sb||0);
+      const sb=matchA?(m.sb||0):(m.sa||0);
+      if(sa>sb)aWins++;else if(sb>sa)bWins++;
+      logs.push({date:m.d||'',mode:modeLabel,sa,sb,draw:sa===sb});
+    });
+  }
+  scanUnivMatch(univM,'🏟️ 대학대전');
+  scanUnivMatch(ckM,'🤝 대학CK');
+  logs.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const total=aWins+bWins;
+  const aRate=total?Math.round(aWins/total*100):0;
+  const bRate=total?100-aRate:0;
+
+  r.innerHTML=`
+    <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:110px;background:${colA}18;border:2px solid ${colA}44;border-radius:10px;padding:12px;text-align:center">
+        <div style="width:40px;height:40px;border-radius:10px;background:${colA};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">${_uvA[0]}</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">${_uvA}</div>
+        ${aWins>bWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colA}">🏆 우세</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;min-width:80px">
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">전체 전적</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:34px;color:${aWins>bWins?colA:'var(--text3)'}">${aWins}</span>
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--gray-l)">:</span>
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:34px;color:${bWins>aWins?colB:'var(--text3)'}">${bWins}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">총 ${logs.length}매치</div>
+      </div>
+      <div style="flex:1;min-width:110px;background:${colB}18;border:2px solid ${colB}44;border-radius:10px;padding:12px;text-align:center">
+        <div style="width:40px;height:40px;border-radius:10px;background:${colB};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">${_uvB[0]}</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">${_uvB}</div>
+        ${bWins>aWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colB}">🏆 우세</div>`:''}
+      </div>
+    </div>
+    ${total>0?`<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:5px">
+        <span style="color:${colA}">${_uvA} ${aRate}%</span>
+        <span style="color:${colB}">${bRate}% ${_uvB}</span>
+      </div>
+      <div class="vs-bar-wrap">
+        <div class="vs-bar-a" style="width:${aRate}%;background:${colA}"></div>
+        <div class="vs-bar-b" style="width:${bRate}%;background:${colB}"></div>
+      </div>
+    </div>`:''}
+    ${logs.length===0?`<div style="padding:20px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:8px;font-size:13px">두 대학 간 대결 기록이 없습니다.</div>`:`
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 매치 기록 (${logs.length}건)</div>
+    <div style="overflow-x:auto">
+      <table style="min-width:300px"><thead><tr><th>날짜</th><th>대전 종류</th><th>스코어</th><th>결과</th></tr></thead><tbody>
+      ${logs.map(lg=>{
+        const aW=lg.sa>lg.sb, bW=lg.sb>lg.sa;
+        return `<tr>
+          <td style="color:var(--gray-l);font-size:11px">${lg.date}</td>
+          <td style="font-size:11px">${lg.mode}</td>
+          <td style="font-size:12px;font-weight:700"><span style="color:${aW?colA:'var(--text3)'}">${lg.sa}</span> : <span style="color:${bW?colB:'var(--text3)'}">${lg.sb}</span></td>
+          <td>${aW?`<span style="font-weight:700;color:${colA}">▶ ${_uvA} 승</span>`:bW?`<span style="font-weight:700;color:${colB}">▶ ${_uvB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table>
+    </div>`}`;
 }
 
 async function captureVsCard(){

@@ -192,7 +192,7 @@ function rCompLeague(tn){
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
-          ${!isDone?`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:100px">
@@ -416,7 +416,7 @@ function rBracketSchedule(tn){
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}
-          ${!isDone?`<span style="background:#f1f5f9;color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
+          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:100px">

@@ -197,7 +197,8 @@ function _b2NameTag(p, accentCol) {
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
       ${_b2Avatar(p, accentCol, 40)}
-      <span style="font-weight:700;font-size:14px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
+      <span style="font-weight:700;font-size:14px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
+      ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
     </div>`;
 }
 
@@ -212,7 +213,8 @@ function _b2PlayerRow(p, accentCol) {
       onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
       ${_b2Avatar(p, accentCol, 40)}
-      <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s">${p.name||''}</span>
+      <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
+      ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       ${race ? `<span style="font-size:12px;color:var(--text3)">${race}</span>` : ''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
     </div>`;

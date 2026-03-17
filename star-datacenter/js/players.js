@@ -111,7 +111,7 @@ function rTotal(C,T){
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
             ${p.photo?`<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:'<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
-            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
