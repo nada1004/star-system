@@ -437,15 +437,15 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='rank'){
     h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>!m.compName||m.compName===_ttCurComp) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록 <span style="font-weight:400;color:#a78bfa">(대회 미지정 기록 포함)</span></div>`;
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }
 
 function ttPlayerRankHTML(compName){
-  const filtered=compName ? ttM.filter(m=>!m.compName||m.compName===compName) : ttM;
+  const filtered=compName ? ttM.filter(m=>m.compName===compName) : ttM;
   const sc={};
   filtered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -1312,6 +1312,12 @@ function setBoardBgImgPos(univName, pos){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
   u.bgImgPos=pos;
+  save();render();
+}
+function setBoardBgImgSize(univName, size){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bgImgSize=size;
   save();render();
 }
 

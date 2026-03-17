@@ -117,8 +117,9 @@ function _b2UnivBlock(univName, col, members) {
   </div>` : '';
 
   const _bgPos = uCfg.bgImgPos || 'center center';
+  const _bgSize = uCfg.bgImgSize || 'cover';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')${_bgPos}/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}')${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
     : '';
 
   return `

@@ -394,7 +394,8 @@ function saveMatch(mode){
         else if (mode==='pro') proM.unshift(matchData);
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
-            ttM.unshift({...matchData, tierLabel: tLabel});
+            const _ttComp=(typeof _ttCurComp!=='undefined'&&_ttCurComp)||curComp||'';
+            ttM.unshift({...matchData, tierLabel: tLabel, ..._ttComp?{compName:_ttComp}:{}});
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');

@@ -445,7 +445,8 @@ function buildUnivBoardCard(u, forExport){
     const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
     const _bgPos=u.bgImgPos||'center center';
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}')${_bgPos}/cover no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`:'';
+    const _bgSize=u.bgImgSize||'cover';
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}')${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
@@ -475,7 +476,9 @@ function buildUnivBoardCard(u, forExport){
               <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 추가">⭐+</button>
               <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 제거">⭐-</button>
               <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지">🖼️${u.bgImg?'':''}<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uNameSafe}')"></label>
-              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${_uNameSafe}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>${_bgPosGrid}`:''}
+              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${_uNameSafe}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
+              <button onclick="event.stopPropagation();setBoardBgImgSize('${_uNameSafe}','${_bgSize==='cover'?'contain':'cover'}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':'채우기(cover)'}">${_bgSize==='cover'?'↔맞추기':'⬛채우기'}</button>
+              ${_bgPosGrid}`:''}
             </div>`:''}
           </div>`:''}
         </div>
