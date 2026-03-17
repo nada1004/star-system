@@ -693,7 +693,7 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏷️ 직책</div>
       <div style="display:flex;gap:3px;flex-wrap:wrap">
-        ${['이사장','총장','총괄','교수','코치','학생회장','오락부장'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
+        ${['이사장','총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
         <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;padding:2px 7px;color:#dc2626">해제</button>
       </div>
       <div style="display:flex;gap:4px;margin-top:4px">
