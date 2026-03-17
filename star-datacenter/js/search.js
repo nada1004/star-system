@@ -1919,7 +1919,8 @@ function pasteApply() {
       if(ab.playerB&&!mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
     const ttSA=ttSetsSnap.filter(s=>s.winner==='A').length, ttSB=ttSetsSnap.filter(s=>s.winner==='B').length;
-    ttM.unshift({_id:matchId,d:dateVal,n:compName||'',sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:compName||''});
+    const _ttSaveComp=compName||(typeof _ttCurComp!=='undefined'?_ttCurComp:'')||'';
+    ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:_ttSaveComp});
   }
   // individual: 개인 전적만 (이미 applyGameResult 처리됨)
 
@@ -2148,7 +2149,7 @@ function openTTPasteModal() {
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) {
     const inp = compWrap.querySelector('#paste-comp-name');
-    if (inp) inp.placeholder = '티어대회명 입력 (선택)';
+    if (inp) { inp.placeholder = '티어대회명 입력 (선택)'; if(_ttCurComp&&!inp.value) inp.value=_ttCurComp; }
     compWrap.style.display = 'flex';
   }
 }
