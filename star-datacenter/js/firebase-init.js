@@ -22,18 +22,20 @@ const dataRef = ref(db, '/');
 // 실시간 데이터 수신 → 일반 스크립트의 onFirebaseLoad 콜백으로 전달
 // 모듈은 비동기 로드되므로, 콜백이 아직 없으면 버퍼에 보관 후 나중에 전달
 let _pending = null;
+let _lastSnapshot = null; // 마지막 수신 데이터 보관 (포그라운드 복귀 시 재전달용)
+
 onValue(dataRef, (snapshot) => {
   const data = snapshot.val();
   if (!data) return;
+  _lastSnapshot = data;
   if (typeof window.onFirebaseLoad === 'function') {
     window.onFirebaseLoad(data);
   } else {
-    _pending = data; // 콜백 등록 전 도착한 데이터 버퍼링
+    _pending = data;
   }
 });
 
 // onFirebaseLoad가 나중에 등록될 때 버퍼 전달
-const _origDefine = Object.defineProperty;
 let _fbCallbackSet = false;
 (function pollCallback() {
   if (_fbCallbackSet) return;
@@ -45,6 +47,13 @@ let _fbCallbackSet = false;
     setTimeout(pollCallback, 200);
   }
 })();
+
+// 모바일 백그라운드 → 포그라운드 복귀 시 최신 데이터 재적용
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _lastSnapshot && typeof window.onFirebaseLoad === 'function') {
+    window.onFirebaseLoad(_lastSnapshot);
+  }
+});
 
 // 데이터 쓰기 함수 (관리자 전용 - cloud-board.js의 fbCloudSave 에서 호출)
 window.fbSet = async function(data, pw) {

@@ -33,15 +33,19 @@ function _applyCloudData(d) {
 // - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
 // - 로컬 데이터 없음 (첫 접속): 항상 적용
 window.onFirebaseLoad = function(data) {
-  const { admin_pw: _, ...clean } = data; // Firebase write 시 포함된 비밀번호 필드 제거
+  const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const hasLocal = typeof players !== 'undefined' && players && players.length > 0;
-  if (hasLocal && typeof isLoggedIn !== 'undefined' && isLoggedIn) return; // 관리자 편집 중 간섭 방지
+  // 관리자가 직접 편집 중일 때만 skip (su_fb_pw 있어야 쓰기 권한 = 실제 관리자)
+  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
+  if (isAdmin) return;
   _applyCloudData(clean);
-  if (typeof localSave === 'function') localSave(); else if (typeof save === 'function') save();
+  if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
+  // 마지막 Firebase 수신 시각 표시
+  const fbTs = document.getElementById('fbLastSync');
+  if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
 };
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
