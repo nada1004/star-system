@@ -244,7 +244,7 @@ function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    if (!localStorage.getItem('su_fb_pw')) {
+    if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
       // 비밀번호 미설정 → Firebase 저장 안 됨 경고
       if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
       return;

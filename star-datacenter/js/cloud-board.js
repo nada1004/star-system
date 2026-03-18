@@ -56,7 +56,7 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
+  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
   if (!window._forcingSync) {
     // 저장 중 → skip (race condition 방지)
     if (window._isSaving) return;
@@ -83,9 +83,11 @@ window.onFirebaseLoad = function(data) {
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
 };
 
+const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
+
 // Firebase에 현재 데이터 저장 (관리자 전용)
 async function fbCloudSave() {
-  const pw = localStorage.getItem('su_fb_pw');
+  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
@@ -1426,7 +1428,7 @@ async function checkFbSyncStatus(){
           <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ Firebase: ${fmt(fbSize*2)}`:'(Firebase 크기 미확인)'}</div>
         </div>
       </div>
-      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());setTimeout(checkFbSyncStatus,500);})()" style="width:100%">⬆️ 지금 Firebase에 업로드</button>`:''}
+      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 Firebase에 업로드</button>`:''}
     </div>`;
   el.innerHTML=rows;
 }
