@@ -3,7 +3,7 @@
    (ES Module - type="module" 로 로드)
 ══════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, onValue, get, set, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAM7YWzo13XEx7J57Z5OhGPs4GRvjZ-GzY",
@@ -19,14 +19,10 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const dataRef = ref(db, '/');
 
-// Firebase REST API URL (WebSocket 연결 없이 HTTP GET → 동시접속 제한 없음)
-const FIREBASE_REST_URL = 'https://stardata1004-default-rtdb.firebaseio.com/.json';
-const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
-
 let _pending = null;
 let _lastSnapshot = null;
+let _unsubscribeViewer = null; // 관람자 onValue 해제용
 
-// 데이터 전달 헬퍼
 function _deliver(data) {
   _lastSnapshot = data;
   if (typeof window.onFirebaseLoad === 'function') window.onFirebaseLoad(data);
@@ -46,25 +42,24 @@ let _fbCallbackSet = false;
   }
 })();
 
-// 관리자 판별: su_session(로그인) + su_fb_pw(Firebase 비밀번호) 둘 다 있으면 관리자 기기
+// 관리자 판별: su_session(로그인) + su_fb_pw(Firebase 비밀번호) 둘 다 있으면 관리자
 const _isAdminDevice = localStorage.getItem('su_session') === '1' && !!localStorage.getItem('su_fb_pw');
 
 if (_isAdminDevice) {
-  // ── 관리자 기기: Firebase WebSocket 실시간 구독 ──
+  // ── 관리자: Firebase onValue 실시간 WebSocket ──
   onValue(dataRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
     _deliver(data);
   });
 
-  // 포그라운드 복귀 시 Firebase에서 최신 데이터 강제 재요청
+  // 포그라운드 복귀 시 최신 데이터 강제 재요청
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
       try {
         const snapshot = await get(dataRef);
         const data = snapshot.val();
-        if (!data) return;
-        _deliver(data);
+        if (data) _deliver(data);
       } catch(e) {
         if (_lastSnapshot) _deliver(_lastSnapshot);
       }
@@ -72,62 +67,63 @@ if (_isAdminDevice) {
   });
 
 } else {
-  // ── 관람자 기기 ──
-  // onValue WebSocket 미사용 → 동시접속 100명 제한 없음 (수천 명 무료)
-  // Firebase REST API(HTTP) + GitHub CDN 폴링 조합
-  let _lastViewerSavedAt = 0;
-
-  async function viewerPoll() {
-    if (document.visibilityState !== 'visible') return;
-
-    // 1. GitHub Pages 먼저 시도 (관리자 GitHub 토큰 설정 시 CDN 무제한 처리)
-    try {
-      const ghRes = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
-      if (ghRes.ok) {
-        const ghData = await ghRes.json();
-        if (ghData && (ghData.savedAt || 0) > _lastViewerSavedAt) {
-          _lastViewerSavedAt = ghData.savedAt || 0;
-          _deliver(ghData);
-          return; // GitHub에서 최신 데이터 받았으면 Firebase 호출 불필요
-        }
-      }
-    } catch(e) {}
-
-    // 2. Firebase REST API 폴백 (GitHub 토큰 미설정 or GitHub에 새 데이터 없을 때)
-    // HTTP GET으로 WebSocket 연결 없이 데이터 조회 → 동시접속 제한 없음
-    try {
-      const fbRes = await fetch(FIREBASE_REST_URL + '?_=' + Date.now(), { cache: 'no-store' });
-      if (!fbRes.ok) return;
-      const fbData = await fbRes.json();
-      if (!fbData) return;
-      if ((fbData.savedAt || 0) > _lastViewerSavedAt) {
-        _lastViewerSavedAt = fbData.savedAt || 0;
-        _deliver(fbData);
-      }
-    } catch(e) {}
-  }
-
-  // 최초 로드: Firebase REST (빠르게 최신 데이터 획득)
-  (async () => {
-    try {
-      const res = await fetch(FIREBASE_REST_URL + '?_=' + Date.now(), { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data) { _lastViewerSavedAt = data.savedAt || 0; _deliver(data); }
-      }
-    } catch(e) {}
-  })();
-
-  // 30초마다 폴링
-  setInterval(viewerPoll, 30000);
-
-  // 포그라운드 복귀 시 즉시 폴링
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') viewerPoll();
+  // ── 관람자: onValue로 실시간 수신, 단 동시접속 절약을 위해 GitHub 토큰 있으면 폴링으로 전환 ──
+  // onValue 시작 (실시간, 즉시 반영)
+  _unsubscribeViewer = onValue(dataRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    _deliver(data);
   });
+
+  // 포그라운드 복귀 시 즉시 최신 데이터 재요청
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      try {
+        const snapshot = await get(dataRef);
+        const data = snapshot.val();
+        if (data) _deliver(data);
+      } catch(e) {
+        if (_lastSnapshot) _deliver(_lastSnapshot);
+      }
+    }
+  });
+
+  // GitHub 토큰 설정된 환경(수천 명 대비)에서는 onValue 해제 후 GitHub 폴링으로 전환
+  // data.json에 savedAt이 포함되면 자동 전환됨
+  setTimeout(async () => {
+    if (!_lastSnapshot || !_lastSnapshot.savedAt) return; // savedAt 없으면 전환 안 함
+    const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
+    try {
+      const res = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      const ghData = await res.json();
+      // GitHub data.json에 savedAt이 있고 Firebase와 같거나 최신이면 폴링으로 전환
+      if (ghData && ghData.savedAt && ghData.savedAt >= _lastSnapshot.savedAt) {
+        // onValue 해제 (WebSocket 연결 끊기)
+        off(dataRef);
+        _unsubscribeViewer = null;
+
+        // GitHub 30초 폴링으로 대체
+        let _lastSavedAt = ghData.savedAt;
+        async function ghPoll() {
+          if (document.visibilityState !== 'visible') return;
+          try {
+            const r = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
+            if (!r.ok) return;
+            const d = await r.json();
+            if (d && (d.savedAt || 0) > _lastSavedAt) {
+              _lastSavedAt = d.savedAt;
+              _deliver(d);
+            }
+          } catch(e) {}
+        }
+        setInterval(ghPoll, 30000);
+      }
+    } catch(e) {}
+  }, 5000); // 5초 후 GitHub 체크
 }
 
-// 데이터 쓰기 함수 (관리자 전용 - cloud-board.js의 fbCloudSave 에서 호출)
+// 데이터 쓰기 함수 (관리자 전용)
 window.fbSet = async function(data, pw) {
   const finalData = { ...data, admin_pw: pw };
   await set(dataRef, finalData);
