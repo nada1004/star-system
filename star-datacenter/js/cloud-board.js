@@ -35,10 +35,10 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  // 관리자가 10초 이내에 직접 저장한 경우만 skip (다른 PC 업데이트는 항상 반영)
+  // 저장 중이거나 30초 이내에 직접 저장한 경우만 skip (다른 PC 업데이트는 항상 반영)
   const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
-  const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 10000);
-  if (justSaved && !window._forcingSync) return;
+  const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 30000);
+  if ((justSaved || window._isSaving) && !window._forcingSync) return;
   _applyCloudData(clean);
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
@@ -52,12 +52,19 @@ window.onFirebaseLoad = function(data) {
 async function fbCloudSave() {
   const pw = localStorage.getItem('su_fb_pw');
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
+  // await 이전에 설정해야 race condition 방지 (Firebase echo가 await 완료 전에 도착하는 경우 대비)
+  window._lastAdminSaveTime = Date.now();
+  window._isSaving = true;
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM
   };
-  await window.fbSet(dataObj, pw);
-  window._lastAdminSaveTime = Date.now();
+  try {
+    await window.fbSet(dataObj, pw);
+    window._lastAdminSaveTime = Date.now(); // 완료 후 window 연장
+  } finally {
+    window._isSaving = false;
+  }
 }
 
 
