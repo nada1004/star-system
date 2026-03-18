@@ -228,6 +228,7 @@ function localSave(){
     localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
     localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
     localStorage.setItem('su_notices',JSON.stringify(notices));
+    localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
