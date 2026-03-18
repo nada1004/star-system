@@ -20,12 +20,33 @@ function _applyCloudData(d) {
   compNames=d.compNames||d.competitionNames||[];
   curComp=d.curComp||d.currentComp||'';
   proM=d.proM||d.pro||d.proMatches||[];
-  if(d.proTourneys!==undefined) proTourneys=d.proTourneys;  // undefined면 기존값 유지 (구버전 Firebase 데이터 호환)
+  if(d.proTourneys!==undefined) proTourneys=d.proTourneys;
   tourneys=d.tourneys||d.tournaments||d.tourney||[];
   ttM=d.ttM||d.tt||[];
   indM=d.indM||d.ind||[];
   gjM=d.gjM||[];
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
+  // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
+  if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
+    Object.keys(boardPlayerOrder).forEach(k=>delete boardPlayerOrder[k]);
+    Object.assign(boardPlayerOrder, d.boardPlayerOrder||{});
+    if(typeof saveBoardPlayerOrder==='function') saveBoardPlayerOrder();
+  }
+  // 현황판 대학 순서
+  if(d.boardOrder!==undefined&&typeof boardOrder!=='undefined') boardOrder=d.boardOrder;
+  // 맵 약자
+  if(d.userMapAlias!==undefined&&typeof userMapAlias!=='undefined') userMapAlias=d.userMapAlias;
+  // 선수 상태 아이콘
+  if(d.playerStatusIcons!==undefined&&typeof playerStatusIcons!=='undefined'){
+    Object.keys(playerStatusIcons).forEach(k=>delete playerStatusIcons[k]);
+    Object.assign(playerStatusIcons, d.playerStatusIcons||{});
+    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+  }
+  // 공지사항
+  if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
+  // 현재 대회 선택 상태
+  if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
+  if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -44,7 +65,8 @@ window.onFirebaseLoad = function(data) {
     // (Firebase 쓰기 실패했거나 에코가 아직 안 온 경우 로컬 데이터 보존)
     if (isAdmin && clean.savedAt !== undefined) {
       const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
-      if (localSavedAt > clean.savedAt) return;
+      // >= : 같은 시각(자기 자신이 저장한 에코)도 skip → refresh 시 불필요한 재렌더 방지
+      if (localSavedAt >= clean.savedAt) return;
     }
   }
   _applyCloudData(clean);
@@ -52,6 +74,11 @@ window.onFirebaseLoad = function(data) {
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
+  // 열려있는 선수 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
+  const _openModal = document.getElementById('playerModal');
+  if (_openModal && _openModal.style.display !== 'none' && window._playerModalCurrentName) {
+    if (typeof openPlayerModal === 'function') openPlayerModal(window._playerModalCurrentName);
+  }
   const fbTs = document.getElementById('fbLastSync');
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
 };
@@ -68,13 +95,28 @@ async function fbCloudSave() {
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
-    savedAt // Firebase 데이터에도 저장 시각 기록
+    boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
+    curProComp, _ttCurComp,
+    savedAt
   };
+  // 페이로드 크기 검사 (base64 사진 등 비정상적으로 큰 경우 경고)
+  try {
+    const _sz = JSON.stringify(dataObj).length;
+    if (_sz > 2 * 1024 * 1024) { // 2MB 초과 경고
+      const statusEl = document.getElementById('cloudStatus');
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 크기 ${(_sz/1024/1024).toFixed(1)}MB — 프로필 사진에 base64 이미지가 있으면 삭제하세요`; }
+      console.warn('[fbCloudSave] 페이로드 크기 경고:', (_sz/1024).toFixed(0)+'KB');
+    }
+  } catch(e) {}
   try {
     await window.fbSet(dataObj, pw);
-    window._lastAdminSaveTime = Date.now(); // 완료 후 window 연장
-    // GitHub data.json도 업로드 (관람자 폴링용, 실패해도 Firebase 저장은 유지)
+    window._lastAdminSaveTime = Date.now();
     githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
+  } catch(e) {
+    console.error('[fbCloudSave]', e);
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 저장 실패: ' + (e.message||e); setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},6000); }
+    throw e;
   } finally {
     window._isSaving = false;
   }
@@ -457,10 +499,12 @@ function buildUnivBoardCard(u, forExport){
       const nameFs=compact?'13px':'16px';
       const badgeFs=compact?'10px':'12px';
       const tierBadgeFs=compact?'9px':'11px';
+      // 사진 렌더: 사진 로드 실패 시 플레이스홀더(종족 텍스트) 표시
+      const _photoEl = photoSrcChip
+        ? `<span style="width:${photoSz};height:${photoSz};border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`
+        : `<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
-        ${photoSrcChip
-          ?`<img src="${photoSrcChip}" style="width:${photoSz};height:${photoSz};border-radius:50%;object-fit:cover;flex-shrink:0;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}" onerror="this.style.display='none'">`
-          :`<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
+        ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
           ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
           <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}</span>
@@ -848,6 +892,9 @@ function boardMovePlayer(playerName, univName, dir){
   order.splice(ni,0,playerName);
   boardPlayerOrder[univName] = order;
   saveBoardPlayerOrder();
+  // Firebase에도 순서 저장 (1.5초 debounce — 연속 이동 시 한 번만 저장)
+  clearTimeout(window._bpoSaveTm);
+  window._bpoSaveTm = setTimeout(() => { if(typeof save === 'function') save(); }, 1500);
   // 해당 카드만 다시 렌더
   _refreshBoardCard(univName);
 }

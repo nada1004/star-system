@@ -561,6 +561,45 @@ _proPasteResults      프로리그 파싱 결과
 
 ---
 
+### 2026-03-18 — Firebase 즉시 반영 / 직책 순서 / 대학 해체 버그 수정
+
+#### 1. 뷰어 즉시 반영 안 되는 버그 수정 (firebase-init.js)
+- **문제**: GitHub data.json에 `savedAt`이 있으면 `off(dataRef)` 호출로 `onValue` 연결 끊김 → GitHub 30초 폴링만 남아 즉시 반영 안 됨
+- **수정**: `off(dataRef)` 제거. `onValue`는 항상 유지하고 GitHub 폴링은 보조 백업으로만 사용
+
+#### 2. 직책 순서 flicker 및 다른 기기 순서 불일치 수정 (cloud-board.js)
+- **문제**: `boardPlayerOrder`가 Firebase에 저장 안 됨 → Firebase 수신 시 다른 기기에서 순서 달라짐
+- **수정**:
+  - `fbCloudSave()` `dataObj`에 `boardPlayerOrder` 추가
+  - `_applyCloudData()`: `d.boardPlayerOrder`가 있으면 `Object.assign`으로 복원 + localStorage 저장
+
+#### 3. 대학 해체 시 boardPlayerOrder 잔재 데이터 정리 (tier-tour.js)
+- **문제**: `confirmDissolve()` 에서 `boardPlayerOrder[u.name]` 삭제 없음 → 해체된 대학 순서 데이터 남아있음
+- **수정**: `delete boardPlayerOrder[u.name]; saveBoardPlayerOrder();` 추가
+
+---
+
+### 2026-03-18 — Firebase 누락 필드 동기화 + 프로필 사진 검증 버그 수정
+
+#### 1. Firebase에 누락된 필드들 추가 (cloud-board.js)
+- **문제**: `fbCloudSave()` dataObj에 `userMapAlias`, `boardOrder`, `playerStatusIcons`, `notices`, `curProComp`, `_ttCurComp` 없음 → 다른 기기에서 맵 약자/대학 순서/상태 아이콘/공지사항이 반영 안 됨
+- **수정**: 위 6개 필드 추가, `_applyCloudData()`에서도 복원 처리
+
+#### 2. boardPlayerOrder 머지 → 교체 수정 (cloud-board.js)
+- **문제**: `Object.assign(boardPlayerOrder, d.boardPlayerOrder)` — 삭제된 대학 키가 로컬에 남음
+- **수정**: `Object.keys().forEach(delete)` 후 `Object.assign` — 완전 교체
+
+#### 3. Firebase 페이로드 크기 경고 추가 (cloud-board.js)
+- **추가**: 저장 전 JSON 크기 계산 → 2MB 초과 시 황색 경고 메시지
+- **추가**: Firebase 저장 실패 시 에러 메시지에 구체적인 오류 내용 표시
+
+#### 4. 프로필 사진 base64 URL 차단 (tier-tour.js)
+- **문제**: `data:image/...` base64 URL 붙여넣기 → Firebase 페이로드 수십MB → 저장 실패
+- **수정**: `savePlayer()` + `addPlayer()`에서 `data:` 시작 URL 차단 알림
+- **추가**: 편집 모달 사진 입력 필드에 실시간 경고 표시 + 2000자 초과 확인 요청
+
+---
+
 ### 향후 작업 시 참고사항
 
 - 파싱 관련 수정 → `search.js` 의 `parsePasteLine`, `pastePreview`, `parseSetSeparator`

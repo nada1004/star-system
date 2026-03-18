@@ -1206,6 +1206,10 @@ function addPlayer(){
   if(players.find(p=>p.name===n)&&!confirm(`"${n}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 등록하시겠습니까?`))return;
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
+  if(_pPhoto){
+    if(_pPhoto.startsWith('data:')){alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n이미지를 imgur.com 등에 업로드 후 URL을 입력하세요.');return;}
+    if(_pPhoto.length>2000&&!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_pPhoto.length}자). 계속 저장하시겠습니까?`))return;
+  }
   players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
 }
@@ -1229,10 +1233,12 @@ function openEP(name){
     <input type="text" id="ed-role" value="${p.role||''}" placeholder="직책 직접 입력 또는 위 버튼 클릭" style="width:100%">
     <label>🖼 프로필 사진 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시 · 비워두면 기본 아이콘)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
-      <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="const v=this.value.trim();const img=document.getElementById('ed-photo-preview');if(v){img.src=v;img.style.display='block';}else{img.style.display='none';}">
-      <img id="ed-photo-preview" src="${p.photo||''}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;${p.photo?'':' display:none'}" onerror="this.style.display='none'">
+      <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="(function(el){const v=el.value.trim();const img=document.getElementById('ed-photo-preview');const warn=document.getElementById('ed-photo-warn');if(v&&v.startsWith('data:')){el.style.borderColor='#dc2626';if(warn){warn.style.color='#dc2626';warn.textContent='❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용';}}else{el.style.borderColor='';if(warn){warn.textContent='이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.';warn.style.color='var(--gray-l)';}}const wrap=document.getElementById('ed-photo-preview-wrap');if(v&&!v.startsWith('data:')){img.src=v;img.style.display='block';if(wrap)wrap.style.display='inline-block';}else{if(wrap)wrap.style.display='none';}})(this)">
+      <span id="ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${p.photo&&!p.photo.startsWith('data:')?'inline-block':'none'}">
+        <img id="ed-photo-preview" src="${p.photo&&!p.photo.startsWith('data:')?p.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none';const w=document.getElementById('ed-photo-warn');if(w){w.style.color='#d97706';w.textContent='⚠️ 이미지를 불러올 수 없습니다. 다른 도메인에서 차단됐거나 URL이 잘못됐을 수 있습니다.';}">
+      </span>
     </div>
-    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.</div>
+    <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
@@ -1394,6 +1400,15 @@ function savePlayer(){
   const _rv=(document.getElementById('ed-role')?.value||'').trim();
   p.role=_rv||undefined;
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
+  if(_photo){
+    if(_photo.startsWith('data:')){
+      alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+      return;
+    }
+    if(_photo.length>2000){
+      if(!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_photo.length}자).\n정상 URL인지 확인하세요. 계속 저장하시겠습니까?`)) return;
+    }
+  }
   p.photo=_photo||undefined;
   const _win=document.getElementById('ed-win');
   const _loss=document.getElementById('ed-loss');
@@ -1555,6 +1570,11 @@ function confirmDissolve(){
   u.dissolvedDate = date;
   if(movePlayers){
     players.forEach(p=>{ if(p.univ===u.name){ p.univ='무소속'; p.role=undefined; } });
+  }
+  // 해체된 대학의 현황판 수동 순서 데이터 정리
+  if(typeof boardPlayerOrder !== 'undefined' && boardPlayerOrder[u.name]){
+    delete boardPlayerOrder[u.name];
+    if(typeof saveBoardPlayerOrder === 'function') saveBoardPlayerOrder();
   }
   save();
   cm('dissolveModal');

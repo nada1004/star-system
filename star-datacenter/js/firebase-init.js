@@ -99,11 +99,10 @@ if (_isAdminDevice) {
       const ghData = await res.json();
       // GitHub data.json에 savedAt이 있고 Firebase와 같거나 최신이면 폴링으로 전환
       if (ghData && ghData.savedAt && ghData.savedAt >= _lastSnapshot.savedAt) {
-        // onValue 해제 (WebSocket 연결 끊기)
-        off(dataRef);
-        _unsubscribeViewer = null;
+        // onValue는 유지 (실시간 반영 보장) + GitHub 폴링을 보조로 추가
+        // off(dataRef) 제거 이유: onValue 끊으면 Firebase 즉시 반영이 안 됨
 
-        // GitHub 30초 폴링으로 대체
+        // GitHub 30초 폴링 (보조 - Firebase 백업용)
         let _lastSavedAt = ghData.savedAt;
         async function ghPoll() {
           if (document.visibilityState !== 'visible') return;
