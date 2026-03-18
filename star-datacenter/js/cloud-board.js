@@ -35,10 +35,18 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  // 저장 중이거나 30초 이내에 직접 저장한 경우만 skip (다른 PC 업데이트는 항상 반영)
   const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
-  const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 30000);
-  if ((justSaved || window._isSaving) && !window._forcingSync) return;
+  if (!window._forcingSync) {
+    // 저장 중 or 30초 이내 저장 → skip (race condition 방지)
+    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 30000);
+    if (justSaved || window._isSaving) return;
+    // 새로고침 후에도 보호: 로컬 저장 시각이 Firebase 저장 시각보다 최신이면 skip
+    // (Firebase 쓰기 실패했거나 에코가 아직 안 온 경우 로컬 데이터 보존)
+    if (isAdmin && clean.savedAt !== undefined) {
+      const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
+      if (localSavedAt > clean.savedAt) return;
+    }
+  }
   _applyCloudData(clean);
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
@@ -52,12 +60,15 @@ window.onFirebaseLoad = function(data) {
 async function fbCloudSave() {
   const pw = localStorage.getItem('su_fb_pw');
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
-  // await 이전에 설정해야 race condition 방지 (Firebase echo가 await 완료 전에 도착하는 경우 대비)
-  window._lastAdminSaveTime = Date.now();
+  const savedAt = Date.now();
+  // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
+  window._lastAdminSaveTime = savedAt;
   window._isSaving = true;
+  localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM
+    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
+    savedAt // Firebase 데이터에도 저장 시각 기록
   };
   try {
     await window.fbSet(dataObj, pw);
