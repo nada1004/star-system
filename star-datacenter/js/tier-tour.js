@@ -1428,7 +1428,11 @@ function savePlayer(){
   cm('emModal');
   render();
   if(typeof openPlayerModal==='function'){
-    setTimeout(()=>openPlayerModal(p.name),50);
+    const _savedName=p.name;
+    setTimeout(()=>{
+      const _p=players.find(x=>x.name===_savedName);
+      if(_p) openPlayerModal(_savedName);
+    },100);
   }
   }catch(e){
     console.error('[savePlayer] 오류:',e);

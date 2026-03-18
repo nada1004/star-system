@@ -148,23 +148,18 @@ function deletePlayerHist(playerName, histIdx){
     }
   }
   p.history.splice(histIdx,1);
-  // univM 세트 게임에서도 해당 경기 제거 → 순위 재계산 반영
+  // matchId로 해당 경기를 대전기록 배열에서도 완전 삭제
   if(hh.matchId){
-    const um=univM.find(m=>m._id===hh.matchId);
-    if(um&&um.sets){
-      um.sets.forEach(s=>{
-        if(!s.games)return;
-        const gi=s.games.findIndex(g=>(g.playerA===playerName||g.playerB===playerName)&&(g.playerA===hh.opp||g.playerB===hh.opp));
-        if(gi>=0){
-          s.games.splice(gi,1);
-          s.scoreA=s.games.filter(g=>g.winner==='A').length;
-          s.scoreB=s.games.filter(g=>g.winner==='B').length;
-          s.winner=s.scoreA>s.scoreB?'A':s.scoreB>s.scoreA?'B':'';
-        }
-      });
-      um.sets=um.sets.filter(s=>s.games&&s.games.length>0);
-      um.sa=um.sets.filter(s=>s.winner==='A').length;
-      um.sb=um.sets.filter(s=>s.winner==='B').length;
+    const mid=hh.matchId;
+    const _arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM,tt:ttM};
+    // mode로 배열 특정, 없으면 전체 탐색
+    const _modeArrKey={'미니대전':'mini','시빌워':'mini','대학대전':'univm','대학CK':'ck','프로리그':'pro','티어대회':'tt'};
+    const _targetKey=hh.mode?_modeArrKey[hh.mode]:null;
+    const _searchArrs=_targetKey?[[_targetKey,_arrMap[_targetKey]]]:Object.entries(_arrMap);
+    for(const [,arr] of _searchArrs){
+      if(!arr)continue;
+      const idx=arr.findIndex(m=>m._id===mid);
+      if(idx>=0){ arr.splice(idx,1); break; }
     }
   }
   if(typeof fixPoints==='function')fixPoints();

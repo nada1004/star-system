@@ -60,9 +60,14 @@ window.onFirebaseLoad = function(data) {
   if (!window._forcingSync) {
     // 저장 중 → skip (race condition 방지)
     if (window._isSaving) return;
-    // 저장 직후 3초: 자기 에코 방지 (window 변수라 새로고침 후 리셋됨)
+    // 저장 직후 3초: 자기 에코 빠른 방지 (window 변수라 새로고침 후 리셋됨)
     const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 3000);
     if (justSaved) return;
+    // 로컬 저장 시각 >= Firebase 저장 시각: 로컬이 같거나 더 최신 → skip (구 데이터 덮어씌우기 방지)
+    if (isAdmin && clean.savedAt !== undefined) {
+      const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
+      if (localSavedAt >= clean.savedAt) return;
+    }
   }
   _applyCloudData(clean);
   if (typeof localSave === 'function') localSave();
