@@ -407,6 +407,38 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
       }
     }
   }
+  // ttM 기록 처리
+  const proKey = `ptn_${tnId}_${ri}_${mi}`;
+  const existIdx = ttM.findIndex(r=>r._proKey===proKey);
+  if (existIdx>=0) ttM.splice(existIdx,1);
+  if (m.winner && m.a && m.b) {
+    const totalRounds = tn.bracket.length;
+    let rLabel;
+    if (ri===totalRounds-1) rLabel='결승';
+    else if (ri===totalRounds-2) rLabel='4강';
+    else if (ri===totalRounds-3&&totalRounds>2) rLabel='8강';
+    else rLabel=`${Math.pow(2,totalRounds-ri)}강`;
+    const wn=m.winner==='A'?m.a:m.b, ln=m.winner==='A'?m.b:m.a;
+    const pa=players.find(p=>p.name===m.a)||{name:m.a};
+    const pb=players.find(p=>p.name===m.b)||{name:m.b};
+    ttM.unshift({
+      _id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      _proKey:proKey,
+      d:new Date().toISOString().slice(0,10),
+      a:m.a, b:m.b, winner:m.winner,
+      map:m.map||'',
+      sa:m.winner==='A'?1:0, sb:m.winner==='B'?1:0,
+      compName:tn.name, n:tn.name, t:rLabel,
+      tierLabel:'프로리그토너먼트',
+      _bktRound:rLabel,
+      noSetMode:true,
+      teamALabel:m.a, teamBLabel:m.b,
+      teamAMembers:[{name:pa.name,univ:pa.univ||'',race:pa.race||'',tier:pa.tier||''}],
+      teamBMembers:[{name:pb.name,univ:pb.univ||'',race:pb.race||'',tier:pb.tier||''}],
+      sets:[{scoreA:m.winner==='A'?1:0,scoreB:m.winner==='B'?1:0,winner:m.winner,
+        games:[{playerA:m.a,playerB:m.b,winner:m.winner,map:m.map||''}]}]
+    });
+  }
   save(); render();
 }
 
