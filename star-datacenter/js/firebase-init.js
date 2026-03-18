@@ -19,6 +19,10 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const dataRef = ref(db, '/');
 
+// Firebase REST API URL (WebSocket 연결 없이 HTTP GET → 동시접속 제한 없음)
+const FIREBASE_REST_URL = 'https://stardata1004-default-rtdb.firebaseio.com/.json';
+const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
+
 let _pending = null;
 let _lastSnapshot = null;
 
@@ -68,37 +72,58 @@ if (_isAdminDevice) {
   });
 
 } else {
-  // ── 관람자 기기: onValue WebSocket 미사용 → 동시접속 100명 제한 회피 ──
-  // 최초 1회 Firebase get() (brief HTTP, persistent 연결 아님)
-  get(dataRef).then(snapshot => {
-    const data = snapshot.val();
-    if (data) _deliver(data);
-  }).catch(() => {});
+  // ── 관람자 기기 ──
+  // onValue WebSocket 미사용 → 동시접속 100명 제한 없음 (수천 명 무료)
+  // Firebase REST API(HTTP) + GitHub CDN 폴링 조합
+  let _lastViewerSavedAt = 0;
 
-  // GitHub Pages data.json 30초 폴링 (수천 명 무료 처리)
-  const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
-  let _lastGhSavedAt = 0;
-
-  async function pollGitHub() {
+  async function viewerPoll() {
     if (document.visibilityState !== 'visible') return;
+
+    // 1. GitHub Pages 먼저 시도 (관리자 GitHub 토큰 설정 시 CDN 무제한 처리)
     try {
-      const res = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data) return;
-      // 더 최신 데이터일 때만 적용 (불필요한 re-render 방지)
-      if ((data.savedAt || 0) > _lastGhSavedAt) {
-        _lastGhSavedAt = data.savedAt || 0;
-        _deliver(data);
+      const ghRes = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
+      if (ghRes.ok) {
+        const ghData = await ghRes.json();
+        if (ghData && (ghData.savedAt || 0) > _lastViewerSavedAt) {
+          _lastViewerSavedAt = ghData.savedAt || 0;
+          _deliver(ghData);
+          return; // GitHub에서 최신 데이터 받았으면 Firebase 호출 불필요
+        }
+      }
+    } catch(e) {}
+
+    // 2. Firebase REST API 폴백 (GitHub 토큰 미설정 or GitHub에 새 데이터 없을 때)
+    // HTTP GET으로 WebSocket 연결 없이 데이터 조회 → 동시접속 제한 없음
+    try {
+      const fbRes = await fetch(FIREBASE_REST_URL + '?_=' + Date.now(), { cache: 'no-store' });
+      if (!fbRes.ok) return;
+      const fbData = await fbRes.json();
+      if (!fbData) return;
+      if ((fbData.savedAt || 0) > _lastViewerSavedAt) {
+        _lastViewerSavedAt = fbData.savedAt || 0;
+        _deliver(fbData);
       }
     } catch(e) {}
   }
 
-  setInterval(pollGitHub, 30000);
+  // 최초 로드: Firebase REST (빠르게 최신 데이터 획득)
+  (async () => {
+    try {
+      const res = await fetch(FIREBASE_REST_URL + '?_=' + Date.now(), { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data) { _lastViewerSavedAt = data.savedAt || 0; _deliver(data); }
+      }
+    } catch(e) {}
+  })();
+
+  // 30초마다 폴링
+  setInterval(viewerPoll, 30000);
 
   // 포그라운드 복귀 시 즉시 폴링
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') pollGitHub();
+    if (document.visibilityState === 'visible') viewerPoll();
   });
 }
 
