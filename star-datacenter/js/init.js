@@ -103,7 +103,6 @@ initDark();
       compNames= d.compNames|| d.competitionNames || [];
       curComp  = d.curComp  || d.currentComp || '';
       proM     = d.proM     || d.pro     || d.proMatches  || [];
-      members  = d.members  || d.member  || [];
       tourneys = d.tourneys || d.tournaments || d.tourney || [];
       ttM      = d.ttM      || d.tt      || [];
       if(d.notices && d.notices.length) notices = d.notices;

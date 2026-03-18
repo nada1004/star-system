@@ -20,7 +20,6 @@ function _applyCloudData(d) {
   compNames=d.compNames||d.competitionNames||[];
   curComp=d.curComp||d.currentComp||'';
   proM=d.proM||d.pro||d.proMatches||[];
-  members=d.members||d.member||[];
   tourneys=d.tourneys||d.tournaments||d.tourney||[];
   ttM=d.ttM||d.tt||[];
   indM=d.indM||d.ind||[];
@@ -49,7 +48,7 @@ async function fbCloudSave() {
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, tiers: TIERS, members, tourneys, ttM, indM, gjM
+    compNames, curComp, proM, tiers: TIERS, tourneys, ttM, indM, gjM
   };
   await window.fbSet(dataObj, pw);
 }

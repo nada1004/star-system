@@ -1191,14 +1191,6 @@ function addPlayer(){
   players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
 }
-function recMatch(){
-  const wN=document.getElementById('ws').value.trim();const lN=document.getElementById('ls').value.trim();
-  const w=players.find(p=>p.name===wN);const l=players.find(p=>p.name===lN);
-  if(!w||!l||w===l)return alert('선수를 올바르게 선택하세요.');
-  const m=document.getElementById('m-map').value;const d=document.getElementById('m-date').value;
-  applyGameResult(wN,lN,d,m,genId(),'','','개인전');
-  document.getElementById('ws').value='';document.getElementById('ls').value='';save();render();
-}
 function openEP(name){
   editName=name;const p=players.find(x=>x.name===name);
   document.getElementById('emBody').innerHTML=`
