@@ -58,14 +58,14 @@ window.onFirebaseLoad = function(data) {
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
   const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
   if (!window._forcingSync) {
-    // 저장 중 or 30초 이내 저장 → skip (race condition 방지)
-    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 30000);
-    if (justSaved || window._isSaving) return;
+    // 저장 중 → skip (race condition 방지)
+    if (window._isSaving) return;
     // 새로고침 후에도 보호: 로컬 저장 시각이 Firebase 저장 시각보다 최신이면 skip
-    // (Firebase 쓰기 실패했거나 에코가 아직 안 온 경우 로컬 데이터 보존)
+    // (자기 자신의 에코 또는 로컬 데이터가 더 최신인 경우)
     if (isAdmin && clean.savedAt !== undefined) {
       const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
       // >= : 같은 시각(자기 자신이 저장한 에코)도 skip → refresh 시 불필요한 재렌더 방지
+      // 다른 기기에서 더 최신 데이터가 오면(clean.savedAt > localSavedAt) 반드시 적용
       if (localSavedAt >= clean.savedAt) return;
     }
   }
