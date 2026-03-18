@@ -163,7 +163,8 @@ function doFile(inp){
 function refreshSel(){
   const allU=getAllUnivs().filter(u=>!u.dissolved);
   document.getElementById('p-univ').innerHTML=allU.map(u=>`<option value="${u.name}"${u.name==='무소속'?' selected':''}>${u.name}</option>`).join('');
-  document.getElementById('m-map').innerHTML=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
+  const mmap=document.getElementById('m-map');
+  if(mmap) mmap.innerHTML=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
 }
 function openGameEditModal(editRef, si, gi){
   const [mode, idxStr]=editRef.split(':');

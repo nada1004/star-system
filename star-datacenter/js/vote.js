@@ -19,13 +19,14 @@ function rVote(C,T){
     const myVote = voteData[key+'_my'];
     const pctA = total===0?50:Math.round(v.a/total*100);
     const pctB = 100-pctA;
-    const aCol = gc((miniM.find(m=>getVoteKey(m)===key)||{}).a||'');
-    const bCol = gc((miniM.find(m=>getVoteKey(m)===key)||{}).b||'');
+    const _vm=miniM.find(m=>getVoteKey(m)===key)||{};
+    const aCol = gc(_vm.a||'');
+    const bCol = gc(_vm.b||'');
     return `
       <div style="margin-top:10px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-bottom:4px">
           <span>🗳️ 총 ${total}표</span>
-          ${myVote?`<span style="color:var(--blue);font-weight:700">✅ 내 예측: ${myVote==='a'?(miniM.find(m=>getVoteKey(m)===key)||{}).a||'A':(miniM.find(m=>getVoteKey(m)===key)||{}).b||'B'}</span>`:''}
+          ${myVote?`<span style="color:var(--blue);font-weight:700">✅ 내 예측: ${myVote==='a'?_vm.a||'A':_vm.b||'B'}</span>`:''}
         </div>
         <div style="display:flex;height:22px;border-radius:20px;overflow:hidden;background:#f1f5f9">
           <div style="width:${pctA}%;background:${aCol||'var(--blue)'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;transition:.4s">${pctA}%</div>
@@ -141,13 +142,19 @@ function cancelVote(key){
 function sf(u,t){fUniv=u;fTier=t;render();}
 function fsearch(type){
   const id=type==='w'?'ws':'ls';const lid=type==='w'?'wl':'ll';
-  const v=document.getElementById(id).value.toLowerCase();
-  const d=document.getElementById(lid);
+  const inp=document.getElementById(id);const d=document.getElementById(lid);
+  if(!inp||!d)return;
+  const v=inp.value.toLowerCase();
   const f=players.filter(p=>p.name.toLowerCase().includes(v));
   if(v&&f.length){d.innerHTML=f.map(p=>`<div class="sitem" onclick="selP('${type}','${p.name}')">${p.name} <span style="color:var(--gray-l);font-size:11px">(${p.univ})</span></div>`).join('');d.style.display='block';}
   else d.style.display='none';
 }
-function selP(type,name){document.getElementById(type==='w'?'ws':'ls').value=name;document.getElementById(type==='w'?'wl':'ll').style.display='none';}
+function selP(type,name){
+  const inp=document.getElementById(type==='w'?'ws':'ls');
+  const d=document.getElementById(type==='w'?'wl':'ll');
+  if(inp) inp.value=name;
+  if(d) d.style.display='none';
+}
 function upTour(i,v){tourD[i]=v;save();render();}
 function om(id){const el=document.getElementById(id);if(el)el.style.display='block';}
 function cm(id){

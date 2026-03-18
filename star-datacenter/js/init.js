@@ -40,8 +40,6 @@ function init(){
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
   try{refreshSel();}catch(e){}
-  const mdate=document.getElementById('m-date');
-  if(mdate) mdate.valueAsDate=new Date();
   initLoginHash();
   applyLoginState();
   render();
