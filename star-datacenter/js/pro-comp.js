@@ -268,48 +268,77 @@ function proCompGrpRank(tn) {
 function proCompBracket(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   if (!tn.bracket || !tn.bracket.length) {
+    const hasGroups = tn.groups && tn.groups.length>0 && tn.groups.some(g=>(g.players||[]).length>0||(g.matches||[]).length>0);
     return `<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:36px;margin-bottom:12px">🗂️</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:8px">대진표가 없습니다</div>
-      <div style="color:var(--gray-l);margin-bottom:20px;font-size:13px">조별 순위 확정 후 관리자가 대진표를 생성합니다.</div>
-      ${isLoggedIn?`<button class="btn btn-b" onclick="proCompInitBracket('${tn.id}')">🎯 대진표 생성</button>`:''}
+      ${isLoggedIn?`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+        ${hasGroups?`<button class="btn btn-b" onclick="proCompInitBracket('${tn.id}')">🏆 조별 순위로 대진표 생성</button>`:''}
+        <button class="btn btn-w" onclick="proCompInitBracketManual('${tn.id}')">✍️ 직접 대진표 만들기</button>
+      </div>`:''}
     </div>`;
   }
-  let h = `<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:16px">🗂️ ${tn.name} — 대진표</div>`;
   const rounds = tn.bracket;
-  h += `<div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:12px">`;
+  const _pc = name => { const p=players.find(x=>x.name===name); return p||null; };
+  const _photo = (name, isWin) => {
+    const p=_pc(name); if(!name||name==='TBD') return `<div style="width:28px;height:28px;border-radius:50%;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px">❓</div>`;
+    return p&&p.photo
+      ?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isWin?'#16a34a':'var(--border)'}" onerror="this.style.display='none'">`
+      :`<div style="width:28px;height:28px;border-radius:50%;background:${gc(p?.univ||'')};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff">${name[0]}</div>`;
+  };
+  const _info = name => {
+    const p=_pc(name); if(!p) return '';
+    return `<span style="font-size:9px;color:var(--gray-l);white-space:nowrap">${p.univ||''}${p.tier?' · '+p.tier:''}</span>`;
+  };
+  let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🗂️ ${tn.name} — 대진표</div>`;
+  // 라운드 레이블 행
+  const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
+  const rndColor = ri => ri===rounds.length-1?'#f59e0b':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
+  h += `<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start">`;
   rounds.forEach((rnd, ri) => {
-    const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
-    h += `<div style="min-width:160px;flex-shrink:0">
-      <div style="text-align:center;font-size:11px;font-weight:800;color:var(--blue);margin-bottom:8px;padding:4px;background:var(--blue-l);border-radius:6px">${rndLabel}</div>
-      <div style="display:flex;flex-direction:column;gap:${ri===0?8:Math.pow(2,ri)*8+8}px">`;
+    const lbl = rndLabel(ri); const col = rndColor(ri);
+    const gap = ri===0?10:(Math.pow(2,ri)*56+10);
+    h += `<div style="min-width:180px;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
+      <div style="width:100%;text-align:center;font-size:11px;font-weight:800;color:#fff;margin-bottom:10px;padding:5px 8px;background:${col};border-radius:8px;box-shadow:0 2px 6px ${col}55">${lbl}</div>
+      <div style="width:100%;display:flex;flex-direction:column;gap:${gap}px">`;
     rnd.forEach((m, mi) => {
-      const aWin = m.winner==='A';
-      const bWin = m.winner==='B';
-      const isDone = !!m.winner;
-      h += `<div style="border:1.5px solid ${isDone?'var(--blue)':'var(--border)'};border-radius:8px;overflow:hidden;background:var(--white);box-shadow:0 2px 8px rgba(0,0,0,.06)">
-        <div style="padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px;font-weight:${aWin?'800':'400'};color:${aWin?'#16a34a':'var(--text)'};background:${aWin?'#dcfce7':'var(--white)'};display:flex;align-items:center;justify-content:space-between">
-          <span>${m.a||'TBD'}</span>
-          ${aWin?'<span style="font-size:10px;font-weight:900;color:#16a34a">WIN</span>':''}
+      const aWin=m.winner==='A', bWin=m.winner==='B', isDone=!!m.winner;
+      const hasBoth = m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD';
+      h += `<div style="border:2px solid ${isDone?col:'var(--border2)'};border-radius:10px;overflow:hidden;background:var(--white);box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <div style="padding:8px 10px;border-bottom:1px solid var(--border);background:${aWin?'#dcfce7':m.a&&m.a!=='TBD'?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
+          ${_photo(m.a, aWin)}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:${aWin?'800':'500'};color:${aWin?'#16a34a':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.a||'TBD'}</div>
+            ${_info(m.a)}
+          </div>
+          ${aWin?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">WIN</span>':''}
         </div>
-        <div style="padding:7px 10px;font-size:12px;font-weight:${bWin?'800':'400'};color:${bWin?'#16a34a':'var(--text)'};background:${bWin?'#dcfce7':'var(--white)'};display:flex;align-items:center;justify-content:space-between">
-          <span>${m.b||'TBD'}</span>
-          ${bWin?'<span style="font-size:10px;font-weight:900;color:#16a34a">WIN</span>':''}
+        <div style="padding:8px 10px;background:${bWin?'#dcfce7':m.b&&m.b!=='TBD'?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
+          ${_photo(m.b, bWin)}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:${bWin?'800':'500'};color:${bWin?'#16a34a':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.b||'TBD'}</div>
+            ${_info(m.b)}
+          </div>
+          ${bWin?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">WIN</span>':''}
         </div>
-        ${isLoggedIn?`<div style="padding:4px 6px;background:var(--surface);display:flex;gap:3px">
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${m.a||'A'} 승</button>
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${m.b||'B'} 승</button>
+        ${m.map?`<div style="padding:2px 10px;font-size:10px;color:var(--gray-l);background:var(--surface);border-top:1px solid var(--border)">📍 ${m.map}</div>`:''}
+        ${isLoggedIn&&hasBoth?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap">
+          <button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,4)} 승</button>
+          <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,4)} 승</button>
+          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵 입력">📍</button>
+          ${isLoggedIn&&ri===0?`<button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 변경">✏️</button>`:''}
+        </div>`:''}
+        ${isLoggedIn&&!hasBoth&&ri===0?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border)">
+          <button class="btn btn-xs" style="width:100%;font-size:9px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})">✏️ 선수 입력</button>
         </div>`:''}
       </div>`;
     });
     h += `</div></div>`;
   });
   h += `</div>`;
-  if (isLoggedIn) {
-    h += `<div style="margin-top:12px;display:flex;gap:8px">
-      <button class="btn btn-r btn-sm" onclick="proCompResetBracket('${tn.id}')">🔄 대진표 초기화</button>
-    </div>`;
-  }
+  if (isLoggedIn) h += `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-r btn-sm" onclick="proCompResetBracket('${tn.id}')">🔄 대진표 초기화</button>
+  </div>`;
   return h;
 }
 
@@ -352,16 +381,74 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   if (!tn||!tn.bracket) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
+  const prevWinner = m.winner;
   m.winner = m.winner===winner ? '' : winner;
-  // 다음 라운드에 승자 전파
-  if (m.winner && tn.bracket[ri+1]) {
-    const nextMi = Math.floor(mi/2);
-    const isA = mi%2===0;
-    const winner_name = m.winner==='A' ? m.a : m.b;
-    if (!tn.bracket[ri+1][nextMi]) tn.bracket[ri+1][nextMi] = {a:'', b:'', winner:''};
-    if (isA) tn.bracket[ri+1][nextMi].a = winner_name;
-    else     tn.bracket[ri+1][nextMi].b = winner_name;
+  const nextMi = Math.floor(mi/2);
+  const isA = mi%2===0;
+  if (tn.bracket[ri+1]&&tn.bracket[ri+1][nextMi]) {
+    const next = tn.bracket[ri+1][nextMi];
+    if (m.winner) {
+      // 승자 전파
+      const wName = m.winner==='A'?m.a:m.b;
+      if (isA) next.a=wName; else next.b=wName;
+    } else {
+      // 승자 취소 시 다음 라운드 해당 슬롯 초기화 + 이후 라운드 연쇄 초기화
+      if (isA) next.a=''; else next.b='';
+      next.winner='';
+      // 이후 라운드 연쇄 초기화
+      let curMi=nextMi;
+      for (let r=ri+2; r<tn.bracket.length; r++) {
+        const nxt2Mi=Math.floor(curMi/2);
+        const isA2=curMi%2===0;
+        if (!tn.bracket[r]||!tn.bracket[r][nxt2Mi]) break;
+        if (isA2) tn.bracket[r][nxt2Mi].a=''; else tn.bracket[r][nxt2Mi].b='';
+        tn.bracket[r][nxt2Mi].winner='';
+        curMi=nxt2Mi;
+      }
+    }
   }
+  save(); render();
+}
+
+function proCompBktSetMap(tnId, ri, mi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.bracket) return;
+  const m = tn.bracket[ri][mi];
+  if (!m) return;
+  const map = prompt('맵을 입력하세요:', m.map||'');
+  if (map===null) return;
+  m.map = map.trim();
+  save(); render();
+}
+
+function proCompBktEditPlayers(tnId, ri, mi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.bracket) return;
+  const m = tn.bracket[ri][mi];
+  if (!m) return;
+  const a = prompt('A 선수 이름:', m.a||'');
+  if (a===null) return;
+  const b = prompt('B 선수 이름:', m.b||'');
+  if (b===null) return;
+  m.a = a.trim(); m.b = b.trim(); m.winner='';
+  save(); render();
+}
+
+function proCompInitBracketManual(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const szStr = prompt('대진표 규모를 선택하세요:\n2 = 결승\n4 = 4강\n8 = 8강\n16 = 16강\n\n참가 인원 수를 입력하세요:', '4');
+  if (!szStr) return;
+  let sz = parseInt(szStr);
+  if (isNaN(sz)||sz<2) return alert('2 이상의 숫자를 입력하세요.');
+  // 올림으로 2의 거듭제곱
+  let p=1; while(p<sz) p*=2; sz=p;
+  const firstRound=[];
+  for(let i=0;i<sz;i+=2) firstRound.push({a:'',b:'',winner:''});
+  const rounds=[firstRound];
+  let cur=firstRound.length;
+  while(cur>1){cur=Math.floor(cur/2);const rnd=[];for(let i=0;i<cur;i++)rnd.push({a:'',b:'',winner:''});rounds.push(rnd);}
+  tn.bracket=rounds;
   save(); render();
 }
 
