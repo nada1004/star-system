@@ -1453,8 +1453,9 @@ function addPlayer(){
   if(!n)return alert('이름을 입력하세요.');
   if(players.find(p=>p.name===n)&&!confirm(`"${n}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 등록하시겠습니까?`))return;
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
-  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,win:0,loss:0,points:0,history:[]});
-  document.getElementById('p-name').value='';save();render();
+  const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
+  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
+  document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
 }
 function recMatch(){
   const wN=document.getElementById('ws').value.trim();const lN=document.getElementById('ls').value.trim();

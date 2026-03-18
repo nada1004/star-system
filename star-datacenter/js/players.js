@@ -3,7 +3,7 @@
 ══════════════════════════════════════ */
 let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
 let totalSearch=''; // 스트리머 탭 이름 검색
-let totalHideNoRecord=true; // 전적 없는 선수 숨기기
+let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let totalShowRetired=false; // 은퇴 선수 표시
 
 function rTotal(C,T){
