@@ -20,7 +20,7 @@ function _applyCloudData(d) {
   compNames=d.compNames||d.competitionNames||[];
   curComp=d.curComp||d.currentComp||'';
   proM=d.proM||d.pro||d.proMatches||[];
-  proTourneys=d.proTourneys||[];
+  if(d.proTourneys!==undefined) proTourneys=d.proTourneys;  // undefined면 기존값 유지 (구버전 Firebase 데이터 호환)
   tourneys=d.tourneys||d.tournaments||d.tourney||[];
   ttM=d.ttM||d.tt||[];
   indM=d.indM||d.ind||[];
