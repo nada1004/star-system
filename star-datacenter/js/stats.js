@@ -270,8 +270,8 @@ function initEloChart(){
   // ELO 재구성: eloAfter 필드 사용
   const pts=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
-    if(h.eloAfter!=null)pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||''});
-    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||''});}
+    if(h.eloAfter!=null)pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0});
+    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0});}
   });
   if(!pts.length)return;
   const ctx=canvas.getContext('2d');
@@ -328,6 +328,28 @@ function initEloChart(){
   // 검색 인풋 동기화
   const inp=document.getElementById('elo-search-input');
   if(inp)inp.value=_eloSelPlayer;
+  // 호버 툴팁
+  let _eloTip=document.getElementById('eloChartTip');
+  if(!_eloTip){
+    _eloTip=document.createElement('div');
+    _eloTip.id='eloChartTip';
+    _eloTip.style.cssText='position:fixed;display:none;background:rgba(15,23,42,.92);color:#fff;font-size:11px;padding:7px 11px;border-radius:9px;pointer-events:none;white-space:nowrap;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);line-height:1.6';
+    document.body.appendChild(_eloTip);
+  }
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(W/rect.width);
+    let ci=0,md=Infinity;
+    pts.forEach((pt,i)=>{const d=Math.abs(mapX(pt.i)-mx);if(d<md){md=d;ci=i;}});
+    if(md*(rect.width/W)<32){
+      const pt=pts[ci];const sign=(pt.eloDelta||0)>=0?'+':'';
+      _eloTip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#86efac':'#fca5a5'}">${pt.result}</span><br>${sign}${pt.eloDelta||0} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>`;
+      _eloTip.style.display='block';
+      _eloTip.style.left=(e.clientX>window.innerWidth/2?e.clientX-145:e.clientX+12)+'px';
+      _eloTip.style.top=(e.clientY-50)+'px';
+    } else _eloTip.style.display='none';
+  };
+  canvas.onmouseleave=()=>{if(_eloTip)_eloTip.style.display='none';};
 }
 
 /* ══════════════════════════════════════

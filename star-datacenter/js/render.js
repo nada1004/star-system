@@ -117,6 +117,7 @@ function openPlayerModal(name){
   // 현재 모달에 표시 중인 선수명 저장
   window._playerModalCurrentName=name;
   om('playerModal');
+  setTimeout(()=>initPEloChart(name),60);
 }
 
 // openEPFromModal은 openEP와 같은 파일(tier-tour.js)에 정의됨
@@ -466,6 +467,23 @@ function buildPlayerDetailHTML(p){
     </div>
   </div>`;
 
+  // ── ELO 추이 차트 ──
+  const _eloHistPts=(p.history||[]).filter(h=>h.eloDelta!=null||h.eloAfter!=null);
+  if(_eloHistPts.length>=3){
+    h+=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
+        ELO 변화 추이
+        <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloHistPts.length}경기</span>
+        <span style="font-size:10px;font-weight:700;margin-left:auto;color:${eloColor}">${eloVal}</span>
+      </div>
+      <div style="position:relative">
+        <canvas id="pEloChart" style="width:100%;height:140px;display:block"></canvas>
+        <div id="pEloTip" style="position:absolute;display:none;background:rgba(15,23,42,.92);color:#fff;font-size:10px;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:nowrap;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>`;
+  }
+
   // ── 종족별 승률 ──
   h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">`;
   RACES.forEach(r=>{
@@ -799,4 +817,81 @@ function rMergedPro(C, T) {
   else                       { if(typeof rProComp==='function') rProComp(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);
+}
+
+/* ══════════════════════════════════════
+   선수 모달 ELO 추이 차트
+══════════════════════════════════════ */
+function initPEloChart(name){
+  const p=players.find(x=>x.name===name);
+  const canvas=document.getElementById('pEloChart');
+  const tip=document.getElementById('pEloTip');
+  if(!p||!canvas)return;
+  const hist=[...(p.history||[])].reverse();
+  const pts=[];let elo=ELO_DEFAULT;
+  hist.forEach((h,i)=>{
+    if(h.eloAfter!=null) pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
+    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
+  });
+  if(pts.length<2){canvas.style.display='none';return;}
+  const W=canvas.offsetWidth||canvas.parentElement?.offsetWidth||300;
+  const H=140;
+  canvas.width=W;canvas.height=H;
+  const pad={t:14,r:14,b:32,l:46};
+  const minE=Math.min(...pts.map(x=>x.elo))-15;
+  const maxE=Math.max(...pts.map(x=>x.elo))+15;
+  const mapX=i=>(i/(pts.length-1||1))*(W-pad.l-pad.r)+pad.l;
+  const mapY=e=>H-pad.b-((e-minE)/(maxE-minE||1))*(H-pad.t-pad.b);
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+  for(let g=0;g<=3;g++){
+    const y=pad.t+g*(H-pad.t-pad.b)/3;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#94a3b8';ctx.font='9px sans-serif';ctx.textAlign='right';
+    ctx.fillText(Math.round(maxE-g*(maxE-minE)/3),pad.l-3,y+3);
+  }
+  if(minE<1200&&maxE>1200){
+    const by=mapY(1200);
+    ctx.strokeStyle='#cbd5e1';ctx.setLineDash([3,3]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,by);ctx.lineTo(W-pad.r,by);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,'rgba(124,58,237,.18)');grad.addColorStop(1,'rgba(124,58,237,0)');
+  ctx.beginPath();ctx.moveTo(mapX(0),mapY(pts[0].elo));
+  pts.forEach(pt=>ctx.lineTo(mapX(pt.i),mapY(pt.elo)));
+  ctx.lineTo(mapX(pts.length-1),H-pad.b);ctx.lineTo(mapX(0),H-pad.b);
+  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#7c3aed';ctx.lineWidth=2;
+  ctx.moveTo(mapX(0),mapY(pts[0].elo));
+  pts.forEach(pt=>ctx.lineTo(mapX(pt.i),mapY(pt.elo)));
+  ctx.stroke();
+  pts.forEach(pt=>{
+    ctx.beginPath();ctx.arc(mapX(pt.i),mapY(pt.elo),3,0,Math.PI*2);
+    ctx.fillStyle=pt.result==='승'?'#16a34a':'#dc2626';
+    ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke();
+  });
+  ctx.fillStyle='#64748b';ctx.font='9px sans-serif';ctx.textAlign='center';
+  [0,Math.floor((pts.length-1)/2),pts.length-1].filter((v,i,a)=>a.indexOf(v)===i).forEach(idx=>{
+    if(pts[idx]&&pts[idx].date)ctx.fillText(pts[idx].date.slice(5)||'',mapX(idx),H-pad.b+12);
+  });
+  if(tip){
+    canvas.onmousemove=e=>{
+      const rect=canvas.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)*(W/rect.width);
+      let ci=0,md=Infinity;
+      pts.forEach((pt,i)=>{const d=Math.abs(mapX(pt.i)-mx);if(d<md){md=d;ci=i;}});
+      if(md<28){
+        const pt=pts[ci];const sign=pt.delta>=0?'+':'';
+        tip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#86efac':'#fca5a5'}">${pt.result}</span><br>${sign}${pt.delta} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>`;
+        const tx=mapX(ci)*(rect.width/W);
+        const ty=mapY(pt.elo)*(rect.height/H);
+        tip.style.display='block';
+        tip.style.left=(tx>rect.width/2?tx-130:tx+10)+'px';
+        tip.style.top=Math.max(0,ty-10)+'px';
+      } else tip.style.display='none';
+    };
+    canvas.onmouseleave=()=>{tip.style.display='none';};
+  }
 }
