@@ -103,7 +103,7 @@ function rTotal(C,T){
         if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?9:8}">▷ 일반 선수 (${_normalPl.length}명)</td></tr>`;
         return;
       }
-      if(!_inRoleSection && p.tier!==lt){lt=p.tier;tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?9:8}">▷ ${getTierLabel(p.tier)}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?9:8}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       tableHTML+=`<tr>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
@@ -337,7 +337,7 @@ function rTier(C,T){
 
   let list=[...players]; // 모든 선수 표시 (승패 기록 없어도)
   if(fUniv!=='전체')list=list.filter(p=>p.univ===fUniv);
-  if(fTier!=='전체')list=list.filter(p=>p.tier===fTier);
+  if(fTier!=='전체')list=list.filter(p=>fTier==='미정'?(p.tier==='미정'||!p.tier):p.tier===fTier);
   // 종족 필터 적용
   if(window._tierRaceFilter&&window._tierRaceFilter!=='전체') list=list.filter(p=>p.race===window._tierRaceFilter);
   // 전적없는 선수 숨기기
@@ -419,7 +419,7 @@ function rTier(C,T){
     _typeSum=sumMap;
     list.sort((a,b)=>(sumMap[b.name]||0)-(sumMap[a.name]||0));
   }
-  else if(tierRankMode==='tier') list.sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+  else if(tierRankMode==='tier'){const _ti=t=>{ const i=TIERS.indexOf(t||'미정'); return i<0?TIERS.length:i; }; list.sort((a,b)=>_ti(a.tier)-_ti(b.tier)||b.points-a.points);}
   else if(tierRankMode==='wins') list.sort((a,b)=>b.win-a.win||a.loss-b.loss);
   else if(tierRankMode==='winrate'){
     list=list.filter(p=>(p.win+p.loss)>=1);
