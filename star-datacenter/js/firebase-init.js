@@ -19,23 +19,17 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const dataRef = ref(db, '/');
 
-// 실시간 데이터 수신 → 일반 스크립트의 onFirebaseLoad 콜백으로 전달
-// 모듈은 비동기 로드되므로, 콜백이 아직 없으면 버퍼에 보관 후 나중에 전달
 let _pending = null;
-let _lastSnapshot = null; // 마지막 수신 데이터 보관 (포그라운드 복귀 시 재전달용)
+let _lastSnapshot = null;
 
-onValue(dataRef, (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+// 데이터 전달 헬퍼
+function _deliver(data) {
   _lastSnapshot = data;
-  if (typeof window.onFirebaseLoad === 'function') {
-    window.onFirebaseLoad(data);
-  } else {
-    _pending = data;
-  }
-});
+  if (typeof window.onFirebaseLoad === 'function') window.onFirebaseLoad(data);
+  else _pending = data;
+}
 
-// onFirebaseLoad가 나중에 등록될 때 버퍼 전달
+// onFirebaseLoad가 나중에 등록될 때 _pending 전달
 let _fbCallbackSet = false;
 (function pollCallback() {
   if (_fbCallbackSet) return;
@@ -48,37 +42,65 @@ let _fbCallbackSet = false;
   }
 })();
 
-// 모바일 백그라운드 → 포그라운드 복귀 시 Firebase에서 최신 데이터 강제 재요청
-// (백그라운드 중 WebSocket 끊겼을 수 있으므로 _lastSnapshot 캐시 대신 신규 fetch)
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && typeof window.onFirebaseLoad === 'function') {
-    try {
-      const snapshot = await get(dataRef);
-      const data = snapshot.val();
-      if (!data) return;
-      _lastSnapshot = data;
-      window.onFirebaseLoad(data);
-    } catch(e) {
-      // fetch 실패 시 캐시 폴백
-      if (_lastSnapshot) window.onFirebaseLoad(_lastSnapshot);
-    }
-  }
-});
+// 관리자 판별: su_session(로그인) + su_fb_pw(Firebase 비밀번호) 둘 다 있으면 관리자 기기
+const _isAdminDevice = localStorage.getItem('su_session') === '1' && !!localStorage.getItem('su_fb_pw');
 
-// 60초마다 자동 폴링 - 오래 열어둔 페이지도 최신 유지 (WebSocket 단절 대비)
-// 관리자는 제외 - 인메모리 미저장 변경사항 보호
-setInterval(async () => {
-  if (document.visibilityState !== 'visible') return;
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
-  if (isAdmin) return;
-  try {
-    const snapshot = await get(dataRef);
+if (_isAdminDevice) {
+  // ── 관리자 기기: Firebase WebSocket 실시간 구독 ──
+  onValue(dataRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
-    _lastSnapshot = data;
-    if (typeof window.onFirebaseLoad === 'function') window.onFirebaseLoad(data);
-  } catch(e) {}
-}, 60000);
+    _deliver(data);
+  });
+
+  // 포그라운드 복귀 시 Firebase에서 최신 데이터 강제 재요청
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      try {
+        const snapshot = await get(dataRef);
+        const data = snapshot.val();
+        if (!data) return;
+        _deliver(data);
+      } catch(e) {
+        if (_lastSnapshot) _deliver(_lastSnapshot);
+      }
+    }
+  });
+
+} else {
+  // ── 관람자 기기: onValue WebSocket 미사용 → 동시접속 100명 제한 회피 ──
+  // 최초 1회 Firebase get() (brief HTTP, persistent 연결 아님)
+  get(dataRef).then(snapshot => {
+    const data = snapshot.val();
+    if (data) _deliver(data);
+  }).catch(() => {});
+
+  // GitHub Pages data.json 30초 폴링 (수천 명 무료 처리)
+  const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
+  let _lastGhSavedAt = 0;
+
+  async function pollGitHub() {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      const res = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data) return;
+      // 더 최신 데이터일 때만 적용 (불필요한 re-render 방지)
+      if ((data.savedAt || 0) > _lastGhSavedAt) {
+        _lastGhSavedAt = data.savedAt || 0;
+        _deliver(data);
+      }
+    } catch(e) {}
+  }
+
+  setInterval(pollGitHub, 30000);
+
+  // 포그라운드 복귀 시 즉시 폴링
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') pollGitHub();
+  });
+}
 
 // 데이터 쓰기 함수 (관리자 전용 - cloud-board.js의 fbCloudSave 에서 호출)
 window.fbSet = async function(data, pw) {

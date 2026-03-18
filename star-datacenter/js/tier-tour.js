@@ -987,6 +987,17 @@ function rCfg(C,T){
       </div>
       <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
     </div>
+    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">
+        <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
+        <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
+      </div>
+      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
+    </div>
   </div>
   `;
   // 관리자 목록 + 맵 약자 목록 렌더링
@@ -1655,6 +1666,20 @@ function clearFbPw(){
   localStorage.removeItem('su_fb_pw');
   const statusEl = document.getElementById('fb-pw-status');
   if (statusEl) statusEl.textContent = '미설정';
+}
+function saveGhToken(){
+  const val = document.getElementById('cfg-gh-token')?.value.trim();
+  const statusEl = document.getElementById('gh-token-status');
+  if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
+  localStorage.setItem('su_gh_token', val);
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
+  const input = document.getElementById('cfg-gh-token');
+  if(input) input.value = '';
+}
+function clearGhToken(){
+  localStorage.removeItem('su_gh_token');
+  const statusEl = document.getElementById('gh-token-status');
+  if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
 }
 
 /* ══════════════════════════════════════

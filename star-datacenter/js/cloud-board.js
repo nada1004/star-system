@@ -73,9 +73,39 @@ async function fbCloudSave() {
   try {
     await window.fbSet(dataObj, pw);
     window._lastAdminSaveTime = Date.now(); // 완료 후 window 연장
+    // GitHub data.json도 업로드 (관람자 폴링용, 실패해도 Firebase 저장은 유지)
+    githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
   } finally {
     window._isSaving = false;
   }
+}
+
+// GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
+// 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
+async function githubDataSave(dataObj) {
+  const token = localStorage.getItem('su_gh_token');
+  if (!token) return; // 토큰 미설정 시 skip
+  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
+  // 현재 파일 SHA 조회 (업데이트 시 필수)
+  const getRes = await fetch(apiUrl, {
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (!getRes.ok) throw new Error('GitHub 파일 조회 실패: ' + getRes.status);
+  const fileInfo = await getRes.json();
+  // 내용 base64 인코딩
+  const jsonStr = JSON.stringify(dataObj, null, 2);
+  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+  // 파일 업데이트
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: b64,
+      sha: fileInfo.sha
+    })
+  });
+  if (!putRes.ok) throw new Error('GitHub 저장 실패: ' + putRes.status);
 }
 
 
