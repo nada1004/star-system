@@ -95,11 +95,9 @@ function applyLoginState(){
   document.querySelectorAll('.lock-admin').forEach(el=>{
     el.classList.toggle('locked',!isLoggedIn);
   });
-  // 관리자 전용 탭 (회원관리, 설정) - 부관리자는 접근 불가
-  ['tabMember','tabCfg'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display=(isLoggedIn&&!isSubAdmin)?'':'none';
-  });
+  // 관리자 전용 탭 (설정) - 부관리자는 접근 불가
+  const _cfgTab=document.getElementById('tabCfg');
+  if(_cfgTab) _cfgTab.style.display=(isLoggedIn&&!isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
@@ -122,7 +120,7 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,members,tourneys},null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';
@@ -142,7 +140,7 @@ function doFile(inp){
       miniM=d.miniM||[];univM=d.univM||[];comps=d.comps||[];ckM=d.ckM||[];
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
-      members=d.members||[];tourneys=d.tourneys||[];ttM=d.ttM||[];
+      tourneys=d.tourneys||[];ttM=d.ttM||[];
       window._compListCache={};window._shareAllMatchesCached=null;
       (function(){
         const allD=[...miniM,...univM,...comps,...ckM,...proM];

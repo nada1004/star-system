@@ -110,7 +110,6 @@
   <button class="tab"     onclick="sw('pro',this)">🏅 프로리그</button>
   <button class="tab" onclick="sw('stats',this)">📊 통계</button>
   <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
-  <button id="tabMember" class="tab" onclick="sw('member',this)">👥 회원관리</button>
   <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
 </div>
 
@@ -238,31 +237,6 @@
   </div>
 </div>
 
-<!-- 회원 추가/수정 모달 -->
-<div id="memberModal" class="modal no-export">
-  <div class="umbox" style="width:680px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="mtitle" id="memberModalTitle" style="margin-bottom:0">회원 추가</div>
-      <button class="btn btn-w btn-sm" onclick="cm('memberModal')">✕ 닫기</button>
-    </div>
-    <div id="memberModalBody"></div>
-    <div class="mbtns" style="margin-top:16px">
-      <button class="btn btn-b" style="flex:1" onclick="memberSave()">💾 저장</button>
-      <button class="btn btn-w" style="flex:1" onclick="cm('memberModal')">취소</button>
-    </div>
-  </div>
-</div>
-
-<!-- 회원 상세 모달 -->
-<div id="memberDetailModal" class="modal no-export">
-  <div class="umbox" style="width:680px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="mtitle" id="memberDetailTitle" style="margin-bottom:0">회원 상세</div>
-      <button class="btn btn-w btn-sm" onclick="cm('memberDetailModal')">✕ 닫기</button>
-    </div>
-    <div id="memberDetailBody"></div>
-  </div>
-</div>
 
 <div id="pasteModal" class="modal no-export">
   <div class="umbox" style="width:740px;max-width:96vw">

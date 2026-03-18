@@ -102,8 +102,6 @@ let proM       = J('su_pro') || [];
 // 프로리그 개인 대회: [{id,name,groups:[{name,players:[],matches:[{a,b,winner,d,map}]}]}]
 let proTourneys = J('su_ptn') || [];
 let curProComp  = J('su_ptc') || '';
-// 회원 관리 데이터: [{id,nick,uid,status,banType,banEnd,banDone,category,memo,posts:[{url,savedAt,note}],comments:[{url,savedAt,note}],createdAt,updatedAt}]
-let members    = J('su_mb') || [];
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
 let tourneys   = J('su_tn') || [];
 let ttM        = J('su_ttm') || [];
@@ -221,7 +219,6 @@ function localSave(){
     localStorage.setItem('su_pro',JSON.stringify(proM));
     localStorage.setItem('su_ptn',JSON.stringify(proTourneys));
     localStorage.setItem('su_ptc',JSON.stringify(curProComp));
-    localStorage.setItem('su_mb',JSON.stringify(members));
     localStorage.setItem('su_tn',JSON.stringify(tourneys));
     localStorage.setItem('su_ttm',JSON.stringify(ttM));
     localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));

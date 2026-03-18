@@ -55,7 +55,6 @@ function render(){
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
-    case 'member':  if(typeof rMember==='function')  rMember(C,T);  break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
