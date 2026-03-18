@@ -60,14 +60,9 @@ window.onFirebaseLoad = function(data) {
   if (!window._forcingSync) {
     // 저장 중 → skip (race condition 방지)
     if (window._isSaving) return;
-    // 새로고침 후에도 보호: 로컬 저장 시각이 Firebase 저장 시각보다 최신이면 skip
-    // (자기 자신의 에코 또는 로컬 데이터가 더 최신인 경우)
-    if (isAdmin && clean.savedAt !== undefined) {
-      const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
-      // >= : 같은 시각(자기 자신이 저장한 에코)도 skip → refresh 시 불필요한 재렌더 방지
-      // 다른 기기에서 더 최신 데이터가 오면(clean.savedAt > localSavedAt) 반드시 적용
-      if (localSavedAt >= clean.savedAt) return;
-    }
+    // 저장 직후 3초: 자기 에코 방지 (window 변수라 새로고침 후 리셋됨)
+    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 3000);
+    if (justSaved) return;
   }
   _applyCloudData(clean);
   if (typeof localSave === 'function') localSave();
