@@ -242,12 +242,21 @@ function localSave(){
 
 function save(){
   localSave();
-  if (typeof fbCloudSave === 'function' && typeof isLoggedIn !== 'undefined' && isLoggedIn && localStorage.getItem('su_fb_pw')) {
-    const statusEl = document.getElementById('cloudStatus');
-    if (statusEl) statusEl.textContent = '⏫ 저장 중...';
+  const statusEl = document.getElementById('cloudStatus');
+  if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+    if (!localStorage.getItem('su_fb_pw')) {
+      // 비밀번호 미설정 → Firebase 저장 안 됨 경고
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+      return;
+    }
+    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+      return;
+    }
+    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
     fbCloudSave()
-      .then(() => { if(statusEl){statusEl.textContent='✅ 저장됨'; setTimeout(()=>{if(statusEl)statusEl.textContent='';},3000);} })
-      .catch(e => { if(statusEl) statusEl.textContent='❌ 저장 실패'; console.error('[fbCloudSave]',e); });
+      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
+      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
   }
 }
 
