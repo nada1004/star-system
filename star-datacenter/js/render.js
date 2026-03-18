@@ -383,7 +383,17 @@ function saveUnivEdit(){
   // 이름 변경 시 players univ 갱신
   if(newName!==univName){
     players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
-    [miniM,univM,comps,ckM].forEach(arr=>(arr||[]).forEach(m=>{if(m.a===univName)m.a=newName;if(m.b===univName)m.b=newName;}));
+    [miniM,univM,comps,ckM,proM].forEach(arr=>(arr||[]).forEach(m=>{
+      if(m.a===univName)m.a=newName;if(m.b===univName)m.b=newName;
+      (m.teamAMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
+      (m.teamBMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
+    }));
+    // boardPlayerOrder 키 갱신
+    if(typeof boardPlayerOrder!=='undefined'&&boardPlayerOrder[univName]){
+      boardPlayerOrder[newName]=boardPlayerOrder[univName];
+      delete boardPlayerOrder[univName];
+      if(typeof saveBoardPlayerOrder==='function')saveBoardPlayerOrder();
+    }
   }
   u.name=newName;
   u.color=newColor;

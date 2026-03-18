@@ -378,7 +378,7 @@ function proCompInitBracket(tnId) {
 
 function proCompSetBktWinner(tnId, ri, mi, winner) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn||!tn.bracket) return;
+  if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
   const prevWinner = m.winner;
@@ -415,10 +415,9 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
     const totalRounds = tn.bracket.length;
     let rLabel;
     if (ri===totalRounds-1) rLabel='결승';
-    else if (ri===totalRounds-2) rLabel='4강';
-    else if (ri===totalRounds-3&&totalRounds>2) rLabel='8강';
+    else if (ri===totalRounds-2) rLabel='준결승';
+    else if (ri===totalRounds-3) rLabel='4강';
     else rLabel=`${Math.pow(2,totalRounds-ri)}강`;
-    const wn=m.winner==='A'?m.a:m.b, ln=m.winner==='A'?m.b:m.a;
     const pa=players.find(p=>p.name===m.a)||{name:m.a};
     const pb=players.find(p=>p.name===m.b)||{name:m.b};
     ttM.unshift({
@@ -444,7 +443,7 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
 
 function proCompBktSetMap(tnId, ri, mi) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn||!tn.bracket) return;
+  if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
   const map = prompt('맵을 입력하세요:', m.map||'');
@@ -455,7 +454,7 @@ function proCompBktSetMap(tnId, ri, mi) {
 
 function proCompBktEditPlayers(tnId, ri, mi) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn||!tn.bracket) return;
+  if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
   const a = prompt('A 선수 이름:', m.a||'');
