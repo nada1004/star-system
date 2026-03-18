@@ -126,22 +126,6 @@
     <input type="text" id="p-photo" placeholder="프로필 이미지 URL(선택)" style="width:170px;">
     <button class="btn btn-b" onclick="addPlayer()">+ 등록</button>
   </div>
-  <div class="form-row" style="border-color:#93c5fd;background:#f0f6ff;">
-    <span class="flabel">⚔️ 경기 기록</span>
-    <input type="date" id="m-date">
-    <button class="btn btn-w btn-xs" onclick="document.getElementById('m-date').valueAsDate=new Date()" title="오늘 날짜로" style="padding:3px 8px;font-size:11px;flex-shrink:0">오늘</button>
-    <div class="swrap">
-      <input type="text" id="ws" placeholder="스트리머 검색..." onkeyup="fsearch('w');if(event.key==='Enter')recMatch()" style="width:130px;">
-      <div id="wl" class="sdrop"></div>
-    </div>
-    <span style="font-weight:800;color:var(--gray-l);">VS</span>
-    <div class="swrap">
-      <input type="text" id="ls" placeholder="스트리머 검색..." onkeyup="fsearch('l');if(event.key==='Enter')recMatch()" style="width:130px;">
-      <div id="ll" class="sdrop"></div>
-    </div>
-    <select id="m-map"></select>
-    <button class="btn btn-g" onclick="recMatch()">💾 저장</button>
-  </div>
 </div>
 
 <div class="main"><div id="cap">
