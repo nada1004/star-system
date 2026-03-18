@@ -3,7 +3,7 @@
    (ES Module - type="module" 로 로드)
 ══════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAM7YWzo13XEx7J57Z5OhGPs4GRvjZ-GzY",
@@ -59,4 +59,17 @@ document.addEventListener('visibilitychange', () => {
 window.fbSet = async function(data, pw) {
   const finalData = { ...data, admin_pw: pw };
   await set(dataRef, finalData);
+};
+
+// 강제 1회 fetch (수동 동기화 버튼용)
+window.fbForceSync = async function() {
+  const snapshot = await get(dataRef);
+  const data = snapshot.val();
+  if (!data) return;
+  _lastSnapshot = data;
+  if (typeof window.onFirebaseLoad === 'function') {
+    window._forcingSync = true;
+    window.onFirebaseLoad(data);
+    window._forcingSync = false;
+  }
 };
