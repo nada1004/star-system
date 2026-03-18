@@ -9,22 +9,22 @@ const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/
 ══════════════════════════════════════ */
 // 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
 function _applyCloudData(d) {
-  players=d.players||d.player||[];
-  univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
-  maps=d.maps||d.map||maps;
-  tourD=d.tourD||d.tournamentDates||Array(15).fill('');
-  miniM=d.miniM||d.mini||d.miniMatches||[];
-  univM=d.univM||d.univ||d.univMatches||[];
-  comps=d.comps||d.comp||d.competitions||[];
-  ckM=d.ckM||d.ck||d.ckMatches||[];
-  compNames=d.compNames||d.competitionNames||[];
-  curComp=d.curComp||d.currentComp||'';
-  proM=d.proM||d.pro||d.proMatches||[];
+  if(d.players!==undefined) players=d.players||d.player||[];
+  if(d.univCfg!==undefined||d.univConfig!==undefined||d.universities!==undefined) univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
+  if(d.maps!==undefined) maps=d.maps||d.map||maps;
+  if(d.tourD!==undefined) tourD=d.tourD||d.tournamentDates||Array(15).fill('');
+  if(d.miniM!==undefined) miniM=d.miniM||d.mini||d.miniMatches||[];
+  if(d.univM!==undefined) univM=d.univM||d.univ||d.univMatches||[];
+  if(d.comps!==undefined) comps=d.comps||d.comp||d.competitions||[];
+  if(d.ckM!==undefined) ckM=d.ckM||d.ck||d.ckMatches||[];
+  if(d.compNames!==undefined) compNames=d.compNames||d.competitionNames||[];
+  if(d.curComp!==undefined) curComp=d.curComp||d.currentComp||'';
+  if(d.proM!==undefined) proM=d.proM||d.pro||d.proMatches||[];
   if(d.proTourneys!==undefined) proTourneys=d.proTourneys;
-  tourneys=d.tourneys||d.tournaments||d.tourney||[];
-  ttM=d.ttM||d.tt||[];
-  indM=d.indM||d.ind||[];
-  gjM=d.gjM||[];
+  if(d.tourneys!==undefined) tourneys=d.tourneys||d.tournaments||d.tourney||[];
+  if(d.ttM!==undefined) ttM=d.ttM||d.tt||[];
+  if(d.indM!==undefined) indM=d.indM||d.ind||[];
+  if(d.gjM!==undefined) gjM=d.gjM||[];
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
   // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
   if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
@@ -1390,7 +1390,7 @@ async function checkFbSyncStatus(){
 
   // Firebase 연결 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!localStorage.getItem('su_fb_pw');
+  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
   const lastSave=localStorage.getItem('su_last_save_time');
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';

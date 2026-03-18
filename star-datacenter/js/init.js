@@ -109,7 +109,7 @@ initDark();
       const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
       years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
       yearOptions.sort();
-      fixPoints(); save(); init();
+      fixPoints(); save(); render();
       gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
     }catch(e){
       console.error('[자동 불러오기] 데이터 적용 오류:', e);

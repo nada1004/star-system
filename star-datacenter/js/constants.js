@@ -224,9 +224,9 @@ function localSave(){
     localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));
     localStorage.setItem('su_indm',JSON.stringify(indM));
     localStorage.setItem('su_gjm',JSON.stringify(gjM));
-    localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
-    localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
-    localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
+    if(typeof boardOrder!=='undefined') localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
+    if(typeof boardPlayerOrder!=='undefined') localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
+    if(typeof playerStatusIcons!=='undefined') localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
     localStorage.setItem('su_notices',JSON.stringify(notices));
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
