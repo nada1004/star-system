@@ -164,7 +164,7 @@ function doFile(inp){
 
 function refreshSel(){
   const allU=getAllUnivs().filter(u=>!u.dissolved);
-  document.getElementById('p-univ').innerHTML=allU.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  document.getElementById('p-univ').innerHTML=allU.map(u=>`<option value="${u.name}"${u.name==='무소속'?' selected':''}>${u.name}</option>`).join('');
   document.getElementById('m-map').innerHTML=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
 }
 function openGameEditModal(editRef, si, gi){
