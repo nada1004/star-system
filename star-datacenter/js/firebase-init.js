@@ -48,12 +48,37 @@ let _fbCallbackSet = false;
   }
 })();
 
-// 모바일 백그라운드 → 포그라운드 복귀 시 최신 데이터 재적용
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && _lastSnapshot && typeof window.onFirebaseLoad === 'function') {
-    window.onFirebaseLoad(_lastSnapshot);
+// 모바일 백그라운드 → 포그라운드 복귀 시 Firebase에서 최신 데이터 강제 재요청
+// (백그라운드 중 WebSocket 끊겼을 수 있으므로 _lastSnapshot 캐시 대신 신규 fetch)
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && typeof window.onFirebaseLoad === 'function') {
+    try {
+      const snapshot = await get(dataRef);
+      const data = snapshot.val();
+      if (!data) return;
+      _lastSnapshot = data;
+      window.onFirebaseLoad(data);
+    } catch(e) {
+      // fetch 실패 시 캐시 폴백
+      if (_lastSnapshot) window.onFirebaseLoad(_lastSnapshot);
+    }
   }
 });
+
+// 60초마다 자동 폴링 - 오래 열어둔 페이지도 최신 유지 (WebSocket 단절 대비)
+// 관리자는 제외 - 인메모리 미저장 변경사항 보호
+setInterval(async () => {
+  if (document.visibilityState !== 'visible') return;
+  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
+  if (isAdmin) return;
+  try {
+    const snapshot = await get(dataRef);
+    const data = snapshot.val();
+    if (!data) return;
+    _lastSnapshot = data;
+    if (typeof window.onFirebaseLoad === 'function') window.onFirebaseLoad(data);
+  } catch(e) {}
+}, 60000);
 
 // 데이터 쓰기 함수 (관리자 전용 - cloud-board.js의 fbCloudSave 에서 호출)
 window.fbSet = async function(data, pw) {
