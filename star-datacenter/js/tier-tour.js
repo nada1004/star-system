@@ -965,7 +965,7 @@ function rCfg(C,T){
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
-    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div><div id="cfg-idb-info" style="font-size:11px;color:var(--gray-l);margin-top:4px"></div></div>
+    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
   </div>
   <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
@@ -1061,21 +1061,6 @@ function renderStorageInfo(){
         }).join('')}
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
-  // IndexedDB 사용량 비동기 표시
-  (async()=>{
-    try{
-      const idbEl=document.getElementById('cfg-idb-info');
-      if(!idbEl)return;
-      const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_u_imgs'];
-      let idbTotal=0;
-      for(const k of keys){
-        const v=await idbGet(k);
-        if(v) idbTotal+=JSON.stringify(v).length*2;
-      }
-      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-      idbEl.textContent='IndexedDB: '+fmt(idbTotal)+(idbTotal>0?' (경기기록 백업)':'');
-    }catch(e){}
-  })();
 }
 function reCfg(){
   const tabs=document.querySelectorAll('.stab');
@@ -1462,16 +1447,38 @@ function setAllFemale(){
 }
 
 function delPlayer(){
-  if(confirm(`"${editName}" 선수를 삭제할까요? (경기 기록은 유지됩니다)`)){
-    const p = players.find(x => x.name === editName);
-    if (p) {
-      p.retired = true;
-    }
-    save();
-    render();
-    cm('emModal');
-    cm('playerModal');
+  if(!confirm(`"${editName}" 선수를 완전 삭제할까요?\n\n⚠️ 선수 정보와 모든 경기 기록이 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`)) return;
+  const name = editName;
+  // 1. players 배열에서 완전 제거
+  const idx = players.findIndex(x => x.name === name);
+  if(idx >= 0) players.splice(idx, 1);
+  // 2. 모든 경기 배열에서 해당 선수 관련 기록 제거
+  // 개인전/끝장전: 해당 선수가 포함된 게임 제거
+  if(typeof indM !== 'undefined') indM = indM.filter(m => m.wName !== name && m.lName !== name);
+  if(typeof gjM !== 'undefined') gjM = gjM.filter(m => m.wName !== name && m.lName !== name);
+  // 미니/대학대전/CK/프로/티어대회: 해당 선수가 포함된 세트의 게임 제거
+  function _removePlayerFromMatches(arr) {
+    arr.forEach(m => {
+      if(!m.sets) return;
+      m.sets.forEach(set => {
+        if(!set.games) return;
+        set.games = set.games.filter(g => g.playerA !== name && g.playerB !== name);
+      });
+    });
   }
+  _removePlayerFromMatches(miniM);
+  _removePlayerFromMatches(univM);
+  _removePlayerFromMatches(ckM);
+  _removePlayerFromMatches(proM);
+  _removePlayerFromMatches(ttM);
+  // 3. 다른 선수의 history에서 해당 선수와의 기록 제거
+  players.forEach(p => {
+    if(p.history) p.history = p.history.filter(h => h.opp !== name);
+  });
+  save();
+  render();
+  cm('emModal');
+  cm('playerModal');
 }
 
 function openRE(mode,idx){
