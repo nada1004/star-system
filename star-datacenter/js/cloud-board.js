@@ -128,7 +128,7 @@ async function fbCloudSave() {
 async function githubDataSave(dataObj) {
   const token = localStorage.getItem('su_gh_token');
   if (!token) return; // 토큰 미설정 시 skip
-  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
+  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
   // 현재 파일 SHA 조회 (업데이트 시 필수)
   const getRes = await fetch(apiUrl, {
     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
