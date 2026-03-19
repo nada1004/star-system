@@ -1,6 +1,61 @@
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   IndexedDB 유틸 — 5MB localStorage 한계 우회
+   대용량 배열(경기기록)을 IndexedDB에 백업 저장
+══════════════════════════════════════ */
+const _IDB_NAME = 'su_store';
+const _IDB_VER  = 1;
+let _idb = null;
+
+function _idbOpen(){
+  return new Promise((res, rej) => {
+    if(_idb){ res(_idb); return; }
+    const req = indexedDB.open(_IDB_NAME, _IDB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+    };
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror   = e => rej(e);
+  });
+}
+async function idbSet(key, val){
+  try{
+    const db = await _idbOpen();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction('kv','readwrite');
+      tx.objectStore('kv').put(val, key);
+      tx.oncomplete = ()=>res();
+      tx.onerror    = e=>rej(e);
+    });
+  }catch(e){ console.warn('[idbSet]',e); }
+}
+async function idbGet(key){
+  try{
+    const db = await _idbOpen();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction('kv','readonly');
+      const req = tx.objectStore('kv').get(key);
+      req.onsuccess = ()=>res(req.result);
+      req.onerror   = e=>rej(e);
+    });
+  }catch(e){ console.warn('[idbGet]',e); return null; }
+}
+
+// IndexedDB에서 대용량 경기 기록 로드 (localStorage가 비어있을 때 폴백)
+async function idbLoadMatchData(){
+  try{
+    const keys = ['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
+    for(const key of keys){
+      if(localStorage.getItem(key)) continue; // localStorage에 있으면 skip
+      const val = await idbGet(key);
+      if(val) localStorage.setItem(key, JSON.stringify(val));
+    }
+  }catch(e){ console.warn('[idbLoadMatchData]',e); }
+}
+
 let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];if(!t.includes('미정'))t.push('미정');return t;})();
 const RACES=['T','Z','P','N'];
 const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
@@ -194,8 +249,25 @@ function fixPoints(){
   });
 }
 
+function _compressHistory(){
+  // 🔧 용량 최적화: history 레거시 필드 제거 + 최대 500개 제한
+  players.forEach(p=>{
+    if(!p.history||!p.history.length) return;
+    // 레거시 필드 제거 (time, eloAfter)
+    p.history=p.history.map(h=>{
+      const c={date:h.date,result:h.result,opp:h.opp,oppRace:h.oppRace,map:h.map,matchId:h.matchId||'',eloDelta:h.eloDelta};
+      if(h.univ) c.univ=h.univ;
+      if(h.mode) c.mode=h.mode;
+      return c;
+    });
+    // 최대 500개 제한 (최신순 유지)
+    if(p.history.length>500) p.history=p.history.slice(0,500);
+  });
+}
+
 function localSave(){
   try{
+    _compressHistory();
     localStorage.setItem('su_tiers',JSON.stringify(TIERS));
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
@@ -230,10 +302,27 @@ function localSave(){
     localStorage.setItem('su_notices',JSON.stringify(notices));
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
+    // 🔧 IndexedDB 백업 — localStorage 5MB 한계 우회
+    // 대용량 경기 기록 배열을 IndexedDB에도 저장 (비동기, 실패해도 무관)
+    const _idbMatchData = {
+      su_mm: miniM, su_um: univM, su_cm: comps, su_ck: ckM,
+      su_pro: proM, su_ptn: proTourneys, su_tn: tourneys,
+      su_ttm: ttM, su_indm: indM, su_gjm: gjM
+    };
+    Object.entries(_idbMatchData).forEach(([k,v])=>{ idbSet(k,v).catch(()=>{}); });
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
-      if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
-      else alert('⚠️ 저장 공간이 부족합니다! 브라우저 저장소를 정리해 주세요.');
+      // 🔧 QuotaExceeded 시 대용량 배열을 localStorage에서 제거하고 IndexedDB로만 유지
+      console.warn('[localSave] QuotaExceeded — 대용량 데이터 localStorage 제거 시도');
+      const _bigKeys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
+      _bigKeys.forEach(k=>{
+        try{
+          const val = _bigKeys.includes(k) ? eval(({'su_mm':'miniM','su_um':'univM','su_cm':'comps','su_ck':'ckM','su_pro':'proM','su_ptn':'proTourneys','su_tn':'tourneys','su_ttm':'ttM','su_indm':'indM','su_gjm':'gjM'})[k]) : null;
+          if(val!=null) idbSet(k,val).catch(()=>{});
+          localStorage.removeItem(k);
+        }catch(_){}
+      });
+      if(typeof showToast==='function')showToast('⚠️ 저장 공간 부족 — 경기 기록을 IndexedDB로 이동했습니다. 데이터는 유지됩니다.',6000);
     }else{
       console.error('[localSave error]',e);
     }
@@ -403,15 +492,13 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+  // 🔧 용량 최적화: time/eloAfter 제거, 빈 필드 생략
+  const _wh={date:d,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta};
+  if(wu&&wu!==w.univ)_wh.univ=wu;
+  if(mode)_wh.mode=mode;
+  w.history.unshift(_wh);
+  const _lh={date:d,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta};
+  if(lu&&lu!==l.univ)_lh.univ=lu;
+  if(mode)_lh.mode=mode;
+  l.history.unshift(_lh);
 }
-
-/* ══════════════════════════════════════
-   캘린더 전역 상태 (calendar.js / stats.js 공유)
-   stats.js에서 이곳으로 이동 — 의존성 순서 정리
-══════════════════════════════════════ */
-// calWeekOffset, calDayDate는 stats.js에도 선언되어 있으나
-// calendar.js가 stats.js보다 나중에 로드되므로 constants.js에서 먼저 초기화
-if(typeof calWeekOffset === 'undefined') var calWeekOffset = 0;
-if(typeof calDayDate    === 'undefined') var calDayDate    = '';

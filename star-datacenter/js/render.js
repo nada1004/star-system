@@ -473,6 +473,12 @@ function buildPlayerDetailHTML(p){
   </div>`;
 
   // ── ELO 추이 차트 ──
+  // 🔧 eloAfter 레거시 필드 제거됨 → eloDelta 누적으로 ELO 재계산
+  const _eloBase = p.elo || ELO_DEFAULT;
+  const _eloDeltas = (p.history||[]).filter(h=>h.eloDelta!=null).reverse();
+  let _eloRunning = _eloBase;
+  const _eloRecalc = [];
+  _eloDeltas.forEach((h,i)=>{ _eloRecalc.unshift({...h, eloAfter:_eloRunning}); _eloRunning -= (h.eloDelta||0); });
   const _eloHistPts=(p.history||[]).filter(h=>h.eloDelta!=null||h.eloAfter!=null);
   if(_eloHistPts.length>=3){
     h+=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
@@ -833,9 +839,14 @@ function initPEloChart(name){
   const tip=document.getElementById('pEloTip');
   if(!p||!canvas)return;
   const hist=[...(p.history||[])].reverse();
+  // eloAfter 없는 경우(압축된 데이터) eloDelta 누적으로 재계산
+  let _eloRc=p.elo||ELO_DEFAULT;
+  const _eloRcMap=new Map();
+  [...hist].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
   const pts=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
-    if(h.eloAfter!=null) pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
+    const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(hist.length-1-i) ?? null);
+    if(_ea!=null) pts.push({i,elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
     else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
   });
   if(pts.length<2){canvas.style.display='none';return;}
