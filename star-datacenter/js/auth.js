@@ -150,6 +150,7 @@ function doFile(inp){
       if(d.notices!==undefined) notices=d.notices||[];
       if(d.playerStatusIcons!==undefined) playerStatusIcons=d.playerStatusIcons||{};
       if(d.boardOrder!==undefined) boardOrder=d.boardOrder||[];
+      if(d.seasons!==undefined) seasons=d.seasons||[];
       window._compListCache={};window._shareAllMatchesCached=null;
       (function(){
         const allD=[...miniM,...univM,...comps,...ckM,...proM];
