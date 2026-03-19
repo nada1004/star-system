@@ -25,40 +25,86 @@ function _fbArr(val, fallback) {
 }
 
 function _applyCloudData(d) {
-  if(d.players!==undefined){
-    players=_fbArr(d.players||d.player, []);
-    // 각 선수의 history도 배열 변환
-    players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+  // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
+  // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
+  const _has = (key) => d[key] !== undefined && d[key] !== null;
+  const _hasOrEmpty = (key) => d.savedAt !== undefined; // savedAt 있으면 완전한 데이터로 간주
+
+  // players
+  {
+    const v = d.players||d.player;
+    if(v !== undefined) {
+      players=_fbArr(v, []);
+      players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+    }
   }
-  if(d.univCfg!==undefined||d.univConfig!==undefined||d.universities!==undefined) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
-  if(d.maps!==undefined) maps=_fbArr(d.maps||d.map, maps);
-  if(d.tourD!==undefined) tourD=_fbArr(d.tourD||d.tournamentDates, Array(15).fill(''));
-  if(d.miniM!==undefined){
-    miniM=_fbArr(d.miniM||d.mini||d.miniMatches, []);
-    miniM.forEach(m=>{ if(m.sets) m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); });
+  if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
+  if(_has('maps')) maps=_fbArr(d.maps||d.map, maps);
+  if(_has('tourD')) tourD=_fbArr(d.tourD||d.tournamentDates, Array(15).fill(''));
+
+  // 🔧 배열 필드: 키가 없어도 savedAt 있으면 빈 배열로 처리 (Firebase 빈 배열 삭제 대응)
+  {
+    const v = d.miniM||d.mini||d.miniMatches;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('miniM') ? [] : null);
+    if(arr !== null){ miniM=arr; miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
   }
-  if(d.univM!==undefined){ univM=_fbArr(d.univM||d.univ||d.univMatches, []); univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  if(d.comps!==undefined) comps=_fbArr(d.comps||d.comp||d.competitions, []);
-  if(d.ckM!==undefined){ ckM=_fbArr(d.ckM||d.ck||d.ckMatches, []); ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  if(d.compNames!==undefined) compNames=_fbArr(d.compNames||d.competitionNames, []);
-  if(d.curComp!==undefined) curComp=d.curComp||d.currentComp||'';
-  if(d.proM!==undefined){ proM=_fbArr(d.proM||d.pro||d.proMatches, []); proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  if(d.proTourneys!==undefined) proTourneys=_fbArr(d.proTourneys, []);
-  if(d.tourneys!==undefined){
-    tourneys=_fbArr(d.tourneys||d.tournaments||d.tourney, []);
-    // 토너먼트 내부 groups, matches도 배열 변환
-    tourneys.forEach(tn=>{
-      if(tn.groups) tn.groups=_fbArr(tn.groups,[]);
-      tn.groups&&tn.groups.forEach(g=>{
-        if(g.univs) g.univs=_fbArr(g.univs,[]);
-        if(g.matches) g.matches=_fbArr(g.matches,[]);
-        g.matches&&g.matches.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);});
+  {
+    const v = d.univM||d.univ||d.univMatches;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('univM') ? [] : null);
+    if(arr !== null){ univM=arr; univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  }
+  {
+    const v = d.comps||d.comp||d.competitions;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('comps') ? [] : null);
+    if(arr !== null) comps=arr;
+  }
+  {
+    const v = d.ckM||d.ck||d.ckMatches;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ckM') ? [] : null);
+    if(arr !== null){ ckM=arr; ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  }
+  if(_has('compNames')) compNames=_fbArr(d.compNames||d.competitionNames, []);
+  if(_has('curComp')||d.savedAt) curComp=d.curComp||d.currentComp||'';
+  {
+    const v = d.proM||d.pro||d.proMatches;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proM') ? [] : null);
+    if(arr !== null){ proM=arr; proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  }
+  {
+    const v = d.proTourneys;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proTourneys') ? [] : null);
+    if(arr !== null) proTourneys=arr;
+  }
+  {
+    const v = d.tourneys||d.tournaments||d.tourney;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('tourneys') ? [] : null);
+    if(arr !== null){
+      tourneys=arr;
+      tourneys.forEach(tn=>{
+        if(tn.groups) tn.groups=_fbArr(tn.groups,[]);
+        tn.groups&&tn.groups.forEach(g=>{
+          if(g.univs) g.univs=_fbArr(g.univs,[]);
+          if(g.matches) g.matches=_fbArr(g.matches,[]);
+          g.matches&&g.matches.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);});
+        });
       });
-    });
+    }
   }
-  if(d.ttM!==undefined) ttM=_fbArr(d.ttM||d.tt, []);
-  if(d.indM!==undefined) indM=_fbArr(d.indM||d.ind, []);
-  if(d.gjM!==undefined) gjM=_fbArr(d.gjM, []);
+  {
+    const v = d.ttM||d.tt;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
+    if(arr !== null) ttM=arr;
+  }
+  {
+    const v = d.indM||d.ind;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
+    if(arr !== null) indM=arr;
+  }
+  {
+    const v = d.gjM;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('gjM') ? [] : null);
+    if(arr !== null) gjM=arr;
+  }
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
   // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
   if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
