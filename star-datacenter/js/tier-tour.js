@@ -1210,35 +1210,35 @@ function bulkDeleteByDate(){
     .filter(m => document.getElementById('bulk-del-chk-'+m)?.checked);
   if(!checkedModes.length){ alert('삭제할 대상을 선택하세요.'); return; }
 
-  // 삭제할 건수 먼저 집계
+  const inRange = m => (m.d||'') >= fromD && (m.d||'') <= toD;
   const modeMap = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind:indM, gj:gjM };
-  let total = 0;
-  checkedModes.forEach(mode => {
-    total += (modeMap[mode]||[]).filter(m => (m.d||'') >= fromD && (m.d||'') <= toD).length;
-  });
-  if(total === 0){ alert('해당 기간에 삭제할 경기가 없습니다.'); return; }
-  if(!confirm(`${fromD} ~ ${toD} 기간의 경기 ${total}건을 삭제합니다.
 
-⚠️ 이 작업은 되돌릴 수 없습니다.
-선수 전적은 재계산되지 않으니 삭제 후 전적 초기화가 필요할 수 있습니다.`)) return;
+  let total = 0;
+  checkedModes.forEach(mode => { total += (modeMap[mode]||[]).filter(inRange).length; });
+  if(total === 0){ alert('해당 기간에 삭제할 경기가 없습니다.'); return; }
+  if(!confirm(`${fromD} ~ ${toD} 기간의 경기 ${total}건을 삭제합니다.\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) return;
 
   checkedModes.forEach(mode => {
     const arr = modeMap[mode];
     if(!arr) return;
-    // 삭제할 항목 선수 history도 정리
-    arr.filter(m => (m.d||'') >= fromD && (m.d||'') <= toD).forEach(m => {
-      if(typeof revertMatchRecord === 'function') revertMatchRecord(m);
-    });
-    const newArr = arr.filter(m => !((m.d||'') >= fromD && (m.d||'') <= toD));
-    if(mode==='mini') { miniM.length=0; miniM.push(...newArr); }
-    else if(mode==='univm') { univM.length=0; univM.push(...newArr); }
-    else if(mode==='ck') { ckM.length=0; ckM.push(...newArr); }
-    else if(mode==='pro') { proM.length=0; proM.push(...newArr); }
-    else if(mode==='tt') { ttM.length=0; ttM.push(...newArr); }
-    else if(mode==='ind') { indM.length=0; indM.push(...newArr); }
-    else if(mode==='gj') { gjM.length=0; gjM.push(...newArr); }
+    const toDelete = arr.filter(inRange);
+    if(mode === 'ind'){
+      toDelete.forEach(m => { if(typeof _removeIndResult==='function') _removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id); });
+      indM = indM.filter(m => !inRange(m));
+    } else if(mode === 'gj'){
+      toDelete.forEach(m => { if(typeof _removeGjResult==='function') _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||m._id); });
+      gjM = gjM.filter(m => !inRange(m));
+    } else {
+      toDelete.forEach(m => { if(typeof revertMatchRecord==='function') revertMatchRecord(m); });
+      const newArr = arr.filter(m => !inRange(m));
+      if(mode==='mini')      { miniM.length=0; miniM.push(...newArr); }
+      else if(mode==='univm'){ univM.length=0; univM.push(...newArr); }
+      else if(mode==='ck')   { ckM.length=0;   ckM.push(...newArr);   }
+      else if(mode==='pro')  { proM.length=0;   proM.push(...newArr);  }
+      else if(mode==='tt')   { ttM.length=0;    ttM.push(...newArr);   }
+    }
   });
-  if(typeof fixPoints === 'function') fixPoints();
+  if(typeof fixPoints==='function') fixPoints();
   save(); render();
   const el = document.getElementById('bulk-del-result');
   if(el){ el.textContent = `✅ ${total}건 삭제 완료`; el.style.color='var(--red)'; }
