@@ -999,6 +999,69 @@ function rCfg(C,T){
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
   </div>
+  <div class="ssec" id="cfg-bulk-edit-sec">
+    <h4>✏️ 경기 일괄 수정</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">특정 날짜 범위의 경기 날짜·맵을 한 번에 수정하거나, 맵 이름 오타를 전체 교체합니다.</p>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 날짜 일괄 변경 -->
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">📅 날짜 일괄 변경</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
+          <input type="date" id="bulk-date-from" style="font-size:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경 후</label>
+          <input type="date" id="bulk-date-to" style="font-size:12px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-date-chk-${m}" checked style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
+        <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
+      </div>
+
+      <!-- 맵 이름 일괄 교체 -->
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🗺️ 맵 이름 일괄 교체</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
+          <input type="text" id="bulk-map-from" placeholder="예: 투혼II" style="font-size:12px;width:120px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 교체 후</label>
+          <input type="text" id="bulk-map-to" placeholder="예: 투혼" style="font-size:12px;width:120px">
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
+        <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
+      </div>
+
+      <!-- 날짜 범위 일괄 삭제 -->
+      <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:10px">🗑️ 날짜 범위 일괄 삭제</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
+          <input type="date" id="bulk-del-from" style="font-size:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">~</label>
+          <input type="date" id="bulk-del-to" style="font-size:12px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
+        <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
+      </div>
+
+    </div>
+  </div>
   `;
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
@@ -1062,6 +1125,125 @@ function renderStorageInfo(){
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
+
+/* ══════════════════════════════════════
+   경기 일괄 수정 함수들
+══════════════════════════════════════ */
+
+// 날짜 일괄 변경
+function bulkChangeDate(){
+  const fromD = document.getElementById('bulk-date-from')?.value;
+  const toD   = document.getElementById('bulk-date-to')?.value;
+  if(!fromD || !toD){ alert('변경 전/후 날짜를 모두 입력하세요.'); return; }
+  if(fromD === toD){ alert('변경 전후 날짜가 같습니다.'); return; }
+
+  const modeMap = {
+    mini: miniM, univm: univM, ck: ckM,
+    pro: proM, tt: ttM, ind: indM, gj: gjM
+  };
+  let total = 0;
+  Object.entries(modeMap).forEach(([mode, arr]) => {
+    if(!document.getElementById('bulk-date-chk-'+mode)?.checked) return;
+    arr.forEach(m => {
+      if((m.d||'') === fromD){ m.d = toD; total++; }
+    });
+  });
+  if(total === 0){
+    document.getElementById('bulk-date-result').textContent = '해당 날짜 경기 없음';
+    document.getElementById('bulk-date-result').style.color = 'var(--gray-l)';
+    return;
+  }
+  save(); render();
+  document.getElementById('bulk-date-result').textContent = `✅ ${total}건 변경 완료`;
+  document.getElementById('bulk-date-result').style.color = 'var(--green)';
+  setTimeout(() => {
+    const el = document.getElementById('bulk-date-result');
+    if(el) el.textContent = '';
+  }, 4000);
+}
+
+// 맵 이름 일괄 교체
+function bulkChangeMap(){
+  const fromM = (document.getElementById('bulk-map-from')?.value || '').trim();
+  const toM   = (document.getElementById('bulk-map-to')?.value || '').trim();
+  if(!fromM){ alert('교체 전 맵 이름을 입력하세요.'); return; }
+  if(fromM === toM){ alert('교체 전후 맵 이름이 같습니다.'); return; }
+
+  let total = 0;
+  // miniM, univM, ckM, proM, ttM, indM, gjM의 sets.games.map 교체
+  const allArrs = [miniM, univM, ckM, proM, ttM];
+  allArrs.forEach(arr => {
+    arr.forEach(m => {
+      (m.sets||[]).forEach(set => {
+        (set.games||[]).forEach(g => {
+          if(g.map === fromM){ g.map = toM; total++; }
+        });
+      });
+    });
+  });
+  // indM, gjM은 m.map 직접
+  [...indM, ...gjM].forEach(m => {
+    if(m.map === fromM){ m.map = toM; total++; }
+  });
+  if(total === 0){
+    document.getElementById('bulk-map-result').textContent = `"${fromM}" 맵 경기 없음`;
+    document.getElementById('bulk-map-result').style.color = 'var(--gray-l)';
+    return;
+  }
+  save(); render();
+  document.getElementById('bulk-map-result').textContent = `✅ ${total}건 교체 완료`;
+  document.getElementById('bulk-map-result').style.color = 'var(--green)';
+  setTimeout(() => {
+    const el = document.getElementById('bulk-map-result');
+    if(el) el.textContent = '';
+  }, 4000);
+}
+
+// 날짜 범위 일괄 삭제
+function bulkDeleteByDate(){
+  const fromD = document.getElementById('bulk-del-from')?.value;
+  const toD   = document.getElementById('bulk-del-to')?.value;
+  if(!fromD || !toD){ alert('시작일과 종료일을 모두 입력하세요.'); return; }
+  if(fromD > toD){ alert('시작일이 종료일보다 늦습니다.'); return; }
+
+  const checkedModes = ['mini','univm','ck','pro','tt','ind','gj']
+    .filter(m => document.getElementById('bulk-del-chk-'+m)?.checked);
+  if(!checkedModes.length){ alert('삭제할 대상을 선택하세요.'); return; }
+
+  // 삭제할 건수 먼저 집계
+  const modeMap = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind:indM, gj:gjM };
+  let total = 0;
+  checkedModes.forEach(mode => {
+    total += (modeMap[mode]||[]).filter(m => (m.d||'') >= fromD && (m.d||'') <= toD).length;
+  });
+  if(total === 0){ alert('해당 기간에 삭제할 경기가 없습니다.'); return; }
+  if(!confirm(`${fromD} ~ ${toD} 기간의 경기 ${total}건을 삭제합니다.
+
+⚠️ 이 작업은 되돌릴 수 없습니다.
+선수 전적은 재계산되지 않으니 삭제 후 전적 초기화가 필요할 수 있습니다.`)) return;
+
+  checkedModes.forEach(mode => {
+    const arr = modeMap[mode];
+    if(!arr) return;
+    // 삭제할 항목 선수 history도 정리
+    arr.filter(m => (m.d||'') >= fromD && (m.d||'') <= toD).forEach(m => {
+      if(typeof revertMatchRecord === 'function') revertMatchRecord(m);
+    });
+    const newArr = arr.filter(m => !((m.d||'') >= fromD && (m.d||'') <= toD));
+    if(mode==='mini') { miniM.length=0; miniM.push(...newArr); }
+    else if(mode==='univm') { univM.length=0; univM.push(...newArr); }
+    else if(mode==='ck') { ckM.length=0; ckM.push(...newArr); }
+    else if(mode==='pro') { proM.length=0; proM.push(...newArr); }
+    else if(mode==='tt') { ttM.length=0; ttM.push(...newArr); }
+    else if(mode==='ind') { indM.length=0; indM.push(...newArr); }
+    else if(mode==='gj') { gjM.length=0; gjM.push(...newArr); }
+  });
+  if(typeof fixPoints === 'function') fixPoints();
+  save(); render();
+  const el = document.getElementById('bulk-del-result');
+  if(el){ el.textContent = `✅ ${total}건 삭제 완료`; el.style.color='var(--red)'; }
+}
+
 function reCfg(){
   const tabs=document.querySelectorAll('.stab');
   let C=null,T=document.createElement('span');
