@@ -1170,10 +1170,6 @@ function renderSeasonList(){
     </div>`).join('');
 }
 
-/* ══════════════════════════════════════
-   📋 대회 경기 붙여넣기 일괄 입력
-══════════════════════════════════════ */
-let _grpPasteState = null; // {mode:'grp', tnId, gi, mi} or {mode:'bkt', tnId, rnd, mi}
 
 /* ── 브라켓 경기 붙여넣기 ── */
 function openBktPasteModal(){
