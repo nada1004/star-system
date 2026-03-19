@@ -120,7 +120,7 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys,boardOrder,userMapAlias,proTourneys,curProComp,ttM,indM,gjM,notices,playerStatusIcons},null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';
@@ -141,6 +141,15 @@ function doFile(inp){
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
       tourneys=d.tourneys||[];ttM=d.ttM||[];
+      // 🔧 누락 변수 복원 추가
+      if(d.indM!==undefined) indM=d.indM||[];
+      if(d.gjM!==undefined) gjM=d.gjM||[];
+      if(d.proTourneys!==undefined) proTourneys=d.proTourneys||[];
+      if(d.curProComp!==undefined) curProComp=d.curProComp||'';
+      if(d.userMapAlias!==undefined) userMapAlias=d.userMapAlias||{};
+      if(d.notices!==undefined) notices=d.notices||[];
+      if(d.playerStatusIcons!==undefined) playerStatusIcons=d.playerStatusIcons||{};
+      if(d.boardOrder!==undefined) boardOrder=d.boardOrder||[];
       window._compListCache={};window._shareAllMatchesCached=null;
       (function(){
         const allD=[...miniM,...univM,...comps,...ckM,...proM];

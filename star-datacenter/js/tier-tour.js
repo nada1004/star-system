@@ -1471,9 +1471,24 @@ function delPlayer(){
   _removePlayerFromMatches(ckM);
   _removePlayerFromMatches(proM);
   _removePlayerFromMatches(ttM);
-  // 3. 다른 선수의 history에서 해당 선수와의 기록 제거
+  // 3. 다른 선수의 history에서 해당 선수와의 기록 제거 + win/loss/points/ELO 재계산
   players.forEach(p => {
-    if(p.history) p.history = p.history.filter(h => h.opp !== name);
+    if(!p.history) return;
+    const removed = p.history.filter(h => h.opp === name);
+    if(!removed.length) return;
+    p.history = p.history.filter(h => h.opp !== name);
+    // 제거된 기록만큼 전적 차감
+    removed.forEach(h => {
+      if(h.result === '승') {
+        p.win = Math.max(0, (p.win||0) - 1);
+        p.points = (p.points||0) - 3;
+        if(h.eloDelta != null) p.elo = (p.elo||ELO_DEFAULT) - h.eloDelta;
+      } else if(h.result === '패') {
+        p.loss = Math.max(0, (p.loss||0) - 1);
+        p.points = (p.points||0) + 3;
+        if(h.eloDelta != null) p.elo = (p.elo||ELO_DEFAULT) - h.eloDelta;
+      }
+    });
   });
   save();
   render();
