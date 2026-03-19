@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */
 let _grpPasteState = null; // {mode:'grp', tnId, gi, mi} or {mode:'bkt', tnId, rnd, mi}
@@ -965,7 +965,7 @@ function rCfg(C,T){
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </div>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
-    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
+    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div><div id="cfg-idb-info" style="font-size:11px;color:var(--gray-l);margin-top:4px"></div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
   </div>
   <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
@@ -1061,6 +1061,21 @@ function renderStorageInfo(){
         }).join('')}
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
+  // IndexedDB 사용량 비동기 표시
+  (async()=>{
+    try{
+      const idbEl=document.getElementById('cfg-idb-info');
+      if(!idbEl)return;
+      const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_u_imgs'];
+      let idbTotal=0;
+      for(const k of keys){
+        const v=await idbGet(k);
+        if(v) idbTotal+=JSON.stringify(v).length*2;
+      }
+      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
+      idbEl.textContent='IndexedDB: '+fmt(idbTotal)+(idbTotal>0?' (경기기록 백업)':'');
+    }catch(e){}
+  })();
 }
 function reCfg(){
   const tabs=document.querySelectorAll('.stab');
@@ -1447,7 +1462,16 @@ function setAllFemale(){
 }
 
 function delPlayer(){
-  if(confirm(`"${editName}" 선수를 삭제할까요?`)){const idx=players.findIndex(p=>p.name===editName);if(idx>=0)players.splice(idx,1);save();render();cm('emModal');cm('playerModal');}
+  if(confirm(`"${editName}" 선수를 삭제할까요? (경기 기록은 유지됩니다)`)){
+    const p = players.find(x => x.name === editName);
+    if (p) {
+      p.retired = true;
+    }
+    save();
+    render();
+    cm('emModal');
+    cm('playerModal');
+  }
 }
 
 function openRE(mode,idx){

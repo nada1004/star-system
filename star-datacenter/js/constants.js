@@ -47,7 +47,7 @@ async function idbGet(key){
 // IndexedDB에서 대용량 경기 기록 로드 (localStorage가 비어있을 때 폴백)
 async function idbLoadMatchData(){
   try{
-    const keys = ['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
+    const keys = ['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_u_imgs'];
     for(const key of keys){
       if(localStorage.getItem(key)) continue; // localStorage에 있으면 skip
       const val = await idbGet(key);
@@ -143,6 +143,15 @@ let players    = J('su_p')  || [];
 (function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object')players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
+// su_u_imgs 병합 (분리 저장된 이미지 필드 복원)
+(function(){
+  const imgs = J('su_u_imgs');
+  if(imgs && typeof imgs === 'object') {
+    univCfg.forEach(u => {
+      if(imgs[u.name]) Object.assign(u, imgs[u.name]);
+    });
+  }
+})();
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
@@ -278,7 +287,26 @@ function localSave(){
     });
     localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
     localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
-    localStorage.setItem('su_u', JSON.stringify(univCfg));
+    // 🔧 univCfg 이미지 필드 분리 저장 (su_u 크기 감소)
+    // bgImg(배경), memoImgs(사이드), bMemoImgs(하단) → su_u_imgs로 분리
+    const _imgFields = ['bgImg','memoImg','memoImgs','bMemoImg','bMemoImgs'];
+    const _univImgMap = {};
+    const _univNoImg = univCfg.map(u => {
+      const c = {...u};
+      const imgs = {};
+      _imgFields.forEach(f => { if(u[f] !== undefined){ imgs[f] = u[f]; delete c[f]; } });
+      if(Object.keys(imgs).length) _univImgMap[u.name] = imgs;
+      return c;
+    });
+    localStorage.setItem('su_u', JSON.stringify(_univNoImg));
+    // 이미지는 IndexedDB에 저장 (base64 크면 localStorage 생략)
+    const _uImgStr = JSON.stringify(_univImgMap);
+    if(_uImgStr.length < 200000) { // 200KB 미만이면 localStorage에도 저장
+      localStorage.setItem('su_u_imgs', _uImgStr);
+    } else {
+      localStorage.removeItem('su_u_imgs'); // localStorage에서 제거
+    }
+    idbSet('su_u_imgs', _univImgMap).catch(()=>{});
     localStorage.setItem('su_m', JSON.stringify(maps));
     localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
     localStorage.setItem('su_t', JSON.stringify(tourD));
@@ -304,10 +332,18 @@ function localSave(){
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
     // 🔧 IndexedDB 백업 — localStorage 5MB 한계 우회
     // 대용량 경기 기록 배열을 IndexedDB에도 저장 (비동기, 실패해도 무관)
+    // 이미지 맵 재구성 (univCfg에서 이미지 필드 수집)
+    const _uImgMapForIdb = {};
+    univCfg.forEach(u => {
+      const imgs = {};
+      ['bgImg','memoImg','memoImgs','bMemoImg','bMemoImgs'].forEach(f=>{if(u[f]!==undefined)imgs[f]=u[f];});
+      if(Object.keys(imgs).length) _uImgMapForIdb[u.name] = imgs;
+    });
     const _idbMatchData = {
       su_mm: miniM, su_um: univM, su_cm: comps, su_ck: ckM,
       su_pro: proM, su_ptn: proTourneys, su_tn: tourneys,
-      su_ttm: ttM, su_indm: indM, su_gjm: gjM
+      su_ttm: ttM, su_indm: indM, su_gjm: gjM,
+      su_u_imgs: _uImgMapForIdb
     };
     Object.entries(_idbMatchData).forEach(([k,v])=>{ idbSet(k,v).catch(()=>{}); });
   }catch(e){
