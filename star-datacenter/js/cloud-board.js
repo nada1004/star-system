@@ -135,22 +135,52 @@ async function fbCloudSave() {
     curProComp, _ttCurComp,
     savedAt
   };
-  // 페이로드 크기 검사 (base64 사진 등 비정상적으로 큰 경우 경고)
+  // 페이로드 크기 검사
+  let _fbPayloadSize = 0;
   try {
-    const _sz = JSON.stringify(dataObj).length;
-    if (_sz > 2 * 1024 * 1024) { // 2MB 초과 경고
-      const statusEl = document.getElementById('cloudStatus');
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 크기 ${(_sz/1024/1024).toFixed(1)}MB — 프로필 사진에 base64 이미지가 있으면 삭제하세요`; }
-      console.warn('[fbCloudSave] 페이로드 크기 경고:', (_sz/1024).toFixed(0)+'KB');
+    _fbPayloadSize = JSON.stringify(dataObj).length;
+    const statusEl = document.getElementById('cloudStatus');
+    if (_fbPayloadSize > 3 * 1024 * 1024) { // 3MB 초과 — Firebase 저장 실패 가능성 높음
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — Firebase 저장 실패 가능 (설정탭에서 base64 이미지 삭제 필요)`; }
+      console.warn('[fbCloudSave] 크기 위험:', (_fbPayloadSize/1024).toFixed(0)+'KB');
+    } else if (_fbPayloadSize > 2 * 1024 * 1024) { // 2MB 경고
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — 곧 저장 실패할 수 있습니다`; }
+      console.warn('[fbCloudSave] 크기 경고:', (_fbPayloadSize/1024).toFixed(0)+'KB');
     }
+    console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
+  // 🔧 전송 전 크기 체크 — 초과 시 history 압축 후 재시도
+  const _tryFbSet = async (obj) => {
+    const sz = JSON.stringify(obj).length;
+    if (sz > 4 * 1024 * 1024) { // 4MB 초과 시 history 축소
+      console.warn('[fbCloudSave] 페이로드 크기 초과:', (sz/1024/1024).toFixed(2)+'MB — history 압축 후 재시도');
+      const slim = {...obj};
+      slim.players = (obj.players||[]).map(p => {
+        const cp = {...p};
+        // history를 최근 100개로 줄임
+        if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(0, 100);
+        return cp;
+      });
+      return window.fbSet(slim, pw);
+    }
+    return window.fbSet(obj, pw);
+  };
   try {
-    await window.fbSet(dataObj, pw);
+    await _tryFbSet(dataObj);
     githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
   } catch(e) {
     console.error('[fbCloudSave]', e);
     const statusEl = document.getElementById('cloudStatus');
-    if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 저장 실패: ' + (e.message||e); setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},6000); }
+    if (statusEl) {
+      const msg = e.message || String(e);
+      // 크기 초과 여부 감지
+      const isSizeErr = msg.includes('exceeded') || msg.includes('too large') || msg.includes('payload');
+      statusEl.style.color='#dc2626';
+      statusEl.innerHTML = '❌ Firebase 저장 실패: ' + msg
+        + (isSizeErr ? ' (데이터 크기 초과)' : '')
+        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
+      // 에러는 닫기 버튼 누르기 전까지 유지 (6초 자동 사라짐 제거)
+    }
     throw e;
   } finally {
     window._isSaving = false;
