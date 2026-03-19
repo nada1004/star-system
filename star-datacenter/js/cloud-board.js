@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
@@ -60,16 +60,16 @@ window.onFirebaseLoad = function(data) {
   if (!window._forcingSync) {
     // 저장 중 → skip (race condition 방지)
     if (window._isSaving) return;
-    // 저장 직후 3초: 자기 에코 빠른 방지 (window 변수라 새로고침 후 리셋됨)
-    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 3000);
+    // 저장 직후 5초: 자기 에코 방지 (window 변수라 새로고침 후 리셋됨)
+    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 5000);
     if (justSaved) return;
-    // 로컬 저장 시각 >= Firebase 저장 시각: 로컬이 같거나 더 최신 → skip (구 데이터 덮어씌우기 방지)
-    if (isAdmin && clean.savedAt !== undefined) {
-      const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
-      if (localSavedAt >= clean.savedAt) return;
-    }
+    // 🔧 수정: savedAt 비교 제거 — 다른 관리자 기기 저장이 무시되는 버그 수정
+    // (localSavedAt >= clean.savedAt 조건이 다른 관리자 저장도 차단하는 문제)
+    // 자기 에코만 justSaved로 방어하고, 나머지는 항상 수신
   }
   _applyCloudData(clean);
+  // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
+  // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
@@ -112,7 +112,6 @@ async function fbCloudSave() {
   } catch(e) {}
   try {
     await window.fbSet(dataObj, pw);
-    window._lastAdminSaveTime = Date.now();
     githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
   } catch(e) {
     console.error('[fbCloudSave]', e);
@@ -129,7 +128,7 @@ async function fbCloudSave() {
 async function githubDataSave(dataObj) {
   const token = localStorage.getItem('su_gh_token');
   if (!token) return; // 토큰 미설정 시 skip
-  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
+  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
   // 현재 파일 SHA 조회 (업데이트 시 필수)
   const getRes = await fetch(apiUrl, {
     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }

@@ -88,38 +88,12 @@ if (_isAdminDevice) {
     }
   });
 
-  // GitHub 토큰 설정된 환경(수천 명 대비)에서는 onValue 해제 후 GitHub 폴링으로 전환
-  // data.json에 savedAt이 포함되면 자동 전환됨
-  setTimeout(async () => {
-    if (!_lastSnapshot || !_lastSnapshot.savedAt) return; // savedAt 없으면 전환 안 함
-    const GITHUB_DATA_URL = 'https://nada1004.github.io/star-system/data.json';
-    try {
-      const res = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) return;
-      const ghData = await res.json();
-      // GitHub data.json에 savedAt이 있고 Firebase와 같거나 최신이면 폴링으로 전환
-      if (ghData && ghData.savedAt && ghData.savedAt >= _lastSnapshot.savedAt) {
-        // onValue는 유지 (실시간 반영 보장) + GitHub 폴링을 보조로 추가
-        // off(dataRef) 제거 이유: onValue 끊으면 Firebase 즉시 반영이 안 됨
-
-        // GitHub 30초 폴링 (보조 - Firebase 백업용)
-        let _lastSavedAt = ghData.savedAt;
-        async function ghPoll() {
-          if (document.visibilityState !== 'visible') return;
-          try {
-            const r = await fetch(GITHUB_DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
-            if (!r.ok) return;
-            const d = await r.json();
-            if (d && (d.savedAt || 0) > _lastSavedAt) {
-              _lastSavedAt = d.savedAt;
-              _deliver(d);
-            }
-          } catch(e) {}
-        }
-        setInterval(ghPoll, 30000);
-      }
-    } catch(e) {}
-  }, 5000); // 5초 후 GitHub 체크
+  // 🔧 GitHub 폴링 제거
+  // 이유: Firebase onValue가 실시간으로 모든 변경 사항을 처리함
+  // GitHub Pages URL(nada1004.github.io/star-system/data.json)과
+  // 실제 저장 경로(raw.githubusercontent.com/.../star-datacenter/data.json)가 달라
+  // 오래된 데이터를 30초마다 덮어씌우는 버그 발생
+  // → Firebase onValue만으로 실시간 동기화 처리
 }
 
 // 데이터 쓰기 함수 (관리자 전용)
