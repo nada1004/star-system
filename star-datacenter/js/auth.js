@@ -120,7 +120,7 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys},null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys,boardOrder,userMapAlias,proTourneys,curProComp,ttM,indM,gjM,notices,playerStatusIcons},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';

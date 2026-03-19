@@ -1,4 +1,4 @@
-﻿function rStats(C,T){
+function rStats(C,T){
   T.textContent='📊 통계';
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
@@ -1396,45 +1396,7 @@ function resetShareCard(el){
 // ── 모바일 호환 이미지 다운로드 헬퍼 ──────────────────────────
 // iOS Safari에서 a.click()이 동작 안 하는 문제를 해결:
 // 1) canvas.toBlob → ObjectURL → a.click() (Android/Chrome)
-// 2) 실패 시 새 탭에서 이미지 열기 (iOS Safari)
-async function _downloadCanvasImage(canvas, filename, mimeType, quality){
-  return new Promise((resolve) => {
-    try {
-      // 방법 1: Blob + ObjectURL (대부분의 브라우저)
-      canvas.toBlob(function(blob){
-        if(!blob){ resolve(false); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
-        resolve(true);
-      }, mimeType, quality);
-    } catch(e) { resolve(false); }
-  });
-}
-
-async function _saveCanvasImage(canvas, filename, fmt){
-  const mime = fmt==='jpg' ? 'image/jpeg' : 'image/png';
-  const q = fmt==='jpg' ? 0.95 : undefined;
-  const ok = await _downloadCanvasImage(canvas, filename, mime, q);
-  if(!ok){
-    // 방법 2: iOS Safari fallback - 새 탭에서 열기
-    const dataUrl = fmt==='jpg' ? canvas.toDataURL('image/jpeg', 0.95) : canvas.toDataURL('image/png');
-    const w = window.open('', '_blank');
-    if(w){
-      w.document.write('<html><body style="margin:0;background:#111">'
-        + '<p style="color:#fff;font-family:sans-serif;padding:12px;font-size:13px">이미지를 길게 눌러 저장하세요 📥</p>'
-        + `<img src="${dataUrl}" style="max-width:100%;display:block">`
-        + '</body></html>');
-    } else {
-      // 팝업 차단된 경우 직접 이동
-      window.location.href = fmt==='jpg' ? canvas.toDataURL('image/jpeg', 0.95) : canvas.toDataURL('image/png');
-    }
-  }
-}
+// _downloadCanvasImage, _saveCanvasImage → render.js로 이동 (로드 순서 버그 수정)
 
 // 이미지 저장 함수 (JPG)
 async function downloadShareCardJpg(){

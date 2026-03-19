@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
 let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];if(!t.includes('미정'))t.push('미정');return t;})();
@@ -406,3 +406,12 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }
+
+/* ══════════════════════════════════════
+   캘린더 전역 상태 (calendar.js / stats.js 공유)
+   stats.js에서 이곳으로 이동 — 의존성 순서 정리
+══════════════════════════════════════ */
+// calWeekOffset, calDayDate는 stats.js에도 선언되어 있으나
+// calendar.js가 stats.js보다 나중에 로드되므로 constants.js에서 먼저 초기화
+if(typeof calWeekOffset === 'undefined') var calWeekOffset = 0;
+if(typeof calDayDate    === 'undefined') var calDayDate    = '';

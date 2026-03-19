@@ -900,3 +900,42 @@ function initPEloChart(name){
     canvas.onmouseleave=()=>{tip.style.display='none';};
   }
 }
+
+/* ══════════════════════════════════════
+   이미지 저장 공통 유틸 (stats.js / vs.js / vote.js 공유)
+   stats.js보다 먼저 로드되는 render.js로 이동 (로드 순서 버그 수정)
+══════════════════════════════════════ */
+async function _downloadCanvasImage(canvas, filename, mimeType, quality){
+  return new Promise((resolve) => {
+    try {
+      canvas.toBlob(function(blob){
+        if(!blob){ resolve(false); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+        resolve(true);
+      }, mimeType, quality);
+    } catch(e) { resolve(false); }
+  });
+}
+async function _saveCanvasImage(canvas, filename, fmt){
+  const mime = fmt==='jpg' ? 'image/jpeg' : 'image/png';
+  const q = fmt==='jpg' ? 0.95 : undefined;
+  const ok = await _downloadCanvasImage(canvas, filename, mime, q);
+  if(!ok){
+    const dataUrl = fmt==='jpg' ? canvas.toDataURL('image/jpeg', 0.95) : canvas.toDataURL('image/png');
+    const w = window.open('', '_blank');
+    if(w){
+      w.document.write('<html><body style="margin:0;background:#111">'
+        + '<p style="color:#fff;font-family:sans-serif;padding:12px;font-size:13px">이미지를 길게 눌러 저장하세요 📥</p>'
+        + '<img src="' + dataUrl + '" style="max-width:100%;display:block">'
+        + '</body></html>');
+    } else {
+      window.location.href = fmt==='jpg' ? canvas.toDataURL('image/jpeg', 0.95) : canvas.toDataURL('image/png');
+    }
+  }
+}
