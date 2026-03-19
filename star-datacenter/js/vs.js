@@ -190,7 +190,7 @@ function _vsRenderResult(){
       <!-- A 선수 카드 -->
       <div style="flex:1;min-width:130px;background:${colA}18;border:2px solid ${colA}44;border-radius:10px;padding:12px;text-align:center">
         ${(()=>{
-          if(pA&&pA.photo) return '<img src="'+pA.photo+'" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid '+colA+';margin:0 auto 8px;display:block" onerror="this.style.display='none'">';
+          if(pA&&pA.photo) return '<img src="'+pA.photo+'" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid '+colA+';margin:0 auto 8px;display:block" onerror="this.style.display=\'none\'">';
           return '<div style="width:52px;height:52px;border-radius:12px;background:'+colA+';margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">'+vsNameA[0]+'</div>';
         })()}
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameA}</div>
@@ -212,7 +212,7 @@ function _vsRenderResult(){
       <!-- B 선수 카드 -->
       <div style="flex:1;min-width:130px;background:${colB}18;border:2px solid ${colB}44;border-radius:10px;padding:12px;text-align:center">
         ${(()=>{
-          if(pB&&pB.photo) return '<img src="'+pB.photo+'" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid '+colB+';margin:0 auto 8px;display:block" onerror="this.style.display='none'">';
+          if(pB&&pB.photo) return '<img src="'+pB.photo+'" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid '+colB+';margin:0 auto 8px;display:block" onerror="this.style.display=\'none\'">';
           return '<div style="width:52px;height:52px;border-radius:12px;background:'+colB+';margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">'+vsNameB[0]+'</div>';
         })()}
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameB}</div>
