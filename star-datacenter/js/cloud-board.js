@@ -149,25 +149,44 @@ async function fbCloudSave() {
     }
     console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
+  // 🔧 Firebase는 undefined 값 저장 불가 → 전송 전 재귀적으로 undefined 제거
+  function _removeUndefined(obj) {
+    if (Array.isArray(obj)) {
+      return obj.map(_removeUndefined);
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const result = {};
+      Object.keys(obj).forEach(k => {
+        if (obj[k] !== undefined) {
+          result[k] = _removeUndefined(obj[k]);
+        }
+        // undefined 필드는 그냥 생략 (Firebase 저장 시 오류 방지)
+      });
+      return result;
+    }
+    return obj;
+  }
+
   // 🔧 전송 전 크기 체크 — 초과 시 history 압축 후 재시도
   const _tryFbSet = async (obj) => {
-    const sz = JSON.stringify(obj).length;
+    // undefined 제거 먼저
+    const clean = _removeUndefined(obj);
+    const sz = JSON.stringify(clean).length;
     console.log('[fbCloudSave] 전송 크기:', (sz/1024).toFixed(0)+'KB');
     if (sz > 4 * 1024 * 1024) { // 4MB 초과 시 history 축소
       console.warn('[fbCloudSave] 페이로드 크기 초과:', (sz/1024/1024).toFixed(2)+'MB — history 압축 후 재시도');
       const statusEl = document.getElementById('cloudStatus');
       if(statusEl){ statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 데이터 크기 초과 — 압축 후 재시도 중...'; }
-      const slim = {...obj};
-      slim.players = (obj.players||[]).map(p => {
+      clean.players = (clean.players||[]).map(p => {
         const cp = {...p};
         if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(0, 100);
         return cp;
       });
-      const slimSz = JSON.stringify(slim).length;
+      const slimSz = JSON.stringify(clean).length;
       console.log('[fbCloudSave] 압축 후 크기:', (slimSz/1024).toFixed(0)+'KB');
-      return window.fbSet(slim, pw);
+      return window.fbSet(clean, pw);
     }
-    return window.fbSet(obj, pw);
+    return window.fbSet(clean, pw);
   };
   try {
     await _tryFbSet(dataObj);
