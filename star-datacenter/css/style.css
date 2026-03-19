@@ -1,4 +1,4 @@
-﻿:root{
+:root{
   --bg:#f0f2f5;--white:#fff;--surface:#f7f9fc;--border:#e4e8ee;--border2:#cdd3dc;
   --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-ll:#dbeafe;
   --gold:#d97706;--gold-bg:#fffbeb;--gold-b:#fde68a;
@@ -45,8 +45,8 @@ b,strong{font-weight:600;}
 .grp-rank-table tr:hover td{background:#f0f6ff;}
 .grp-rank-top1{background:linear-gradient(90deg,#fffbeb,#fff)!important;}
 .grp-rank-top2{background:linear-gradient(90deg,#f1f5f9,#fff)!important;}
-.grp-match-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .15s;}
-.grp-match-card:hover{box-shadow:0 3px 12px rgba(37,99,235,.1);}
+.grp-match-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow var(--tr),transform var(--tr);}
+.grp-match-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
 .grp-match-vs{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--gray-l);}
 .grp-match-score{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;letter-spacing:2px;}
 .grp-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
@@ -107,7 +107,7 @@ th{background:var(--surface);padding:8px 12px;border-bottom:1px solid var(--bord
 td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;font-weight:400;background:var(--white);}
 .td-c{text-align:center!important;}
 tr:last-child td{border-bottom:none;}
-tr:not(.ugrp):not(.tgrp):hover td{background:#fafbff;}
+/* tr hover — 아래 #f0f6ff 버전으로 통합 (중복 제거) */
 /* 스트리머 이름 컬럼 공백 방지 */
 .td-name{text-align:left;padding-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;width:100%;}
 .ugrp td{background:var(--c,#2563eb);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;border-top:2px solid var(--c,#2563eb);padding:8px 12px;color:#fff;border-left:4px solid var(--c,#2563eb);text-align:left;text-shadow:0 1px 4px rgba(0,0,0,.2);}
@@ -967,8 +967,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .rec-summary{transition:box-shadow var(--tr),transform var(--tr);}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(37,99,235,.10);transform:translateY(-1px);}
 /* 대전 카드 hover */
-.grp-match-card{transition:box-shadow var(--tr),transform var(--tr);}
-.grp-match-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
+/* .grp-match-card transition — 48줄 정의와 통합 (중복 제거) */
 /* 테이블 행 hover 강화 */
 tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
 /* 탭 전환 부드럽게 */
