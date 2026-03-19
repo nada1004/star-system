@@ -8,23 +8,57 @@ const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/
    Firebase 연동 (실시간 동기화)
 ══════════════════════════════════════ */
 // 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
+// 🔧 Firebase 배열→객체 변환 대응 헬퍼
+// Firebase Realtime DB는 배열을 {0:...,1:...,2:...} 객체로 저장할 수 있음
+// 수신 시 객체면 배열로 변환, null 슬롯 제거
+function _fbArr(val, fallback) {
+  if(!val) return fallback||[];
+  if(Array.isArray(val)) return val;
+  // 숫자 키 객체 → 배열 변환 (null 슬롯 제거)
+  if(typeof val === 'object') {
+    return Object.keys(val)
+      .sort((a,b)=>Number(a)-Number(b))
+      .map(k=>val[k])
+      .filter(v=>v!=null);
+  }
+  return fallback||[];
+}
+
 function _applyCloudData(d) {
-  if(d.players!==undefined) players=d.players||d.player||[];
-  if(d.univCfg!==undefined||d.univConfig!==undefined||d.universities!==undefined) univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
-  if(d.maps!==undefined) maps=d.maps||d.map||maps;
-  if(d.tourD!==undefined) tourD=d.tourD||d.tournamentDates||Array(15).fill('');
-  if(d.miniM!==undefined) miniM=d.miniM||d.mini||d.miniMatches||[];
-  if(d.univM!==undefined) univM=d.univM||d.univ||d.univMatches||[];
-  if(d.comps!==undefined) comps=d.comps||d.comp||d.competitions||[];
-  if(d.ckM!==undefined) ckM=d.ckM||d.ck||d.ckMatches||[];
-  if(d.compNames!==undefined) compNames=d.compNames||d.competitionNames||[];
+  if(d.players!==undefined){
+    players=_fbArr(d.players||d.player, []);
+    // 각 선수의 history도 배열 변환
+    players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+  }
+  if(d.univCfg!==undefined||d.univConfig!==undefined||d.universities!==undefined) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
+  if(d.maps!==undefined) maps=_fbArr(d.maps||d.map, maps);
+  if(d.tourD!==undefined) tourD=_fbArr(d.tourD||d.tournamentDates, Array(15).fill(''));
+  if(d.miniM!==undefined){
+    miniM=_fbArr(d.miniM||d.mini||d.miniMatches, []);
+    miniM.forEach(m=>{ if(m.sets) m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); });
+  }
+  if(d.univM!==undefined){ univM=_fbArr(d.univM||d.univ||d.univMatches, []); univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  if(d.comps!==undefined) comps=_fbArr(d.comps||d.comp||d.competitions, []);
+  if(d.ckM!==undefined){ ckM=_fbArr(d.ckM||d.ck||d.ckMatches, []); ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  if(d.compNames!==undefined) compNames=_fbArr(d.compNames||d.competitionNames, []);
   if(d.curComp!==undefined) curComp=d.curComp||d.currentComp||'';
-  if(d.proM!==undefined) proM=d.proM||d.pro||d.proMatches||[];
-  if(d.proTourneys!==undefined) proTourneys=d.proTourneys;
-  if(d.tourneys!==undefined) tourneys=d.tourneys||d.tournaments||d.tourney||[];
-  if(d.ttM!==undefined) ttM=d.ttM||d.tt||[];
-  if(d.indM!==undefined) indM=d.indM||d.ind||[];
-  if(d.gjM!==undefined) gjM=d.gjM||[];
+  if(d.proM!==undefined){ proM=_fbArr(d.proM||d.pro||d.proMatches, []); proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+  if(d.proTourneys!==undefined) proTourneys=_fbArr(d.proTourneys, []);
+  if(d.tourneys!==undefined){
+    tourneys=_fbArr(d.tourneys||d.tournaments||d.tourney, []);
+    // 토너먼트 내부 groups, matches도 배열 변환
+    tourneys.forEach(tn=>{
+      if(tn.groups) tn.groups=_fbArr(tn.groups,[]);
+      tn.groups&&tn.groups.forEach(g=>{
+        if(g.univs) g.univs=_fbArr(g.univs,[]);
+        if(g.matches) g.matches=_fbArr(g.matches,[]);
+        g.matches&&g.matches.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);});
+      });
+    });
+  }
+  if(d.ttM!==undefined) ttM=_fbArr(d.ttM||d.tt, []);
+  if(d.indM!==undefined) indM=_fbArr(d.indM||d.ind, []);
+  if(d.gjM!==undefined) gjM=_fbArr(d.gjM, []);
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
   // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
   if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
