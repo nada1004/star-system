@@ -1,61 +1,6 @@
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
-/* ══════════════════════════════════════
-   IndexedDB 유틸 — 5MB localStorage 한계 우회
-   대용량 배열(경기기록)을 IndexedDB에 백업 저장
-══════════════════════════════════════ */
-const _IDB_NAME = 'su_store';
-const _IDB_VER  = 1;
-let _idb = null;
-
-function _idbOpen(){
-  return new Promise((res, rej) => {
-    if(_idb){ res(_idb); return; }
-    const req = indexedDB.open(_IDB_NAME, _IDB_VER);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
-    };
-    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
-    req.onerror   = e => rej(e);
-  });
-}
-async function idbSet(key, val){
-  try{
-    const db = await _idbOpen();
-    return new Promise((res,rej)=>{
-      const tx = db.transaction('kv','readwrite');
-      tx.objectStore('kv').put(val, key);
-      tx.oncomplete = ()=>res();
-      tx.onerror    = e=>rej(e);
-    });
-  }catch(e){ console.warn('[idbSet]',e); }
-}
-async function idbGet(key){
-  try{
-    const db = await _idbOpen();
-    return new Promise((res,rej)=>{
-      const tx = db.transaction('kv','readonly');
-      const req = tx.objectStore('kv').get(key);
-      req.onsuccess = ()=>res(req.result);
-      req.onerror   = e=>rej(e);
-    });
-  }catch(e){ console.warn('[idbGet]',e); return null; }
-}
-
-// IndexedDB에서 대용량 경기 기록 로드 (localStorage가 비어있을 때 폴백)
-async function idbLoadMatchData(){
-  try{
-    const keys = ['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_u_imgs'];
-    for(const key of keys){
-      if(localStorage.getItem(key)) continue; // localStorage에 있으면 skip
-      const val = await idbGet(key);
-      if(val) localStorage.setItem(key, JSON.stringify(val));
-    }
-  }catch(e){ console.warn('[idbLoadMatchData]',e); }
-}
-
 let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];if(!t.includes('미정'))t.push('미정');return t;})();
 const RACES=['T','Z','P','N'];
 const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
@@ -143,15 +88,6 @@ let players    = J('su_p')  || [];
 (function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object')players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
-// su_u_imgs 병합 (분리 저장된 이미지 필드 복원)
-(function(){
-  const imgs = J('su_u_imgs');
-  if(imgs && typeof imgs === 'object') {
-    univCfg.forEach(u => {
-      if(imgs[u.name]) Object.assign(u, imgs[u.name]);
-    });
-  }
-})();
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
@@ -258,25 +194,8 @@ function fixPoints(){
   });
 }
 
-function _compressHistory(){
-  // 🔧 용량 최적화: history 레거시 필드 제거 + 최대 500개 제한
-  players.forEach(p=>{
-    if(!p.history||!p.history.length) return;
-    // 레거시 필드 제거 (time, eloAfter)
-    p.history=p.history.map(h=>{
-      const c={date:h.date,result:h.result,opp:h.opp,oppRace:h.oppRace,map:h.map,matchId:h.matchId||'',eloDelta:h.eloDelta};
-      if(h.univ) c.univ=h.univ;
-      if(h.mode) c.mode=h.mode;
-      return c;
-    });
-    // 최대 500개 제한 (최신순 유지)
-    if(p.history.length>500) p.history=p.history.slice(0,500);
-  });
-}
-
 function localSave(){
   try{
-    _compressHistory();
     localStorage.setItem('su_tiers',JSON.stringify(TIERS));
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
@@ -287,26 +206,7 @@ function localSave(){
     });
     localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
     localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
-    // 🔧 univCfg 이미지 필드 분리 저장 (su_u 크기 감소)
-    // bgImg(배경), memoImgs(사이드), bMemoImgs(하단) → su_u_imgs로 분리
-    const _imgFields = ['bgImg','memoImg','memoImgs','bMemoImg','bMemoImgs'];
-    const _univImgMap = {};
-    const _univNoImg = univCfg.map(u => {
-      const c = {...u};
-      const imgs = {};
-      _imgFields.forEach(f => { if(u[f] !== undefined){ imgs[f] = u[f]; delete c[f]; } });
-      if(Object.keys(imgs).length) _univImgMap[u.name] = imgs;
-      return c;
-    });
-    localStorage.setItem('su_u', JSON.stringify(_univNoImg));
-    // 이미지는 IndexedDB에 저장 (base64 크면 localStorage 생략)
-    const _uImgStr = JSON.stringify(_univImgMap);
-    if(_uImgStr.length < 200000) { // 200KB 미만이면 localStorage에도 저장
-      localStorage.setItem('su_u_imgs', _uImgStr);
-    } else {
-      localStorage.removeItem('su_u_imgs'); // localStorage에서 제거
-    }
-    idbSet('su_u_imgs', _univImgMap).catch(()=>{});
+    localStorage.setItem('su_u', JSON.stringify(univCfg));
     localStorage.setItem('su_m', JSON.stringify(maps));
     localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
     localStorage.setItem('su_t', JSON.stringify(tourD));
@@ -328,37 +228,13 @@ function localSave(){
     if(typeof boardPlayerOrder!=='undefined') localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
     if(typeof playerStatusIcons!=='undefined') localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
     localStorage.setItem('su_notices',JSON.stringify(notices));
+    localStorage.setItem('su_seasons',JSON.stringify(seasons));
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
-    // 🔧 IndexedDB 백업 — localStorage 5MB 한계 우회
-    // 대용량 경기 기록 배열을 IndexedDB에도 저장 (비동기, 실패해도 무관)
-    // 이미지 맵 재구성 (univCfg에서 이미지 필드 수집)
-    const _uImgMapForIdb = {};
-    univCfg.forEach(u => {
-      const imgs = {};
-      ['bgImg','memoImg','memoImgs','bMemoImg','bMemoImgs'].forEach(f=>{if(u[f]!==undefined)imgs[f]=u[f];});
-      if(Object.keys(imgs).length) _uImgMapForIdb[u.name] = imgs;
-    });
-    const _idbMatchData = {
-      su_mm: miniM, su_um: univM, su_cm: comps, su_ck: ckM,
-      su_pro: proM, su_ptn: proTourneys, su_tn: tourneys,
-      su_ttm: ttM, su_indm: indM, su_gjm: gjM,
-      su_u_imgs: _uImgMapForIdb
-    };
-    Object.entries(_idbMatchData).forEach(([k,v])=>{ idbSet(k,v).catch(()=>{}); });
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
-      // 🔧 QuotaExceeded 시 대용량 배열을 localStorage에서 제거하고 IndexedDB로만 유지
-      console.warn('[localSave] QuotaExceeded — 대용량 데이터 localStorage 제거 시도');
-      const _bigKeys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
-      _bigKeys.forEach(k=>{
-        try{
-          const val = _bigKeys.includes(k) ? eval(({'su_mm':'miniM','su_um':'univM','su_cm':'comps','su_ck':'ckM','su_pro':'proM','su_ptn':'proTourneys','su_tn':'tourneys','su_ttm':'ttM','su_indm':'indM','su_gjm':'gjM'})[k]) : null;
-          if(val!=null) idbSet(k,val).catch(()=>{});
-          localStorage.removeItem(k);
-        }catch(_){}
-      });
-      if(typeof showToast==='function')showToast('⚠️ 저장 공간 부족 — 경기 기록을 IndexedDB로 이동했습니다. 데이터는 유지됩니다.',6000);
+      if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
+      else alert('⚠️ 저장 공간이 부족합니다! 브라우저 저장소를 정리해 주세요.');
     }else{
       console.error('[localSave error]',e);
     }
@@ -405,6 +281,10 @@ let vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 let yearOptions=['2026'];
 let filterYear='전체';
 let filterMonth='전체'; // '전체' 또는 '01'~'12'
+
+// 🆕 시즌 관리: [{id, name, from, to}] — from/to: 'YYYY-MM-DD'
+let seasons = J('su_seasons') || [];
+let filterSeason = '전체'; // '전체' 또는 시즌 id
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
 // Get univ color with alpha hex suffix for row tinting
@@ -528,13 +408,6 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
-  // 🔧 용량 최적화: time/eloAfter 제거, 빈 필드 생략
-  const _wh={date:d,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta};
-  if(wu&&wu!==w.univ)_wh.univ=wu;
-  if(mode)_wh.mode=mode;
-  w.history.unshift(_wh);
-  const _lh={date:d,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta};
-  if(lu&&lu!==l.univ)_lh.univ=lu;
-  if(mode)_lh.mode=mode;
-  l.history.unshift(_lh);
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }

@@ -999,7 +999,27 @@ function rCfg(C,T){
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
   </div>
-  <div class="ssec" id="cfg-bulk-edit-sec">
+  <div class="ssec" id="cfg-season-sec">
+    <h4>🏆 시즌 관리</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
+    <div id="cfg-season-list" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시즌 이름</label>
+        <input type="text" id="cfg-season-name" placeholder="예: 2025 스프링" style="width:140px;font-size:12px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시작일</label>
+        <input type="date" id="cfg-season-from" style="font-size:12px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">종료일</label>
+        <input type="date" id="cfg-season-to" style="font-size:12px">
+      </div>
+      <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
+    </div>
+  </div>
+    <div class="ssec" id="cfg-bulk-edit-sec">
     <h4>✏️ 경기 일괄 수정</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">특정 날짜 범위의 경기 날짜·맵을 한 번에 수정하거나, 맵 이름 오타를 전체 교체합니다.</p>
 
@@ -1066,6 +1086,7 @@ function rCfg(C,T){
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     renderStorageInfo();
+    renderSeasonList();
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -1129,6 +1150,68 @@ function renderStorageInfo(){
 /* ══════════════════════════════════════
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
+
+
+/* ══════════════════════════════════════
+   시즌 관리 함수
+══════════════════════════════════════ */
+function renderSeasonList(){
+  const el = document.getElementById('cfg-season-list');
+  if(!el) return;
+  if(!seasons.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">등록된 시즌이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = seasons.map((s,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:800;color:#7c3aed;min-width:100px">🏆 ${s.name}</span>
+      <span style="font-size:11px;color:var(--gray-l)">${s.from} ~ ${s.to}</span>
+      <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="editSeason(${i})">✏️ 수정</button>
+      <button class="btn btn-r btn-xs" onclick="deleteSeason(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+function addSeason(){
+  const name = document.getElementById('cfg-season-name')?.value.trim();
+  const from = document.getElementById('cfg-season-from')?.value;
+  const to   = document.getElementById('cfg-season-to')?.value;
+  if(!name){ alert('시즌 이름을 입력하세요.'); return; }
+  if(!from || !to){ alert('시작일과 종료일을 입력하세요.'); return; }
+  if(from > to){ alert('시작일이 종료일보다 늦습니다.'); return; }
+  const id = 'season_' + Date.now();
+  seasons.push({id, name, from, to});
+  seasons.sort((a,b) => a.from.localeCompare(b.from));
+  save();
+  renderSeasonList();
+  document.getElementById('cfg-season-name').value = '';
+  document.getElementById('cfg-season-from').value = '';
+  document.getElementById('cfg-season-to').value = '';
+  showToast('✅ 시즌 추가됨: ' + name);
+}
+
+function editSeason(i){
+  const s = seasons[i];
+  const name = prompt('시즌 이름', s.name);
+  if(!name) return;
+  const from = prompt('시작일 (YYYY-MM-DD)', s.from);
+  if(!from) return;
+  const to = prompt('종료일 (YYYY-MM-DD)', s.to);
+  if(!to) return;
+  seasons[i] = {...s, name, from, to};
+  seasons.sort((a,b) => a.from.localeCompare(b.from));
+  save();
+  renderSeasonList();
+  showToast('✅ 시즌 수정됨');
+}
+
+function deleteSeason(i){
+  if(!confirm(`"${seasons[i].name}" 시즌을 삭제할까요?`)) return;
+  seasons.splice(i, 1);
+  if(typeof filterSeason !== 'undefined') filterSeason = '전체';
+  save();
+  renderSeasonList();
+  showToast('🗑️ 시즌 삭제됨');
+}
 
 // 날짜 일괄 변경
 function bulkChangeDate(){

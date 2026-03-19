@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    대전 기록 탭
 ══════════════════════════════════════ */
 /* ═══════════════════════════════
@@ -189,9 +189,12 @@ function _vsRenderResult(){
     <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <!-- A 선수 카드 -->
       <div style="flex:1;min-width:130px;background:${colA}18;border:2px solid ${colA}44;border-radius:10px;padding:12px;text-align:center">
-        <div style="width:44px;height:44px;border-radius:10px;background:${colA};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${vsNameA[0]}</div>
+        ${(()=>{
+          if(pA&&pA.photo) return `<img src="${pA.photo}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid ${colA};margin:0 auto 8px;display:block" onerror="this.outerHTML='<div style=width:52px;height:52px;border-radius:12px;background:'+encodeURIComponent(colA)+';margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff>'+(vsNameA[0])+'</div>'">`; 
+          return `<div style="width:52px;height:52px;border-radius:12px;background:${colA};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${vsNameA[0]}</div>`;
+        })()}
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameA}</div>
-        ${pA?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pA.univ}</div>`:''}
+        ${pA?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pA.univ}${pA.role?' · '+pA.role:''}</div>`:''}
         ${pA?getTierBadge(pA.tier):''}
         ${aLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colA+'">🏆 우세</div>':''}
       </div>
@@ -208,9 +211,12 @@ function _vsRenderResult(){
       </div>
       <!-- B 선수 카드 -->
       <div style="flex:1;min-width:130px;background:${colB}18;border:2px solid ${colB}44;border-radius:10px;padding:12px;text-align:center">
-        <div style="width:44px;height:44px;border-radius:10px;background:${colB};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${vsNameB[0]}</div>
+        ${(()=>{
+          if(pB&&pB.photo) return `<img src="${pB.photo}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2.5px solid ${colB};margin:0 auto 8px;display:block" onerror="this.outerHTML='<div style=width:52px;height:52px;border-radius:12px;background:'+encodeURIComponent(colB)+';margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff>'+(vsNameB[0])+'</div>'">`; 
+          return `<div style="width:52px;height:52px;border-radius:12px;background:${colB};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${vsNameB[0]}</div>`;
+        })()}
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameB}</div>
-        ${pB?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pB.univ}</div>`:''}
+        ${pB?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pB.univ}${pB.role?' · '+pB.role:''}</div>`:''}
         ${pB?getTierBadge(pB.tier):''}
         ${bLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colB+'">🏆 우세</div>':''}
       </div>
@@ -290,6 +296,44 @@ function _vsRenderResult(){
                 <td style="text-align:center;padding:5px 6px;color:var(--gray-l);font-size:11px">종족</td>
                 <td style="text-align:left;padding:5px 10px;color:var(--text)">${raceB}</td>
               </tr>
+              ${(()=>{
+                // 최근 5경기 폼
+                function recentForm(p) {
+                  const hist = (p.history||[]).slice(0,5);
+                  if(!hist.length) return '<span style="color:var(--gray-l);font-size:11px">기록없음</span>';
+                  return hist.map(h=>h.result==='승'
+                    ? '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#16a34a;color:#fff;font-size:9px;font-weight:900;text-align:center;line-height:16px;margin:1px">W</span>'
+                    : '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:900;text-align:center;line-height:16px;margin:1px">L</span>'
+                  ).join('');
+                }
+                return `<tr>
+                  <td style="text-align:right;padding:5px 10px">${recentForm(pA)}</td>
+                  <td style="text-align:center;padding:5px 6px;color:var(--gray-l);font-size:11px">최근5경기</td>
+                  <td style="text-align:left;padding:5px 10px">${recentForm(pB)}</td>
+                </tr>`;
+              })()}
+              ${(()=>{
+                // 종족별 승률 (테란/저그/프로토스 상대)
+                function raceWR(p) {
+                  const rv = {T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
+                  (p.history||[]).forEach(h=>{
+                    if(rv[h.oppRace]) { if(h.result==='승') rv[h.oppRace].w++; else rv[h.oppRace].l++; }
+                  });
+                  return ['T','Z','P'].map(r=>{
+                    const t=rv[r].w+rv[r].l;
+                    const wr=t?Math.round(rv[r].w/t*100):null;
+                    const rn=r==='T'?'테':r==='Z'?'저':'프';
+                    return wr!==null?`<span style="font-size:10px;color:var(--text3)">${rn}<b style="color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</b></span>`:'';
+                  }).filter(Boolean).join(' ');
+                }
+                const rwA=raceWR(pA), rwB=raceWR(pB);
+                if(!rwA&&!rwB) return '';
+                return `<tr>
+                  <td style="text-align:right;padding:5px 10px;font-size:11px">${rwA||'-'}</td>
+                  <td style="text-align:center;padding:5px 6px;color:var(--gray-l);font-size:11px">종족별승률</td>
+                  <td style="text-align:left;padding:5px 10px;font-size:11px">${rwB||'-'}</td>
+                </tr>`;
+              })()}
             </tbody>
           </table>
         </div>

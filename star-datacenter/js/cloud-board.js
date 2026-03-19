@@ -124,6 +124,8 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
+  // 🆕 시즌
+  if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
@@ -178,7 +180,7 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp,
+    curProComp, _ttCurComp, seasons,
     savedAt
   };
   // 페이로드 크기 검사
