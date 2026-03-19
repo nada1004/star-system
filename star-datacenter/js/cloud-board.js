@@ -92,14 +92,14 @@ window.onFirebaseLoad = function(data) {
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
   const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
   if (!window._forcingSync) {
-    // 저장 중 → skip (race condition 방지)
-    if (window._isSaving) return;
-    // 저장 직후 5초: 자기 에코 방지 (window 변수라 새로고침 후 리셋됨)
+    // 저장 중 → 바로 버리지 않고 pending에 보관 후 저장 완료 시 재적용
+    if (window._isSaving) {
+      window._fbPendingData = clean; // 마지막 수신 데이터 보관
+      return;
+    }
+    // 자기 에코 방지: 저장 직후 5초 이내 + 자기 기기에서 발생한 경우만 skip
     const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 5000);
     if (justSaved) return;
-    // 🔧 수정: savedAt 비교 제거 — 다른 관리자 기기 저장이 무시되는 버그 수정
-    // (localSavedAt >= clean.savedAt 조건이 다른 관리자 저장도 차단하는 문제)
-    // 자기 에코만 justSaved로 방어하고, 나머지는 항상 수신
   }
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
@@ -184,6 +184,21 @@ async function fbCloudSave() {
     throw e;
   } finally {
     window._isSaving = false;
+    // 저장 중 놓친 수신 데이터가 있으면 재적용
+    if (window._fbPendingData) {
+      const pending = window._fbPendingData;
+      window._fbPendingData = null;
+      setTimeout(() => {
+        // pending은 이미 admin_pw 제거된 clean 데이터
+        if (typeof _applyCloudData === 'function') {
+          _applyCloudData(pending);
+          if (typeof localSave === 'function') localSave();
+          if (typeof fixPoints === 'function') fixPoints();
+          window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
+          if (typeof render === 'function') render();
+        }
+      }, 200);
+    }
   }
 }
 
