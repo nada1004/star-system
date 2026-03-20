@@ -169,7 +169,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
   const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
-  const safeName=(playerName||'').replace(/'/g,"\'");
+  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){

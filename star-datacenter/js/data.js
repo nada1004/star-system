@@ -38,7 +38,7 @@ function revertMatchRecord(matchObj){
         let idx=-1;
         if(mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
         if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===mdate);
-        if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName);
+        if(idx<0){ idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', wName,'vs',lName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){
           const hr=w.history[idx];
           w.win=Math.max(0,(w.win||0)-1);w.points=(w.points||0)-3;
@@ -51,7 +51,7 @@ function revertMatchRecord(matchObj){
         let idx=-1;
         if(mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
         if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===mdate);
-        if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName);
+        if(idx<0){ idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', lName,'vs',wName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){
           const hr=l.history[idx];
           l.loss=Math.max(0,(l.loss||0)-1);l.points=(l.points||0)+3;
