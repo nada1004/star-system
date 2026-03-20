@@ -862,41 +862,6 @@ function buildUnivDetailHTML(univName){
     }
   }
 
-  // ── 소속 선수 카드 + 출석/활동률 ──
-  {
-    const _today = new Date().toISOString().slice(0,10);
-    const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-    const _activeM = members.filter(p=>!p.retired);
-    if(_activeM.length){
-      const memberCards = _activeM.map(p=>{
-        const lastDate=(p.history||[]).reduce((mx,hh)=>hh.date>mx?hh.date:mx,'');
-        const isAct = lastDate >= _30ago;
-        const daysSince = lastDate ? Math.floor((new Date(_today)-new Date(lastDate))/86400000) : null;
-        const actBadge = !lastDate
-          ? `<span style="font-size:9px;color:#9ca3af">기록없음</span>`
-          : isAct
-            ? `<span style="font-size:9px;color:#16a34a;font-weight:700">✅ 활동중</span>`
-            : `<span style="font-size:9px;color:#f59e0b;font-weight:700">${daysSince}일전</span>`;
-        const wrP = (p.win+p.loss) ? Math.round(p.win/(p.win+p.loss)*100) : null;
-        const photoEl = p.photo
-          ? `<img src="${p.photo}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-          : `<div style="width:24px;height:24px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0">${p.name[0]}</div>`;
-        const safeName = p.name.replace(/'/g, "\'");
-        return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:90px;max-width:140px;cursor:pointer" onclick="openPlayerModal('${safeName}')">
-          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">${photoEl}<span style="font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span></div>
-          <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-bottom:3px">${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px">${p.race||'?'}</span></div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            ${(()=>{const wc=wrP>=50?'#16a34a':'#dc2626';const wt=wrP!==null?wrP+'%':'-';return '<span style="font-size:10px;color:'+wc+';font-weight:700">'+wt+'</span>';})()}
-            ${actBadge}
-          </div>
-        </div>`;
-      }).join('');
-      h += `<div style="margin-top:16px">
-        <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">👥 소속 선수 (${_activeM.length}명)</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">${memberCards}</div>
-      </div>`;
-    }
-  }
   return h;
 }/* ══════════════════════════════════════
    통합 탭 렌더 함수
