@@ -3026,6 +3026,12 @@ function openRE(mode,idx){
       <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
       <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
       <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
+  } else if(mode==='ind'){
+    const m=indM[idx];tit='🎮 개인전 수정';
+    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
+      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
   }
   document.getElementById('reTitle').innerText=tit;
   document.getElementById('reBody').innerHTML=body;om('reModal');
@@ -3065,9 +3071,14 @@ function saveRow(){
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
-    m.wName=document.getElementById('re-gj-w').value.trim()||m.wName;
-    m.lName=document.getElementById('re-gj-l').value.trim()||m.lName;
-    m.map=document.getElementById('re-gj-map').value.trim()||m.map;
+    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
+    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
+    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+  } else if(reMode==='ind'){
+    const m=indM[reIdx];m.d=d;
+    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
+    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
+    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
   }
   save();render();cm('reModal');
 }
