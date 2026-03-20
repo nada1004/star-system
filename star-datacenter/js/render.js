@@ -173,8 +173,8 @@ function openPlayerHistEdit(playerName, histIdx){
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
   const races=['T','Z','P'];
-  const _pheMapList=(hh.map&&hh.map!=='-'&&!maps.includes(hh.map))?[hh.map,...maps]:maps;
-  const mapOpts=_pheMapList.map(m=>`<option value="${m}"${hh.map===m?' selected':''}>${m}${hh.map===m&&!maps.includes(m)?' (기록값)':''}</option>`).join('');
+  // mapOpts: select는 항상 "목록에서 선택" 기본값, selected 없음
+  const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
   document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${hh.opp}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
