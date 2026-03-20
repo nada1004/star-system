@@ -109,8 +109,11 @@ function rVote(C,T){
             const winner=m.sa>m.sb?'a':'b';
             const correct=myVote&&myVote===winner;
             const voted=!!myVote;
-            const aCol=gc(m.a||'');
-            const bCol=gc(m.b||'');
+            const isCKorProF=(ckM.includes(m)||proM.includes(m)||(typeof ttM!=='undefined'&&ttM.includes(m)));
+            const tAF=isCKorProF?(m.teamALabel||'A팀'):(m.a||'팀A');
+            const tBF=isCKorProF?(m.teamBLabel||'B팀'):(m.b||'팀B');
+            const aCol=isCKorProF?'#2563eb':gc(m.a||'');
+            const bCol=isCKorProF?'#dc2626':gc(m.b||'');
             const total=v.a+v.b;
             const pctA=total===0?50:Math.round(v.a/total*100);
             return `<div style="background:var(--white);border:1px solid ${voted?(correct?'var(--green)':'var(--red)'):'var(--border)'};border-radius:12px;padding:14px;margin-bottom:8px;opacity:${voted?1:0.7}">
