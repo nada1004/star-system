@@ -829,22 +829,30 @@ function buildUnivDetailHTML(univName){
       const seen=new Set();
       const uniqueAces=aces.filter(x=>{ if(seen.has(x.p.name))return false; seen.add(x.p.name); return true; });
       if(uniqueAces.length){
-        h+=`<div style="margin-top:16px">
+        h+=(()=>{
+        const rows=uniqueAces.map(({label,p:ap})=>{
+          if(!ap) return '';
+          const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
+          const safeName=ap.name.replace(/'/g,"\'");
+          const photoEl=ap.photo
+            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            :`<div style="width:30px;height:30px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
+          return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
+            <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              ${photoEl}
+              <div>
+                <div style="font-weight:800;font-size:13px">${ap.name}</div>
+                <div style="font-size:10px;color:var(--gray-l)">${wr}% · ${ap.points}pt · ELO ${ap.elo||ELO_DEFAULT}</div>
+              </div>
+            </div>
+          </div>`;
+        }).filter(Boolean).join('');
+        return `<div style="margin-top:16px">
           <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">⭐ 에이스 선수</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${uniqueAces.map(({label,p2=null})=>{
-              const ap=p2||aces.find(x=>x.label===label)?.p;
-              if(!ap) return '';
-              const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
-              return '<div style="flex:1;min-width:120px;background:linear-gradient(135deg,'+col+'18,'+col+'08);border:1.5px solid '+col+'44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal(''+ap.name.replace(/'/g,"\'")+"'),100)">"+
-                '<div style="font-size:10px;font-weight:700;color:'+col+';margin-bottom:5px">'+label+'</div>'+
-                '<div style="display:flex;align-items:center;gap:6px">'+
-                (ap.photo?'<img src="'+ap.photo+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid '+col+'" onerror="this.style.display='none'">':'<div style="width:30px;height:30px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">'+ap.name[0]+'</div>')+
-                '<div><div style="font-weight:800;font-size:13px">'+ap.name+'</div>'+
-                '<div style="font-size:10px;color:var(--gray-l)">'+wr+'% · '+ap.points+'pt · ELO '+(ap.elo||ELO_DEFAULT)+'</div></div></div></div>';
-            }).filter(Boolean).join('')}
-          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${rows}</div>
         </div>`;
+      })();
       }
     }
   }
@@ -866,7 +874,7 @@ function buildUnivDetailHTML(univName){
             :'<span style="font-size:9px;color:#f59e0b;font-weight:700">'+daysSince+'일전</span>';
           const wrP=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
           const photoHTML=p.photo
-            ?'<img src="'+p.photo+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">'
+            ?'<img src="'+p.photo+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
             :'<div style="width:24px;height:24px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0">'+p.name[0]+'</div>';
           return '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:90px;max-width:140px;cursor:pointer" onclick="openPlayerModal(''+p.name.replace(/'/g,"\'")+'')">'+
             '<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+photoHTML+
