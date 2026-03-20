@@ -438,17 +438,17 @@ function buildPlayerDetailHTML(p){
           <span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>
         </div>
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${gUI(p.univ,'12px')}${p.univ}</span>
+          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}" ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
           <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
           ${(()=>{
             if(!p.channelUrl) return '';
             const url=p.channelUrl;
-            let icon='🏠', label='방송', bg='rgba(255,255,255,.22)';
+            let icon='🏠', label='방송';
             if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
             else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
             else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
             else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
-            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;transition:.15s;flex-shrink:0">'+icon+' '+label+'</a>';
+            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+icon+' '+label+'</a>';
           })()}
         </div>
       </div>
@@ -626,14 +626,41 @@ function buildPlayerDetailHTML(p){
   if((p.history||[]).length){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
+    if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
     const allModes=[...new Set((p.history||[]).map(h=>h.mode||'').filter(Boolean))];
     const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
       <button onclick="window._playerHistFilter='전체';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
       ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
     </div>`:'';
-    const filteredHist=window._playerHistFilter&&window._playerHistFilter!=='전체'
-      ?(p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
-      :(p.history||[]);
+    // 시즌 필터 UI
+    let seasonBar='';
+    if(typeof seasons!=='undefined' && seasons && seasons.length){
+      const _pSafe=p.name.replace(/'/g,"\'");
+      const _rbFn=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafe}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
+        <button onclick="window._playerSeasonFilter='전체';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
+        ${seasons.map(s=>{
+          const isOn=window._playerSeasonFilter===s.id;
+          const _sid=s.id.replace(/'/g,"\'");
+          return `<button onclick="window._playerSeasonFilter='${_sid}';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
+        }).join('')}
+      </div>`;
+    }
+
+    const _curSeason=(()=>{
+      if(!window._playerSeasonFilter||window._playerSeasonFilter==='전체') return null;
+      return (typeof seasons!=='undefined'?seasons:[]).find(s=>s.id===window._playerSeasonFilter)||null;
+    })();
+    const _modeHist = window._playerHistFilter&&window._playerHistFilter!=='전체'
+      ? (p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
+      : (p.history||[]);
+    const filteredHist = _curSeason
+      ? _modeHist.filter(hh=>{
+          const d=hh.date||'';
+          return d>=(_curSeason.start||'') && d<=(_curSeason.end||'9999-99-99');
+        })
+      : _modeHist;
     const totalGames=filteredHist.length;
     const pageSize=20;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
@@ -644,7 +671,7 @@ function buildPlayerDetailHTML(p){
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span></div>`;
-    h+=filterBar;
+    h+=seasonBar+filterBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
@@ -703,7 +730,7 @@ function buildPlayerDetailHTML(p){
         return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
           <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
           <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
-            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px;transition:.3s"></div>
+            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:10px">
             <span style="color:${barCol};font-weight:800">${wr}%</span>
@@ -723,30 +750,29 @@ function buildPlayerDetailHTML(p){
   }
 
   // ── 같은 대학 팀원 ──
-  {
-    if(p.univ==='무소속') return; // 무소속은 팀원 표시 안 함
+  if(p.univ && p.univ !== '무소속'){
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
     if(teammates.length){
-      const sorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      const tmSorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      const tmCards = tmSorted.map(q=>{
+        const qCol=gc(q.univ);
+        const qSafe=q.name.replace(/'/g,"\'");
+        const qPhoto=q.photo
+          ?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+          :`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+          ${qPhoto}${q.name}${getTierBadge(q.tier)}
+        </button>`;
+      }).join('');
       h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
         <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
           <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>
           ${p.univ} 팀원 (${teammates.length}명)
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">
-          ${sorted.map(q=>{
-            const qCol=gc(q.univ);
-            const qPhoto=q.photo?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
-            const qSafe=q.name.replace(/'/g,"\'");
-            return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text);transition:.15s" onmouseover="this.style.background='${qCol}22'" onmouseout="this.style.background='${qCol}10'">
-              ${qPhoto}${q.name}${getTierBadge(q.tier)}
-            </button>`;
-          }).join('')}
-        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${tmCards}</div>
       </div>`;
     }
   }
-
 
   // ── 선수 메모 (관리자만) ──
   if(isLoggedIn){
