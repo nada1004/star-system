@@ -18,6 +18,7 @@
     {id:'procomp',  grp:'대회',   lbl:'🏅 프로리그 대회'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
+    {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
@@ -796,6 +797,131 @@ function _psearchUpdate(val){
   window._histPSearchQ=val;
   const r=document.getElementById('hist-psearch-results');
   if(r) r.innerHTML=_histPSearchResultsHTML(val.trim());
+}
+
+/* ══════════════════════════════════════
+   대학 전력 비교
+══════════════════════════════════════ */
+let _univCompA = '', _univCompB = '';
+
+function histUnivCompHTML(){
+  const allU = getAllUnivs().filter(u=>!u.hidden||isLoggedIn);
+  const uOpts = name => `<option value="">— 대학 선택 —</option>`
+    + allU.map(u=>`<option value="${u.name}"${u.name===name?' selected':''}>${u.name}</option>`).join('');
+
+  // 선택된 대학 비교 카드
+  function univStats(univName){
+    if(!univName) return null;
+    const col = gc(univName);
+    const members = players.filter(p=>p.univ===univName&&!p.retired);
+    const activeM = members.filter(p=>(p.win+p.loss)>0);
+    const avgElo = activeM.length ? Math.round(activeM.reduce((s,p)=>s+(p.elo||ELO_DEFAULT),0)/activeM.length) : ELO_DEFAULT;
+    const totalW = members.reduce((s,p)=>s+(p.win||0),0);
+    const totalL = members.reduce((s,p)=>s+(p.loss||0),0);
+    const wr = (totalW+totalL) ? Math.round(totalW/(totalW+totalL)*100) : 0;
+    const ace = [...members].sort((a,b)=>(b.points||0)-(a.points||0))[0];
+    // 미니대전 전적
+    let mW=0,mL=0;
+    miniM.forEach(m=>{
+      if(m.sa==null||m.sb==null) return;
+      if(m.a===univName&&m.sa>m.sb) mW++;
+      else if(m.b===univName&&m.sb>m.sa) mW++;
+      else if(m.a===univName&&m.sa<m.sb) mL++;
+      else if(m.b===univName&&m.sb<m.sa) mL++;
+    });
+    // 직접 대결
+    let vsW=0,vsL=0;
+    if(_univCompA&&_univCompB){
+      const opp=univName===_univCompA?_univCompB:_univCompA;
+      miniM.filter(m=>m.sa!=null).forEach(m=>{
+        const myWin=(m.a===univName&&m.sa>m.sb)||(m.b===univName&&m.sb>m.sa);
+        const myLoss=(m.a===univName&&m.sa<m.sb)||(m.b===univName&&m.sb<m.sa);
+        const hasOpp=m.a===opp||m.b===opp;
+        if(hasOpp){ if(myWin)vsW++; else if(myLoss)vsL++; }
+      });
+    }
+    return {col,members,activeM,avgElo,totalW,totalL,wr,ace,mW,mL,vsW,vsL};
+  }
+
+  const sA = univStats(_univCompA);
+  const sB = univStats(_univCompB);
+
+  function statRow(label,va,vb,higherBetter=true){
+    const na=parseFloat(va),nb=parseFloat(vb);
+    const aWins=!isNaN(na)&&!isNaN(nb)&&(higherBetter?na>nb:na<nb);
+    const bWins=!isNaN(na)&&!isNaN(nb)&&(higherBetter?nb>na:nb<na);
+    const ca=sA?sA.col:'#2563eb', cb=sB?sB.col:'#dc2626';
+    return `<tr>
+      <td style="text-align:right;padding:6px 10px;font-weight:${aWins?800:600};color:${aWins?ca:'var(--text)'}">${va}${aWins?` <span style="color:${ca}">◀</span>`:''}</td>
+      <td style="text-align:center;padding:6px 8px;color:var(--gray-l);font-size:11px;white-space:nowrap">${label}</td>
+      <td style="text-align:left;padding:6px 10px;font-weight:${bWins?800:600};color:${bWins?cb:'var(--text)'}">${bWins?`<span style="color:${cb}">▶</span> `:''}${vb}</td>
+    </tr>`;
+  }
+
+  return `<div>
+    <!-- 선택 UI -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      <select onchange="_univCompA=this.value;render()" style="flex:1;min-width:120px;padding:7px 10px;border-radius:8px;border:1.5px solid ${sA?sA.col+'99':'var(--border2)'};font-size:13px;font-weight:700;background:var(--white)">
+        ${uOpts(_univCompA)}
+      </select>
+      <span style="font-weight:900;font-size:16px;color:var(--gray-l)">VS</span>
+      <select onchange="_univCompB=this.value;render()" style="flex:1;min-width:120px;padding:7px 10px;border-radius:8px;border:1.5px solid ${sB?sB.col+'99':'var(--border2)'};font-size:13px;font-weight:700;background:var(--white)">
+        ${uOpts(_univCompB)}
+      </select>
+    </div>
+
+    ${(!sA||!sB)?`<div style="text-align:center;padding:40px;color:var(--gray-l)">두 대학을 선택하면 전력을 비교합니다</div>`:`
+    <!-- 비교 카드 -->
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <!-- A 대학 -->
+      <div style="flex:1;min-width:130px;background:${sA.col}18;border:2px solid ${sA.col}44;border-radius:12px;padding:14px;text-align:center">
+        <div style="font-weight:900;font-size:16px;color:${sA.col};margin-bottom:4px">${_univCompA}</div>
+        <div style="font-size:11px;color:var(--gray-l)">${sA.members.length}명</div>
+        ${sA.vsW>sA.vsL?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${sA.col}">🏆 직접 대결 우세</div>`:''}
+      </div>
+      <!-- 스코어 -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px">
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">직접 대결</div>
+        <div style="font-size:28px;font-weight:900">
+          <span style="color:${sA.vsW>sA.vsL?sA.col:'var(--text3)'}">${sA.vsW}</span>
+          <span style="color:var(--gray-l);font-size:18px">:</span>
+          <span style="color:${sB.vsW>sB.vsL?sB.col:'var(--text3)'}">${sB.vsW}</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l)">미니대전 기준</div>
+      </div>
+      <!-- B 대학 -->
+      <div style="flex:1;min-width:130px;background:${sB.col}18;border:2px solid ${sB.col}44;border-radius:12px;padding:14px;text-align:center">
+        <div style="font-weight:900;font-size:16px;color:${sB.col};margin-bottom:4px">${_univCompB}</div>
+        <div style="font-size:11px;color:var(--gray-l)">${sB.members.length}명</div>
+        ${sB.vsW>sB.vsL?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${sB.col}">🏆 직접 대결 우세</div>`:''}
+      </div>
+    </div>
+
+    <!-- 스탯 비교 테이블 -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px">
+      <table style="margin:0;border:none;border-radius:0;table-layout:fixed">
+        <thead><tr>
+          <th style="text-align:right;color:${sA.col};width:40%">${_univCompA}</th>
+          <th style="text-align:center;color:var(--gray-l);width:20%">항목</th>
+          <th style="text-align:left;color:${sB.col};width:40%">${_univCompB}</th>
+        </tr></thead>
+        <tbody>
+          ${statRow('평균 ELO', sA.avgElo, sB.avgElo)}
+          ${statRow('전체 승률', sA.wr+'%', sB.wr+'%')}
+          ${statRow('전체 승', sA.totalW, sB.totalW)}
+          ${statRow('전체 패', sA.totalL, sB.totalL, false)}
+          ${statRow('미니대전 승', sA.mW, sB.mW)}
+          ${statRow('미니대전 패', sA.mL, sB.mL, false)}
+          ${statRow('선수 수', sA.members.length, sB.members.length)}
+          <tr>
+            <td style="text-align:right;padding:6px 10px;cursor:pointer;color:${sA.col};font-weight:700" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${(sA.ace?.name||'').replace(/'/g,"\'")}'),80)">${sA.ace?.name||'-'}</td>
+            <td style="text-align:center;padding:6px 8px;color:var(--gray-l);font-size:11px">에이스</td>
+            <td style="text-align:left;padding:6px 10px;cursor:pointer;color:${sB.col};font-weight:700" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${(sB.ace?.name||'').replace(/'/g,"\'")}'),80)">${sB.ace?.name||'-'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`}
+  </div>`;
 }
 
 function histPlayerSearchHTML(){

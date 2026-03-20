@@ -1,4 +1,4 @@
-function showNoticePopup(){
+﻿function showNoticePopup(){
   if(typeof notices==='undefined'||!notices.length) return;
   const active=notices.filter(n=>n.active);
   if(!active.length) return;
@@ -44,14 +44,22 @@ function init(){
   applyLoginState();
   render();
   setTimeout(showNoticePopup, 800);
+  // 🆕 URL 파라미터로 선수/대학 자동 오픈
+  setTimeout(()=>{
+    try{
+      const params = new URLSearchParams(window.location.search);
+      const playerParam = params.get('player');
+      const univParam = params.get('univ');
+      if(playerParam && typeof openPlayerModal==='function'){
+        openPlayerModal(decodeURIComponent(playerParam));
+      } else if(univParam && typeof openUnivModal==='function'){
+        openUnivModal(decodeURIComponent(univParam));
+      }
+    }catch(e){}
+  }, 1200);
 }
 init();
 initDark();
-
-// ── IndexedDB 폴백 로드 (localStorage 용량 초과 시) ──
-(async function _idbFallbackLoad(){
-  if(typeof idbLoadMatchData==='function') await idbLoadMatchData();
-})();
 
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){

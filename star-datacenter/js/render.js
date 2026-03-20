@@ -440,7 +440,16 @@ function buildPlayerDetailHTML(p){
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${gUI(p.univ,'12px')}${p.univ}</span>
           <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
-          ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" title="방송국 바로가기" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:16px;color:#fff;transition:.15s;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.35)'" onmouseout="this.style.background='rgba(255,255,255,.22)'">🏠</a>`:''}
+          ${(()=>{
+            if(!p.channelUrl) return '';
+            const url=p.channelUrl;
+            let icon='🏠', label='방송', bg='rgba(255,255,255,.22)';
+            if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
+            else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
+            else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
+            else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
+            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;transition:.15s;flex-shrink:0">'+icon+' '+label+'</a>';
+          })()}
         </div>
       </div>
     </div>
@@ -672,6 +681,77 @@ function buildPlayerDetailHTML(p){
     }
     h+=`</div>`;
   }
+
+  // ── 맵별 승률 ──
+  {
+    const mapStats = {};
+    (p.history||[]).forEach(h=>{
+      if(!h.map || h.map==='-' || h.map==='') return;
+      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
+      if(h.result==='승') mapStats[h.map].w++;
+      else mapStats[h.map].l++;
+    });
+    const mapList = Object.entries(mapStats)
+      .filter(([,s])=>s.w+s.l>=2)
+      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
+      .slice(0,8);
+    if(mapList.length>=2){
+      const mapCards = mapList.map(([mapName,s])=>{
+        const t=s.w+s.l;
+        const wr=Math.round(s.w/t*100);
+        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
+          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
+            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px;transition:.3s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:${barCol};font-weight:800">${wr}%</span>
+            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
+          </div>
+        </div>`;
+      }).join('');
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
+          맵별 승률
+          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
+      </div>`;
+    }
+  }
+
+  // ── 같은 대학 팀원 ──
+  {
+    const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
+    if(teammates.length){
+      const sorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>
+          ${p.univ} 팀원 (${teammates.length}명)
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${sorted.map(q=>{
+            const qCol=gc(q.univ);
+            const qPhoto=q.photo?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+            const qSafe=q.name.replace(/'/g,"\'");
+            return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text);transition:.15s" onmouseover="this.style.background='${qCol}22'" onmouseout="this.style.background='${qCol}10'">
+              ${qPhoto}${q.name}${getTierBadge(q.tier)}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── 공유 링크 버튼 ──
+  h += `<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap">
+    <button onclick="(()=>{try{const u=new URL(location.href);u.searchParams.set('player','${p.name.replace(/'/g,"\'")}');navigator.clipboard.writeText(u.toString()).then(()=>showToast('🔗 선수 링크 복사됨')).catch(()=>alert('링크: '+u.toString()));}catch(e){alert('링크 복사 실패')}})()" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:.15s;font-family:'Noto Sans KR',sans-serif">
+      🔗 선수 링크 공유
+    </button>
+  </div>`;
 
   // ── 선수 메모 (관리자만) ──
   if(isLoggedIn){
