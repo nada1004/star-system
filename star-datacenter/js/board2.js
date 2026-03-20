@@ -69,7 +69,7 @@ function _b2UnivBlock(univName, col, members) {
   if (!members.length) {
     return `<div style="border-radius:14px;border:2px dashed ${col}66;padding:20px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
       ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
-      <span style="font-weight:900;font-size:15px;color:${col}">${univName}</span>
+      <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
       <span style="font-size:11px;color:var(--gray-l);margin-left:4px">등록된 선수 없음</span>
     </div>`;
   }
@@ -135,7 +135,7 @@ function _b2UnivBlock(univName, col, members) {
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
           ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
-          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0">${univName}</span>
+          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:0 1 auto;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>

@@ -482,6 +482,42 @@ function buildPlayerDetailHTML(p){
     </div>
   </div>`;
 
+  // ── 연승/연패 + 랭킹 위치 + 최근 폼 ──
+  {
+    // 연승/연패 계산
+    const hist = (p.history||[]).slice();
+    let streak = 0, streakType = '';
+    for(const h of hist) {
+      if(streak===0){ streak=1; streakType=h.result; }
+      else if(h.result===streakType) streak++;
+      else break;
+    }
+    const streakHTML = streak>=2
+      ? `<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${streakType==='승'?'#dcfce7':'#fee2e2'};color:${streakType==='승'?'#16a34a':'#dc2626'};border:1px solid ${streakType==='승'?'#bbf7d0':'#fecaca'}">${streakType==='승'?'🔥':'❄️'} ${streak}연${streakType}</span>`
+      : '';
+
+    // 랭킹 위치
+    const allRanked=[...players].filter(q=>!q.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
+    const myRank = allRanked.findIndex(q=>q.name===p.name)+1;
+    const rankChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, myRank) : '';
+    const rankHTML = myRank ? `<span style="font-size:11px;font-weight:800;color:var(--text3)">🏅 전체 ${myRank}위</span> ${rankChange}` : '';
+
+    // 최근 10경기 폼
+    const recent10 = hist.slice(0,10);
+    const formHTML = recent10.length>=3 ? `<div style="display:flex;gap:2px;align-items:center">
+      ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':'#dc2626'};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
+      <span style="font-size:10px;color:var(--gray-l);margin-left:3px">최근${recent10.length}</span>
+    </div>` : '';
+
+    if(streakHTML||rankHTML||formHTML){
+      h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px">
+        ${rankHTML}
+        ${streakHTML}
+        ${formHTML}
+      </div>`;
+    }
+  }
+
   // ── ELO 추이 차트 ──
   // 🔧 eloAfter 레거시 필드 제거됨 → eloDelta 누적으로 ELO 재계산
   const _eloBase = p.elo || ELO_DEFAULT;
@@ -773,6 +809,46 @@ function buildUnivDetailHTML(univName){
     });
     h+=`</tbody></table></div>`;
   }
+  // ── 에이스 선수 하이라이트 ──
+  {
+    const activeM = members.filter(p=>!p.retired&&(p.win+p.loss)>0);
+    if(activeM.length>=2){
+      const byPoints = [...activeM].sort((a,b)=>(b.points||0)-(a.points||0));
+      const byWR = [...activeM].filter(p=>p.win+p.loss>=5).sort((a,b)=>{
+        const wa=(a.win+a.loss)?a.win/(a.win+a.loss):0;
+        const wb=(b.win+b.loss)?b.win/(b.win+b.loss):0;
+        return wb-wa;
+      });
+      const byElo = [...activeM].sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
+      const aces = [
+        {label:'🏆 포인트 1위', p:byPoints[0]},
+        {label:'📈 승률 1위', p:byWR[0]},
+        {label:'⚡ ELO 1위', p:byElo[0]},
+      ].filter(x=>x.p);
+      // 중복 제거
+      const seen=new Set();
+      const uniqueAces=aces.filter(x=>{ if(seen.has(x.p.name))return false; seen.add(x.p.name); return true; });
+      if(uniqueAces.length){
+        h+=`<div style="margin-top:16px">
+          <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">⭐ 에이스 선수</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${uniqueAces.map(({label,p2=null})=>{
+              const ap=p2||aces.find(x=>x.label===label)?.p;
+              if(!ap) return '';
+              const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
+              return '<div style="flex:1;min-width:120px;background:linear-gradient(135deg,'+col+'18,'+col+'08);border:1.5px solid '+col+'44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal(''+ap.name.replace(/'/g,"\'")+"'),100)">"+
+                '<div style="font-size:10px;font-weight:700;color:'+col+';margin-bottom:5px">'+label+'</div>'+
+                '<div style="display:flex;align-items:center;gap:6px">'+
+                (ap.photo?'<img src="'+ap.photo+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid '+col+'" onerror="this.style.display='none'">':'<div style="width:30px;height:30px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">'+ap.name[0]+'</div>')+
+                '<div><div style="font-weight:800;font-size:13px">'+ap.name+'</div>'+
+                '<div style="font-size:10px;color:var(--gray-l)">'+wr+'% · '+ap.points+'pt · ELO '+(ap.elo||ELO_DEFAULT)+'</div></div></div></div>';
+            }).filter(Boolean).join('')}
+          </div>
+        </div>`;
+      }
+    }
+  }
+
   // ── 소속 선수 카드 + 출석/활동률 ──
   const _today = new Date().toISOString().slice(0,10);
   const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
