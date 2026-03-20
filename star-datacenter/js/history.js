@@ -155,12 +155,29 @@ function histAllHTML(){
   // 페이지네이션
   const pageSize=getHistPageSize();
   if(histPage['all']===undefined) histPage['all']=0;
-  const totalPages=Math.ceil(filtered.length/pageSize)||1;
+  const totalPages=Math.ceil(_typeFiltered.length/pageSize)||1;
   if(histPage['all']>=totalPages) histPage['all']=Math.max(0,totalPages-1);
   const curPage=histPage['all'];
-  const paged=filtered.length>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
+  const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
   const initQ=(window._recQ&&window._recQ['all'])||'';
+  if(!window._recTypeFilter) window._recTypeFilter='전체';
+  const _typeFiltered = window._recTypeFilter==='전체' ? filtered
+    : filtered.filter(({type})=>type===window._recTypeFilter);
+  const _typeCountMap={};
+  filtered.forEach(({type})=>{_typeCountMap[type]=(_typeCountMap[type]||0)+1;});
+  const _typeButtons=[
+    {id:'전체',lbl:'전체'},
+    {id:'mini',lbl:'⚡ 미니'},
+    {id:'univm',lbl:'🏟️ 대학대전'},
+    {id:'ck',lbl:'🤝 CK'},
+    {id:'pro',lbl:'🏅 프로'},
+    {id:'tt',lbl:'🎯 티어'},
+    {id:'ind',lbl:'🎮 개인전'},
+    {id:'gj',lbl:'⚔️ 끝장전'},
+    {id:'tourney',lbl:'🎖️ 대회'},
+  ].filter(t=>t.id==='전체'||_typeCountMap[t.id]>0);
+
   let h=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
@@ -171,7 +188,10 @@ function histAllHTML(){
         style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:150px">
       ${initQ?`<button onclick="if(!window._recQ)window._recQ={};window._recQ['all']='';render()" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px">✕</button>`:''}
     </div>
-    <span style="font-size:11px;color:var(--gray-l)">${filtered.length}건</span>
+    <span style="font-size:11px;color:var(--gray-l)">${_typeFiltered.length}건</span>
+  </div>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+    ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
   </div>`;
 
   if(!paged.length){

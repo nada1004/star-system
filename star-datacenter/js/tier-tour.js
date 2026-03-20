@@ -1064,6 +1064,34 @@ function rCfg(C,T){
         <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
       </div>
 
+      <!-- 선수 일괄 티어 변경 -->
+      <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 선수 일괄 티어 변경</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
+          <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 (상관없음)</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경할 티어</label>
+          <select id="bulk-tier-to" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">선택</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">대상 대학</label>
+          <select id="bulk-tier-univ" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 대학</option>
+            ${getAllUnivs().map(u=>`<option value="${u.name}">${u.name}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
+        <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
+      </div>
+
       <!-- 날짜 범위 일괄 삭제 -->
       <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
         <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:10px">🗑️ 날짜 범위 일괄 삭제</div>
@@ -1166,6 +1194,25 @@ function renderStorageInfo(){
         }).join('')}
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
+}
+
+function bulkChangeTier(){
+  if(!isLoggedIn) return;
+  const fromTier=document.getElementById('bulk-tier-from')?.value||'';
+  const toTier=document.getElementById('bulk-tier-to')?.value||'';
+  const targetUniv=document.getElementById('bulk-tier-univ')?.value||'';
+  if(!toTier){alert('변경할 티어를 선택하세요.');return;}
+  const targets=players.filter(p=>{
+    if(fromTier && (p.tier||'미정')!==fromTier) return false;
+    if(targetUniv && p.univ!==targetUniv) return false;
+    return true;
+  });
+  if(!targets.length){alert('해당하는 선수가 없습니다.');return;}
+  if(!confirm(`${targets.length}명의 티어를 '${toTier}'으로 변경할까요?\n\n${targets.slice(0,5).map(p=>p.name).join(', ')}${targets.length>5?` 외 ${targets.length-5}명`:''}`)) return;
+  targets.forEach(p=>{ p.tier=toTier; });
+  save(); render();
+  const el=document.getElementById('bulk-tier-result');
+  if(el){ el.textContent=`✅ ${targets.length}명 변경 완료!`; setTimeout(()=>{if(el)el.textContent='';},3000); }
 }
 
 /* ══════════════════════════════════════
@@ -2320,6 +2367,34 @@ function rCfg(C,T){
         <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
       </div>
 
+      <!-- 선수 일괄 티어 변경 -->
+      <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 선수 일괄 티어 변경</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
+          <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 (상관없음)</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경할 티어</label>
+          <select id="bulk-tier-to" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">선택</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">대상 대학</label>
+          <select id="bulk-tier-univ" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 대학</option>
+            ${getAllUnivs().map(u=>`<option value="${u.name}">${u.name}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
+        <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
+      </div>
+
       <!-- 날짜 범위 일괄 삭제 -->
       <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
         <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:10px">🗑️ 날짜 범위 일괄 삭제</div>
@@ -2422,6 +2497,25 @@ function renderStorageInfo(){
         }).join('')}
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
+}
+
+function bulkChangeTier(){
+  if(!isLoggedIn) return;
+  const fromTier=document.getElementById('bulk-tier-from')?.value||'';
+  const toTier=document.getElementById('bulk-tier-to')?.value||'';
+  const targetUniv=document.getElementById('bulk-tier-univ')?.value||'';
+  if(!toTier){alert('변경할 티어를 선택하세요.');return;}
+  const targets=players.filter(p=>{
+    if(fromTier && (p.tier||'미정')!==fromTier) return false;
+    if(targetUniv && p.univ!==targetUniv) return false;
+    return true;
+  });
+  if(!targets.length){alert('해당하는 선수가 없습니다.');return;}
+  if(!confirm(`${targets.length}명의 티어를 '${toTier}'으로 변경할까요?\n\n${targets.slice(0,5).map(p=>p.name).join(', ')}${targets.length>5?` 외 ${targets.length-5}명`:''}`)) return;
+  targets.forEach(p=>{ p.tier=toTier; });
+  save(); render();
+  const el=document.getElementById('bulk-tier-result');
+  if(el){ el.textContent=`✅ ${targets.length}명 변경 완료!`; setTimeout(()=>{if(el)el.textContent='';},3000); }
 }
 
 /* ══════════════════════════════════════

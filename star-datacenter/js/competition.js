@@ -1163,11 +1163,16 @@ function grpRefreshSets(){
       const mapOpts=_mapList.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}${g.map===mp&&!maps.includes(mp)?' (기록값)':''}</option>`).join('');
       const selA=optsA.replace(`value="${g.playerA}"`,`value="${g.playerA}" selected`);
       const selB=optsB.replace(`value="${g.playerB}"`,`value="${g.playerB}" selected`);
+      const dlIdA=`dl-a-${si}-${gi2}`, dlIdB=`dl-b-${si}-${gi2}`;
+      const dlA=mA.map(p=>`<option value="${p.name}${p.univ!==teamA?' ('+p.univ+')':''}">${p.name}</option>`).join('');
+      const dlB=mB.map(p=>`<option value="${p.name}${p.univ!==teamB?' ('+p.univ+')':''}">${p.name}</option>`).join('');
       h+=`<div class="game-row">
         <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi2+1}</span>
-        <select onchange="grpSetGame(${si},${gi2},'playerA',this.value)">${selA}</select>
+        <datalist id="${dlIdA}">${dlA}</datalist>
+        <input list="${dlIdA}" value="${g.playerA||''}" placeholder="A팀 선수 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())">
         <span style="font-size:11px;color:var(--gray-l)">vs</span>
-        <select onchange="grpSetGame(${si},${gi2},'playerB',this.value)">${selB}</select>
+        <datalist id="${dlIdB}">${dlB}</datalist>
+        <input list="${dlIdB}" value="${g.playerB||''}" placeholder="B팀 선수 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())">
         <select onchange="grpSetGame(${si},${gi2},'map',this.value)" style="max-width:100px"><option value="">맵</option>${mapOpts}</select>
         <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','A');grpRefreshSets()">A 승</button>
         <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','B');grpRefreshSets()">B 승</button>
@@ -1384,11 +1389,16 @@ function bktRefreshSets(){
       const mapOpts=_mapList.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}${g.map===mp&&!maps.includes(mp)?' (기록값)':''}</option>`).join('');
       const selA=optsA.replace(`value="${g.playerA}"`,`value="${g.playerA}" selected`);
       const selB=optsB.replace(`value="${g.playerB}"`,`value="${g.playerB}" selected`);
+      const bdlIdA=`bdl-a-${si}-${gi2}`, bdlIdB=`bdl-b-${si}-${gi2}`;
+      const bdlA=mA.map(p=>`<option value="${p.name}${p.univ!==teamA?' ('+p.univ+')':''}">${p.name}</option>`).join('');
+      const bdlB=mB.map(p=>`<option value="${p.name}${p.univ!==teamB?' ('+p.univ+')':''}">${p.name}</option>`).join('');
       h+=`<div class="game-row">
         <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi2+1}</span>
-        <select onchange="bktSetGame(${si},${gi2},'playerA',this.value)">${selA}</select>
+        <datalist id="${bdlIdA}">${bdlA}</datalist>
+        <input list="${bdlIdA}" value="${g.playerA||''}" placeholder="A팀 선수 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="bktSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())" onchange="bktSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())">
         <span style="font-size:11px;color:var(--gray-l)">vs</span>
-        <select onchange="bktSetGame(${si},${gi2},'playerB',this.value)">${selB}</select>
+        <datalist id="${bdlIdB}">${bdlB}</datalist>
+        <input list="${bdlIdB}" value="${g.playerB||''}" placeholder="B팀 선수 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="bktSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())" onchange="bktSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())">
         <select onchange="bktSetGame(${si},${gi2},'map',this.value)" style="max-width:100px"><option value="">맵</option>${mapOpts}</select>
         <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="bktSetGame(${si},${gi2},'winner','A');bktRefreshSets()">A 승</button>
         <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="bktSetGame(${si},${gi2},'winner','B');bktRefreshSets()">B 승</button>
