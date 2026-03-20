@@ -169,13 +169,16 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
   const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const safeName=(playerName||'').replace(/'/g,"\'");
+  const clickStyle='cursor:pointer;';
+  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
     const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
     const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
     const txt=p?.race||'?';
-    return '<span style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42)">'+txt+'</span>';
+    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  return '<img src="'+p.photo+'" style="'+base+';object-fit:cover;'+bdr+'" onerror="this.style.display=\'none\'">';
+  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:cover;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
