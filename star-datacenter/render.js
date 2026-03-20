@@ -440,7 +440,16 @@ function buildPlayerDetailHTML(p){
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${gUI(p.univ,'12px')}${p.univ}</span>
           <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
-          ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" title="방송국 바로가기" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:16px;color:#fff;transition:.15s;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.35)'" onmouseout="this.style.background='rgba(255,255,255,.22)'">🏠</a>`:''}
+          ${(()=>{
+            if(!p.channelUrl) return '';
+            const url=p.channelUrl;
+            let icon='🏠', label='방송';
+            if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
+            else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
+            else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
+            else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
+            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+icon+' '+label+'</a>';
+          })()}
         </div>
       </div>
     </div>
@@ -492,8 +501,13 @@ function buildPlayerDetailHTML(p){
       else if(h.result===streakType) streak++;
       else break;
     }
+    const _isWinStreak = streakType==='승';
+    const streakBg = _isWinStreak ? '#dcfce7' : '#fee2e2';
+    const streakCol = _isWinStreak ? '#16a34a' : '#dc2626';
+    const streakBd = _isWinStreak ? '#bbf7d0' : '#fecaca';
+    const streakEmoji = _isWinStreak ? '🔥' : '❄️';
     const streakHTML = streak>=2
-      ? `<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${streakType==='승'?'#dcfce7':'#fee2e2'};color:${streakType==='승'?'#16a34a':'#dc2626'};border:1px solid ${streakType==='승'?'#bbf7d0':'#fecaca'}">${streakType==='승'?'🔥':'❄️'} ${streak}연${streakType}</span>`
+      ? `<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${streakBg};color:${streakCol};border:1px solid ${streakBd}">${streakEmoji} ${streak}연${streakType}</span>`
       : '';
 
     // 랭킹 위치
@@ -612,14 +626,41 @@ function buildPlayerDetailHTML(p){
   if((p.history||[]).length){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
+    if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
     const allModes=[...new Set((p.history||[]).map(h=>h.mode||'').filter(Boolean))];
     const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
       <button onclick="window._playerHistFilter='전체';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
       ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
     </div>`:'';
-    const filteredHist=window._playerHistFilter&&window._playerHistFilter!=='전체'
-      ?(p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
-      :(p.history||[]);
+    // 시즌 필터 UI
+    let seasonBar='';
+    if(typeof seasons!=='undefined' && seasons && seasons.length){
+      const _pSafe=p.name.replace(/'/g,"\'");
+      const _rbFn=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafe}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
+        <button onclick="window._playerSeasonFilter='전체';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
+        ${seasons.map(s=>{
+          const isOn=window._playerSeasonFilter===s.id;
+          const _sid=s.id.replace(/'/g,"\'");
+          return `<button onclick="window._playerSeasonFilter='${_sid}';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
+        }).join('')}
+      </div>`;
+    }
+
+    const _curSeason=(()=>{
+      if(!window._playerSeasonFilter||window._playerSeasonFilter==='전체') return null;
+      return (typeof seasons!=='undefined'?seasons:[]).find(s=>s.id===window._playerSeasonFilter)||null;
+    })();
+    const _modeHist = window._playerHistFilter&&window._playerHistFilter!=='전체'
+      ? (p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
+      : (p.history||[]);
+    const filteredHist = _curSeason
+      ? _modeHist.filter(hh=>{
+          const d=hh.date||'';
+          return d>=(_curSeason.start||'') && d<=(_curSeason.end||'9999-99-99');
+        })
+      : _modeHist;
     const totalGames=filteredHist.length;
     const pageSize=20;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
@@ -630,7 +671,7 @@ function buildPlayerDetailHTML(p){
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span></div>`;
-    h+=filterBar;
+    h+=seasonBar+filterBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
@@ -666,6 +707,71 @@ function buildPlayerDetailHTML(p){
       </div>`;
     }
     h+=`</div>`;
+  }
+
+  // ── 맵별 승률 ──
+  {
+    const mapStats = {};
+    (p.history||[]).forEach(h=>{
+      if(!h.map || h.map==='-' || h.map==='') return;
+      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
+      if(h.result==='승') mapStats[h.map].w++;
+      else mapStats[h.map].l++;
+    });
+    const mapList = Object.entries(mapStats)
+      .filter(([,s])=>s.w+s.l>=2)
+      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
+      .slice(0,8);
+    if(mapList.length>=2){
+      const mapCards = mapList.map(([mapName,s])=>{
+        const t=s.w+s.l;
+        const wr=Math.round(s.w/t*100);
+        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
+          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
+            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:${barCol};font-weight:800">${wr}%</span>
+            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
+          </div>
+        </div>`;
+      }).join('');
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
+          맵별 승률
+          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
+      </div>`;
+    }
+  }
+
+  // ── 같은 대학 팀원 ──
+  if(p.univ && p.univ !== '무소속'){
+    const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
+    if(teammates.length){
+      const tmSorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      const tmCards = tmSorted.map(q=>{
+        const qCol=gc(q.univ);
+        const qSafe=q.name.replace(/'/g,"\'");
+        const qPhoto=q.photo
+          ?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+          :`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+          ${qPhoto}${q.name}${getTierBadge(q.tier)}
+        </button>`;
+      }).join('');
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>
+          ${p.univ} 팀원 (${teammates.length}명)
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${tmCards}</div>
+      </div>`;
+    }
   }
 
   // ── 선수 메모 (관리자만) ──
@@ -829,55 +935,32 @@ function buildUnivDetailHTML(univName){
       const seen=new Set();
       const uniqueAces=aces.filter(x=>{ if(seen.has(x.p.name))return false; seen.add(x.p.name); return true; });
       if(uniqueAces.length){
-        h+=`<div style="margin-top:16px">
+        h+=(()=>{
+        const rows=uniqueAces.map(({label,p:ap})=>{
+          if(!ap) return '';
+          const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
+          const safeName=ap.name.replace(/'/g,"\'");
+          const photoEl=ap.photo
+            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            :`<div style="width:30px;height:30px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
+          return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
+            <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              ${photoEl}
+              <div>
+                <div style="font-weight:800;font-size:13px">${ap.name}</div>
+                <div style="font-size:10px;color:var(--gray-l)">${wr}% · ${ap.points}pt · ELO ${ap.elo||ELO_DEFAULT}</div>
+              </div>
+            </div>
+          </div>`;
+        }).filter(Boolean).join('');
+        return `<div style="margin-top:16px">
           <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">⭐ 에이스 선수</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${uniqueAces.map(({label,p})=>{
-              const ap=p;
-              if(!ap) return '';
-              const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
-              return '<div style="flex:1;min-width:120px;background:linear-gradient(135deg,'+col+'18,'+col+'08);border:1.5px solid '+col+'44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm(\'univModal\');setTimeout(()=>openPlayerModal(\'+ap.name.replace(/'/g,"\'")+"\'),100)">"+
-                '<div style="font-size:10px;font-weight:700;color:'+col+';margin-bottom:5px">'+label+'</div>'+
-                '<div style="display:flex;align-items:center;gap:6px">'+
-                (ap.photo?'<img src="'+ap.photo+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid '+col+'" onerror="this.style.display='none'">':'<div style="width:30px;height:30px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">'+ap.name[0]+'</div>')+
-                '<div><div style="font-weight:800;font-size:13px">'+ap.name+'</div>'+
-                '<div style="font-size:10px;color:var(--gray-l)">'+wr+'% · '+ap.points+'pt · ELO '+(ap.elo||ELO_DEFAULT)+'</div></div></div></div>';
-            }).filter(Boolean).join('')}
-          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${rows}</div>
         </div>`;
+      })();
       }
     }
-  }
-
-  // ── 소속 선수 카드 + 출석/활동률 ──
-  const _today = new Date().toISOString().slice(0,10);
-  const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-  const _activeM = members.filter(p=>!p.retired);
-  if(_activeM.length){
-    h+=`<div style="margin-top:16px">
-      <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">👥 소속 선수 (${_activeM.length}명)</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${_activeM.map(p=>{
-          const lastDate=(p.history||[]).reduce((mx,hh)=>hh.date>mx?hh.date:mx,'');
-          const isAct=lastDate>=_30ago;
-          const daysSince=lastDate?Math.floor((new Date(_today)-new Date(lastDate))/(86400000)):null;
-          const actBadge=!lastDate?'<span style="font-size:9px;color:#9ca3af">기록없음</span>'
-            :isAct?'<span style="font-size:9px;color:#16a34a;font-weight:700">✅ 활동중</span>'
-            :'<span style="font-size:9px;color:#f59e0b;font-weight:700">'+daysSince+'일전</span>';
-          const wrP=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-          const photoHTML=p.photo
-            ?'<img src="'+p.photo+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
-            :'<div style="width:24px;height:24px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0">'+p.name[0]+'</div>';
-          return '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:90px;max-width:140px;cursor:pointer" onclick="openPlayerModal(''+p.name.replace(/'/g,"\'")+'')">'+
-            '<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+photoHTML+
-            '<span style="font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</span></div>'+
-            '<div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-bottom:3px">'+getTierBadge(p.tier)+'<span class="rbadge r'+p.race+'" style="font-size:9px">'+(p.race||'?')+'</span></div>'+
-            '<div style="display:flex;align-items:center;justify-content:space-between">'+
-            '<span style="font-size:10px;color:'+(wrP>=50?'#16a34a':'#dc2626')+';font-weight:700">'+(wrP!==null?wrP+'%':'-')+'</span>'+
-            actBadge+'</div></div>';
-        }).join('')}
-      </div>
-    </div>`;
   }
 
   return h;
