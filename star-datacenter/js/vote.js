@@ -14,10 +14,6 @@ function rVote(C,T){
   const _isUnresolved = m => m.sa==null || m.sa==='';
   const _isResolved   = m => m.sa!=null && m.sa!=='';
 
-  // 개인전/끝장전은 wName/lName 기반으로 별도 처리
-  const _indUpcoming  = (typeof indM!=='undefined'?indM:[]).filter(m=>!m.wName||!m.lName?false:false); // 개인전은 결과가 항상 있어서 예측 불가
-  const _gjUpcoming   = (typeof gjM!=='undefined'?gjM:[]).filter(m=>!m.wName||!m.lName?false:false);
-
   // 팀전 전체 합산
   const _allTeamM = [
     ...miniM.map(m=>({...m,_mode:'⚡ 미니대전'})),

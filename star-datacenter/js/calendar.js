@@ -5,7 +5,11 @@
   // 전역 calScheduled 사용 (Firebase 동기화)
   if(typeof calScheduled==='undefined') window.calScheduled=[];
   window._calScheduled=calScheduled; // 하위 호환
-  const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),...(typeof indM!=='undefined'?indM:[]),...(typeof gjM!=='undefined'?gjM:[]),...(typeof ttM!=='undefined'?ttM:[]),...window._calScheduled];
+  // allMatches 캐시 (save() → su_last_save_time 변경 시 무효화)
+  const _calT=localStorage.getItem('su_last_save_time')||'0';
+  if(_calT!==window._calMatchCacheTime){window._calMatchCache=null;window._calMatchCacheTime=_calT;}
+  if(!window._calMatchCache) window._calMatchCache=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),...(typeof indM!=='undefined'?indM:[]),...(typeof gjM!=='undefined'?gjM:[]),...(typeof ttM!=='undefined'?ttM:[]),...window._calScheduled];
+  const allMatches=window._calMatchCache;
   window._rCalAllMatches=allMatches; // calView=day 공유카드용 전역 캐시
   const dateMatchMap={};
   allMatches.forEach(m=>{

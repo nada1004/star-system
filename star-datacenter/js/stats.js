@@ -1,3 +1,8 @@
+/* ─── 캐시 (save() → su_last_save_time 변경 시 자동 무효화) ─── */
+let _sCacheTime='', _sCache={};
+function _scGet(sub){ const t=localStorage.getItem('su_last_save_time')||'0'; if(t!==_sCacheTime){_sCache={};_sCacheTime=t;} return _sCache[sub]||null; }
+function _scSet(sub,html){ _sCache[sub]=html; return html; }
+
 function rStats(C,T){
   T.textContent='📊 통계';
   // UX 3: 마지막 방문 서브탭 복원
@@ -44,27 +49,30 @@ function rStats(C,T){
     h+=`</div>`;
   });
   h+=`</div>`;
-  if(statsSub==='overview')    h+=statsOverviewHTML();
-  else if(statsSub==='elo')    h+=statsEloHTML();
-  else if(statsSub==='growth') h+=statsGrowthHTML();
-  else if(statsSub==='award')  h+=statsAwardHTML();
-  else if(statsSub==='records')h+=statsRecordsHTML();
-  else if(statsSub==='radar')  h+=statsRadarHTML();
-  else if(statsSub==='mismatch')h+=statsMismatchHTML();
-  else if(statsSub==='heatmap')  h+=statsHeatmapHTML();
-  else if(statsSub==='tierwin')  h+=statsTierWinHTML();
-  else if(statsSub==='maprank')  h+=statsMapRankHTML();
-  else if(statsSub==='univmatrix')h+=statsUnivMatrixHTML();
-  else if(statsSub==='racetrend')h+=statsRaceTrendHTML();
+  // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
+  const _CACHEABLE=['overview','records','killer','clutch','streakhist','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
+  function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
+  if(statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
+  else if(statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
+  else if(statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
+  else if(statsSub==='award')  h+=_cached('award', statsAwardHTML);
+  else if(statsSub==='records')h+=_cached('records', statsRecordsHTML);
+  else if(statsSub==='radar')  h+=statsRadarHTML();       // 차트 초기화 필요
+  else if(statsSub==='mismatch')h+=_cached('mismatch', statsMismatchHTML);
+  else if(statsSub==='heatmap')  h+=_cached('heatmap', statsHeatmapHTML);
+  else if(statsSub==='tierwin')  h+=_cached('tierwin', statsTierWinHTML);
+  else if(statsSub==='maprank')  h+=_cached('maprank', statsMapRankHTML);
+  else if(statsSub==='univmatrix')h+=_cached('univmatrix', statsUnivMatrixHTML);
+  else if(statsSub==='racetrend')h+=statsRaceTrendHTML(); // 차트 초기화 필요
   else if(statsSub==='csvexport')h+=statsCsvExportHTML();
   else if(statsSub==='sharecard')h+=statsShareCardHTML();
-  else if(statsSub==='advsearch')h+=statsAdvSearchHTML();
-  else if(statsSub==='killer')   h+=statsKillerHTML();
-  else if(statsSub==='seasonal') h+=statsSeasonalHTML();
-  else if(statsSub==='clutch')   h+=statsClutchHTML();
-  else if(statsSub==='streakhist')h+=statsStreakHistHTML();
-  else if(statsSub==='tiermatch') h+=statsTierMatchHTML();
-  else if(statsSub==='univmatrix2')h+=statsUnivMatrix2HTML();
+  else if(statsSub==='advsearch')h+=statsAdvSearchHTML(); // 검색 필터 상태 있음
+  else if(statsSub==='killer')   h+=_cached('killer', statsKillerHTML);
+  else if(statsSub==='seasonal') h+=_cached('seasonal', statsSeasonalHTML);
+  else if(statsSub==='clutch')   h+=_cached('clutch', statsClutchHTML);
+  else if(statsSub==='streakhist')h+=_cached('streakhist', statsStreakHistHTML);
+  else if(statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
+  else if(statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
   C.innerHTML=h;
   // 서브탭별 후처리
   if(statsSub==='elo')         initEloChart();
@@ -74,7 +82,14 @@ function rStats(C,T){
 }
 
 /* ─── 공통 유틸 ─── */
-function statsProMatchIds(){return new Set(proM.map(m=>m._id).filter(Boolean));}
+let _sProIds=null, _sProIdsTime='';
+function statsProMatchIds(){
+  const t=localStorage.getItem('su_last_save_time')||'0';
+  if(t!==_sProIdsTime){_sProIds=null;_sProIdsTime=t;}
+  if(_sProIds)return _sProIds;
+  _sProIds=new Set(proM.map(m=>m._id).filter(Boolean));
+  return _sProIds;
+}
 function statsNonProHist(p){const s=statsProMatchIds();return(p.history||[]).filter(h=>!s.has(h.matchId));}
 
 /* ══════════════════════════════════════
