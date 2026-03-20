@@ -76,27 +76,8 @@ function rTotal(C,T){
       ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🚫 방문자 숨김</span>`:''}
       <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
     </td></tr>`;
-    const sorted=(typeof _getBoardPlayers==='function')
-      ? _getBoardPlayers(u.name).filter(p=>{
-          if(!totalShowRetired&&p.retired)return false;
-          if(totalRaceFilter!=='전체'&&p.race!==totalRaceFilter)return false;
-          if(totalSearch.trim()){
-            const _tsq2=totalSearch.trim().toLowerCase();
-            const _RMAP2={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P'};
-            const _GMAP2={'여':'F','여자':'F','남':'M','남자':'M'};
-            const _toks2=_tsq2.split(/\s+/).filter(Boolean);
-            let _rf2='',_gf2='',_nts2=[];
-            _toks2.forEach(t=>{if(_RMAP2[t])_rf2=_RMAP2[t];else if(_GMAP2[t])_gf2=_GMAP2[t];else _nts2.push(t);});
-            const _nm2=_nts2.length===0||_nts2.every(t=>
-              p.name.toLowerCase().includes(t)||(p.univ||'').toLowerCase().includes(t)||
-              (p.tier||'').toLowerCase().includes(t)||(p.role||'').toLowerCase().includes(t)
-            );
-            if(!(_nm2&&(!_rf2||p.race===_rf2)&&(!_gf2||p.gender===_gf2)))return false;
-          }
-          if(totalHideNoRecord&&!(p.win+p.loss))return false;
-          return true;
-        })
-      : [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+    // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
+    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     // 직책자와 일반 선수 분리
     const _rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
     const _normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
