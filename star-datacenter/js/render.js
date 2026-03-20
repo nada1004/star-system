@@ -644,7 +644,7 @@ function buildPlayerDetailHTML(p){
                 return `<tr style="cursor:pointer;transition:.1s" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${oppSafe}'),100)" onmouseover="this.style.background='${oc}12'" onmouseout="this.style.background=''">
                   <td style="padding:6px 12px">
                     <div style="display:flex;align-items:center;gap:7px">
-                      ${getPlayerPhotoHTML(opp,'26px')}
+                      ${getPlayerPhotoHTML(opp,'36px')}
                       <span style="font-weight:700;font-size:13px">${opp}</span>
                     </div>
                   </td>
@@ -793,15 +793,16 @@ function buildPlayerDetailHTML(p){
   if(p.univ && p.univ !== '무소속'){
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
     if(teammates.length){
-      const tmSorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      // 직책자 먼저, 그 다음 포인트순
+      const tmSorted = [...teammates].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||(b.points||0)-(a.points||0));
       const tmCards = tmSorted.map(q=>{
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-          :`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
-        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
-          ${qPhoto}${q.name}${getTierBadge(q.tier)}
+          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          :`<div style="width:32px;height:32px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+          ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
         </button>`;
       }).join('');
       h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
