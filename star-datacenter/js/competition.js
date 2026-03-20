@@ -1097,7 +1097,6 @@ function grpOpenMatchModal(tn,gi,mi){
       <button class="btn btn-w btn-sm" onclick="grpAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 붙여넣기 일괄 입력</button>
-      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 재계산</button>
       <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
         <option value="set">세트제</option>
         <option value="game">게임수 합산</option>
@@ -1209,21 +1208,6 @@ function grpDelGame(si,gi2){
   const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];m.sets[si].games.splice(gi2,1);grpRefreshSets();
 }
 
-function grpRecalcSaSb(){
-  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);
-  if(!tn) return;
-  const m2=(tn.groups||[])[grpMatchState.gi]?.matches?.[grpMatchState.mi];
-  if(!m2||!m2.sets||!m2.sets.length){alert('세트 기록이 없습니다.');return;}
-  const gA=m2.sets.reduce((s,st)=>s+(st.scoreA||0),0);
-  const gB=m2.sets.reduce((s,st)=>s+(st.scoreB||0),0);
-  const sA=m2.sets.filter(s=>s.winner==='A').length;
-  const sB=m2.sets.filter(s=>s.winner==='B').length;
-  const ans=prompt('현재: '+m2.sa+':'+m2.sb+'\n\n1 = 게임수 합산 ('+gA+':'+gB+')\n2 = 세트수 ('+sA+':'+sB+')\n\n번호 입력:','1');
-  if(ans==='1'){m2.sa=gA;m2.sb=gB;}
-  else if(ans==='2'){m2.sa=sA;m2.sb=sB;}
-  else return;
-  save();render();alert('✅ 수정: '+m2.sa+':'+m2.sb);
-}
 
 function grpSaveMatch(){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
@@ -1335,7 +1319,6 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
       <button class="btn btn-w btn-sm" onclick="bktAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="bktAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openBktPasteModal()">📋 붙여넣기</button>
-      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 재계산</button>
       <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
         <option value="set">세트제</option>
         <option value="game">게임수 합산</option>
