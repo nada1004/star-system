@@ -1092,13 +1092,17 @@ function grpOpenMatchModal(tn,gi,mi){
       </div>
     </div>
     <div id="gm-sets"></div>
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b btn-sm" onclick="grpAddSet()">+ 1세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 붙여넣기 일괄 입력</button>
-      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 sa/sb 재계산</button>
-<button class="btn btn-g btn-sm" style="margin-left:auto" onclick="grpSaveMatch()">✅ 저장 (개인전적 자동반영)</button>
+      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 재계산</button>
+      <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
+        <option value="set">세트제</option>
+        <option value="game">게임수 합산</option>
+      </select>
+      <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="grpSaveMatch()">✅ 저장</button>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
     </div>`;
   om('grpMatchModal');
@@ -1238,6 +1242,12 @@ function grpSaveMatch(){
     set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
+  // 경기방식: game=게임수합산, set=세트수(기본)
+  const _grpMode = document.getElementById('gm-match-mode')?.value||'set';
+  if(_grpMode==='game'){
+    sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
+    sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);
+  }
   m.sa=sa;m.sb=sb;
   // 선수 개인 전적 자동 반영 (경기 시점 대학 저장)
   (m.sets||[]).forEach(set=>{
@@ -1320,11 +1330,16 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
       </div>
     </div>
     <div id="gm-sets"></div>
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b btn-sm" onclick="bktAddSet()">+ 1세트</button>
       <button class="btn btn-w btn-sm" onclick="bktAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="bktAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openBktPasteModal()">📋 붙여넣기</button>
+      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 재계산</button>
+      <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
+        <option value="set">세트제</option>
+        <option value="game">게임수 합산</option>
+      </select>
       <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="bktSaveMatch()">✅ 저장</button>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
     </div>`;
@@ -1434,6 +1449,12 @@ function bktSaveMatch(){
     set.scoreA=sA;set.scoreB=sB;set.winner=sA>sB?'A':sB>sA?'B':'';
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
+  // 경기방식: game=게임수합산, set=세트수(기본)
+  const _bktMode = document.getElementById('gm-match-mode')?.value||'set';
+  if(_bktMode==='game'){
+    sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
+    sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);
+  }
   m.sa=sa;m.sb=sb;
   // 브라켓 승자 자동 업데이트 (수동 추가 경기는 스킵)
   const tn=tourneys.find(t=>t.id===tnId);
