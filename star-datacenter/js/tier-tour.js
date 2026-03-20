@@ -883,9 +883,14 @@ function rCfg(C,T){
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 기본 내장 약자</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">📦 기본 내장 약자 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(✕ 클릭 시 비활성화)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">
-        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).slice(0,30).map(([k,v])=>k!==v?`<span style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 9px;font-size:11px;font-family:monospace"><b>${k}</b> → ${v}</span>`:'').filter(Boolean).join('')}
+        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).filter(([k,v])=>k!==v).map(([k,v])=>{
+          const disabled=(userMapAlias||{}).hasOwnProperty(k+'__disabled');
+          return disabled
+            ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 9px;font-size:11px;opacity:.5;text-decoration:line-through"><span style="font-family:monospace"><b>${k}</b> → ${v}</span><button onclick="restoreDefaultMapAlias('${encodeURIComponent(k)}')" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:10px;padding:0 2px;line-height:1;text-decoration:none" title="복원">↩</button></span>`
+            : `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 9px;font-size:11px"><span style="font-family:monospace"><b>${k}</b> → ${v}</span><button onclick="delDefaultMapAlias('${encodeURIComponent(k)}','${encodeURIComponent(v)}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0 2px;line-height:1" title="비활성화">✕</button></span>`;
+        }).join('')}
       </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔧 사용자 정의 약자</div>
@@ -2134,9 +2139,14 @@ function rCfg(C,T){
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 기본 내장 약자</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">📦 기본 내장 약자 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(✕ 클릭 시 비활성화)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">
-        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).slice(0,30).map(([k,v])=>k!==v?`<span style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 9px;font-size:11px;font-family:monospace"><b>${k}</b> → ${v}</span>`:'').filter(Boolean).join('')}
+        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).filter(([k,v])=>k!==v).map(([k,v])=>{
+          const disabled=(userMapAlias||{}).hasOwnProperty(k+'__disabled');
+          return disabled
+            ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 9px;font-size:11px;opacity:.5;text-decoration:line-through"><span style="font-family:monospace"><b>${k}</b> → ${v}</span><button onclick="restoreDefaultMapAlias('${encodeURIComponent(k)}')" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:10px;padding:0 2px;line-height:1;text-decoration:none" title="복원">↩</button></span>`
+            : `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 9px;font-size:11px"><span style="font-family:monospace"><b>${k}</b> → ${v}</span><button onclick="delDefaultMapAlias('${encodeURIComponent(k)}','${encodeURIComponent(v)}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0 2px;line-height:1" title="비활성화">✕</button></span>`;
+        }).join('')}
       </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔧 사용자 정의 약자</div>
@@ -3296,13 +3306,23 @@ function _refreshAliasList(){
     listEl.innerHTML = '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
     return;
   }
-  listEl.innerHTML = entries.map(([k,v])=>`
+  listEl.innerHTML = entries.filter(([k])=>!k.endsWith('__disabled')).map(([k,v])=>`
     <div class="srow">
       <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:50px;text-align:center">${k}</code>
       <span style="color:var(--gray-l)">→</span>
-      <span style="font-weight:600;font-size:13px">${v}</span>
+      <input type="text" value="${v}" id="alias-edit-${encodeURIComponent(k)}" style="width:100px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px;font-size:12px">
+      <button class="btn btn-b btn-xs" onclick="editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),document.getElementById('alias-edit-${encodeURIComponent(k)}').value)">✏️ 수정</button>
       <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">🗑️ 삭제</button>
-    </div>`).join('');
+    </div>`).join('') || '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
+}
+
+function editMapAlias(key, newVal){
+  newVal=(newVal||'').trim();
+  if(!newVal){alert('맵 이름을 입력하세요.');return;}
+  if(key===newVal){alert('약자와 맵 이름이 같습니다.');return;}
+  userMapAlias[key]=newVal;
+  save();
+  _refreshAliasList();
 }
 
 function addMapAlias(){
@@ -3327,6 +3347,20 @@ function delMapAlias(key){
   delete userMapAlias[key];
   save();
   _refreshAliasList();
+}
+
+function restoreDefaultMapAlias(encK){
+  const k=decodeURIComponent(encK);
+  delete userMapAlias[k+'__disabled'];
+  save(); render();
+}
+
+function delDefaultMapAlias(encK, encV){
+  const k=decodeURIComponent(encK), v=decodeURIComponent(encV);
+  if(!confirm(`기본 약자 '${k}' → '${v}' 를 비활성화할까요?\n(사용자 정의로 덮어쓰거나, 복원하려면 직접 추가하세요)`)) return;
+  // __disabled 마커로 기본 약자 비활성화
+  userMapAlias[k+'__disabled']='1';
+  save(); render();
 }
 
 function addTier(){

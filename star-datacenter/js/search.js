@@ -71,7 +71,17 @@ const PASTE_MAP_ALIAS_DEFAULT = {
 
 // 기본 약자 + 사용자 정의 약자를 합쳐 반환
 function getMapAlias() {
-  return Object.assign({}, PASTE_MAP_ALIAS_DEFAULT, (typeof userMapAlias !== 'undefined' ? userMapAlias : {}));
+  const user = typeof userMapAlias !== 'undefined' ? userMapAlias : {};
+  const merged = Object.assign({}, PASTE_MAP_ALIAS_DEFAULT, user);
+  // __disabled 마커가 있는 기본 약자 제외
+  Object.keys(user).forEach(k => {
+    if(k.endsWith('__disabled')) {
+      const orig = k.replace('__disabled','');
+      delete merged[orig];
+      delete merged[k];
+    }
+  });
+  return merged;
 }
 
 // 맵 이름 변환: exact alias → prefix 매칭(2자 이상) → 원본 반환
