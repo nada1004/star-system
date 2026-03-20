@@ -569,19 +569,7 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }
 
-  // ── 종족별 승률 ──
-  h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">`;
-  RACES.forEach(r=>{
-    const s=rv[r];const t=s.w+s.l;const w=t?Math.round(s.w/t*100):0;
-    const raceColors={T:'#3b82f6',Z:'#7c3aed',P:'#d97706',N:'#6b7280'};
-    const rc=raceColors[r]||'#6b7280';
-    h+=`<div class="rscard" style="border-color:${rc}55;background:${rc}12;flex:1;min-width:80px">
-      <div style="margin-bottom:6px"><span class="rbadge r${r}" style="font-size:11px">${r} ${RNAME[r]||''}</span></div>
-      <div style="font-weight:900;font-size:22px;color:${t?(w>=50?rc:'#94a3b8'):'#d1d5db'}">${t?w+'%':'-'}</div>
-      <div style="font-size:10px;margin-top:4px"><span style="color:#16a34a;font-weight:700">${s.w}W</span> <span style="color:#dc2626;font-weight:700">${s.l}L</span></div>
-    </div>`;
-  });
-  h+=`</div>`;
+
 
   // ── 모드별 전적 ──
   const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
@@ -616,24 +604,62 @@ function buildPlayerDetailHTML(p){
   h+=`</div>`;
 
   // ── 상대 전적 ──
-  const oppList=Object.entries(opps).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
-  if(oppList.length){
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>상대 전적 (${oppList.length}명)</div>
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">`;
-    oppList.forEach(([opp,s])=>{
-      const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
-      const oc=gc((players.find(x=>x.name===opp)||{}).univ||'');
-      const oppUniv=(players.find(x=>x.name===opp)||{}).univ||'';
-      h+=`<div class="ocard" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${opp}'),100)" style="border-color:${oc}44;background:${oc}08">
-        <div style="width:28px;height:28px;border-radius:8px;background:${oc};margin:0 auto 5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:0 2px 6px ${oc}55">${opp[0]}</div>
-        <div style="font-weight:800;font-size:11px;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px">${opp}</div>
-        <div style="font-size:9px;color:var(--gray-l);margin-bottom:3px">${oppUniv}</div>
-        <div style="font-size:10px;margin-bottom:2px"><span class="rbadge r${s.race}" style="font-size:9px;padding:1px 5px">${s.race}</span></div>
-        <div style="font-size:10px"><span style="color:#16a34a;font-weight:700">${s.w}W</span> <span style="color:#dc2626;font-weight:700">${s.l}L</span></div>
-        <div style="font-weight:800;font-size:12px;margin-top:2px;color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
+  {
+    if(!window._oppSort) window._oppSort='tot';
+    const oppList=Object.entries(opps);
+    if(oppList.length){
+      const _pSafeOpp=p.name.replace(/'/g,"\'");
+      const _rebuildOpp=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeOpp}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      if(window._oppSort==='wr') oppList.sort((a,b)=>{const ta=a[1].w+a[1].l,tb=b[1].w+b[1].l;const wa=ta?a[1].w/ta:0,wb=tb?b[1].w/tb:0;return wb-wa;});
+      else if(window._oppSort==='w') oppList.sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
+      else oppList.sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
+      h+=`<div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px">
+            <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
+            상대 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${oppList.length}명)</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <button onclick="window._oppSort='tot';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='tot'?'var(--blue)':'var(--white)'};color:${window._oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
+            <button onclick="window._oppSort='w';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='w'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='w'?'var(--blue)':'var(--white)'};color:${window._oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
+            <button onclick="window._oppSort='wr';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='wr'?'var(--blue)':'var(--white)'};color:${window._oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <table style="margin:0;border:none;border-radius:0">
+            <thead><tr>
+              <th style="text-align:left;padding:7px 12px">선수</th>
+              <th style="text-align:center;width:40px">종족</th>
+              <th style="text-align:center;width:80px">대학</th>
+              <th style="text-align:center;width:36px">승</th>
+              <th style="text-align:center;width:36px">패</th>
+              <th style="text-align:center;width:52px">승률</th>
+            </tr></thead>
+            <tbody>
+              ${oppList.map(([opp,s])=>{
+                const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
+                const op=players.find(x=>x.name===opp);
+                const oc=gc(op?.univ||'');
+                const oppSafe=opp.replace(/'/g,"\'");
+                return `<tr style="cursor:pointer;transition:.1s" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${oppSafe}'),100)" onmouseover="this.style.background='${oc}12'" onmouseout="this.style.background=''">
+                  <td style="padding:6px 12px">
+                    <div style="display:flex;align-items:center;gap:7px">
+                      ${getPlayerPhotoHTML(opp,'26px')}
+                      <span style="font-weight:700;font-size:13px">${opp}</span>
+                    </div>
+                  </td>
+                  <td style="text-align:center"><span class="rbadge r${s.race||op?.race||'?'}" style="font-size:10px">${s.race||op?.race||'?'}</span></td>
+                  <td style="text-align:center"><span style="background:${oc};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${op?.univ||'-'}</span></td>
+                  <td style="text-align:center;font-weight:700;color:#16a34a">${s.w}</td>
+                  <td style="text-align:center;font-weight:700;color:#dc2626">${s.l}</td>
+                  <td style="text-align:center;font-weight:800;font-size:12px;color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>`;
-    });
-    h+=`</div>`;
+    }
   }
 
   // ── 최근 기록 ──
