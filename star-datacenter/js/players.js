@@ -8,6 +8,8 @@ let totalShowRetired=false; // 은퇴 선수 표시
 
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
+  // 랭킹 스냅샷 업데이트 (하루 1회)
+  if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
   const raceOpts=['전체','T','Z','P','N'];
   let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
     <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
@@ -22,11 +24,12 @@ function rTotal(C,T){
   </div>`;
 
     let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
-    <col style="width:80px"><col style="width:60px"><col style="width:220px">
+    <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px">
     <col style="width:52px"><col style="width:52px">
     <col style="width:70px"><col style="width:80px"><col style="width:60px">
     ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
+    <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
@@ -37,6 +40,11 @@ function rTotal(C,T){
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
+
+  // 전체 순위 맵 (points 기준)
+  const _allRanked = [...players].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
+  const _rankMap = {};
+  _allRanked.forEach((p,i) => { _rankMap[p.name] = i+1; });
 
   let totalShown=0;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
@@ -62,7 +70,7 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${isLoggedIn?9:8}">
+    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${isLoggedIn?10:9}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
       ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🚫 방문자 숨김</span>`:''}
@@ -95,19 +103,25 @@ function rTotal(C,T){
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?9:8}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
+    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?10:9}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
     _displayList.forEach(p=>{
       if(p===null){
         // 구분자 - 직책 섹션 끝, 일반 선수 시작
         _inRoleSection=false; lt='';
-        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?9:8}">▷ 일반 선수 (${_normalPl.length}명)</td></tr>`;
+        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?10:9}">▷ 일반 선수 (${_normalPl.length}명)</td></tr>`;
         return;
       }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?9:8}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?10:9}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
+      const _pRank = _rankMap[p.name];
+      const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
       tableHTML+=`<tr>
+        <td style="text-align:center;white-space:nowrap;padding:5px 4px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
+          <div>${_pChange}</div>
+        </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
+        <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
             ${p.photo?`<span style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
@@ -126,7 +140,7 @@ function rTotal(C,T){
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?9:8}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
+    tableHTML+=`<tr><td colspan="${isLoggedIn?10:9}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 

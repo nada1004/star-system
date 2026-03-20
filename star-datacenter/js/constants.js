@@ -290,6 +290,37 @@ let filterSeason = '전체'; // '전체' 또는 시즌 id
 // 🆕 캘린더 예정 경기 (Firebase 동기화)
 let calScheduled = J('su_cal_sched') || [];
 
+// 🆕 랭킹 변동 스냅샷 (points 기준 순위)
+// { playerName: rank } 형태로 저장
+let _rankSnapshot = J('su_rank_snap') || {};
+let _rankSnapDate = localStorage.getItem('su_rank_snap_date') || '';
+
+// 랭킹 스냅샷 업데이트 (하루 1회)
+function updateRankSnapshot() {
+  const today = new Date().toISOString().slice(0,10);
+  if(_rankSnapDate === today) return; // 오늘 이미 업데이트됨
+  // 현재 순위 계산 (points 기준)
+  const ranked = [...players]
+    .filter(p => !p.retired)
+    .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
+  const snap = {};
+  ranked.forEach((p,i) => { snap[p.name] = i+1; });
+  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
+  localStorage.setItem('su_rank_snap_date', today);
+  _rankSnapshot = snap;
+  _rankSnapDate = today;
+}
+
+// 랭킹 변동 HTML 반환 (▲3 / ▼2 / NEW / -)
+function getRankChangeBadge(playerName, currentRank) {
+  const prev = _rankSnapshot[playerName];
+  if(!prev) return '<span style="font-size:9px;color:#7c3aed;font-weight:700;padding:1px 4px;background:#ede9fe;border-radius:3px">NEW</span>';
+  const diff = prev - currentRank; // 양수 = 상승
+  if(diff === 0) return '<span style="font-size:9px;color:var(--gray-l)">-</span>';
+  if(diff > 0)  return `<span style="font-size:9px;color:#16a34a;font-weight:800">▲${diff}</span>`;
+  return `<span style="font-size:9px;color:#dc2626;font-weight:800">▼${Math.abs(diff)}</span>`;
+}
+
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
 // Get univ color with alpha hex suffix for row tinting
 function gcHex8(n,alpha){

@@ -129,11 +129,10 @@ function deletePlayerHist(playerName, histIdx){
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
-  // ELO 차감
+  // ELO + 승/패 + 포인트 차감
   if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
-  // 승/패 카운트 차감
-  if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); }
-  else { p.loss=Math.max(0,(p.loss||0)-1); }
+  if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
+  else { p.loss=Math.max(0,(p.loss||0)-1); p.points=(p.points||0)+3; }
   // 상대 기록도 차감
   const opp=players.find(x=>x.name===hh.opp);
   if(opp){
@@ -142,8 +141,8 @@ function deletePlayerHist(playerName, histIdx){
     if(oppIdx>=0){
       const oh=oppHist[oppIdx];
       if(oh.eloDelta!=null) opp.elo=(opp.elo||ELO_DEFAULT)-oh.eloDelta;
-      if(oh.result==='승'){ opp.win=Math.max(0,(opp.win||0)-1); }
-      else { opp.loss=Math.max(0,(opp.loss||0)-1); }
+      if(oh.result==='승'){ opp.win=Math.max(0,(opp.win||0)-1); opp.points=(opp.points||0)-3; }
+      else { opp.loss=Math.max(0,(opp.loss||0)-1); opp.points=(opp.points||0)+3; }
       oppHist.splice(oppIdx,1);
     }
   }
@@ -201,15 +200,26 @@ function openPlayerHistEdit(playerName, histIdx){
   const saveBtnOrig=document.querySelector('#reModal .btn-b');
   if(saveBtnOrig){
     saveBtnOrig.onclick=function(){
+      const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp;
       hh.date=document.getElementById('phe-date').value;
       hh.result=document.getElementById('phe-result').value;
       hh.opp=document.getElementById('phe-opp').value;
       hh.oppRace=document.getElementById('phe-race').value;
       hh.map=document.getElementById('phe-map').value;
-      // 포인트 재계산은 복잡하므로 스킵, 날짜/맵/상대 정도만 수정
+      // 🔧 상대방 history도 날짜/맵 동기화
+      const oppPlayer=players.find(x=>x.name===oldOpp);
+      if(oppPlayer){
+        const oppH=(oppPlayer.history||[]).find(o=>
+          o.opp===playerName&&o.date===oldDate&&(o.map||'-')===(oldMap||'-')
+        );
+        if(oppH){
+          oppH.date=hh.date;
+          oppH.map=hh.map;
+          if(hh.opp!==oldOpp) oppH.opp=hh.opp; // 상대 이름 변경 시
+        }
+      }
       save();
       cm('reModal');
-      // 모달 업데이트
       const pb=document.getElementById('playerModalBody');
       if(pb&&window._playerModalCurrentName===playerName){
         pb.innerHTML=buildPlayerDetailHTML(p);
@@ -763,10 +773,39 @@ function buildUnivDetailHTML(univName){
     });
     h+=`</tbody></table></div>`;
   }
-  return h;
-}
+  // ── 소속 선수 카드 + 출석/활동률 ──
+  const _today = new Date().toISOString().slice(0,10);
+  const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
+  const _activeM = members.filter(p=>!p.retired);
+  if(_activeM.length){
+    h+=`<div style="margin-top:16px">
+      <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">👥 소속 선수 (${_activeM.length}명)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${_activeM.map(p=>{
+          const lastDate=(p.history||[]).reduce((mx,hh)=>hh.date>mx?hh.date:mx,'');
+          const isAct=lastDate>=_30ago;
+          const daysSince=lastDate?Math.floor((new Date(_today)-new Date(lastDate))/(86400000)):null;
+          const actBadge=!lastDate?'<span style="font-size:9px;color:#9ca3af">기록없음</span>'
+            :isAct?'<span style="font-size:9px;color:#16a34a;font-weight:700">✅ 활동중</span>'
+            :'<span style="font-size:9px;color:#f59e0b;font-weight:700">'+daysSince+'일전</span>';
+          const wrP=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
+          const photoHTML=p.photo
+            ?'<img src="'+p.photo+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">'
+            :'<div style="width:24px;height:24px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0">'+p.name[0]+'</div>';
+          return '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:90px;max-width:140px;cursor:pointer" onclick="openPlayerModal(''+p.name.replace(/'/g,"\'")+'')">'+
+            '<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+photoHTML+
+            '<span style="font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</span></div>'+
+            '<div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-bottom:3px">'+getTierBadge(p.tier)+'<span class="rbadge r'+p.race+'" style="font-size:9px">'+(p.race||'?')+'</span></div>'+
+            '<div style="display:flex;align-items:center;justify-content:space-between">'+
+            '<span style="font-size:10px;color:'+(wrP>=50?'#16a34a':'#dc2626')+';font-weight:700">'+(wrP!==null?wrP+'%':'-')+'</span>'+
+            actBadge+'</div></div>';
+        }).join('')}
+      </div>
+    </div>`;
+  }
 
-/* ══════════════════════════════════════
+  return h;
+}/* ══════════════════════════════════════
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
 let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
