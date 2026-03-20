@@ -192,9 +192,13 @@ function openPlayerHistEdit(playerName, histIdx){
         </select>
       </div>
       <div><label>맵</label>
-        <select id="phe-map" style="width:100%">
-          <option value="">-</option>${mapOpts}
-        </select>
+        <div style="display:flex;gap:6px">
+          <select id="phe-map-sel" style="flex:1" onchange="const v=this.value;const inp=document.getElementById('phe-map');if(v)inp.value=v;">
+            <option value="">목록에서 선택</option>${mapOpts}
+          </select>
+          <input id="phe-map" type="text" value="${!hh.map||hh.map==='-'?'':hh.map}" placeholder="맵 이름 직접 입력" style="flex:1">
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:2px">기록값: ${hh.map||'-'}</div>
       </div>
       <div><label>당시 소속 대학</label>
         <select id="phe-univ" style="width:100%">
@@ -213,7 +217,7 @@ function openPlayerHistEdit(playerName, histIdx){
       hh.result=document.getElementById('phe-result').value;
       hh.opp=document.getElementById('phe-opp').value;
       hh.oppRace=document.getElementById('phe-race').value;
-      hh.map=document.getElementById('phe-map').value;
+      hh.map=document.getElementById('phe-map').value||'-';
       const _newUniv=document.getElementById('phe-univ')?.value;
       if(_newUniv) hh.univ=_newUniv;
       // 🔧 상대방 history도 날짜/맵 동기화
