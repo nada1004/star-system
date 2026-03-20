@@ -1159,7 +1159,8 @@ function grpRefreshSets(){
         <button class="btn btn-r btn-xs" onclick="grpDelSet(${si})">세트 삭제</button>
       </div>`;
     (set.games||[]).forEach((g,gi2)=>{
-      const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
+      const _mapList=g.map&&!maps.includes(g.map)?[g.map,...maps]:maps;
+      const mapOpts=_mapList.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}${g.map===mp&&!maps.includes(mp)?' (기록값)':''}</option>`).join('');
       const selA=optsA.replace(`value="${g.playerA}"`,`value="${g.playerA}" selected`);
       const selB=optsB.replace(`value="${g.playerB}"`,`value="${g.playerB}" selected`);
       h+=`<div class="game-row">
@@ -1379,7 +1380,8 @@ function bktRefreshSets(){
         <button class="btn btn-r btn-xs" onclick="bktDelSet(${si})">세트 삭제</button>
       </div>`;
     (set.games||[]).forEach((g,gi2)=>{
-      const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
+      const _mapList=g.map&&!maps.includes(g.map)?[g.map,...maps]:maps;
+      const mapOpts=_mapList.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}${g.map===mp&&!maps.includes(mp)?' (기록값)':''}</option>`).join('');
       const selA=optsA.replace(`value="${g.playerA}"`,`value="${g.playerA}" selected`);
       const selB=optsB.replace(`value="${g.playerB}"`,`value="${g.playerB}" selected`);
       h+=`<div class="game-row">
