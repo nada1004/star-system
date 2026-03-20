@@ -97,6 +97,7 @@ function rComp(C,T){
 }
 
 function rCompLeague(tn){
+  if(!tn||!tn.groups) tn=tn?{...tn,groups:[]}:null;
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   const allMatches=[];
   tn.groups.forEach((grp,gi)=>{
