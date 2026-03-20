@@ -724,6 +724,7 @@ function buildPlayerDetailHTML(p){
 
   // ── 같은 대학 팀원 ──
   {
+    if(p.univ==='무소속') return; // 무소속은 팀원 표시 안 함
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
     if(teammates.length){
       const sorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
