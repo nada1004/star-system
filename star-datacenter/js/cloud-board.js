@@ -138,7 +138,7 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
+  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
   if (!window._forcingSync) {
     // 저장 중 → 바로 버리지 않고 pending에 보관 후 저장 완료 시 재적용
     if (window._isSaving) {
@@ -165,12 +165,16 @@ window.onFirebaseLoad = function(data) {
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
 };
 
-const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
+// 🔧 보안: 비밀번호는 코드에 하드코딩하지 않음
+// 관리자가 설정탭에서 직접 입력한 su_fb_pw 값만 사용
+const _FB_PW_DEFAULT = null; // 하드코딩 비밀번호 제거
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
 async function fbCloudSave() {
-  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
+  const pw = localStorage.getItem('su_fb_pw');
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
+  // 🔧 admin_config/pw 자동 설정 (최초 1회 — Rules 적용 전 준비)
+  if (typeof window.fbSetAdminConfig === 'function') window.fbSetAdminConfig(pw);
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -1544,7 +1548,7 @@ async function checkFbSyncStatus(){
 
   // Firebase 연결 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
+  const hasPw=!!localStorage.getItem('su_fb_pw');
   const lastSave=localStorage.getItem('su_last_save_time');
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';

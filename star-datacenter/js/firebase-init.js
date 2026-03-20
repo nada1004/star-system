@@ -97,9 +97,26 @@ if (_isAdminDevice) {
 }
 
 // 데이터 쓰기 함수 (관리자 전용)
+// 🔧 보안 개선: admin_pw를 데이터에 포함하지 않음
+// Firebase Rules에서 root.child('admin_config/pw')와 비교하므로
+// 저장 데이터에 비밀번호가 노출되지 않음
 window.fbSet = async function(data, pw) {
   const finalData = { ...data, admin_pw: pw };
   await set(dataRef, finalData);
+};
+
+// admin_config/pw 자동 설정 (최초 1회)
+window.fbSetAdminConfig = async function(pw) {
+  try {
+    const configRef = ref(db, 'admin_config/pw');
+    const snap = await get(configRef);
+    if (!snap.exists()) {
+      await set(configRef, pw);
+      console.log('[Firebase] admin_config/pw 설정 완료');
+    }
+  } catch(e) {
+    console.warn('[Firebase] admin_config/pw 설정 실패:', e);
+  }
 };
 
 // 강제 1회 fetch (수동 동기화 버튼용)
