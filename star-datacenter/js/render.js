@@ -747,12 +747,6 @@ function buildPlayerDetailHTML(p){
     }
   }
 
-  // ── 공유 링크 버튼 ──
-  h += `<div style="margin-bottom:14px;display:flex;gap:6px;flex-wrap:wrap">
-    <button onclick="(()=>{try{const u=new URL(location.href);u.searchParams.set('player','${p.name.replace(/'/g,"\'")}');navigator.clipboard.writeText(u.toString()).then(()=>showToast('🔗 선수 링크 복사됨')).catch(()=>alert('링크: '+u.toString()));}catch(e){alert('링크 복사 실패')}})()" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:.15s;font-family:'Noto Sans KR',sans-serif">
-      🔗 선수 링크 공유
-    </button>
-  </div>`;
 
   // ── 선수 메모 (관리자만) ──
   if(isLoggedIn){
