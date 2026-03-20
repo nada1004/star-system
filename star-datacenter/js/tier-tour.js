@@ -1080,6 +1080,22 @@ function rCfg(C,T){
         <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
       </div>
 
+      <!-- 세트제→게임수 합산 일괄 변환 -->
+      <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:6px">🔄 세트제 → 게임수 합산 일괄 변환</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
+        <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
+      </div>
+
     </div>
   </div>
   `;
@@ -1150,6 +1166,73 @@ function renderStorageInfo(){
 /* ══════════════════════════════════════
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
+function bulkConvertToGameScore(){
+  if(!isLoggedIn) return;
+  const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
+  const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
+  if(!targets.length){ alert('대상을 선택하세요.'); return; }
+
+  let converted = 0;
+  targets.forEach(key=>{
+    const arr = arrMap[key]||[];
+    arr.forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const gA = m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB = m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      // 세트 수와 다를 때만 변환
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+  });
+
+  // 대회(tourneys) 조별리그도 변환
+  (tourneys||[]).forEach(tn=>{
+    if(!tn.groups) return;
+    tn.groups.forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m.sets||!m.sets.length) return;
+        const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+        const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+        if(gA!==m.sa||gB!==m.sb){
+          m.sa=gA; m.sb=gB;
+          converted++;
+        }
+      });
+    });
+    // 브라켓 경기도 변환
+    const br=tn.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(m=>{
+      if(!m||!m.sets||!m.sets.length) return;
+      const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+    (br.manualMatches||[]).forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+  });
+
+  if(converted===0){
+    const el=document.getElementById('bulk-conv-result');
+    if(el) el.textContent='변환할 경기가 없습니다. (이미 게임수 합산으로 저장됨)';
+    return;
+  }
+  save(); render();
+  const el=document.getElementById('bulk-conv-result');
+  if(el) el.textContent='✅ '+converted+'건 변환 완료!';
+  setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
+}
 
 
 /* ══════════════════════════════════════
@@ -2248,6 +2331,22 @@ function rCfg(C,T){
         <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
       </div>
 
+      <!-- 세트제→게임수 합산 일괄 변환 -->
+      <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:6px">🔄 세트제 → 게임수 합산 일괄 변환</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
+        <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
+      </div>
+
     </div>
   </div>
   `;
@@ -2318,6 +2417,73 @@ function renderStorageInfo(){
 /* ══════════════════════════════════════
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
+function bulkConvertToGameScore(){
+  if(!isLoggedIn) return;
+  const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
+  const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
+  if(!targets.length){ alert('대상을 선택하세요.'); return; }
+
+  let converted = 0;
+  targets.forEach(key=>{
+    const arr = arrMap[key]||[];
+    arr.forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const gA = m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB = m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      // 세트 수와 다를 때만 변환
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+  });
+
+  // 대회(tourneys) 조별리그도 변환
+  (tourneys||[]).forEach(tn=>{
+    if(!tn.groups) return;
+    tn.groups.forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m.sets||!m.sets.length) return;
+        const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+        const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+        if(gA!==m.sa||gB!==m.sb){
+          m.sa=gA; m.sb=gB;
+          converted++;
+        }
+      });
+    });
+    // 브라켓 경기도 변환
+    const br=tn.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(m=>{
+      if(!m||!m.sets||!m.sets.length) return;
+      const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+    (br.manualMatches||[]).forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const gA=m.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+      const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+      if(gA!==m.sa||gB!==m.sb){
+        m.sa=gA; m.sb=gB;
+        converted++;
+      }
+    });
+  });
+
+  if(converted===0){
+    const el=document.getElementById('bulk-conv-result');
+    if(el) el.textContent='변환할 경기가 없습니다. (이미 게임수 합산으로 저장됨)';
+    return;
+  }
+  save(); render();
+  const el=document.getElementById('bulk-conv-result');
+  if(el) el.textContent='✅ '+converted+'건 변환 완료!';
+  setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
+}
 
 
 /* ══════════════════════════════════════
