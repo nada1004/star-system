@@ -101,7 +101,9 @@ if (_isAdminDevice) {
 // Firebase Rules에서 root.child('admin_config/pw')와 비교하므로
 // 저장 데이터에 비밀번호가 노출되지 않음
 window.fbSet = async function(data, pw) {
-  const finalData = { ...data, admin_pw: pw };
+  // admin_config 키 제외 (Firebase Rules로 보호된 경로)
+  const { admin_config: _ac, ...rest } = data;
+  const finalData = { ...rest, admin_pw: pw };
   await set(dataRef, finalData);
 };
 
