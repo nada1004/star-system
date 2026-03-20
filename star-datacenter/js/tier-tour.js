@@ -2788,7 +2788,14 @@ function savePlayer(){
       });
     };
     renameInMatches(miniM);renameInMatches(univM);renameInMatches(comps);
-    renameInMatches(ckM);renameInMatches(proM);
+    renameInMatches(ckM);renameInMatches(proM);renameInMatches(ttM);
+    // 🔧 개인전/끝장전: wName/lName 갱신
+    [indM, gjM].forEach(arr=>{
+      (arr||[]).forEach(m=>{
+        if(m.wName===oldName) m.wName=newName;
+        if(m.lName===oldName) m.lName=newName;
+      });
+    });
     tourneys.forEach(tn=>{
       (tn.groups||[]).forEach(grp=>{
         (grp.matches||[]).forEach(m=>{
@@ -2937,18 +2944,32 @@ function openRE(mode,idx){
   let body='',tit='';
   if(mode==='mini'){
     const m=miniM[idx];tit='⚡ 미니대전 수정';
+    const mSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
+    const mSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A 대학</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>팀 A 세트 승</label><input type="number" id="re-sa" value="${m.sa}">
+      <label>팀 A 점수 (sa)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
+        ${mSetsA!==null&&mSetsA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${mSetsA};document.getElementById('re-sb').value=${mSetsB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer;white-space:nowrap">🔄 게임수(${mSetsA}:${mSetsB})</button>`:''}
+      </div>
       <label>팀 B 대학</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>팀 B 세트 승</label><input type="number" id="re-sb" value="${m.sb}">`;
+      <label>팀 B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
+      ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}`;
   } else if(mode==='univm'){
     const m=univM[idx];tit='🏟️ 대학대전 수정';
+    const uSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
+    const uSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>A 세트 승</label><input type="number" id="re-sa" value="${m.sa}">
+      <label>A 점수 (sa)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
+        ${uSetsA!==null&&uSetsA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${uSetsA};document.getElementById('re-sb').value=${uSetsB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer;white-space:nowrap">🔄 게임수(${uSetsA}:${uSetsB})</button>`:''}
+      </div>
       <label>팀 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>B 세트 승</label><input type="number" id="re-sb" value="${m.sb}">`;
+      <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
+      ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}`;
   } else if(mode==='comp'){
     const c=comps[idx];tit='🎖️ 대회 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${c.d}">
@@ -2960,19 +2981,39 @@ function openRE(mode,idx){
   } else if(mode==='pro'){
     const m=proM[idx];tit='🏅 프로리그 수정';
     const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
+    const pSetsGA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
+    const pSetsGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const pSetsWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
+    const pSetsWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>A팀 레이블</label><input type="text" id="re-tla" value="${m.teamALabel||''}">
-      <label>A팀 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
+      <label>A팀 점수 (sa)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
+        ${pSetsGA!==null&&pSetsGA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${pSetsGA};document.getElementById('re-sb').value=${pSetsGB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer">🔄 게임수(${pSetsGA}:${pSetsGB})</button>`:''}
+        ${pSetsWA!==null&&pSetsWA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${pSetsWA};document.getElementById('re-sb').value=${pSetsWB}" style="font-size:11px;padding:2px 8px;background:#dbeafe;border:1px solid #2563eb;border-radius:6px;cursor:pointer">🔄 세트수(${pSetsWA}:${pSetsWB})</button>`:''}
+      </div>
       <label>B팀 레이블</label><input type="text" id="re-tlb" value="${m.teamBLabel||''}">
-      <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
-      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+      <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
+      ${pSetsGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${pSetsWA} / B ${pSetsWB} | 게임 수: A ${pSetsGA} / B ${pSetsGB}</div>`:''}
+      <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='tt'){
     const m=ttM[idx];tit='🎯 티어대회 수정';
+    const ttGA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
+    const ttGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
+    const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
-      <label>A팀 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
-      <label>B팀 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
-      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+      <label>A팀 점수 (sa)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
+        ${ttGA!==null&&ttGA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${ttGA};document.getElementById('re-sb').value=${ttGB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer">🔄 게임수(${ttGA}:${ttGB})</button>`:''}
+        ${ttWA!==null&&ttWA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${ttWA};document.getElementById('re-sb').value=${ttWB}" style="font-size:11px;padding:2px 8px;background:#dbeafe;border:1px solid #2563eb;border-radius:6px;cursor:pointer">🔄 세트수(${ttWA}:${ttWB})</button>`:''}
+      </div>
+      <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
+      ${ttGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${ttWA} / B ${ttWB} | 게임 수: A ${ttGA} / B ${ttGB}</div>`:''}
+      <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='ck'){
     const m=ckM[idx];tit='🤝 대학CK 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">

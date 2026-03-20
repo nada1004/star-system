@@ -24,7 +24,7 @@ function rTotal(C,T){
   </div>`;
 
     let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
-    <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px">
+    <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col style="width:52px"><col style="width:52px">
     <col style="width:70px"><col style="width:80px"><col style="width:60px">
     ${isLoggedIn?'<col style="width:70px">':''}
@@ -38,6 +38,7 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
 
@@ -70,7 +71,7 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${isLoggedIn?10:9}">
+    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${isLoggedIn?11:10}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
       ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🚫 방문자 숨김</span>`:''}
@@ -84,15 +85,15 @@ function rTotal(C,T){
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?10:9}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
+    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?11:10}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
     _displayList.forEach(p=>{
       if(p===null){
         // 구분자 - 직책 섹션 끝, 일반 선수 시작
         _inRoleSection=false; lt='';
-        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?10:9}">▷ 일반 선수 (${_normalPl.length}명)</td></tr>`;
+        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?11:10}">▷ 일반 선수 (${_normalPl.length}명)</td></tr>`;
         return;
       }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?10:9}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?11:10}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       const _pRank = _rankMap[p.name];
       const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
@@ -116,12 +117,22 @@ function rTotal(C,T){
         </td>
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px" class="${pC(p.points)}">${pS(p.points)}</td>
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
+        <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
+          const _today2=new Date().toISOString().slice(0,10);
+          const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
+          const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+          const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
+          if(!lastD) return '<span style="font-size:9px;color:#9ca3af">-</span>';
+          if(lastD>=_7ago2) return '<span style="font-size:9px;font-weight:800;color:#16a34a">🟢</span>';
+          if(lastD>=_30ago2) return '<span style="font-size:9px;font-weight:800;color:#f59e0b">🟡</span>';
+          return '<span style="font-size:9px;font-weight:800;color:#9ca3af">⚫</span>';
+        })()}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?10:9}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
+    tableHTML+=`<tr><td colspan="${isLoggedIn?11:10}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 

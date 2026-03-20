@@ -820,24 +820,45 @@ function histUnivCompHTML(){
     const totalL = members.reduce((s,p)=>s+(p.loss||0),0);
     const wr = (totalW+totalL) ? Math.round(totalW/(totalW+totalL)*100) : 0;
     const ace = [...members].sort((a,b)=>(b.points||0)-(a.points||0))[0];
-    // 미니대전 전적
+    // 전체 팀전 전적 (미니/대학대전/CK/프로)
+    const _allTeamArrs = [
+      {arr:miniM, label:'미니'},
+      {arr:univM, label:'대학대전'},
+      {arr:ckM,   label:'CK', isCK:true},
+      {arr:proM,  label:'프로', isCK:true},
+    ];
     let mW=0,mL=0;
-    miniM.forEach(m=>{
-      if(m.sa==null||m.sb==null) return;
-      if(m.a===univName&&m.sa>m.sb) mW++;
-      else if(m.b===univName&&m.sb>m.sa) mW++;
-      else if(m.a===univName&&m.sa<m.sb) mL++;
-      else if(m.b===univName&&m.sb<m.sa) mL++;
+    _allTeamArrs.forEach(({arr,isCK})=>{
+      (arr||[]).forEach(m=>{
+        if(m.sa==null||m.sb==null) return;
+        const myA = isCK
+          ? (m.teamAMembers||[]).some(x=>x.univ===univName)
+          : m.a===univName;
+        const myB = isCK
+          ? (m.teamBMembers||[]).some(x=>x.univ===univName)
+          : m.b===univName;
+        if(myA&&m.sa>m.sb) mW++;
+        else if(myB&&m.sb>m.sa) mW++;
+        else if(myA&&m.sa<m.sb) mL++;
+        else if(myB&&m.sb<m.sa) mL++;
+      });
     });
-    // 직접 대결
+    // 직접 대결 (전체 팀전)
     let vsW=0,vsL=0;
     if(_univCompA&&_univCompB){
       const opp=univName===_univCompA?_univCompB:_univCompA;
-      miniM.filter(m=>m.sa!=null).forEach(m=>{
-        const myWin=(m.a===univName&&m.sa>m.sb)||(m.b===univName&&m.sb>m.sa);
-        const myLoss=(m.a===univName&&m.sa<m.sb)||(m.b===univName&&m.sb<m.sa);
-        const hasOpp=m.a===opp||m.b===opp;
-        if(hasOpp){ if(myWin)vsW++; else if(myLoss)vsL++; }
+      _allTeamArrs.forEach(({arr,isCK})=>{
+        (arr||[]).filter(m=>m.sa!=null).forEach(m=>{
+          const myA=isCK?(m.teamAMembers||[]).some(x=>x.univ===univName):m.a===univName;
+          const myB=isCK?(m.teamBMembers||[]).some(x=>x.univ===univName):m.b===univName;
+          const oppA=isCK?(m.teamAMembers||[]).some(x=>x.univ===opp):m.a===opp;
+          const oppB=isCK?(m.teamBMembers||[]).some(x=>x.univ===opp):m.b===opp;
+          const hasOpp=oppA||oppB;
+          if(!hasOpp) return;
+          const myWin=(myA&&m.sa>m.sb)||(myB&&m.sb>m.sa);
+          const myLoss=(myA&&m.sa<m.sb)||(myB&&m.sb<m.sa);
+          if(myWin)vsW++; else if(myLoss)vsL++;
+        });
       });
     }
     return {col,members,activeM,avgElo,totalW,totalL,wr,ace,mW,mL,vsW,vsL};
@@ -887,7 +908,7 @@ function histUnivCompHTML(){
           <span style="color:var(--gray-l);font-size:18px">:</span>
           <span style="color:${sB.vsW>sB.vsL?sB.col:'var(--text3)'}">${sB.vsW}</span>
         </div>
-        <div style="font-size:10px;color:var(--gray-l)">미니대전 기준</div>
+        <div style="font-size:10px;color:var(--gray-l)">팀전 전체 기준</div>
       </div>
       <!-- B 대학 -->
       <div style="flex:1;min-width:130px;background:${sB.col}18;border:2px solid ${sB.col}44;border-radius:12px;padding:14px;text-align:center">
@@ -910,8 +931,8 @@ function histUnivCompHTML(){
           ${statRow('전체 승률', sA.wr+'%', sB.wr+'%')}
           ${statRow('전체 승', sA.totalW, sB.totalW)}
           ${statRow('전체 패', sA.totalL, sB.totalL, false)}
-          ${statRow('미니대전 승', sA.mW, sB.mW)}
-          ${statRow('미니대전 패', sA.mL, sB.mL, false)}
+          ${statRow('팀전 승(전체)', sA.mW, sB.mW)}
+          ${statRow('팀전 패(전체)', sA.mL, sB.mL, false)}
           ${statRow('선수 수', sA.members.length, sB.members.length)}
           <tr>
             <td style="text-align:right;padding:6px 10px;cursor:pointer;color:${sA.col};font-weight:700" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${(sA.ace?.name||'').replace(/'/g,"\'")}'),80)">${sA.ace?.name||'-'}</td>
