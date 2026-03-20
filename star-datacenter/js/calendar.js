@@ -2,7 +2,9 @@
   T.textContent='📅 경기 캘린더';
 
   // 모든 경기 데이터 맵 (날짜→경기 객체 배열)
-  if(typeof window._calScheduled==='undefined') window._calScheduled=JSON.parse(localStorage.getItem('su_cal_sched')||'[]');
+  // 전역 calScheduled 사용 (Firebase 동기화)
+  if(typeof calScheduled==='undefined') window.calScheduled=[];
+  window._calScheduled=calScheduled; // 하위 호환
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),...(typeof indM!=='undefined'?indM:[]),...(typeof gjM!=='undefined'?gjM:[]),...(typeof ttM!=='undefined'?ttM:[]),...window._calScheduled];
   window._rCalAllMatches=allMatches; // calView=day 공유카드용 전역 캐시
   const dateMatchMap={};
@@ -216,7 +218,7 @@
         <button class="btn btn-sm ${calView==='month'?'btn-b':'btn-w'}" onclick="calView='month';render()">월간</button>
         <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
         <button class="btn btn-sm ${calView==='day'?'btn-b':'btn-w'}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
-        <button class="btn btn-w btn-sm no-export" onclick="(function(){const d=prompt('예정 경기 날짜 (YYYY-MM-DD):',todayStr||'');if(!d)return;const n=prompt('경기 메모:','');if(!n)return;window._calScheduled.push({d,note:n,_id:'s'+Date.now()});localStorage.setItem('su_cal_sched',JSON.stringify(window._calScheduled));render();})()">+ 예정</button>
+        <button class="btn btn-w btn-sm no-export" onclick="(function(){const d=prompt('예정 경기 날짜 (YYYY-MM-DD):',todayStr||'');if(!d)return;const n=prompt('경기 메모:','');if(!n)return;const newSched={d,note:n,_id:'s'+Date.now()};calScheduled.push(newSched);window._calScheduled=calScheduled;if(typeof save==='function')save();render();})()">+ 예정</button>
       </div>
     </div>
     ${undatedHTML}
@@ -242,6 +244,15 @@
 
 let _calActiveDay='';
 let _calDetailState={}; // 캘린더 전용 상세 열림 상태
+
+function calDeleteSched(id){
+  if(!isLoggedIn) return;
+  if(!confirm('예정 경기를 삭제할까요?')) return;
+  const idx = calScheduled.findIndex(x=>x._id===id);
+  if(idx>=0){ calScheduled.splice(idx,1); window._calScheduled=calScheduled; }
+  if(typeof save==='function') save();
+  render();
+}
 
 function calToggleDetail(key){
   const area=document.getElementById('det-'+key);
@@ -269,6 +280,8 @@ function calShowDay(ds){
   _calDetailState={}; // 날짜 변경 시 상세 상태 초기화
   const allMatches=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])];
   const matches=allMatches.filter(m=>m.d===ds);
+  // 예정 경기도 포함
+  const schedMatches=(calScheduled||[]).filter(m=>m.d===ds);
   // 공유카드용 캐시 - 날짜별 매치 배열 저장
   if(!window._calDayCache)window._calDayCache={};
   window._calDayCache[ds]=matches;
@@ -323,6 +336,15 @@ function calShowDay(ds){
     +'<button class="btn btn-w btn-sm" onclick="_calActiveDay=\'\';document.getElementById(\'calDayDetail\').innerHTML=\'\'">✕ 닫기</button>'
     +'</div></div>'
     +matches.map(buildMatchRow).join('')
+    // 예정 경기 섹션
+    +(schedMatches.length ? '<div style="margin-top:10px;padding:10px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:8px">'
+      +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px">📌 예정 경기</div>'
+      +schedMatches.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fde68a20">'
+        +'<span style="font-size:12px;flex:1">'+( m.note||'예정')+'</span>'
+        +(isLoggedIn?'<button class="btn btn-r btn-xs" onclick="calDeleteSched(\''+m._id+'\')">🗑️</button>':'')
+        +'</div>'
+      ).join('')
+      +'</div>' : '')
     +'</div>';
   // render() 제거 - 호출하면 rCal이 재실행되어 calDayDetail이 초기화됨
 }

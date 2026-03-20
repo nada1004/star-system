@@ -1,17 +1,35 @@
 ﻿/* ══════════════════════════════════════
    🎯 승부예측 시스템
 ══════════════════════════════════════ */
-function saveVotes(){ localStorage.setItem('su_votes', JSON.stringify(voteData)); }
+function saveVotes(){
+  localStorage.setItem('su_votes', JSON.stringify(voteData));
+  // 집계 데이터(_my 제외)만 Firebase에 동기화
+  if(typeof save === 'function') save();
+}
 
 function rVote(C,T){
   T.textContent='🎯 승부예측';
 
-  // 예정/진행중 경기 수집 (결과 없는 미니대전)
-  const upcoming = miniM.filter(m=> m.sa==null || m.sa===''); // null/undefined/빈문자열=미입력, sa=0도 완료로 정상 처리
-  // 결과 있는 경기
-  const finished = miniM.filter(m=> m.sa!=null && m.sa!==''); // 숫자(0포함)가 있으면 완료 경기
+  // 예정/진행중 경기 수집 (전체 종류)
+  const _isUnresolved = m => m.sa==null || m.sa==='';
+  const _isResolved   = m => m.sa!=null && m.sa!=='';
 
-  function getVoteKey(m){ return m._id||`${m.a}_${m.b}_${m.d}`; }
+  // 개인전/끝장전은 wName/lName 기반으로 별도 처리
+  const _indUpcoming  = (typeof indM!=='undefined'?indM:[]).filter(m=>!m.wName||!m.lName?false:false); // 개인전은 결과가 항상 있어서 예측 불가
+  const _gjUpcoming   = (typeof gjM!=='undefined'?gjM:[]).filter(m=>!m.wName||!m.lName?false:false);
+
+  // 팀전 전체 합산
+  const _allTeamM = [
+    ...miniM.map(m=>({...m,_mode:'⚡ 미니대전'})),
+    ...univM.map(m=>({...m,_mode:'🏟️ 대학대전'})),
+    ...ckM.map(m=>({...m,_mode:'🤝 대학CK'})),
+    ...proM.map(m=>({...m,_mode:'🏅 프로리그'})),
+    ...(typeof ttM!=='undefined'?ttM:[]).map(m=>({...m,_mode:'🎯 티어대회'})),
+  ];
+  const upcoming = _allTeamM.filter(_isUnresolved);
+  const finished = _allTeamM.filter(_isResolved);
+
+  function getVoteKey(m){ return m._id||`${m.wName||m.a}_${m.lName||m.b}_${m.d}`; }
 
   function voteBar(key, side){
     const v = voteData[key]||{a:0,b:0};
@@ -19,7 +37,7 @@ function rVote(C,T){
     const myVote = voteData[key+'_my'];
     const pctA = total===0?50:Math.round(v.a/total*100);
     const pctB = 100-pctA;
-    const _vm=miniM.find(m=>getVoteKey(m)===key)||{};
+    const _vm=_allTeamM.find(m=>getVoteKey(m)===key)||{};
     const aCol = gc(_vm.a||'');
     const bCol = gc(_vm.b||'');
     return `
@@ -47,25 +65,31 @@ function rVote(C,T){
             const key=getVoteKey(m);
             const v=voteData[key]||{a:0,b:0};
             const myVote=voteData[key+'_my'];
-            const aCol=gc(m.a||'');
-            const bCol=gc(m.b||'');
+            const isCKorPro=(ckM.includes(m)||proM.includes(m)||(typeof ttM!=='undefined'&&ttM.includes(m)));
+            const tA=isCKorPro?(m.teamALabel||'A팀'):(m.a||'팀A');
+            const tB=isCKorPro?(m.teamBLabel||'B팀'):(m.b||'팀B');
+            const aCol=isCKorPro?'#2563eb':gc(m.a||'');
+            const bCol=isCKorPro?'#dc2626':gc(m.b||'');
             return `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
-              <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">📅 ${m.d||'날짜 미정'}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <span style="font-size:10px;background:#e0e7ff;color:#3730a3;padding:1px 7px;border-radius:20px;font-weight:700">${m._mode||'⚡ 미니대전'}</span>
+                <span style="font-size:11px;color:var(--gray-l)">📅 ${m.d||'날짜 미정'}</span>
+              </div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
                 <div style="flex:1;text-align:center;padding:10px;background:${aCol}22;border-radius:8px;border:2px solid ${myVote==='a'?aCol:'transparent'}">
-                  <div style="font-weight:800;color:${aCol}">${m.a||'팀A'}</div>
+                  <div style="font-weight:800;color:${aCol}">${tA}</div>
                 </div>
                 <div style="font-weight:900;color:var(--gray-l);font-size:18px">VS</div>
                 <div style="flex:1;text-align:center;padding:10px;background:${bCol}22;border-radius:8px;border:2px solid ${myVote==='b'?bCol:'transparent'}">
-                  <div style="font-weight:800;color:${bCol}">${m.b||'팀B'}</div>
+                  <div style="font-weight:800;color:${bCol}">${tB}</div>
                 </div>
               </div>
               ${voteBar(key)}
               ${myVote
                 ? `<button class="btn btn-w btn-sm" style="width:100%;margin-top:10px" onclick="cancelVote('${key}')">🔄 예측 취소</button>`
                 : `<div style="display:flex;gap:8px;margin-top:10px">
-                    <button class="btn btn-sm" style="flex:1;background:${aCol};color:#fff;border-color:${aCol}" onclick="doVote('${key}','a')">${m.a||'팀A'} 승리</button>
-                    <button class="btn btn-sm" style="flex:1;background:${bCol};color:#fff;border-color:${bCol}" onclick="doVote('${key}','b')">${m.b||'팀B'} 승리</button>
+                    <button class="btn btn-sm" style="flex:1;background:${aCol};color:#fff;border-color:${aCol}" onclick="doVote('${key}','a')">${tA} 승리</button>
+                    <button class="btn btn-sm" style="flex:1;background:${bCol};color:#fff;border-color:${bCol}" onclick="doVote('${key}','b')">${tB} 승리</button>
                   </div>`
               }
             </div>`;
@@ -96,11 +120,11 @@ function rVote(C,T){
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="flex:1;text-align:center;font-weight:${m.sa>m.sb?'900':'400'};color:${m.sa>m.sb?aCol:'var(--gray-l)'}">
-                  ${m.sa>m.sb?'🏆 ':''} ${m.a||'팀A'}
+                  ${m.sa>m.sb?'🏆 ':''} ${tAF}
                 </div>
                 <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px">${m.sa} : ${m.sb}</div>
                 <div style="flex:1;text-align:center;font-weight:${m.sb>m.sa?'900':'400'};color:${m.sb>m.sa?bCol:'var(--gray-l)'}">
-                  ${m.sb>m.sa?'🏆 ':''} ${m.b||'팀B'}
+                  ${m.sb>m.sa?'🏆 ':''} ${tBF}
                 </div>
               </div>
               <div style="margin-top:8px">

@@ -229,6 +229,7 @@ function localSave(){
     if(typeof playerStatusIcons!=='undefined') localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
     localStorage.setItem('su_notices',JSON.stringify(notices));
     localStorage.setItem('su_seasons',JSON.stringify(seasons));
+    localStorage.setItem('su_cal_sched',JSON.stringify(calScheduled));
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
   }catch(e){
@@ -285,6 +286,9 @@ let filterMonth='전체'; // '전체' 또는 '01'~'12'
 // 🆕 시즌 관리: [{id, name, from, to}] — from/to: 'YYYY-MM-DD'
 let seasons = J('su_seasons') || [];
 let filterSeason = '전체'; // '전체' 또는 시즌 id
+
+// 🆕 캘린더 예정 경기 (Firebase 동기화)
+let calScheduled = J('su_cal_sched') || [];
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
 // Get univ color with alpha hex suffix for row tinting
