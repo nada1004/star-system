@@ -1097,20 +1097,7 @@ function grpOpenMatchModal(tn,gi,mi){
       <button class="btn btn-w btn-sm" onclick="grpAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 붙여넣기 일괄 입력</button>
-      <button class="btn btn-w btn-sm" onclick="(()=>{
-  const m2=tourneys.find(t=>t.id===grpMatchState.tnId)?.groups[grpMatchState.gi]?.matches[grpMatchState.mi];
-  if(!m2||!m2.sets||!m2.sets.length){alert('세트 기록이 없습니다.');return;}
-  const gA=m2.sets.reduce((s,st)=>s+(st.scoreA||0),0);
-  const gB=m2.sets.reduce((s,st)=>s+(st.scoreB||0),0);
-  const sA=m2.sets.filter(s=>s.winner==='A').length;
-  const sB=m2.sets.filter(s=>s.winner==='B').length;
-  const msg='현재 저장값: '+m2.sa+':'+m2.sb+'\n\n게임수 합산: '+gA+':'+gB+'\n세트수: '+sA+':'+sB+'\n\n어떤 방식으로 수정할까요?\n1 = 게임수 합산\n2 = 세트수';
-  const ans=prompt(msg,'1');
-  if(ans==='1'){m2.sa=gA;m2.sb=gB;}
-  else if(ans==='2'){m2.sa=sA;m2.sb=sB;}
-  else return;
-  save();render();alert('✅ 수정 완료: '+m2.sa+':'+m2.sb);
-})()">🔄 sa/sb 재계산</button>
+      <button class="btn btn-w btn-sm" onclick="grpRecalcSaSb()">🔄 sa/sb 재계산</button>
 <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="grpSaveMatch()">✅ 저장 (개인전적 자동반영)</button>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
     </div>`;
@@ -1216,6 +1203,22 @@ function grpAddGame(si){
 function grpDelGame(si,gi2){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
   const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];m.sets[si].games.splice(gi2,1);grpRefreshSets();
+}
+
+function grpRecalcSaSb(){
+  const tn=tourneys.find(t=>t.id===grpMatchState.tnId);
+  if(!tn) return;
+  const m2=(tn.groups||[])[grpMatchState.gi]?.matches?.[grpMatchState.mi];
+  if(!m2||!m2.sets||!m2.sets.length){alert('세트 기록이 없습니다.');return;}
+  const gA=m2.sets.reduce((s,st)=>s+(st.scoreA||0),0);
+  const gB=m2.sets.reduce((s,st)=>s+(st.scoreB||0),0);
+  const sA=m2.sets.filter(s=>s.winner==='A').length;
+  const sB=m2.sets.filter(s=>s.winner==='B').length;
+  const ans=prompt('현재: '+m2.sa+':'+m2.sb+'\n\n1 = 게임수 합산 ('+gA+':'+gB+')\n2 = 세트수 ('+sA+':'+sB+')\n\n번호 입력:','1');
+  if(ans==='1'){m2.sa=gA;m2.sb=gB;}
+  else if(ans==='2'){m2.sa=sA;m2.sb=sB;}
+  else return;
+  save();render();alert('✅ 수정: '+m2.sa+':'+m2.sb);
 }
 
 function grpSaveMatch(){
