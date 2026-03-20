@@ -8,103 +8,23 @@ const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/
    Firebase 연동 (실시간 동기화)
 ══════════════════════════════════════ */
 // 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
-// 🔧 Firebase 배열→객체 변환 대응 헬퍼
-// Firebase Realtime DB는 배열을 {0:...,1:...,2:...} 객체로 저장할 수 있음
-// 수신 시 객체면 배열로 변환, null 슬롯 제거
-function _fbArr(val, fallback) {
-  if(!val) return fallback||[];
-  if(Array.isArray(val)) return val;
-  // 숫자 키 객체 → 배열 변환 (null 슬롯 제거)
-  if(typeof val === 'object') {
-    return Object.keys(val)
-      .sort((a,b)=>Number(a)-Number(b))
-      .map(k=>val[k])
-      .filter(v=>v!=null);
-  }
-  return fallback||[];
-}
-
 function _applyCloudData(d) {
-  // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
-  // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
-  const _has = (key) => d[key] !== undefined && d[key] !== null;
-  const _hasOrEmpty = (key) => d.savedAt !== undefined; // savedAt 있으면 완전한 데이터로 간주
-
-  // players
-  {
-    const v = d.players||d.player;
-    if(v !== undefined) {
-      players=_fbArr(v, []);
-      players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
-    }
-  }
-  if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
-  if(_has('maps')) maps=_fbArr(d.maps||d.map, maps);
-  if(_has('tourD')) tourD=_fbArr(d.tourD||d.tournamentDates, Array(15).fill(''));
-
-  // 🔧 배열 필드: 키가 없어도 savedAt 있으면 빈 배열로 처리 (Firebase 빈 배열 삭제 대응)
-  {
-    const v = d.miniM||d.mini||d.miniMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('miniM') ? [] : null);
-    if(arr !== null){ miniM=arr; miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
-  }
-  {
-    const v = d.univM||d.univ||d.univMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('univM') ? [] : null);
-    if(arr !== null){ univM=arr; univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  {
-    const v = d.comps||d.comp||d.competitions;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('comps') ? [] : null);
-    if(arr !== null) comps=arr;
-  }
-  {
-    const v = d.ckM||d.ck||d.ckMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ckM') ? [] : null);
-    if(arr !== null){ ckM=arr; ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  if(_has('compNames')) compNames=_fbArr(d.compNames||d.competitionNames, []);
-  if(_has('curComp')||d.savedAt) curComp=d.curComp||d.currentComp||'';
-  {
-    const v = d.proM||d.pro||d.proMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proM') ? [] : null);
-    if(arr !== null){ proM=arr; proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  {
-    const v = d.proTourneys;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proTourneys') ? [] : null);
-    if(arr !== null) proTourneys=arr;
-  }
-  {
-    const v = d.tourneys||d.tournaments||d.tourney;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('tourneys') ? [] : null);
-    if(arr !== null){
-      tourneys=arr;
-      tourneys.forEach(tn=>{
-        if(tn.groups) tn.groups=_fbArr(tn.groups,[]);
-        tn.groups&&tn.groups.forEach(g=>{
-          if(g.univs) g.univs=_fbArr(g.univs,[]);
-          if(g.matches) g.matches=_fbArr(g.matches,[]);
-          g.matches&&g.matches.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);});
-        });
-      });
-    }
-  }
-  {
-    const v = d.ttM||d.tt;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
-    if(arr !== null) ttM=arr;
-  }
-  {
-    const v = d.indM||d.ind;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
-    if(arr !== null) indM=arr;
-  }
-  {
-    const v = d.gjM;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('gjM') ? [] : null);
-    if(arr !== null) gjM=arr;
-  }
+  if(d.players!==undefined) players=d.players||d.player||[];
+  if(d.univCfg!==undefined||d.univConfig!==undefined||d.universities!==undefined) univCfg=d.univCfg||d.univConfig||d.universities||univCfg;
+  if(d.maps!==undefined) maps=d.maps||d.map||maps;
+  if(d.tourD!==undefined) tourD=d.tourD||d.tournamentDates||Array(15).fill('');
+  if(d.miniM!==undefined) miniM=d.miniM||d.mini||d.miniMatches||[];
+  if(d.univM!==undefined) univM=d.univM||d.univ||d.univMatches||[];
+  if(d.comps!==undefined) comps=d.comps||d.comp||d.competitions||[];
+  if(d.ckM!==undefined) ckM=d.ckM||d.ck||d.ckMatches||[];
+  if(d.compNames!==undefined) compNames=d.compNames||d.competitionNames||[];
+  if(d.curComp!==undefined) curComp=d.curComp||d.currentComp||'';
+  if(d.proM!==undefined) proM=d.proM||d.pro||d.proMatches||[];
+  if(d.proTourneys!==undefined) proTourneys=d.proTourneys;
+  if(d.tourneys!==undefined) tourneys=d.tourneys||d.tournaments||d.tourney||[];
+  if(d.ttM!==undefined) ttM=d.ttM||d.tt||[];
+  if(d.indM!==undefined) indM=d.indM||d.ind||[];
+  if(d.gjM!==undefined) gjM=d.gjM||[];
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
   // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
   if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
@@ -124,8 +44,6 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // 🆕 시즌
-  if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
@@ -138,20 +56,22 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!localStorage.getItem('su_fb_pw');
+  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
   if (!window._forcingSync) {
-    // 저장 중 → 바로 버리지 않고 pending에 보관 후 저장 완료 시 재적용
-    if (window._isSaving) {
-      window._fbPendingData = clean; // 마지막 수신 데이터 보관
-      return;
-    }
-    // 자기 에코 방지: 저장 직후 5초 이내 + 자기 기기에서 발생한 경우만 skip
-    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 5000);
+    // 저장 중 → skip (race condition 방지)
+    if (window._isSaving) return;
+    // 저장 직후 3초: 자기 에코 빠른 방지 (window 변수라 새로고침 후 리셋됨)
+    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 3000);
     if (justSaved) return;
+    // 로컬 저장 시각 >= Firebase 저장 시각: 로컬이 같거나 더 최신 → skip (구 데이터 덮어씌우기 방지)
+    if (isAdmin && clean.savedAt !== undefined) {
+      const localSavedAt = parseInt(localStorage.getItem('su_last_admin_save') || '0');
+      if (localSavedAt >= clean.savedAt) return;
+    }
   }
   _applyCloudData(clean);
-  // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
-  // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
+  // Firebase 데이터 적용 후 타임스탬프 동기화 (다음 업데이트 비교 기준 갱신)
+  if (isAdmin && clean.savedAt) localStorage.setItem('su_last_admin_save', String(clean.savedAt));
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
@@ -165,16 +85,12 @@ window.onFirebaseLoad = function(data) {
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
 };
 
-// 🔧 보안: 비밀번호는 코드에 하드코딩하지 않음
-// 관리자가 설정탭에서 직접 입력한 su_fb_pw 값만 사용
-const _FB_PW_DEFAULT = null; // 하드코딩 비밀번호 제거
+const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
 async function fbCloudSave() {
-  const pw = localStorage.getItem('su_fb_pw');
+  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
   if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
-  // 🔧 admin_config/pw 자동 설정 (최초 1회 — Rules 적용 전 준비)
-  if (typeof window.fbSetAdminConfig === 'function') window.fbSetAdminConfig(pw);
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -184,101 +100,28 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons,
+    curProComp, _ttCurComp,
     savedAt
   };
-  // 페이로드 크기 검사
-  let _fbPayloadSize = 0;
+  // 페이로드 크기 검사 (base64 사진 등 비정상적으로 큰 경우 경고)
   try {
-    _fbPayloadSize = JSON.stringify(dataObj).length;
-    const statusEl = document.getElementById('cloudStatus');
-    if (_fbPayloadSize > 3 * 1024 * 1024) { // 3MB 초과 — Firebase 저장 실패 가능성 높음
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — Firebase 저장 실패 가능 (설정탭에서 base64 이미지 삭제 필요)`; }
-      console.warn('[fbCloudSave] 크기 위험:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-    } else if (_fbPayloadSize > 2 * 1024 * 1024) { // 2MB 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — 곧 저장 실패할 수 있습니다`; }
-      console.warn('[fbCloudSave] 크기 경고:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-    }
-    console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-  } catch(e) {}
-  // 🔧 Firebase는 undefined 값 저장 불가 → 전송 전 재귀적으로 undefined 제거
-  function _removeUndefined(obj) {
-    if (Array.isArray(obj)) {
-      return obj.map(_removeUndefined);
-    }
-    if (obj !== null && typeof obj === 'object') {
-      const result = {};
-      Object.keys(obj).forEach(k => {
-        if (obj[k] !== undefined) {
-          result[k] = _removeUndefined(obj[k]);
-        }
-        // undefined 필드는 그냥 생략 (Firebase 저장 시 오류 방지)
-      });
-      return result;
-    }
-    return obj;
-  }
-
-  // 🔧 전송 전 크기 체크 — 초과 시 history 압축 후 재시도
-  const _tryFbSet = async (obj) => {
-    // undefined 제거 먼저
-    const clean = _removeUndefined(obj);
-    const sz = JSON.stringify(clean).length;
-    console.log('[fbCloudSave] 전송 크기:', (sz/1024).toFixed(0)+'KB');
-    if (sz > 4 * 1024 * 1024) { // 4MB 초과 시 history 축소
-      console.warn('[fbCloudSave] 페이로드 크기 초과:', (sz/1024/1024).toFixed(2)+'MB — history 압축 후 재시도');
+    const _sz = JSON.stringify(dataObj).length;
+    if (_sz > 2 * 1024 * 1024) { // 2MB 초과 경고
       const statusEl = document.getElementById('cloudStatus');
-      if(statusEl){ statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 데이터 크기 초과 — 압축 후 재시도 중...'; }
-      clean.players = (clean.players||[]).map(p => {
-        const cp = {...p};
-        if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(0, 100);
-        return cp;
-      });
-      const slimSz = JSON.stringify(clean).length;
-      console.log('[fbCloudSave] 압축 후 크기:', (slimSz/1024).toFixed(0)+'KB');
-      return window.fbSet(clean, pw);
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 크기 ${(_sz/1024/1024).toFixed(1)}MB — 프로필 사진에 base64 이미지가 있으면 삭제하세요`; }
+      console.warn('[fbCloudSave] 페이로드 크기 경고:', (_sz/1024).toFixed(0)+'KB');
     }
-    return window.fbSet(clean, pw);
-  };
+  } catch(e) {}
   try {
-    await _tryFbSet(dataObj);
+    await window.fbSet(dataObj, pw);
     githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
   } catch(e) {
-    // 에러 상세 정보 최대한 추출
-    const errCode = e.code || '';
-    const errMsg = e.message || '';
-    const errStr = String(e);
-    const errName = e.name || '';
-    const fullErr = [errCode, errMsg, errName, errStr].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' | ');
-    console.error('[fbCloudSave] 상세:', {code:errCode, message:errMsg, name:errName, full:errStr, error:e});
+    console.error('[fbCloudSave]', e);
     const statusEl = document.getElementById('cloudStatus');
-    if (statusEl) {
-      const isSizeErr = fullErr.includes('exceeded') || fullErr.includes('too large') || fullErr.includes('payload') || fullErr.includes('413');
-      const isAuthErr = fullErr.includes('Permission') || fullErr.includes('PERMISSION') || fullErr.includes('auth') || fullErr.includes('denied') || fullErr.includes('401') || fullErr.includes('403');
-      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → Firebase 보안 규칙 차단' : '';
-      const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
-      statusEl.style.color='#dc2626';
-      statusEl.innerHTML = '❌ Firebase 저장 실패: ' + display + hint
-        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
-    }
+    if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 저장 실패: ' + (e.message||e); setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},6000); }
     throw e;
   } finally {
     window._isSaving = false;
-    // 저장 중 놓친 수신 데이터가 있으면 재적용
-    if (window._fbPendingData) {
-      const pending = window._fbPendingData;
-      window._fbPendingData = null;
-      setTimeout(() => {
-        // pending은 이미 admin_pw 제거된 clean 데이터
-        if (typeof _applyCloudData === 'function') {
-          _applyCloudData(pending);
-          if (typeof localSave === 'function') localSave();
-          if (typeof fixPoints === 'function') fixPoints();
-          window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
-          if (typeof render === 'function') render();
-        }
-      }, 200);
-    }
   }
 }
 
@@ -287,7 +130,7 @@ async function fbCloudSave() {
 async function githubDataSave(dataObj) {
   const token = localStorage.getItem('su_gh_token');
   if (!token) return; // 토큰 미설정 시 skip
-  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
+  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
   // 현재 파일 SHA 조회 (업데이트 시 필수)
   const getRes = await fetch(apiUrl, {
     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
@@ -1548,7 +1391,7 @@ async function checkFbSyncStatus(){
 
   // Firebase 연결 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!localStorage.getItem('su_fb_pw');
+  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
   const lastSave=localStorage.getItem('su_last_save_time');
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
