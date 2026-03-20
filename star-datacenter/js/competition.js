@@ -1129,11 +1129,23 @@ function grpRefreshSets(){
   if(!aEl)return;
   const teamA=aEl.value,teamB=bEl?bEl.value:'';
   const tfs=window._grpTierFilters||[];
-  const mA=players.filter(p=>p.univ===teamA&&(tfs.length===0||tfs.includes(p.tier)));
-  const mB=players.filter(p=>p.univ===teamB&&(tfs.length===0||tfs.includes(p.tier)));
+  // 기존 게임에 등장한 선수 이름 수집 (이적/무소속 선수 포함)
+  const _existNamesA=new Set(), _existNamesB=new Set();
+  (m.sets||[]).forEach(set=>{
+    (set.games||[]).forEach(g=>{
+      if(g.playerA) _existNamesA.add(g.playerA);
+      if(g.playerB) _existNamesB.add(g.playerB);
+    });
+  });
+  // 현재 소속 선수 + 기존 게임에 있는 선수 합산
+  const mARaw=players.filter(p=>(p.univ===teamA||(teamA&&_existNamesA.has(p.name)))&&(tfs.length===0||tfs.includes(p.tier)));
+  const mBRaw=players.filter(p=>(p.univ===teamB||(teamB&&_existNamesB.has(p.name)))&&(tfs.length===0||tfs.includes(p.tier)));
+  // 중복 제거
+  const mA=[...new Map(mARaw.map(p=>[p.name,p])).values()];
+  const mB=[...new Map(mBRaw.map(p=>[p.name,p])).values()];
   const tfLabel=tfs.length?` [${tfs.join('+')}]`:'';
-  const optsA=`<option value="">A팀 선수${tfLabel}</option>`+mA.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
-  const optsB=`<option value="">B팀 선수${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsA=`<option value="">A팀 선수${tfLabel}</option>`+mA.map(p=>`<option value="${p.name}"${_existNamesA.has(p.name)&&p.univ!==teamA?` style="color:#f59e0b"`:''} >${p.name}${p.univ!==teamA?` (${p.univ||'무소속'})`:''} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsB=`<option value="">B팀 선수${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}"${_existNamesB.has(p.name)&&p.univ!==teamB?` style="color:#f59e0b"`:''} >${p.name}${p.univ!==teamB?` (${p.univ||'무소속'})`:''} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
   const setsEl=document.getElementById('gm-sets');if(!setsEl)return;
   if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
   let h='';
@@ -1337,11 +1349,23 @@ function bktRefreshSets(){
   if(!aEl)return;
   const teamA=aEl.value,teamB=bEl?bEl.value:'';
   const tfs=window._grpTierFilters||[];
-  const mA=players.filter(p=>p.univ===teamA&&(tfs.length===0||tfs.includes(p.tier)));
-  const mB=players.filter(p=>p.univ===teamB&&(tfs.length===0||tfs.includes(p.tier)));
+  // 기존 게임에 등장한 선수 이름 수집 (이적/무소속 선수 포함)
+  const _existNamesA=new Set(), _existNamesB=new Set();
+  (m.sets||[]).forEach(set=>{
+    (set.games||[]).forEach(g=>{
+      if(g.playerA) _existNamesA.add(g.playerA);
+      if(g.playerB) _existNamesB.add(g.playerB);
+    });
+  });
+  // 현재 소속 선수 + 기존 게임에 있는 선수 합산
+  const mARaw=players.filter(p=>(p.univ===teamA||(teamA&&_existNamesA.has(p.name)))&&(tfs.length===0||tfs.includes(p.tier)));
+  const mBRaw=players.filter(p=>(p.univ===teamB||(teamB&&_existNamesB.has(p.name)))&&(tfs.length===0||tfs.includes(p.tier)));
+  // 중복 제거
+  const mA=[...new Map(mARaw.map(p=>[p.name,p])).values()];
+  const mB=[...new Map(mBRaw.map(p=>[p.name,p])).values()];
   const tfLabel=tfs.length?` [${tfs.join('+')}]`:'';
-  const optsA=`<option value="">A팀 선수${tfLabel}</option>`+mA.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
-  const optsB=`<option value="">B팀 선수${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsA=`<option value="">A팀 선수${tfLabel}</option>`+mA.map(p=>`<option value="${p.name}"${_existNamesA.has(p.name)&&p.univ!==teamA?` style="color:#f59e0b"`:''} >${p.name}${p.univ!==teamA?` (${p.univ||'무소속'})`:''} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
+  const optsB=`<option value="">B팀 선수${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}"${_existNamesB.has(p.name)&&p.univ!==teamB?` style="color:#f59e0b"`:''} >${p.name}${p.univ!==teamB?` (${p.univ||'무소속'})`:''} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
   const setsEl=document.getElementById('gm-sets');if(!setsEl)return;
   if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
   let h='';
