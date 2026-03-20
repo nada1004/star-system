@@ -449,11 +449,11 @@ function buildPlayerDetailHTML(p){
       <div style="flex:1;min-width:0;position:relative">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
           <span style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)">${p.name}${genderIcon(p.gender)}</span>${p.role?`<span style="display:block;margin-top:3px">${getRoleBadgeHTML(p.role,'11px')}</span>`:''}
-          <span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>
+          ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}" ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-          <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
+          <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
           ${(()=>{
             if(!p.channelUrl) return '';
             const url=p.channelUrl;
