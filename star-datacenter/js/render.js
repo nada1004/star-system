@@ -195,6 +195,13 @@ function openPlayerHistEdit(playerName, histIdx){
           <option value="">-</option>${mapOpts}
         </select>
       </div>
+      <div><label>당시 소속 대학</label>
+        <select id="phe-univ" style="width:100%">
+          <option value="">미지정</option>
+          ${getAllUnivs().map(u=>`<option value="${u.name}"${(hh.univ||p.univ)===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:2px">현재: ${p.univ||'무소속'} · 기록: ${hh.univ||'(미저장)'}</div>
+      </div>
     </div>`;
   // 저장 버튼 임시 교체
   const saveBtnOrig=document.querySelector('#reModal .btn-b');
@@ -206,6 +213,8 @@ function openPlayerHistEdit(playerName, histIdx){
       hh.opp=document.getElementById('phe-opp').value;
       hh.oppRace=document.getElementById('phe-race').value;
       hh.map=document.getElementById('phe-map').value;
+      const _newUniv=document.getElementById('phe-univ')?.value;
+      if(_newUniv) hh.univ=_newUniv;
       // 🔧 상대방 history도 날짜/맵 동기화
       const oppPlayer=players.find(x=>x.name===oldOpp);
       if(oppPlayer){
@@ -803,8 +812,16 @@ function buildUnivDetailHTML(univName){
   univM.forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   comps.forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
 
-  const tot=members.reduce((s,p)=>s+p.win+p.loss,0);
-  const wins=members.reduce((s,p)=>s+p.win,0);
+  // 개인 전적: 현재 소속이 아니어도 history.univ 기준으로 집계
+  let wins=0, tot=0;
+  players.forEach(p=>{
+    (p.history||[]).forEach(h=>{
+      if((h.univ||p.univ)===univName){
+        tot++;
+        if(h.result==='승') wins++;
+      }
+    });
+  });
   const pts=members.reduce((s,p)=>s+p.points,0);
   const wr=tot?Math.round(wins/tot*100):0;
 
