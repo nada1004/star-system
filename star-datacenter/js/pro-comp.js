@@ -4,10 +4,10 @@
    - 조별리그 + 조별순위 + 대진표 + 조편성관리
 ══════════════════════════════════════ */
 
-let proCompSub = 'league';
-let proCompFilterDate = '';
-let proCompFilterGrp = '';
-let proCompSortDir = 'desc';
+var proCompSub = 'league';
+var proCompFilterDate = '';
+var proCompFilterGrp = '';
+var proCompSortDir = 'desc';
 let proCompGrpEditId = null;
 let proCompMatchState = {tnId:null, gi:null, mi:null};
 let proCompBktState = {tnId:null, rnd:null, mi:null, playerA:'', playerB:''};
@@ -24,6 +24,7 @@ function rProComp(C, T) {
   if (!isLoggedIn && proCompSub === 'grpedit') proCompSub = 'league';
 
   const tn = getCurrentProTourney();
+  if (tn && !tn.groups) tn.groups = [];
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>

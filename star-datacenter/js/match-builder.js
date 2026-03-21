@@ -1062,7 +1062,7 @@ function univMRankHTML(){
 /* ══════════════════════════════════════
    프로리그 (대학CK 방식)
 ══════════════════════════════════════ */
-let proSub='records';
+var proSub='records';
 
 function rPro(C,T){
   T.innerText='🏅 프로리그';
