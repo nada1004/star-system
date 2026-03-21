@@ -16,7 +16,7 @@ function sw(t,el){
   if(t==='univck')   _mergedUnivSub='univck';
   if(t==='comp')     _mergedCompSub='comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') { proSub='records'; _mergedProSub='pro'; }
+  if(t==='pro') { _mergedProSub='pro'; }
   if(t==='hist') histSub='mini'; // 대전 기록 탭으로 돌아올 때 초기화
   // 탭 전환 시 해당 탭 검색어 초기화
   if(window._recQ){const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};const m=tabModeMap[t];if(m)window._recQ[m]='';}
@@ -1067,12 +1067,13 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'},{id:'all',lbl:'🔗 통합'}],
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
-  if(_mergedProSub==='pro') { if(typeof rPro==='function')      rPro(sub,T); }
-  else                       { if(typeof rProComp==='function') rProComp(sub,T); }
+  if(_mergedProSub==='pro')   { if(typeof rPro==='function')          rPro(sub,T); }
+  else if(_mergedProSub==='comp') { if(typeof rProComp==='function')  rProComp(sub,T); }
+  else                         { if(typeof rProAll==='function')       rProAll(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);
 }

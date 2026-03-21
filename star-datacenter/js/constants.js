@@ -235,6 +235,7 @@ function localSave(){
     localStorage.setItem('su_cal_sched',JSON.stringify(calScheduled));
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
+    if(BLD['pro'])localStorage.setItem('su_bld_pro',JSON.stringify({date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]}));
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
       if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
