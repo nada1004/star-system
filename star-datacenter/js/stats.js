@@ -1,7 +1,15 @@
 /* ─── 캐시 (save() → su_last_save_time 변경 시 자동 무효화) ─── */
-let _sCacheTime='', _sCache={};
-function _scGet(sub){ const t=localStorage.getItem('su_last_save_time')||'0'; if(t!==_sCacheTime){_sCache={};_sCacheTime=t;} return _sCache[sub]||null; }
+let _sCacheTime='', _sCache={}, _sCacheFilterKey='';
+function _scGet(sub){
+  const t=localStorage.getItem('su_last_save_time')||'0';
+  const fk=`${_statsDateFrom}|${_statsDateTo}|${_statsMinGames}`;
+  if(t!==_sCacheTime||fk!==_sCacheFilterKey){_sCache={};_sCacheTime=t;_sCacheFilterKey=fk;}
+  return _sCache[sub]||null;
+}
 function _scSet(sub,html){ _sCache[sub]=html; return html; }
+
+/* ─── 전역 필터 상태 ─── */
+let _statsDateFrom='', _statsDateTo='', _statsMinGames=3;
 
 function rStats(C,T){
   T.textContent='📊 통계';
@@ -18,6 +26,7 @@ function rStats(C,T){
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
       {id:'clutch',lbl:'⚡ 클러치 지수'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
+      {id:'playervs',lbl:'⚔️ 선수 비교'},
     ]},
     {label:'🏛️ 대학',tabs:[
       {id:'radar',lbl:'🕸️ 대학 레이더'},
@@ -49,6 +58,23 @@ function rStats(C,T){
     h+=`</div>`;
   });
   h+=`</div>`;
+  // 전역 필터 바
+  const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==3);
+  h+=`<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:7px 12px;background:${_isFiltered?'#eff6ff':'var(--surface)'};border:1px solid ${_isFiltered?'#93c5fd':'var(--border)'};border-radius:8px">
+    <span style="font-size:11px;font-weight:800;color:${_isFiltered?'var(--blue)':'var(--text3)'};white-space:nowrap">🔧 전역 필터</span>
+    <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap">
+      📅 기간
+      <input type="date" value="${_statsDateFrom}" oninput="_statsDateFrom=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
+      ~
+      <input type="date" value="${_statsDateTo}" oninput="_statsDateTo=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
+    </label>
+    <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap">
+      🎮 최소경기
+      <input type="number" min="1" max="99" value="${_statsMinGames}" oninput="_statsMinGames=Math.max(1,parseInt(this.value)||1);render()" style="width:50px;font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
+    </label>
+    ${_isFiltered?`<button onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=3;render()" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;cursor:pointer;color:#dc2626;font-weight:700">✕ 초기화</button>`:''}
+    ${(_statsDateFrom||_statsDateTo)?`<span style="font-size:10px;color:var(--blue);font-weight:700">📅 기간 필터 적용 중 — 해당 기간 경기만 집계됩니다</span>`:''}
+  </div>`;
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
   const _CACHEABLE=['overview','records','killer','clutch','streakhist','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
   function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
@@ -73,6 +99,7 @@ function rStats(C,T){
   else if(statsSub==='streakhist')h+=_cached('streakhist', statsStreakHistHTML);
   else if(statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
   else if(statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
+  else if(statsSub==='playervs')  h+=statsPlayerVsHTML();
   C.innerHTML=h;
   // 서브탭별 후처리
   if(statsSub==='elo')         initEloChart();
@@ -90,7 +117,13 @@ function statsProMatchIds(){
   _sProIds=new Set(proM.map(m=>m._id).filter(Boolean));
   return _sProIds;
 }
-function statsNonProHist(p){const s=statsProMatchIds();return(p.history||[]).filter(h=>!s.has(h.matchId));}
+function statsNonProHist(p){
+  const s=statsProMatchIds();
+  let h=(p.history||[]).filter(x=>!s.has(x.matchId));
+  if(_statsDateFrom) h=h.filter(x=>(x.date||'')>=_statsDateFrom);
+  if(_statsDateTo)   h=h.filter(x=>(x.date||'')<=_statsDateTo);
+  return h;
+}
 
 /* ══════════════════════════════════════
    1. 종합 (기존 내용 유지)
@@ -539,9 +572,19 @@ function statsAwardHTML(){
     </div>`;
   }
   const mostWin=curList[0]||null;
-  const highRate=curList.filter(p=>p.mt>=3).sort((a,b)=>b.mrate-a.mrate)[0]||null;
+  const highRate=curList.filter(p=>p.mt>=_statsMinGames).sort((a,b)=>b.mrate-a.mrate)[0]||null;
   const mostActive=[...curList].sort((a,b)=>b.mt-a.mt)[0]||null;
   const prevTop=prevList[0];
+  // 전월 대비 맵 {name: {mw, mrate}}
+  const prevMap=Object.fromEntries(prevList.map(p=>[p.name,p]));
+  function trendBadge(p){
+    const pp=prevMap[p.name];
+    if(!pp)return`<span style="font-size:10px;color:var(--gray-l)">신규</span>`;
+    const dw=p.mw-pp.mw,dr=p.mrate-pp.mrate;
+    const wStr=dw>0?`<span style="color:#16a34a">▲${dw}승</span>`:dw<0?`<span style="color:#dc2626">▼${Math.abs(dw)}승</span>`:`<span style="color:var(--gray-l)">-</span>`;
+    const rStr=dr>0?`<span style="color:#16a34a;font-size:9px">+${dr}%</span>`:dr<0?`<span style="color:#dc2626;font-size:9px">${dr}%</span>`:'';
+    return`${wStr}${rStr?` ${rStr}`:''}`;
+  }
   return`<div style="display:flex;flex-direction:column;gap:20px">
   <div class="ssec" id="stats-award-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -550,7 +593,7 @@ function statsAwardHTML(){
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       ${awardCard('👑 이달 최다승',mostWin,'이번 달 가장 많은 승리!','#d97706')}
-      ${awardCard('🎯 이달 최고 승률',highRate,'(3경기 이상)','#16a34a')}
+      ${awardCard(`🎯 이달 최고 승률`,highRate,`(${_statsMinGames}경기 이상)`,'#16a34a')}
       ${awardCard('⚡ 이달 최다 경기',mostActive,'가장 활발하게 뛰었어요','#7c3aed')}
     </div>
   </div>
@@ -565,7 +608,7 @@ function statsAwardHTML(){
   <div class="ssec">
     <h4 style="margin-bottom:10px">📋 이달 전체 순위 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span></h4>
     ${curList.length===0?'<p style="color:var(--gray-l)">이달 경기 기록이 없습니다.</p>':`
-    <table><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th></tr></thead><tbody>
+    <table><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th><th title="전월 대비">전월비</th></tr></thead><tbody>
     ${[...curList].sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate).map((p,i)=>`<tr>
       <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'위'}</td>
       <td style="cursor:pointer;color:var(--blue);font-weight:700" onclick="openPlayerModal('${p.name}')">${p.name}</td>
@@ -574,6 +617,7 @@ function statsAwardHTML(){
       <td class="wt">${p.mw}</td><td class="lt">${p.ml}</td>
       <td style="font-weight:700;color:${p.mrate>=50?'var(--green)':'var(--red)'}">${p.mrate}%</td>
       <td>${p.mt}</td>
+      <td style="font-size:11px;white-space:nowrap">${trendBadge(p)}</td>
     </tr>`).join('')}
     </tbody></table>`}
   </div></div>`;
@@ -603,7 +647,7 @@ function statsRecordsHTML(){
   if(!withStats.length)return`<div class="ssec"><p style="color:var(--gray-l)">기록이 없습니다.</p></div>`;
   const cats=[
     {title:'🏆 역대 최다승',icon:'🏆',sort:(a,b)=>b.w-a.w,val:p=>`${p.w}승`,sub:p=>`총 ${p.tot}경기`},
-    {title:'📊 역대 최고 승률',icon:'📊',sort:(a,b)=>b.rate-a.rate||b.tot-a.tot,val:p=>`${p.rate}%`,sub:p=>`${p.w}승${p.l}패`,filter:p=>p.tot>=5},
+    {title:'📊 역대 최고 승률',icon:'📊',sort:(a,b)=>b.rate-a.rate||b.tot-a.tot,val:p=>`${p.rate}%`,sub:p=>`${p.w}승${p.l}패`,filter:p=>p.tot>=_statsMinGames},
     {title:'⚡ 역대 최다 경기',icon:'⚡',sort:(a,b)=>b.tot-a.tot,val:p=>`${p.tot}경기`,sub:p=>`${p.w}승${p.l}패`},
     {title:'🔥 최장 연승 기록',icon:'🔥',sort:(a,b)=>b.maxStreak-a.maxStreak,val:p=>`${p.maxStreak}연승`,sub:p=>`총 ${p.w}승`},
     {title:'💎 최고 ELO',icon:'💎',sort:(a,b)=>b.elo-a.elo,val:p=>`${p.elo}`,sub:p=>`${p.w}승${p.l}패`},
@@ -705,15 +749,18 @@ function initRadarChart(){
   const info=document.getElementById('radarInfo');
   if(!canvas)return;
   const proIds=statsProMatchIds();
-  const scores=calcUnivRadar(_radarSelUniv,proIds);
   const allUnivs=getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const _allScores={};
+  allUnivs.forEach(u=>{ _allScores[u.name]=calcUnivRadar(u.name,proIds); });
+  const scores=_allScores[_radarSelUniv]||calcUnivRadar(_radarSelUniv,proIds);
+  const _sv=Object.values(_allScores);
   const maxVals={
     winrate:100,
-    avgElo:Math.max(...allUnivs.map(u=>calcUnivRadar(u.name,proIds).avgElo),1500),
-    activity:Math.max(...allUnivs.map(u=>calcUnivRadar(u.name,proIds).activity),1),
+    avgElo:Math.max(..._sv.map(s=>s.avgElo),1500),
+    activity:Math.max(..._sv.map(s=>s.activity),1),
     diversity:3,
-    streak:Math.max(...allUnivs.map(u=>calcUnivRadar(u.name,proIds).streak),1),
-    mem:Math.max(...allUnivs.map(u=>calcUnivRadar(u.name,proIds).mem),1),
+    streak:Math.max(..._sv.map(s=>s.streak),1),
+    mem:Math.max(..._sv.map(s=>s.mem),1),
   };
   const labels=['승률','ELO','활동도','다양성','연승','선수수'];
   const vals=[
@@ -875,10 +922,6 @@ function statsShareCardHTML(){
   // 모든 경기 최신순 (tourneys 대회 경기 포함)
   const tourMatchesForShare=typeof getTourneyMatches==="function"?getTourneyMatches():[];
   const allMatches=[...miniM,...univM,...ckM,...comps,...tourMatchesForShare].sort((a,b)=>(b.d||"").localeCompare(a.d||""));
-  // 캐시 초기화 (페이지 렌더링마다 fresh)
-  window._shareAllMatchesCached=null;
-
-
   const totalPages=Math.ceil(allMatches.length/SHARE_MATCH_PER_PAGE)||1;
   const safePage=Math.min(_shareMatchPage,totalPages-1);
   const pageMatches=allMatches.slice(safePage*SHARE_MATCH_PER_PAGE,(safePage+1)*SHARE_MATCH_PER_PAGE);
@@ -1308,7 +1351,7 @@ function openRCalMatchShareCard(ds, mi){
   const dayMatches=all.filter(m=>m.d===ds&&m.sa!=null&&m.sa!=='');
   const m=dayMatches[mi];
   if(!m)return;
-  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':ttM.includes(m)?'tt':'';
+  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':(ttM&&ttM.includes(m))?'tt':'';
   const isCKorPro=!!_mt&&_mt!=='';
   window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro, _matchType:_mt};
   _shareMode='match';
@@ -1322,7 +1365,7 @@ function openCalMatchShareCardByCache(ds, mi){
   if(!matches||mi>=matches.length)return;
   const m=matches[mi];
   if(!m)return;
-  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':ttM.includes(m)?'tt':'';
+  const _mt=ckM.includes(m)?'ck':proM.includes(m)?'pro':(ttM&&ttM.includes(m))?'tt':'';
   const isCKorPro=!!_mt;
   window._shareMatchObj={...m, a:isCKorPro?'A팀':(m.a||''), b:isCKorPro?'B팀':(m.b||''), _noUnivIcon:isCKorPro, _matchType:_mt};
   _shareMode='match';
@@ -1459,16 +1502,9 @@ function statsHeatmapHTML(){
   const isPlayerMode=!!_heatmapSelPlayer;
   const dayCnt={};
   if(isPlayerMode){
-    // 선수별 히트맵: history의 날짜 기준 (1경기=1칸)
+    // 선수별 히트맵: history의 날짜 기준 (승+패 모두 카운트)
     const tp=players.find(p=>p.name===_heatmapSelPlayer);
-    (tp?.history||[]).forEach(h=>{
-      const d=h.date||'';if(!d)return;
-      if(h.result==='승')dayCnt[d]=(dayCnt[d]||0)+1; // 승자 기준 1번만 카운트
-    });
-    // 0이면 패배 포함해서 다시
-    if(!Object.keys(dayCnt).length){
-      (tp?.history||[]).forEach(h=>{const d=h.date||'';if(!d)return;dayCnt[d]=(dayCnt[d]||0)+1;});
-    }
+    (tp?.history||[]).forEach(h=>{const d=h.date||'';if(!d)return;dayCnt[d]=(dayCnt[d]||0)+1;});
   }else{
     // 전체 경기 히트맵: 매치 날짜 기준 게임 수 (토너먼트 포함)
     const _heatTourM=typeof getTourneyMatches==='function'?getTourneyMatches():[];
@@ -1894,35 +1930,34 @@ function statsUnivMatrixHTML(){
    E. 종족 픽률 트렌드
 ══════════════════════════════════════ */
 let _raceTrendMonths=12;
-function statsRaceTrendHTML(){
-  // 월별 종족별 경기 수 집계 (매치 sets.games + 개인 history 승자기준 합산)
+function _calcRaceTrendData(){
   const monthData={};
   function addRace(ym,race){if(!ym||ym.length!==7)return;if(!monthData[ym])monthData[ym]={T:0,Z:0,P:0,total:0};if(race&&monthData[ym][race]!==undefined){monthData[ym][race]++;monthData[ym].total++;}}
-  // 매치 sets.games 집계
-  const tourMs4=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs4.push(m))));
-  const allM=[...miniM,...univM,...ckM,...comps,...proM,...tourMs4];
+  const tourMs=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs.push(m))));
+  const allM=[...miniM,...univM,...ckM,...comps,...proM,...tourMs];
   allM.forEach(m=>{
     const ym=(m.d||'').slice(0,7);
     (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
-      const pA=players.find(x=>x.name===g.playerA), pB=players.find(x=>x.name===g.playerB);
+      const pA=players.find(x=>x.name===g.playerA),pB=players.find(x=>x.name===g.playerB);
       addRace(ym,pA?.race);addRace(ym,pB?.race);
     }));
   });
-  // 개인 history 중 위 매치에 없는 개인전 (matchId 기준 중복 방지)
   const matchIdsInSets=new Set();
   allM.forEach(m=>(m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.matchId)matchIdsInSets.add(g.matchId);})));
   players.forEach(p=>{
     if(!p.race)return;
     (p.history||[]).forEach(h=>{
-      if(h.result!=='승')return; // 승자 기준 1회만
-      if(h.matchId&&matchIdsInSets.has(h.matchId))return; // 이미 집계된 것 제외
+      if(h.result!=='승')return;
+      if(h.matchId&&matchIdsInSets.has(h.matchId))return;
       const ym=(h.date||'').slice(0,7);
       const opp=players.find(x=>x.name===h.opp);
-      addRace(ym,p.race);
-      addRace(ym,opp?.race);
+      addRace(ym,p.race);addRace(ym,opp?.race);
     });
   });
-
+  return monthData;
+}
+function statsRaceTrendHTML(){
+  const monthData=_calcRaceTrendData();
   const months=Object.keys(monthData).sort().slice(-_raceTrendMonths);
   if(!months.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">경기 기록이 없습니다.<br><span style="font-size:11px">경기 기록에 선수 정보와 종족이 입력되어야 집계됩니다.</span></p></div>`;
 
@@ -1970,29 +2005,7 @@ function statsRaceTrendHTML(){
 function initRaceTrendChart(){
   const canvas=document.getElementById('raceTrendChart');
   if(!canvas) return;
-  const monthData={};
-  function addRace2(ym,race){if(!ym||ym.length!==7)return;if(!monthData[ym])monthData[ym]={T:0,Z:0,P:0,total:0};if(race&&monthData[ym][race]!==undefined){monthData[ym][race]++;monthData[ym].total++;}}
-  const tourMs3=[];(tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs3.push(m))));
-  const allM=[...miniM,...univM,...ckM,...comps,...proM,...tourMs3];
-  allM.forEach(m=>{
-    const ym=(m.d||'').slice(0,7);
-    (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
-      const pA=players.find(x=>x.name===g.playerA),pB=players.find(x=>x.name===g.playerB);
-      addRace2(ym,pA?.race);addRace2(ym,pB?.race);
-    }));
-  });
-  const matchIdsInSets2=new Set();
-  allM.forEach(m=>(m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.matchId)matchIdsInSets2.add(g.matchId);})));
-  players.forEach(p=>{
-    if(!p.race)return;
-    (p.history||[]).forEach(h=>{
-      if(h.result!=='승')return;
-      if(h.matchId&&matchIdsInSets2.has(h.matchId))return;
-      const ym=(h.date||'').slice(0,7);
-      const opp=players.find(x=>x.name===h.opp);
-      addRace2(ym,p.race);addRace2(ym,opp?.race);
-    });
-  });
+  const monthData=_calcRaceTrendData();
   const months=Object.keys(monthData).sort().slice(-_raceTrendMonths);
   if(!months.length){canvas.style.display='none';return;}
   canvas.style.display='block';
@@ -2988,6 +3001,188 @@ document.addEventListener('click', e=>{
   }
 });
 
+
+/* ══════════════════════════════════════
+   선수 vs 선수 비교
+══════════════════════════════════════ */
+let _vsSelA='', _vsSelB='';
+function _vsSearchDrop(id, val){
+  const d=document.getElementById(id);if(!d)return;
+  d.querySelectorAll('.sitem').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(val.toLowerCase())?'':'none';});
+}
+function statsPlayerVsHTML(){
+  const pAll=players.filter(p=>(p.history||[]).length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  function selDropHTML(selId,dropId,inputId,selName){
+    return`<div style="position:relative">
+      <input id="${inputId}" type="text" value="${selName}" placeholder="🔍 선수 검색..."
+        style="padding:6px 12px;border:2px solid ${selName?gc(players.find(p=>p.name===selName)?.univ||''):'var(--border2)'};border-radius:8px;font-size:13px;width:180px"
+        oninput="_vsSearchDrop('${dropId}',this.value)"
+        onfocus="document.getElementById('${dropId}').style.display='block'"
+        onblur="setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.style.display='none'},200)">
+      <div id="${dropId}" style="display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:220px;box-shadow:var(--sh2)">
+        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${p.name.replace(/'/g,"\'")}';document.getElementById('${inputId}').value='${p.name.replace(/'/g,"\'")}';document.getElementById('${dropId}').style.display='none';render()">
+          <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  const pA=players.find(p=>p.name===_vsSelA);
+  const pB=players.find(p=>p.name===_vsSelB);
+  const colA=pA?gc(pA.univ):'#2563eb';
+  const colB=pB?gc(pB.univ):'#dc2626';
+
+  // 직접 대결 기록
+  let h2hAwin=0,h2hBwin=0;
+  if(pA&&pB){
+    statsNonProHist(pA).forEach(h=>{if(h.opp===_vsSelB){if(h.result==='승')h2hAwin++;else h2hBwin++;}});
+  }
+  const h2hTotal=h2hAwin+h2hBwin;
+
+  // 개인 통계
+  function getStats(p){
+    if(!p)return null;
+    const h=statsNonProHist(p);
+    const w=h.filter(x=>x.result==='승').length;
+    const l=h.filter(x=>x.result==='패').length;
+    const tot=w+l;
+    // 최근 5경기 폼
+    const rec=[...h].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,5);
+    // 현재 연속
+    let streak=0,sType='';
+    for(const x of h){if(!sType||x.result===sType){streak++;sType=x.result;}else break;}
+    // 종족 상성
+    const rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
+    h.forEach(x=>{if(x.oppRace&&rv[x.oppRace]){if(x.result==='승')rv[x.oppRace].w++;else rv[x.oppRace].l++;}});
+    // 월별 추이 최근 6개월
+    const now=new Date();
+    const months=Array.from({length:6},(_,i)=>{
+      const d=new Date(now);d.setMonth(d.getMonth()-5+i);
+      return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    });
+    const mStats=Object.fromEntries(months.map(ym=>[ym,{w:0,l:0}]));
+    h.forEach(x=>{const ym=(x.date||'').slice(0,7);if(mStats[ym]){if(x.result==='승')mStats[ym].w++;else mStats[ym].l++;}});
+    return{w,l,tot,rate:tot?Math.round(w/tot*100):0,elo:p.elo||1200,rec,streak,sType,rv,mStats,months};
+  }
+  const stA=getStats(pA), stB=getStats(pB);
+
+  function formDots(rec){
+    return(rec||[]).map(h=>`<span title="${h.date} vs ${h.opp}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${h.result==='승'?'#16a34a':'#dc2626'};color:#fff;font-size:9px;font-weight:900;text-align:center;line-height:18px">${h.result==='승'?'W':'L'}</span>`).join('');
+  }
+  function raceTbl(rv,race,col){
+    const r=rv[race]||{w:0,l:0};const t=r.w+r.l;
+    return`<td style="text-align:center;font-size:11px;font-weight:700;color:${t?col:'var(--gray-l)'}">${t?Math.round(r.w/t*100)+'%':'-'}<br><span style="font-weight:400;font-size:10px;color:var(--gray-l)">${r.w}W${r.l}L</span></td>`;
+  }
+  function statRow(label,valA,valB,higherIsBetter=true){
+    const numA=parseFloat(valA),numB=parseFloat(valB);
+    const aWins=!isNaN(numA)&&!isNaN(numB)&&(higherIsBetter?numA>numB:numA<numB);
+    const bWins=!isNaN(numA)&&!isNaN(numB)&&(higherIsBetter?numB>numA:numB<numA);
+    return`<tr>
+      <td style="text-align:right;font-weight:${aWins?'800':'400'};color:${aWins?colA:'var(--text)'};">${valA}${aWins?` <span style="color:${colA}">◀</span>`:''}</td>
+      <td style="text-align:center;font-size:11px;color:var(--gray-l);padding:4px 12px;white-space:nowrap">${label}</td>
+      <td style="text-align:left;font-weight:${bWins?'800':'400'};color:${bWins?colB:'var(--text)'};">${bWins?`<span style="color:${colB}">▶</span> `:''} ${valB}</td>
+    </tr>`;
+  }
+
+  const noSel=!pA&&!pB;
+  return`<div style="display:flex;flex-direction:column;gap:14px">
+  <div class="ssec">
+    <h4 style="margin-bottom:14px">⚔️ 선수 vs 선수 비교</h4>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        ${getPlayerPhotoHTML(_vsSelA||'','44px',`border:2px solid ${colA};`)}
+        ${selDropHTML('A','vs-drop-a','vs-inp-a',_vsSelA)}
+        ${pA?`<span class="ubadge" style="background:${colA}">${pA.univ}</span>`:''}
+      </div>
+      <div style="font-size:22px;font-weight:900;color:var(--text3);padding:0 8px">VS</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        ${getPlayerPhotoHTML(_vsSelB||'','44px',`border:2px solid ${colB};`)}
+        ${selDropHTML('B','vs-drop-b','vs-inp-b',_vsSelB)}
+        ${pB?`<span class="ubadge" style="background:${colB}">${pB.univ}</span>`:''}
+      </div>
+      ${pA&&pB?`<button onclick="_vsSelA='';_vsSelB='';render()" style="margin-left:auto;font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--text3)">초기화</button>`:''}
+    </div>
+    ${noSel?`<p style="color:var(--gray-l);text-align:center;padding:30px">두 선수를 선택하면 비교 분석이 시작됩니다.</p>`:
+    (!pA||!pB)?`<p style="color:var(--gray-l);text-align:center;padding:20px">나머지 선수를 선택하세요.</p>`:`
+
+    <!-- 직접 대결 -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">⚔️ 직접 대결 기록</div>
+      ${h2hTotal===0?`<span style="color:var(--gray-l);font-size:12px">직접 대결 기록 없음</span>`:`
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:900;color:${colA}">${h2hAwin}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${_vsSelA}</div>
+        </div>
+        <div style="font-size:13px;color:var(--gray-l)">:&nbsp;</div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:900;color:${colB}">${h2hBwin}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${_vsSelB}</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;height:8px;border-radius:4px;overflow:hidden;background:${colB};display:flex">
+        <div style="width:${Math.round(h2hAwin/h2hTotal*100)}%;background:${colA};transition:width .4s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">총 ${h2hTotal}게임</div>`}
+    </div>
+
+    <!-- 스탯 비교표 -->
+    <div style="overflow-x:auto;margin-bottom:14px">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="text-align:right;color:${colA};padding:6px 12px;font-size:13px">${_vsSelA}</th>
+        <th style="text-align:center;color:var(--text3);font-size:11px;padding:4px 0">항목</th>
+        <th style="text-align:left;color:${colB};padding:6px 12px;font-size:13px">${_vsSelB}</th>
+      </tr></thead>
+      <tbody>
+        ${statRow('승률',stA.rate+'%',stB.rate+'%')}
+        ${statRow('총 승',stA.w+'승',stB.w+'승')}
+        ${statRow('총 경기',stA.tot+'경기',stB.tot+'경기')}
+        ${statRow('ELO',stA.elo,stB.elo)}
+        ${statRow('현재 연속',stA.streak+'연'+(stA.sType==='승'?'승':'패'),stB.streak+'연'+(stB.sType==='승'?'승':'패'),true)}
+        ${statRow('티어',getTierLabel(pA.tier||'-'),getTierLabel(pB.tier||'-'),false)}
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 최근 폼 -->
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelA} 최근 폼</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${formDots(stA.rec)}</div>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelB} 최근 폼</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${formDots(stB.rec)}</div>
+      </div>
+    </div>
+
+    <!-- 종족 상성 비교 -->
+    <div style="overflow-x:auto;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">🎭 종족 상성 (vs 상대 종족 승률)</div>
+      <table style="width:100%">
+        <thead><tr><th>선수</th><th style="color:#3b82f6">vs 테란</th><th style="color:#7c3aed">vs 저그</th><th style="color:#d97706">vs 프로토스</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;color:${colA}">${_vsSelA}</td>${raceTbl(stA.rv,'T',colA)}${raceTbl(stA.rv,'Z',colA)}${raceTbl(stA.rv,'P',colA)}</tr>
+          <tr><td style="font-weight:700;color:${colB}">${_vsSelB}</td>${raceTbl(stB.rv,'T',colB)}${raceTbl(stB.rv,'Z',colB)}${raceTbl(stB.rv,'P',colB)}</tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 월별 승수 비교 -->
+    <div style="overflow-x:auto">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📅 최근 6개월 월별 승수</div>
+      <table style="width:100%">
+        <thead><tr><th>월</th>${stA.months.map(ym=>`<th style="font-size:10px">${ym.slice(5)}</th>`).join('')}</tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;color:${colA}">${_vsSelA}</td>${stA.months.map(ym=>{const s=stA.mStats[ym];return`<td style="text-align:center;font-weight:700;color:${s.w>0?colA:'var(--gray-l)'}">${s.w>0?s.w+'W':'-'}<br><span style="font-size:9px;color:var(--gray-l)">${(s.w+s.l)>0?Math.round(s.w/(s.w+s.l)*100)+'%':''}</span></td>`;}).join('')}</tr>
+          <tr><td style="font-weight:700;color:${colB}">${_vsSelB}</td>${stB.months.map(ym=>{const s=stB.mStats[ym];return`<td style="text-align:center;font-weight:700;color:${s.w>0?colB:'var(--gray-l)'}">${s.w>0?s.w+'W':'-'}<br><span style="font-size:9px;color:var(--gray-l)">${(s.w+s.l)>0?Math.round(s.w/(s.w+s.l)*100)+'%':''}</span></td>`;}).join('')}</tr>
+        </tbody>
+      </table>
+    </div>
+    `}
+  </div></div>`;
+}
 
 /* ══════════════════════════════════════
    📅 경기 캘린더
