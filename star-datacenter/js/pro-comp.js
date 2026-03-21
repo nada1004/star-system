@@ -152,7 +152,10 @@ function proCompLeague(tn) {
       dateLabel = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${days[dt.getDay()]}`;
     }
     h += `<div style="margin-bottom:22px">
-      <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;margin-bottom:10px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>`;
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
+        ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추가</button>`:''}
+      </div>`;
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
       const pb = players.find(p=>p.name===m.b);
@@ -604,7 +607,31 @@ function proCompRemovePlayer(tnId, gi, pi) {
 /* ──────────────────────────────────────
    경기 CRUD
 ────────────────────────────────────── */
-function proCompAddMatch(tnId, gi) {
+function proCompAddMatchOnDate(tnId, date) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn || !tn.groups.length) { alert('조를 먼저 만들어 주세요.'); return; }
+  if (tn.groups.length === 1) {
+    proCompAddMatch(tnId, 0, date);
+  } else {
+    // 조 선택 팝업
+    const GL = 'ABCDEFGHIJ';
+    const grpOpts = tn.groups.map((g,i)=>`<option value="${i}">GROUP ${GL[i]} · ${g.name||GL[i]+'조'}</option>`).join('');
+    const sel = document.createElement('div');
+    sel.id = 'proGrpSelModal';
+    sel.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center';
+    sel.innerHTML = `<div style="background:var(--white);border-radius:12px;padding:20px;width:280px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+      <div style="font-weight:900;font-size:14px;margin-bottom:12px">어느 조에 추가할까요?</div>
+      <select id="proGrpSelSel" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:14px;box-sizing:border-box">${grpOpts}</select>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-b" style="flex:1" onclick="var _gi=parseInt(document.getElementById('proGrpSelSel').value);document.getElementById('proGrpSelModal').remove();proCompAddMatch('${tnId}',_gi,'${date}')">선택</button>
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('proGrpSelModal').remove()">취소</button>
+      </div>
+    </div>`;
+    document.body.appendChild(sel);
+  }
+}
+
+function proCompAddMatch(tnId, gi, preDate) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||!tn.groups[gi]) return;
   const grp = tn.groups[gi];
@@ -612,6 +639,7 @@ function proCompAddMatch(tnId, gi) {
   proCompMatchState = {tnId, gi, mi: -1}; // -1 = new match
   const pList = grp.players||[];
   const pOpts = pList.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const defDate = preDate || new Date().toISOString().slice(0,10);
   const modal = document.createElement('div');
   modal.id = 'proMatchModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
@@ -631,7 +659,7 @@ function proCompAddMatch(tnId, gi) {
     </div>
     <div style="margin-bottom:10px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">날짜</label>
-      <input id="pm_d" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      <input id="pm_d" type="date" value="${defDate}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
     <div style="margin-bottom:10px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">맵 (선택)</label>
