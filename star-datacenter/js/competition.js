@@ -46,7 +46,10 @@ function rComp(C,T){
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
       ${tourneys.filter(t=>t.type!=='tier').map(t=>{
-        const _dates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
+        const _grpDates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
+        const _br=t.bracket||{};
+        const _bktDates=Object.values(_br.matchDetails||{}).map(m=>m.d).concat((_br.manualMatches||[]).map(m=>m&&m.d));
+        const _dates=[..._grpDates,..._bktDates].filter(Boolean).sort();
         const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})` :'';
         return`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}${_range}</option>`;
       }).join('')}
