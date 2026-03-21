@@ -15,7 +15,9 @@ function rStats(C,T){
   T.textContent='📊 통계';
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
-  if(_savedSub&&statsSub==='overview'&&_savedSub!=='overview') statsSub=_savedSub;
+  if(_savedSub&&statsSub==='overview'&&_savedSub!=='overview'){
+    if(_savedSub!=='csvexport'||isLoggedIn) statsSub=_savedSub;
+  }
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},
