@@ -17,16 +17,16 @@ function _calcGrpRank(grp){
   });
   return Object.entries(st).map(([u,s])=>({u,...s})).sort((a,b)=>b.w-a.w||(b.sw-b.sl)-(a.sw-a.sl)||b.sw-a.sw);
 }
-let leagueFilterDate='';
-let leagueFilterGrp='';
-let grpRankFilter='';
-let grpSub='list';
-let grpEditId=null;
-let grpMatchState={tnId:null,gi:null,mi:null};
-let bracketMatchState={tnId:null,rnd:null,mi:null,teamA:'',teamB:''};
-let bktSchedRound='전체';
-let leagueSortDir='desc';
-let bktSchedSortDir='desc';
+var leagueFilterDate='';
+var leagueFilterGrp='';
+var grpRankFilter='';
+var grpSub='list';
+var grpEditId=null;
+var grpMatchState={tnId:null,gi:null,mi:null};
+var bracketMatchState={tnId:null,rnd:null,mi:null,teamA:'',teamB:''};
+var bktSchedRound='전체';
+var leagueSortDir='desc';
+var bktSchedSortDir='desc';
 
 function getCurrentTourney(){
   return tourneys.find(t=>t.name===curComp)||tourneys[0]||null;
@@ -45,7 +45,11 @@ function rComp(C,T){
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tourneys.filter(t=>t.type!=='tier').map(t=>`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}</option>`).join('')}
+      ${tourneys.filter(t=>t.type!=='tier').map(t=>{
+        const _dates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
+        const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})` :'';
+        return`<option value="${t.name}"${curComp===t.name?' selected':''}>${t.name}${_range}</option>`;
+      }).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="grpNewLeagueTourney()">+ 일반 대회</button>`:''}
     ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="grpDelCurTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}

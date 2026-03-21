@@ -30,7 +30,11 @@ function rProComp(C, T) {
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curProComp=this.value;proCompFilterDate='';proCompFilterGrp='';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${proTourneys.map(t=>`<option value="${t.name}"${curProComp===t.name?' selected':''}>${t.name}</option>`).join('')}
+      ${proTourneys.map(t=>{
+        const _dates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
+        const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})` :'';
+        return`<option value="${t.name}"${curProComp===t.name?' selected':''}>${t.name}${_range}</option>`;
+      }).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
     ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
@@ -41,7 +45,7 @@ function rProComp(C, T) {
     {id:'league', lbl:'📅 조별리그 일정'},
     {id:'grprank', lbl:'📊 조별 순위'},
     {id:'tour', lbl:'🗂️ 대진표'},
-    {id:'stats', lbl:'📈 통계'},
+    {id:'stats', lbl:'🏅 개인 순위'},
     ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
   ];
   h += `<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${proCompSub===o.id?'on':''}" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
