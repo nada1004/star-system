@@ -458,6 +458,10 @@ function _getBoardPlayers(univName, includeRetired=false){
   const univPlayers = players.filter(p=>p.univ===univName&&(includeRetired||!p.retired));
   const order = boardPlayerOrder[univName] || [];
   if(!order.length){
+    // 무소속: ELO 내림차순
+    if(univName==='무소속'){
+      return [...univPlayers].sort((a,b)=>(b.elo||1500)-(a.elo||1500));
+    }
     // 기본: MAIN_ROLES → 티어 → 포인트
     return [...univPlayers].sort((a,b)=>{
       const ra=getRoleOrder(a.role),rb=getRoleOrder(b.role);
@@ -679,7 +683,7 @@ function buildUnivBoardCard(u, forExport){
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
           ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
-          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}</span>
+          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}${(()=>{if(!p.transferDate||!p.prevUniv)return'';const diff=(new Date()-new Date(p.transferDate))/(864e5);return diff<=30?`<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:800;margin-left:3px;border:1px solid #fcd34d" title="${p.prevUniv}에서 이적 (${p.transferDate})">🔄 이적</span>`:'';})()}</span>
           <span style="display:inline-flex;align-items:center;gap:${compact?'3px':'5px'};line-height:1.2">
             <span style="font-size:${badgeFs};font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${rTxt}</span>
             ${p.tier?`<span style="font-size:${tierBadgeFs};font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${p.tier}</span>`:''}
@@ -708,16 +712,26 @@ function buildUnivBoardCard(u, forExport){
         }).join('')
       : '';
 
-    const tierRows=tierOrder.map((tier,tidx)=>{
-      const ps=tierMap[tier];
-      const tColor = _TIER_BG[tier] || col;
-      const tText = _TIER_TEXT[tier] || '#fff';
-      return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
-        <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${tColor};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
-      </div>`;
-    }).join('');
-    const allRows = roleSection + tierRows;
+    // 무소속: 직급/티어 구분 없이 ELO순 flat 리스트
+    let tierRows='', allRows='';
+    if(u.name==='무소속'&&!forExport){
+      const eloSorted=[...sorted].sort((a,b)=>(b.elo||1500)-(a.elo||1500));
+      const chipIdxMapElo={};
+      eloSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
+      tierRows=`<div style="display:flex;flex-wrap:wrap;gap:0">${eloSorted.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>`;
+      allRows=tierRows;
+    } else {
+      tierRows=tierOrder.map((tier,tidx)=>{
+        const ps=tierMap[tier];
+        const tColor = _TIER_BG[tier] || col;
+        const tText = _TIER_TEXT[tier] || '#fff';
+        return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
+          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${tColor};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
+        </div>`;
+      }).join('');
+      allRows = roleSection + tierRows;
+    }
 
     const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
@@ -931,6 +945,7 @@ function boardTransferPlayerFromChip(playerName, fromUniv){
   const p = players.find(x=>x.name===playerName);
   if(!p) return;
   if(!confirm(`"${playerName}"을(를) "${fromUniv}" → "${toUniv}"로 이동하시겠습니까?`)) return;
+  p.prevUniv = fromUniv; p.transferDate = new Date().toISOString().slice(0,10);
   p.univ = toUniv;
   if(boardPlayerOrder[fromUniv]){
     boardPlayerOrder[fromUniv] = boardPlayerOrder[fromUniv].filter(n=>n!==playerName);
@@ -1108,6 +1123,7 @@ function boardTransferPlayer(playerName, fromUniv){
   if(!confirm(`"${playerName}"을(를) "${fromUniv}" → "${toUniv}"로 이동하시겠습니까?\n\n스트리머 목록·티어 순위표·스트리머 상세·대학 상세가 모두 자동 반영됩니다.`)) return;
 
   // 실제 데이터 변경
+  p.prevUniv = fromUniv; p.transferDate = new Date().toISOString().slice(0,10);
   p.univ = toUniv;
 
   // boardPlayerOrder에서 제거
@@ -1257,6 +1273,7 @@ function initBoardPlayerDrag(body){
       if(!confirm(`"${playerName}"을(를) "${srcUniv}" → "${targetUniv}"로 이동하시겠습니까?`)) return;
       const p = players.find(x=>x.name===playerName);
       if(!p) return;
+      p.prevUniv = srcUniv; p.transferDate = new Date().toISOString().slice(0,10);
       p.univ = targetUniv;
       if(boardPlayerOrder[srcUniv]){
         boardPlayerOrder[srcUniv] = boardPlayerOrder[srcUniv].filter(n=>n!==playerName);
@@ -1305,6 +1322,7 @@ function initBoardPlayerDrag(body){
         if(!confirm(`"${playerName}"을(를) "${srcUniv}" → "${targetUniv}"로 이동하시겠습니까?`)) return;
         const p = players.find(x=>x.name===playerName);
         if(!p) return;
+        p.prevUniv = srcUniv; p.transferDate = new Date().toISOString().slice(0,10);
         p.univ = targetUniv;
         if(boardPlayerOrder[srcUniv]){
           boardPlayerOrder[srcUniv] = boardPlayerOrder[srcUniv].filter(n=>n!==playerName);
