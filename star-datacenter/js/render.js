@@ -1016,10 +1016,10 @@ function buildUnivDetailHTML(univName){
 }/* ══════════════════════════════════════
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
-let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
-let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
-let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
-let _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'comp'
+var _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
+var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
+var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'comp' | 'all'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">

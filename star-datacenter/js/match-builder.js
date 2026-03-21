@@ -1070,7 +1070,6 @@ function rPro(C,T){
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
-    {id:'team',lbl:'⚔️ 팀전 집계',fn:`proSub='team';render()`},
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
   ];
   let h=stabs(proSub,subOpts);
@@ -1082,8 +1081,6 @@ function rPro(C,T){
     h+=buildProInputHTML();
   } else if(proSub==='rank'){
     h+=proRankHTML();
-  } else if(proSub==='team'){
-    h+=proTeamResultsHTML();
   } else {
     h+=recSummaryListHTML(proM,'pro','tab');
   }
