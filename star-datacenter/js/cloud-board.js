@@ -887,6 +887,15 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
     </div>
     <div class="brd-move-popup-sep"></div>
+    <div style="padding:4px 6px 6px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
+      <div style="display:flex;gap:4px">
+        <input id="brd-photo-chip-${_pnSafeChip}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-chip-${_pnSafeChip}').value)">저장</button>
+      </div>
+      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+    </div>
+    <div class="brd-move-popup-sep"></div>
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">📋 스트리머 상세 보기</button>
   `;
 
@@ -981,6 +990,14 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
+      <div style="display:flex;gap:4px">
+        <input id="brd-photo-${_pnSafe}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-${_pnSafe}').value)">저장</button>
+      </div>
+      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+    </div>
+    <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏫 대학 이동</div>
       <div style="display:flex;gap:4px">
         <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
@@ -1032,6 +1049,15 @@ function setBrdRole(playerName, role){
   save();
   _brdClose();
   _refreshBoardCard(p.univ);
+}
+function setBrdPhoto(playerName, url){
+  const p=players.find(x=>x.name===playerName);
+  if(!p)return;
+  const trimmed=url.trim();
+  if(trimmed) p.photo=trimmed; else delete p.photo;
+  save();
+  _refreshBoardCard(p.univ);
+  _brdToast(trimmed?'🖼️ 프로필 이미지 저장 완료':'🗑️ 프로필 이미지 삭제');
 }
 function setBrdStatusIcon(btn, playerName, iconId){
   setStatusIcon(playerName, iconId);
