@@ -65,6 +65,7 @@
     return;
   }
   if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h;return;}
+  if(histSub==='univcomp'){h+=histUnivCompHTML();C.innerHTML=h;return;}
   if(histSub==='univrank'){
     if(typeof rUnivBodyHTML==='function'){
       h+=rUnivBodyHTML();
