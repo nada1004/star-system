@@ -458,9 +458,9 @@ function _getBoardPlayers(univName, includeRetired=false){
   const univPlayers = players.filter(p=>p.univ===univName&&(includeRetired||!p.retired));
   const order = boardPlayerOrder[univName] || [];
   if(!order.length){
-    // 무소속: ELO 내림차순
+    // 무소속: 티어 → 포인트 순
     if(univName==='무소속'){
-      return [...univPlayers].sort((a,b)=>(b.elo||1500)-(a.elo||1500));
+      return [...univPlayers].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     }
     // 기본: MAIN_ROLES → 티어 → 포인트
     return [...univPlayers].sort((a,b)=>{
@@ -712,13 +712,13 @@ function buildUnivBoardCard(u, forExport){
         }).join('')
       : '';
 
-    // 무소속: 직급/티어 구분 없이 ELO순 flat 리스트
+    // 무소속: 직급/티어 구분 없이 티어→포인트 flat 리스트
     let tierRows='', allRows='';
     if(u.name==='무소속'&&!forExport){
-      const eloSorted=[...sorted].sort((a,b)=>(b.elo||1500)-(a.elo||1500));
+      const tierSorted=[...sorted].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
       const chipIdxMapElo={};
-      eloSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
-      tierRows=`<div style="display:flex;flex-wrap:wrap;gap:0">${eloSorted.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>`;
+      tierSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
+      tierRows=`<div style="display:flex;flex-wrap:wrap;gap:0">${tierSorted.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>`;
       allRows=tierRows;
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
