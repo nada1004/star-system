@@ -712,13 +712,25 @@ function buildUnivBoardCard(u, forExport){
         }).join('')
       : '';
 
-    // 무소속: 직급/티어 구분 없이 티어→포인트 flat 리스트
+    // 무소속: 티어 레이블 포함 flat 리스트
     let tierRows='', allRows='';
     if(u.name==='무소속'&&!forExport){
       const tierSorted=[...sorted].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
       const chipIdxMapElo={};
       tierSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
-      tierRows=`<div style="display:flex;flex-wrap:wrap;gap:0">${tierSorted.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>`;
+      // 티어별 그룹핑하여 레이블 표시
+      const freeTierMap={};
+      tierSorted.forEach(p=>{ const t=p.tier||'기타'; if(!freeTierMap[t])freeTierMap[t]=[]; freeTierMap[t].push(p); });
+      const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
+      tierRows=freeTierOrder.map(tier=>{
+        const ps=freeTierMap[tier];
+        const tColor=_TIER_BG[tier]||col;
+        const tText=_TIER_TEXT[tier]||'#fff';
+        return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
+          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${tColor};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:0">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
+        </div>`;
+      }).join('');
       allRows=tierRows;
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
