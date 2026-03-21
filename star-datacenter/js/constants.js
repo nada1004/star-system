@@ -276,11 +276,11 @@ const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
-let miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
-let miniType='mini'; // 'mini' | 'civil'
-let histUniv='';
-let recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
-let vsNameA='', vsNameB=''; // 1:1 상대전적 조회
+var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
+var miniType='mini'; // 'mini' | 'civil'
+var histUniv='';
+var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
+var vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 
 // 공통 연도/월 필터 상태
 let yearOptions=['2026'];

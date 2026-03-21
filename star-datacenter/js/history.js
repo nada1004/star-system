@@ -104,7 +104,8 @@ function histAllHTML(){
     ind:{lbl:'🎮 개인전',col:'#16a34a'},
     gj:{lbl:'⚔️ 끝장전',col:'#d97706'},
     tt:{lbl:'🎯 티어대회',col:'#7c3aed'},
-    tourney:{lbl:'🎖️ 대회',col:'#b45309'}
+    tourney:{lbl:'🎖️ 대회',col:'#b45309'},
+    procomp:{lbl:'🏅 프로리그대회',col:'#7c3aed'},
   };
   // 통합 목록 생성
   const allItems=[];
@@ -140,6 +141,18 @@ function histAllHTML(){
       allItems.push({type:'tourney',d:m.d||'',m});
     });
   }
+  // 프로리그 개인 대회 (procomp)
+  (proTourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m.a||!m.b||!m.winner)return;
+        if(!passDateFilter(m.d||''))return;
+        const wName=m.winner==='A'?m.a:m.b;
+        const lName=m.winner==='A'?m.b:m.a;
+        allItems.push({type:'procomp',d:m.d||'',m:{...m,wName,lName}});
+      });
+    });
+  });
   allItems.sort((a,b)=>recSortDir==='asc'?(a.d).localeCompare(b.d):(b.d).localeCompare(a.d));
 
   // 검색어 필터
@@ -151,14 +164,6 @@ function histAllHTML(){
       (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.wName||'',g.lName||''])).join(' ')
     ].join(' ').toLowerCase().includes(_sq);
   }):allItems;
-
-  // 페이지네이션
-  const pageSize=getHistPageSize();
-  if(histPage['all']===undefined) histPage['all']=0;
-  const totalPages=Math.ceil(_typeFiltered.length/pageSize)||1;
-  if(histPage['all']>=totalPages) histPage['all']=Math.max(0,totalPages-1);
-  const curPage=histPage['all'];
-  const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
   const initQ=(window._recQ&&window._recQ['all'])||'';
   if(!window._recTypeFilter) window._recTypeFilter='전체';
@@ -176,7 +181,15 @@ function histAllHTML(){
     {id:'ind',lbl:'🎮 개인전'},
     {id:'gj',lbl:'⚔️ 끝장전'},
     {id:'tourney',lbl:'🎖️ 대회'},
+    {id:'procomp',lbl:'🏅 프로리그대회'},
   ].filter(t=>t.id==='전체'||_typeCountMap[t.id]>0);
+  // 페이지네이션
+  const pageSize=getHistPageSize();
+  if(histPage['all']===undefined) histPage['all']=0;
+  const totalPages=Math.ceil(_typeFiltered.length/pageSize)||1;
+  if(histPage['all']>=totalPages) histPage['all']=Math.max(0,totalPages-1);
+  const curPage=histPage['all'];
+  const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
   let h=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="font-size:11px;color:var(--text3)">날짜</span>
@@ -202,7 +215,7 @@ function histAllHTML(){
   paged.forEach(({type,d,m})=>{
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
     const isCK=(type==='ck'||type==='pro');
-    const isInd=(type==='ind'||type==='gj');
+    const isInd=(type==='ind'||type==='gj'||type==='procomp');
     let teamA='',teamB='',scoreA='',scoreB='';
     if(isInd){
       teamA=m.wName||''; teamB=m.lName||'';
@@ -239,7 +252,7 @@ function histAllHTML(){
   });
 
   // 페이지 네비게이션
-  if(filtered.length>pageSize){
+  if(_typeFiltered.length>pageSize){
     h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
       <button class="btn btn-sm" ${curPage===0?'disabled':''} onclick="histPage['all']=${curPage-1};render()">← 이전</button>
       <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages}</span>
@@ -366,12 +379,11 @@ function rHistUnivStat(){
   if(typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist-univ');
   }
-  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" class="no-export">`;
+  h+=`<div style="margin-bottom:16px;" class="no-export"><select onchange="histUniv=this.value;openDetails={};render()" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--fg);font-size:14px;cursor:pointer;">`;
   allU.forEach(u=>{
-    const sel=histUniv===u.name;
-    h+=`<button class="pill ${sel?'on':''}" style="${sel?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="histUniv='${u.name}';openDetails={};render()">${u.name}</button>`;
+    h+=`<option value="${u.name}"${histUniv===u.name?' selected':''}>${u.name}</option>`;
   });
-  h+=`</div>`;
+  h+=`</select></div>`;
   if(!histUniv) return h+`<div style="padding:40px;text-align:center;color:var(--gray-l)">대학을 선택하세요.</div>`;
   const col=gc(histUniv);
   const myMini=miniM.filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
@@ -792,7 +804,7 @@ function _histPSearchResultsHTML(q){
         <table style="margin:0;border:none;border-radius:0;font-size:12px"><thead><tr>
           <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>
         </tr></thead><tbody>`;
-    hist.slice(0,50).forEach(hh=>{
+    hist.forEach(hh=>{
       const isWin=hh.result==='승';
       const mc=modeBadgeColors[hh.mode||'']||'#6b7280';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
@@ -807,7 +819,6 @@ function _histPSearchResultsHTML(q){
         <td>${eloStr}</td>
       </tr>`;
     });
-    if(hist.length>50) h+=`<tr><td colspan="7" style="text-align:center;color:var(--gray-l);font-size:11px;padding:6px">... 최근 50게임만 표시 (전체 ${hist.length}게임은 선수 상세에서 확인)</td></tr>`;
     h+=`</tbody></table></div></div>`;
   });
   return h||`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">경기 기록이 없습니다</div></div>`;
@@ -822,7 +833,7 @@ function _psearchUpdate(val){
 /* ══════════════════════════════════════
    대학 전력 비교
 ══════════════════════════════════════ */
-let _univCompA = '', _univCompB = '';
+var _univCompA = '', _univCompB = '';
 
 function histUnivCompHTML(){
   const allU = getAllUnivs().filter(u=>!u.hidden||isLoggedIn);
