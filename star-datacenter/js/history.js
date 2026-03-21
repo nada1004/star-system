@@ -65,7 +65,7 @@
     return;
   }
   if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h;return;}
-  if(histSub==='univcomp'){h+=histUnivCompHTML();C.innerHTML=h;return;}
+  if(histSub==='univcomp'){try{h+=histUnivCompHTML();}catch(e){h+=`<div style="padding:20px;color:red;font-size:12px">⚠️ 오류: ${e.message}</div>`;console.error('histUnivCompHTML error:',e);}C.innerHTML=h;return;}
   if(histSub==='univrank'){
     if(typeof rUnivBodyHTML==='function'){
       h+=rUnivBodyHTML();
@@ -837,7 +837,10 @@ function _psearchUpdate(val){
 var _univCompA = '', _univCompB = '';
 
 function histUnivCompHTML(){
-  const allU = getAllUnivs().filter(u=>!u.hidden||isLoggedIn);
+  const allU = getAllUnivs().filter(u=>!u.hidden||isLoggedIn).filter(u=>u.name!=='무소속');
+  // 처음 진입 시 자동으로 첫 두 대학 선택
+  if(!_univCompA && allU.length>=1) _univCompA = allU[0].name;
+  if(!_univCompB && allU.length>=2) _univCompB = allU[1].name;
   const uOpts = name => `<option value="">— 대학 선택 —</option>`
     + allU.map(u=>`<option value="${u.name}"${u.name===name?' selected':''}>${u.name}</option>`).join('');
 
