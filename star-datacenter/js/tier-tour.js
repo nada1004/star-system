@@ -415,11 +415,8 @@ function rTierTourTab(C, T){
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
       ${tierTourneys.map(t=>{
-        const _tDates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
-        const _tBr=t.bracket||{};
-        const _tBktD=Object.values(_tBr.matchDetails||{}).map(m=>m.d).concat((_tBr.manualMatches||[]).map(m=>m&&m.d));
-        const _tAll=[..._tDates,..._tBktD].filter(Boolean).sort();
-        const _tRange=_tAll.length?` (${_tAll[0].slice(2).replace(/-/g,'.')}~${_tAll[_tAll.length-1].slice(2).replace(/-/g,'.')})` :'';
+        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
+        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
         return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
       }).join('')}
     </select>
@@ -1725,11 +1722,8 @@ function rTierTourTab(C, T){
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
       ${tierTourneys.map(t=>{
-        const _tDates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
-        const _tBr=t.bracket||{};
-        const _tBktD=Object.values(_tBr.matchDetails||{}).map(m=>m.d).concat((_tBr.manualMatches||[]).map(m=>m&&m.d));
-        const _tAll=[..._tDates,..._tBktD].filter(Boolean).sort();
-        const _tRange=_tAll.length?` (${_tAll[0].slice(2).replace(/-/g,'.')}~${_tAll[_tAll.length-1].slice(2).replace(/-/g,'.')})` :'';
+        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
+        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
         return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
       }).join('')}
     </select>
