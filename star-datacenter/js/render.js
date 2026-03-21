@@ -1067,13 +1067,12 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'},{id:'all',lbl:'🔗 통합'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
-  if(_mergedProSub==='pro')   { if(typeof rPro==='function')          rPro(sub,T); }
-  else if(_mergedProSub==='comp') { if(typeof rProComp==='function')  rProComp(sub,T); }
-  else                         { if(typeof rProAll==='function')       rProAll(sub,T); }
+  if(_mergedProSub==='pro') { if(typeof rPro==='function')     rPro(sub,T); }
+  else                      { if(typeof rProComp==='function') rProComp(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
