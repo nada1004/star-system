@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>⭐ 스타대학 데이터 센터 V49.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -385,8 +385,17 @@
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
 <div id="mobileActionBar" style="display:none;position:fixed;bottom:68px;right:12px;z-index:995;flex-direction:column;gap:8px;align-items:flex-end;">
+</div>
 
-
+<!-- 📱 FAB -->
+<div id="mobileFab">
+  <div class="fab-sub-list" id="fabSubList">
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('mini')"><span>⚡</span> 미니 경기</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('ind')"><span>⚔️</span> 개인전</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('pro')"><span>🏅</span> 프로리그</div>
+  </div>
+  <button class="fab-main" id="fabMain" onclick="toggleFab()" aria-label="빠른 이동">＋</button>
 </div>
 
 <!-- 📱 하단 고정 네비게이션 바 (모바일) -->
