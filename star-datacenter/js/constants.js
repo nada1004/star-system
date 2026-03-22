@@ -273,7 +273,8 @@ const HIST_PAGE_SIZE=20;
 const HIST_PAGE_SIZE_MOBILE=10;
 function getHistPageSize(){return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:HIST_PAGE_SIZE;}
 const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때 페이지네이션
-let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=localStorage.getItem('su_cal_view')||'month';
+let calTypeFilter='all';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
 var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';

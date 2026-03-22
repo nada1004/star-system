@@ -61,6 +61,29 @@
   </div>
 </div>
 
+<!-- 📅 예정 경기 등록 모달 -->
+<div id="calSchedModal" class="modal no-export" style="display:none">
+  <div class="mbox" style="width:360px">
+    <div class="mtitle">📌 예정 경기 등록</div>
+    <label class="mbox" style="padding:0;display:block;margin-top:4px">
+      <span style="font-size:11px;color:var(--gray-l);font-weight:600">날짜</span>
+      <input type="date" id="cal-sched-date" style="width:100%;margin-top:4px">
+    </label>
+    <label style="display:block;margin-top:10px">
+      <span style="font-size:11px;color:var(--gray-l);font-weight:600">시간 (선택)</span>
+      <input type="time" id="cal-sched-time" style="width:100%;margin-top:4px;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px">
+    </label>
+    <label style="display:block;margin-top:10px">
+      <span style="font-size:11px;color:var(--gray-l);font-weight:600">메모</span>
+      <textarea id="cal-sched-note" rows="2" placeholder="경기 메모 (예: A팀 vs B팀)" style="width:100%;margin-top:4px;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+    </label>
+    <div class="mbtns" style="margin-top:16px">
+      <button class="btn btn-b" style="flex:1" onclick="saveCalSched()">💾 저장</button>
+      <button class="btn btn-w" onclick="cm('calSchedModal')">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- 로그인 모달 (헤더 버튼 클릭 시) -->
 <div id="loginModal" class="modal no-export" style="display:none">
   <div class="mbox" style="width:340px;text-align:center;padding:32px 28px">
