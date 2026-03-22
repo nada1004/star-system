@@ -34,6 +34,7 @@ function rStats(C,T){
       {id:'radar',lbl:'🕸️ 대학 레이더'},
       {id:'univmatrix',lbl:'🏛️ 대학 매트릭스'},
       {id:'univmatrix2',lbl:'🏛️ 대학 매트릭스+'},
+      {id:'univwinbar',lbl:'📊 대학별 승률'},
     ]},
     {label:'📊 경기',tabs:[
       {id:'mismatch',lbl:'⚡ 미스매치'},
@@ -102,12 +103,14 @@ function rStats(C,T){
   else if(statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
   else if(statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
   else if(statsSub==='playervs')  h+=statsPlayerVsHTML();
+  else if(statsSub==='univwinbar') h+=statsUnivWinBarHTML();
   C.innerHTML=h;
   // 서브탭별 후처리
   if(statsSub==='elo')         initEloChart();
   else if(statsSub==='growth') initGrowthChart();
   else if(statsSub==='radar')  initRadarChart();
   else if(statsSub==='racetrend') initRaceTrendChart();
+  else if(statsSub==='univwinbar') initUnivWinBarChart();
 }
 
 /* ─── 공통 유틸 ─── */
@@ -3184,6 +3187,99 @@ function statsPlayerVsHTML(){
     </div>
     `}
   </div></div>`;
+}
+
+/* ══════════════════════════════════════
+   📊 대학별 승률 비교 차트
+══════════════════════════════════════ */
+var _uwbSort='wr'; // 'wr'=승률순, 'total'=경기수순, 'name'=이름순
+function statsUnivWinBarHTML(){
+  return `<div id="uwb-wrap">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-weight:800;font-size:13px">📊 대학별 개인 승률 비교</span>
+      <span style="font-size:11px;color:var(--gray-l)">(개인 미니/대학대전/CK/프로 합산)</span>
+      <select onchange="_uwbSort=this.value;initUnivWinBarChart()" style="margin-left:auto;font-size:12px;padding:4px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--card)">
+        <option value="wr"${_uwbSort==='wr'?' selected':''}>승률순</option>
+        <option value="total"${_uwbSort==='total'?' selected':''}>경기수순</option>
+        <option value="name"${_uwbSort==='name'?' selected':''}>이름순</option>
+      </select>
+    </div>
+    <canvas id="uwbCanvas" style="width:100%;display:block"></canvas>
+  </div>`;
+}
+function initUnivWinBarChart(){
+  const canvas=document.getElementById('uwbCanvas');
+  if(!canvas)return;
+  // 데이터 수집
+  const univs=getAllUnivs().filter(u=>u.name!=='무소속'&&!u.hidden||isLoggedIn).filter(u=>players.some(p=>p.univ===u.name&&!p.retired));
+  const data=univs.map(u=>{
+    const mem=players.filter(p=>p.univ===u.name&&!p.retired);
+    const w=mem.reduce((s,p)=>s+(p.win||0),0);
+    const l=mem.reduce((s,p)=>s+(p.loss||0),0);
+    const tot=w+l;
+    const wr=tot?Math.round(w/tot*100):0;
+    return{name:u.name,col:gc(u.name),w,l,tot,wr};
+  }).filter(d=>d.tot>0);
+  if(!data.length){canvas.style.display='none';return;}
+  // 정렬
+  if(_uwbSort==='wr') data.sort((a,b)=>b.wr-a.wr);
+  else if(_uwbSort==='total') data.sort((a,b)=>b.tot-a.tot);
+  else data.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+
+  const dpr=window.devicePixelRatio||1;
+  const ROW_H=34, PAD_L=90, PAD_R=55, PAD_T=28, PAD_B=24;
+  const W=canvas.parentElement.clientWidth||300;
+  const H=PAD_T+data.length*ROW_H+PAD_B;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  // 배경
+  const isDark=document.body.classList.contains('dark')||document.documentElement.getAttribute('data-theme')==='dark';
+  const bgCol=isDark?'#1e293b':'#f8fafc';
+  const textCol=isDark?'#e2e8f0':'#1e293b';
+  const gridCol=isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.07)';
+  ctx.fillStyle=bgCol; ctx.fillRect(0,0,W,H);
+  // 헤더: %축
+  const chartW=W-PAD_L-PAD_R;
+  const pctTicks=[0,25,50,75,100];
+  ctx.font=`bold ${10*1}px 'Noto Sans KR',sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillStyle=isDark?'#94a3b8':'#64748b';
+  pctTicks.forEach(t=>{
+    const x=PAD_L+chartW*t/100;
+    ctx.fillText(t+'%',x,PAD_T-8);
+    ctx.beginPath(); ctx.strokeStyle=gridCol; ctx.lineWidth=1;
+    ctx.moveTo(x,PAD_T); ctx.lineTo(x,H-PAD_B); ctx.stroke();
+  });
+  // 50% 기준선 강조
+  const x50=PAD_L+chartW*0.5;
+  ctx.beginPath(); ctx.strokeStyle=isDark?'rgba(255,255,255,.18)':'rgba(0,0,0,.15)'; ctx.lineWidth=1.5;
+  ctx.setLineDash([4,3]); ctx.moveTo(x50,PAD_T); ctx.lineTo(x50,H-PAD_B); ctx.stroke(); ctx.setLineDash([]);
+
+  data.forEach((d,i)=>{
+    const y=PAD_T+i*ROW_H;
+    const barH=20, barY=y+7;
+    const barW=Math.max(2,chartW*d.wr/100);
+    // 대학명
+    ctx.font=`bold ${12}px 'Noto Sans KR',sans-serif`;
+    ctx.textAlign='right'; ctx.fillStyle=textCol;
+    ctx.fillText(d.name,PAD_L-6,barY+14);
+    // 바 배경
+    ctx.fillStyle=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)';
+    ctx.beginPath(); ctx.roundRect?ctx.roundRect(PAD_L,barY,chartW,barH,4):ctx.rect(PAD_L,barY,chartW,barH); ctx.fill();
+    // 승률 바
+    const hex=d.col;
+    ctx.fillStyle=hex+'cc';
+    ctx.beginPath(); ctx.roundRect?ctx.roundRect(PAD_L,barY,barW,barH,4):ctx.rect(PAD_L,barY,barW,barH); ctx.fill();
+    // 테두리
+    ctx.strokeStyle=hex; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.roundRect?ctx.roundRect(PAD_L,barY,barW,barH,4):ctx.rect(PAD_L,barY,barW,barH); ctx.stroke();
+    // 수치 레이블
+    ctx.font=`bold ${11}px 'Noto Sans KR',sans-serif`;
+    ctx.textAlign='left'; ctx.fillStyle=textCol;
+    ctx.fillText(`${d.wr}%  (${d.w}승 ${d.l}패)`,PAD_L+barW+5,barY+14);
+  });
 }
 
 /* ══════════════════════════════════════

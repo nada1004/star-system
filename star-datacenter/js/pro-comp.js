@@ -31,7 +31,10 @@ function rProComp(C, T) {
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curProComp=this.value;proCompFilterDate='';proCompFilterGrp='';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
       ${proTourneys.map(t=>{
-        const _dates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d)).filter(Boolean).sort();
+        const _grpD=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
+        const _br=t.bracket||{};
+        const _bktD=Object.values(_br.matchDetails||{}).map(m=>m&&m.d).concat((_br.manualMatches||[]).map(m=>m&&m.d));
+        const _dates=[..._grpD,..._bktD].filter(Boolean).sort();
         const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})` :'';
         return`<option value="${t.name}"${curProComp===t.name?' selected':''}>${t.name}${_range}</option>`;
       }).join('')}

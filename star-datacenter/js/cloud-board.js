@@ -243,7 +243,7 @@ async function fbCloudSave() {
       if(statusEl){ statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 데이터 크기 초과 — 압축 후 재시도 중...'; }
       clean.players = (clean.players||[]).map(p => {
         const cp = {...p};
-        if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(0, 100);
+        if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(-100);
         return cp;
       });
       const slimSz = JSON.stringify(clean).length;
