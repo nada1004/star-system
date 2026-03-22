@@ -482,7 +482,7 @@ function saveBoardPlayerOrder(){
 function rBoard(C,T){
   T.textContent='📊 현황판';
   const univs=_getBoardUnivs();
-  const visUnivs=isLoggedIn?univs:univs.filter(u=>!u.hidden);
+  const visUnivs=(isLoggedIn?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
   if(!univs.length){C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">등록된 선수가 없습니다.</div>';return;}
   let h=`
   <style>
