@@ -19,7 +19,7 @@ function vsSearchHTML(){
     const col    = slot==='A'?colA:colB;
     const inputId= `vs-input-${slot}`;
     const dropId = `vs-drop-${slot}`;
-    const label  = slot==='A'?'선수 A':'선수 B';
+    const label  = slot==='A'?'스트리머 A':'스트리머 B';
     const inputVal= slot==='A'?_vsInputA:_vsInputB;
     if(name){
       const p=players.find(x=>x.name===name);
@@ -59,7 +59,7 @@ function vsSearchHTML(){
       <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;color:var(--gray-l);flex-shrink:0">VS</div>
       ${playerSlot('B')}
     </div>
-    ${(!vsNameA&&!vsNameB)?`<div style="margin-top:12px;font-size:11px;color:var(--gray-l);text-align:center">💡 선수 이름을 입력하면 목록이 나타납니다</div>`:''}
+    ${(!vsNameA&&!vsNameB)?`<div style="margin-top:12px;font-size:11px;color:var(--gray-l);text-align:center">💡 스트리머 이름을 입력하면 목록이 나타납니다</div>`:''}
   </div>
   <div id="vsResult"></div>`;
 }

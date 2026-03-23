@@ -591,7 +591,7 @@ function buildUnivBoardCard(u, forExport){
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
       ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
-      <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
+      <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
   }
   const cnt=sorted.length;
@@ -1563,7 +1563,7 @@ function buildBoardRankViewHTML(univs){
   const allPlayers=(players||[]).filter(p=>p.univ&&univNames.has(p.univ)&&(p.win||0)+(p.loss||0)>0)
     .map(p=>({...p,_univ:p.univ,_col:gc(p.univ)}));
   allPlayers.sort((a,b)=>(b.points||0)-(a.points||0));
-  if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">선수 없음</div>`;
+  if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">스트리머 없음</div>`;
   const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'⭐','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
   let h=`<div style="background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden">
     <div style="padding:14px 18px;font-weight:900;font-size:15px;color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>

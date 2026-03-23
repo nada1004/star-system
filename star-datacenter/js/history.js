@@ -3,7 +3,7 @@
 
   const tabDefs=[
     {id:'all',      grp:'종합',   lbl:'📋 전체 통합'},
-    {id:'psearch',  grp:'종합',   lbl:'🔍 선수별 검색'},
+    {id:'psearch',  grp:'종합',   lbl:'🔍 스트리머별 검색'},
     {id:'race',     grp:'종합',   lbl:'🧬 종족 승률'},
     {id:'vs',       grp:'종합',   lbl:'⚔️ 1:1 상대전적'},
     {id:'ind',      grp:'개인',   lbl:'🎮 개인전'},
@@ -794,12 +794,12 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 function _histPSearchResultsHTML(q){
   const modeBadgeColors={'조별리그':'#2563eb','대회':'#b45309','미니대전':'#2563eb','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','개인':'#8b5cf6'};
   if(!q){
-    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">선수 이름을 입력하세요</div><div class="empty-state-desc">모든 종목의 경기 기록을 한번에 확인할 수 있습니다</div></div>`;
+    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">모든 종목의 경기 기록을 한번에 확인할 수 있습니다</div></div>`;
   }
   const ql=q.toLowerCase();
   const matched=players.filter(p=>p.name.toLowerCase().includes(ql));
   if(!matched.length){
-    return`<div class="empty-state"><div class="empty-state-icon">😅</div><div class="empty-state-title">선수를 찾을 수 없습니다</div><div class="empty-state-desc">"${q}"와 일치하는 선수가 없습니다</div></div>`;
+    return`<div class="empty-state"><div class="empty-state-icon">😅</div><div class="empty-state-title">스트리머를 찾을 수 없습니다</div><div class="empty-state-desc">"${q}"와 일치하는 스트리머가 없습니다</div></div>`;
   }
   let h='';
   matched.forEach(p=>{
@@ -1002,7 +1002,7 @@ function histPlayerSearchHTML(){
   const q=(window._histPSearchQ||'').trim();
   return`<div style="margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <input type="text" id="hist-psearch-input" placeholder="🔍 선수 이름 입력..." value="${q.replace(/"/g,'&quot;')}"
+      <input type="text" id="hist-psearch-input" placeholder="🔍 스트리머 이름 입력..." value="${q.replace(/"/g,'&quot;')}"
         oninput="_psearchUpdate(this.value)"
         style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:600;outline:none" autofocus>
       ${q?`<button onclick="window._histPSearchQ='';document.getElementById('hist-psearch-input').value='';document.getElementById('hist-psearch-results').innerHTML=_histPSearchResultsHTML('')" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:18px;line-height:1;padding:0 2px">✕</button>`:''}

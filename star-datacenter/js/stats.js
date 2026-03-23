@@ -23,12 +23,12 @@ function rStats(C,T){
       {id:'overview',lbl:'🏛️ 종합'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
-      {id:'award',lbl:'🏆 이달의 선수'},
+      {id:'award',lbl:'🏆 이달의 스트리머'},
       {id:'records',lbl:'🎖️ 최다 기록'},
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
       {id:'clutch',lbl:'⚡ 클러치 지수'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
-      {id:'playervs',lbl:'⚔️ 선수 비교'},
+      {id:'playervs',lbl:'⚔️ 스트리머 비교'},
     ]},
     {label:'🏛️ 대학',tabs:[
       {id:'radar',lbl:'🕸️ 대학 레이더'},
@@ -421,7 +421,7 @@ function statsGrowthHTML(){
   const selP=players.find(p=>p.name===_growthSel);
   return`<div class="ssec" id="stats-growth-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <h4 style="margin:0">📊 선수 성장 곡선</h4>
+      <h4 style="margin:0">📊 스트리머 성장 곡선</h4>
       <div style="position:relative">
         <input id="growth-search-input" type="text" placeholder="🔍 스트리머 검색..."
           value="${_growthSel}"
@@ -593,7 +593,7 @@ function statsAwardHTML(){
   return`<div style="display:flex;flex-direction:column;gap:20px">
   <div class="ssec" id="stats-award-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h4 style="margin:0">🏆 이달의 선수 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
+      <h4 style="margin:0">🏆 이달의 스트리머 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -632,7 +632,7 @@ function statsAwardHTML(){
    5. 최다 기록 보유자
 ══════════════════════════════════════ */
 function statsRecordsHTML(){
-  if(!players.length)return`<div class="ssec"><p style="color:var(--gray-l)">선수 데이터가 없습니다.</p></div>`;
+  if(!players.length)return`<div class="ssec"><p style="color:var(--gray-l)">스트리머 데이터가 없습니다.</p></div>`;
   const proIds=statsProMatchIds();
   const withStats=players.map(p=>{
     const h=statsNonProHist(p);
@@ -937,7 +937,7 @@ function statsShareCardHTML(){
     </div>
     <!-- 모드 탭 -->
     <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" class="no-export">
-      <button class="stab ${_shareMode==='player'?'on':''}" onclick="_shareMode='player';_sharePlayerSearch='';render()">👤 선수 카드</button>
+      <button class="stab ${_shareMode==='player'?'on':''}" onclick="_shareMode='player';_sharePlayerSearch='';render()">👤 스트리머 카드</button>
       <button class="stab ${_shareMode==='univ'?'on':''}" onclick="_shareMode='univ';render()">🏛️ 대학 카드</button>
       <button class="stab ${_shareMode==='match'?'on':''}" onclick="_shareMode='match';window._shareMatchObj=null;render()">⚔️ 경기 결과</button>
     </div>
@@ -1044,7 +1044,7 @@ function renderShareCard(){
 function renderShareCardByPlayer(name){
   const card=document.getElementById('share-card');if(!card)return;
   const p=players.find(x=>x.name===name);
-  if(!p){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">선수를 찾을 수 없습니다</p>';return;}
+  if(!p){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">스트리머를 찾을 수 없습니다</p>';return;}
   const h=typeof statsNonProHist==='function'?statsNonProHist(p):(p.history||[]);
   const w=h.filter(x=>x.result==='승').length,l=h.filter(x=>x.result==='패').length,tot=w+l;
   const rate=tot?Math.round(w/tot*100):0;
@@ -1592,7 +1592,7 @@ function statsHeatmapHTML(){
       <h4 style="margin:0">📅 활동량 히트맵 <span style="font-size:11px;color:var(--gray-l);font-weight:400">최근 1년</span></h4>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div style="position:relative">
-          <input id="heatmap-search-input" type="text" placeholder="🔍 선수 검색 (전체보기: 비워두기)"
+          <input id="heatmap-search-input" type="text" placeholder="🔍 스트리머 검색 (전체보기: 비워두기)"
             value="${_heatmapSelPlayer}"
             style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
             oninput="heatmapSearchFilter(this.value);if(!this.value){_heatmapSelPlayer='';render();}"
@@ -2864,6 +2864,18 @@ function _statsPlayerSearchUpdate(){
       }).join('');
 }
 
+function _advFilterName(val){
+  _advFilter.name=val;
+  clearTimeout(window._advNameTimer);
+  window._advNameTimer=setTimeout(()=>{
+    const id='advsearch-name-input';
+    const el=document.getElementById(id);
+    const pos=el?el.selectionStart:null;
+    render();
+    const el2=document.getElementById(id);
+    if(el2){el2.focus();if(pos!==null)try{el2.setSelectionRange(pos,pos);}catch(e){}}
+  },300);
+}
 let _advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};
 function statsAdvSearchHTML(){
   const f=_advFilter;
@@ -2910,7 +2922,7 @@ function statsAdvSearchHTML(){
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec" id="stats-advsearch-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h4 style="margin:0">🔍 선수 고급 검색 필터</h4>
+      <h4 style="margin:0">🔍 스트리머 고급 검색 필터</h4>
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-advsearch-sec','advsearch')">📷 이미지 저장</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
@@ -2923,7 +2935,7 @@ function statsAdvSearchHTML(){
       }).join('')}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <input type="text" placeholder="🔍 이름 검색..." value="${f.name}" oninput="_advFilter.name=this.value;render()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
+      <input id="advsearch-name-input" type="text" placeholder="🔍 스트리머 이름 검색..." value="${f.name}" oninput="_advFilterName(this.value)" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
       <select onchange="_advFilter.univ=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">대학 전체</option>
         ${univs.map(u=>`<option value="${u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
@@ -2958,7 +2970,7 @@ function statsAdvSearchHTML(){
       <button class="btn btn-w btn-sm" onclick="_advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};render()">🔄 초기화</button>
     </div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">검색 결과: <strong>${list.length}명</strong></div>
-    ${list.length===0?'<p style="color:var(--gray-l);padding:20px;text-align:center">조건에 맞는 선수가 없습니다.</p>':`
+    ${list.length===0?'<p style="color:var(--gray-l);padding:20px;text-align:center">조건에 맞는 스트리머가 없습니다.</p>':`
     <div style="overflow-x:auto"><table>
       <thead><tr><th>순위</th><th>이름</th><th>대학</th><th>티어</th><th>종족</th><th>성별</th><th>ELO</th><th>승</th><th>패</th><th>승률</th><th>경기수</th></tr></thead>
       <tbody>
@@ -3087,7 +3099,7 @@ function statsPlayerVsHTML(){
   const pAll=players.filter(p=>(p.history||[]).length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   function selDropHTML(selId,dropId,inputId,selName){
     return`<div style="position:relative">
-      <input id="${inputId}" type="text" value="${selName}" placeholder="🔍 선수 검색..."
+      <input id="${inputId}" type="text" value="${selName}" placeholder="🔍 스트리머 검색..."
         style="padding:6px 12px;border:2px solid ${selName?gc(players.find(p=>p.name===selName)?.univ||''):'var(--border2)'};border-radius:8px;font-size:13px;width:180px"
         oninput="_vsSearchDrop('${dropId}',this.value)"
         onfocus="document.getElementById('${dropId}').style.display='block'"
@@ -3160,7 +3172,7 @@ function statsPlayerVsHTML(){
   const noSel=!pA&&!pB;
   return`<div style="display:flex;flex-direction:column;gap:14px">
   <div class="ssec">
-    <h4 style="margin-bottom:14px">⚔️ 선수 vs 선수 비교</h4>
+    <h4 style="margin-bottom:14px">⚔️ 스트리머 vs 스트리머 비교</h4>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
         ${getPlayerPhotoHTML(_vsSelA||'','44px',`border:2px solid ${colA};`)}
