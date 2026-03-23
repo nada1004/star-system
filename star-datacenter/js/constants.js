@@ -182,7 +182,10 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
-  return ic?`<span style="font-size:13px;margin-left:3px;flex-shrink:0">${ic}</span>`:'';
+  if(!ic) return '';
+  const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
+  const lbl=def?def.label:ic;
+  return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
 }
 
 function fixPoints(){

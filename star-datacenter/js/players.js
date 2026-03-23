@@ -2,14 +2,6 @@
    성적 관리
 ══════════════════════════════════════ */
 let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
-function toggleStatusLegend(){
-  const row=document.getElementById('status-legend-row');
-  const btn=document.getElementById('status-legend-btn');
-  if(!row)return;
-  const open=row.style.display==='table-row';
-  row.style.display=open?'none':'table-row';
-  if(btn)btn.textContent=open?'❓':'✕';
-}
 let totalSearch=''; // 스트리머 탭 이름 검색
 let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let totalShowRetired=false; // 은퇴 선수 표시
@@ -46,14 +38,9 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동 <button id="status-legend-btn" onclick="toggleStatusLegend()" title="아이콘 설명" style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:0 1px;line-height:1;vertical-align:middle;opacity:.7">❓</button></th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
-  </tr></thead><tbody>
-  <tr id="status-legend-row" class="no-export" style="display:none"><td colspan="12" style="padding:8px 14px;background:var(--bg2);border-bottom:2px solid var(--border)">
-    <div style="display:flex;flex-wrap:wrap;gap:4px 14px">
-      ${Object.entries(STATUS_ICON_DEFS).filter(([k])=>k!=='none').map(([,d])=>`<span style="font-size:12px;white-space:nowrap;color:var(--text2)">${d.label}</span>`).join('')}
-    </div>
-  </td></tr>`;
+  </tr></thead><tbody>`;
 
   // 전체 순위 맵 (points 기준)
   const _allRanked = [...players].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
@@ -135,10 +122,10 @@ function rTotal(C,T){
           const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
           const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
           const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-          if(!lastD) return '<span style="font-size:9px;color:#9ca3af">-</span>';
-          if(lastD>=_7ago2) return '<span style="font-size:9px;font-weight:800;color:#16a34a">🟢</span>';
-          if(lastD>=_30ago2) return '<span style="font-size:9px;font-weight:800;color:#f59e0b">🟡</span>';
-          return '<span style="font-size:9px;font-weight:800;color:#9ca3af">⚫</span>';
+          if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="전적 없음">-</span>';
+          if(lastD>=_7ago2) return `<span style="font-size:9px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
+          if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
+          return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
         })()}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
