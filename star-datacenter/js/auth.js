@@ -144,18 +144,23 @@ async function doRemoteDownload(){
       if(!res||!res.ok)continue;
       const t=await res.text();
       if(!t||!t.trim())continue;
-      // GitHub API는 base64 인코딩된 content 반환
+      let candidate=null;
       try{
         const raw=JSON.parse(t);
         if(raw&&raw.content&&raw.encoding==='base64'){
+          // GitHub API base64
           const b64=raw.content.replace(/\s/g,'');
           const bin=atob(b64);
           const bytes=new Uint8Array(bin.length);
           for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-          text=new TextDecoder('utf-8').decode(bytes);
-        }else{text=t;}
-      }catch(e){text=t;}
-      if(text&&text.trim())break;
+          candidate=new TextDecoder('utf-8').decode(bytes);
+        }else{candidate=t;}
+      }catch(e){candidate=t;}
+      // BOM 제거 후 JSON 유효성 확인
+      if(candidate){
+        const clean=candidate.replace(/^\uFEFF/,'');
+        try{JSON.parse(clean);text=clean;break;}catch(e){continue;}
+      }
     }catch(e){continue;}
   }
   if(!text){gsSetStatus&&gsSetStatus('','');alert('원격 데이터를 가져오지 못했습니다.');return;}
