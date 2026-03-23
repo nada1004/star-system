@@ -2418,8 +2418,8 @@ function statsTierMatchHTML(){
   usedTiers.forEach((t,i)=>{
     const presets={G:'#091540',K:'#102058',JA:'#182d80',J:'#2040a8',S:'#2d52c8',
       '0티어':'#3860d8',
-      '1티어':'#4070e0','2티어':'#5888f0','3티어':'#6e9ef8','4티어':'#84b4ff',
-      '5티어':'#9ecaff','6티어':'#b2dcff','7티어':'#c6ecff','8티어':'#d8f4ff','유스':'#b45309'};
+      '1티어':'#3a68d8','2티어':'#4e80e8','3티어':'#6294f4','4티어':'#76a6f6',
+      '5티어':'#8ab6f0','6티어':'#9cc4e8','7티어':'#aecee0','8티어':'#bcd4d8','유스':'#b45309'};
     tierColor[t]=presets[t]||TIER_PALETTE[i%TIER_PALETTE.length];
   });
 

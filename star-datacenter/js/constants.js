@@ -41,12 +41,12 @@ function getTierPillLabel(tier){
 // 티어 필터 버튼 색상 — 현황판(TIER_FIXED_COLORS)과 완전히 동일
 const _TIER_BG = {
   'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
-  '0티어':'#1d4ed8','1티어':'#2e54c8','2티어':'#3d6ee0','3티어':'#5082f0',
-  '4티어':'#6898f8','5티어':'#80b0ff','6티어':'#96c6ff','7티어':'#acdbff','8티어':'#c0e8ff',
+  '0티어':'#1d4ed8','1티어':'#2558d0','2티어':'#3268d8','3티어':'#4a7ee8',
+  '4티어':'#6092f4','5티어':'#74a4f4','6티어':'#86b2ec','7티어':'#98bee4','8티어':'#a8c8dc',
   '유스':'#b45309','미정':'#94a3b8'
 };
 const _TIER_TEXT = {
-  '5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1d4ed8','8티어':'#1d4ed8','미정':'#fff'
+  '4티어':'#1a3a8a','5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1a4070','8티어':'#1a4070','미정':'#fff'
 };
 function getTierBtnColor(tier){ return _TIER_BG[tier]||'#64748b'; }
 function getTierBtnTextColor(tier){ return _TIER_TEXT[tier]||'#fff'; }
