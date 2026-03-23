@@ -104,7 +104,7 @@ function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
-  if(window._playerModalCurrentName!==name) playerHistPage=0;
+  if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; }
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
   injectUnivIcons(document.getElementById('playerModalBody'));
@@ -613,6 +613,12 @@ function buildPlayerDetailHTML(p){
       if(window._oppSort==='wr') oppList.sort((a,b)=>{const ta=a[1].w+a[1].l,tb=b[1].w+b[1].l;const wa=ta?a[1].w/ta:0,wb=tb?b[1].w/tb:0;return wb-wa;});
       else if(window._oppSort==='w') oppList.sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
       else oppList.sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
+      if(!window._oppPage) window._oppPage=0;
+      const _oppPageSize=10;
+      const _oppTotalPages=Math.ceil(oppList.length/_oppPageSize)||1;
+      const _oppCurPage=Math.max(0,Math.min(window._oppPage,_oppTotalPages-1));
+      const _oppDisplay=oppList.slice(_oppCurPage*_oppPageSize,(_oppCurPage+1)*_oppPageSize);
+      const _oppResetSort=`window._oppPage=0;`;
       h+=`<div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <div style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px">
@@ -620,9 +626,9 @@ function buildPlayerDetailHTML(p){
             상대 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${oppList.length}명)</span>
           </div>
           <div style="margin-left:auto;display:flex;gap:4px">
-            <button onclick="window._oppSort='tot';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='tot'?'var(--blue)':'var(--white)'};color:${window._oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
-            <button onclick="window._oppSort='w';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='w'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='w'?'var(--blue)':'var(--white)'};color:${window._oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
-            <button onclick="window._oppSort='wr';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='wr'?'var(--blue)':'var(--white)'};color:${window._oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
+            <button onclick="${_oppResetSort}window._oppSort='tot';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='tot'?'var(--blue)':'var(--white)'};color:${window._oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
+            <button onclick="${_oppResetSort}window._oppSort='w';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='w'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='w'?'var(--blue)':'var(--white)'};color:${window._oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
+            <button onclick="${_oppResetSort}window._oppSort='wr';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='wr'?'var(--blue)':'var(--white)'};color:${window._oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
           </div>
         </div>
         <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
@@ -636,7 +642,7 @@ function buildPlayerDetailHTML(p){
               <th style="text-align:center;width:52px">승률</th>
             </tr></thead>
             <tbody>
-              ${oppList.map(([opp,s])=>{
+              ${_oppDisplay.map(([opp,s])=>{
                 const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
                 const op=players.find(x=>x.name===opp);
                 const oc=gc(op?.univ||'');
@@ -657,6 +663,11 @@ function buildPlayerDetailHTML(p){
               }).join('')}
             </tbody>
           </table>
+          ${_oppTotalPages>1?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
+            <button class="btn btn-w btn-xs" ${_oppCurPage===0?'disabled':''} onclick="window._oppPage=${_oppCurPage-1};${_rebuildOpp}">◀ 이전</button>
+            <span style="font-size:12px;color:var(--gray-l)">${_oppCurPage+1} / ${_oppTotalPages} 페이지</span>
+            <button class="btn btn-w btn-xs" ${_oppCurPage>=_oppTotalPages-1?'disabled':''} onclick="window._oppPage=${_oppCurPage+1};${_rebuildOpp}">다음 ▶</button>
+          </div>`:''}
         </div>
       </div>`;
     }
@@ -702,7 +713,7 @@ function buildPlayerDetailHTML(p){
         })
       : _modeHist;
     const totalGames=filteredHist.length;
-    const pageSize=20;
+    const pageSize=10;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
     const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));
     // 날짜 최신순 정렬 (원본 인덱스 보존)

@@ -230,7 +230,7 @@ function indRecordsHTML(){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">전체삭제</button>`:'';
+    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">삭제</button>`:'';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'ind')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
@@ -859,7 +859,7 @@ function gjRecordsHTML(proOnly){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">전체삭제</button>`:'';
+    const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">삭제</button>`:'';
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">🎴 공유카드</button>`;
