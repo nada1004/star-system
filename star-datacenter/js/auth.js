@@ -133,20 +133,33 @@ function doExport(){
 
 async function doRemoteDownload(){
   const _RAW='https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+  const _API='https://api.github.com/repos/nada1004/star-system/contents/data.json';
   const _CDN='https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  const _PROXY='https://api.allorigins.win/raw?url='+encodeURIComponent(_RAW);
   gsSetStatus&&gsSetStatus('☁️ 원격 데이터 다운로드 중...','var(--blue)');
   let text=null;
-  for(const url of [_RAW,_CDN]){
+  for(const url of [_RAW,_CDN,_API,_PROXY]){
     try{
       const res=await Promise.race([fetch(url,{cache:'no-store',mode:'cors'}),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);
       if(!res||!res.ok)continue;
-      text=await res.text();
+      const t=await res.text();
+      if(!t||!t.trim())continue;
+      // GitHub API는 base64 인코딩된 content 반환
+      try{
+        const raw=JSON.parse(t);
+        if(raw&&raw.content&&raw.encoding==='base64'){
+          const b64=raw.content.replace(/\s/g,'');
+          const bin=atob(b64);
+          const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+          text=new TextDecoder('utf-8').decode(bytes);
+        }else{text=t;}
+      }catch(e){text=t;}
       if(text&&text.trim())break;
     }catch(e){continue;}
   }
   if(!text){gsSetStatus&&gsSetStatus('','');alert('원격 데이터를 가져오지 못했습니다.');return;}
   try{
-    // 유효한 JSON인지 확인
     JSON.parse(text);
     const b=new Blob([text],{type:'application/json'});
     const url=URL.createObjectURL(b);
