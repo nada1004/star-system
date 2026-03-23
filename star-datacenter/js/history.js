@@ -636,6 +636,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
             ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
             ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
+            ${isLoggedIn&&(mode==='mini'||mode==='univm')?`<button class="btn btn-w btn-xs no-export" onclick="event.stopPropagation();openMoveMatchPop(this,'${mode}',${i})" title="다른 탭으로 이동">↗ 이동</button>`:''}
           </div>
         </div>
       </div>
@@ -1122,6 +1123,79 @@ function _getCompMatchObj(listIdx,context){
     window._compListCache[context]=all;
   }
   return window._compListCache[context][listIdx]||null;
+}
+
+/* ══════════════════════════════════════
+   경기 이동 (탭 간 이동)
+══════════════════════════════════════ */
+var _movePop=null;
+function _showMovePop(btn,opts){
+  closeMovePop();
+  const pop=document.createElement('div');
+  pop.id='_movePop';
+  pop.style.cssText='position:fixed;z-index:9999;background:var(--white,#fff);border:1px solid var(--border2,#cbd5e1);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;font-family:\'Noto Sans KR\',sans-serif';
+  const r=btn.getBoundingClientRect();
+  pop.style.top=(r.bottom+4)+'px';
+  pop.style.right=(window.innerWidth-r.right)+'px';
+  let html='';
+  opts.forEach((o,i)=>{
+    html+=`<button onclick="_movePop_pick(${i})" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;border-radius:7px;color:var(--text,#1e293b)" onmouseenter="this.style.background='rgba(37,99,235,.08)'" onmouseleave="this.style.background='none'">${o.l}</button>`;
+  });
+  html+=`<button onclick="closeMovePop()" style="display:block;width:100%;text-align:left;padding:6px 12px;border:none;background:none;cursor:pointer;font-size:12px;border-radius:7px;color:var(--gray-l,#94a3b8)" onmouseenter="this.style.background='rgba(0,0,0,.04)'" onmouseleave="this.style.background='none'">취소</button>`;
+  pop.innerHTML=html;
+  document.body.appendChild(pop);
+  _movePop=pop;
+  window._movePopOpts=opts;
+  setTimeout(()=>document.addEventListener('click',_movePopOutside,{once:true}),0);
+}
+function _movePopOutside(e){ if(_movePop&&!_movePop.contains(e.target)) closeMovePop(); }
+function _movePop_pick(i){ const fn=window._movePopOpts&&window._movePopOpts[i]&&window._movePopOpts[i].fn; closeMovePop(); if(fn) fn(); }
+function closeMovePop(){ if(_movePop){_movePop.remove();_movePop=null;} document.removeEventListener('click',_movePopOutside); }
+
+// 팀 경기 이동 (mini ↔ univm ↔ civil)
+function moveTeamMatch(srcMode, srcIdx, destMode){
+  const srcArr=srcMode==='mini'?miniM:univM;
+  const m=srcArr[srcIdx];
+  if(!m)return;
+  const srcType=m.type||'mini'; // 'mini'|'civil' (miniM 전용)
+  const oldLabel=srcMode==='univm'?'대학대전':srcType==='civil'?'시빌워':'미니대전';
+  const newLabel=destMode==='univm'?'대학대전':destMode==='civil'?'시빌워':'미니대전';
+  if(oldLabel===newLabel)return;
+  // 배열 이동
+  srcArr.splice(srcIdx,1);
+  if(destMode==='univm'){
+    const {type:_t,...rest}=m; // type 필드 제거
+    univM.unshift(rest);
+    var moved=rest;
+  } else {
+    m.type=destMode==='civil'?'civil':'mini';
+    miniM.unshift(m);
+    var moved=m;
+  }
+  // player.history mode 레이블 업데이트
+  const mid=moved._id;
+  players.forEach(p=>(p.history||[]).forEach(h=>{if(h.matchId===mid)h.mode=newLabel;}));
+  if(typeof fixPoints==='function')fixPoints();
+  save();render();
+}
+
+// 팀 경기 이동 팝업 열기
+function openMoveMatchPop(btn,srcMode,srcIdx){
+  const arr=srcMode==='mini'?miniM:univM;
+  const m=arr[srcIdx];if(!m)return;
+  const srcType=m.type||'mini';
+  const opts=[];
+  if(srcMode==='mini'&&srcType==='mini'){
+    opts.push({l:'⚔️ 시빌워로 이동',fn:()=>moveTeamMatch('mini',srcIdx,'civil')});
+    opts.push({l:'🏟️ 대학대전으로 이동',fn:()=>moveTeamMatch('mini',srcIdx,'univm')});
+  } else if(srcMode==='mini'&&srcType==='civil'){
+    opts.push({l:'⚡ 미니대전으로 이동',fn:()=>moveTeamMatch('mini',srcIdx,'mini')});
+    opts.push({l:'🏟️ 대학대전으로 이동',fn:()=>moveTeamMatch('mini',srcIdx,'univm')});
+  } else if(srcMode==='univm'){
+    opts.push({l:'⚡ 미니대전으로 이동',fn:()=>moveTeamMatch('univm',srcIdx,'mini')});
+    opts.push({l:'⚔️ 시빌워로 이동',fn:()=>moveTeamMatch('univm',srcIdx,'civil')});
+  }
+  _showMovePop(btn,opts);
 }
 
 function delRec(mode,i){

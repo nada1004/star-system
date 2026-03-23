@@ -217,6 +217,7 @@ function indRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">전체삭제</button>`:'';
+    const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'ind')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
@@ -226,7 +227,7 @@ function indRecordsHTML(){
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
+        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${moveBtn}${delBtn}</span>
       </summary>
       <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
@@ -283,6 +284,39 @@ function deleteIndSession(ids){
   indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
   indM=indM.filter(m=>!ids.includes(m._id));
   save();render();
+}
+
+// 개인전/끝장전 세션 이동
+function moveIndSession(idsArr, srcMode, destMode){
+  const srcArr=srcMode==='ind'?indM:gjM;
+  const games=srcArr.filter(m=>idsArr.includes(m._id));
+  if(!games.length)return;
+  const sid=games[0].sid||games[0]._id;
+  const newLabel=destMode==='ind'?'개인전':destMode==='gj'?'끝장전':'프로리그';
+  if(destMode!=='prolabel'){
+    // 배열 간 이동
+    idsArr.forEach(id=>{const idx=srcArr.findIndex(m=>m._id===id);if(idx>=0)srcArr.splice(idx,1);});
+    const destArr=destMode==='ind'?indM:gjM;
+    destArr.unshift(...games);
+  }
+  // player.history mode 레이블 업데이트 (sid 또는 _id로 매칭)
+  players.forEach(p=>(p.history||[]).forEach(h=>{
+    if(h.matchId===sid||idsArr.includes(h.matchId))h.mode=newLabel;
+  }));
+  save();render();
+}
+
+// 개인전/끝장전 이동 팝업
+function openMoveIndPop(btn, idsArr, srcMode){
+  const opts=[];
+  if(srcMode==='ind'){
+    opts.push({l:'⚔️ 끝장전으로 이동',fn:()=>moveIndSession(idsArr,'ind','gj')});
+    opts.push({l:'🏅 프로리그로 표시 변경',fn:()=>moveIndSession(idsArr,'ind','prolabel')});
+  } else {
+    opts.push({l:'🎮 개인전으로 이동',fn:()=>moveIndSession(idsArr,'gj','ind')});
+    opts.push({l:'🏅 프로리그로 표시 변경',fn:()=>moveIndSession(idsArr,'gj','prolabel')});
+  }
+  if(typeof _showMovePop==='function') _showMovePop(btn,opts);
 }
 
 /* ══════════════════════════════════════
@@ -743,6 +777,7 @@ function gjRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">전체삭제</button>`:'';
+    const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'gj')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">🎴 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
@@ -752,7 +787,7 @@ function gjRecordsHTML(){
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${delBtn}</span>
+        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${moveBtn}${delBtn}</span>
       </summary>
       <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
