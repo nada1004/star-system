@@ -210,7 +210,21 @@ function indRecordsHTML(){
   if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
   const cur=histPage['ind'];
   const slice=total>pageSize?filteredSess.slice(cur*pageSize,(cur+1)*pageSize):filteredSess;
-  let h='';
+  const _indBulkOn=isLoggedIn&&!!_bulkModes['ind'];
+  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+    <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
+  </div>`:'';
+  if(_indBulkOn){
+    h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+        <input type="checkbox" id="bulk-all-ind" onchange="indBulkToggleAll('ind',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
+      </label>
+      <span id="bulk-cnt-ind" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+      <span style="color:var(--border2)">│</span>
+      <button onclick="bulkMoveInd('ind','gj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">⚔️ 끝장전으로 이동</button>
+      <button onclick="bulkMoveInd('ind','progj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #7c3aed;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🏅 프로리그 끝장전으로 이동</button>
+    </div>`;
+  }
   slice.forEach(s=>{
     const p1wins=s.games.filter(m=>m.wName===s.p1).length;
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
@@ -219,8 +233,9 @@ function indRecordsHTML(){
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">전체삭제</button>`:'';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'ind')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">📷 공유카드</button>`;
+    const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbInd}
         <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
@@ -287,7 +302,7 @@ function deleteIndSession(ids){
 }
 
 // 개인전/끝장전 세션 이동
-function moveIndSession(idsArr, srcMode, destMode){
+function moveIndSession(idsArr, srcMode, destMode, _batch=false){
   const srcArr=(srcMode==='ind')?indM:gjM;
   const games=srcArr.filter(m=>idsArr.includes(m._id));
   if(!games.length)return;
@@ -327,8 +342,33 @@ function moveIndSession(idsArr, srcMode, destMode){
       if(h.matchId===sid||idsArr.includes(h.matchId))h.mode=newLabel;
     }));
   }
+  if(!_batch){save();render();}
+}
+
+// ── 일괄 선택 이동 (개인전/끝장전) ──────────────────────────
+function _indBulkCountUpdate(key){
+  const n=[...document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]:checked`)].length;
+  const el=document.getElementById('bulk-cnt-'+key);
+  if(el)el.textContent=n+'개 선택됨';
+  const allCbs=document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]`);
+  const allChk=document.getElementById('bulk-all-'+key);
+  if(allChk&&allCbs.length) allChk.indeterminate=n>0&&n<allCbs.length, allChk.checked=n===allCbs.length;
+}
+function indBulkToggleAll(key,checked){
+  document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]`).forEach(cb=>cb.checked=checked);
+  _indBulkCountUpdate(key);
+}
+function bulkMoveInd(bulkKey,destMode){
+  const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
+  if(!cbs.length){alert('선택된 세션이 없습니다.');return;}
+  const allIds=cbs.map(cb=>JSON.parse(cb.dataset.bids.replace(/'/g,'"')));
+  if(!confirm(allIds.length+'개 세션을 이동하시겠습니까?'))return;
+  const srcMode=bulkKey==='ind'?'ind':'gj';
+  allIds.forEach(ids=>moveIndSession(ids,srcMode,destMode,true));
+  if(typeof _bulkModes!=='undefined') _bulkModes[bulkKey]=false;
   save();render();
 }
+// ─────────────────────────────────────────────────────────────
 
 // 개인전/끝장전 이동 팝업
 function openMoveIndPop(btn, idsArr, srcMode){
@@ -796,7 +836,24 @@ function gjRecordsHTML(proOnly){
   if(histPage['gj']>=totalPages) histPage['gj']=Math.max(0,totalPages-1);
   const cur=histPage['gj'];
   const slice=total>pageSize?filteredSessGj.slice(cur*pageSize,(cur+1)*pageSize):filteredSessGj;
-  let h='';
+  const _gjBulkKey=proOnly?'pro_gj':'gj';
+  const _gjBulkOn=isLoggedIn&&!!_bulkModes[_gjBulkKey];
+  const _gjBulkDests=proOnly
+    ?[{l:'⚔️ 일반 끝장전',d:'ungj'},{l:'🎮 개인전',d:'ind'}]
+    :[{l:'🎮 개인전',d:'ind'},{l:'🏅 프로리그 끝장전',d:'progj'}];
+  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+    <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
+  </div>`:'';
+  if(_gjBulkOn){
+    h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+        <input type="checkbox" id="bulk-all-${_gjBulkKey}" onchange="indBulkToggleAll('${_gjBulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
+      </label>
+      <span id="bulk-cnt-${_gjBulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+      <span style="color:var(--border2)">│</span>
+      ${_gjBulkDests.map(bd=>`<button onclick="bulkMoveInd('${_gjBulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+    </div>`;
+  }
   slice.forEach(s=>{
     const p1wins=s.games.filter(m=>m.wName===s.p1).length;
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
@@ -806,8 +863,9 @@ function gjRecordsHTML(proOnly){
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">🎴 공유카드</button>`;
+    const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbGj}
         <span style="font-size:11px;color:${s.d?'var(--gray-l)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
         <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>

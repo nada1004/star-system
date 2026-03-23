@@ -577,11 +577,19 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
 
   const initQ2=(window._recQ&&window._recQ[mode])||'';
+  // 일괄 이동 컨텍스트
+  const _canBulk=isLoggedIn&&(mode==='mini'||mode==='univm');
+  const _bulkKey=(mode==='mini'&&histSub==='civil')?'civil':mode;
+  const _bulkOn=_canBulk&&!!_bulkModes[_bulkKey];
+  const _bulkDests=_bulkKey==='mini'?[{l:'⚔️ 시빌워',d:'civil'},{l:'🏟️ 대학대전',d:'univm'}]
+    :_bulkKey==='civil'?[{l:'⚡ 미니대전',d:'mini'},{l:'🏟️ 대학대전',d:'univm'}]
+    :_bulkKey==='univm'?[{l:'⚡ 미니대전',d:'mini'},{l:'⚔️ 시빌워',d:'civil'}]:[];
   const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
+    ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
     <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
       <input type="text" id="rq-${mode}" placeholder="🔍 선수/대학 검색..." value="${initQ2}"
         oninput="if(!window._recQ)window._recQ={};window._recQ['${mode}']=this.value;histPage['${mode}']=0;render()"
@@ -589,6 +597,14 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ2?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
     </div>
   </div>
+  ${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+      <input type="checkbox" id="bulk-all-${_bulkKey}" onchange="bulkToggleAll('${_bulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
+    </label>
+    <span id="bulk-cnt-${_bulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+    <span style="color:var(--border2)">│</span>
+    ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+  </div>`:''}
   <div id="rq-empty-${mode}" style="display:none"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어를 사용해보세요</div><button class="btn btn-w" onclick="recClearSearch('${mode}')">🔄 초기화</button></div></div>`;
 
   if(!totalItems){
@@ -619,6 +635,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
     h+=`<div class="rec-summary" data-hay="${hayData}" style="border-left:3px solid ${_wBorderCol}">
       <div class="rec-sum-header">
+        ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--gray-l);font-size:10px;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):''}</span>
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
@@ -1153,7 +1170,7 @@ function _movePop_pick(i){ const fn=window._movePopOpts&&window._movePopOpts[i]&
 function closeMovePop(){ if(_movePop){_movePop.remove();_movePop=null;} document.removeEventListener('click',_movePopOutside); }
 
 // 팀 경기 이동 (mini ↔ univm ↔ civil)
-function moveTeamMatch(srcMode, srcIdx, destMode){
+function moveTeamMatch(srcMode, srcIdx, destMode, _batch=false){
   const srcArr=srcMode==='mini'?miniM:univM;
   const m=srcArr[srcIdx];
   if(!m)return;
@@ -1175,9 +1192,40 @@ function moveTeamMatch(srcMode, srcIdx, destMode){
   // player.history mode 레이블 업데이트
   const mid=moved._id;
   players.forEach(p=>(p.history||[]).forEach(h=>{if(h.matchId===mid)h.mode=newLabel;}));
+  if(!_batch){if(typeof fixPoints==='function')fixPoints();save();render();}
+}
+
+// ── 일괄 선택 이동 ───────────────────────────────────────────
+let _bulkModes = {}; // {key:bool} — 'mini'|'civil'|'univm'
+
+function toggleBulkMode(key){
+  _bulkModes[key]=!_bulkModes[key];
+  render();
+}
+function bulkToggleAll(key,checked){
+  document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]`).forEach(cb=>cb.checked=checked);
+  _bulkCountUpdate(key);
+}
+function _bulkCountUpdate(key){
+  const n=[...document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]:checked`)].length;
+  const el=document.getElementById('bulk-cnt-'+key);
+  if(el)el.textContent=n+'개 선택됨';
+  const allCbs=document.querySelectorAll(`.bulk-cb[data-bkey="${key}"]`);
+  const allChk=document.getElementById('bulk-all-'+key);
+  if(allChk&&allCbs.length) allChk.indeterminate=n>0&&n<allCbs.length, allChk.checked=n===allCbs.length;
+}
+function bulkMoveTeam(bulkKey,destMode){
+  const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
+  if(!cbs.length){alert('선택된 경기가 없습니다.');return;}
+  const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
+  if(!confirm(indices.length+'개 경기를 이동하시겠습니까?'))return;
+  const srcMode=bulkKey==='univm'?'univm':'mini';
+  indices.forEach(idx=>moveTeamMatch(srcMode,idx,destMode,true));
+  _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
 }
+// ─────────────────────────────────────────────────────────────
 
 // 팀 경기 이동 팝업 열기
 function openMoveMatchPop(btn,srcMode,srcIdx){

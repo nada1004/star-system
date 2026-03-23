@@ -893,6 +893,9 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const _pnSafeChip = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
+  const _tierIdxChip = TIERS.indexOf(p.tier||'미정');
+  const _prevTierChip = _tierIdxChip > 0 ? TIERS[_tierIdxChip-1] : null;
+  const _nextTierChip = _tierIdxChip < TIERS.length-1 ? TIERS[_tierIdxChip+1] : null;
 
   popup.innerHTML = `
     <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
@@ -907,6 +910,13 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
     </div>
     ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
+    <div class="brd-move-popup-sep"></div>
+    <div style="padding:4px 6px 2px;font-size:11px;font-weight:700;color:var(--text3)">⭐ 티어</div>
+    <div style="display:flex;align-items:center;gap:5px;padding:3px 6px 8px">
+      <button onclick="${_prevTierChip?`setBrdTier('${playerName}','${_prevTierChip}')`:'void 0'}" ${!_prevTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTierChip?'.3':'1'}">▲</button>
+      <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
+      <button onclick="${_nextTierChip?`setBrdTier('${playerName}','${_nextTierChip}')`:'void 0'}" ${!_nextTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTierChip?'.3':'1'}">▼</button>
+    </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
     <div style="display:flex;gap:6px;padding:0 6px 6px">
@@ -988,6 +998,9 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
 
   const _pnSafe = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
   const _curIcon = getStatusIcon(playerName);
+  const _tierIdx = TIERS.indexOf(p.tier||'미정');
+  const _prevTier = _tierIdx > 0 ? TIERS[_tierIdx-1] : null;
+  const _nextTier = _tierIdx < TIERS.length-1 ? TIERS[_tierIdx+1] : null;
   popup.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
       <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${playerName} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${univName})</span></div>
@@ -1010,6 +1023,14 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
         <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()" style="font-size:11px">설정</button>
       </div>
       ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
+    </div>
+    <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">⭐ 티어</div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <button onclick="${_prevTier?`setBrdTier('${playerName}','${_prevTier}')`:'void 0'}" ${!_prevTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTier?'.3':'1'}">▲</button>
+        <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
+        <button onclick="${_nextTier?`setBrdTier('${playerName}','${_nextTier}')`:'void 0'}" ${!_nextTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTier?'.3':'1'}">▼</button>
+      </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘</div>
@@ -1065,6 +1086,15 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   }
 }
 
+function setBrdTier(playerName, newTier){
+  const p=players.find(x=>x.name===playerName);
+  if(!p)return;
+  p.tier=newTier;
+  save();
+  _brdClose();
+  _refreshBoardCard(p.univ);
+  _brdToast('⭐ 티어 변경: '+newTier);
+}
 function setBrdRole(playerName, role){
   const p=players.find(x=>x.name===playerName);
   if(!p)return;
