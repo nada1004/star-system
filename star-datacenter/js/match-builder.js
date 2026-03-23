@@ -4,16 +4,11 @@
 function rMini(C,T){
   T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   if(!isLoggedIn && miniSub==='input') miniSub='records';
-  // 타입 토글
-  const typeToggle=`<div style="display:flex;gap:6px;margin-bottom:10px">
-    <button class="btn btn-sm ${miniType==='mini'?'btn-b':'btn-w'}" onclick="miniType='mini';miniSub='records';render()">⚡ 미니대전</button>
-    <button class="btn btn-sm ${miniType==='civil'?'btn-b':'btn-w'}" onclick="miniType='civil';miniSub='records';render()">⚔️ 시빌워</button>
-  </div>`;
   if(miniType==='civil' && miniSub==='rank') miniSub='records';
   const subOpts = miniType==='civil'
     ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
-  let h=typeToggle+stabs(miniSub,subOpts);
+  let h=stabs(miniSub,subOpts);
   if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('mini');
   }

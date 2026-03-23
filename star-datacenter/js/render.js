@@ -12,7 +12,7 @@ function sw(t,el){
   // 통합탭 서브탭 초기값 (탭 진입 시에만 설정)
   if(t==='ind')      _mergedIndSub='ind';
   if(t==='gj')       _mergedIndSub='gj';
-  if(t==='univm'||t==='mini') _mergedUnivSub='mini';
+  if(t==='univm'||t==='mini') { _mergedUnivSub='mini'; miniType='mini'; }
   if(t==='univck')   _mergedUnivSub='univck';
   if(t==='comp')     _mergedCompSub='comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
@@ -1017,7 +1017,7 @@ function buildUnivDetailHTML(univName){
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
 var _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
-var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
+var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
 var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'comp' | 'all'
 
@@ -1042,11 +1042,12 @@ function rMergedInd(C, T) {
 
 function rMergedUnivM(C, T) {
   const bar = _mergedSubBar(
-    [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
+    [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
     _mergedUnivSub, '_mergedUnivSub'
   );
   const sub = document.createElement('div');
-  if(_mergedUnivSub==='mini')        { if(typeof rMini==='function')  rMini(sub,T); }
+  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
+  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T); }
   else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
   else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
   C.innerHTML = bar;
