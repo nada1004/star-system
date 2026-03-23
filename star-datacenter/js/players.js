@@ -2,6 +2,14 @@
    성적 관리
 ══════════════════════════════════════ */
 let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
+function toggleStatusLegend(){
+  const row=document.getElementById('status-legend-row');
+  const btn=document.getElementById('status-legend-btn');
+  if(!row)return;
+  const open=row.style.display==='table-row';
+  row.style.display=open?'none':'table-row';
+  if(btn)btn.textContent=open?'❓':'✕';
+}
 let totalSearch=''; // 스트리머 탭 이름 검색
 let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let totalShowRetired=false; // 은퇴 선수 표시
@@ -38,9 +46,14 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동 <button id="status-legend-btn" onclick="toggleStatusLegend()" title="아이콘 설명" style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:0 1px;line-height:1;vertical-align:middle;opacity:.7">❓</button></th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
-  </tr></thead><tbody>`;
+  </tr></thead><tbody>
+  <tr id="status-legend-row" class="no-export" style="display:none"><td colspan="12" style="padding:8px 14px;background:var(--bg2);border-bottom:2px solid var(--border)">
+    <div style="display:flex;flex-wrap:wrap;gap:4px 14px">
+      ${Object.entries(STATUS_ICON_DEFS).filter(([k])=>k!=='none').map(([,d])=>`<span style="font-size:12px;white-space:nowrap;color:var(--text2)">${d.label}</span>`).join('')}
+    </div>
+  </td></tr>`;
 
   // 전체 순위 맵 (points 기준)
   const _allRanked = [...players].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
