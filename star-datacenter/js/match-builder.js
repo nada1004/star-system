@@ -288,21 +288,45 @@ function deleteIndSession(ids){
 
 // 개인전/끝장전 세션 이동
 function moveIndSession(idsArr, srcMode, destMode){
-  const srcArr=srcMode==='ind'?indM:gjM;
+  const srcArr=(srcMode==='ind')?indM:gjM;
   const games=srcArr.filter(m=>idsArr.includes(m._id));
   if(!games.length)return;
   const sid=games[0].sid||games[0]._id;
-  const newLabel=destMode==='ind'?'개인전':destMode==='gj'?'끝장전':'프로리그';
-  if(destMode!=='prolabel'){
-    // 배열 간 이동
+  let newLabel='';
+
+  if(destMode==='ind'){
+    // → 개인전 배열
     idsArr.forEach(id=>{const idx=srcArr.findIndex(m=>m._id===id);if(idx>=0)srcArr.splice(idx,1);});
-    const destArr=destMode==='ind'?indM:gjM;
-    destArr.unshift(...games);
+    games.forEach(g=>{delete g._proLabel;});
+    indM.unshift(...games);
+    newLabel='개인전';
+  } else if(destMode==='gj'){
+    // → 일반 끝장전 배열 (프로 레이블 제거)
+    idsArr.forEach(id=>{const idx=srcArr.findIndex(m=>m._id===id);if(idx>=0)srcArr.splice(idx,1);});
+    games.forEach(g=>{delete g._proLabel;});
+    gjM.unshift(...games);
+    newLabel='끝장전';
+  } else if(destMode==='progj'){
+    // → 프로리그 끝장전 (_proLabel=true, ind면 gjM으로 이동)
+    if(srcMode==='ind'){
+      idsArr.forEach(id=>{const idx=indM.findIndex(m=>m._id===id);if(idx>=0)indM.splice(idx,1);});
+      games.forEach(g=>{g._proLabel=true;});
+      gjM.unshift(...games);
+    } else {
+      games.forEach(g=>{g._proLabel=true;});
+    }
+    newLabel='프로리그';
+  } else if(destMode==='ungj'){
+    // 프로리그 끝장전 → 일반 끝장전 (레이블만 제거, gjM 유지)
+    games.forEach(g=>{delete g._proLabel;});
+    newLabel='끝장전';
   }
-  // player.history mode 레이블 업데이트 (sid 또는 _id로 매칭)
-  players.forEach(p=>(p.history||[]).forEach(h=>{
-    if(h.matchId===sid||idsArr.includes(h.matchId))h.mode=newLabel;
-  }));
+
+  if(newLabel){
+    players.forEach(p=>(p.history||[]).forEach(h=>{
+      if(h.matchId===sid||idsArr.includes(h.matchId))h.mode=newLabel;
+    }));
+  }
   save();render();
 }
 
@@ -311,10 +335,13 @@ function openMoveIndPop(btn, idsArr, srcMode){
   const opts=[];
   if(srcMode==='ind'){
     opts.push({l:'⚔️ 끝장전으로 이동',fn:()=>moveIndSession(idsArr,'ind','gj')});
-    opts.push({l:'🏅 프로리그로 표시 변경',fn:()=>moveIndSession(idsArr,'ind','prolabel')});
-  } else {
+    opts.push({l:'🏅 프로리그 끝장전으로 이동',fn:()=>moveIndSession(idsArr,'ind','progj')});
+  } else if(srcMode==='gj'){
     opts.push({l:'🎮 개인전으로 이동',fn:()=>moveIndSession(idsArr,'gj','ind')});
-    opts.push({l:'🏅 프로리그로 표시 변경',fn:()=>moveIndSession(idsArr,'gj','prolabel')});
+    opts.push({l:'🏅 프로리그 끝장전으로 이동',fn:()=>moveIndSession(idsArr,'gj','progj')});
+  } else if(srcMode==='pro_gj'){
+    opts.push({l:'⚔️ 일반 끝장전으로 이동',fn:()=>moveIndSession(idsArr,'pro_gj','ungj')});
+    opts.push({l:'🎮 개인전으로 이동',fn:()=>moveIndSession(idsArr,'pro_gj','ind')});
   }
   if(typeof _showMovePop==='function') _showMovePop(btn,opts);
 }
@@ -551,22 +578,21 @@ function deleteGjSession(idsArr){
 ══════════════════════════════════════ */
 let _gjInput={date:'',playerA:'',playerB:'',games:[]};
 
-function rGJ(C,T){
-  T.innerText='⚔️ 끝장전';
+function rGJ(C,T,proOnly){
+  T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
   if(!isLoggedIn && gjSub==='input') gjSub='records';
-  const subOpts=[
-    {id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},
-    {id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},
-    {id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}
-  ];
+  const subOpts=proOnly
+    ?[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
+    :[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
+  if(proOnly&&gjSub==='input') gjSub='records';
   let h=stabs(gjSub,subOpts);
   if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
-  if(gjSub==='input'&&isLoggedIn){
+  if(gjSub==='input'&&isLoggedIn&&!proOnly){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
-    h+=gjRankHTML();
+    h+=gjRankHTML(proOnly);
   } else {
-    h+=gjRecordsHTML();
+    h+=gjRecordsHTML(proOnly);
   }
   C.innerHTML=h;
 }
@@ -677,10 +703,11 @@ function gjDirectSave(){
   },200);
 }
 
-function gjRankHTML(){
+function gjRankHTML(proOnly){
   const sc={};
   const vs={};
-  gjM.forEach(m=>{
+  const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
+  _gjSrc.forEach(m=>{
     if(!sc[m.wName])sc[m.wName]={w:0,l:0};
     if(!sc[m.lName])sc[m.lName]={w:0,l:0};
     sc[m.wName].w++; sc[m.lName].l++;
@@ -739,15 +766,14 @@ function gjRankHTML(){
   return h+`</tbody></table>`+_pageNav;
 }
 
-function gjRecordsHTML(){
-  if(!gjM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+function gjRecordsHTML(proOnly){
+  const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
+  if(!_gjSrc.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
   // 세션 그룹화
-  // - sid 있음: sid+페어 기준 (비연속이어도 같은 페어끼리 합침 → 여러 쌍 동시 붙여넣기 지원)
-  // - sid 없음: 연속된 같은 날짜+페어 기준 (기존 방식)
   const sessions=[];
-  const sidPairMap=new Map(); // sid+pair→session (비연속 병합용)
+  const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
-  gjM.forEach((m)=>{
+  _gjSrc.forEach((m)=>{
     const pair=[m.wName,m.lName].sort();
     const k = m.sid ? `${m.sid}|${pair[0]}|${pair[1]}` : `${m.d||''}|${pair[0]}|${pair[1]}`;
     if(k!==lastKey||!lastSess){
@@ -777,7 +803,8 @@ function gjRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">전체삭제</button>`:'';
-    const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'gj')">↗ 이동</button>`:'';
+    const _gjMoveCtx=proOnly?'pro_gj':'gj';
+    const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${s.p1.replace(/'/g,"\\'")}','${s.p2.replace(/'/g,"\\'")}',${p1wins},${p2wins},'${s.d}','${winner.replace(/'/g,"\\'")}')">🎴 공유카드</button>`;
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">
