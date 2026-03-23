@@ -57,10 +57,22 @@ function init(){
       const params = new URLSearchParams(window.location.search);
       const playerParam = params.get('player');
       const univParam = params.get('univ');
+      const queryParam = params.get('query');
       if(playerParam && typeof openPlayerModal==='function'){
         openPlayerModal(decodeURIComponent(playerParam));
       } else if(univParam && typeof openUnivModal==='function'){
         openUnivModal(decodeURIComponent(univParam));
+      } else if(queryParam){
+        const q = decodeURIComponent(queryParam);
+        const exact = players.find(p=>p.name===q);
+        if(exact && typeof openPlayerModal==='function'){
+          openPlayerModal(q);
+        } else {
+          if(typeof sw==='function') sw('stats');
+          if(typeof statsSub!=='undefined') statsSub='psearch';
+          if(typeof _psearchQ!=='undefined') _psearchQ=q;
+          if(typeof render==='function') render();
+        }
       }
     }catch(e){}
   }, 1200);

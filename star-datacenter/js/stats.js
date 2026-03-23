@@ -46,6 +46,7 @@ function rStats(C,T){
       {id:'seasonal',lbl:'📅 요일/시즌 승률'},
     ]},
     {label:'🔍 기록실',tabs:[
+      {id:'psearch',lbl:'🔍 스트리머 검색'},
       {id:'sharecard',lbl:'🎴 공유 카드'},
       {id:'advsearch',lbl:'🔍 고급 검색'},
       ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
@@ -94,6 +95,7 @@ function rStats(C,T){
   else if(statsSub==='univmatrix')h+=_cached('univmatrix', statsUnivMatrixHTML);
   else if(statsSub==='racetrend')h+=statsRaceTrendHTML(); // 차트 초기화 필요
   else if(statsSub==='csvexport')h+=statsCsvExportHTML();
+  else if(statsSub==='psearch')   h+=statsPlayerSearchHTML();
   else if(statsSub==='sharecard')h+=statsShareCardHTML();
   else if(statsSub==='advsearch')h+=statsAdvSearchHTML(); // 검색 필터 상태 있음
   else if(statsSub==='killer')   h+=_cached('killer', statsKillerHTML);
@@ -271,7 +273,7 @@ function statsEloHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
       <div style="position:relative">
-        <input id="elo-search-input" type="text" placeholder="🔍 선수 이름 검색..."
+        <input id="elo-search-input" type="text" placeholder="🔍 스트리머 검색..."
           value="${_eloSelPlayer}"
           style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
           oninput="eloSearchFilter(this.value)"
@@ -284,7 +286,6 @@ function statsEloHTML(){
           </div>`).join('')}
         </div>
       </div>
-      ${selP?`<span class="ubadge" style="background:${gc(selP.univ)}">${selP.univ}</span>`:''}
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
     <canvas id="eloChart" style="width:100%;max-height:300px"></canvas>
@@ -422,7 +423,7 @@ function statsGrowthHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 선수 성장 곡선</h4>
       <div style="position:relative">
-        <input id="growth-search-input" type="text" placeholder="🔍 선수 이름 검색..."
+        <input id="growth-search-input" type="text" placeholder="🔍 스트리머 검색..."
           value="${_growthSel}"
           style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
           oninput="growthSearchFilter(this.value)"
@@ -435,7 +436,6 @@ function statsGrowthHTML(){
           </div>`).join('')}
         </div>
       </div>
-      ${selP?`<span class="ubadge" style="background:${gc(selP.univ)}">${selP.univ}</span>`:''}
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
     <canvas id="growthChart" style="width:100%;max-height:300px"></canvas>
@@ -2796,6 +2796,74 @@ function csvDownloadMaps(){
 /* ══════════════════════════════════════
    9. 선수 검색 고급 필터
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   스트리머 검색
+══════════════════════════════════════ */
+let _psearchQ = '';
+function statsPlayerSearchHTML(){
+  const q = _psearchQ.trim().toLowerCase();
+  const list = q
+    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q))
+    : [];
+  return `<div class="ssec">
+    <h4 style="margin:0 0 12px">🔍 스트리머 검색</h4>
+    <div style="position:relative;max-width:400px;margin-bottom:14px">
+      <input id="psearch-input" type="text" value="${_psearchQ.replace(/"/g,'&quot;')}"
+        placeholder="🔍 스트리머 이름 / 대학 / 티어 검색..."
+        oninput="_psearchQ=this.value;_statsPlayerSearchUpdate()"
+        style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:14px;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif"
+        autofocus>
+      ${_psearchQ?`<button onclick="_psearchQ='';render()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1">✕</button>`:''}
+    </div>
+    <div id="psearch-results">
+      ${q && !list.length ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>` : ''}
+      ${list.map(p=>{
+        const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
+        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
+          </div>
+          ${p.tier?`<div>${getTierBadge(p.tier)}</div>`:''}
+          <div style="text-align:right;font-size:11px;color:var(--text3)">
+            <div style="font-weight:700;color:${wr===null?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${wr===null?'-':wr+'%'}</div>
+            <div>${p.win}승 ${p.loss}패</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin-top:6px">
+      💡 URL에 <code>?query=이름</code> 을 붙이면 바로 해당 스트리머 정보가 열립니다
+    </div>
+  </div>`;
+}
+function _statsPlayerSearchUpdate(){
+  const q = _psearchQ.trim().toLowerCase();
+  const list = q
+    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q))
+    : [];
+  const res = document.getElementById('psearch-results');
+  if(!res) return;
+  res.innerHTML = (q && !list.length)
+    ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>`
+    : list.map(p=>{
+        const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
+        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
+          </div>
+          ${p.tier?`<div>${getTierBadge(p.tier)}</div>`:''}
+          <div style="text-align:right;font-size:11px;color:var(--text3)">
+            <div style="font-weight:700;color:${wr===null?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${wr===null?'-':wr+'%'}</div>
+            <div>${p.win}승 ${p.loss}패</div>
+          </div>
+        </div>`;
+      }).join('');
+}
+
 let _advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'',name:'',sort:'elo', shuffle: false};
 function statsAdvSearchHTML(){
   const f=_advFilter;
