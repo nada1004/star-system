@@ -196,12 +196,6 @@ function histAllHTML(){
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <div style="display:flex;gap:4px;align-items:center;margin-left:auto">
-      <input type="text" placeholder="🔍 선수/대학 검색..." value="${initQ}"
-        oninput="if(!window._recQ)window._recQ={};window._recQ['all']=this.value;histPage['all']=0;render()"
-        style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:150px">
-      ${initQ?`<button onclick="if(!window._recQ)window._recQ={};window._recQ['all']='';render()" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px">✕</button>`:''}
-    </div>
     <span style="font-size:11px;color:var(--gray-l)">${_typeFiltered.length}건</span>
   </div>
   <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
@@ -520,12 +514,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
-      <input type="text" id="rq-${mode}" placeholder="🔍 스트리머/대학 검색..." value="${initQ}"
-        oninput="recFilterInPlace('${mode}',this.value)"
-        style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:150px">
-      <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
-    </div>
   </div>`;
     return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
@@ -590,12 +578,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
     ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
-    <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
-      <input type="text" id="rq-${mode}" placeholder="🔍 스트리머/대학 검색..." value="${initQ2}"
-        oninput="recFilterInPlace('${mode}',this.value)"
-        style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:150px">
-      <button id="rq-clear-${mode}" onclick="recClearSearch('${mode}')" style="display:${initQ2?'inline-block':'none'};background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:16px;line-height:1;padding:0 2px" title="검색 초기화">✕</button>
-    </div>
   </div>
   ${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
     <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">

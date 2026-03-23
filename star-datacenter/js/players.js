@@ -16,11 +16,6 @@ function rTotal(C,T){
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <button class="pill ${totalHideNoRecord?'on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 스트리머 숨기기</button>
     <button class="pill ${totalShowRetired?'on':''}" onclick="totalShowRetired=!totalShowRetired;render()" style="${totalShowRetired?'background:#6b7280;border-color:#6b7280;color:#fff':''}">🎗️ 은퇴 스트리머 포함</button>
-    <div style="margin-left:auto;position:relative;display:inline-block">
-      <input type="text" id="total-search" value="${totalSearch}" placeholder="🔍 이름/대학/종족/성별 검색..."
-        oninput="(function(inp){totalSearch=inp.value;window._searchFocusId='total-search';clearTimeout(window._totalSearchTm);window._totalSearchTm=setTimeout(function(){render();window._searchFocusId=null;},200);})(this)"
-        style="padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;width:130px">
-    </div>
   </div>`;
 
     let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
