@@ -103,8 +103,10 @@ function applyLoginState(){
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
+  const remoteDownVis=document.getElementById('btnRemoteDownloadVis');
   if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
   if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
+  if(remoteDownVis)remoteDownVis.style.display=isLoggedIn?'flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
@@ -129,6 +131,34 @@ function doExport(){
   }catch(e){alert('내보내기 오류: '+e.message);}
 }
 
+async function doRemoteDownload(){
+  const _RAW='https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
+  const _CDN='https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  gsSetStatus&&gsSetStatus('☁️ 원격 데이터 다운로드 중...','var(--blue)');
+  let text=null;
+  for(const url of [_RAW,_CDN]){
+    try{
+      const res=await Promise.race([fetch(url,{cache:'no-store',mode:'cors'}),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);
+      if(!res||!res.ok)continue;
+      text=await res.text();
+      if(text&&text.trim())break;
+    }catch(e){continue;}
+  }
+  if(!text){gsSetStatus&&gsSetStatus('','');alert('원격 데이터를 가져오지 못했습니다.');return;}
+  try{
+    // 유효한 JSON인지 확인
+    JSON.parse(text);
+    const b=new Blob([text],{type:'application/json'});
+    const url=URL.createObjectURL(b);
+    const a=document.createElement('a');
+    const today=new Date().toISOString().slice(0,10);
+    a.href=url;a.download=`remote_data_${today}.json`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+    gsSetStatus&&gsSetStatus('✅ 원격 데이터 다운로드 완료','var(--green)');
+    setTimeout(()=>gsSetStatus&&gsSetStatus('',''),3000);
+  }catch(e){gsSetStatus&&gsSetStatus('','');alert('데이터 파싱 오류: '+e.message);}
+}
 function doImport(){document.getElementById('fi').click();}
 function doFile(inp){
   const r=new FileReader();
