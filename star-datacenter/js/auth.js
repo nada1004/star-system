@@ -103,10 +103,8 @@ function applyLoginState(){
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
-  const remoteDownVis=document.getElementById('btnRemoteDownloadVis');
   if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
   if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
-  if(remoteDownVis)remoteDownVis.style.display=isLoggedIn?'flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
@@ -131,52 +129,6 @@ function doExport(){
   }catch(e){alert('내보내기 오류: '+e.message);}
 }
 
-async function doRemoteDownload(){
-  const _RAW='https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
-  const _API='https://api.github.com/repos/nada1004/star-system/contents/data.json';
-  const _CDN='https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
-  const _PROXY='https://api.allorigins.win/raw?url='+encodeURIComponent(_RAW);
-  gsSetStatus&&gsSetStatus('☁️ 원격 데이터 다운로드 중...','var(--blue)');
-  let text=null;
-  for(const url of [_RAW,_CDN,_API,_PROXY]){
-    try{
-      const res=await Promise.race([fetch(url,{cache:'no-store',mode:'cors'}),new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);
-      if(!res||!res.ok)continue;
-      const t=await res.text();
-      if(!t||!t.trim())continue;
-      let candidate=null;
-      try{
-        const raw=JSON.parse(t);
-        if(raw&&raw.content&&raw.encoding==='base64'){
-          // GitHub API base64
-          const b64=raw.content.replace(/\s/g,'');
-          const bin=atob(b64);
-          const bytes=new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-          candidate=new TextDecoder('utf-8').decode(bytes);
-        }else{candidate=t;}
-      }catch(e){candidate=t;}
-      // BOM 제거 후 JSON 유효성 확인
-      if(candidate){
-        const clean=candidate.replace(/^\uFEFF/,'');
-        try{JSON.parse(clean);text=clean;break;}catch(e){continue;}
-      }
-    }catch(e){continue;}
-  }
-  if(!text){gsSetStatus&&gsSetStatus('','');alert('원격 데이터를 가져오지 못했습니다.');return;}
-  try{
-    JSON.parse(text);
-    const b=new Blob([text],{type:'application/json'});
-    const url=URL.createObjectURL(b);
-    const a=document.createElement('a');
-    const today=new Date().toISOString().slice(0,10);
-    a.href=url;a.download=`remote_data_${today}.json`;
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
-    gsSetStatus&&gsSetStatus('✅ 원격 데이터 다운로드 완료','var(--green)');
-    setTimeout(()=>gsSetStatus&&gsSetStatus('',''),3000);
-  }catch(e){gsSetStatus&&gsSetStatus('','');alert('데이터 파싱 오류: '+e.message);}
-}
 function doImport(){document.getElementById('fi').click();}
 function doFile(inp){
   const r=new FileReader();
