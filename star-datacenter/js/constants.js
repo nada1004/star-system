@@ -134,6 +134,12 @@ const STATUS_ICON_DEFS = {
   cry:     { label: '😭 울음',  emoji: '😭' },
   blank:   { label: '😐 생각없음', emoji: '😐' },
   sad:     { label: '😢 슬픔',  emoji: '😢' },
+  sob:     { label: '😩 통곡',  emoji: '😩' },
+  new:     { label: '🆕 NEW',   emoji: '🆕' },
+  hot:     { label: '🌶️ HOT',   emoji: '🌶️' },
+  cool:    { label: '😎 COOL',  emoji: '😎' },
+  star2:   { label: '⭐ 스타',  emoji: '⭐' },
+  crown:   { label: '👑 왕관',  emoji: '👑' },
 };
 function getStatusIcon(name){ return playerStatusIcons[name]||''; }
 function setStatusIcon(name, iconId){
