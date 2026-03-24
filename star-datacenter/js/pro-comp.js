@@ -472,6 +472,8 @@ function proCompBracket(tn) {
     </div>`;
   }
   if (isLoggedIn) h += `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    ${rounds.length >= 2 && !tn.thirdPlace ? `<button class="btn btn-w btn-sm" onclick="proCompAddThirdPlace('${tn.id}')">🥉 3·4위전 추가</button>` : ''}
+    ${rounds.length >= 2 && tn.thirdPlace ? `<button class="btn btn-w btn-sm" onclick="proCompRemoveThirdPlace('${tn.id}')">🥉 3·4위전 제거</button>` : ''}
     <button class="btn btn-r btn-sm" onclick="proCompResetBracket('${tn.id}')">🔄 대진표 초기화</button>
   </div>`;
   return h;
@@ -508,7 +510,6 @@ function proCompInitBracket(tnId) {
     rounds.push(rnd);
   }
   tn.bracket = rounds;
-  if (rounds.length >= 2) tn.thirdPlace = {a:'', b:'', winner:'', map:''};
   save(); render();
 }
 
@@ -543,11 +544,9 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
       }
     }
   }
-  // 준결승 패자 → 3위전 자동 배정
+  // 준결승 패자 → 3위전 자동 배정 (3위전이 추가된 경우에만)
   const semiRi = tn.bracket.length - 2;
-  if (ri === semiRi && tn.bracket.length >= 2 && (mi === 0 || mi === 1)) {
-    if (!tn.thirdPlace) tn.thirdPlace = {a:'', b:'', winner:'', map:''};
-    // 기존 3위전 결과 revert
+  if (tn.thirdPlace && ri === semiRi && tn.bracket.length >= 2 && (mi === 0 || mi === 1)) {
     const thirdKey = `pbn_${tnId}_3rd`;
     if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
     tn.thirdPlace.winner = '';
@@ -692,7 +691,32 @@ function proCompInitBracketManual(tnId) {
   let cur=firstRound.length;
   while(cur>1){cur=Math.floor(cur/2);const rnd=[];for(let i=0;i<cur;i++)rnd.push({a:'',b:'',winner:''});rounds.push(rnd);}
   tn.bracket=rounds;
-  if (rounds.length >= 2) tn.thirdPlace = {a:'', b:'', winner:'', map:''};
+  save(); render();
+}
+
+function proCompAddThirdPlace(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  tn.thirdPlace = {a:'', b:'', winner:'', map:''};
+  // 준결승 결과가 이미 있으면 패자 자동 배정
+  const semiRi = (tn.bracket||[]).length - 2;
+  if (semiRi >= 0) {
+    const semiRnd = tn.bracket[semiRi] || [];
+    if (semiRnd[0] && semiRnd[0].winner && semiRnd[0].a && semiRnd[0].b)
+      tn.thirdPlace.a = semiRnd[0].winner==='A' ? semiRnd[0].b : semiRnd[0].a;
+    if (semiRnd[1] && semiRnd[1].winner && semiRnd[1].a && semiRnd[1].b)
+      tn.thirdPlace.b = semiRnd[1].winner==='A' ? semiRnd[1].b : semiRnd[1].a;
+  }
+  save(); render();
+}
+
+function proCompRemoveThirdPlace(tnId) {
+  if (!confirm('3·4위전을 제거하시겠습니까?')) return;
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const thirdKey = `pbn_${tnId}_3rd`;
+  if (tn.thirdPlace && tn.thirdPlace.winner) _revertProMatch(thirdKey);
+  tn.thirdPlace = null;
   save(); render();
 }
 
