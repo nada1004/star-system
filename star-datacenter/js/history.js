@@ -1059,6 +1059,23 @@ function getTourneyMatches(){
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
+    // 브라켓 winner-only 경기 (matchDetails에 a/b 없는 경우도 포함)
+    Object.entries(br.winners||{}).forEach(([key,winner])=>{
+      if(!winner)return;
+      const det=(br.matchDetails||{})[key];
+      if(det&&det.a&&det.b&&det.sa!=null&&det.sb!=null)return; // 이미 위에서 처리
+      const parts=key.split('-');
+      const r=parseInt(parts[0]),mi=parseInt(parts[1]);
+      const a=(det&&det.a)||br.slots&&br.slots[`${r}-${mi}-a`]||(r>0&&br.winners&&(br.winners[`${r-1}-${mi*2}`]||''))||'';
+      const b=(det&&det.b)||br.slots&&br.slots[`${r}-${mi}-b`]||(r>0&&br.winners&&(br.winners[`${r-1}-${mi*2+1}`]||''))||'';
+      if(!a||!b)return;
+      result.push({
+        _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
+        d:(det&&det.d)||'',n:tn.name,a,b,
+        sa:winner===a?1:0,sb:winner===b?1:0,sets:[],
+        grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
+      });
+    });
     // 수동 추가 브라켓 경기 (manualMatches)
     (br.manualMatches||[]).forEach((m,idx)=>{
       if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
