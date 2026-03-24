@@ -153,7 +153,7 @@ function rProComp(C, T) {
   const subOpts = [
     {id:'league', lbl:'📅 조별리그 일정'},
     {id:'grprank', lbl:'📊 조별 순위'},
-    {id:'tour', lbl:'🗂️ 대진표'},
+    {id:'tour', lbl:'🗂️ 토너먼트'},
     {id:'team', lbl:'🤝 팀전'},
     {id:'stats', lbl:'🏅 개인 순위'},
     ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),

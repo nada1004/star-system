@@ -17,7 +17,8 @@
     {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전'},
     {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그'},
     {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록'},
-    {id:'procomptn',grp:'프로리그', lbl:'🗂️ 토너먼트'},
+    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트'},
+    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
@@ -91,6 +92,7 @@
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='procomptn') h+=histProCompTourneyHTML();
+  else if(histSub==='procompteam') h+=histProCompTeamHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
 }
@@ -1397,7 +1399,7 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
    대전 기록 > 프로리그 대회 탭
 ══════════════════════════════════════ */
 function histProCompHTML() {
-  // proTourneys에서 완료된 경기만 추출 (조별리그 + 팀전)
+  // proTourneys에서 완료된 경기만 추출 (조별리그)
   const allItems = [];
   (proTourneys||[]).forEach(tn => {
     // 조별리그 경기
@@ -1408,19 +1410,6 @@ function histProCompHTML() {
         if (!m.a||!m.b||!m.winner) return;
         if (typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return;
         allItems.push({...m, _tnName:tn.name, _stage:'조별리그', _stageDetail:`GROUP ${gl}`, _stageColor:col});
-      });
-    });
-    // 팀전 게임
-    (tn.teamMatches||[]).forEach(tm => {
-      (tm.games||[]).forEach(g => {
-        if (!g.wName||!g.lName) return;
-        if (typeof passDateFilter==='function'&&!passDateFilter(tm.d||'')) return;
-        allItems.push({
-          a:g.wName, b:g.lName, winner:'A', d:tm.d||'', map:g.map||'',
-          _tnName:tn.name, _stage:'팀전',
-          _stageDetail:`${tm.teamAName||'A팀'} vs ${tm.teamBName||'B팀'}`,
-          _stageColor:'#0891b2', _tmSide:g._sideW, _teamAName:tm.teamAName, _teamBName:tm.teamBName
-        });
       });
     });
   });
@@ -1556,6 +1545,85 @@ function histProCompTourneyHTML() {
             ${m.map?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">📍${m.map}</span>`:''}
           </div>
         </div>
+      </div>`;
+    });
+  });
+  return h;
+}
+
+/* ══════════════════════════════════════
+   대전 기록 > 프로리그 팀전 탭
+══════════════════════════════════════ */
+function histProCompTeamHTML() {
+  // proTourneys.teamMatches 전체 추출
+  const tmList = []; // [{tnName, tm}]
+  (proTourneys||[]).forEach(tn => {
+    (tn.teamMatches||[]).forEach(tm => {
+      const games = (tm.games||[]).filter(g=>g.wName&&g.lName);
+      if (!games.length) return;
+      if (typeof passDateFilter==='function'&&!passDateFilter(tm.d||'')) return;
+      tmList.push({tnName:tn.name, tm});
+    });
+  });
+  tmList.sort((a,b)=>recSortDir==='asc'?(a.tm.d||'').localeCompare(b.tm.d||''):(b.tm.d||'').localeCompare(a.tm.d||''));
+  const totalGames = tmList.reduce((s,x)=>s+(x.tm.games||[]).filter(g=>g.wName&&g.lName).length,0);
+  const sortBar=`<div class="sort-bar no-export">
+    <span style="font-size:11px;color:var(--text3)">날짜 정렬</span>
+    <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
+    <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
+    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalGames}경기 / ${tmList.length}팀전</span>
+  </div>`;
+  if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
+  const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
+  const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
+  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const colA='#2563eb', colB='#dc2626';
+  let h=sortBar;
+  // 대회명별 그룹
+  const byTn={};
+  tmList.forEach(({tnName,tm})=>{ if(!byTn[tnName])byTn[tnName]=[]; byTn[tnName].push(tm); });
+  Object.entries(byTn).forEach(([tnName,tms])=>{
+    const gCnt=tms.reduce((s,tm)=>s+(tm.games||[]).filter(g=>g.wName&&g.lName).length,0);
+    h+=`<div style="background:linear-gradient(135deg,#ecfdf5 0%,var(--white) 100%);border:1.5px solid #bbf7d0;border-left:4px solid #16a34a;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:16px">🤝</span>
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:#16a34a">${tnName}</span>
+      <span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;border-radius:20px;padding:2px 10px;margin-left:auto">${tms.length}팀전 · ${gCnt}경기</span>
+    </div>`;
+    tms.forEach(tm=>{
+      const aWin=tm.sa>tm.sb, bWin=tm.sb>tm.sa;
+      const games=(tm.games||[]).filter(g=>g.wName&&g.lName);
+      h+=`<div style="border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <span style="font-size:10px;color:var(--gray-l)">${tm.d||'날짜 미정'}</span>
+          <span style="background:#e0f2fe;color:#0284c7;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">팀전</span>
+          <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:13px">${tm.teamAName||'A팀'}</span>
+          <span style="font-size:16px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:1px 10px;border-radius:6px">${tm.sa||0}:${tm.sb||0}</span>
+          <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:13px">${tm.teamBName||'B팀'}</span>
+        </div>
+        ${games.map(g=>{
+          const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
+          const sideWin=g._sideW==='A'?tm.teamAName||'A팀':tm.teamBName||'B팀';
+          return `<div class="rec-summary" style="margin-left:4px;border-left:3px solid ${g._sideW==='A'?colA:colB}">
+            <div class="rec-sum-header">
+              <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${sideWin}</span>
+              <div class="rec-sum-vs" style="flex:1">
+                <div style="display:flex;align-items:center;gap:4px">
+                  ${_photo(pw)}<span style="font-weight:800;font-size:13px;color:#16a34a">${g.wName}</span>
+                  ${_rb(pw)}${_tb(pw)}
+                  ${pw&&pw.univ?`<span style="font-size:10px;color:var(--gray-l)">${pw.univ}</span>`:''}
+                  <span style="font-size:10px;font-weight:800;color:#16a34a;margin-left:2px">WIN</span>
+                </div>
+                <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
+                <div style="display:flex;align-items:center;gap:4px;opacity:.7">
+                  ${_photo(pl)}<span style="font-weight:500;font-size:13px;color:var(--text)">${g.lName}</span>
+                  ${_rb(pl)}${_tb(pl)}
+                  ${pl&&pl.univ?`<span style="font-size:10px;color:var(--gray-l)">${pl.univ}</span>`:''}
+                </div>
+                ${g.map?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">📍${g.map}</span>`:''}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
       </div>`;
     });
   });
