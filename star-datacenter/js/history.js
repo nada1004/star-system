@@ -1361,7 +1361,7 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
    대전 기록 > 프로리그 대회 탭
 ══════════════════════════════════════ */
 function histProCompHTML() {
-  // proTourneys에서 완료된 경기만 추출 (조별리그 + 대진표)
+  // proTourneys에서 완료된 경기만 추출 (조별리그 + 대진표 + 3위전 + 팀전)
   const allItems = [];
   (proTourneys||[]).forEach(tn => {
     const rounds = tn.bracket||[];
@@ -1392,6 +1392,19 @@ function histProCompHTML() {
         allItems.push({...tn.thirdPlace, _tnName:tn.name, _stage:'대진표', _stageDetail:'3위전', _stageColor:'#cd7f32', d:tn.thirdPlace.d||''});
       }
     }
+    // 팀전 게임
+    (tn.teamMatches||[]).forEach(tm => {
+      (tm.games||[]).forEach(g => {
+        if (!g.wName||!g.lName) return;
+        if (typeof passDateFilter==='function'&&!passDateFilter(tm.d||'')) return;
+        allItems.push({
+          a:g.wName, b:g.lName, winner:'A', d:tm.d||'', map:g.map||'',
+          _tnName:tn.name, _stage:'팀전',
+          _stageDetail:`${tm.teamAName||'A팀'} vs ${tm.teamBName||'B팀'}`,
+          _stageColor:'#0891b2', _tmSide:g._sideW, _teamAName:tm.teamAName, _teamBName:tm.teamBName
+        });
+      });
+    });
   });
   allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const sortBar = `<div class="sort-bar no-export">

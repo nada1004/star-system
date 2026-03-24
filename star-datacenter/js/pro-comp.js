@@ -36,6 +36,15 @@ function _proCompSyncSilent() {
         existing.add(thirdId); cnt++;
       }
     }
+    // 팀전 게임
+    (tn.teamMatches||[]).forEach(tm => {
+      (tm.games||[]).forEach(g => {
+        if (!g._id||!g.wName||!g.lName) return;
+        if (existing.has(g._id)) return;
+        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그팀전');
+        existing.add(g._id); cnt++;
+      });
+    });
   });
   if (cnt > 0) save();
 }
@@ -78,6 +87,16 @@ function proCompSyncHistory() {
         cnt++;
       }
     }
+    // 팀전 게임
+    (tn.teamMatches||[]).forEach(tm => {
+      (tm.games||[]).forEach(g => {
+        if (!g._id||!g.wName||!g.lName) return;
+        if (existing.has(g._id)) return;
+        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그팀전');
+        existing.add(g._id);
+        cnt++;
+      });
+    });
   });
   if (cnt > 0) { save(); alert(`✅ ${cnt}경기 전적이 스트리머 상세에 동기화되었습니다.`); render(); }
   else alert('이미 모두 동기화되어 있습니다.');
@@ -126,6 +145,7 @@ function rProComp(C, T) {
     {id:'league', lbl:'📅 조별리그 일정'},
     {id:'grprank', lbl:'📊 조별 순위'},
     {id:'tour', lbl:'🗂️ 대진표'},
+    {id:'team', lbl:'🤝 팀전'},
     {id:'stats', lbl:'🏅 개인 순위'},
     {id:'progj', lbl:'⚔️ 끝장전'},
     ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
@@ -145,6 +165,7 @@ function rProComp(C, T) {
   if (proCompSub === 'league') h += proCompLeague(tn);
   else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
   else if (proCompSub === 'tour') h += proCompBracket(tn);
+  else if (proCompSub === 'team') h += proCompTeamSection(tn);
   else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
   else if (proCompSub === 'grpedit') h += proCompGrpEdit();
   else if (proCompSub === 'progj') {
@@ -362,6 +383,236 @@ function proCompGrpRank(tn) {
     h += `</tbody></table></div>`;
   });
   return h;
+}
+
+/* ──────────────────────────────────────
+   팀전
+────────────────────────────────────── */
+function proCompTeamSection(tn) {
+  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
+  const tms = tn.teamMatches||[];
+  let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🤝 ${tn.name} — 팀전</div>`;
+  if (isLoggedIn) {
+    h += `<button class="btn btn-b btn-sm no-export" style="margin-bottom:12px" onclick="proCompCreateTeamMatch('${tn.id}')">+ 팀전 추가</button>`;
+  }
+  if (!tms.length) {
+    h += `<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">팀을 구성하고 대결 결과를 기록할 수 있습니다</div></div>`;
+    return h;
+  }
+  tms.forEach((tm, tmi) => {
+    const aWin = tm.sa > tm.sb, bWin = tm.sb > tm.sa;
+    const games = tm.games||[];
+    const colA='#2563eb', colB='#dc2626';
+    h += `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-size:11px;color:var(--gray-l);flex-shrink:0">${tm.d||'날짜 미정'}</span>
+        <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
+          <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:14px">${tm.teamAName||'A팀'}</span>
+          <span style="font-size:20px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:2px 14px;border-radius:8px">${tm.sa||0}:${tm.sb||0}</span>
+          <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:14px">${tm.teamBName||'B팀'}</span>
+        </div>
+        ${isLoggedIn?`<div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
+          <button class="btn btn-r btn-xs" onclick="proCompDeleteTeamMatch('${tn.id}',${tmi})">🗑️</button>
+        </div>`:''}
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="font-size:11px"><span style="color:${colA};font-weight:700">${tm.teamAName||'A팀'}:</span> <span style="color:var(--text3)">${(tm.teamA||[]).map(p=>`<span onclick="openPlayerModal('${p.replace(/'/g,"\\'")}') " style="cursor:pointer;text-decoration:underline dotted">${p}</span>`).join(', ')||'—'}</span></div>
+        <div style="font-size:11px"><span style="color:${colB};font-weight:700">${tm.teamBName||'B팀'}:</span> <span style="color:var(--text3)">${(tm.teamB||[]).map(p=>`<span onclick="openPlayerModal('${p.replace(/'/g,"\\'")}') " style="cursor:pointer;text-decoration:underline dotted">${p}</span>`).join(', ')||'—'}</span></div>
+      </div>
+      ${games.length?`<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+        ${games.map((g, gi) => {
+          const sideWin=g._sideW==='A'?tm.teamAName||'A팀':tm.teamBName||'B팀';
+          const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
+          const rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
+          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border-radius:6px;margin-bottom:3px;font-size:12px">
+            <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;flex-shrink:0">${sideWin}</span>
+            <span style="font-weight:700;color:#16a34a;cursor:pointer" onclick="openPlayerModal('${g.wName.replace(/'/g,"\\'")}' )">${g.wName||'?'} ${rb(pw)}</span>
+            <span style="color:var(--gray-l);font-size:11px">WIN vs</span>
+            <span style="color:var(--text3);cursor:pointer" onclick="openPlayerModal('${(g.lName||'').replace(/'/g,"\\'")}' )">${g.lName||'?'} ${rb(pl)}</span>
+            ${g.map?`<span style="color:var(--gray-l);font-size:10px;margin-left:auto;flex-shrink:0">📍${g.map}</span>`:''}
+            ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:${g.map?'4px':'auto'};flex-shrink:0" onclick="proCompDeleteTeamGame('${tn.id}',${tmi},${gi})">✕</button>`:''}
+          </div>`;
+        }).join('')}
+      </div>`:''}
+    </div>`;
+  });
+  return h;
+}
+
+function proCompCreateTeamMatch(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const allPlayers = [...new Set((tn.groups||[]).flatMap(g=>g.players||[]))];
+  const modal = document.createElement('div');
+  modal.id = '_tmModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:460px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3);margin:auto">
+    <div style="font-weight:900;font-size:15px;margin-bottom:16px">🤝 팀전 추가</div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:var(--text3)">날짜</label>
+        <input id="_tm_d" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#2563eb">A팀 이름</label>
+        <input id="_tm_an" value="A팀" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#dc2626">B팀 이름</label>
+        <input id="_tm_bn" value="B팀" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px">팀 구성 (클릭 → A팀 → B팀 → 해제)</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1;background:#2563eb11;border:1.5px solid #2563eb44;border-radius:8px;padding:8px;min-height:50px">
+        <div style="font-size:11px;font-weight:700;color:#2563eb;margin-bottom:4px">A팀</div>
+        <div id="_tm_draftA" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div style="flex:1;background:#dc262611;border:1.5px solid #dc262644;border-radius:8px;padding:8px;min-height:50px">
+        <div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:4px">B팀</div>
+        <div id="_tm_draftB" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+    </div>
+    <div id="_tm_pool" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;padding:8px;background:var(--surface);border-radius:8px;max-height:160px;overflow-y:auto">
+      ${allPlayers.length
+        ? allPlayers.map(p=>`<button class="_tm_pBtn" data-name="${p}" data-side="none" onclick="_tmCyclePlayer(this,'${p.replace(/'/g,"\\'")}') " style="padding:3px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer">${p}</button>`).join('')
+        : `<span style="font-size:12px;color:var(--gray-l)">조편성 선수 없음 — 팀 이름만 설정 후 생성</span>`}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="_tmSaveCreate('${tnId}')">생성</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function _tmCyclePlayer(btn, name) {
+  const side = btn.getAttribute('data-side')||'none';
+  const draftA = document.getElementById('_tm_draftA');
+  const draftB = document.getElementById('_tm_draftB');
+  document.querySelectorAll(`._tm_draftTag[data-name="${name}"]`).forEach(el=>el.remove());
+  let nextSide;
+  if (side==='none') nextSide='A';
+  else if (side==='A') nextSide='B';
+  else nextSide='none';
+  btn.setAttribute('data-side', nextSide);
+  if (nextSide==='A') {
+    btn.style.cssText='padding:3px 10px;border-radius:12px;border:1.5px solid #2563eb;background:#2563eb;color:#fff;font-size:12px;cursor:pointer;font-weight:700';
+    const tag=document.createElement('span');
+    tag.className='_tm_draftTag'; tag.setAttribute('data-name',name);
+    tag.style.cssText='padding:2px 8px;background:#2563eb;color:#fff;border-radius:10px;font-size:11px;font-weight:600';
+    tag.textContent=name; draftA.appendChild(tag);
+  } else if (nextSide==='B') {
+    btn.style.cssText='padding:3px 10px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:12px;cursor:pointer;font-weight:700';
+    const tag=document.createElement('span');
+    tag.className='_tm_draftTag'; tag.setAttribute('data-name',name);
+    tag.style.cssText='padding:2px 8px;background:#dc2626;color:#fff;border-radius:10px;font-size:11px;font-weight:600';
+    tag.textContent=name; draftB.appendChild(tag);
+  } else {
+    btn.style.cssText='padding:3px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer';
+  }
+}
+
+function _tmSaveCreate(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const d = document.getElementById('_tm_d').value;
+  const teamAName = document.getElementById('_tm_an').value.trim()||'A팀';
+  const teamBName = document.getElementById('_tm_bn').value.trim()||'B팀';
+  const teamA=[...document.querySelectorAll('#_tm_draftA ._tm_draftTag')].map(el=>el.getAttribute('data-name'));
+  const teamB=[...document.querySelectorAll('#_tm_draftB ._tm_draftTag')].map(el=>el.getAttribute('data-name'));
+  if (!tn.teamMatches) tn.teamMatches=[];
+  tn.teamMatches.push({_id:'ptm_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4), d, teamAName, teamBName, teamA, teamB, games:[], sa:0, sb:0});
+  document.getElementById('_tmModal').remove();
+  save(); render();
+}
+
+function proCompAddTeamGame(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  const teamA = tm.teamA&&tm.teamA.length ? tm.teamA : players.map(p=>p.name);
+  const teamB = tm.teamB&&tm.teamB.length ? tm.teamB : players.map(p=>p.name);
+  const optsA = teamA.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const optsB = teamB.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const modal = document.createElement('div');
+  modal.id = '_tmGameModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:14px">⚔️ 경기 추가</div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:700;color:#2563eb">${tm.teamAName||'A팀'} 선수</label>
+      <select id="_tg_a" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box"><option value="">선택</option>${optsA}</select>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:700;color:#dc2626">${tm.teamBName||'B팀'} 선수</label>
+      <select id="_tg_b" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box"><option value="">선택</option>${optsB}</select>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">승자</label>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button id="_tg_wA" class="btn btn-w" style="flex:1" onclick="document.getElementById('_tg_wA').className='btn btn-b';document.getElementById('_tg_wB').className='btn btn-w'">${tm.teamAName||'A팀'} 승</button>
+        <button id="_tg_wB" class="btn btn-w" style="flex:1" onclick="document.getElementById('_tg_wB').className='btn btn-b';document.getElementById('_tg_wA').className='btn btn-w'">${tm.teamBName||'B팀'} 승</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">맵 (선택)</label>
+      <input id="_tg_map" placeholder="선택입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="_tmSaveGame('${tnId}',${tmi})">추가</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmGameModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function _tmSaveGame(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  const aName = document.getElementById('_tg_a').value;
+  const bName = document.getElementById('_tg_b').value;
+  const wA = document.getElementById('_tg_wA').className.includes('btn-b');
+  const wB = document.getElementById('_tg_wB').className.includes('btn-b');
+  const map = document.getElementById('_tg_map').value.trim();
+  if (!aName||!bName) { alert('선수를 선택하세요.'); return; }
+  if (!wA&&!wB) { alert('승자를 선택하세요.'); return; }
+  const wName = wA?aName:bName, lName = wA?bName:aName;
+  const gid = 'ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
+  if (!tm.games) tm.games=[];
+  tm.games.push({_id:gid, wName, lName, map, _sideW:wA?'A':'B'});
+  tm.sa=(tm.games).filter(g=>g._sideW==='A').length;
+  tm.sb=(tm.games).filter(g=>g._sideW==='B').length;
+  applyGameResult(wName, lName, tm.d||'', map, gid, '', '', '프로리그팀전');
+  document.getElementById('_tmGameModal').remove();
+  save(); render();
+}
+
+function proCompDeleteTeamGame(tnId, tmi, gi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  const g = (tm.games||[])[gi];
+  if (!g) return;
+  _revertProMatch(g._id);
+  tm.games.splice(gi,1);
+  tm.sa=(tm.games).filter(g=>g._sideW==='A').length;
+  tm.sb=(tm.games).filter(g=>g._sideW==='B').length;
+  save(); render();
+}
+
+function proCompDeleteTeamMatch(tnId, tmi) {
+  if (!confirm('이 팀전을 삭제하시겠습니까? 경기 전적도 취소됩니다.')) return;
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.teamMatches) return;
+  const tm = tn.teamMatches[tmi];
+  if (tm) (tm.games||[]).forEach(g=>_revertProMatch(g._id));
+  tn.teamMatches.splice(tmi,1);
+  save(); render();
 }
 
 /* ──────────────────────────────────────
@@ -1184,7 +1435,9 @@ function proCompTourneyStats(tn) {
   (tn.bracket||[]).forEach(rnd => rnd.forEach(m => { if(m&&m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') allM.push(m); }));
   if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD') allM.push(tn.thirdPlace);
   const doneM = allM.filter(m=>m.winner);
-  if (!allM.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:12px">아직 등록된 경기가 없습니다.</div>`;
+  // 팀전 게임도 allM 유사 형태로 수집 (맵/종족 통계용)
+  const allTmGames = (tn.teamMatches||[]).flatMap(tm=>(tm.games||[]).map(g=>({...g, _isTmGame:true, d:tm.d||'', winner:'W'})));
+  if (!allM.length && !allTmGames.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:12px">아직 등록된 경기가 없습니다.</div>`;
 
   // 선수별 승/패 집계 (조별리그 + 대진표 + 3위전)
   const pSt = {};
@@ -1214,6 +1467,15 @@ function proCompTourneyStats(tn) {
     if (tp.winner==='A'){pSt[tp.a].w++;pSt[tp.b].l++;}
     else {pSt[tp.b].w++;pSt[tp.a].l++;}
   }
+  // 팀전 게임 집계
+  (tn.teamMatches||[]).forEach(tm => {
+    (tm.games||[]).forEach(g => {
+      if (!g.wName||!g.lName) return;
+      if (!pSt[g.wName]) pSt[g.wName]={w:0,l:0};
+      if (!pSt[g.lName]) pSt[g.lName]={w:0,l:0};
+      pSt[g.wName].w++; pSt[g.lName].l++;
+    });
+  });
   const pArr = Object.entries(pSt).map(([name,s])=>({name,...s,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0})).filter(p=>p.total>0).sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
   // 맵 통계
