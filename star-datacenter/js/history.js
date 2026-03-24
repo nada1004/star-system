@@ -6,16 +6,17 @@
     {id:'psearch',  grp:'종합',   lbl:'🔍 스트리머별 검색'},
     {id:'race',     grp:'종합',   lbl:'🧬 종족 승률'},
     {id:'vs',       grp:'종합',   lbl:'⚔️ 1:1 상대전적'},
-    {id:'ind',      grp:'개인',   lbl:'🎮 개인전'},
-    {id:'gj',       grp:'개인',   lbl:'⚔️ 끝장전'},
-    {id:'pro',      grp:'개인',   lbl:'🏅 프로리그'},
-    {id:'mini',     grp:'팀경기', lbl:'⚡ 미니대전'},
-    {id:'ck',       grp:'팀경기', lbl:'🤝 대학CK'},
-    {id:'univm',    grp:'팀경기', lbl:'🏟️ 대학대전'},
-    {id:'civil',    grp:'팀경기', lbl:'⚔️ 시빌워'},
-    {id:'tourney',  grp:'대회',   lbl:'🎖️ 대회 (토너먼트)'},
-    {id:'tiertour', grp:'대회',   lbl:'🎯 티어대회'},
-    {id:'procomp',  grp:'대회',   lbl:'🏅 프로리그 대회'},
+    {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
+    {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전'},
+    {id:'mini',     grp:'팀경기',  lbl:'⚡ 미니대전'},
+    {id:'ck',       grp:'팀경기',  lbl:'🤝 대학CK'},
+    {id:'univm',    grp:'팀경기',  lbl:'🏟️ 대학대전'},
+    {id:'civil',    grp:'팀경기',  lbl:'⚔️ 시빌워'},
+    {id:'tourney',  grp:'대회',    lbl:'🎖️ 대회 (토너먼트)'},
+    {id:'tiertour', grp:'대회',    lbl:'🎯 티어대회'},
+    {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전'},
+    {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그'},
+    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
@@ -42,7 +43,7 @@
     });
     h+=`</div>`;
   }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   if(needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
@@ -79,7 +80,8 @@
   else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
-  else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
+  else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
+  else if(histSub==='progj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(true):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
@@ -142,6 +144,14 @@ function histAllHTML(){
       allItems.push({type:'tourney',d:m.d||'',m});
     });
   }
+  // 대회 토너먼트 (comps)
+  (comps||[]).forEach(m=>{
+    if(!m.a&&!m.u) return; if(!m.b) return;
+    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
+    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
+    if(!passDateFilter(m.d||'')) return;
+    allItems.push({type:'tourney',d:m.d||'',m:{...m,a:m.a||m.u}});
+  });
   // 프로리그 개인 대회 (procomp)
   (proTourneys||[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{
@@ -394,7 +404,32 @@ function rHistUnivStat(){
   const sc=calcStats(myComp,m=>m.a||m.u,m=>m.b);
   const st=calcStats(myTourney,m=>m.a,m=>m.b);
   let ckW=0,ckL=0;
-  myCK.forEach(m=>{if(m.univWins&&m.univWins[histUniv])ckW+=m.univWins[histUniv];if(m.univLosses&&m.univLosses[histUniv])ckL+=m.univLosses[histUniv];});
+  myCK.forEach(m=>{
+    // univWins가 채워진 경우 (match builder 저장)
+    if(m.univWins&&Object.keys(m.univWins).length){
+      ckW+=(m.univWins[histUniv]||0);
+      ckL+=(m.univLosses&&m.univLosses[histUniv]||0);
+    } else {
+      // 미채워진 경우: sets 내 게임별 승패 집계
+      let hasSets=false;
+      (m.sets||[]).forEach(set=>{
+        (set.games||[]).forEach(g=>{
+          hasSets=true;
+          const wp=players.find(p=>p.name===(g.wName||''));
+          const lp=players.find(p=>p.name===(g.lName||''));
+          if(wp&&wp.univ===histUniv) ckW++;
+          if(lp&&lp.univ===histUniv) ckL++;
+        });
+      });
+      // sets도 없으면 팀 스코어로 대체
+      if(!hasSets){
+        const inA=(m.teamAMembers||[]).some(x=>x.univ===histUniv);
+        const inB=(m.teamBMembers||[]).some(x=>x.univ===histUniv);
+        if(inA&&m.sa!=null&&m.sb!=null){if(m.sa>m.sb)ckW++;else if(m.sb>m.sa)ckL++;}
+        else if(inB&&m.sa!=null&&m.sb!=null){if(m.sb>m.sa)ckW++;else if(m.sa>m.sb)ckL++;}
+      }
+    }
+  });
 
   // 상대 대학 승/패 집계
   const oppStats={};
@@ -1347,9 +1382,16 @@ function histProCompHTML() {
       const stageColor = ri===totalRounds-1?'#f59e0b':ri===totalRounds-2?'#7c3aed':ri===totalRounds-3?'#dc2626':'#2563eb';
       rnd.forEach(m => {
         if (!m.a||!m.b||!m.winner) return;
+        if (typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return;
         allItems.push({...m, _tnName:tn.name, _stage:'대진표', _stageDetail:rndLabel, _stageColor:stageColor, d:m.d||''});
       });
     });
+    // 3위전
+    if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.winner) {
+      if (!(typeof passDateFilter==='function'&&!passDateFilter(tn.thirdPlace.d||''))) {
+        allItems.push({...tn.thirdPlace, _tnName:tn.name, _stage:'대진표', _stageDetail:'3위전', _stageColor:'#cd7f32', d:tn.thirdPlace.d||''});
+      }
+    }
   });
   allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const sortBar = `<div class="sort-bar no-export">

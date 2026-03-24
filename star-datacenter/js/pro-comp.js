@@ -818,7 +818,10 @@ function proCompGrpEdit() {
             <button class="btn btn-b btn-xs" style="margin-left:auto" onclick="proCompEditMatch('${tn.id}',${gi},${mi})">✏️</button>
             <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${gi},${mi})">🗑️</button>
           </div>`).join('')}
-          <button class="btn btn-b btn-sm" style="margin-top:6px" onclick="proCompAddMatch('${tn.id}',${gi})">+ 경기 추가</button>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn btn-b btn-sm" onclick="proCompAddMatch('${tn.id}',${gi})">+ 경기 추가</button>
+            <button class="btn btn-w btn-sm" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 일괄 입력</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -894,6 +897,68 @@ function proCompAddMatchOnDate(tnId, date) {
     </div>`;
     document.body.appendChild(sel);
   }
+}
+
+function proCompOpenPasteModal(tnId, gi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.groups[gi]) return;
+  const modal = document.createElement('div');
+  modal.id = '_pcPasteModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:8px">📋 경기 결과 일괄 입력</div>
+    <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.7">
+      한 줄에 한 경기. 공백/탭으로 구분:<br>
+      <code>[날짜] 선수A 선수B [승자]</code><br>
+      승자: A / B / 선수이름 (생략 시 미정)<br>
+      예) <code>2024-01-15 홍길동 이순신 A</code>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">기본 날짜</label>
+      <input id="_pcPasteDate" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+    </div>
+    <textarea id="_pcPasteText" rows="8" placeholder="홍길동 이순신 A&#10;이순신 강감찬 B&#10;강감찬 홍길동 홍길동" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-b" style="flex:1" onclick="proCompSavePaste('${tnId}',${gi})">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcPasteModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function proCompSavePaste(tnId, gi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.groups[gi]) return;
+  const grp = tn.groups[gi];
+  const text = (document.getElementById('_pcPasteText')||{}).value||'';
+  const defDate = (document.getElementById('_pcPasteDate')||{}).value || new Date().toISOString().slice(0,10);
+  document.getElementById('_pcPasteModal').remove();
+  if (!text.trim()) return;
+  const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(line => {
+    const parts = line.split(/[\s\t]+/);
+    if (parts.length < 2) return;
+    let d = defDate, a = '', b = '', winnerRaw = '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+      d = parts[0]; a = parts[1]||''; b = parts[2]||''; winnerRaw = parts[3]||'';
+    } else {
+      a = parts[0]; b = parts[1]||''; winnerRaw = parts[2]||'';
+    }
+    if (!a||!b||a===b) return;
+    let winner = '';
+    if (winnerRaw==='A') winner='A';
+    else if (winnerRaw==='B') winner='B';
+    else if (winnerRaw===a) winner='A';
+    else if (winnerRaw===b) winner='B';
+    const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    if (!grp.matches) grp.matches = [];
+    grp.matches.push({a,b,winner,d,map:'',_id:newMid});
+    if (winner) applyGameResult(winner==='A'?a:b, winner==='A'?b:a, d, '', newMid, '', '', '프로리그대회');
+    added++;
+  });
+  save(); render();
+  if (added>0) alert(`${added}개 경기가 추가되었습니다.`);
 }
 
 function proCompAddMatch(tnId, gi, preDate) {
@@ -1113,13 +1178,15 @@ function proCompTourneyStats(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   // 전적 자동 동기화 (알림 없이)
   _proCompSyncSilent();
-  // 전체 경기 수집
+  // 전체 경기 수집 (조별리그 + 대진표 + 3위전)
   const allM = [];
   tn.groups.forEach(grp => (grp.matches||[]).forEach(m => allM.push(m)));
+  (tn.bracket||[]).forEach(rnd => rnd.forEach(m => { if(m&&m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') allM.push(m); }));
+  if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD') allM.push(tn.thirdPlace);
   const doneM = allM.filter(m=>m.winner);
   if (!allM.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:12px">아직 등록된 경기가 없습니다.</div>`;
 
-  // 선수별 승/패 집계
+  // 선수별 승/패 집계 (조별리그 + 대진표 + 3위전)
   const pSt = {};
   tn.groups.forEach(grp => {
     (grp.players||[]).forEach(p => { if(!pSt[p]) pSt[p]={w:0,l:0}; });
@@ -1131,6 +1198,22 @@ function proCompTourneyStats(tn) {
       else {pSt[m.b].w++;pSt[m.a].l++;}
     });
   });
+  (tn.bracket||[]).forEach(rnd => {
+    rnd.forEach(m => {
+      if (!m||!m.a||!m.b||!m.winner||m.a==='TBD'||m.b==='TBD') return;
+      if (!pSt[m.a]) pSt[m.a]={w:0,l:0};
+      if (!pSt[m.b]) pSt[m.b]={w:0,l:0};
+      if (m.winner==='A'){pSt[m.a].w++;pSt[m.b].l++;}
+      else {pSt[m.b].w++;pSt[m.a].l++;}
+    });
+  });
+  if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.winner&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD') {
+    const tp=tn.thirdPlace;
+    if (!pSt[tp.a]) pSt[tp.a]={w:0,l:0};
+    if (!pSt[tp.b]) pSt[tp.b]={w:0,l:0};
+    if (tp.winner==='A'){pSt[tp.a].w++;pSt[tp.b].l++;}
+    else {pSt[tp.b].w++;pSt[tp.a].l++;}
+  }
   const pArr = Object.entries(pSt).map(([name,s])=>({name,...s,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0})).filter(p=>p.total>0).sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
   // 맵 통계
