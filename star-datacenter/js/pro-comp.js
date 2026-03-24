@@ -667,13 +667,13 @@ function proCompOpenTeamPasteModal(tnId, tmi) {
   if (typeof openPasteModal !== 'function') return;
   // 공통 pasteModal 재활용
   _grpPasteState = {mode:'procomp-team', tnId, tmi};
+  openPasteModal();
   window._grpPasteMode = true;
   window._pasteForceTeamA = tm.teamAName||'A팀';
   window._pasteForceTeamB = tm.teamBName||'B팀';
   // 팀 멤버 로스터 사전 등록 → 자동 팀 배정 지원
   if ((tm.teamA||[]).length) window._pasteRosterA = {teamName:tm.teamAName||'A팀', members:tm.teamA};
   if ((tm.teamB||[]).length) window._pasteRosterB = {teamName:tm.teamBName||'B팀', members:tm.teamB};
-  openPasteModal();
   const sel = document.getElementById('paste-mode');
   const lbl = document.getElementById('paste-mode-label');
   if (sel) { sel.value = 'mini'; sel.style.display = 'none'; if(typeof onPasteModeChange==='function') onPasteModeChange('mini'); }
@@ -1429,10 +1429,10 @@ function proCompOpenBktMatchPaste(tnId, ri, mi) {
   if (!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return alert('두 선수가 모두 확정된 경기에만 사용 가능합니다.');
   if (typeof openPasteModal !== 'function') return;
   _grpPasteState = {mode:'procomp-bkt', tnId, ri, mi};
+  openPasteModal();
   window._grpPasteMode = true;
   window._pasteForceTeamA = m.a;
   window._pasteForceTeamB = m.b;
-  openPasteModal();
   const sel = document.getElementById('paste-mode');
   const lbl = document.getElementById('paste-mode-label');
   if (sel) { sel.value = 'ind'; sel.style.display = 'none'; if(typeof onPasteModeChange==='function') onPasteModeChange('ind'); }
@@ -1496,8 +1496,8 @@ function proCompOpenPasteModal(tnId, gi, preDate) {
   if (typeof openPasteModal !== 'function') return;
   // 공통 pasteModal 재활용 (경기입력 붙여넣기와 동일한 UI)
   _grpPasteState = {mode:'procomp-league', tnId, gi};
-  window._grpPasteMode = true;
   openPasteModal();
+  window._grpPasteMode = true;
   // 개인전 형식 고정 (승자이름 패자이름 [맵])
   const sel = document.getElementById('paste-mode');
   const lbl = document.getElementById('paste-mode-label');
