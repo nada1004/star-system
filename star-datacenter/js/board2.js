@@ -4,6 +4,7 @@
 ══════════════════════════════════════ */
 
 let _b2View = 'univ';
+let _b2SaveUniv = '전체';
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha = J('su_b2la') ?? 16;
@@ -28,11 +29,25 @@ function rBoard2(C, T) {
     ? `<button onclick="_b2View='old';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='old'?'var(--blue)':'var(--border2)'};background:${_b2View==='old'?'var(--blue)':'var(--white)'};color:${_b2View==='old'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">📊 구현황판</button>`
     : '';
 
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const saveBar = _b2View === 'univ' ? `
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+      <div style="position:relative">
+        <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="전체">🏫 전체</option>
+          ${univList.map(u=>`<option value="${u.name}"${_b2SaveUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+    </div>` : '';
+
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
       ${oldBtn}
+      ${saveBar}
     </div>
     <div id="b2-content"></div>`;
 
@@ -268,6 +283,43 @@ function _b2AvatarFallback(letter, col, size) {
   return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
+
+async function saveB2Img() {
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const targets = _b2SaveUniv === '전체' ? univList : univList.filter(u => u.name === _b2SaveUniv);
+  if (!targets.length) { alert('저장할 대학이 없습니다.'); return; }
+
+  const btn = document.querySelector('[onclick="saveB2Img()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+  const CARD_W = 460;
+  const cols = _b2SaveUniv === '전체' ? Math.min(2, targets.length) : 1;
+  const gap = 12;
+
+  const tmpDiv = document.createElement('div');
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:16px;background:#f0f2f5;box-sizing:border-box;width:${cols * CARD_W + (cols - 1) * gap + 32}px`;
+  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}</style>
+    <div style="display:grid;grid-template-columns:repeat(${cols},${CARD_W}px);gap:${gap}px;align-items:start">
+      ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired))).join('')}
+    </div>`;
+  document.body.appendChild(tmpDiv);
+
+  await new Promise(r => setTimeout(r, 200));
+  injectUnivIcons(tmpDiv);
+  await new Promise(r => setTimeout(r, 100));
+
+  const h = tmpDiv.scrollHeight + 32;
+  const w = tmpDiv.scrollWidth;
+  const fname = (_b2SaveUniv === '전체' ? '대학별현황판_전체' : `대학별현황판_${_b2SaveUniv}`) + '_' + new Date().toISOString().slice(0,10) + '.png';
+
+  try {
+    await _captureAndSave(tmpDiv, w, h, fname);
+  } catch(e) { alert('저장 실패: ' + e.message); }
+  finally {
+    document.body.removeChild(tmpDiv);
+    if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
+  }
+}
 
 function _b2ContrastColor(hex) {
   try {
