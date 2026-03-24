@@ -94,9 +94,21 @@ function _b2UnivBlock(univName, col, members) {
   const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
   const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
-  let roledBody = '';
+  // 같은 직책끼리 묶어서 1행으로
+  const roleGroups = {};
+  const roleOrder = [];
   roledMembers.forEach(p => {
-    roledBody += _row(_roleLabel(p.role||''), _b2PlayerRow(p, col));
+    const r = p.role || '';
+    if (!roleGroups[r]) { roleGroups[r] = []; roleOrder.push(r); }
+    roleGroups[r].push(p);
+  });
+  let roledBody = '';
+  roleOrder.forEach(role => {
+    const group = roleGroups[role];
+    const content = group.length === 1
+      ? _b2PlayerRow(group[0], col)
+      : `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
+    roledBody += _row(_roleLabel(role), content);
   });
 
   let tieredBody = '';
