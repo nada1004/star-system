@@ -63,7 +63,8 @@ function _b2UnivBlock(univName, col, members) {
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
-  const lightCol = col + '10';
+  const lightCol = col + '15';
+  const labelCol = col + '30';
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
@@ -93,8 +94,8 @@ function _b2UnivBlock(univName, col, members) {
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   const _tableRow = (label, isRole, chips) => `
     <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}22">
-      <div style="background:${isRole?col:col+'cc'};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:${textCol};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
+      <div style="background:${labelCol};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
       <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
         ${chips}
@@ -124,7 +125,7 @@ function _b2UnivBlock(univName, col, members) {
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}22">
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
