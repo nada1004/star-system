@@ -274,7 +274,8 @@ function proCompLeague(tn) {
     h += `<div style="margin-bottom:22px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
-        ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추가</button>`:''}
+        ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추가</button>
+        <button class="btn btn-w btn-xs no-export" onclick="proCompOpenDatePaste('${tn.id}','${date}')">📋 결과 입력</button>`:''}
       </div>`;
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
@@ -846,10 +847,7 @@ function proCompBracket(tn) {
     const p=_pc(name); if(!p) return '';
     return `<span style="font-size:9px;color:var(--gray-l);white-space:nowrap">${p.univ||''}${p.tier?' · '+p.tier:''}</span>`;
   };
-  let h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-weight:900;font-size:15px;color:var(--blue)">🗂️ ${tn.name} — 대진표</div>
-    ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="proCompOpenBktPasteModal('${tn.id}')">📋 일괄 입력</button>`:''}
-  </div>`;
+  let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🗂️ ${tn.name} — 대진표</div>`;
   // 라운드 레이블 행
   const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
   const rndColor = ri => ri===rounds.length-1?'#f59e0b':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
@@ -883,7 +881,8 @@ function proCompBracket(tn) {
         ${(m.map||m.d)?`<div style="padding:2px 10px;font-size:10px;color:var(--gray-l);background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px">${m.d?`<span>📅 ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>📍 ${m.map}</span>`:''}</div>`:''}
         ${isLoggedIn?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap">
           ${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,4)} 승</button>
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,4)} 승</button>`:''}
+          <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,4)} 승</button>
+          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="결과 붙여넣기">📋</button>`:''}
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜 입력">📅</button>
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵 입력">📍</button>
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>
@@ -1423,7 +1422,75 @@ function proCompAddMatchOnDate(tnId, date) {
   }
 }
 
-function proCompOpenPasteModal(tnId, gi) {
+// 대진표 경기별 붙여넣기
+function proCompOpenBktMatchPaste(tnId, ri, mi) {
+  const tn = proTourneys.find(t=>t.id===tnId); if (!tn) return;
+  const m = (tn.bracket||[])[ri]?.[mi];
+  if (!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return alert('두 선수가 모두 확정된 경기에만 사용 가능합니다.');
+  if (typeof openPasteModal !== 'function') return;
+  _grpPasteState = {mode:'procomp-bkt', tnId, ri, mi};
+  window._grpPasteMode = true;
+  window._pasteForceTeamA = m.a;
+  window._pasteForceTeamB = m.b;
+  openPasteModal();
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'ind'; sel.style.display = 'none'; if(typeof onPasteModeChange==='function') onPasteModeChange('ind'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = `<span style="color:#7c3aed;font-weight:700">🗂️ 대진표: <b>${m.a}</b> vs <b>${m.b}</b> — 승자 이름 입력</span>`;
+  const title = document.querySelector('#pasteModal .mtitle');
+  if (title) title.textContent = '📋 대진표 결과 입력';
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) compWrap.style.display = 'none';
+  if (m.d) { const dateEl = document.getElementById('paste-date'); if (dateEl) dateEl.value = m.d; }
+}
+
+function _proCompBktPasteApplyLogic(savable) {
+  const {tnId, ri, mi} = _grpPasteState;
+  if (!savable.length) return false;
+  const r = savable[0];
+  const winName = r.wPlayer?.name; if (!winName) return false;
+  const tn = proTourneys.find(t=>t.id===tnId); if (!tn) return false;
+  const m = (tn.bracket||[])[ri]?.[mi]; if (!m) return false;
+  let winner;
+  if (winName===m.a) winner='A';
+  else if (winName===m.b) winner='B';
+  else { alert(`"${winName}"은(는) 이 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`); return false; }
+  const dateEl = document.getElementById('paste-date');
+  if (dateEl?.value) m.d = dateEl.value;
+  proCompSetBktWinner(tnId, ri, mi, winner);
+  return true;
+}
+
+// 조별리그 날짜별 붙여넣기
+function proCompOpenDatePaste(tnId, date) {
+  const tn = proTourneys.find(t=>t.id===tnId); if (!tn) return;
+  const groups = tn.groups||[];
+  if (!groups.length) return alert('조편성을 먼저 설정하세요.');
+  if (groups.length === 1) {
+    proCompOpenPasteModal(tnId, 0, date);
+    return;
+  }
+  // 여러 조 → 조 선택 다이얼로그
+  const modal = document.createElement('div');
+  modal.id = '_pcDatePasteGrpSel';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  const GL='ABCDEFGHIJ';
+  const btns = groups.map((_,gi)=>{
+    const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+    return `<button class="btn btn-sm" style="background:${col};color:#fff;border-color:${col}" onclick="document.getElementById('_pcDatePasteGrpSel').remove();proCompOpenPasteModal('${tnId}',${gi},'${date}')">GROUP ${GL[gi]}</button>`;
+  }).join('');
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:340px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:4px">📋 조 선택</div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:14px">${date} 경기 결과를 입력할 조를 선택하세요</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">${btns}</div>
+    <button class="btn btn-w" style="width:100%" onclick="document.getElementById('_pcDatePasteGrpSel').remove()">취소</button>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function proCompOpenPasteModal(tnId, gi, preDate) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||!tn.groups[gi]) return;
   if (typeof openPasteModal !== 'function') return;
@@ -1443,6 +1510,7 @@ function proCompOpenPasteModal(tnId, gi) {
   if (title) title.textContent = `📋 조별리그 결과 일괄 입력 — ${gl}조`;
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) compWrap.style.display = 'none';
+  if (preDate) { const dateEl = document.getElementById('paste-date'); if (dateEl) dateEl.value = preDate; }
 }
 
 // 공통 pasteModal → 프로리그 대회 조별리그에 저장

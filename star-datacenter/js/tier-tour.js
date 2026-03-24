@@ -152,6 +152,9 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='procomp-team'){
     return typeof _proCompTeamPasteApplyLogic==='function'?_proCompTeamPasteApplyLogic(savable):false;
   }
+  if(_grpPasteState.mode==='procomp-bkt'){
+    return typeof _proCompBktPasteApplyLogic==='function'?_proCompBktPasteApplyLogic(savable):false;
+  }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
@@ -1493,6 +1496,9 @@ function _grpPasteApplyLogic(savable){
   }
   if(_grpPasteState.mode==='procomp-team'){
     return typeof _proCompTeamPasteApplyLogic==='function'?_proCompTeamPasteApplyLogic(savable):false;
+  }
+  if(_grpPasteState.mode==='procomp-bkt'){
+    return typeof _proCompBktPasteApplyLogic==='function'?_proCompBktPasteApplyLogic(savable):false;
   }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
