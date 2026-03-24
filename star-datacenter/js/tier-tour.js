@@ -3415,11 +3415,17 @@ function saveRow(){
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='tt'){
-    const m=ttM[reIdx];m.d=d;
+    const m=ttM[reIdx];
+    const oldId=m._id;
+    m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // player.history 날짜 동기화
+    if(oldId&&d){
+      players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId===oldId)h.date=d;});});
+    }
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
