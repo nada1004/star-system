@@ -219,18 +219,20 @@ function proCompLeague(tn) {
     </div>
   </div>`;
   if (isLoggedIn && tn.groups.length) {
-    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
       <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추가:</span>`;
     tn.groups.forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi];
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
       h += `<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
     });
-    h += `<span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">|</span>`;
+    h += `</div>`;
+    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">결과 붙여넣기:</span>`;
     tn.groups.forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi];
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h += `<button class="btn btn-xs" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${gl}조</button>`;
+      h += `<button class="btn btn-sm" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${gl}조</button>`;
     });
     h += `</div>`;
   }
@@ -787,7 +789,7 @@ function proCompBracket(tn) {
   };
   let h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🗂️ ${tn.name} — 대진표</div>
-    ${isLoggedIn&&rounds.length?`<button class="btn btn-w btn-sm no-export" onclick="proCompOpenBktPasteModal('${tn.id}')">📋 일괄 입력</button>`:''}
+    ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="proCompOpenBktPasteModal('${tn.id}')">📋 일괄 입력</button>`:''}
   </div>`;
   // 라운드 레이블 행
   const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
@@ -969,7 +971,7 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
 ────────────────────────────────────── */
 function proCompOpenBktPasteModal(tnId) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn||!tn.bracket||!tn.bracket.length) return;
+  if (!tn||!tn.bracket||!tn.bracket.length) { alert('대진표를 먼저 생성하세요.\n(대진표 탭 → 대진표 생성 버튼)'); return; }
   const rounds = tn.bracket;
   const totalRounds = rounds.length;
   const rndLabel = ri => ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
