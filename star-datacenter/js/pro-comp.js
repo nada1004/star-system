@@ -39,7 +39,8 @@ function _proCompSyncSilent() {
     // 팀전 게임
     (tn.teamMatches||[]).forEach(tm => {
       (tm.games||[]).forEach(g => {
-        if (!g._id||!g.wName||!g.lName) return;
+        if (!g.wName||!g.lName) return;
+        if (!g._id) g._id = 'ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
         if (existing.has(g._id)) return;
         applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그팀전');
         existing.add(g._id); cnt++;
@@ -90,7 +91,8 @@ function proCompSyncHistory() {
     // 팀전 게임
     (tn.teamMatches||[]).forEach(tm => {
       (tm.games||[]).forEach(g => {
-        if (!g._id||!g.wName||!g.lName) return;
+        if (!g.wName||!g.lName) return;
+        if (!g._id) g._id = 'ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
         if (existing.has(g._id)) return;
         applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그팀전');
         existing.add(g._id);
@@ -393,10 +395,7 @@ function proCompTeamSection(tn) {
   const tms = tn.teamMatches||[];
   let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🤝 ${tn.name} — 팀전</div>`;
   if (isLoggedIn) {
-    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <button class="btn btn-b btn-sm" onclick="proCompCreateTeamMatch('${tn.id}')">+ 팀전 추가</button>
-      <button class="btn btn-w btn-sm" onclick="proCompOpenTeamPasteModal('${tn.id}')">📋 일괄 입력</button>
-    </div>`;
+    h += `<button class="btn btn-b btn-sm no-export" style="margin-bottom:12px" onclick="proCompCreateTeamMatch('${tn.id}')">+ 팀전 추가</button>`;
   }
   if (!tms.length) {
     h += `<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">팀을 구성하고 대결 결과를 기록할 수 있습니다</div></div>`;
@@ -414,8 +413,9 @@ function proCompTeamSection(tn) {
           <span style="font-size:20px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:2px 14px;border-radius:8px">${tm.sa||0}:${tm.sb||0}</span>
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:14px">${tm.teamBName||'B팀'}</span>
         </div>
-        ${isLoggedIn?`<div style="display:flex;gap:4px;flex-shrink:0">
+        ${isLoggedIn?`<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
+          <button class="btn btn-w btn-xs" onclick="proCompOpenTeamPasteModal('${tn.id}',${tmi})">📋</button>
           <button class="btn btn-r btn-xs" onclick="proCompDeleteTeamMatch('${tn.id}',${tmi})">🗑️</button>
         </div>`:''}
       </div>
@@ -644,83 +644,62 @@ function proCompDeleteTeamMatch(tnId, tmi) {
 ────────────────────────────────────── */
 function proCompOpenTeamPasteModal(tnId, tmi) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn) return;
-  const tms = tn.teamMatches||[];
-  const tmIdx = (tmi!=null&&tms[tmi]) ? tmi : null;
-  const tm = tmIdx!=null ? tms[tmIdx] : null;
-  // 팀전 선택 옵션
-  const tmOpts = tms.map((t,i)=>`<option value="${i}"${tmIdx===i?' selected':''}>${t.teamAName||'A팀'} vs ${t.teamBName||'B팀'} (${t.d||'날짜 미정'})</option>`).join('');
+  if (!tn||!tn.teamMatches||!tn.teamMatches[tmi]) return;
+  const tm = tn.teamMatches[tmi];
+  const colA='#2563eb', colB='#dc2626';
   const modal = document.createElement('div');
   modal.id = '_tmPasteModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:430px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:8px">📋 팀전 경기 일괄 입력</div>
+    <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 경기 결과 일괄 입력</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--surface);border-radius:8px">
+      <span style="color:${colA};font-weight:700;font-size:13px">${tm.teamAName||'A팀'}</span>
+      <span style="color:var(--gray-l);font-size:12px">vs</span>
+      <span style="color:${colB};font-weight:700;font-size:13px">${tm.teamBName||'B팀'}</span>
+      <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${tm.d||'날짜 미정'}</span>
+    </div>
     <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.8">
       한 줄에 한 경기. 공백/탭 구분:<br>
-      <code>[날짜] A팀선수 B팀선수 승자(A/B/이름) [맵]</code><br>
-      예) <code>홍길동 이순신 A 신한은행</code><br>
-      승자 A = A팀선수 승, B = B팀선수 승
+      <code>승자이름 패자이름 [맵]</code><br>
+      팀 멤버 등록 시 자동으로 A/B팀 구분.<br>
+      예) <code>홍길동 이순신 신한은행</code>
     </div>
-    ${tms.length?`<div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:var(--text3)">팀전 선택</label>
-      <select id="_tp_tmi" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
-        <option value="-1">새 팀전 생성</option>${tmOpts}
-      </select>
-    </div>`:`<div style="margin-bottom:10px;padding:8px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">팀전이 없습니다. 입력 시 새 팀전이 생성됩니다.</div>`}
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div style="flex:1">
-        <label style="font-size:12px;font-weight:700;color:var(--text3)">기본 날짜</label>
-        <input id="_tp_date" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
-      </div>
-    </div>
-    <textarea id="_tp_text" rows="8" placeholder="홍길동 이순신 A 신한은행&#10;강감찬 을지문덕 B&#10;이순신 강감찬 이순신" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <textarea id="_tp_text" rows="9" placeholder="홍길동 이순신 신한은행&#10;강감찬 을지문덕&#10;이순신 강감찬 블리자드리지" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div id="_tp_preview" style="margin-top:8px;font-size:11px;color:var(--text3)"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-b" style="flex:1" onclick="proCompSaveTeamPaste('${tnId}')">저장</button>
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveTeamPaste('${tnId}',${tmi})">저장</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmPasteModal').remove()">취소</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
 }
 
-function proCompSaveTeamPaste(tnId) {
+function proCompSaveTeamPaste(tnId, tmi) {
   const tn = proTourneys.find(t=>t.id===tnId);
-  if (!tn) return;
+  if (!tn||!tn.teamMatches||!tn.teamMatches[tmi]) return;
+  const tm = tn.teamMatches[tmi];
   const text = (document.getElementById('_tp_text')||{}).value||'';
-  const defDate = (document.getElementById('_tp_date')||{}).value||new Date().toISOString().slice(0,10);
-  const tmiEl = document.getElementById('_tp_tmi');
-  let tmi = tmiEl ? parseInt(tmiEl.value) : -1;
   document.getElementById('_tmPasteModal').remove();
   if (!text.trim()) return;
-  if (!tn.teamMatches) tn.teamMatches=[];
-  // 새 팀전 생성 필요하면 생성
-  if (tmi<0||!tn.teamMatches[tmi]) {
-    tn.teamMatches.push({_id:'ptm_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4), d:defDate, teamAName:'A팀', teamBName:'B팀', teamA:[], teamB:[], games:[], sa:0, sb:0});
-    tmi = tn.teamMatches.length-1;
-  }
-  const tm = tn.teamMatches[tmi];
+  const teamASet = new Set(tm.teamA||[]);
+  const teamBSet = new Set(tm.teamB||[]);
   const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
   let added=0;
   lines.forEach(line => {
     const parts = line.split(/[\s\t]+/);
     if (parts.length<2) return;
-    let d=defDate, aName='', bName='', winRaw='', map='';
-    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
-      d=parts[0]; aName=parts[1]||''; bName=parts[2]||''; winRaw=parts[3]||''; map=parts.slice(4).join(' ');
-    } else {
-      aName=parts[0]; bName=parts[1]||''; winRaw=parts[2]||''; map=parts.slice(3).join(' ');
-    }
-    if (!aName||!bName||aName===bName) return;
-    let sideW='';
-    if (winRaw==='A') sideW='A';
-    else if (winRaw==='B') sideW='B';
-    else if (winRaw===aName) sideW='A';
-    else if (winRaw===bName) sideW='B';
-    if (!sideW) return; // 승자 없으면 skip
-    const wName=sideW==='A'?aName:bName, lName=sideW==='A'?bName:aName;
+    const wName=parts[0], lName=parts[1], map=parts.slice(2).join(' ');
+    if (!wName||!lName||wName===lName) return;
+    // _sideW: 팀 멤버 기준 자동 감지, 없으면 A
+    let sideW='A';
+    if (teamBSet.has(wName)) sideW='B';
+    else if (teamASet.has(wName)) sideW='A';
+    else if (teamBSet.has(lName)) sideW='A'; // 패자가 B팀 → 승자는 A팀
+    else if (teamASet.has(lName)) sideW='B';
     const gid='ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
     if (!tm.games) tm.games=[];
     tm.games.push({_id:gid, wName, lName, map:map.trim(), _sideW:sideW});
-    applyGameResult(wName, lName, tm.d||d, map.trim(), gid, '', '', '프로리그팀전');
+    applyGameResult(wName, lName, tm.d||'', map.trim(), gid, '', '', '프로리그팀전');
     added++;
   });
   tm.sa=(tm.games||[]).filter(g=>g._sideW==='A').length;
