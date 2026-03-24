@@ -63,14 +63,14 @@ function _b2UnivBlock(univName, col, members) {
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
-  const lightCol = col + '28';
+  const lightCol = col + '10';
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
-    return `<div style="border-radius:14px;border:2px dashed ${col}66;padding:20px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
-      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
-      <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
-      <span style="font-size:11px;color:var(--gray-l);margin-left:4px">등록된 선수 없음</span>
+    return `<div style="border-radius:14px;border:2px dashed ${col}55;padding:16px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
+      ${iconUrl?`<img src="${iconUrl}" style="width:28px;height:28px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+      <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
   }
 
@@ -78,7 +78,7 @@ function _b2UnivBlock(univName, col, members) {
   const roledMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
   roledMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
 
-  // 티어 그룹 (직책 없는 일반 멤버)
+  // 티어 그룹
   const tieredMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
   const tierGroups = {};
   tieredMembers.forEach(p => {
@@ -90,11 +90,18 @@ function _b2UnivBlock(univName, col, members) {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
-  const _row = (labelEl, contentEl) => `<div style="padding:5px 0"><div style="display:flex;align-items:flex-start;gap:10px">${labelEl}${contentEl}</div></div>`;
-  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
-  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+  // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
+  const _tableRow = (label, isRole, chips) => `
+    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}22">
+      <div style="background:${isRole?col:col+'cc'};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:${textCol};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
+      </div>
+      <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        ${chips}
+      </div>
+    </div>`;
 
-  // 같은 직책끼리 묶어서 1행으로
+  // 같은 직책끼리 묶어서 1행
   const roleGroups = {};
   const roleOrder = [];
   roledMembers.forEach(p => {
@@ -102,36 +109,22 @@ function _b2UnivBlock(univName, col, members) {
     if (!roleGroups[r]) { roleGroups[r] = []; roleOrder.push(r); }
     roleGroups[r].push(p);
   });
-  let roledBody = '';
+  let rows = '';
   roleOrder.forEach(role => {
     const group = roleGroups[role];
-    const content = group.length === 1
-      ? _b2PlayerRow(group[0], col)
-      : `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, true)).join('')}</div>`;
-    roledBody += _row(_roleLabel(role), content);
+    rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
   });
-
-  let tieredBody = '';
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
+    rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 사이드 패널 (memoImgs 배열, position:absolute로 선 가리지 않음)
-  const _sideMemo = uCfg.memo || '';
-  const _sideImgs = (uCfg.memoImgs||[]).length ? uCfg.memoImgs : (uCfg.memoImg ? [uCfg.memoImg] : []);
-  const sideImgHtml = _sideImgs.map(src=>`<img src="${src}" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
-  const hasSide = !!(_sideMemo||_sideImgs.length);
-  const floatSideHtml = hasSide ? `<div class="b2-side-panel" style="background:${col}16;border:1px solid ${col}30">${sideImgHtml}${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}</div>` : '';
-
-  const tierSection = `<div style="overflow:hidden">${floatSideHtml}${roledBody}${tieredBody}</div>`;
-
-  // 하단 (bMemo + bMemoImgs 배열)
+  // 하단 메모/이미지
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}22">
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
@@ -139,26 +132,24 @@ function _b2UnivBlock(univName, col, members) {
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'cover';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.12;pointer-events:none;z-index:0"></div>`
     : '';
 
   return `
-    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
+    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
-          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
-          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:0 1 auto;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:''}
+          ${iconUrl?`<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}55;flex-shrink:0" onerror="this.style.display='none'">`:''}
+          <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
-          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33">${members.length}명</span>
         </div>
       </div>
-      <div style="background:${lightCol};padding:4px 14px 8px;position:relative;overflow:hidden">
+      <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1">
-          ${tierSection}
-        </div>
+        <div style="position:relative;z-index:1">${rows}</div>
       </div>
       ${bottomSection}
     </div>`;
