@@ -107,7 +107,7 @@ function _b2UnivBlock(univName, col, members) {
     const group = roleGroups[role];
     const content = group.length === 1
       ? _b2PlayerRow(group[0], col)
-      : `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`;
+      : `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, true)).join('')}</div>`;
     roledBody += _row(_roleLabel(role), content);
   });
 
@@ -115,7 +115,7 @@ function _b2UnivBlock(univName, col, members) {
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
+    tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
   });
 
   // 사이드 패널 (memoImgs 배열, position:absolute로 선 가리지 않음)
@@ -203,14 +203,14 @@ function _b2FreeView() {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     const col = getTierBtnColor(tier);
-    h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
+    h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
   });
   h += `</div></div>`;
   return h;
 }
 
 /* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
-function _b2NameTag(p, accentCol) {
+function _b2NameTag(p, accentCol, showTier) {
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
       style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
@@ -219,7 +219,7 @@ function _b2NameTag(p, accentCol) {
       ${_b2Avatar(p, accentCol, 40)}
       <span style="font-weight:700;font-size:14px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.race&&p.race!=='N'?_b2RaceIcon(p.race,15):''}
-      ${p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
+      ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
     </div>`;
 }
