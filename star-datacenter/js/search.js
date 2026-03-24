@@ -2350,9 +2350,9 @@ function renderProPreview(results) {
   <thead><tr style="background:linear-gradient(90deg,#5b21b6,#7c3aed);color:#fff">
     <th style="padding:6px 8px;font-size:10px;width:56px">세트</th>
     <th style="padding:6px 8px;font-size:10px;width:84px">맵</th>
-    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔵 A조</th>
+    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔵 A팀</th>
     <th style="padding:6px 4px;font-size:10px;width:44px;text-align:center">교체</th>
-    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔴 B조</th>
+    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔴 B팀</th>
     <th style="padding:6px 4px;font-size:10px;width:56px">상태</th>
     <th style="padding:6px 4px;font-size:10px;width:32px;text-align:center">삭제</th>
   </tr></thead><tbody>`;
@@ -2458,7 +2458,7 @@ function renderProPreview(results) {
       style="width:56px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:11px">${setOpts}</select>`;
 
     // 전체 교체 버튼 (중앙)
-    const flipBtn = `<button class="pro-flip-btn" data-idx="${i}" title="A조↔B조 교체"
+    const flipBtn = `<button class="pro-flip-btn" data-idx="${i}" title="A팀↔B팀 교체"
       style="padding:3px 6px;border-radius:5px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:13px;cursor:pointer;transition:.12s"
       onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">⇄</button>`;
 
@@ -2513,18 +2513,18 @@ function renderProPreview(results) {
     }).join('');
     const totalA = (mode==='set'||multiSet) ? sa : Object.values(setMap2).reduce((s,v)=>s+v.A,0);
     const totalB = (mode==='set'||multiSet) ? sb : Object.values(setMap2).reduce((s,v)=>s+v.B,0);
-    const winner = totalA>totalB?'🔵 A조':totalB>totalA?'🔴 B조':'무승부';
+    const winner = totalA>totalB?'🔵 A팀':totalB>totalA?'🔴 B팀':'무승부';
     html += `<div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📊 결과 미리보기${multiSet?' (세트제)':''}</div>
       ${multiSet?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${setRows}</div>`:''}
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A조</span>
+        <span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
         <span style="font-weight:900;font-size:22px">
           <span style="color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
           <span style="color:var(--gray-l);font-size:14px"> : </span>
           <span style="color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
         </span>
-        <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B조</span>
+        <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B팀</span>
         <span style="font-size:12px;font-weight:700;padding:3px 12px;border-radius:12px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">
           ${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}
         </span>
