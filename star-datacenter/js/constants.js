@@ -135,8 +135,6 @@ const STATUS_ICON_DEFS = {
   blank:   { label: '😐 생각없음', emoji: '😐' },
   sad:     { label: '😢 슬픔',  emoji: '😢' },
   sob:     { label: '😩 통곡',  emoji: '😩' },
-  new:     { label: '✨ NEW',   emoji: 'https://cdn-icons-png.freepik.com/256/10786/10786054.png?semt=ais_white_label' },
-  hot:     { label: '🔥 HOT',   emoji: 'https://cdn-icons-png.flaticon.com/512/1534/1534959.png' },
   cool:    { label: '😎 COOL',  emoji: '😎' },
   star2:   { label: '⭐ 스타',  emoji: '⭐' },
   crown:   { label: '👑 왕관',  emoji: '👑' },
