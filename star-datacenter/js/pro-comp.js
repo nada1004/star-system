@@ -393,7 +393,10 @@ function proCompTeamSection(tn) {
   const tms = tn.teamMatches||[];
   let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🤝 ${tn.name} — 팀전</div>`;
   if (isLoggedIn) {
-    h += `<button class="btn btn-b btn-sm no-export" style="margin-bottom:12px" onclick="proCompCreateTeamMatch('${tn.id}')">+ 팀전 추가</button>`;
+    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-b btn-sm" onclick="proCompCreateTeamMatch('${tn.id}')">+ 팀전 추가</button>
+      <button class="btn btn-w btn-sm" onclick="proCompOpenTeamPasteModal('${tn.id}')">📋 일괄 입력</button>
+    </div>`;
   }
   if (!tms.length) {
     h += `<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">팀을 구성하고 대결 결과를 기록할 수 있습니다</div></div>`;
@@ -443,7 +446,10 @@ function proCompTeamSection(tn) {
 function proCompCreateTeamMatch(tnId) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn) return;
-  const allPlayers = [...new Set((tn.groups||[]).flatMap(g=>g.players||[]))];
+  // 조편성 선수 우선 + 전체 players 포함
+  const grpPlayers = [...new Set((tn.groups||[]).flatMap(g=>g.players||[]))];
+  const allPNames = players.map(p=>p.name);
+  const allPlayerList = [...grpPlayers, ...allPNames.filter(n=>!grpPlayers.includes(n))];
   const modal = document.createElement('div');
   modal.id = '_tmModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;box-sizing:border-box';
@@ -476,10 +482,11 @@ function proCompCreateTeamMatch(tnId) {
         <div id="_tm_draftB" style="display:flex;flex-wrap:wrap;gap:4px"></div>
       </div>
     </div>
+    <div style="margin-bottom:6px">
+      <input id="_tm_search" placeholder="🔍 스트리머 검색..." oninput="_tmFilterPool()" style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box">
+    </div>
     <div id="_tm_pool" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;padding:8px;background:var(--surface);border-radius:8px;max-height:160px;overflow-y:auto">
-      ${allPlayers.length
-        ? allPlayers.map(p=>`<button class="_tm_pBtn" data-name="${p}" data-side="none" onclick="_tmCyclePlayer(this,'${p.replace(/'/g,"\\'")}') " style="padding:3px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer">${p}</button>`).join('')
-        : `<span style="font-size:12px;color:var(--gray-l)">조편성 선수 없음 — 팀 이름만 설정 후 생성</span>`}
+      ${allPlayerList.map(p=>`<button class="_tm_pBtn" data-name="${p}" data-side="none" onclick="_tmCyclePlayer(this,'${p.replace(/'/g,"\\'")}') " style="padding:3px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer">${p}</button>`).join('')}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="_tmSaveCreate('${tnId}')">생성</button>
@@ -487,6 +494,15 @@ function proCompCreateTeamMatch(tnId) {
     </div>
   </div>`;
   document.body.appendChild(modal);
+}
+
+function _tmFilterPool() {
+  const q = (document.getElementById('_tm_search')||{}).value||'';
+  const pool = document.getElementById('_tm_pool');
+  if (!pool) return;
+  pool.querySelectorAll('._tm_pBtn').forEach(btn => {
+    btn.style.display = q===''||btn.getAttribute('data-name').includes(q) ? '' : 'none';
+  });
 }
 
 function _tmCyclePlayer(btn, name) {
@@ -534,23 +550,26 @@ function proCompAddTeamGame(tnId, tmi) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||(tn.teamMatches||[])[tmi]==null) return;
   const tm = tn.teamMatches[tmi];
-  const teamA = tm.teamA&&tm.teamA.length ? tm.teamA : players.map(p=>p.name);
-  const teamB = tm.teamB&&tm.teamB.length ? tm.teamB : players.map(p=>p.name);
-  const optsA = teamA.map(p=>`<option value="${p}">${p}</option>`).join('');
-  const optsB = teamB.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const teamA = tm.teamA&&tm.teamA.length ? tm.teamA : [];
+  const teamB = tm.teamB&&tm.teamB.length ? tm.teamB : [];
+  const colA='#2563eb', colB='#dc2626';
+  const _memberBtns = (list, side, inputId) => list.map(p=>`<button type="button" onclick="_tmPickPlayer('${p.replace(/'/g,"\\'")}','${inputId}')" style="padding:2px 8px;border-radius:10px;border:1.5px solid ${side==='A'?colA:colB};background:${side==='A'?colA+'15':colB+'15'};color:${side==='A'?colA:colB};font-size:11px;cursor:pointer;font-weight:600">${p}</button>`).join('');
   const modal = document.createElement('div');
   modal.id = '_tmGameModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:380px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
     <div style="font-weight:900;font-size:15px;margin-bottom:14px">⚔️ 경기 추가</div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:#2563eb">${tm.teamAName||'A팀'} 선수</label>
-      <select id="_tg_a" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box"><option value="">선택</option>${optsA}</select>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:${colA}">${tm.teamAName||'A팀'} 선수</label>
+      ${teamA.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin:5px 0">${_memberBtns(teamA,'A','_tg_a')}</div>`:''}
+      <input id="_tg_a" placeholder="검색하거나 직접 입력" list="_tg_allPlayers" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;font-size:12px;box-sizing:border-box">
     </div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:#dc2626">${tm.teamBName||'B팀'} 선수</label>
-      <select id="_tg_b" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box"><option value="">선택</option>${optsB}</select>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:${colB}">${tm.teamBName||'B팀'} 선수</label>
+      ${teamB.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin:5px 0">${_memberBtns(teamB,'B','_tg_b')}</div>`:''}
+      <input id="_tg_b" placeholder="검색하거나 직접 입력" list="_tg_allPlayers" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;font-size:12px;box-sizing:border-box">
     </div>
+    <datalist id="_tg_allPlayers">${players.map(p=>`<option value="${p.name}">`).join('')}</datalist>
     <div style="margin-bottom:10px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">승자</label>
       <div style="display:flex;gap:8px;margin-top:6px">
@@ -560,7 +579,7 @@ function proCompAddTeamGame(tnId, tmi) {
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">맵 (선택)</label>
-      <input id="_tg_map" placeholder="선택입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      <input id="_tg_map" placeholder="선택입력" list="_tg_allPlayers" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;font-size:12px;box-sizing:border-box">
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="_tmSaveGame('${tnId}',${tmi})">추가</button>
@@ -568,6 +587,11 @@ function proCompAddTeamGame(tnId, tmi) {
     </div>
   </div>`;
   document.body.appendChild(modal);
+}
+
+function _tmPickPlayer(name, inputId) {
+  const el = document.getElementById(inputId);
+  if (el) el.value = name;
 }
 
 function _tmSaveGame(tnId, tmi) {
@@ -613,6 +637,96 @@ function proCompDeleteTeamMatch(tnId, tmi) {
   if (tm) (tm.games||[]).forEach(g=>_revertProMatch(g._id));
   tn.teamMatches.splice(tmi,1);
   save(); render();
+}
+
+/* ──────────────────────────────────────
+   팀전 일괄 입력 (붙여넣기)
+────────────────────────────────────── */
+function proCompOpenTeamPasteModal(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const tms = tn.teamMatches||[];
+  const tmIdx = (tmi!=null&&tms[tmi]) ? tmi : null;
+  const tm = tmIdx!=null ? tms[tmIdx] : null;
+  // 팀전 선택 옵션
+  const tmOpts = tms.map((t,i)=>`<option value="${i}"${tmIdx===i?' selected':''}>${t.teamAName||'A팀'} vs ${t.teamBName||'B팀'} (${t.d||'날짜 미정'})</option>`).join('');
+  const modal = document.createElement('div');
+  modal.id = '_tmPasteModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:430px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:8px">📋 팀전 경기 일괄 입력</div>
+    <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.8">
+      한 줄에 한 경기. 공백/탭 구분:<br>
+      <code>[날짜] A팀선수 B팀선수 승자(A/B/이름) [맵]</code><br>
+      예) <code>홍길동 이순신 A 신한은행</code><br>
+      승자 A = A팀선수 승, B = B팀선수 승
+    </div>
+    ${tms.length?`<div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">팀전 선택</label>
+      <select id="_tp_tmi" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+        <option value="-1">새 팀전 생성</option>${tmOpts}
+      </select>
+    </div>`:`<div style="margin-bottom:10px;padding:8px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e">팀전이 없습니다. 입력 시 새 팀전이 생성됩니다.</div>`}
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:var(--text3)">기본 날짜</label>
+        <input id="_tp_date" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+    </div>
+    <textarea id="_tp_text" rows="8" placeholder="홍길동 이순신 A 신한은행&#10;강감찬 을지문덕 B&#10;이순신 강감찬 이순신" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveTeamPaste('${tnId}')">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmPasteModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function proCompSaveTeamPaste(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const text = (document.getElementById('_tp_text')||{}).value||'';
+  const defDate = (document.getElementById('_tp_date')||{}).value||new Date().toISOString().slice(0,10);
+  const tmiEl = document.getElementById('_tp_tmi');
+  let tmi = tmiEl ? parseInt(tmiEl.value) : -1;
+  document.getElementById('_tmPasteModal').remove();
+  if (!text.trim()) return;
+  if (!tn.teamMatches) tn.teamMatches=[];
+  // 새 팀전 생성 필요하면 생성
+  if (tmi<0||!tn.teamMatches[tmi]) {
+    tn.teamMatches.push({_id:'ptm_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4), d:defDate, teamAName:'A팀', teamBName:'B팀', teamA:[], teamB:[], games:[], sa:0, sb:0});
+    tmi = tn.teamMatches.length-1;
+  }
+  const tm = tn.teamMatches[tmi];
+  const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  let added=0;
+  lines.forEach(line => {
+    const parts = line.split(/[\s\t]+/);
+    if (parts.length<2) return;
+    let d=defDate, aName='', bName='', winRaw='', map='';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+      d=parts[0]; aName=parts[1]||''; bName=parts[2]||''; winRaw=parts[3]||''; map=parts.slice(4).join(' ');
+    } else {
+      aName=parts[0]; bName=parts[1]||''; winRaw=parts[2]||''; map=parts.slice(3).join(' ');
+    }
+    if (!aName||!bName||aName===bName) return;
+    let sideW='';
+    if (winRaw==='A') sideW='A';
+    else if (winRaw==='B') sideW='B';
+    else if (winRaw===aName) sideW='A';
+    else if (winRaw===bName) sideW='B';
+    if (!sideW) return; // 승자 없으면 skip
+    const wName=sideW==='A'?aName:bName, lName=sideW==='A'?bName:aName;
+    const gid='ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
+    if (!tm.games) tm.games=[];
+    tm.games.push({_id:gid, wName, lName, map:map.trim(), _sideW:sideW});
+    applyGameResult(wName, lName, tm.d||d, map.trim(), gid, '', '', '프로리그팀전');
+    added++;
+  });
+  tm.sa=(tm.games||[]).filter(g=>g._sideW==='A').length;
+  tm.sb=(tm.games||[]).filter(g=>g._sideW==='B').length;
+  save(); render();
+  if (added>0) alert(`${added}경기가 추가되었습니다.`);
 }
 
 /* ──────────────────────────────────────
