@@ -5,25 +5,33 @@ let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
 let totalSearch=''; // 스트리머 탭 이름 검색
 let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let totalShowRetired=false; // 은퇴 선수 표시
+let _bulkEditMode=false; // 일괄 수정 모드
+let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   // 랭킹 스냅샷 업데이트 (하루 1회)
   if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
   const raceOpts=['전체','T','Z','P','N'];
+  const _showBulk=isLoggedIn&&_bulkEditMode;
+  const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
   let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
     <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <button class="pill ${totalHideNoRecord?'on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 스트리머 숨기기</button>
     <button class="pill ${totalShowRetired?'on':''}" onclick="totalShowRetired=!totalShowRetired;render()" style="${totalShowRetired?'background:#6b7280;border-color:#6b7280;color:#fff':''}">🎗️ 은퇴 스트리머 포함</button>
+    ${isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''}
+    ${_showBulk?`<button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>`:''}
   </div>`;
 
     let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
+    ${_showBulk?'<col style="width:36px">':''}
     <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col style="width:52px"><col style="width:52px">
     <col style="width:70px"><col style="width:80px"><col style="width:60px">
     ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
+    ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
     <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
@@ -66,7 +74,7 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${isLoggedIn?11:10}">
+    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
       <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'18px')}${u.name}</span>
       ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
       ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🚫 방문자 숨김</span>`:''}
@@ -80,19 +88,21 @@ function rTotal(C,T){
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?11:10}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
+    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
     _displayList.forEach(p=>{
       if(p===null){
         // 구분자 - 직책 섹션 끝, 일반 선수 시작
         _inRoleSection=false; lt='';
-        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${isLoggedIn?11:10}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`;
+        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`;
         return;
       }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${isLoggedIn?11:10}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${_ncols}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
       const _pRank = _rankMap[p.name];
       const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
+      const _pSafe=p.name.replace(/'/g,"\\'");
       tableHTML+=`<tr>
+        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
@@ -127,7 +137,7 @@ function rTotal(C,T){
     });
   });
   if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${isLoggedIn?11:10}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
+    tableHTML+=`<tr><td colspan="${_ncols}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
   }
   tableHTML+=`</tbody></table></div>`;
 
@@ -136,6 +146,69 @@ function rTotal(C,T){
   requestAnimationFrame(()=>injectUnivIcons(C));
   const si=C.querySelector('#total-search');
   if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+}
+
+function toggleBulkEditMode(){
+  _bulkEditMode=!_bulkEditMode;
+  _bulkEditSelected=new Set();
+  render();
+}
+
+function toggleBulkEditPlayer(name,checked){
+  if(checked) _bulkEditSelected.add(name);
+  else _bulkEditSelected.delete(name);
+  const cnt=document.getElementById('bulk-edit-cnt');
+  if(cnt) cnt.textContent=_bulkEditSelected.size;
+  const btn=document.getElementById('bulk-edit-apply-btn');
+  if(btn) btn.style.display=_bulkEditSelected.size>0?'inline-flex':'none';
+}
+
+function bulkEditToggleAll(checked){
+  document.querySelectorAll('[onchange^="toggleBulkEditPlayer"]').forEach(cb=>{
+    cb.checked=checked;
+    const name=cb.getAttribute('onchange').match(/toggleBulkEditPlayer\('(.+?)',/)?.[1];
+    if(name){if(checked)_bulkEditSelected.add(name);else _bulkEditSelected.delete(name);}
+  });
+  const cnt=document.getElementById('bulk-edit-cnt');
+  if(cnt) cnt.textContent=_bulkEditSelected.size;
+  const btn=document.getElementById('bulk-edit-apply-btn');
+  if(btn) btn.style.display=_bulkEditSelected.size>0?'inline-flex':'none';
+}
+
+function openBulkEditModal(){
+  if(!_bulkEditSelected.size) return;
+  const univOpts=getAllUnivs().filter(u=>!u.dissolved).map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const tierOpts=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
+  document.getElementById('bulkEditBody').innerHTML=`
+    <div style="margin-bottom:14px;padding:10px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--text2)">
+      <strong style="color:var(--blue)">${_bulkEditSelected.size}명</strong> 선택됨: ${[..._bulkEditSelected].join(', ')}
+    </div>
+    <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">티어</label>
+    <select id="bulk-ed-t" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:14px">
+      <option value="">변경 안함</option>${tierOpts}
+    </select>
+    <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">대학</label>
+    <select id="bulk-ed-u" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+      <option value="">변경 안함</option>${univOpts}
+    </select>`;
+  om('bulkEditModal');
+}
+
+function saveBulkEdit(){
+  const t=document.getElementById('bulk-ed-t').value;
+  const u=document.getElementById('bulk-ed-u').value;
+  if(!t&&!u){alert('변경할 항목을 선택하세요.');return;}
+  _bulkEditSelected.forEach(name=>{
+    const p=players.find(x=>x.name===name);
+    if(!p) return;
+    if(t) p.tier=t;
+    if(u) p.univ=u;
+  });
+  save();
+  cm('bulkEditModal');
+  _bulkEditMode=false;
+  _bulkEditSelected=new Set();
+  render();
 }
 
 /* ══════════════════════════════════════
