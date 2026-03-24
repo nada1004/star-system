@@ -233,8 +233,8 @@ function _b2PlayerRow(p, accentCol) {
       style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
       onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
-      ${_b2Avatar(p, accentCol, 40)}
-      <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
+      ${_b2Avatar(p, accentCol, 58)}
+      <span class="b2name" style="font-weight:700;font-size:18px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
