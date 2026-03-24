@@ -226,6 +226,12 @@ function proCompLeague(tn) {
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
       h += `<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
     });
+    h += `<span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">|</span>`;
+    tn.groups.forEach((grp, gi) => {
+      const gl = 'ABCDEFGHIJ'[gi];
+      const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+      h += `<button class="btn btn-xs" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${gl}조</button>`;
+    });
     h += `</div>`;
   }
   h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
@@ -779,7 +785,10 @@ function proCompBracket(tn) {
     const p=_pc(name); if(!p) return '';
     return `<span style="font-size:9px;color:var(--gray-l);white-space:nowrap">${p.univ||''}${p.tier?' · '+p.tier:''}</span>`;
   };
-  let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🗂️ ${tn.name} — 대진표</div>`;
+  let h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="font-weight:900;font-size:15px;color:var(--blue)">🗂️ ${tn.name} — 대진표</div>
+    ${isLoggedIn&&rounds.length?`<button class="btn btn-w btn-sm no-export" onclick="proCompOpenBktPasteModal('${tn.id}')">📋 일괄 입력</button>`:''}
+  </div>`;
   // 라운드 레이블 행
   const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
   const rndColor = ri => ri===rounds.length-1?'#f59e0b':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
@@ -953,6 +962,100 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   const existIdx = ttM.findIndex(r=>r._proKey===proKey);
   if (existIdx>=0) ttM.splice(existIdx,1);
   save(); render();
+}
+
+/* ──────────────────────────────────────
+   대진표 결과 일괄 입력 (붙여넣기)
+────────────────────────────────────── */
+function proCompOpenBktPasteModal(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.bracket||!tn.bracket.length) return;
+  const rounds = tn.bracket;
+  const totalRounds = rounds.length;
+  const rndLabel = ri => ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
+  // 진행 가능한 경기 목록 (a, b 모두 있는 경기)
+  const pending = [];
+  rounds.forEach((rnd, ri) => rnd.forEach((m, mi) => {
+    if (m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') pending.push({ri, mi, a:m.a, b:m.b, round:rndLabel(ri), done:!!m.winner});
+  }));
+  const pendHTML = pending.length
+    ? `<div style="font-size:11px;color:var(--text3);margin-bottom:8px;padding:8px;background:var(--surface);border-radius:8px;line-height:1.9">
+        ${pending.map(p=>`<span style="display:inline-block;margin:1px 4px;padding:1px 8px;border-radius:10px;background:${p.done?'#dcfce7':'#fef3c7'};color:${p.done?'#16a34a':'#92400e'};font-size:10px;font-weight:700">${p.round}: ${p.a} vs ${p.b}${p.done?' ✓':''}</span>`).join('')}
+       </div>` : '';
+  const modal = document.createElement('div');
+  modal.id = '_bktPasteModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:440px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:8px">📋 대진표 결과 일괄 입력</div>
+    <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.8">
+      한 줄에 한 경기 (공백/탭 구분):<br>
+      <code>승자이름 패자이름 [맵]</code><br>
+      대진표에 등록된 선수명과 일치해야 자동 배정됩니다.
+    </div>
+    ${pendHTML}
+    <textarea id="_bkt_text" rows="8" placeholder="${pending.slice(0,3).map(p=>`${p.a} ${p.b} 맵이름`).join('\n')||'홍길동 이순신\n강감찬 을지문덕'}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div id="_bkt_preview" style="margin-top:6px;font-size:11px;color:var(--text3)"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktPaste('${tnId}')">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktPasteModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function proCompSaveBktPaste(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.bracket) return;
+  const text = (document.getElementById('_bkt_text')||{}).value||'';
+  document.getElementById('_bktPasteModal').remove();
+  if (!text.trim()) return;
+  const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  let applied = 0, skipped = 0;
+  lines.forEach(line => {
+    const parts = line.split(/[\s\t]+/);
+    if (parts.length < 2) return;
+    const wName = parts[0], lName = parts[1], map = parts.slice(2).join(' ');
+    if (!wName||!lName||wName===lName) return;
+    // 브라켓에서 해당 슬롯 찾기
+    let found = false;
+    for (let ri=0; ri<tn.bracket.length; ri++) {
+      for (let mi=0; mi<tn.bracket[ri].length; mi++) {
+        const m = tn.bracket[ri][mi];
+        if (!m.a||!m.b) continue;
+        let winner = '';
+        if (m.a===wName&&m.b===lName) winner='A';
+        else if (m.b===wName&&m.a===lName) winner='B';
+        if (!winner) continue;
+        if (map) m.map = map;
+        // proCompSetBktWinner 로직 인라인 (모달 없이)
+        const prevWinner = m.winner;
+        m.winner = winner;
+        const nextMi = Math.floor(mi/2), isA = mi%2===0;
+        if (tn.bracket[ri+1]&&tn.bracket[ri+1][nextMi]) {
+          const next = tn.bracket[ri+1][nextMi];
+          const wn = m.winner==='A'?m.a:m.b;
+          if (isA) next.a=wn; else next.b=wn;
+        }
+        // 준결승 패자 → 3위전
+        const semiRi = tn.bracket.length-2;
+        if (tn.thirdPlace&&ri===semiRi&&tn.bracket.length>=2&&(mi===0||mi===1)) {
+          if (tn.thirdPlace.winner) _revertProMatch(`pbn_${tnId}_3rd`);
+          tn.thirdPlace.winner='';
+          const loser=m.winner==='A'?m.b:m.a;
+          if (mi===0) tn.thirdPlace.a=loser; else tn.thirdPlace.b=loser;
+        }
+        // player history 반영
+        const bktMatchId=`pbn_${tnId}_${ri}_${mi}`;
+        if (prevWinner&&m.a&&m.b) _revertProMatch(bktMatchId);
+        if (m.a&&m.b) applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||new Date().toISOString().slice(0,10), map||m.map||'', bktMatchId, '', '', '프로리그대회');
+        applied++; found=true; break;
+      }
+      if (found) break;
+    }
+    if (!found) skipped++;
+  });
+  save(); render();
+  alert(`✅ ${applied}경기 적용${skipped>0?`, ${skipped}건 미매칭`:''}`);
 }
 
 function proCompBktSetDate(tnId, ri, mi) {
