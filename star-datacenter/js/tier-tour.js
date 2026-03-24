@@ -511,6 +511,8 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
+  // 대회탭에서 호출: curComp(대회탭 선택)로 _ttCurComp 동기화
+  if(curComp) _ttCurComp=curComp;
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
@@ -1835,6 +1837,8 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
+  // 대회탭에서 호출: curComp(대회탭 선택)로 _ttCurComp 동기화
+  if(curComp) _ttCurComp=curComp;
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
