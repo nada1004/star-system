@@ -64,7 +64,7 @@ function _b2UnivBlock(univName, col, members) {
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
   const lightCol = col + '10';
-  const labelCol = col + '35';
+  const labelCol = col + '18';
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
