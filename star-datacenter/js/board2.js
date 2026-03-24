@@ -63,7 +63,7 @@ function _b2UnivBlock(univName, col, members) {
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
-  const lightCol = col + '28';
+  const lightCol = col + '10';
   const labelCol = col + '35';
 
   // 멤버 없을 때 빈 블록
@@ -93,7 +93,7 @@ function _b2UnivBlock(univName, col, members) {
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   const _tableRow = (label, isRole, chips) => `
-    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}22">
+    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44">
       <div style="background:${labelCol};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
         <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
