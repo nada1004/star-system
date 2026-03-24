@@ -140,6 +140,9 @@ const STATUS_ICON_DEFS = {
   cool:    { label: '😎 COOL',  emoji: '😎' },
   star2:   { label: '⭐ 스타',  emoji: '⭐' },
   crown:   { label: '👑 왕관',  emoji: '👑' },
+  hot2:    { label: '🥵 핫',   emoji: '🥵' },
+  star3:   { label: '🌟 빛나는별', emoji: '🌟' },
+  new2:    { label: '🆕 NEW2', emoji: '🆕' },
 };
 function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
 function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
