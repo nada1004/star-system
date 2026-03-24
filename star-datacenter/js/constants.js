@@ -362,7 +362,7 @@ const UNIV_ICONS={
 const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="flex-shrink:0;opacity:0.75;vertical-align:middle"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 // 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
 function gUI(n,size='1em'){
-  const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';
+  const url=(univCfg.find(x=>x.name===n)||{}).icon||UNIV_ICONS[n]||'';
   if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`;
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
