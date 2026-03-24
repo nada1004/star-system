@@ -23,6 +23,7 @@ function _b2VisUnivs() {
 }
 
 function rBoard2(C, T) {
+  T.innerText = '📊 현황판';
   const oldBtn = isLoggedIn
     ? `<button onclick="_b2View='old';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='old'?'var(--blue)':'var(--border2)'};background:${_b2View==='old'?'var(--blue)':'var(--white)'};color:${_b2View==='old'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">📊 구현황판</button>`
     : '';
