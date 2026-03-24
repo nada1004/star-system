@@ -2151,6 +2151,27 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
+  <div class="ssec"><h4>🎨 현황판 대학별 색상 진하기</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">라벨(직책·티어)과 스트리머 배경의 대학 색상 투명도를 조절합니다. 현황판 대학별 탭으로 이동하면 바로 반영됩니다.</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">라벨 배경 진하기</span>
+          <span id="b2la-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2LabelAlpha}%</span>
+        </div>
+        <input type="range" min="0" max="40" value="${b2LabelAlpha}" style="width:100%;accent-color:var(--blue)"
+          oninput="b2LabelAlpha=+this.value;document.getElementById('b2la-val').textContent=this.value+'%';localStorage.setItem('su_b2la',this.value)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">스트리머 배경 진하기</span>
+          <span id="b2ba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2BgAlpha}%</span>
+        </div>
+        <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:100%;accent-color:var(--blue)"
+          oninput="b2BgAlpha=+this.value;document.getElementById('b2ba-val').textContent=this.value+'%';localStorage.setItem('su_b2ba',this.value)">
+      </div>
+    </div>
+  </div>
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{

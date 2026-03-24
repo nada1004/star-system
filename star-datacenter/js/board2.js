@@ -5,6 +5,11 @@
 
 let _b2View = 'univ';
 
+// 대학별 현황판 색상 진하기 (0~100, %)
+let b2LabelAlpha = J('su_b2la') ?? 16;
+let b2BgAlpha    = J('su_b2ba') ?? 9;
+function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
+
 const _B2_ROLE_ORDER = ['이사장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
 
 function _b2RoleRank(p) {
@@ -63,8 +68,8 @@ function _b2UnivBlock(univName, col, members) {
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
-  const lightCol = col + '18';
-  const labelCol = col + '28';
+  const lightCol = col + _b2AlphaHex(b2BgAlpha);
+  const labelCol = col + _b2AlphaHex(b2LabelAlpha);
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
