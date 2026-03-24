@@ -44,58 +44,112 @@ function rBoard2(C, T) {
   }
 }
 
-/* ── 대학별 뷰 (컬러 행 로스터) ── */
+/* ── 대학별 뷰 ── */
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  let h = `<div style="display:flex;flex-direction:column;gap:3px">`;
+  const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
+  let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
+  h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
-    const col = gc(u.name);
-    const textCol = _b2ContrastColor(col);
-    const lightCol = col + '18';
-    const uCfg = univCfg.find(x => x.name === u.name) || {};
-    const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[u.name] || '';
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired);
-    // 직책→티어→이름 순 정렬
-    const roled = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
-    roled.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
-    const normal = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
-    normal.sort((a,b) => TIERS.indexOf(a.tier||'미정') - TIERS.indexOf(b.tier||'미정') || (a.name||'').localeCompare(b.name||''));
-    const sorted = [...roled, ...normal];
-    const chips = sorted.map(p => {
-      const raceShort = {'T':'T','Z':'Z','P':'P'}[p.race||''] || '?';
-      const tierCol = getTierBtnColor(p.tier||'');
-      const tierTextCol = getTierBtnTextColor(p.tier||'') || '#fff';
-      const avatarHtml = p.photo
-        ? `<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,.7)" onerror="this.style.display='none'">`
-        : `<span style="width:22px;height:22px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:${textCol};flex-shrink:0;border:1.5px solid rgba(255,255,255,.5)">${raceShort}</span>`;
-      const badge = p.role
-        ? `<span style="font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:${col};color:${textCol};flex-shrink:0">${p.role}</span>`
-        : `<span style="font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:${tierCol};color:${tierTextCol};flex-shrink:0">${p.tier||'?'}</span>`;
-      return `<div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-        style="display:inline-flex;align-items:center;gap:4px;padding:3px 7px 3px 3px;border-radius:20px;cursor:pointer;background:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.85);white-space:nowrap;transition:transform .1s"
-        onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
-        ${avatarHtml}
-        <span style="font-weight:700;font-size:12px;color:#1e293b;${p.inactive?'opacity:.55':''}">${p.name||''}</span>
-        ${badge}
-      </div>`;
-    }).join('');
-    h += `<div style="display:flex;align-items:stretch;border-radius:8px;overflow:hidden;min-height:46px">
-      <div onclick="if(typeof openUnivModal==='function')openUnivModal('${u.name}')" title="대학 상세"
-        style="background:${col};min-width:110px;width:110px;display:flex;align-items:center;gap:6px;padding:7px 10px 7px 12px;flex-shrink:0;cursor:pointer">
-        ${iconUrl?`<img src="${iconUrl}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${textCol}44" onerror="this.style.display='none'">`:''}
-        <div style="min-width:0;flex:1">
-          <div style="font-weight:900;font-size:12px;color:${textCol};line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
-          <div style="font-size:10px;color:${textCol}aa;font-weight:600">${members.length}명</div>
-        </div>
-      </div>
-      <div style="background:${lightCol};flex:1;display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:5px 10px">
-        ${chips||`<span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>`}
-      </div>
-    </div>`;
+    h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
   return h;
+}
+
+function _b2UnivBlock(univName, col, members) {
+  const uCfg = univCfg.find(x => x.name === univName) || {};
+  const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
+  const textCol = _b2ContrastColor(col);
+  const lightCol = col + '12';
+
+  // 멤버 없을 때 빈 블록
+  if (!members.length) {
+    return `<div style="border-radius:14px;border:2px dashed ${col}66;padding:20px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
+      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
+      <span style="font-size:11px;color:var(--gray-l);margin-left:4px">등록된 선수 없음</span>
+    </div>`;
+  }
+
+  // 직책 그룹
+  const roledMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  roledMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
+
+  // 티어 그룹 (직책 없는 일반 멤버)
+  const tieredMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const tierGroups = {};
+  tieredMembers.forEach(p => {
+    const t = p.tier || '?';
+    if (!tierGroups[t]) tierGroups[t] = [];
+    tierGroups[t].push(p);
+  });
+  const orderedTierKeys = TIERS.filter(t => tierGroups[t]).concat(
+    Object.keys(tierGroups).filter(t => !TIERS.includes(t))
+  );
+
+  const _row = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${col}40"><div style="display:flex;align-items:flex-start;gap:10px">${labelEl}${contentEl}</div></div>`;
+  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+
+  let roledBody = '';
+  roledMembers.forEach(p => {
+    roledBody += _row(_roleLabel(p.role||''), _b2PlayerRow(p, col));
+  });
+
+  let tieredBody = '';
+  orderedTierKeys.forEach(tier => {
+    const group = tierGroups[tier];
+    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    tieredBody += _row(_tierLabel(tier), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col)).join('')}</div>`);
+  });
+
+  // 사이드 패널 (memoImgs 배열, position:absolute로 선 가리지 않음)
+  const _sideMemo = uCfg.memo || '';
+  const _sideImgs = (uCfg.memoImgs||[]).length ? uCfg.memoImgs : (uCfg.memoImg ? [uCfg.memoImg] : []);
+  const sideImgHtml = _sideImgs.map(src=>`<img src="${src}" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:7px;margin-bottom:5px;display:block" onerror="this.style.display='none'">`).join('');
+  const hasSide = !!(_sideMemo||_sideImgs.length);
+  const floatSideHtml = hasSide ? `<div class="b2-side-panel" style="background:${col}16;border:1px solid ${col}30">${sideImgHtml}${_sideMemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_sideMemo}</div>`:''}</div>` : '';
+
+  const tierSection = `<div style="overflow:hidden">${floatSideHtml}${roledBody}${tieredBody}</div>`;
+
+  // 하단 (bMemo + bMemoImgs 배열)
+  const _bnote = uCfg.bMemo || '';
+  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
+    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
+    ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
+  </div>` : '';
+
+  const _bgPos = uCfg.bgImgPos || 'center center';
+  const _bgSize = uCfg.bgImgSize || 'cover';
+  const bgImgHtml = uCfg.bgImg
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`
+    : '';
+
+  return `
+    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px ${col}2a">
+      <div style="background:${col};padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
+          ${iconUrl ? `<img src="${iconUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid ${textCol}66;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+          <span style="font-weight:900;font-size:15px;color:${textCol};letter-spacing:-0.3px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" title="대학 상세">${univName}</span>
+          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;align-items:center;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}cc;flex:0 1 auto;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:2px">${uCfg.memo2}</span>`:''}
+          <span style="flex:1"></span>
+          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
+        </div>
+      </div>
+      <div style="background:${lightCol};padding:4px 14px 8px;position:relative;overflow:hidden">
+        ${bgImgHtml}
+        <div style="position:relative;z-index:1">
+          ${tierSection}
+        </div>
+      </div>
+      ${bottomSection}
+    </div>`;
 }
 
 /* ── 무소속 뷰 ── */
