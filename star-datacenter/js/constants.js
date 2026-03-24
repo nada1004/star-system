@@ -140,10 +140,42 @@ const STATUS_ICON_DEFS = {
   cool:    { label: '😎 COOL',  emoji: '😎' },
   star2:   { label: '⭐ 스타',  emoji: '⭐' },
   crown:   { label: '👑 왕관',  emoji: '👑' },
-  hot2:    { label: '🥵 핫',   emoji: '🥵' },
-  star3:   { label: '🌟 빛나는별', emoji: '🌟' },
-  new2:    { label: '🆕 NEW2', emoji: '🆕' },
+  hot2:    { label: '🥵 핫',    emoji: '🥵' },
+  star3:   { label: '🌟 빛나는별',emoji: '🌟' },
+  new2:    { label: '🆕 NEW',   emoji: '🆕' },
+  trophy:  { label: '🏆 트로피', emoji: '🏆' },
+  diamond: { label: '💎 다이아', emoji: '💎' },
+  skull:   { label: '💀 해골',  emoji: '💀' },
+  muscle:  { label: '💪 강함',  emoji: '💪' },
+  rocket:  { label: '🚀 로켓',  emoji: '🚀' },
+  think:   { label: '🤔 생각중',emoji: '🤔' },
+  sleep:   { label: '😴 수면',  emoji: '😴' },
+  boom:    { label: '🤯 폭발',  emoji: '🤯' },
+  cold:    { label: '🥶 추움',  emoji: '🥶' },
+  party:   { label: '🎉 파티',  emoji: '🎉' },
+  dizzy:   { label: '💫 어지러움',emoji:'💫' },
+  clown:   { label: '🤡 광대',  emoji: '🤡' },
+  angry:   { label: '😤 화남',  emoji: '😤' },
+  target:  { label: '🎯 집중',  emoji: '🎯' },
 };
+// ── 커스텀 URL 아이콘 ──
+let _customStatusIcons = J('su_si_customs') || [];
+(function _loadCustomIcons(){
+  _customStatusIcons.forEach((c,i)=>{ STATUS_ICON_DEFS['_c'+i]={label:c.label||'커스텀'+(i+1),emoji:c.emoji}; });
+})();
+function addCustomStatusIcon(label, emoji){
+  if(!emoji) return;
+  _customStatusIcons.push({label:label||'커스텀',emoji});
+  const i=_customStatusIcons.length-1;
+  STATUS_ICON_DEFS['_c'+i]={label:_customStatusIcons[i].label,emoji};
+  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+}
+function removeCustomStatusIcon(idx){
+  _customStatusIcons.splice(idx,1);
+  Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
+  _customStatusIcons.forEach((c,i)=>{STATUS_ICON_DEFS['_c'+i]={label:c.label,emoji:c.emoji};});
+  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+}
 function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
 function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
 function getStatusIcon(name){ return playerStatusIcons[name]||''; }
@@ -154,7 +186,6 @@ function setStatusIcon(name, iconId){
 }
 function setStatusIconFromModal(btn, playerName, iconId){
   setStatusIcon(playerName, iconId);
-  // Update button highlights
   const container = btn.closest('#ed-icon-btns') || btn.parentElement;
   if(container){
     container.querySelectorAll('button[data-icon-id]').forEach(b=>{
@@ -164,10 +195,7 @@ function setStatusIconFromModal(btn, playerName, iconId){
     });
   }
   const lbl = document.getElementById('ed-icon-label');
-  if(lbl){
-    const d = STATUS_ICON_DEFS[iconId];
-    lbl.textContent = '선택: '+(d?d.label:'없음');
-  }
+  if(lbl){ const d=STATUS_ICON_DEFS[iconId]; lbl.textContent='선택: '+(d?d.label:'없음'); }
 }
 function saveCustomStatusIcon(slot, emoji){
   localStorage.setItem('su_si_c'+slot, emoji);

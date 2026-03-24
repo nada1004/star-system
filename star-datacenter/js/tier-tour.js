@@ -919,6 +919,23 @@ function rCfg(C,T){
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
     </div>
+    
+    <div style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🖼️ URL 아이콘 추가</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <input type="text" id="si-url-label" placeholder="이름 (예: HOT)" style="width:90px">
+        <input type="text" id="si-url-val" placeholder="이미지 URL 또는 이모지" style="flex:1;min-width:160px" oninput="(function(v){const p=document.getElementById('si-url-preview');p.innerHTML=v&&(v.startsWith('http')||v.startsWith('data:'))?'<img src=''+v+'' style='width:20px;height:20px;object-fit:contain' onerror='this.style.display='none''>':v;})(this.value)">
+        <span id="si-url-preview" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:16px"></span>
+        <button class="btn btn-b" onclick="(function(){const lbl=document.getElementById('si-url-label').value.trim();const val=document.getElementById('si-url-val').value.trim();if(!val){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(lbl||'커스텀',val);render();})()">+ 추가</button>
+      </div>
+      ${_customStatusIcons.length?_customStatusIcons.map((c,i)=>
+        `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+          <span style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">${_siIsImg(c.emoji)?_siRender(c.emoji,'20px'):c.emoji}</span>
+          <span style="flex:1;font-size:12px;color:var(--text2)">${c.label}</span>
+          <button class="btn btn-r btn-xs" onclick="removeCustomStatusIcon(${i});render()">🗑️</button>
+        </div>`
+      ).join(''):'<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:8px">추가된 커스텀 아이콘 없음</div>'}
+    </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
@@ -2246,6 +2263,23 @@ function rCfg(C,T){
         ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 6px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px;display:inline-flex;align-items:center;justify-content:center;min-width:28px" title="${d.label}">${_siIsImg(d.emoji)?_siRender(d.emoji,"18px"):d.emoji}</span>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
+    </div>
+    
+    <div style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🖼️ URL 아이콘 추가</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <input type="text" id="si-url-label" placeholder="이름 (예: HOT)" style="width:90px">
+        <input type="text" id="si-url-val" placeholder="이미지 URL 또는 이모지" style="flex:1;min-width:160px" oninput="(function(v){const p=document.getElementById('si-url-preview');p.innerHTML=v&&(v.startsWith('http')||v.startsWith('data:'))?'<img src=''+v+'' style='width:20px;height:20px;object-fit:contain' onerror='this.style.display='none''>':v;})(this.value)">
+        <span id="si-url-preview" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:16px"></span>
+        <button class="btn btn-b" onclick="(function(){const lbl=document.getElementById('si-url-label').value.trim();const val=document.getElementById('si-url-val').value.trim();if(!val){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(lbl||'커스텀',val);render();})()">+ 추가</button>
+      </div>
+      ${_customStatusIcons.length?_customStatusIcons.map((c,i)=>
+        `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
+          <span style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">${_siIsImg(c.emoji)?_siRender(c.emoji,'20px'):c.emoji}</span>
+          <span style="flex:1;font-size:12px;color:var(--text2)">${c.label}</span>
+          <button class="btn btn-r btn-xs" onclick="removeCustomStatusIcon(${i});render()">🗑️</button>
+        </div>`
+      ).join(''):'<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:8px">추가된 커스텀 아이콘 없음</div>'}
     </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
