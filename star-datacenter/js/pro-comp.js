@@ -100,8 +100,15 @@ function proCompSyncHistory() {
       });
     });
   });
-  if (cnt > 0) { save(); alert(`✅ ${cnt}경기 전적이 스트리머 상세에 동기화되었습니다.`); render(); }
-  else alert('이미 모두 동기화되어 있습니다.');
+  // ttM에 잘못 저장된 프로리그 대진표 기록 정리 (_proKey 있는 항목 제거)
+  const ttOrig = ttM.length;
+  for (let i=ttM.length-1; i>=0; i--) { if(ttM[i]._proKey) ttM.splice(i,1); }
+  const ttRemoved = ttOrig - ttM.length;
+  if (cnt > 0 || ttRemoved > 0) {
+    save();
+    alert(`✅ ${cnt}경기 전적 동기화${ttRemoved>0?`, 티어대회 오염 기록 ${ttRemoved}건 정리`:''}`);
+    render();
+  } else alert('이미 모두 동기화되어 있습니다.');
 }
 
 var proCompSub = 'league';
@@ -941,37 +948,10 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
     const d = m.d||new Date().toISOString().slice(0,10);
     applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, d, m.map||'', bktMatchId, '', '', '프로리그대회');
   }
-  // ttM 기록 처리
+  // 기존에 ttM에 잘못 저장된 프로리그 대진표 기록 정리
   const proKey = `ptn_${tnId}_${ri}_${mi}`;
   const existIdx = ttM.findIndex(r=>r._proKey===proKey);
   if (existIdx>=0) ttM.splice(existIdx,1);
-  if (m.winner && m.a && m.b) {
-    const totalRounds = tn.bracket.length;
-    let rLabel;
-    if (ri===totalRounds-1) rLabel='결승';
-    else if (ri===totalRounds-2) rLabel='준결승';
-    else if (ri===totalRounds-3) rLabel='4강';
-    else rLabel=`${Math.pow(2,totalRounds-ri)}강`;
-    const pa=players.find(p=>p.name===m.a)||{name:m.a};
-    const pb=players.find(p=>p.name===m.b)||{name:m.b};
-    ttM.unshift({
-      _id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-      _proKey:proKey,
-      d:new Date().toISOString().slice(0,10),
-      a:m.a, b:m.b, winner:m.winner,
-      map:m.map||'',
-      sa:m.winner==='A'?1:0, sb:m.winner==='B'?1:0,
-      compName:tn.name, n:tn.name, t:rLabel,
-      tierLabel:'프로리그토너먼트',
-      _bktRound:rLabel,
-      noSetMode:true,
-      teamALabel:m.a, teamBLabel:m.b,
-      teamAMembers:[{name:pa.name,univ:pa.univ||'',race:pa.race||'',tier:pa.tier||''}],
-      teamBMembers:[{name:pb.name,univ:pb.univ||'',race:pb.race||'',tier:pb.tier||''}],
-      sets:[{scoreA:m.winner==='A'?1:0,scoreB:m.winner==='B'?1:0,winner:m.winner,
-        games:[{playerA:m.a,playerB:m.b,winner:m.winner,map:m.map||''}]}]
-    });
-  }
   save(); render();
 }
 
