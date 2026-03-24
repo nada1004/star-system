@@ -933,6 +933,14 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
     </div>
     <div class="brd-move-popup-sep"></div>
+    <div style="padding:4px 6px 6px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
+      <div style="display:flex;gap:4px">
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
+      </div>
+    </div>
+    <div class="brd-move-popup-sep"></div>
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">📋 스트리머 상세 보기</button>
   `;
 
@@ -1051,6 +1059,13 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
       <div style="display:flex;gap:4px">
         <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
         <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${playerName}','${univName}')">이동</button>
+      </div>
+    </div>
+    <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
+      <div style="display:flex;gap:4px">
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px">
