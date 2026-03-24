@@ -427,8 +427,9 @@ function _getBoardUnivs(){
   const univs = getAllUnivs();
   if(!boardOrder.length) return univs;
   const ordered = [];
-  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u) ordered.push(u); });
-  univs.forEach(u => { if(!boardOrder.includes(u.name)) ordered.push(u); });
+  const seen = new Set();
+  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
+  univs.forEach(u => { if(!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   return ordered;
 }
 function toggleBoardUniv(name){
