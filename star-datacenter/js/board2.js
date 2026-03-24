@@ -91,8 +91,8 @@ function _b2UnivBlock(univName, col, members) {
   );
 
   const _row = (labelEl, contentEl) => `<div style="padding:5px 0"><div style="display:flex;align-items:flex-start;gap:10px">${labelEl}${contentEl}</div></div>`;
-  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${textCol};opacity:.85;width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
-  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${textCol};opacity:.7;width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+  const _roleLabel = (text) => `<span style="font-size:12px;font-weight:800;color:${col};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
+  const _tierLabel = (text) => `<span style="font-size:12px;font-weight:800;color:var(--text3);width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
 
   // 같은 직책끼리 묶어서 1행으로
   const roleGroups = {};
@@ -131,7 +131,7 @@ function _b2UnivBlock(univName, col, members) {
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col};border-top:1px solid ${textCol}18">
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${lightCol};border-top:1px solid ${col}18">
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
@@ -154,7 +154,7 @@ function _b2UnivBlock(univName, col, members) {
           <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}44">${members.length}명</span>
         </div>
       </div>
-      <div style="background:${col};padding:4px 14px 8px;position:relative;overflow:hidden">
+      <div style="background:${lightCol};padding:4px 14px 8px;position:relative;overflow:hidden">
         ${bgImgHtml}
         <div style="position:relative;z-index:1">
           ${tierSection}
