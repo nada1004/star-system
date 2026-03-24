@@ -617,17 +617,20 @@ function deleteGjSession(idsArr){
    끝장전
 ══════════════════════════════════════ */
 let _gjInput={date:'',playerA:'',playerB:'',games:[]};
+let _gjProMode=false;
 
-function rGJ(C,T,proOnly){
+function rGJ(C,T,proOnly,proInput){
+  _gjProMode=!!(proOnly&&proInput);
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
   if(!isLoggedIn && gjSub==='input') gjSub='records';
-  const subOpts=proOnly
-    ?[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
-    :[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
-  if(proOnly&&gjSub==='input') gjSub='records';
+  const showInput=!proOnly||proInput;
+  const subOpts=showInput
+    ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
+    :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
+  if(!showInput&&gjSub==='input') gjSub='records';
   let h=stabs(gjSub,subOpts);
   if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
-  if(gjSub==='input'&&isLoggedIn&&!proOnly){
+  if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
     h+=gjRankHTML(proOnly);
@@ -635,6 +638,11 @@ function rGJ(C,T,proOnly){
     h+=gjRecordsHTML(proOnly);
   }
   C.innerHTML=h;
+}
+
+function openGJProPasteModal(){
+  openGJPasteModal();
+  window._gjProPaste=true;
 }
 
 function gjInputHTML(){
@@ -658,8 +666,8 @@ function gjInputHTML(){
     </div>`;
   });
 
-  return `<div class="match-builder"><h3>⚔️ 끝장전 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openGJPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button></div>
+  return `<div class="match-builder"><h3>${_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력'}</h3>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="${_gjProMode?'openGJProPasteModal':'openGJPasteModal'}()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button></div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
@@ -722,11 +730,12 @@ function gjDirectSave(){
     _id:genId(),sid,d:dateVal,
     wName:w==='A'?gi.playerA:gi.playerB,
     lName:w==='A'?gi.playerB:gi.playerA,
-    map:''
+    map:'',
+    ...(_gjProMode?{_proLabel:true}:{})
   }));
   // 개인 전적 반영
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','','끝장전');
+    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','',_gjProMode?'프로리그끝장전':'끝장전');
   });
   gjM.unshift(...newGames);
   const p1w=gi.games.filter(g=>g==='A').length, p2w=gi.games.filter(g=>g==='B').length;

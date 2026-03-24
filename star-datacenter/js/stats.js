@@ -125,8 +125,7 @@ function statsProMatchIds(){
   return _sProIds;
 }
 function statsNonProHist(p){
-  const s=statsProMatchIds();
-  let h=(p.history||[]).filter(x=>!s.has(x.matchId));
+  let h=(p.history||[]);
   if(_statsDateFrom) h=h.filter(x=>(x.date||'')>=_statsDateFrom);
   if(_statsDateTo)   h=h.filter(x=>(x.date||'')<=_statsDateTo);
   return h;

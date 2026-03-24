@@ -1084,7 +1084,7 @@ function rMergedPro(C, T) {
   );
   const sub = document.createElement('div');
   if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
-  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true); }
+  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true,true); }
   else                            { if(typeof rProComp==='function') rProComp(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);

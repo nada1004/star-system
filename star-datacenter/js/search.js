@@ -1910,7 +1910,8 @@ function pasteApply() {
     indM.unshift(...indGames);
   } else if (mode === 'gj') {
     const gjSid = genId(); // 같은 붙여넣기 세션은 동일 sid로 묶음
-    const gjGames = savable.map(r => ({ _id: genId(), sid: gjSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
+    const _gjPro = !!window._gjProPaste;
+    const gjGames = savable.map(r => ({ _id: genId(), sid: gjSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}) }));
     gjM.unshift(...gjGames); // 순서 유지하며 한꺼번에 앞에 삽입
   } else if (mode === 'tt') {
     const ttAB = (r) => {
@@ -2015,6 +2016,7 @@ function swapPasteTeams(){
 }
 
 function closePasteModal() {
+  window._gjProPaste = false;
   // 강제 모드(미니/대학대전)였다면 모드 선택기 원복
   if (window._forcedPasteMode) {
     window._forcedPasteMode = null;
