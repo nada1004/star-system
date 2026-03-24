@@ -135,12 +135,14 @@ const STATUS_ICON_DEFS = {
   blank:   { label: '😐 생각없음', emoji: '😐' },
   sad:     { label: '😢 슬픔',  emoji: '😢' },
   sob:     { label: '😩 통곡',  emoji: '😩' },
-  new:     { label: '🆕 NEW',   emoji: '🆕' },
-  hot:     { label: '🌶️ HOT',   emoji: '🌶️' },
+  new:     { label: '✨ NEW',   emoji: 'https://cdn-icons-png.freepik.com/256/10786/10786054.png?semt=ais_white_label' },
+  hot:     { label: '🔥 HOT',   emoji: 'https://cdn-icons-png.flaticon.com/512/1534/1534959.png' },
   cool:    { label: '😎 COOL',  emoji: '😎' },
   star2:   { label: '⭐ 스타',  emoji: '⭐' },
   crown:   { label: '👑 왕관',  emoji: '👑' },
 };
+function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
+function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
 function getStatusIcon(name){ return playerStatusIcons[name]||''; }
 function setStatusIcon(name, iconId){
   if(!iconId||iconId==='none') delete playerStatusIcons[name];
@@ -191,6 +193,7 @@ function getStatusIconHTML(name){
   if(!ic) return '';
   const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
   const lbl=def?def.label:ic;
+  if(_siIsImg(ic)) return `<span style="margin-left:3px;flex-shrink:0;display:inline-flex;align-items:center" title="${lbl}">${_siRender(ic,'18px')}</span>`;
   return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
 }
 
