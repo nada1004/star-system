@@ -145,6 +145,10 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  // 프로리그 대회 조별리그 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function'?_proCompLeaguePasteApplyLogic(savable):false;
+  }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
@@ -1480,6 +1484,10 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  // 프로리그 대회 조별리그 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function'?_proCompLeaguePasteApplyLogic(savable):false;
+  }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){

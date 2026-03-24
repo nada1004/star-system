@@ -1367,28 +1367,45 @@ function proCompAddMatchOnDate(tnId, date) {
 function proCompOpenPasteModal(tnId, gi) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||!tn.groups[gi]) return;
-  const modal = document.createElement('div');
-  modal.id = '_pcPasteModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:8px">📋 경기 결과 일괄 입력</div>
-    <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.7">
-      한 줄에 한 경기. 공백/탭으로 구분:<br>
-      <code>[날짜] 선수A 선수B [승자]</code><br>
-      승자: A / B / 선수이름 (생략 시 미정)<br>
-      예) <code>2024-01-15 홍길동 이순신 A</code>
-    </div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:var(--text3)">기본 날짜</label>
-      <input id="_pcPasteDate" type="date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
-    </div>
-    <textarea id="_pcPasteText" rows="8" placeholder="홍길동 이순신 A&#10;이순신 강감찬 B&#10;강감찬 홍길동 홍길동" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-b" style="flex:1" onclick="proCompSavePaste('${tnId}',${gi})">저장</button>
-      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcPasteModal').remove()">취소</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
+  if (typeof openPasteModal !== 'function') return;
+  // 공통 pasteModal 재활용 (경기입력 붙여넣기와 동일한 UI)
+  _grpPasteState = {mode:'procomp-league', tnId, gi};
+  window._grpPasteMode = true;
+  openPasteModal();
+  // 개인전 형식 고정 (승자이름 패자이름 [맵])
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'ind'; sel.style.display = 'none'; if(typeof onPasteModeChange==='function') onPasteModeChange('ind'); }
+  if (lbl) lbl.style.display = 'none';
+  const gl = 'ABCDEFGHIJ'[gi];
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) hint.innerHTML = `<span style="color:#1d4ed8;font-weight:700">🏆 ${tn.name} — ${gl}조 결과 입력</span>`;
+  const title = document.querySelector('#pasteModal .mtitle');
+  if (title) title.textContent = `📋 조별리그 결과 일괄 입력 — ${gl}조`;
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) compWrap.style.display = 'none';
+}
+
+// 공통 pasteModal → 프로리그 대회 조별리그에 저장
+function _proCompLeaguePasteApplyLogic(savable) {
+  const {tnId, gi} = _grpPasteState;
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.groups[gi]) return false;
+  const grp = tn.groups[gi];
+  const dateEl = document.getElementById('paste-date');
+  const defDate = dateEl?.value || new Date().toISOString().slice(0,10);
+  if (!grp.matches) grp.matches = [];
+  let added = 0;
+  savable.forEach(r => {
+    if (!r.wPlayer||!r.lPlayer) return;
+    const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    grp.matches.push({a:r.wPlayer.name, b:r.lPlayer.name, winner:'A', d:defDate, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, defDate, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
+    added++;
+  });
+  save(); render();
+  if (added > 0) setTimeout(()=>alert(`${added}개 경기가 추가되었습니다.`), 100);
+  return true;
 }
 
 function proCompSavePaste(tnId, gi) {
