@@ -534,8 +534,8 @@ function rTierTour(){
         <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 ${_curTnName}에 모두 연결</button>
       </div>`;
     }
-    // 현재 선택된 대회의 기록만 표시
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
+    // 현재 선택된 대회의 기록 표시 (compName 일치 + 미지정 기록 포함)
+    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName||!m.compName) : ttM;
     if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
@@ -1869,8 +1869,8 @@ function rTierTour(){
         <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 ${_curTnName}에 모두 연결</button>
       </div>`;
     }
-    // 현재 선택된 대회의 기록만 표시
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
+    // 현재 선택된 대회의 기록 표시 (compName 일치 + 미지정 기록 포함)
+    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName||!m.compName) : ttM;
     if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
