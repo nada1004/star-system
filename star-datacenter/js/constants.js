@@ -405,7 +405,8 @@ function pS(n){return (n>0?'+':'')+n;}
 function getAllUnivs(){
   const r=[...univCfg];const s=new Set(univCfg.map(u=>u.name));
   players.forEach(p=>{if(!s.has(p.univ)){r.push({name:p.univ,color:'#6b7280'});s.add(p.univ);}});
-  return r;
+  const seen=new Set();
+  return r.filter(u=>{if(seen.has(u.name))return false;seen.add(u.name);return true;});
 }
 
 // 현황판 boardOrder → univCfg 순서 동기화 (현황판에서 이동하면 스트리머 목록도 같이 이동)
