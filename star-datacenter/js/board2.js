@@ -218,7 +218,7 @@ function _b2NameTag(p, accentCol) {
       onmouseout="this.style.background='transparent'">
       ${_b2Avatar(p, accentCol, 40)}
       <span style="font-weight:700;font-size:14px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${p.race?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}
+      ${p.race&&p.race!=='N'?_b2RaceIcon(p.race,15):''}
       ${p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
     </div>`;
@@ -226,7 +226,6 @@ function _b2NameTag(p, accentCol) {
 
 /* ── 직책 1행 표시 ── */
 function _b2PlayerRow(p, accentCol) {
-  const race = {'T':'테란','Z':'저그','P':'프로토스'}[p.race||''] || '';
   const tierCol = getTierBtnColor(p.tier||'');
   const tierTextCol = getTierBtnTextColor(p.tier||'') || '#fff';
   return `
@@ -237,7 +236,7 @@ function _b2PlayerRow(p, accentCol) {
       ${_b2Avatar(p, accentCol, 40)}
       <span class="b2name" style="font-weight:700;font-size:16px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
-      ${race ? `<span style="font-size:12px;color:var(--text3)">${race}</span>` : ''}
+      ${p.race&&p.race!=='N'?_b2RaceIcon(p.race,18):''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
     </div>`;
 }
@@ -269,6 +268,15 @@ function _b2Avatar(p, col, size) {
 function _b2AvatarFallback(letter, col, size) {
   const s = size || 28;
   return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
+}
+
+/* ── 종족 SVG 아이콘 ── */
+function _b2RaceIcon(race, size) {
+  const s = size || 16;
+  if (race === 'T') return `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" style="flex-shrink:0" title="테란"><circle cx="8" cy="8" r="7" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/><line x1="8" y1="2.5" x2="8" y2="13.5" stroke="#1d4ed8" stroke-width="1.5"/><line x1="2.5" y1="8" x2="13.5" y2="8" stroke="#1d4ed8" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#1d4ed8"/></svg>`;
+  if (race === 'Z') return `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" style="flex-shrink:0" title="저그"><circle cx="8" cy="8" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><path d="M8 2.5L9.5 6H13L10.2 8.2L11.2 12L8 9.8L4.8 12L5.8 8.2L3 6H6.5Z" fill="#7c3aed"/></svg>`;
+  if (race === 'P') return `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" style="flex-shrink:0" title="프로토스"><circle cx="8" cy="8" r="7" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/><polygon points="8,3.5 12.5,12 3.5,12" fill="#b45309"/></svg>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><circle cx="8" cy="8" r="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/><text x="8" y="12" text-anchor="middle" font-size="8" fill="#64748b" font-weight="700">?</text></svg>`;
 }
 
 function _b2ContrastColor(hex) {
