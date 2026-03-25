@@ -273,7 +273,7 @@ function _b2Avatar(p, col, size) {
   const badgeSize = Math.round(s * 0.38);
   const statusHtml = getStatusIconHTML(p.name);
   const badge = statusHtml
-    ? `<span style="position:absolute;bottom:-2px;right:-2px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px #fff,0 1px 4px rgba(0,0,0,.18);font-size:${Math.round(badgeSize*0.72)}px;line-height:1">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
+    ? `<span style="position:absolute;bottom:-2px;right:-2px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px rgba(255,255,255,.6),0 1px 4px rgba(0,0,0,.15);font-size:${Math.round(badgeSize*0.72)}px;line-height:1;opacity:.75">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
