@@ -271,13 +271,17 @@ function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
   const s = size || 28;
   const badgeSize = Math.round(s * 0.38);
+  const _rawIcon = getStatusIcon(p.name);
   const statusHtml = getStatusIconHTML(p.name);
   // 1시 방향(30°), 배지 중심을 원 테두리 위에 걸치게
   const r = s / 2, br = badgeSize / 2;
   const _bTop   = Math.round(r * 0.134 - br); // ≈ -7px (s=58 기준)
   const _bRight = Math.round(r * 0.5   - br); // ≈  4px
+  const _badgeInner = (_rawIcon && _siIsImg(_rawIcon))
+    ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`
+    : statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'');
   const badge = statusHtml
-    ? `<span style="position:absolute;top:${_bTop}px;right:${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
+    ? `<span style="position:absolute;top:${_bTop}px;right:${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${_badgeInner}</span>`
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
