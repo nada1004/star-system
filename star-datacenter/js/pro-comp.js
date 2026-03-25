@@ -244,13 +244,27 @@ function proCompLeague(tn) {
   });
   h += `</div>`;
   if (tn.groups.length > 1) {
-    h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조:</span>
+    h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조:</span>
       <button class="pill ${!proCompFilterGrp?'on':''}" onclick="proCompFilterGrp='';render()">전체</button>`;
     tn.groups.forEach((grp, gi) => {
       const gl='ABCDEFGHIJ'[gi]; const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
       h += `<button class="pill ${proCompFilterGrp===grp.name?'on':''}" style="${proCompFilterGrp===grp.name?`background:${col};border-color:${col};color:#fff`:''}" onclick="proCompFilterGrp='${grp.name}';render()">GROUP ${gl}</button>`;
     });
     h += `</div>`;
+    // 조별 공유카드 버튼 행
+    const grpsWithDone = tn.groups.filter(g=>(g.matches||[]).some(m=>m.winner));
+    if (grpsWithDone.length) {
+      h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조 공유카드:</span>`;
+      tn.groups.forEach((grp, gi) => {
+        const gl='ABCDEFGHIJ'[gi]; const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+        const gDone=(grp.matches||[]).filter(m=>m.winner).length;
+        if (gDone > 0) h += `<button class="btn btn-xs" style="background:${col}15;color:${col};border:1px solid ${col}44;font-size:10px" onclick="_openProCompGrpAllShareCard('${tn.id}',${gi})">🎴 GROUP ${gl}</button>`;
+      });
+      h += `</div>`;
+    }
+  } else if (tn.groups.length===1) {
+    const gDone=(tn.groups[0].matches||[]).filter(m=>m.winner).length;
+    if (gDone>0) h += `<div style="margin-bottom:10px"><button class="btn btn-w btn-sm" onclick="_openProCompGrpAllShareCard('${tn.id}',0)">🎴 조 전체 공유카드</button></div>`;
   }
   let filtered = allMatches;
   if (proCompFilterDate) filtered = filtered.filter(m=>m.d===proCompFilterDate);
@@ -939,96 +953,133 @@ function proCompBracket(tn) {
     </div>`;
   }
   const rounds = tn.bracket;
-  const _pc = name => { const p=players.find(x=>x.name===name); return p||null; };
-  const _photo = (name, isWin) => {
-    const p=_pc(name); if(!name||name==='TBD') return `<div style="width:28px;height:28px;border-radius:50%;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px">❓</div>`;
+  const _pc = name => players.find(x=>x.name===name)||null;
+  const _photo = (name, isWin, col) => {
+    const p=_pc(name);
+    if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:50%;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
+    const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     return p&&p.photo
-      ?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isWin?'#16a34a':'var(--border)'}" onerror="this.style.display='none'">`
-      :`<div style="width:28px;height:28px;border-radius:50%;background:${gc(p?.univ||'')};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff">${name[0]}</div>`;
+      ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;${ring}" onerror="this.style.display='none'">`
+      :`<div style="width:36px;height:36px;border-radius:50%;background:${gc(p?.univ||'')||col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
-    return `<span style="font-size:9px;color:var(--gray-l);white-space:nowrap">${p.univ||''}${p.tier?' · '+p.tier:''}</span>`;
+    const rb = p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:9px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${p.univ||''}${p.tier?' · '+p.tier:''}</span></div>`;
   };
+  const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'🥊 준결승':ri===rounds.length-3?'⚔️ 4강':`${Math.pow(2,rounds.length-ri)}강`;
+  const rndColor = ri => ri===rounds.length-1?'#d97706':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
+  const rndBg   = ri => ri===rounds.length-1?'linear-gradient(135deg,#f59e0b,#d97706)':ri===rounds.length-2?'linear-gradient(135deg,#8b5cf6,#6d28d9)':ri===rounds.length-3?'linear-gradient(135deg,#ef4444,#b91c1c)':'linear-gradient(135deg,#3b82f6,#1d4ed8)';
+
+  // 챔피언 배너
   let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">🗂️ ${tn.name} — 대진표</div>`;
-  // 라운드 레이블 행
-  const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
-  const rndColor = ri => ri===rounds.length-1?'#f59e0b':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
-  h += `<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start">`;
+  const finalMatch = (rounds[rounds.length-1]||[])[0];
+  const champion = finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
+  if (champion) {
+    const cp = _pc(champion);
+    const cpPhoto = cp?.photo?`<img src="${cp.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
+      `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
+    h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
+      ${cpPhoto}
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">🏆 우승</div>
+        <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
+        ${cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:''}
+      </div>
+      <div style="margin-left:auto;font-size:32px">🏆</div>
+    </div>`;
+  }
+
+  h += `<div style="overflow-x:auto;padding-bottom:16px"><div style="display:inline-flex;gap:0;align-items:flex-start;min-width:fit-content">`;
   rounds.forEach((rnd, ri) => {
-    const lbl = rndLabel(ri); const col = rndColor(ri);
-    const gap = ri===0?10:(Math.pow(2,ri)*56+10);
-    h += `<div style="min-width:180px;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
-      <div style="width:100%;text-align:center;font-size:11px;font-weight:800;color:#fff;margin-bottom:10px;padding:5px 8px;background:${col};border-radius:8px;box-shadow:0 2px 6px ${col}55">${lbl}</div>
-      <div style="width:100%;display:flex;flex-direction:column;gap:${gap}px">`;
+    const lbl=rndLabel(ri), col=rndColor(ri), bg=rndBg(ri);
+    const isLast=ri===rounds.length-1;
+    const gap=ri===0?8:(Math.pow(2,ri)*60+8);
+    h += `<div style="display:flex;align-items:center">
+      <div style="min-width:${isLast?220:200}px;flex-shrink:0">
+        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:10px;padding:7px 10px;background:${bg};border-radius:10px;box-shadow:0 3px 8px ${col}44;letter-spacing:.5px">${lbl}</div>
+        <div style="display:flex;flex-direction:column;gap:${gap}px">`;
     rnd.forEach((m, mi) => {
       const aWin=m.winner==='A', bWin=m.winner==='B', isDone=!!m.winner;
-      const hasBoth = m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD';
-      h += `<div style="border:2px solid ${isDone?col:'var(--border2)'};border-radius:10px;overflow:hidden;background:var(--white);box-shadow:0 2px 12px rgba(0,0,0,.08)">
-        <div style="padding:8px 10px;border-bottom:1px solid var(--border);background:${aWin?'#dcfce7':m.a&&m.a!=='TBD'?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
-          ${_photo(m.a, aWin)}
+      const hasBoth=m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD';
+      const aTBD=!m.a||m.a==='TBD', bTBD=!m.b||m.b==='TBD';
+      const winnerName=aWin?m.a:bWin?m.b:'';
+      h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
+        <!-- A 선수 -->
+        <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
+          ${_photo(m.a, aWin, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${aWin?'800':'500'};color:${aWin?'#16a34a':'var(--blue)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&m.a!=='TBD'?'pointer':'default'}" onclick="${m.a&&m.a!=='TBD'?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
-            ${_info(m.a)}
+            <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
+            ${!aTBD?_info(m.a):''}
           </div>
-          ${aWin?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">WIN</span>':''}
+          ${aWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        <div style="padding:8px 10px;background:${bWin?'#dcfce7':m.b&&m.b!=='TBD'?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
-          ${_photo(m.b, bWin)}
+        <!-- B 선수 -->
+        <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
+          ${_photo(m.b, bWin, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${bWin?'800':'500'};color:${bWin?'#16a34a':'var(--blue)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&m.b!=='TBD'?'pointer':'default'}" onclick="${m.b&&m.b!=='TBD'?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
-            ${_info(m.b)}
+            <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
+            ${!bTBD?_info(m.b):''}
           </div>
-          ${bWin?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">WIN</span>':''}
+          ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        ${(m.map||m.d)?`<div style="padding:2px 10px;font-size:10px;color:var(--gray-l);background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px">${m.d?`<span>📅 ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>📍 ${m.map}</span>`:''}</div>`:''}
-        ${isLoggedIn?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap">
-          ${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,4)} 승</button>
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,4)} 승</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="결과 붙여넣기">📋</button>
-          ${isDone?`<button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})" title="공유 카드">🎴</button>`:''}`:''}
-          ${!hasBoth&&isDone?`<button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})" title="공유 카드">🎴</button>`:''}
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜 입력">📅</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵 입력">📍</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>
-        </div>`:''}
+        <!-- 날짜/맵 -->
+        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>📅 ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>📍 ${m.map}</span>`:''}</div>`:''}
+        <!-- 액션 버튼 -->
+        <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
+          ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">🎴</button>`:''}
+          ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="붙여넣기">📋</button>`:''}
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜">📅</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵">📍</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>`:''}
+        </div>
       </div>`;
     });
     h += `</div></div>`;
+    // 라운드 간 화살표 커넥터
+    if (ri < rounds.length-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">›</div>`;
+    h += `</div>`;
   });
-  h += `</div>`;
+  h += `</div></div>`;
   // 3위전
   if (rounds.length >= 2 && tn.thirdPlace) {
     const tp = tn.thirdPlace;
     const tpA = tp.winner==='A', tpB = tp.winner==='B';
     const tpBoth = tp.a&&tp.b&&tp.a!=='TBD'&&tp.b!=='TBD';
     const tpCol = '#78716c';
-    h += `<div style="margin-top:16px;padding:14px 16px;background:var(--surface);border:2px solid ${tpCol}44;border-radius:12px;max-width:400px">
-      <div style="font-size:12px;font-weight:900;color:${tpCol};margin-bottom:10px;display:flex;align-items:center;gap:6px">🥉 3·4위전</div>
-      <div style="border:2px solid ${tp.winner?tpCol:'var(--border2)'};border-radius:10px;overflow:hidden;background:var(--white);max-width:240px">
-        <div style="padding:8px 10px;border-bottom:1px solid var(--border);background:${tpA?'#dcfce7':tp.a?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
-          ${_photo(tp.a, tpA)}
+    const tpWinner = tpA?tp.a:tpB?tp.b:null;
+    h += `<div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:900;color:${tpCol}">🥉 3·4위전</span>
+        ${tpWinner?`<span style="font-size:11px;background:#78716c18;color:#78716c;padding:2px 10px;border-radius:20px;font-weight:700">3위 · ${tpWinner}</span>`:''}
+      </div>
+      <div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:0 2px 10px rgba(0,0,0,.08);border:${tp.winner?`1.5px solid ${tpCol}44`:'1.5px solid #e2e8f0'};max-width:230px">
+        <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${tpA?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpA?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpA?'opacity:.55':''}">
+          ${_photo(tp.a, tpA, tpCol)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${tpA?'800':'500'};color:${tpA?'#16a34a':'var(--blue)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.a&&tp.a!=='TBD'?'pointer':'default'}" onclick="${tp.a&&tp.a!=='TBD'?`openPlayerModal('${(tp.a||'').replace(/'/g,"\\'")}')`:''}">${tp.a||'TBD'}</div>
-            ${_info(tp.a)}
+            <div style="font-size:12px;font-weight:${tpA?'800':'550'};color:${tpA?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.a&&tp.a!=='TBD'?'pointer':'default'}" onclick="${tp.a&&tp.a!=='TBD'?`openPlayerModal('${(tp.a||'').replace(/'/g,"\\'")}')`:''}">${tp.a||'TBD'}</div>
+            ${tp.a&&tp.a!=='TBD'?_info(tp.a):''}
           </div>
-          ${tpA?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">3위</span>':''}
+          ${tpA?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🥉 3위</span>`:''}
         </div>
-        <div style="padding:8px 10px;background:${tpB?'#dcfce7':tp.b?'var(--white)':'var(--surface)'};display:flex;align-items:center;gap:6px">
-          ${_photo(tp.b, tpB)}
+        <div style="padding:9px 12px;background:${tpB?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpB?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpB?'opacity:.55':''}">
+          ${_photo(tp.b, tpB, tpCol)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${tpB?'800':'500'};color:${tpB?'#16a34a':'var(--blue)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${(tp.b||'').replace(/'/g,"\\'")}')`:''}">${tp.b||'TBD'}</div>
-            ${_info(tp.b)}
+            <div style="font-size:12px;font-weight:${tpB?'800':'550'};color:${tpB?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${(tp.b||'').replace(/'/g,"\\'")}')`:''}">${tp.b||'TBD'}</div>
+            ${tp.b&&tp.b!=='TBD'?_info(tp.b):''}
           </div>
-          ${tpB?'<span style="font-size:10px;font-weight:900;color:#16a34a;flex-shrink:0">3위</span>':''}
+          ${tpB?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🥉 3위</span>`:''}
         </div>
-        ${(tp.map||tp.d)?`<div style="padding:2px 10px;font-size:10px;color:var(--gray-l);background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px">${tp.d?`<span>📅 ${tp.d.slice(2).replace(/-/g,'.')}</span>`:''}${tp.map?`<span>📍 ${tp.map}</span>`:''}</div>`:''}
-        ${isLoggedIn&&tpBoth?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap">
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${tpA?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetThirdWinner('${tn.id}','A')">${(tp.a||'A').slice(0,4)} 승(3위)</button>
-          <button class="btn btn-xs" style="flex:1;font-size:9px;${tpB?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetThirdWinner('${tn.id}','B')">${(tp.b||'B').slice(0,4)} 승(3위)</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdDate('${tn.id}')" title="날짜 입력">📅</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdMap('${tn.id}')" title="맵 입력">📍</button>
-        </div>`:''}
+        ${(tp.map||tp.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${tp.d?`<span>📅 ${tp.d.slice(2).replace(/-/g,'.')}</span>`:''}${tp.map?`<span>📍 ${tp.map}</span>`:''}</div>`:''}
+        <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
+          ${tp.winner?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${tpCol}18;color:${tpCol};border-color:${tpCol}44" onclick="_openProCompBktShareCard('${tn.id}','3rd',0)" title="공유카드">🎴</button>`:''}
+          ${isLoggedIn&&tpBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${tpA?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','A')">${(tp.a||'A').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="flex:1;font-size:9px;${tpB?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','B')">${(tp.b||'B').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdDate('${tn.id}')">📅</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdMap('${tn.id}')">📍</button>`:''}
+        </div>
       </div>
     </div>`;
   }
