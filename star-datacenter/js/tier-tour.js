@@ -988,9 +988,9 @@ function rCfg(C,T){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
+            <span style="font-size:18px;min-width:24px;text-align:center;display:inline-flex;align-items:center">${cur?(_siIsImg(cur)?_siRender(cur,'20px'):cur):''}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?(_siIsImg(d.emoji)?'🖼️ ':d.emoji+' '):''}${d.label}</option>`).join('')}
             </select>
           </div>`;
         }).join('')
@@ -2375,9 +2375,9 @@ function rCfg(C,T){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
+            <span style="font-size:18px;min-width:24px;text-align:center;display:inline-flex;align-items:center">${cur?(_siIsImg(cur)?_siRender(cur,'20px'):cur):''}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?(_siIsImg(d.emoji)?'🖼️ ':d.emoji+' '):''}${d.label}</option>`).join('')}
             </select>
           </div>`;
         }).join('')
