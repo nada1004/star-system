@@ -272,11 +272,12 @@ function _b2Avatar(p, col, size) {
   const s = size || 28;
   const badgeSize = Math.round(s * 0.38);
   const statusHtml = getStatusIconHTML(p.name);
-  // 1시~12:30 방향, 프로필 이미지와 겹치지 않도록 바깥으로 충분히 띄움
-  const _bTop   = -Math.round(badgeSize * 0.5);  // ≈ -11px (22px badge 기준)
-  const _bRight = -Math.round(badgeSize * 0.4);  // ≈ -9px
+  // 1시 방향(30°), 프로필 이미지와 겹치지 않는 거리 계산
+  const r = s / 2, br = badgeSize / 2, d = r + br + 2;
+  const _bTop   = Math.round(r - 0.866 * d - br); // cos(30°)
+  const _bRight = Math.round(r - 0.5   * d - br); // sin(30°) — 음수=오른쪽 바깥
   const badge = statusHtml
-    ? `<span style="position:absolute;top:${_bTop}px;right:-${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
+    ? `<span style="position:absolute;top:${_bTop}px;right:${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
