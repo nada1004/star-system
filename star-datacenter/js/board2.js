@@ -276,7 +276,7 @@ function _b2Avatar(p, col, size) {
   const _bTop  = Math.round(s * 0.10);
   const _bRight = Math.round(badgeSize * 0.3);
   const badge = statusHtml
-    ? `<span style="position:absolute;top:${_bTop}px;right:-${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px rgba(255,255,255,.6),0 1px 4px rgba(0,0,0,.15);font-size:${Math.round(badgeSize*0.72)}px;line-height:1;opacity:.75">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
+    ? `<span style="position:absolute;top:${_bTop}px;right:-${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:rgba(255,255,255,.82);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px rgba(255,255,255,.85),0 1px 4px rgba(0,0,0,.18);font-size:${Math.round(badgeSize*0.72)}px;line-height:1;opacity:.9">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
