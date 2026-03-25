@@ -1165,9 +1165,11 @@ function renderShareCardByMatchObj(m){
   const civColor=civUniv?gc(civUniv):'#6366f1';
   // 경기 타입별 전용 색상 (대학 색상 사용 안함)
   const _TYPE_COLORS={
-    pro:{a:'#1d4ed8',b:'#be123c'},   // 프로리그: 딥블루 vs 크림슨
-    tt: {a:'#7c3aed',b:'#047857'},   // 티어대회: 바이올렛 vs 에메랄드
-    ck: {a:'#0e7490',b:'#b45309'},   // 대학CK:  시안 vs 앰버
+    pro:{a:'#1d4ed8',b:'#be123c'},        // 프로리그: 딥블루 vs 크림슨
+    tt: {a:'#7c3aed',b:'#047857'},        // 티어대회: 바이올렛 vs 에메랄드
+    ck: {a:'#0e7490',b:'#b45309'},        // 대학CK:  시안 vs 앰버
+    'procomp-team':{a:'#1e3a8a',b:'#881337'}, // 프로리그 팀전: 네이비 vs 다크레드
+    'procomp-bkt': {a:'#92400e',b:'#4c1d95'},  // 프로리그 토너먼트: 앰버 vs 딥퍼플
   };
   const _tc=m._matchType&&_TYPE_COLORS[m._matchType]?_TYPE_COLORS[m._matchType]:null;
   let ca=_tc?_tc.a:(isCivil?civColor:gc(a));
@@ -1301,9 +1303,10 @@ function renderShareCardByMatchObj(m){
       <!-- 대회명 + 날짜 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         ${(()=>{
-          const _typeLbl={pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK'}[m._matchType]||'';
+          const _typeLbl={pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK','procomp-team':'🤝 팀전','procomp-bkt':'🗂️ 토너먼트'}[m._matchType]||'';
           const lbl=_typeLbl||(m.n?`🎖️ ${m.n}`:'');
-          return lbl?`<div style="font-size:11px;color:rgba(255,255,255,.9);font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 12px;border-radius:20px">${lbl}</div>`:'<div></div>';
+          const fullLbl=lbl?`${lbl}${m._subLabel?` · ${m._subLabel}`:''}`:m._subLabel||'';
+          return fullLbl?`<div style="font-size:11px;color:rgba(255,255,255,.9);font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 12px;border-radius:20px">${fullLbl}</div>`:'<div></div>';
         })()}
         <div style="font-size:11px;color:rgba(255,255,255,.65)">${m.d||''}</div>
       </div>

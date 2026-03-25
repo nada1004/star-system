@@ -2182,19 +2182,23 @@ function rProAll(C, T) {
 function _openProCompLeagueShareCard(tnId, gi, mi) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn) return;
-  const m = (tn.groups||[])[gi]?.matches?.[mi];
+  const grp = (tn.groups||[])[gi];
+  const m = grp?.matches?.[mi];
   if (!m || !m.winner) return;
   const aWin = m.winner==='A';
+  const gl = 'ABCDEFGHIJ'[gi]||gi;
+  // 조별리그: 선수 소속 대학 색상 적용 → 경기마다 다른 컬러
   const shareObj = {
     a: m.a||'', b: m.b||'',
     sa: aWin?1:0, sb: aWin?0:1,
-    d: m.d||'', n: tn.name,
+    d: m.d||'', n: `${tn.name}`,
+    _subLabel: `GROUP ${gl}`,
     sets: [{
       scoreA: aWin?1:0, scoreB: aWin?0:1,
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: true, _matchType: 'pro'
+    _noUnivIcon: false, _matchType: ''  // 대학 색상 자동 적용
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
@@ -2213,12 +2217,13 @@ function _openProCompTeamShareCard(tnId, tmi) {
     winner: g._sideW||'A',
     map: g.map||''
   }));
+  // 팀전: 네이비 vs 다크레드 (팀 대결 느낌)
   const shareObj = {
     a: tm.teamAName||'A팀', b: tm.teamBName||'B팀',
     sa: tm.sa||0, sb: tm.sb||0,
     d: tm.d||'', n: tn.name,
-    sets: [{scoreA:tm.sa||0, scoreB:tm.sb||0, winner:tm.sa>tm.sb?'A':'B', games}],
-    _noUnivIcon: true, _matchType: 'pro'
+    sets: [{scoreA:tm.sa||0, scoreB:tm.sb||0, winner:tm.sa>tm.sb?'A':tm.sb>tm.sa?'B':'', games}],
+    _noUnivIcon: true, _matchType: 'procomp-team'
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
@@ -2234,16 +2239,18 @@ function _openProCompBktShareCard(tnId, ri, mi) {
   if (!m || !m.winner) return;
   const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
   const aWin = m.winner==='A';
+  // 대진표: 앰버(골드) vs 딥퍼플 (토너먼트/챔피언십 느낌)
   const shareObj = {
     a: m.a||'', b: m.b||'',
     sa: aWin?1:0, sb: aWin?0:1,
-    d: m.d||'', n: `${tn.name} · ${rndLabel}`,
+    d: m.d||'', n: `${tn.name}`,
+    _subLabel: rndLabel,
     sets: [{
       scoreA: aWin?1:0, scoreB: aWin?0:1,
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: true, _matchType: 'pro'
+    _noUnivIcon: true, _matchType: 'procomp-bkt'
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
