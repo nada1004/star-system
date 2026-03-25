@@ -159,6 +159,8 @@ const STATUS_ICON_DEFS = {
   sword:   { label: '🗡️ 검',    emoji: '🗡️' },
   gold:    { label: '🥇 금메달',emoji: '🥇' },
   princess:{ label: '👸 공주',  emoji: '👸' },
+  sprout:  { label: '🌱 새싹',  emoji: '🌱' },
+  chick:   { label: '🐥 병아리',emoji: '🐥' },
 };
 // ── 커스텀 URL 아이콘 ──
 let _customStatusIcons = J('su_si_customs') || [];
