@@ -1046,6 +1046,11 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
       <div style="display:flex;flex-wrap:wrap;gap:3px" id="brd-icon-grid-${_pnSafe}">
         ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('')}
       </div>
+      <div style="display:flex;gap:3px;margin-top:5px;align-items:center">
+        <input id="brd-si-url-${_pnSafe}" type="text" placeholder="🔗 이미지 URL 입력" style="flex:1;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);font-size:11px" oninput="_brdSiPreview('${_pnSafe}',this.value)">
+        <span id="brd-si-prev-${_pnSafe}" style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:5px;background:var(--white);font-size:14px;flex-shrink:0"></span>
+        <button class="btn btn-b btn-xs" onclick="_brdAddCustomIcon('${_pnSafe}','${playerName}')">추가</button>
+      </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
@@ -1132,6 +1137,30 @@ function setBrdPhoto(playerName, url){
   save();
   _refreshBoardCard(p.univ);
   _brdToast(trimmed?'🖼️ 프로필 이미지 저장 완료':'🗑️ 프로필 이미지 삭제');
+}
+function _brdSiPreview(pnSafe, v){
+  const el = document.getElementById('brd-si-prev-'+pnSafe);
+  if(!el) return;
+  el.innerHTML = v && (v.startsWith('http')||v.startsWith('data:'))
+    ? `<img src="${v}" style="width:18px;height:18px;object-fit:contain" onerror="this.style.display='none'">`
+    : v;
+}
+function _brdAddCustomIcon(pnSafe, playerName){
+  const urlEl = document.getElementById('brd-si-url-'+pnSafe);
+  if(!urlEl || !urlEl.value.trim()) return;
+  addCustomStatusIcon('커스텀', urlEl.value.trim());
+  urlEl.value = '';
+  const prev = document.getElementById('brd-si-prev-'+pnSafe);
+  if(prev) prev.innerHTML = '';
+  // 그리드 갱신
+  const grid = document.getElementById('brd-icon-grid-'+pnSafe);
+  if(!grid) return;
+  const _curIcon = playerStatusIcons[playerName] || '';
+  grid.innerHTML = Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{
+    const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);
+    const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';
+    return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;
+  }).join('');
 }
 function setBrdStatusIcon(btn, playerName, iconId){
   setStatusIcon(playerName, iconId);
