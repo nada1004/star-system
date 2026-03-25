@@ -154,6 +154,11 @@ const STATUS_ICON_DEFS = {
   clown:   { label: '🤡 광대',  emoji: '🤡' },
   angry:   { label: '😤 화남',  emoji: '😤' },
   target:  { label: '🎯 집중',  emoji: '🎯' },
+  ghost:   { label: '👻 유령',  emoji: '👻' },
+  game:    { label: '🎮 게임',  emoji: '🎮' },
+  sword:   { label: '🗡️ 검',    emoji: '🗡️' },
+  gold:    { label: '🥇 금메달',emoji: '🥇' },
+  princess:{ label: '👸 공주',  emoji: '👸' },
 };
 // ── 커스텀 URL 아이콘 ──
 let _customStatusIcons = J('su_si_customs') || [];
