@@ -145,7 +145,6 @@ const STATUS_ICON_DEFS = {
   diamond: { label: '💎 다이아', emoji: '💎' },
   skull:   { label: '💀 해골',  emoji: '💀' },
   muscle:  { label: '💪 강함',  emoji: '💪' },
-  rocket:  { label: '🚀 로켓',  emoji: '🚀' },
   think:   { label: '🤔 생각중',emoji: '🤔' },
   sleep:   { label: '😴 수면',  emoji: '😴' },
   boom:    { label: '🤯 폭발',  emoji: '🤯' },
