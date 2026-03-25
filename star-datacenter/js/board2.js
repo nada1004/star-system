@@ -231,7 +231,6 @@ function _b2NameTag(p, accentCol, showTier) {
       onmouseout="this.style.background='transparent'">
       ${_b2Avatar(p, accentCol, 58)}
       <span style="font-weight:700;font-size:18px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${getStatusIconHTML(p.name)}
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}
       ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
@@ -249,7 +248,6 @@ function _b2PlayerRow(p, accentCol) {
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
       ${_b2Avatar(p, accentCol, 58)}
       <span class="b2name" style="font-weight:700;font-size:18px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${getStatusIconHTML(p.name)}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
@@ -272,12 +270,18 @@ function _b2Chip(p, accentCol) {
 function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
   const s = size || 28;
+  const badgeSize = Math.round(s * 0.38);
+  const statusHtml = getStatusIconHTML(p.name);
+  const badge = statusHtml
+    ? `<span style="position:absolute;bottom:-2px;right:-2px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px #fff,0 1px 4px rgba(0,0,0,.18);font-size:${Math.round(badgeSize*0.72)}px;line-height:1">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
+    : '';
   if (p.photo) {
-    return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex">
+    return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
       <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      ${badge}
     </span>`;
   }
-  return _b2AvatarFallback(raceShort, col, s);
+  return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
 }
 
 function _b2AvatarFallback(letter, col, size) {
