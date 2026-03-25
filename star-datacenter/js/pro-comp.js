@@ -316,10 +316,11 @@ function proCompLeague(tn) {
           </div>
           ${_pcard(pb, bWin)}
         </div>
-        ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="proCompEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
-          <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
-        </div>`:''}
+        <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
+          ${isDone?`<button class="btn btn-p btn-xs" onclick="_openProCompLeagueShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴</button>`:''}
+          ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="proCompEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
+          <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>`:''}
+        </div>
       </div>`;
     });
     h += `</div>`;
@@ -431,12 +432,13 @@ function proCompTeamSection(tn) {
           <span style="font-size:20px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:2px 14px;border-radius:8px">${tm.sa||0}:${tm.sb||0}</span>
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:14px">${tm.teamBName||'B팀'}</span>
         </div>
-        ${isLoggedIn?`<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap">
-          <button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
+        <div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap" class="no-export">
+          ${games.length?`<button class="btn btn-p btn-xs" onclick="_openProCompTeamShareCard('${tn.id}',${tmi})">🎴</button>`:''}
+          ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
           <button class="btn btn-w btn-xs" onclick="proCompOpenTeamPasteModal('${tn.id}',${tmi})">📋</button>
           <button class="btn btn-w btn-xs" onclick="proCompEditTeamMatch('${tn.id}',${tmi})">✏️</button>
-          <button class="btn btn-r btn-xs" onclick="proCompDeleteTeamMatch('${tn.id}',${tmi})">🗑️</button>
-        </div>`:''}
+          <button class="btn btn-r btn-xs" onclick="proCompDeleteTeamMatch('${tn.id}',${tmi})">🗑️</button>`:''}
+        </div>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap">
         <div style="font-size:11px"><span style="color:${colA};font-weight:700">${tm.teamAName||'A팀'}:</span> <span style="color:var(--text3)">${(tm.teamA||[]).map(p=>`<span onclick="openPlayerModal('${p.replace(/'/g,"\\'")}') " style="cursor:pointer;text-decoration:underline dotted">${p}</span>`).join(', ')||'—'}</span></div>
@@ -931,7 +933,9 @@ function proCompBracket(tn) {
         ${isLoggedIn?`<div style="padding:5px 6px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap">
           ${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,4)} 승</button>
           <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?'background:#16a34a;color:#fff;border-color:#16a34a':''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,4)} 승</button>
-          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="결과 붙여넣기">📋</button>`:''}
+          <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="결과 붙여넣기">📋</button>
+          ${isDone?`<button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})" title="공유 카드">🎴</button>`:''}`:''}
+          ${!hasBoth&&isDone?`<button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})" title="공유 카드">🎴</button>`:''}
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜 입력">📅</button>
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵 입력">📍</button>
           <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>
@@ -2170,4 +2174,79 @@ function rProAll(C, T) {
   }
   h+=`</div>`;
   C.innerHTML = h;
+}
+
+/* ──────────────────────────────────────
+   공유카드 헬퍼 (프로리그 대회)
+────────────────────────────────────── */
+function _openProCompLeagueShareCard(tnId, gi, mi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const m = (tn.groups||[])[gi]?.matches?.[mi];
+  if (!m || !m.winner) return;
+  const aWin = m.winner==='A';
+  const shareObj = {
+    a: m.a||'', b: m.b||'',
+    sa: aWin?1:0, sb: aWin?0:1,
+    d: m.d||'', n: tn.name,
+    sets: [{
+      scoreA: aWin?1:0, scoreB: aWin?0:1,
+      winner: m.winner,
+      games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
+    }],
+    _noUnivIcon: true, _matchType: 'pro'
+  };
+  window._shareMatchObj = shareObj;
+  window._shareMode = 'match';
+  openShareCardModal();
+  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+}
+
+function _openProCompTeamShareCard(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const tm = (tn.teamMatches||[])[tmi];
+  if (!tm || !(tm.games||[]).length) return;
+  const games = (tm.games||[]).map(g => ({
+    playerA: g._sideW==='A' ? g.wName : g.lName,
+    playerB: g._sideW==='A' ? g.lName : g.wName,
+    winner: g._sideW||'A',
+    map: g.map||''
+  }));
+  const shareObj = {
+    a: tm.teamAName||'A팀', b: tm.teamBName||'B팀',
+    sa: tm.sa||0, sb: tm.sb||0,
+    d: tm.d||'', n: tn.name,
+    sets: [{scoreA:tm.sa||0, scoreB:tm.sb||0, winner:tm.sa>tm.sb?'A':'B', games}],
+    _noUnivIcon: true, _matchType: 'pro'
+  };
+  window._shareMatchObj = shareObj;
+  window._shareMode = 'match';
+  openShareCardModal();
+  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+}
+
+function _openProCompBktShareCard(tnId, ri, mi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const rounds = tn.bracket||[];
+  const m = (rounds[ri]||[])[mi];
+  if (!m || !m.winner) return;
+  const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
+  const aWin = m.winner==='A';
+  const shareObj = {
+    a: m.a||'', b: m.b||'',
+    sa: aWin?1:0, sb: aWin?0:1,
+    d: m.d||'', n: `${tn.name} · ${rndLabel}`,
+    sets: [{
+      scoreA: aWin?1:0, scoreB: aWin?0:1,
+      winner: m.winner,
+      games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
+    }],
+    _noUnivIcon: true, _matchType: 'pro'
+  };
+  window._shareMatchObj = shareObj;
+  window._shareMode = 'match';
+  openShareCardModal();
+  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
 }
