@@ -272,9 +272,9 @@ function _b2Avatar(p, col, size) {
   const s = size || 28;
   const badgeSize = Math.round(s * 0.38);
   const statusHtml = getStatusIconHTML(p.name);
-  // 2시 방향 (60도): 원 반지름 + 3px 갭 기준 계산
-  const _bTop  = Math.max(1, Math.round(s * 0.034)); // ≈ 2px (s=58)
-  const _bRight = Math.round(s * 0.17);              // ≈ 10px (s=58)
+  // 1시~12:30 방향, 프로필 이미지와 겹치지 않도록 바깥으로 충분히 띄움
+  const _bTop   = -Math.round(badgeSize * 0.5);  // ≈ -11px (22px badge 기준)
+  const _bRight = -Math.round(badgeSize * 0.4);  // ≈ -9px
   const badge = statusHtml
     ? `<span style="position:absolute;top:${_bTop}px;right:-${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:rgba(255,255,255,.82);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px rgba(255,255,255,.85),0 1px 4px rgba(0,0,0,.18);font-size:${Math.round(badgeSize*0.72)}px;line-height:1;opacity:.9">${statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'')}</span>`
     : '';
