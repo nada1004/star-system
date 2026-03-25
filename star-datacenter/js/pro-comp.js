@@ -360,6 +360,7 @@ function proCompGrpRank(tn) {
       <div style="padding:10px 16px;background:linear-gradient(135deg,${col},${col}cc);color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;gap:8px">
         <span>GROUP ${GL[gi]} · ${grp.name||GL[gi]+'조'}</span>
         <span style="margin-left:auto;font-size:11px;font-weight:600;opacity:.85">${_gDone}/${_gTotal}경기 · ${_gPct}%</span>
+        ${_gDone>0?`<button class="btn btn-xs no-export" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);font-size:11px;padding:2px 8px" onclick="_openProCompGrpAllShareCard('${tn.id}',${gi})" title="조 전체 공유카드">🎴</button>`:''}
       </div>
       ${_gTotal>0?`<div style="height:4px;background:${col}33"><div style="height:100%;width:${_gPct}%;background:${col};transition:.3s"></div></div>`:''}
       <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -654,16 +655,22 @@ function proCompEditTeamMatch(tnId, tmi) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||(tn.teamMatches||[])[tmi]==null) return;
   const tm = tn.teamMatches[tmi];
+  const pList = players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const pOpts = () => pList.map(p=>`<option value="${p.name}">${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
+  const renderMembers = (side) => {
+    const members = tm[side]||[];
+    return members.map((p,pi)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--surface);border-radius:14px;font-size:11px;font-weight:600;border:1px solid var(--border)">${p}<button onclick="_tmRemoveMember('${tnId}',${tmi},'${side}',${pi})" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:11px;padding:0;line-height:1">✕</button></span>`).join('');
+  };
   const modal = document.createElement('div');
   modal.id = '_tmEditModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:360px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
     <div style="font-weight:900;font-size:15px;margin-bottom:14px">✏️ 팀전 수정</div>
     <div style="margin-bottom:12px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">날짜</label>
       <input id="_tme_d" type="date" value="${tm.d||''}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
       <div style="flex:1">
         <label style="font-size:12px;font-weight:700;color:#2563eb">A팀 이름</label>
         <input id="_tme_an" value="${tm.teamAName||'A팀'}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
@@ -673,12 +680,57 @@ function proCompEditTeamMatch(tnId, tmi) {
         <input id="_tme_bn" value="${tm.teamBName||'B팀'}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
       </div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div style="flex:1;border:1px solid #2563eb44;border-radius:10px;padding:10px">
+        <div style="font-size:11px;font-weight:700;color:#2563eb;margin-bottom:6px">A팀 멤버</div>
+        <div id="_tme_aMembers" style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;margin-bottom:8px">${renderMembers('teamA')}</div>
+        <div style="display:flex;gap:4px">
+          <select id="_tme_aSel" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--border);font-size:11px"><option value="">선수 선택</option>${pOpts()}</select>
+          <button class="btn btn-b btn-xs" onclick="_tmAddMember('${tnId}',${tmi},'teamA')">+</button>
+        </div>
+      </div>
+      <div style="flex:1;border:1px solid #dc262644;border-radius:10px;padding:10px">
+        <div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:6px">B팀 멤버</div>
+        <div id="_tme_bMembers" style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;margin-bottom:8px">${renderMembers('teamB')}</div>
+        <div style="display:flex;gap:4px">
+          <select id="_tme_bSel" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--border);font-size:11px"><option value="">선수 선택</option>${pOpts()}</select>
+          <button class="btn btn-r btn-xs" onclick="_tmAddMember('${tnId}',${tmi},'teamB')">+</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-b" style="flex:1" onclick="_tmSaveEdit('${tnId}',${tmi})">저장</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmEditModal').remove()">취소</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
+}
+
+function _tmAddMember(tnId, tmi, side) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  const selId = side==='teamA' ? '_tme_aSel' : '_tme_bSel';
+  const name = (document.getElementById(selId)||{}).value||'';
+  if (!name) return;
+  if (!tm[side]) tm[side]=[];
+  if (tm[side].includes(name)) return;
+  tm[side].push(name);
+  // 멤버 영역 갱신
+  const containerId = side==='teamA' ? '_tme_aMembers' : '_tme_bMembers';
+  const cont = document.getElementById(containerId);
+  if (cont) cont.innerHTML = (tm[side]||[]).map((p,pi)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--surface);border-radius:14px;font-size:11px;font-weight:600;border:1px solid var(--border)">${p}<button onclick="_tmRemoveMember('${tnId}',${tmi},'${side}',${pi})" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:11px;padding:0;line-height:1">✕</button></span>`).join('');
+}
+
+function _tmRemoveMember(tnId, tmi, side, pi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  if (!tm[side]) return;
+  tm[side].splice(pi,1);
+  const containerId = side==='teamA' ? '_tme_aMembers' : '_tme_bMembers';
+  const cont = document.getElementById(containerId);
+  if (cont) cont.innerHTML = (tm[side]||[]).map((p,pi2)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--surface);border-radius:14px;font-size:11px;font-weight:600;border:1px solid var(--border)">${p}<button onclick="_tmRemoveMember('${tnId}',${tmi},'${side}',${pi2})" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:11px;padding:0;line-height:1">✕</button></span>`).join('');
 }
 
 function _tmSaveEdit(tnId, tmi) {
@@ -1068,7 +1120,7 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   if (prevWinner && m.a && m.b) _revertProMatch(bktMatchId);
   if (m.winner && m.a && m.b) {
     const d = m.d||new Date().toISOString().slice(0,10);
-    applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, d, m.map||'', bktMatchId, '', '', '프로리그대회');
+    applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktMatchId, '', '', '프로리그대회');
   }
   // 기존에 ttM에 잘못 저장된 프로리그 대진표 기록 정리
   const proKey = `ptn_${tnId}_${ri}_${mi}`;
@@ -1160,7 +1212,7 @@ function proCompSaveBktPaste(tnId) {
         // player history 반영
         const bktMatchId=`pbn_${tnId}_${ri}_${mi}`;
         if (prevWinner&&m.a&&m.b) _revertProMatch(bktMatchId);
-        if (m.a&&m.b) applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||new Date().toISOString().slice(0,10), map||m.map||'', bktMatchId, '', '', '프로리그대회');
+        if (m.a&&m.b) applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', map||m.map||'', bktMatchId, '', '', '프로리그대회');
         applied++; found=true; break;
       }
       if (found) break;
@@ -1195,10 +1247,19 @@ function proCompBktSetMap(tnId, ri, mi) {
   if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
-  const map = prompt('맵을 입력하세요:', m.map||'');
-  if (map===null) return;
-  m.map = map.trim();
-  save(); render();
+  const modal = document.createElement('div');
+  modal.id = '_bktMapModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:14px">🗺️ 맵 설정</div>
+    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=proTourneys.find(t=>t.id==='${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}])t2.bracket[${ri}][${mi}].map=v;document.getElementById('_bktMapModal').remove();save();render();})()">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktMapModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('_bktMapInp').focus();
 }
 
 function proCompBktEditPlayers(tnId, ri, mi) {
@@ -1339,10 +1400,19 @@ function proCompSetThirdDate(tnId) {
 function proCompSetThirdMap(tnId) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn||!tn.thirdPlace) return;
-  const map = prompt('맵을 입력하세요:', tn.thirdPlace.map||'');
-  if (map===null) return;
-  tn.thirdPlace.map = map.trim();
-  save(); render();
+  const modal = document.createElement('div');
+  modal.id = '_thirdMapModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:14px">🗺️ 3위전 맵 설정</div>
+    <input id="_thirdMapInp" value="${((tn.thirdPlace.map)||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdMapInp').value.trim();const t2=proTourneys.find(t=>t.id==='${tnId}');if(t2&&t2.thirdPlace)t2.thirdPlace.map=v;document.getElementById('_thirdMapModal').remove();save();render();})()">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_thirdMapModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('_thirdMapInp').focus();
 }
 
 /* ──────────────────────────────────────
@@ -1394,15 +1464,35 @@ function proCompGrpEdit() {
             <button class="btn btn-b btn-xs" style="margin-left:auto" onclick="proCompEditMatch('${tn.id}',${gi},${mi})">✏️</button>
             <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${gi},${mi})">🗑️</button>
           </div>`).join('')}
-          <div style="display:flex;gap:6px;margin-top:6px">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <button class="btn btn-b btn-sm" onclick="proCompAddMatch('${tn.id}',${gi})">+ 경기 추가</button>
             <button class="btn btn-w btn-sm" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 일괄 입력</button>
+            ${(grp.players||[]).length>=2?`<button class="btn btn-w btn-sm" onclick="proCompGenRoundRobin('${tn.id}',${gi})" title="선수 목록 기반 라운드로빈 경기 자동 생성">🔄 라운드로빈 생성</button>`:''}
           </div>
         </div>
       </div>
     </div>`;
   });
   return h;
+}
+
+function proCompGenRoundRobin(tnId, gi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||!tn.groups[gi]) return;
+  const grp = tn.groups[gi];
+  const ps = grp.players||[];
+  if (ps.length < 2) return alert('선수가 2명 이상이어야 합니다.');
+  // 기존 미완료 경기 수 확인
+  const existing = (grp.matches||[]).filter(m=>!m.winner);
+  const pairs = [];
+  for (let i=0;i<ps.length;i++) for (let j=i+1;j<ps.length;j++) pairs.push({a:ps[i],b:ps[j]});
+  // 이미 있는 대진 제외
+  const newPairs = pairs.filter(p => !(grp.matches||[]).some(m=>(m.a===p.a&&m.b===p.b)||(m.a===p.b&&m.b===p.a)));
+  if (!newPairs.length) { alert('모든 라운드로빈 경기가 이미 등록되어 있습니다.'); return; }
+  if (!confirm(`${newPairs.length}경기를 추가하시겠습니까?\n(이미 있는 대진은 제외됩니다)`)) return;
+  if (!grp.matches) grp.matches=[];
+  newPairs.forEach(p => grp.matches.push({a:p.a,b:p.b,winner:'',map:'',d:''}));
+  save(); render();
 }
 
 function proCompSearchPlayerSug(tnId, gi) {
@@ -1828,7 +1918,9 @@ function proCompRenameGrp(tnId, gi, name) {
 function proCompDelGrp(tnId, gi) {
   const tn = proTourneys.find(t=>t.id===tnId);
   if (!tn) return;
-  if (!confirm('이 조를 삭제하시겠습니까?')) return;
+  if (!confirm('이 조를 삭제하시겠습니까?\n등록된 경기 전적도 모두 취소됩니다.')) return;
+  const grp = tn.groups[gi];
+  if (grp) (grp.matches||[]).forEach((m,mi) => { if(m.winner) _revertProMatch(`pcg_${tnId}_${gi}_${mi}`); });
   tn.groups.splice(gi, 1);
   save(); render();
 }
@@ -2198,7 +2290,7 @@ function _openProCompLeagueShareCard(tnId, gi, mi) {
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: false, _matchType: ''  // 대학 색상 자동 적용
+    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: ''  // 선수 프로필 사진 + 대학 색상
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
@@ -2250,10 +2342,151 @@ function _openProCompBktShareCard(tnId, ri, mi) {
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: true, _matchType: 'procomp-bkt'
+    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'procomp-bkt'
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
   openShareCardModal();
   setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+}
+
+/* ──────────────────────────────────────
+   조 전체 공유카드
+────────────────────────────────────── */
+function _openProCompGrpAllShareCard(tnId, gi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const grp = (tn.groups||[])[gi];
+  if (!grp) return;
+  openShareCardModal();
+  setTimeout(() => _renderProCompGrpShareCard(tnId, gi), 80);
+}
+
+function _renderProCompGrpShareCard(tnId, gi) {
+  const card = document.getElementById('share-card');
+  if (!card) return;
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn) return;
+  const grp = (tn.groups||[])[gi];
+  if (!grp) return;
+  const GL = 'ABCDEFGHIJ';
+  const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+  const ranks = _calcProGrpRank(grp);
+  const allM = grp.matches||[];
+  const doneM = allM.filter(m=>m.winner);
+  const pendM = allM.filter(m=>!m.winner);
+  const pct = allM.length ? Math.round(doneM.length/allM.length*100) : 0;
+
+  // 선수 아바타 행
+  const avatarRow = ranks.map(r => {
+    const p = players.find(x=>x.name===r.name);
+    const photo = p&&p.photo
+      ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${col}66" onerror="this.style.display='none'">`
+      : `<span style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col}44;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${col}">${(r.name||'?').slice(0,1)}</span>`;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px">
+      ${photo}
+      <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;max-width:46px;overflow:hidden;text-overflow:ellipsis">${r.name}</span>
+    </div>`;
+  }).join('');
+
+  // 순위표 행
+  const rankRows = ranks.map((r, idx) => {
+    const total = r.w + r.l;
+    const wr = total ? Math.round(r.w/total*100) : 0;
+    const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
+    const p = players.find(x=>x.name===r.name);
+    const photoCell = p&&p.photo
+      ? `<img src="${p.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid ${idx===0?col+'aa':'#ddd'}" onerror="this.outerHTML=''">`
+      : `<span style="width:26px;height:26px;border-radius:50%;background:${col}18;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${(r.name||'?').slice(0,1)}</span>`;
+    const raceBadge = p&&p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
+    return `<tr style="border-top:1px solid ${col}18;${idx===0?'background:'+col+'0a':''}">
+      <td style="padding:6px 8px;text-align:center;font-size:14px;width:28px">${medal||String(idx+1)}</td>
+      <td style="padding:6px 6px">
+        <div style="display:flex;align-items:center;gap:5px">
+          ${photoCell}
+          <span style="font-weight:${idx<2?'800':'600'};font-size:12px;color:#1e293b">${r.name}</span>
+          ${raceBadge}
+        </div>
+      </td>
+      <td style="padding:6px 8px;text-align:center;font-weight:700;color:#16a34a;font-size:12px">${r.w}</td>
+      <td style="padding:6px 8px;text-align:center;color:#dc2626;font-size:12px">${r.l}</td>
+      <td style="padding:6px 8px;text-align:center;font-weight:700;font-size:12px;color:${wr>=70?col:'#64748b'}">${wr}%</td>
+    </tr>`;
+  }).join('');
+
+  // 경기 결과 목록
+  const matchRows = doneM.map(m => {
+    const winner = m.winner==='A'?m.a:m.b;
+    const loser  = m.winner==='A'?m.b:m.a;
+    const wp = players.find(x=>x.name===winner);
+    const lp = players.find(x=>x.name===loser);
+    const wPhoto = wp&&wp.photo
+      ? `<img src="${wp.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`
+      : `<span style="width:20px;height:20px;border-radius:50%;background:${col}22;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${col}">${(winner||'?').slice(0,1)}</span>`;
+    const lPhoto = lp&&lp.photo
+      ? `<img src="${lp.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;opacity:.55" onerror="this.style.display='none'">`
+      : `<span style="width:20px;height:20px;border-radius:50%;background:#94a3b822;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8">${(loser||'?').slice(0,1)}</span>`;
+    return `<div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid ${col}12">
+      <div style="display:flex;align-items:center;gap:3px;flex:1;min-width:0">
+        ${wPhoto}
+        <span style="font-weight:700;font-size:11px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${winner}</span>
+      </div>
+      <span style="font-size:10px;font-weight:900;color:${col};flex-shrink:0;padding:1px 7px;background:${col}15;border-radius:4px">WIN</span>
+      <div style="display:flex;align-items:center;gap:3px;flex:1;min-width:0;justify-content:flex-end">
+        <span style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${loser}</span>
+        ${lPhoto}
+      </div>
+      ${m.map?`<span style="font-size:9px;color:#94a3b8;flex-shrink:0;margin-left:3px">📍${m.map}</span>`:''}
+    </div>`;
+  }).join('');
+
+  card.innerHTML = `<div style="background:#f8fafc;color:#1e293b;min-width:320px;border-radius:18px;overflow:hidden;font-family:'Noto Sans KR',sans-serif">
+
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,${col},${col}dd);padding:18px 20px 16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
+      <div style="position:absolute;bottom:-30px;left:10px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;letter-spacing:.5px;margin-bottom:2px">🏆 ${tn.name}</div>
+          <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:1px">GROUP ${GL[gi]}</div>
+          ${grp.name?`<div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:1px">${grp.name}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:#fff">${pct}%</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.65)">${doneM.length}/${allM.length} 완료</div>
+        </div>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-bottom:14px">
+        <div style="height:100%;width:${pct}%;background:rgba(255,255,255,.85);border-radius:2px"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${avatarRow}</div>
+    </div>
+
+    <!-- 순위표 -->
+    <div style="padding:14px 16px 10px">
+      <div style="font-size:10px;font-weight:800;color:${col};letter-spacing:.5px;margin-bottom:8px">📊 현재 순위</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:${col}10">
+          <th style="padding:5px 8px;text-align:center;width:28px;font-size:10px;color:#64748b;font-weight:700">순위</th>
+          <th style="padding:5px 6px;text-align:left;font-size:10px;color:#64748b;font-weight:700">선수</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#16a34a;font-weight:700">승</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#dc2626;font-weight:700">패</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#64748b;font-weight:700">승률</th>
+        </tr></thead>
+        <tbody>${rankRows}</tbody>
+      </table>
+    </div>
+
+    ${doneM.length?`<div style="padding:0 16px 14px">
+      <div style="font-size:10px;font-weight:800;color:${col};letter-spacing:.5px;margin-bottom:8px">🎮 경기 결과</div>
+      ${matchRows}
+    </div>`:''}
+
+    ${pendM.length?`<div style="padding:4px 16px 12px;font-size:10px;color:#94a3b8;text-align:center">⏳ ${pendM.length}경기 남음</div>`:''}
+
+    <div style="background:${col}0d;padding:8px 16px;display:flex;align-items:center;justify-content:flex-end">
+      <span style="font-size:9px;color:#94a3b8">🌟 스타대학 데이터 센터</span>
+    </div>
+  </div>`;
 }

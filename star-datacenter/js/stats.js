@@ -1315,10 +1315,16 @@ function renderShareCardByMatchObj(m){
       <div style="display:flex;align-items:center;justify-content:center;gap:10px">
         <!-- A팀 -->
         <div style="text-align:center;flex:1;min-width:0">
-          ${!m._noUnivIcon?`<div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
-            ${univIconHTML(isCivil&&civUniv?civUniv:a,'40px')}
-          </div>`:'<div style="height:12px"></div>'}
+          ${!m._noUnivIcon?(m._usePlayerPhoto
+            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(a,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            </div>`
+            :`<div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
+              ${univIconHTML(isCivil&&civUniv?civUniv:a,'40px')}
+            </div>`)
+          :'<div style="height:12px"></div>'}
           <div style="font-size:13px;font-weight:${aWin?900:600};color:${aWin?'#fff':'rgba(255,255,255,.65)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'⚔️ A팀':a}</div>
+          ${m._usePlayerPhoto?(()=>{const _pa=players.find(x=>x.name===a);return _pa&&(_pa.race||_pa.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pa.race?`<span class="rbadge r${_pa.race}" style="font-size:9px;padding:1px 5px">${_pa.race}</span>`:''}${_pa.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pa.univ}</span>`:''}</div>`:''})():''}
           ${aWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
 
@@ -1332,10 +1338,16 @@ function renderShareCardByMatchObj(m){
 
         <!-- B팀 -->
         <div style="text-align:center;flex:1;min-width:0">
-          ${!m._noUnivIcon?`<div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
-            ${univIconHTML(isCivil&&civUniv?civUniv:b,'40px')}
-          </div>`:'<div style="height:12px"></div>'}
+          ${!m._noUnivIcon?(m._usePlayerPhoto
+            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(b,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            </div>`
+            :`<div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
+              ${univIconHTML(isCivil&&civUniv?civUniv:b,'40px')}
+            </div>`)
+          :'<div style="height:12px"></div>'}
           <div style="font-size:13px;font-weight:${bWin?900:600};color:${bWin?'#fff':'rgba(255,255,255,.65)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'🛡️ B팀':b}</div>
+          ${m._usePlayerPhoto?(()=>{const _pb=players.find(x=>x.name===b);return _pb&&(_pb.race||_pb.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pb.race?`<span class="rbadge r${_pb.race}" style="font-size:9px;padding:1px 5px">${_pb.race}</span>`:''}${_pb.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pb.univ}</span>`:''}</div>`:''})():''}
           ${bWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
       </div>
