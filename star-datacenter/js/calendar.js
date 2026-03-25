@@ -285,8 +285,11 @@ function rCal(C,T){
     ${filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
   </div>`;
 
+  const _rouletteHTML = (typeof renderRoulettePanel === 'function') ? renderRoulettePanel() : '';
+
   C.innerHTML=`
-  <div>
+  <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+  <div style="flex:1;min-width:280px">
     <!-- 컨트롤 바 -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
       ${navHTML}
@@ -310,7 +313,13 @@ function rCal(C,T){
     </div>
     <!-- 선택 날짜 경기 목록 (월간뷰용) -->
     <div id="calDayDetail" style="margin-top:14px"></div>
+  </div>
+  <!-- 룰렛 패널 -->
+  <div style="width:280px;flex-shrink:0" class="no-export">
+    ${_rouletteHTML}
+  </div>
   </div>`;
+  if (typeof _gcSetup === 'function') setTimeout(_gcSetup, 60);
 }
 
 let _calActiveDay='';
