@@ -521,31 +521,52 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
-  // 대회탭에서 호출: curComp(대회탭 선택)로 _ttCurComp 동기화
-  if(curComp) _ttCurComp=curComp;
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
+  // _ttCurComp 유효성 검증 및 자동 설정
+  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
+  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
+  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
+  // 대회 선택 드롭다운
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
+    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
+    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
+      <option value="">— 대회를 선택하세요 —</option>
+      ${tierTourneys.map(t=>{
+        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
+        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
+        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
+      }).join('')}
+    </select>
+    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
+    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
+    <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
+  </div>`;
+  if(!tierTourneys.length){
+    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
+    return h;
+  }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
-  let h=stabs(_ttSub,subOpts);
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
+  } else if(_ttSub==='rank'){
+    h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    // 순위 표시
     const _curTnName=_ttCurComp||'';
-    if(_curTnName) h+=ttPlayerRankHTML(_curTnName);
     // 고아 레코드(compName 없는 기록) 연결 버튼
     const _orphans=ttM.filter(m=>!m.compName);
     if(_curTnName&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span>⚠️ 대회 미지정 기록 ${_orphans.length}건 있음</span>
-        <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 ${_curTnName}에 모두 연결</button>
+      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
+        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 현재 대회(${_curTnName})에 모두 연결</button>
       </div>`;
     }
-    // 현재 선택된 대회의 기록 표시 (compName 일치 + 미지정 기록 포함)
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName||!m.compName) : ttM;
+    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
     if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
@@ -1866,31 +1887,52 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
-  // 대회탭에서 호출: curComp(대회탭 선택)로 _ttCurComp 동기화
-  if(curComp) _ttCurComp=curComp;
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
+  // _ttCurComp 유효성 검증 및 자동 설정
+  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
+  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
+  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
+  // 대회 선택 드롭다운
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
+    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
+    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
+      <option value="">— 대회를 선택하세요 —</option>
+      ${tierTourneys.map(t=>{
+        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
+        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
+        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
+      }).join('')}
+    </select>
+    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
+    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
+    <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
+  </div>`;
+  if(!tierTourneys.length){
+    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
+    return h;
+  }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
-  let h=stabs(_ttSub,subOpts);
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
+  } else if(_ttSub==='rank'){
+    h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    // 순위 표시
     const _curTnName=_ttCurComp||'';
-    if(_curTnName) h+=ttPlayerRankHTML(_curTnName);
     // 고아 레코드(compName 없는 기록) 연결 버튼
     const _orphans=ttM.filter(m=>!m.compName);
     if(_curTnName&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span>⚠️ 대회 미지정 기록 ${_orphans.length}건 있음</span>
-        <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 ${_curTnName}에 모두 연결</button>
+      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
+        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 현재 대회(${_curTnName})에 모두 연결</button>
       </div>`;
     }
-    // 현재 선택된 대회의 기록 표시 (compName 일치 + 미지정 기록 포함)
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName||!m.compName) : ttM;
+    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
     if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }

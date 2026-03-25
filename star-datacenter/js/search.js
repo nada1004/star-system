@@ -2161,7 +2161,7 @@ function openTTPasteModal() {
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) {
     const inp = compWrap.querySelector('#paste-comp-name');
-    if (inp) { inp.placeholder = '티어대회명 입력 (선택)'; if(_ttCurComp&&!inp.value) inp.value=_ttCurComp; }
+    if (inp) { inp.placeholder = '티어대회명 입력 (선택)'; inp.value = _ttCurComp||''; }
     compWrap.style.display = 'flex';
   }
 }
