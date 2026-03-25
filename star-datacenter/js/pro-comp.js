@@ -275,7 +275,7 @@ function proCompLeague(tn) {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
         ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추가</button>
-        <button class="btn btn-w btn-xs no-export" onclick="proCompOpenDatePaste('${tn.id}','${date}')">📋 결과 입력</button>`:''}
+        ${date!=='날짜 미정'?`<button class="btn btn-w btn-xs no-export" onclick="proCompOpenDatePaste('${tn.id}','${date}')">📋 결과 입력</button>`:''}`:''}
       </div>`;
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
@@ -353,8 +353,14 @@ function proCompGrpRank(tn) {
   tn.groups.forEach((grp, gi) => {
     const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
     const ranks = _calcProGrpRank(grp);
+    const _gTotal=(grp.matches||[]).length, _gDone=(grp.matches||[]).filter(m=>m.winner).length;
+    const _gPct=_gTotal?Math.round(_gDone/_gTotal*100):0;
     h += `<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid ${col}33">
-      <div style="padding:10px 16px;background:linear-gradient(135deg,${col},${col}cc);color:#fff;font-weight:900;font-size:13px">GROUP ${GL[gi]} · ${grp.name||GL[gi]+'조'}</div>
+      <div style="padding:10px 16px;background:linear-gradient(135deg,${col},${col}cc);color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;gap:8px">
+        <span>GROUP ${GL[gi]} · ${grp.name||GL[gi]+'조'}</span>
+        <span style="margin-left:auto;font-size:11px;font-weight:600;opacity:.85">${_gDone}/${_gTotal}경기 · ${_gPct}%</span>
+      </div>
+      ${_gTotal>0?`<div style="height:4px;background:${col}33"><div style="height:100%;width:${_gPct}%;background:${col};transition:.3s"></div></div>`:''}
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr style="background:${col}11">
           <th style="padding:8px 12px;text-align:center;width:40px;color:var(--text3)">순위</th>
@@ -428,6 +434,7 @@ function proCompTeamSection(tn) {
         ${isLoggedIn?`<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
           <button class="btn btn-w btn-xs" onclick="proCompOpenTeamPasteModal('${tn.id}',${tmi})">📋</button>
+          <button class="btn btn-w btn-xs" onclick="proCompEditTeamMatch('${tn.id}',${tmi})">✏️</button>
           <button class="btn btn-r btn-xs" onclick="proCompDeleteTeamMatch('${tn.id}',${tmi})">🗑️</button>
         </div>`:''}
       </div>
@@ -591,7 +598,7 @@ function proCompAddTeamGame(tnId, tmi) {
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">맵 (선택)</label>
-      <input id="_tg_map" placeholder="선택입력" list="_tg_allPlayers" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;font-size:12px;box-sizing:border-box">
+      <input id="_tg_map" placeholder="선택입력" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;font-size:12px;box-sizing:border-box">
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="_tmSaveGame('${tnId}',${tmi})">추가</button>
@@ -638,6 +645,48 @@ function proCompDeleteTeamGame(tnId, tmi, gi) {
   tm.games.splice(gi,1);
   tm.sa=(tm.games).filter(g=>g._sideW==='A').length;
   tm.sb=(tm.games).filter(g=>g._sideW==='B').length;
+  save(); render();
+}
+
+function proCompEditTeamMatch(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  const modal = document.createElement('div');
+  modal.id = '_tmEditModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:360px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:14px">✏️ 팀전 수정</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">날짜</label>
+      <input id="_tme_d" type="date" value="${tm.d||''}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#2563eb">A팀 이름</label>
+        <input id="_tme_an" value="${tm.teamAName||'A팀'}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#dc2626">B팀 이름</label>
+        <input id="_tme_bn" value="${tm.teamBName||'B팀'}" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="_tmSaveEdit('${tnId}',${tmi})">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_tmEditModal').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function _tmSaveEdit(tnId, tmi) {
+  const tn = proTourneys.find(t=>t.id===tnId);
+  if (!tn||(tn.teamMatches||[])[tmi]==null) return;
+  const tm = tn.teamMatches[tmi];
+  tm.d = document.getElementById('_tme_d').value;
+  tm.teamAName = document.getElementById('_tme_an').value.trim()||'A팀';
+  tm.teamBName = document.getElementById('_tme_bn').value.trim()||'B팀';
+  document.getElementById('_tmEditModal').remove();
   save(); render();
 }
 
@@ -755,7 +804,7 @@ function _proCompTeamPasteApplyLogic(savable) {
     else if (teamASet.has(wName)) sideW='A';
     else if (teamBSet.has(lName)) sideW='A';
     else if (teamASet.has(lName)) sideW='B';
-    else sideW = (r.leftName && r.leftName===wName) ? 'A' : 'A';
+    else sideW = (r.rightName && r.rightName===wName) ? 'B' : 'A';
     const gid='ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
     const map=r.map&&r.map!=='-'?r.map:'';
     tm.games.push({_id:gid, wName, lName, map, _sideW:sideW});
