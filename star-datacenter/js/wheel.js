@@ -22,15 +22,6 @@
     '.wh-btn-spin:disabled{background:linear-gradient(135deg,#aaa,#888);box-shadow:0 4px 0 #555;cursor:not-allowed;transform:none}',
     '.wh-btn-spin.spinning{animation:whPulse .5s ease-in-out infinite alternate}',
     '@keyframes whPulse{from{box-shadow:0 5px 0 #C0274A}to{box-shadow:0 5px 20px rgba(255,75,110,.5),0 5px 0 #C0274A}}',
-    '.wh-result-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#C0274A 45%,#FF4B6E);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9999;animation:whFadeIn .3s ease}',
-    '@keyframes whFadeIn{from{opacity:0}to{opacity:1}}',
-    '.wh-res-trophy{font-size:clamp(60px,10vw,96px);animation:whPop .6s cubic-bezier(.34,1.56,.64,1) forwards}',
-    '.wh-res-label{font-size:clamp(16px,2.5vw,24px);font-weight:700;color:rgba(255,255,255,.85);letter-spacing:2px}',
-    '.wh-res-name{font-size:clamp(44px,10vw,88px);font-weight:900;color:#fff;text-shadow:0 0 48px rgba(255,255,255,.45),0 6px 0 rgba(0,0,0,.3);text-align:center;word-break:break-all;padding:0 20px;line-height:1.1;animation:whSlideUp .45s .2s ease-out both}',
-    '.wh-res-stars{font-size:clamp(18px,3vw,30px);letter-spacing:5px;animation:whBounce .6s ease-in-out infinite alternate}',
-    '.wh-res-hint{font-size:clamp(11px,1.5vw,14px);color:rgba(255,255,255,.4);margin-top:4px}',
-    '.wh-res-btn{font-family:inherit;font-size:clamp(14px,1.8vw,17px);font-weight:700;color:#fff;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);border-radius:22px;padding:10px 24px;cursor:pointer;transition:background .15s}',
-    '.wh-res-btn:hover{background:rgba(255,255,255,.32)}',
     '.wh-hist-box{width:100%;background:var(--white);border:2px solid var(--border);border-radius:14px;padding:12px 14px;margin-top:4px}',
     '.wh-hist-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}',
     '.wh-hist-item:last-child{border-bottom:none}',
@@ -39,6 +30,7 @@
     '@keyframes whSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}',
     '@keyframes whBounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}',
     '@keyframes whParticle{0%{transform:translate(0,0) scale(1) rotate(0deg);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0) rotate(var(--rot));opacity:0}}',
+    '@keyframes whCardAppear{0%{opacity:0;transform:scale(0.7) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}',
   ].join('');
   document.head.appendChild(s);
 })();
@@ -91,6 +83,12 @@ function _whRender(root) {
     + '<canvas id="wh-canvas"></canvas>'
     + '</div>'
     + '<button class="wh-btn-spin" id="wh-btn-spin" onclick="_whSpin()">🎡 돌려라!</button>'
+    // 결과 카드 (hidden 초기)
+    + '<div id="wh-result-card" style="display:none;width:100%;max-width:480px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:20px;text-align:center;box-sizing:border-box;animation:whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">'
+    + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
+    + '<div id="wh-res-icon" style="font-size:52px;margin-bottom:6px;line-height:1.1">🏆</div>'
+    + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:8px"></div>'
+    + '</div>'
     // 히스토리
     + _whHistHTML()
     + '</div>';
@@ -183,6 +181,8 @@ function _whSpin() {
   _whSpinning = true;
   const btn = document.getElementById('wh-btn-spin');
   if (btn) { btn.disabled = true; btn.textContent = '🎡 돌아가는 중...'; btn.classList.add('spinning'); }
+  const prevCard = document.getElementById('wh-result-card');
+  if (prevCard) prevCard.style.display = 'none';
 
   const winIdx  = Math.floor(Math.random() * names.length);
   const slice   = Math.PI * 2 / names.length;
@@ -218,28 +218,22 @@ function _whSpin() {
   _whAnimId = requestAnimationFrame(frame);
 }
 
-// ─── 결과 오버레이 ────────────────────────────────────────────────────────────
+// ─── 결과 카드 ────────────────────────────────────────────────────────────────
 function _whShowResult(name) {
-  const ov = document.createElement('div');
-  ov.className = 'wh-result-overlay';
-  ov.id = 'wh-result-overlay';
-  ov.innerHTML =
-    '<div class="wh-res-trophy">🏆</div>'
-    + '<div class="wh-res-label">🎉 당첨자 발표! 🎉</div>'
-    + '<div class="wh-res-name">' + name + '</div>'
-    + '<div class="wh-res-stars">🌟 ✨ 🎊 💫 🌟</div>'
-    + '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px">'
-    + '<button class="wh-res-btn" onclick="document.getElementById(\'wh-result-overlay\').remove();const b=document.getElementById(\'wh-btn-spin\');if(b)b.disabled=false;">🎡 다시 돌리기</button>'
-    + '</div>'
-    + '<div class="wh-res-hint">화면을 터치하면 닫힙니다</div>';
-  ov.addEventListener('click', function(e) {
-    if (e.target === ov) {
-      ov.remove();
-      const b = document.getElementById('wh-btn-spin');
-      if (b) b.disabled = false;
-    }
-  });
-  document.body.appendChild(ov);
+  const card = document.getElementById('wh-result-card');
+  const nameEl = document.getElementById('wh-res-name');
+  const iconEl = document.getElementById('wh-res-icon');
+  if (!card || !nameEl) return;
+  if (nameEl) nameEl.textContent = name;
+  if (iconEl) {
+    const icons = ['🏆','🥇','🎖️','👑','🌟'];
+    iconEl.textContent = icons[Math.floor(Math.random() * icons.length)];
+  }
+  card.style.display = 'block';
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = 'whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   _whFireConfetti();
   _whPlayWin();
 }
