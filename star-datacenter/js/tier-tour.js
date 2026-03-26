@@ -3097,7 +3097,8 @@ function addPlayer(){
     if(_pPhoto.startsWith('data:')){alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n이미지를 imgur.com 등에 업로드 후 URL을 입력하세요.');return;}
     if(_pPhoto.length>2000&&!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_pPhoto.length}자). 계속 저장하시겠습니까?`))return;
   }
-  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
+  const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
+  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
 }
 function openEP(name){
@@ -3189,6 +3190,12 @@ function openEP(name){
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-inactive" ${p.inactive?'checked':''} style="width:16px;height:16px;cursor:pointer">
         ⏸️ 임시 상태 (휴학/활동중단) — 현황판에서 반투명 표시, 은퇴와 달리 숨기지 않음
+      </label>
+    </div>
+    <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+        <input type="checkbox" id="ed-hide-board" ${p.hideFromBoard?'checked':''} style="width:16px;height:16px;cursor:pointer">
+        🚫 현황판 제외 — 스트리머 탭에는 표시, 현황판에서만 숨김
       </label>
     </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
@@ -3314,6 +3321,8 @@ function savePlayer(){
   if(!p.retired)p.retired=undefined;
   p.inactive=document.getElementById('ed-inactive')?.checked||false;
   if(!p.inactive)p.inactive=undefined;
+  p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
+  if(!p.hideFromBoard)p.hideFromBoard=undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
