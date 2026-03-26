@@ -113,13 +113,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const tbStyle = (active, borderRight) =>
     `flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};cursor:pointer;${borderRight?'border-right:2px solid var(--border);':''}transition:.1s`;
 
-  // 입력 본체 HTML
-  const inputBodyInner = isLadder ? `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
-      <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
-      <textarea id="ld-names-input" rows="2" oninput="_ldSaveNames(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldNamesText}</textarea>
-    </div>
+  // 사다리: 항상 표시할 결과 항목 블록 (접기 영역 밖)
+  const ldItemsAlways = isLadder ? `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">결과 항목 (쉼표 구분, 이름 수와 동일하게)</div>
       <textarea id="ld-items-input" rows="2" oninput="_ldSaveItems(this.value)"
@@ -127,6 +122,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <button onclick="_ldRebuild()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid #a78bfa;background:#f5f3ff;color:#7c3aed;cursor:pointer;font-weight:600">🎲 사다리 다시 만들기</button>
     </div>
     <div id="ld-hist-box"></div>
+  ` : '';
+
+  // 입력 본체 HTML (접기 대상)
+  const inputBodyInner = isLadder ? `
+    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
+      <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
+      <textarea id="ld-names-input" rows="2" oninput="_ldSaveNames(this.value)"
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldNamesText}</textarea>
+    </div>
   ` : `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
@@ -221,6 +225,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
       ${inputBodyInner}
     </div>
+    ${ldItemsAlways}
     ${gcResultHTML}
   </div>
   ${rightPanelHTML}
