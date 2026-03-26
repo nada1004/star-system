@@ -11,6 +11,8 @@ function rRoulette(C, T) {
   C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
   if (_gcTab === 'ladder') {
     setTimeout(_ldInit, 60);
+  } else if (_gcTab === 'duck') {
+    setTimeout(_drInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }
@@ -64,6 +66,22 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   const isPlayer = _gcTab === 'player';
   const isLadder = _gcTab === 'ladder';
+  const isDuck   = _gcTab === 'duck';
+
+  // 오리경주 탭: 별도 레이아웃
+  if (isDuck) {
+    const tbStyleDuck = (active, borderRight) =>
+      `flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:${active?'#e0f5ff':'var(--surface)'};color:${active?'#0d7bb0':'var(--text2)'};cursor:pointer;${borderRight?'border-right:2px solid var(--border);':''}transition:.1s`;
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto">
+  <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="${tbStyleDuck(_gcTab==='duck',false)}">🐥 오리경주</button>
+  </div>
+  <div id="dr-root"></div>
+</div>`;
+  }
 
   const savedText   = (!isLadder) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
   const activeItems = savedText.split(',').map(v=>v.trim()).filter(v=>v);
@@ -219,6 +237,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
       <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
       <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
+      <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(false,true)}">🐥 오리경주</button>
       <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${Math.round(pad*0.8)}px ${Math.round(pad*0.6)}px;font-size:${fs}px;font-weight:700;border:none;background:var(--surface);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
     </div>
     <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
@@ -233,10 +252,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 }
 
 function _gcSwitchTab(tab) {
+  // 오리경주에서 다른 탭으로 전환 시 정리
+  if (_gcTab === 'duck' && tab !== 'duck' && typeof _drCleanup === 'function') _drCleanup();
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
     setTimeout(_ldInit, 60);
+  } else if (tab === 'duck') {
+    setTimeout(_drInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }
