@@ -151,7 +151,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
   const hasSide = !!((_smemo||_simgs.length));
   // 오른쪽 컬럼 전체를 대학색으로 채우는 래퍼 — 이미지 아래 공백도 같은 색
-  const sidePanelHtml = hasSide ? `<div style="background:${lightCol};padding:8px;box-sizing:border-box">
+  const sidePanelHtml = hasSide ? `<div style="background:${lightCol};border-left:1px solid ${col}33;padding:8px;box-sizing:border-box">
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
