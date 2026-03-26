@@ -489,10 +489,14 @@ function rTierTourTab(C, T){
   C.innerHTML=h;
 }
 
-function ttFixOrphanRecords(compName){
-  const targets=ttM.filter(m=>!m.compName||m.compName==='');
-  if(!targets.length){alert('연결할 미지정 기록이 없습니다.');return;}
-  if(!confirm(`대회명 없는 기록 ${targets.length}건을 "${compName}"에 연결할까요?`))return;
+function ttFixOrphanRecords(compName,includeWrong){
+  const orphans=ttM.filter(m=>!m.compName||m.compName==='');
+  const wrongComp=includeWrong?ttM.filter(m=>m.compName&&m.compName!==compName):[];
+  const targets=[...orphans,...wrongComp];
+  if(!targets.length){alert('연결할 기록이 없습니다.');return;}
+  const wrongNames=[...new Set(wrongComp.map(m=>m.compName))].join(', ');
+  const msg=`기록 ${targets.length}건을 "${compName}"에 연결합니다.${wrongNames?`\n(다른 대회명: ${wrongNames})`:''}\n계속할까요?`;
+  if(!confirm(msg))return;
   targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
   save();render();
 }
@@ -1968,10 +1972,14 @@ function rTierTourTab(C, T){
   C.innerHTML=h;
 }
 
-function ttFixOrphanRecords(compName){
-  const targets=ttM.filter(m=>!m.compName||m.compName==='');
-  if(!targets.length){alert('연결할 미지정 기록이 없습니다.');return;}
-  if(!confirm(`대회명 없는 기록 ${targets.length}건을 "${compName}"에 연결할까요?`))return;
+function ttFixOrphanRecords(compName,includeWrong){
+  const orphans=ttM.filter(m=>!m.compName||m.compName==='');
+  const wrongComp=includeWrong?ttM.filter(m=>m.compName&&m.compName!==compName):[];
+  const targets=[...orphans,...wrongComp];
+  if(!targets.length){alert('연결할 기록이 없습니다.');return;}
+  const wrongNames=[...new Set(wrongComp.map(m=>m.compName))].join(', ');
+  const msg=`기록 ${targets.length}건을 "${compName}"에 연결합니다.${wrongNames?`\n(다른 대회명: ${wrongNames})`:''}\n계속할까요?`;
+  if(!confirm(msg))return;
   targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
   save();render();
 }
