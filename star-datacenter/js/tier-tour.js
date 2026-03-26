@@ -450,16 +450,14 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='rank'){
     h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
+    // 대회명 없는 고아 기록: 티어대회 1개면 자동 연결, 여러개면 필터에 포함해서 표시
     const _orphans=ttM.filter(m=>!m.compName);
-    if(_ttCurComp&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}')">📎 현재 대회(${_ttCurComp})에 모두 연결</button>
-      </div>`;
+    if(_orphans.length&&_ttCurComp&&tierTourneys.length===1){
+      _orphans.forEach(m=>{m.compName=_ttCurComp;if(!m.n)m.n=_ttCurComp;});
+      save();
     }
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp||!m.compName) : ttM;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
@@ -1822,16 +1820,14 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='rank'){
     h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
+    // 대회명 없는 고아 기록: 티어대회 1개면 자동 연결, 여러개면 필터에 포함해서 표시
     const _orphans=ttM.filter(m=>!m.compName);
-    if(_ttCurComp&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}')">📎 현재 대회(${_ttCurComp})에 모두 연결</button>
-      </div>`;
+    if(_orphans.length&&_ttCurComp&&tierTourneys.length===1){
+      _orphans.forEach(m=>{m.compName=_ttCurComp;if(!m.n)m.n=_ttCurComp;});
+      save();
     }
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp||!m.compName) : ttM;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
