@@ -90,7 +90,7 @@ function _b2UnivBlock(univName, col, members) {
   // 멤버 없을 때 빈 블록
   if (!members.length) {
     return `<div style="border-radius:14px;border:2px dashed ${col}55;padding:16px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
-      ${iconUrl?`<img src="${iconUrl}" style="width:28px;height:28px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${iconUrl}" style="width:36px;height:36px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
@@ -161,7 +161,7 @@ function _b2UnivBlock(univName, col, members) {
     <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<img src="${iconUrl}" style="width:26px;height:26px;border-radius:6px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${iconUrl}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
