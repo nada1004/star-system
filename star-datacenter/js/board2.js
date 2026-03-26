@@ -222,7 +222,7 @@ function _b2FreeView() {
       <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
       <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #fff4">${freeMembers.length}명</span>
     </div>
-    <div style="background:#64748b2e;padding:6px 14px 12px">`;
+    <div style="background:#64748b40;padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}${contentEl}</div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
