@@ -3812,6 +3812,13 @@ function _ulogoSave(i, val) {
   save();
 }
 
+function ttBracketHTML(compName){
+  const tn=(tourneys||[]).find(t=>t.name===compName&&t.type==='tier');
+  if(!tn) return '<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회를 선택하세요.</div>';
+  if(typeof rCompLeague==='function') return rCompLeague(tn);
+  return '<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
+}
+
 /* ══════════════════════════════════════
    📊 통계 탭
 ══════════════════════════════════════ */
