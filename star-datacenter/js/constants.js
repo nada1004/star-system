@@ -252,7 +252,20 @@ function localSave(){
     const _pNoPhoto=players.map(p=>{
       const c={...p};
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+      // eloAfter(render.js fallback으로 재계산 가능) + time(위치 순으로 대체) 제거
+      if(c.history&&c.history.length){
+        // eslint-disable-next-line no-unused-vars
+        c.history=c.history.map(({eloAfter,time,...h})=>h);
+      }
       return c;
+    });
+    // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
+    const _trimM=arr=>arr.map(m=>{
+      if(!m.teamAMembers&&!m.teamBMembers)return m;
+      const r={...m};
+      if(r.teamAMembers)r.teamAMembers=r.teamAMembers.map(x=>({name:x.name,univ:x.univ}));
+      if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
+      return r;
     });
     localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
     localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
@@ -263,14 +276,14 @@ function localSave(){
     localStorage.setItem('su_mm',JSON.stringify(miniM));
     localStorage.setItem('su_um',JSON.stringify(univM));
     localStorage.setItem('su_cm',JSON.stringify(comps));
-    localStorage.setItem('su_ck',JSON.stringify(ckM));
+    localStorage.setItem('su_ck',JSON.stringify(_trimM(ckM)));
     localStorage.setItem('su_cn',JSON.stringify(compNames));
     localStorage.setItem('su_cc',JSON.stringify(curComp));
-    localStorage.setItem('su_pro',JSON.stringify(proM));
+    localStorage.setItem('su_pro',JSON.stringify(_trimM(proM)));
     localStorage.setItem('su_ptn',JSON.stringify(proTourneys));
     localStorage.setItem('su_ptc',JSON.stringify(curProComp));
     localStorage.setItem('su_tn',JSON.stringify(tourneys));
-    localStorage.setItem('su_ttm',JSON.stringify(ttM));
+    localStorage.setItem('su_ttm',JSON.stringify(_trimM(ttM)));
     localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));
     localStorage.setItem('su_indm',JSON.stringify(indM));
     localStorage.setItem('su_gjm',JSON.stringify(gjM));
