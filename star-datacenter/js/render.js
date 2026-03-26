@@ -365,9 +365,14 @@ function openUnivModal(univName){
   injectUnivIcons(document.getElementById('univModalBody'));
   window._univModalCurrentName=univName;
   window._univEditOpen=false;
+  om('univModal');
   const editBtn=document.getElementById('univEditBtn');
   if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
-  om('univModal');
+  // 비동기 업데이트(Firebase 등)로 버튼이 숨겨지는 경우를 방지
+  requestAnimationFrame(()=>{
+    const btn=document.getElementById('univEditBtn');
+    if(btn) btn.style.display=isLoggedIn?'inline-flex':'none';
+  });
 }
 
 function toggleUnivEdit(){

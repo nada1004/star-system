@@ -170,10 +170,14 @@ window.onFirebaseLoad = function(data) {
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
-  // 열려있는 선수 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
+  // 열려있는 선수/대학 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
   const _openModal = document.getElementById('playerModal');
   if (_openModal && _openModal.style.display !== 'none' && window._playerModalCurrentName) {
     if (typeof openPlayerModal === 'function') openPlayerModal(window._playerModalCurrentName);
+  }
+  const _openUnivModal = document.getElementById('univModal');
+  if (_openUnivModal && _openUnivModal.style.display !== 'none' && window._univModalCurrentName) {
+    if (typeof openUnivModal === 'function') openUnivModal(window._univModalCurrentName);
   }
   const fbTs = document.getElementById('fbLastSync');
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
