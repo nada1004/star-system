@@ -153,7 +153,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
 
   // 사이드 패널 — 절대 위치로 오른쪽에 오버레이 (가로 구분선이 padding-right 덕에 전체 폭으로 이어짐)
-  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};border-left:1px solid ${col}33;padding:8px;box-sizing:border-box;overflow:hidden">
+  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
@@ -222,7 +222,7 @@ function _b2FreeView() {
       <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
       <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #fff4">${freeMembers.length}명</span>
     </div>
-    <div style="background:#64748b0e;padding:6px 14px 12px">`;
+    <div style="background:#64748b22;padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:flex-start;gap:10px">${labelEl}${contentEl}</div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;padding-top:6px">${text}</span>`;
