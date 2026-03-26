@@ -248,19 +248,16 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   `;
 
   return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  <div style="display:flex;align-items:center;gap:6px;margin-bottom:${pad}px">
-    <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;flex:1;min-width:0">
-      <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
-      <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
-      <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
-      <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
-      <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(false,true)}">🎡 휠</button>
-    </div>
-    <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${_tbP}px ${Math.round(pad*0.5)}px;font-size:${_tbF}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s;flex-shrink:0">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
+  <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
+    <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(false,true)}">🎡 휠</button>
   </div>
-  <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
   <div style="${innerLayout}">
     <div style="${inputColStyle}">
+      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="width:100%;padding:7px 12px;font-size:${fs}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;transition:.1s;margin-bottom:${Math.round(pad*0.5)}px;text-align:left">${_gcInputOpen?'📝 입력 접기 ▲':'📝 입력 펼치기 ▼'}</button>
       <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
         ${inputBodyInner}
       </div>
@@ -289,12 +286,10 @@ function _gcSwitchTab(tab) {
 
 function _gcToggleInput() {
   _gcInputOpen = !_gcInputOpen;
-  const body    = document.getElementById('gc-input-body');
-  const summary = document.getElementById('gc-input-summary');
-  const btn     = document.getElementById('gc-input-toggle');
-  if (body)    body.style.display    = _gcInputOpen ? 'block' : 'none';
-  if (summary) summary.style.display = _gcInputOpen ? 'none'  : 'block';
-  if (btn)     btn.textContent       = _gcInputOpen ? '접기 ▲' : '펼치기 ▼';
+  const body = document.getElementById('gc-input-body');
+  const btn  = document.getElementById('gc-input-toggle');
+  if (body) body.style.display = _gcInputOpen ? 'block' : 'none';
+  if (btn)  btn.textContent    = _gcInputOpen ? '📝 입력 접기 ▲' : '📝 입력 펼치기 ▼';
 }
 
 function _gcSaveText(val) {

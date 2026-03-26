@@ -83,9 +83,9 @@ initDark();
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    const stored = localStorage.getItem('su_p');
-    const hasLocal = stored && JSON.parse(stored).length > 0;
-    if(hasLocal) return;
+    // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
+    const localPlayers = J('su_p');
+    if(localPlayers && localPlayers.length > 0) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
