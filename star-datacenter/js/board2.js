@@ -151,7 +151,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
   const hasSide = !!((_smemo||_simgs.length));
   const _sidePad = _smemo ? '8px' : '8px 8px 0 8px';
-  const sidePanelHtml = hasSide ? `<div style="width:190px;flex-shrink:0;background:${lightCol};border:1px solid ${col}44;border-radius:10px;padding:${_sidePad};box-sizing:border-box;align-self:flex-start;overflow:hidden">
+  const sidePanelHtml = hasSide ? `<div style="width:190px;flex-shrink:0;background:${labelCol};border:1px solid ${col}44;border-radius:10px;padding:${_sidePad};box-sizing:border-box;align-self:flex-start;overflow:hidden">
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:${i<_simgs.length-1||_smemo?'7px':'0 0 10px 10px'};${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
   </div>` : '';
