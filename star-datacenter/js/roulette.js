@@ -384,6 +384,7 @@ function _gcSpin() {
         void resultCard.offsetWidth;
         resultCard.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
       }
+      _gcSpinning = false; // 결과 표시 후 바로 다시 뽑기 가능
     }, 750);
   }, 950);
 }
