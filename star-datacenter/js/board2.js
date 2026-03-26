@@ -147,7 +147,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
   const hasSide = !!((_smemo||_simgs.length));
   const sidePanelHtml = hasSide ? `<div style="width:190px;flex-shrink:0;background:${lightCol};border:1px solid ${col}44;border-radius:10px;padding:8px;box-sizing:border-box;align-self:flex-start">
-    ${_simgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
   </div>` : '';
   // 하단 메모/이미지 (bMemo/bMemoImgs)
@@ -333,9 +333,12 @@ async function saveB2Img() {
     </div>`;
   document.body.appendChild(tmpDiv);
 
-  await new Promise(r => setTimeout(r, 400));
-  injectUnivIcons(tmpDiv);
   await new Promise(r => setTimeout(r, 300));
+  injectUnivIcons(tmpDiv);
+  await new Promise(r => setTimeout(r, 200));
+  // 이미지 먼저 data URL로 변환 후 치수 측정 (측정 전 로드 필수)
+  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 6000);
+  await new Promise(r => setTimeout(r, 100));
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
