@@ -145,16 +145,6 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  // 프로리그 대회 모드
-  if(_grpPasteState.mode==='procomp-league'){
-    return typeof _proCompLeaguePasteApplyLogic==='function'?_proCompLeaguePasteApplyLogic(savable):false;
-  }
-  if(_grpPasteState.mode==='procomp-team'){
-    return typeof _proCompTeamPasteApplyLogic==='function'?_proCompTeamPasteApplyLogic(savable):false;
-  }
-  if(_grpPasteState.mode==='procomp-bkt'){
-    return typeof _proCompBktPasteApplyLogic==='function'?_proCompBktPasteApplyLogic(savable):false;
-  }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
@@ -287,15 +277,9 @@ function _grpPasteApplyLogic(savable){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(teamA||m.a||''):(teamB||m.b||'');
       const univL=g.winner==='A'?(teamB||m.b||''):(teamA||m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
+      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'조별리그');
     });
   });
-  // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
-  if(tn.type==='tier'){
-    const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
-    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
-  }
 
   save();
   // 이중저장 방지: 편집 모달 + 붙여넣기 모달 모두 닫기
@@ -430,11 +414,7 @@ function rTierTourTab(C, T){
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{
-        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
-        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
-        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
-      }).join('')}
+      ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
@@ -446,40 +426,39 @@ function rTierTourTab(C, T){
   }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
-    {id:'bracket',lbl:'🏆 토너먼트',fn:`_ttSub='bracket';render()`},
-    {id:'rank',lbl:'📊 순위',fn:`_ttSub='rank';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
-  } else if(_ttSub==='bracket'){
-    h+=ttBracketHTML(_ttCurComp);
   } else if(_ttSub==='rank'){
     h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    // 대회명 없는 고아 기록: 티어대회 1개면 자동 연결, 여러개면 버튼으로 수동 연결
-    const _orphans=ttM.filter(m=>!m.compName);
-    if(_orphans.length&&_ttCurComp&&tierTourneys.length===1){
-      _orphans.forEach(m=>{m.compName=_ttCurComp;if(!m.n)m.n=_ttCurComp;});
-      save();
-    } else if(_orphans.length&&_ttCurComp&&isLoggedIn){
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
+    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
+    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
+    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
+    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
+    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
+      const _totalBad=_orphans.length+_wrongComp.length;
       h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}')">📎 현재 대회(${_ttCurComp})에 모두 연결</button>
+        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
+        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
       </div>`;
     }
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp||!m.compName) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }
 
 function ttFixOrphanRecords(compName){
-  if(!confirm(`대회명 없는 티어대회 기록을 모두 "${compName}"에 연결하시겠습니까?`))return;
-  ttM.forEach(m=>{if(!m.compName){m.compName=compName;if(!m.n)m.n=compName;}});
+  const targets=ttM.filter(m=>!m.compName||m.compName==='');
+  if(!targets.length){alert('연결할 미지정 기록이 없습니다.');return;}
+  if(!confirm(`대회명 없는 기록 ${targets.length}건을 "${compName}"에 연결할까요?`))return;
+  targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
   save();render();
 }
 
@@ -534,55 +513,20 @@ function ttPlayerRankHTML(compName){
 
 function rTierTour(){
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
-  // _ttCurComp 유효성 검증 및 자동 설정
-  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
-  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
-  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
-  // 대회 선택 드롭다운
-  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
-    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
-    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
-      <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{
-        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
-        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
-        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
-      }).join('')}
-    </select>
-    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
-    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
-    <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
-  </div>`;
-  if(!tierTourneys.length){
-    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
-    return h;
-  }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
-    {id:'bracket',lbl:'🏆 토너먼트',fn:`_ttSub='bracket';render()`},
-    {id:'rank',lbl:'📊 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
+  let h=stabs(_ttSub,subOpts);
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
-  } else if(_ttSub==='bracket'){
-    h+=ttBracketHTML(_ttCurComp);
-  } else if(_ttSub==='rank'){
-    h+=ttPlayerRankHTML(_ttCurComp);
   } else {
+    // 현재 선택된 대회의 기록만 표시
     const _curTnName=_ttCurComp||'';
-    // 고아 레코드(compName 없는 기록) 연결 버튼
-    const _orphans=ttM.filter(m=>!m.compName);
-    if(_curTnName&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 현재 대회(${_curTnName})에 모두 연결</button>
-      </div>`;
-    }
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
-    if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
+    const _ttFiltered=_curTnName
+      ? ttM.filter(m=>m.compName===_curTnName)
+      : ttM;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   return h;
@@ -610,15 +554,15 @@ function buildTierTourInputHTML(){
         <button class="tier-filter-btn ${tfs.length===0?'on':''}" onclick="BLD['tt'].tiers=[];BLD['tt'].membersA=[];BLD['tt'].membersB=[];BLD['tt'].sets=[];render()">전체</button>
         ${TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tfs.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="ttToggleTier('${t}')">${getTierLabel(t)}</button>`;}).join('')}
       </div>
-      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 스트리머: <strong>${eligible.length}명</strong></div>
+      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 선수: <strong>${eligible.length}명</strong></div>
     </div>
 
     <!-- 선수 목록 클릭으로 팀 배정 -->
     <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 스트리머 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 선수 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto">
         ${eligible.length===0
-          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 스트리머 목록이 표시됩니다</span>'
+          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 선수 목록이 표시됩니다</span>'
           :eligible.map(p=>{
               const inA=mA.some(m=>m.name===p.name);
               const inB=mB.some(m=>m.name===p.name);
@@ -644,7 +588,7 @@ function buildTierTourInputHTML(){
           <input type="text" id="tt-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('A')">
         </div>
         <div id="tt-a-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
+        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
@@ -652,7 +596,7 @@ function buildTierTourInputHTML(){
           <input type="text" id="tt-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('B')">
         </div>
         <div id="tt-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
+        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
     </div>`;
   h+=setBuilderHTML(bld,'tt');h+=`</div>`;return h;
@@ -911,12 +855,6 @@ function rCfg(C,T){
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
-      <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
-        ${u.icon?`<img id="ulogo-prev-${i}" src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
-        <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
-          oninput="_ulogoPreview(${i},this.value)"
-          onblur="_ulogoSave(${i},this.value)">
-      </div>
       ${isDissolved
         ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
@@ -944,7 +882,19 @@ function rCfg(C,T){
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></div>
-  <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
+      <div class="ssec">
+      <h4>🎮 크루 관리</h4>
+      <div id="crew-list" style="margin-bottom:12px"></div>
+      ${isLoggedIn?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <input type="text" id="crew-name" placeholder="크루 이름" style="width:120px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="text" id="crew-icon" placeholder="아이콘 (이모지)" style="width:90px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="color" id="crew-color" value="#6366f1" style="width:40px;height:30px;border:1px solid var(--border2);border-radius:6px;cursor:pointer">
+        <input type="text" id="crew-desc" placeholder="설명 (선택)" style="width:150px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <button class="btn btn-b btn-sm" onclick="addCrew()">+ 크루 추가</button>
+      </div>`:``}
+    </div>
+
+    <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
@@ -973,45 +923,28 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+  <div class="ssec"><h4>🏷️ 선수 상태 아이콘 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 선수별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 사용 가능한 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 6px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px;display:inline-flex;align-items:center;justify-content:center;min-width:28px" title="${d.label}">${_siIsImg(d.emoji)?_siRender(d.emoji,"18px"):d.emoji}</span>`).join('')}
+        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px" title="${d.label}">${d.emoji}</span>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
-    </div>
-    
-    <div style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🖼️ URL 아이콘 추가</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-        <input type="text" id="si-url-label" placeholder="이름 (예: HOT)" style="width:90px">
-        <input type="text" id="si-url-val" placeholder="이미지 URL 또는 이모지" style="flex:1;min-width:160px" oninput="(function(v){const p=document.getElementById('si-url-preview');p.innerHTML=v&&(v.startsWith('http')||v.startsWith('data:'))?'<img src=''+v+'' style='width:20px;height:20px;object-fit:contain' onerror='this.style.display='none''>':v;})(this.value)">
-        <span id="si-url-preview" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:16px"></span>
-        <button class="btn btn-b" onclick="(function(){const lbl=document.getElementById('si-url-label').value.trim();const val=document.getElementById('si-url-val').value.trim();if(!val){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(lbl||'커스텀',val);render();})()">+ 추가</button>
-      </div>
-      ${_customStatusIcons.length?_customStatusIcons.map((c,i)=>
-        `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
-          <span style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">${_siIsImg(c.emoji)?_siRender(c.emoji,'20px'):c.emoji}</span>
-          <span style="flex:1;font-size:12px;color:var(--text2)">${c.label}</span>
-          <button class="btn btn-r btn-xs" onclick="removeCustomStatusIcon(${i});render()">🗑️</button>
-        </div>`
-      ).join(''):'<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:8px">추가된 커스텀 아이콘 없음</div>'}
     </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 스트리머 없음</div>':
+      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
         [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
           const cur=playerStatusIcons[p.name]||'';
           const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center;display:inline-flex;align-items:center">${cur?(_siIsImg(cur)?_siRender(cur,'20px'):cur):''}</span>
+            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?(_siIsImg(d.emoji)?'🖼️ ':d.emoji+' '):''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
           </div>`;
         }).join('')
@@ -1150,7 +1083,7 @@ function rCfg(C,T){
 
       <!-- 선수 일괄 티어 변경 -->
       <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
-        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 스트리머 일괄 티어 변경</div>
+        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 선수 일괄 티어 변경</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
           <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
           <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
@@ -1220,6 +1153,7 @@ function rCfg(C,T){
   setTimeout(()=>{
     renderStorageInfo();
     renderSeasonList();
+    _refreshCrewList();
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -1280,6 +1214,86 @@ function renderStorageInfo(){
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
 
+// ── 크루 관리 함수들 ──
+function _refreshCrewList(){
+  const el=document.getElementById('crew-list');
+  if(!el) return;
+  if(!crews||!crews.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">아직 추가된 크루가 없습니다.</div>';return;}
+  el.innerHTML=crews.map((c,ci)=>{
+    const col=c.color||'#6b7280';
+    const memberBtns=(c.members||[]).map((m,mi)=>`
+      <span style="display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px">
+        ${m.name}${m.role?`<span style="color:${col};font-size:10px;margin-left:2px">(${m.role})</span>`:''}
+        ${isLoggedIn?`<button onclick="delCrewMember(${ci},${mi})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0 2px">✕</button>`:''}
+      </span>`).join('');
+    return `<div style="border:1.5px solid ${col}55;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:${col}08">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        ${c.icon?`<span style="font-size:20px">${c.icon}</span>`:''}
+        <span style="font-weight:800;font-size:14px;color:${col}">${c.name}</span>
+        ${c.desc?`<span style="font-size:11px;color:var(--gray-l)">${c.desc}</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${(c.members||[]).length}명</span>
+        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="delCrew(${ci})">🗑️ 삭제</button>`:''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${memberBtns}</div>
+      ${isLoggedIn?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select id="crew-add-mem-${ci}" style="font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
+          <option value="">멤버 추가...</option>
+          ${players.filter(p=>!(c.members||[]).some(m=>m.name===p.name)).map(p=>{
+              const hasUniv=p.univ&&p.univ!=='무소속';
+              return `<option value="${p.name}">${p.name} (${p.univ||'무소속'})${hasUniv?' ⚠️대학있음':''}`;
+            }).join('')}
+        </select>
+        <input type="text" id="crew-add-role-${ci}" placeholder="역할 (선택, 예:리더)" style="width:100px;font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
+        <button class="btn btn-b btn-xs" onclick="addCrewMember(${ci})">+ 추가</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function addCrew(){
+  const name=(document.getElementById('crew-name')?.value||'').trim();
+  if(!name){alert('크루 이름을 입력하세요.');return;}
+  if(crews.find(c=>c.name===name)){alert('같은 이름의 크루가 있습니다.');return;}
+  const color=document.getElementById('crew-color')?.value||'#6366f1';
+  const icon=(document.getElementById('crew-icon')?.value||'').trim();
+  const desc=(document.getElementById('crew-desc')?.value||'').trim();
+  const id='crew_'+Date.now();
+  crews.push({id,name,color,icon,desc,members:[]});
+  save();
+  document.getElementById('crew-name').value='';
+  document.getElementById('crew-icon').value='';
+  document.getElementById('crew-desc').value='';
+  _refreshCrewList();
+}
+
+function delCrew(ci){
+  if(!confirm(`"${crews[ci]?.name}" 크루를 삭제할까요?`)) return;
+  crews.splice(ci,1);
+  save(); render();
+}
+
+function addCrewMember(ci){
+  const name=document.getElementById(`crew-add-mem-${ci}`)?.value||'';
+  if(!name) return;
+  const role=(document.getElementById(`crew-add-role-${ci}`)?.value||'').trim();
+  if(!(crews[ci].members)) crews[ci].members=[];
+  crews[ci].members.push({name,role});
+  // 크루 소속 = 자동 무소속 처리
+  const p=players.find(x=>x.name===name);
+  if(p && p.univ && p.univ!=='무소속'){
+    if(confirm(`"${name}"의 대학 소속(${p.univ})을 무소속으로 변경할까요?`)){
+      delete p.role;
+      p.univ='무소속';
+    }
+  }
+  save(); _refreshCrewList();
+}
+
+function delCrewMember(ci,mi){
+  crews[ci].members.splice(mi,1);
+  save(); _refreshCrewList();
+}
+
 function bulkChangeTier(){
   if(!isLoggedIn) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';
@@ -1291,7 +1305,7 @@ function bulkChangeTier(){
     if(targetUniv && p.univ!==targetUniv) return false;
     return true;
   });
-  if(!targets.length){alert('해당하는 스트리머가 없습니다.');return;}
+  if(!targets.length){alert('해당하는 선수가 없습니다.');return;}
   if(!confirm(`${targets.length}명의 티어를 '${toTier}'으로 변경할까요?\n\n${targets.slice(0,5).map(p=>p.name).join(', ')}${targets.length>5?` 외 ${targets.length-5}명`:''}`)) return;
   targets.forEach(p=>{ p.tier=toTier; });
   save(); render();
@@ -1532,16 +1546,6 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  // 프로리그 대회 모드
-  if(_grpPasteState.mode==='procomp-league'){
-    return typeof _proCompLeaguePasteApplyLogic==='function'?_proCompLeaguePasteApplyLogic(savable):false;
-  }
-  if(_grpPasteState.mode==='procomp-team'){
-    return typeof _proCompTeamPasteApplyLogic==='function'?_proCompTeamPasteApplyLogic(savable):false;
-  }
-  if(_grpPasteState.mode==='procomp-bkt'){
-    return typeof _proCompBktPasteApplyLogic==='function'?_proCompBktPasteApplyLogic(savable):false;
-  }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
@@ -1674,15 +1678,9 @@ function _grpPasteApplyLogic(savable){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(teamA||m.a||''):(teamB||m.b||'');
       const univL=g.winner==='A'?(teamB||m.b||''):(teamA||m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
+      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'조별리그');
     });
   });
-  // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
-  if(tn.type==='tier'){
-    const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
-    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
-  }
 
   save();
   // 이중저장 방지: 편집 모달 + 붙여넣기 모달 모두 닫기
@@ -1817,11 +1815,7 @@ function rTierTourTab(C, T){
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{
-        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
-        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
-        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
-      }).join('')}
+      ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
@@ -1833,40 +1827,39 @@ function rTierTourTab(C, T){
   }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
-    {id:'bracket',lbl:'🏆 토너먼트',fn:`_ttSub='bracket';render()`},
-    {id:'rank',lbl:'📊 순위',fn:`_ttSub='rank';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
-  } else if(_ttSub==='bracket'){
-    h+=ttBracketHTML(_ttCurComp);
   } else if(_ttSub==='rank'){
     h+=ttPlayerRankHTML(_ttCurComp);
   } else {
-    // 대회명 없는 고아 기록: 티어대회 1개면 자동 연결, 여러개면 버튼으로 수동 연결
-    const _orphans=ttM.filter(m=>!m.compName);
-    if(_orphans.length&&_ttCurComp&&tierTourneys.length===1){
-      _orphans.forEach(m=>{m.compName=_ttCurComp;if(!m.n)m.n=_ttCurComp;});
-      save();
-    } else if(_orphans.length&&_ttCurComp&&isLoggedIn){
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
+    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
+    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
+    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
+    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
+    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
+      const _totalBad=_orphans.length+_wrongComp.length;
       h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}')">📎 현재 대회(${_ttCurComp})에 모두 연결</button>
+        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
+        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
       </div>`;
     }
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp||!m.compName) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }
 
 function ttFixOrphanRecords(compName){
-  if(!confirm(`대회명 없는 티어대회 기록을 모두 "${compName}"에 연결하시겠습니까?`))return;
-  ttM.forEach(m=>{if(!m.compName){m.compName=compName;if(!m.n)m.n=compName;}});
+  const targets=ttM.filter(m=>!m.compName||m.compName==='');
+  if(!targets.length){alert('연결할 미지정 기록이 없습니다.');return;}
+  if(!confirm(`대회명 없는 기록 ${targets.length}건을 "${compName}"에 연결할까요?`))return;
+  targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
   save();render();
 }
 
@@ -1921,55 +1914,20 @@ function ttPlayerRankHTML(compName){
 
 function rTierTour(){
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
-  // _ttCurComp 유효성 검증 및 자동 설정
-  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
-  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
-  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
-  // 대회 선택 드롭다운
-  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
-    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
-    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
-      <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{
-        const _tDates=(ttM||[]).filter(m=>m.compName===t.name).map(m=>m.d).filter(Boolean).sort();
-        const _tRange=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'.')}~${_tDates[_tDates.length-1].slice(2).replace(/-/g,'.')})` :'';
-        return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_tRange}</option>`;
-      }).join('')}
-    </select>
-    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
-    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
-    <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
-  </div>`;
-  if(!tierTourneys.length){
-    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
-    return h;
-  }
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
-    {id:'bracket',lbl:'🏆 토너먼트',fn:`_ttSub='bracket';render()`},
-    {id:'rank',lbl:'📊 순위',fn:`_ttSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
+  let h=stabs(_ttSub,subOpts);
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
     h+=buildTierTourInputHTML();
-  } else if(_ttSub==='bracket'){
-    h+=ttBracketHTML(_ttCurComp);
-  } else if(_ttSub==='rank'){
-    h+=ttPlayerRankHTML(_ttCurComp);
   } else {
+    // 현재 선택된 대회의 기록만 표시
     const _curTnName=_ttCurComp||'';
-    // 고아 레코드(compName 없는 기록) 연결 버튼
-    const _orphans=ttM.filter(m=>!m.compName);
-    if(_curTnName&&isLoggedIn&&_orphans.length){
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회명 없는 기록 <b>${_orphans.length}건</b>이 있습니다 (구버전 버그로 저장됨)</span>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_curTnName.replace(/'/g,"\\'")}')">📎 현재 대회(${_curTnName})에 모두 연결</button>
-      </div>`;
-    }
-    const _ttFiltered=_curTnName ? ttM.filter(m=>m.compName===_curTnName) : ttM;
-    if(_curTnName) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_curTnName} 기록</div>`;
+    const _ttFiltered=_curTnName
+      ? ttM.filter(m=>m.compName===_curTnName)
+      : ttM;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   return h;
@@ -1997,15 +1955,15 @@ function buildTierTourInputHTML(){
         <button class="tier-filter-btn ${tfs.length===0?'on':''}" onclick="BLD['tt'].tiers=[];BLD['tt'].membersA=[];BLD['tt'].membersB=[];BLD['tt'].sets=[];render()">전체</button>
         ${TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tfs.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="ttToggleTier('${t}')">${getTierLabel(t)}</button>`;}).join('')}
       </div>
-      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 스트리머: <strong>${eligible.length}명</strong></div>
+      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 선수: <strong>${eligible.length}명</strong></div>
     </div>
 
     <!-- 선수 목록 클릭으로 팀 배정 -->
     <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 스트리머 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 선수 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto">
         ${eligible.length===0
-          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 스트리머 목록이 표시됩니다</span>'
+          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 선수 목록이 표시됩니다</span>'
           :eligible.map(p=>{
               const inA=mA.some(m=>m.name===p.name);
               const inB=mB.some(m=>m.name===p.name);
@@ -2031,7 +1989,7 @@ function buildTierTourInputHTML(){
           <input type="text" id="tt-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('A')">
         </div>
         <div id="tt-a-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
+        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
@@ -2039,7 +1997,7 @@ function buildTierTourInputHTML(){
           <input type="text" id="tt-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('B')">
         </div>
         <div id="tt-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
+        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
     </div>`;
   h+=setBuilderHTML(bld,'tt');h+=`</div>`;return h;
@@ -2288,76 +2246,23 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
-  <div class="ssec"><h4>🎨 현황판 대학별 색상 진하기</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">라벨(직책·티어)과 스트리머 배경의 대학 색상 투명도를 조절합니다. 현황판 대학별 탭으로 이동하면 바로 반영됩니다.</div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">라벨 배경 진하기</span>
-          <span id="b2la-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2LabelAlpha}%</span>
-        </div>
-        <input type="range" min="0" max="40" value="${b2LabelAlpha}" style="width:100%;accent-color:var(--blue)"
-          oninput="b2LabelAlpha=+this.value;document.getElementById('b2la-val').textContent=this.value+'%';localStorage.setItem('su_b2la',this.value)">
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">스트리머 배경 진하기</span>
-          <span id="b2ba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2BgAlpha}%</span>
-        </div>
-        <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:100%;accent-color:var(--blue)"
-          oninput="b2BgAlpha=+this.value;document.getElementById('b2ba-val').textContent=this.value+'%';localStorage.setItem('su_b2ba',this.value)">
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">배경 이미지 진하기 (기본값)</span>
-          <span id="b2bia-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2BgImgAlpha}%</span>
-        </div>
-        <input type="range" min="0" max="60" value="${b2BgImgAlpha}" style="width:100%;accent-color:var(--blue)"
-          oninput="b2BgImgAlpha=+this.value;document.getElementById('b2bia-val').textContent=this.value+'%';localStorage.setItem('su_b2bia',this.value)">
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 배경 진하기</span>
-          <span id="b2fba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2FreeBgAlpha}%</span>
-        </div>
-        <input type="range" min="0" max="60" value="${b2FreeBgAlpha}" style="width:100%;accent-color:var(--blue)"
-          oninput="b2FreeBgAlpha=+this.value;document.getElementById('b2fba-val').textContent=this.value+'%';localStorage.setItem('su_b2fba',this.value)">
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 티어 좌측 배경 진하기</span>
-          <span id="b2ftba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2FreeTierBgAlpha}%</span>
-        </div>
-        <input type="range" min="0" max="60" value="${b2FreeTierBgAlpha}" style="width:100%;accent-color:var(--blue)"
-          oninput="b2FreeTierBgAlpha=+this.value;document.getElementById('b2ftba-val').textContent=this.value+'%';localStorage.setItem('su_b2ftba',this.value)">
-      </div>
-    </div>
-  </div>
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
-    if(u.dissolved) return; // 해체된 대학은 아래 별도 섹션에 표시
     const isHidden = !!u.hidden;
+    const isDissolved = !!u.dissolved;
     h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
-      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
-      <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
-        ${u.icon?`<img id="ulogo-prev-${i}" src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
-        <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
-          oninput="_ulogoPreview(${i},this.value)"
-          onblur="_ulogoSave(${i},this.value)">
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-basis:100%;margin-top:2px">
-        <span style="font-size:11px;color:var(--text3);flex-shrink:0">🌅 배경 이미지 진하기</span>
-        <input type="range" min="0" max="60" value="${u.bgImgAlpha??b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
-          oninput="univCfg[${i}].bgImgAlpha=+this.value;this.nextElementSibling.textContent=this.value+'%';save()">
-        <span style="font-size:11px;font-weight:700;color:var(--blue);min-width:32px;text-align:right">${u.bgImgAlpha??b2BgImgAlpha}%</span>
-      </div>
-      <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-          onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
-          ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
-      <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>
+      ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
+      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
+      ${isDissolved
+        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
+        : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
+            ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
+          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
+      }
       <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -2365,33 +2270,7 @@ function rCfg(C,T){
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
-  </div>`;
-  {
-    const _dissolved=univCfg.map((u,i)=>({u,i})).filter(({u})=>u.dissolved);
-    if(_dissolved.length){
-      h+=`<div style="margin-top:18px;border-top:1.5px dashed var(--border2);padding-top:14px">
-        <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          🏚️ 해체된 대학
-          <span style="font-size:10px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:10px;padding:1px 8px;font-weight:700">${_dissolved.length}개</span>
-        </div>`;
-      _dissolved.forEach(({u,i})=>{
-        h+=`<div class="srow" style="background:var(--surface);border-radius:8px;padding:4px 6px;margin:-2px -6px;opacity:.8;flex-wrap:wrap;gap:4px">
-          <div class="cdot" style="background:${u.color};opacity:.5"></div>
-          <input type="text" value="${u.name}" style="flex:1;max-width:130px;color:var(--text3)" onblur="univCfg[${i}].name=this.value;save()">
-          <span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ ${u.dissolvedDate||'해체'}</span>
-          <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
-            ${u.icon?`<img src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
-            <input type="text" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text3)"
-              onblur="_ulogoSave(${i},this.value)">
-          </div>
-          <button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>
-          <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
-        </div>`;
-      });
-      h+=`</div>`;
-    }
-  }
-  h+=`</div>
+  </div></div>
   <div class="ssec"><h4>🗺️ 맵 관리</h4>`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
@@ -2433,45 +2312,28 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+  <div class="ssec"><h4>🏷️ 선수 상태 아이콘 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 선수별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 사용 가능한 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 6px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px;display:inline-flex;align-items:center;justify-content:center;min-width:28px" title="${d.label}">${_siIsImg(d.emoji)?_siRender(d.emoji,"18px"):d.emoji}</span>`).join('')}
+        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px" title="${d.label}">${d.emoji}</span>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
-    </div>
-    
-    <div style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🖼️ URL 아이콘 추가</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-        <input type="text" id="si-url-label" placeholder="이름 (예: HOT)" style="width:90px">
-        <input type="text" id="si-url-val" placeholder="이미지 URL 또는 이모지" style="flex:1;min-width:160px" oninput="(function(v){const p=document.getElementById('si-url-preview');p.innerHTML=v&&(v.startsWith('http')||v.startsWith('data:'))?'<img src=''+v+'' style='width:20px;height:20px;object-fit:contain' onerror='this.style.display='none''>':v;})(this.value)">
-        <span id="si-url-preview" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:16px"></span>
-        <button class="btn btn-b" onclick="(function(){const lbl=document.getElementById('si-url-label').value.trim();const val=document.getElementById('si-url-val').value.trim();if(!val){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(lbl||'커스텀',val);render();})()">+ 추가</button>
-      </div>
-      ${_customStatusIcons.length?_customStatusIcons.map((c,i)=>
-        `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">
-          <span style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">${_siIsImg(c.emoji)?_siRender(c.emoji,'20px'):c.emoji}</span>
-          <span style="flex:1;font-size:12px;color:var(--text2)">${c.label}</span>
-          <button class="btn btn-r btn-xs" onclick="removeCustomStatusIcon(${i});render()">🗑️</button>
-        </div>`
-      ).join(''):'<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:8px">추가된 커스텀 아이콘 없음</div>'}
     </div>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 스트리머 없음</div>':
+      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
         [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
           const cur=playerStatusIcons[p.name]||'';
           const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center;display:inline-flex;align-items:center">${cur?(_siIsImg(cur)?_siRender(cur,'20px'):cur):''}</span>
+            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?(_siIsImg(d.emoji)?'🖼️ ':d.emoji+' '):''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
           </div>`;
         }).join('')
@@ -2610,7 +2472,7 @@ function rCfg(C,T){
 
       <!-- 선수 일괄 티어 변경 -->
       <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
-        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 스트리머 일괄 티어 변경</div>
+        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 선수 일괄 티어 변경</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
           <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
           <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
@@ -2680,6 +2542,7 @@ function rCfg(C,T){
   setTimeout(()=>{
     renderStorageInfo();
     renderSeasonList();
+    _refreshCrewList();
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -2740,6 +2603,86 @@ function renderStorageInfo(){
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
 
+// ── 크루 관리 함수들 ──
+function _refreshCrewList(){
+  const el=document.getElementById('crew-list');
+  if(!el) return;
+  if(!crews||!crews.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">아직 추가된 크루가 없습니다.</div>';return;}
+  el.innerHTML=crews.map((c,ci)=>{
+    const col=c.color||'#6b7280';
+    const memberBtns=(c.members||[]).map((m,mi)=>`
+      <span style="display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px">
+        ${m.name}${m.role?`<span style="color:${col};font-size:10px;margin-left:2px">(${m.role})</span>`:''}
+        ${isLoggedIn?`<button onclick="delCrewMember(${ci},${mi})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0 2px">✕</button>`:''}
+      </span>`).join('');
+    return `<div style="border:1.5px solid ${col}55;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:${col}08">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        ${c.icon?`<span style="font-size:20px">${c.icon}</span>`:''}
+        <span style="font-weight:800;font-size:14px;color:${col}">${c.name}</span>
+        ${c.desc?`<span style="font-size:11px;color:var(--gray-l)">${c.desc}</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${(c.members||[]).length}명</span>
+        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="delCrew(${ci})">🗑️ 삭제</button>`:''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${memberBtns}</div>
+      ${isLoggedIn?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select id="crew-add-mem-${ci}" style="font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
+          <option value="">멤버 추가...</option>
+          ${players.filter(p=>!(c.members||[]).some(m=>m.name===p.name)).map(p=>{
+              const hasUniv=p.univ&&p.univ!=='무소속';
+              return `<option value="${p.name}">${p.name} (${p.univ||'무소속'})${hasUniv?' ⚠️대학있음':''}`;
+            }).join('')}
+        </select>
+        <input type="text" id="crew-add-role-${ci}" placeholder="역할 (선택, 예:리더)" style="width:100px;font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
+        <button class="btn btn-b btn-xs" onclick="addCrewMember(${ci})">+ 추가</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function addCrew(){
+  const name=(document.getElementById('crew-name')?.value||'').trim();
+  if(!name){alert('크루 이름을 입력하세요.');return;}
+  if(crews.find(c=>c.name===name)){alert('같은 이름의 크루가 있습니다.');return;}
+  const color=document.getElementById('crew-color')?.value||'#6366f1';
+  const icon=(document.getElementById('crew-icon')?.value||'').trim();
+  const desc=(document.getElementById('crew-desc')?.value||'').trim();
+  const id='crew_'+Date.now();
+  crews.push({id,name,color,icon,desc,members:[]});
+  save();
+  document.getElementById('crew-name').value='';
+  document.getElementById('crew-icon').value='';
+  document.getElementById('crew-desc').value='';
+  _refreshCrewList();
+}
+
+function delCrew(ci){
+  if(!confirm(`"${crews[ci]?.name}" 크루를 삭제할까요?`)) return;
+  crews.splice(ci,1);
+  save(); render();
+}
+
+function addCrewMember(ci){
+  const name=document.getElementById(`crew-add-mem-${ci}`)?.value||'';
+  if(!name) return;
+  const role=(document.getElementById(`crew-add-role-${ci}`)?.value||'').trim();
+  if(!(crews[ci].members)) crews[ci].members=[];
+  crews[ci].members.push({name,role});
+  // 크루 소속 = 자동 무소속 처리
+  const p=players.find(x=>x.name===name);
+  if(p && p.univ && p.univ!=='무소속'){
+    if(confirm(`"${name}"의 대학 소속(${p.univ})을 무소속으로 변경할까요?`)){
+      delete p.role;
+      p.univ='무소속';
+    }
+  }
+  save(); _refreshCrewList();
+}
+
+function delCrewMember(ci,mi){
+  crews[ci].members.splice(mi,1);
+  save(); _refreshCrewList();
+}
+
 function bulkChangeTier(){
   if(!isLoggedIn) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';
@@ -2751,7 +2694,7 @@ function bulkChangeTier(){
     if(targetUniv && p.univ!==targetUniv) return false;
     return true;
   });
-  if(!targets.length){alert('해당하는 스트리머가 없습니다.');return;}
+  if(!targets.length){alert('해당하는 선수가 없습니다.');return;}
   if(!confirm(`${targets.length}명의 티어를 '${toTier}'으로 변경할까요?\n\n${targets.slice(0,5).map(p=>p.name).join(', ')}${targets.length>5?` 외 ${targets.length-5}명`:''}`)) return;
   targets.forEach(p=>{ p.tier=toTier; });
   save(); render();
@@ -3157,8 +3100,7 @@ function addPlayer(){
     if(_pPhoto.startsWith('data:')){alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n이미지를 imgur.com 등에 업로드 후 URL을 입력하세요.');return;}
     if(_pPhoto.length>2000&&!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_pPhoto.length}자). 계속 저장하시겠습니까?`))return;
   }
-  const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
-  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,win:0,loss:0,points:0,history:[]});
+  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
 }
 function openEP(name){
@@ -3196,7 +3138,7 @@ function openEP(name){
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
-        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?`<img src="${d.emoji}" style="width:20px;height:20px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`:`<span style="font-family:'Noto Sans KR',sans-serif">${d.emoji}</span>`):'<span style="font-size:11px;font-weight:700">없음</span>';return `<button type="button" onclick="setStatusIconFromModal(this,'${p.name}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;font-size:15px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;transition:.12s;">${inner}</button>`}).join('')})()}
+        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);return `<button type="button" onclick="setStatusIconFromModal(this,'${p.name}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;font-size:15px;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${d.emoji||'<span style="font-size:11px;font-weight:700">없음</span>'}</button>`}).join('')})()}
       </div>
       <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">선택: ${(()=>{const c=getStatusIcon(p.name);const found=Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===c);return found?found[1].label:'없음';})()}</div>
     </div>
@@ -3252,15 +3194,9 @@ function openEP(name){
         ⏸️ 임시 상태 (휴학/활동중단) — 현황판에서 반투명 표시, 은퇴와 달리 숨기지 않음
       </label>
     </div>
-    <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
-        <input type="checkbox" id="ed-hide-board" ${p.hideFromBoard?'checked':''} style="width:16px;height:16px;cursor:pointer">
-        🚫 현황판 제외 — 스트리머 탭에는 표시, 현황판에서만 숨김
-      </label>
-    </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 스트리머 메모</div>
-      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="스트리머에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
+      <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
+      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
     </div>`;
   om('emModal');
 }
@@ -3381,8 +3317,6 @@ function savePlayer(){
   if(!p.retired)p.retired=undefined;
   p.inactive=document.getElementById('ed-inactive')?.checked||false;
   if(!p.inactive)p.inactive=undefined;
-  p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
-  if(!p.hideFromBoard)p.hideFromBoard=undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
@@ -3410,7 +3344,7 @@ function setAllFemale(){
 }
 
 function delPlayer(){
-  if(!confirm(`"${editName}" 스트리머를 완전 삭제할까요?\n\n⚠️ 선수 정보와 모든 경기 기록이 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if(!confirm(`"${editName}" 선수를 완전 삭제할까요?\n\n⚠️ 선수 정보와 모든 경기 기록이 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`)) return;
   const name = editName;
   // 1. players 배열에서 완전 제거
   const idx = players.findIndex(x => x.name === name);
@@ -3558,63 +3492,47 @@ function openRE(mode,idx){
 }
 function saveRow(){
   const d=document.getElementById('re-d')?.value||'';
-  // player.history 날짜 동기화 헬퍼
-  const _syncHistDate=(matchLookupId,newD)=>{
-    if(!matchLookupId||!newD)return;
-    players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId===matchLookupId)h.date=newD;});});
-  };
   if(reMode==='mini'){
-    const m=miniM[reIdx];
-    m.d=d;
-    m.a=document.getElementById('re-a')?.value||m.a;
-    m.b=document.getElementById('re-b')?.value||m.b;
-    m.sa=parseInt(document.getElementById('re-sa').value)||0;
-    m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(m._id,d);
+    miniM[reIdx].d=d;
+    miniM[reIdx].a=document.getElementById('re-a')?.value||miniM[reIdx].a;
+    miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
+    miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
+    miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='univm'){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(m._id,d);
   } else if(reMode==='comp'){
     const c=comps[reIdx];c.d=d;c.n=document.getElementById('re-cn').value;
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
     c.sa=parseInt(document.getElementById('re-sa').value)||0;
     c.b=document.getElementById('re-b').value;c.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(c._id,d);
   } else if(reMode==='pro'){
     const m=proM[reIdx];m.d=d;
     m.teamALabel=document.getElementById('re-tla')?.value||m.teamALabel;
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(m._id,d);
   } else if(reMode==='tt'){
-    const m=ttM[reIdx];
-    const oldId=m._id;
-    m.d=d;
+    const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(oldId,d);
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    _syncHistDate(m._id,d);
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
     m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
     m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
-    _syncHistDate(m.sid||m._id,d);
   } else if(reMode==='ind'){
     const m=indM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
     m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
     m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
-    _syncHistDate(m.sid||m._id,d);
   }
   save();render();cm('reModal');
 }
@@ -3798,37 +3716,6 @@ function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
   if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
-}
-
-// 설정 > 대학 관리: 로고 미리보기 & 저장 헬퍼
-function _ulogoPreview(i, val) {
-  let prev = document.getElementById('ulogo-prev-'+i);
-  if (!val) { if (prev) prev.style.display='none'; return; }
-  if (prev && prev.tagName==='IMG') {
-    prev.src = val;
-    prev.style.display = '';
-  } else {
-    const inp = document.getElementById('ulogo-inp-'+i);
-    if (!inp) return;
-    const img = document.createElement('img');
-    img.id = 'ulogo-prev-'+i;
-    img.src = val;
-    img.style.cssText = 'width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0';
-    img.onerror = function(){ this.style.display='none'; };
-    inp.parentNode.insertBefore(img, inp);
-  }
-}
-function _ulogoSave(i, val) {
-  const v = val.trim();
-  if (v) univCfg[i].icon = v; else delete univCfg[i].icon;
-  save();
-}
-
-function ttBracketHTML(compName){
-  const tn=(tourneys||[]).find(t=>t.name===compName&&t.type==='tier');
-  if(!tn) return '<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회를 선택하세요.</div>';
-  if(typeof rCompLeague==='function') return rCompLeague(tn);
-  return '<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
 }
 
 /* ══════════════════════════════════════
