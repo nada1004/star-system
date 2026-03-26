@@ -73,7 +73,7 @@ function _b2UnivView() {
   let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
-    const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired);
+    const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -179,7 +179,7 @@ function _b2UnivBlock(univName, col, members) {
 
 /* ── 무소속 뷰 ── */
 function _b2FreeView() {
-  const freeMembers = players.filter(p => (!p.univ || p.univ === '무소속') && !p.hidden && !p.retired);
+  const freeMembers = players.filter(p => (!p.univ || p.univ === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard);
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
   const roledFree = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
