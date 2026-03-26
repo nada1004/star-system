@@ -88,7 +88,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 오리경주 탭: 별도 레이아웃 (tbStyle 선언 이후에 위치)
   if (isDuck) {
-    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto">
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
   <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
     <button onclick="_gcSwitchTab('player')" style="${tbStyle(false)}">🎰 스트리머뽑기</button>
     <button onclick="_gcSwitchTab('map')"    style="${tbStyle(false)}">🗺️ 맵뽑기</button>
@@ -127,9 +127,9 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const ldCanvasH = Math.max(300, Math.round(avH * 0.58));
 
   const inputW = isWide ? Math.min(360, Math.round(avW * 0.38)) : '100%';
-  const containerStyle = isWide
-    ? `display:flex;gap:${pad*2}px;align-items:flex-start;justify-content:center;padding:${pad}px;max-width:${avW-32}px;margin:0 auto`
-    : `display:flex;flex-direction:column;align-items:center;padding:${pad}px;max-width:${avW-16}px;margin:0 auto`;
+  const innerLayout = isWide
+    ? `display:flex;gap:${pad*2}px;align-items:flex-start;justify-content:center`
+    : `display:flex;flex-direction:column;align-items:center`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
   // 탭 버튼 스타일 헬퍼 (상단에서 이미 선언됨 - 중복 선언 제거)
@@ -234,25 +234,27 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   </div>
   `;
 
-  return `<div style="${containerStyle}">
-  <div style="${inputColStyle}">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:${pad}px">
-      <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;flex:1;min-width:0">
-        <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 스트리머뽑기</button>
-        <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
-        <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
-        <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(false,true)}">🐥 오리경주</button>
-      </div>
-      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${_tbP}px ${Math.round(pad*0.5)}px;font-size:${_tbF}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s;flex-shrink:0">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
+  return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:${pad}px">
+    <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;flex:1;min-width:0">
+      <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 스트리머뽑기</button>
+      <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
+      <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
+      <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(false,true)}">🐥 오리경주</button>
     </div>
-    <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
-    <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
-      ${inputBodyInner}
-    </div>
-    ${ldItemsAlways}
-    ${gcResultHTML}
+    <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${_tbP}px ${Math.round(pad*0.5)}px;font-size:${_tbF}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s;flex-shrink:0">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
   </div>
-  ${rightPanelHTML}
+  <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
+  <div style="${innerLayout}">
+    <div style="${inputColStyle}">
+      <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
+        ${inputBodyInner}
+      </div>
+      ${ldItemsAlways}
+      ${gcResultHTML}
+    </div>
+    ${rightPanelHTML}
+  </div>
 </div>`;
 }
 
