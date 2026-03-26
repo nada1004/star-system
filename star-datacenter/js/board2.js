@@ -146,14 +146,14 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 사이드 패널 (현황판 memoImgs/memo) — flex 오른쪽 고정
+  // 사이드 패널 (현황판 memoImgs/memo)
   const _smemo = uCfg.memo || '';
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
   const hasSide = !!((_smemo||_simgs.length));
-  const _sidePad = _smemo ? '8px' : '8px 8px 0 8px';
-  const sidePanelHtml = hasSide ? `<div style="width:190px;flex-shrink:0;background:${labelCol};border:1px solid ${col}44;border-radius:10px;padding:${_sidePad};box-sizing:border-box;align-self:flex-start;overflow:hidden">
-    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:${i<_simgs.length-1||_smemo?'7px':'0 0 10px 10px'};${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
-    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
+  // 오른쪽 컬럼 전체를 대학색으로 채우는 래퍼 — 이미지 아래 공백도 같은 색
+  const sidePanelHtml = hasSide ? `<div style="background:${labelCol};border-left:1px solid ${col}33;padding:8px;box-sizing:border-box">
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
+    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
@@ -186,7 +186,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       </div>
       <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1;display:grid;grid-template-columns:1fr${hasSide?' 190px':''};align-items:start">
+        <div style="position:relative;z-index:1;display:grid;grid-template-columns:1fr${hasSide?' 190px':''}">
           <div>${rows}</div>
           ${sidePanelHtml}
         </div>
