@@ -26,6 +26,7 @@ function rRoulette(C, T) {
 })();
 
 let _gcTab = 'player';
+let _gcInputOpen = true;
 let _gcSpinning = false;
 let _gcSpeedMult = 1;
 let _gcCapsules = [];
@@ -95,26 +96,36 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     ? `width:${inputW}px;flex-shrink:0`
     : `width:100%`;
 
+  const _inputSummary = activeItems.length
+    ? `✏️ ${isPlayer?'스트리머':'맵'} ${activeItems.length}개 입력됨`
+    : `✏️ ${isPlayer?'스트리머':'맵'} 입력 없음`;
+
   return `<div style="${containerStyle}">
   <!-- 왼쪽: 입력 영역 -->
   <div style="${inputColStyle}">
-    <!-- 탭 -->
+    <!-- 탭 + 접기/펼치기 -->
     <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
-      <button onclick="_gcSwitchTab('player')" style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fsLg}px;font-weight:700;border:none;background:${isPlayer?'#FFF0F3':'var(--surface)'};color:${isPlayer?'#FF4B6E':'var(--text2)'};cursor:pointer;border-right:2px solid var(--border);transition:.1s">🎰 선수뽑기</button>
-      <button onclick="_gcSwitchTab('map')" style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fsLg}px;font-weight:700;border:none;background:${!isPlayer?'#FFF0F3':'var(--surface)'};color:${!isPlayer?'#FF4B6E':'var(--text2)'};cursor:pointer;transition:.1s">🗺️ 맵뽑기</button>
+      <button onclick="_gcSwitchTab('player')" style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fsLg}px;font-weight:700;border:none;background:${isPlayer?'#FFF0F3':'var(--surface)'};color:${isPlayer?'#FF4B6E':'var(--text2)'};cursor:pointer;border-right:2px solid var(--border);transition:.1s">🎰 스트리머뽑기</button>
+      <button onclick="_gcSwitchTab('map')" style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fsLg}px;font-weight:700;border:none;background:${!isPlayer?'#FFF0F3':'var(--surface)'};color:${!isPlayer?'#FF4B6E':'var(--text2)'};cursor:pointer;border-right:2px solid var(--border);transition:.1s">🗺️ 맵뽑기</button>
+      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${Math.round(pad*0.8)}px ${Math.round(pad*0.6)}px;font-size:${fs}px;font-weight:700;border:none;background:var(--surface);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
     </div>
-    <!-- 입력창 -->
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
-      <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'선수 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
-      <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${savedText}</textarea>
-      <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
+    <!-- 입력 요약 (접혔을 때) -->
+    <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
+    <!-- 입력 본체 (접기/펼치기 대상) -->
+    <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
+      <!-- 입력창 -->
+      <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
+        <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
+        <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
+          style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${savedText}</textarea>
+        <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
+      </div>
+      ${!isPlayer && mapBadges ? `
+      <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
+        <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:10px">📋 등록된 맵 (클릭해서 추가)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${mapBadges}</div>
+      </div>` : ''}
     </div>
-    ${!isPlayer && mapBadges ? `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
-      <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:10px">📋 등록된 맵 (클릭해서 추가)</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${mapBadges}</div>
-    </div>` : ''}
     <!-- 결과 카드 -->
     <div id="gc-result-card" style="display:none;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:${pad*1.2}px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
       <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>
@@ -161,6 +172,16 @@ function _gcSwitchTab(tab) {
   _gcTab = tab;
   render();
   setTimeout(_gcSetup, 60);
+}
+
+function _gcToggleInput() {
+  _gcInputOpen = !_gcInputOpen;
+  const body    = document.getElementById('gc-input-body');
+  const summary = document.getElementById('gc-input-summary');
+  const btn     = document.getElementById('gc-input-toggle');
+  if (body)    body.style.display    = _gcInputOpen ? 'block' : 'none';
+  if (summary) summary.style.display = _gcInputOpen ? 'none'  : 'block';
+  if (btn)     btn.textContent       = _gcInputOpen ? '접기 ▲' : '펼치기 ▼';
 }
 
 function _gcSaveText(val) {
