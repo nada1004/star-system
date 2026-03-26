@@ -7,8 +7,9 @@ let _b2View = 'univ';
 let _b2SaveUniv = '전체';
 
 // 대학별 현황판 색상 진하기 (0~100, %)
-let b2LabelAlpha = J('su_b2la') ?? 16;
-let b2BgAlpha    = J('su_b2ba') ?? 9;
+let b2LabelAlpha  = J('su_b2la')  ?? 16;
+let b2BgAlpha     = J('su_b2ba')  ?? 9;
+let b2FreeBgAlpha = J('su_b2fba') ?? 25; // 무소속 배경 진하기 (기본 25%)
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 
 const _B2_ROLE_ORDER = ['이사장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
@@ -222,7 +223,7 @@ function _b2FreeView() {
       <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
       <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #fff4">${freeMembers.length}명</span>
     </div>
-    <div style="background:#64748b40;padding:6px 14px 12px">`;
+    <div style="background:#64748b${_b2AlphaHex(b2FreeBgAlpha)};padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}${contentEl}</div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
