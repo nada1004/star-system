@@ -28,6 +28,7 @@ function rRoulette(C, T) {
 let _gcTab = 'player';
 let _gcInputOpen = true;
 let _gcSpinning = false;
+let _gcHistory = { player: JSON.parse(localStorage.getItem('su_gc_hist_p')||'[]'), map: JSON.parse(localStorage.getItem('su_gc_hist_m')||'[]') };
 let _gcSpeedMult = 1;
 let _gcCapsules = [];
 let _gcAnimId = null;
@@ -135,6 +136,25 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
         onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #C0274A'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #C0274A'">🎰 다시 뽑기!</button>
     </div>
+    <!-- 결과 기록 -->
+    ${(()=>{
+      const hist = _gcHistory[isPlayer?'player':'map'];
+      if (!hist.length) return '';
+      return `<div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-top:${Math.round(pad*0.5)}px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:${fs}px;font-weight:700;color:var(--text2)">📋 결과 기록 (${hist.length})</span>
+          <button onclick="_gcClearHistory()" style="font-size:${Math.max(10,fs-2)}px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto">
+          ${hist.slice().reverse().map((r,i)=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:8px;font-size:${fs}px">
+            <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px;min-width:18px;text-align:right">${hist.length-i}</span>
+            <span style="font-weight:700;flex:1;color:var(--text1)">${r.name}</span>
+            <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px">${r.time}</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    })()}
   </div>
 
   <!-- 오른쪽: 가챠 머신 -->
@@ -348,6 +368,15 @@ function _gcSpin() {
       const resEl = document.getElementById('gc-res-text');
       if (resEl) resEl.textContent = displayName;
 
+      // 결과 기록 저장
+      const histKey = _gcTab === 'player' ? 'player' : 'map';
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      _gcHistory[histKey].push({ name: displayName, time: timeStr });
+      localStorage.setItem(`su_gc_hist_${histKey==='player'?'p':'m'}`, JSON.stringify(_gcHistory[histKey]));
+      // 기록 목록 갱신 (애니메이션 없이)
+      _gcRefreshHistory();
+
       const resultCard = document.getElementById('gc-result-card');
       if (resultCard) {
         resultCard.style.display = 'block';
@@ -357,6 +386,43 @@ function _gcSpin() {
       }
     }, 750);
   }, 950);
+}
+
+function _gcRefreshHistory() {
+  const hist = _gcHistory[_gcTab === 'player' ? 'player' : 'map'];
+  const fs = Math.max(13, Math.round(window._GC_DOME * 0.075));
+  const pad = Math.max(14, Math.round(window._GC_DOME * 0.085));
+  // 기록 컨테이너가 없으면 새로 삽입
+  let container = document.getElementById('gc-hist-box');
+  const resultCard = document.getElementById('gc-result-card');
+  if (!container && resultCard) {
+    container = document.createElement('div');
+    container.id = 'gc-hist-box';
+    resultCard.parentNode.insertBefore(container, resultCard.nextSibling);
+  }
+  if (!container) return;
+  if (!hist.length) { container.innerHTML = ''; return; }
+  container.style.cssText = `background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-top:${Math.round(pad*0.5)}px`;
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:${fs}px;font-weight:700;color:var(--text2)">📋 결과 기록 (${hist.length})</span>
+      <button onclick="_gcClearHistory()" style="font-size:${Math.max(10,fs-2)}px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto">
+      ${hist.slice().reverse().map((r,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:8px;font-size:${fs}px">
+        <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px;min-width:18px;text-align:right">${hist.length-i}</span>
+        <span style="font-weight:700;flex:1;color:var(--text1)">${r.name}</span>
+        <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px">${r.time}</span>
+      </div>`).join('')}
+    </div>`;
+}
+
+function _gcClearHistory() {
+  const key = _gcTab === 'player' ? 'player' : 'map';
+  _gcHistory[key] = [];
+  localStorage.removeItem(`su_gc_hist_${key==='player'?'p':'m'}`);
+  _gcRefreshHistory();
 }
 
 function _gcReset() {
