@@ -209,9 +209,10 @@ function openPlayerHistEdit(playerName, histIdx){
         <div style="font-size:10px;color:var(--gray-l);margin-top:2px">현재: ${p.univ||'무소속'} · 기록: ${hh.univ||'(미저장)'}</div>
       </div>
     </div>`;
-  // 저장 버튼 임시 교체
+  // 저장 버튼 임시 교체 (완료 후 원래 saveRow 복원)
   const saveBtnOrig=document.querySelector('#reModal .btn-b');
   if(saveBtnOrig){
+    const _prevOnclick=saveBtnOrig.onclick;
     saveBtnOrig.onclick=function(){
       const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp;
       hh.date=document.getElementById('phe-date').value;
@@ -230,9 +231,22 @@ function openPlayerHistEdit(playerName, histIdx){
         if(oppH){
           oppH.date=hh.date;
           oppH.map=hh.map;
-          if(hh.opp!==oldOpp) oppH.opp=hh.opp; // 상대 이름 변경 시
+          if(hh.opp!==oldOpp) oppH.opp=hh.opp;
         }
       }
+      // 🔧 대전기록 배열(.d)도 날짜 동기화
+      if(hh.matchId && hh.date){
+        const _matchArrs=[miniM,univM,ckM,proM,ttM,comps,
+          typeof gjM!=='undefined'?gjM:[],
+          typeof indM!=='undefined'?indM:[]];
+        for(const arr of _matchArrs){
+          if(!arr)continue;
+          const entry=arr.find(m=>m._id===hh.matchId);
+          if(entry){entry.d=hh.date;break;}
+        }
+      }
+      // 버튼 onclick 복원 (다음 openRE 호출을 위해)
+      saveBtnOrig.onclick=_prevOnclick;
       save();
       cm('reModal');
       const pb=document.getElementById('playerModalBody');

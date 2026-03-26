@@ -3467,27 +3467,37 @@ function openRE(mode,idx){
 }
 function saveRow(){
   const d=document.getElementById('re-d')?.value||'';
+  // player.history 날짜 동기화 헬퍼
+  const _syncHistDate=(matchLookupId,newD)=>{
+    if(!matchLookupId||!newD)return;
+    players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId===matchLookupId)h.date=newD;});});
+  };
   if(reMode==='mini'){
-    miniM[reIdx].d=d;
-    miniM[reIdx].a=document.getElementById('re-a')?.value||miniM[reIdx].a;
-    miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
-    miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
-    miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    const m=miniM[reIdx];
+    m.d=d;
+    m.a=document.getElementById('re-a')?.value||m.a;
+    m.b=document.getElementById('re-b')?.value||m.b;
+    m.sa=parseInt(document.getElementById('re-sa').value)||0;
+    m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    _syncHistDate(m._id,d);
   } else if(reMode==='univm'){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    _syncHistDate(m._id,d);
   } else if(reMode==='comp'){
     const c=comps[reIdx];c.d=d;c.n=document.getElementById('re-cn').value;
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
     c.sa=parseInt(document.getElementById('re-sa').value)||0;
     c.b=document.getElementById('re-b').value;c.sb=parseInt(document.getElementById('re-sb').value)||0;
+    _syncHistDate(c._id,d);
   } else if(reMode==='pro'){
     const m=proM[reIdx];m.d=d;
     m.teamALabel=document.getElementById('re-tla')?.value||m.teamALabel;
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    _syncHistDate(m._id,d);
   } else if(reMode==='tt'){
     const m=ttM[reIdx];
     const oldId=m._id;
@@ -3496,24 +3506,24 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    // player.history 날짜 동기화
-    if(oldId&&d){
-      players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId===oldId)h.date=d;});});
-    }
+    _syncHistDate(oldId,d);
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    _syncHistDate(m._id,d);
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
     m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
     m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    _syncHistDate(m.sid||m._id,d);
   } else if(reMode==='ind'){
     const m=indM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
     m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
     m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    _syncHistDate(m.sid||m._id,d);
   }
   save();render();cm('reModal');
 }
