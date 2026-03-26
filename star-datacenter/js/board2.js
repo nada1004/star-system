@@ -142,9 +142,9 @@ function _b2UnivBlock(univName, col, members) {
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 하단 메모/이미지
-  const _bnote = uCfg.bMemo || '';
-  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
+  // 하단 메모/이미지 (bMemo/bMemoImgs + 현황판 사이드패널 memo/memoImgs 통합)
+  const _bnote = uCfg.bMemo || uCfg.memo || '';
+  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]).concat(uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
   const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
