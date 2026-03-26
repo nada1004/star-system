@@ -74,11 +74,16 @@ function rTotal(C,T){
     if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
     if(!up.length)return;
     totalShown+=up.length;
+    const _univTotal=players.filter(p=>p.univ===u.name).length; // 은퇴 포함 전체 인원
     tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
-      <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'26px')}${u.name}</span>
-      ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
-      ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">🚫 방문자 숨김</span>`:''}
-      <span style="font-size:11px;color:rgba(255,255,255,.75);margin-left:6px">(${up.length}명)</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'26px')}${u.name}</span>
+          ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
+          ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
+        </div>
+        <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${_univTotal}명</span>
+      </div>
     </td></tr>`;
     // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
     const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
