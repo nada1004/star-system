@@ -128,25 +128,16 @@ function stabs(current, opts){
 
 // 공통 연도/월 필터 UI
 function buildYearMonthFilter(section){
-  let h=`<div class="fbar no-export" style="margin-bottom:12px;flex-wrap:wrap"><strong>기간</strong>`;
-  // 🆕 시즌 버튼
-  if(typeof seasons!=='undefined' && seasons.length){
-    const noSeason=(filterSeason==='전체');
-    h+=`<button class="pill ${noSeason&&filterYear==='전체'?'on':''}" onclick="filterSeason='전체';filterYear='전체';filterMonth='전체';openDetails={};render()">전체</button>`;
-    seasons.forEach(s=>{
-      const sel=(filterSeason===s.id);
-      h+=`<button class="pill ${sel?'on':''}" style="${sel?'background:#7c3aed;border-color:#7c3aed;color:#fff':''}" onclick="filterSeason='${s.id}';filterYear='전체';filterMonth='전체';openDetails={};render()">🏆 ${s.name}</button>`;
-    });
-    h+=`<span style="font-size:11px;color:var(--gray-l);margin:0 6px">|</span>`;
-  }
+  let h=`<div class="fbar no-export" style="margin-bottom:12px;flex-wrap:wrap">
+    <strong>기간</strong>`;
   const years=['전체',...yearOptions];
   years.forEach(y=>{
-    const sel=(filterSeason==='전체'&&filterYear===y);
-    const label=(y==='전체')?'연도':y+'년';
-    h+=`<button class="pill ${sel?'on':''}" onclick="filterSeason='전체';setFilterYear('${y}','${section}')">${label}</button>`;
+    const sel=(filterYear===y);
+    const label=(y==='전체')?'전체':`${y}년`;
+    h+=`<button class="pill ${sel?'on':''}" onclick="setFilterYear('${y}','${section}')">${label}</button>`;
   });
   if(isLoggedIn){
-    h+=`<button class="pill" onclick="addYear('${section}')">+ 연도</button>`;
+    h+=`<button class="pill" onclick="addYear('${section}')">+ 연도 추가</button>`;
   }
   h+=`<span style="font-size:11px;color:var(--gray-l);margin-left:10px">월</span>`;
   const months=['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
@@ -183,14 +174,6 @@ function setFilterMonth(m, section){
 
 function passDateFilter(dateStr){
   if(!dateStr)return true;
-  // 🆕 시즌 필터
-  if(typeof filterSeason!=='undefined' && filterSeason!=='전체' && typeof seasons!=='undefined'){
-    const s=seasons.find(x=>x.id===filterSeason);
-    if(s){
-      if(dateStr < s.from || dateStr > s.to) return false;
-      return true;
-    }
-  }
   const y=dateStr.slice(0,4);
   const m=dateStr.slice(5,7);
   if(filterYear!=='전체' && y!==filterYear)return false;
@@ -411,7 +394,7 @@ function saveMatch(mode){
         else if (mode==='pro') proM.unshift(matchData);
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
-            const _ttComp=_ttCurComp||curComp||'';
+            const _ttComp=_ttCurComp||'';
             ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp});
         }
     } else {
@@ -517,7 +500,7 @@ function saveMatch(mode){
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:((curTab==='tiertour'||_mergedCompSub==='tiertour')?_ttCurComp:curComp)||_ttCurComp||''
+      compName:_ttCurComp||''
     });
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
