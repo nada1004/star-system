@@ -80,7 +80,7 @@ function _b2UnivView() {
   return h;
 }
 
-function _b2UnivBlock(univName, col, members) {
+function _b2UnivBlock(univName, col, members, forExport=false) {
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
@@ -154,7 +154,9 @@ function _b2UnivBlock(univName, col, members) {
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'cover';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.12;pointer-events:none;z-index:0"></div>`
+    ? forExport
+      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize};opacity:0.12;pointer-events:none;z-index:0">`
+      : `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.12;pointer-events:none;z-index:0"></div>`
     : '';
 
   return `
@@ -309,14 +311,14 @@ async function saveB2Img() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
   const CARD_W = 460;
-  const cols = _b2SaveUniv === '전체' ? Math.min(2, targets.length) : 1;
+  const cols = 1;
   const gap = 12;
 
   const tmpDiv = document.createElement('div');
   tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:16px;background:#f0f2f5;box-sizing:border-box;width:${cols * CARD_W + (cols - 1) * gap + 32}px`;
   tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}</style>
     <div style="display:grid;grid-template-columns:repeat(${cols},${CARD_W}px);gap:${gap}px;align-items:start">
-      ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired))).join('')}
+      ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
     </div>`;
   document.body.appendChild(tmpDiv);
 
