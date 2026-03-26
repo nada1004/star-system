@@ -79,14 +79,21 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const fsLg = Math.max(16, Math.round(dome * 0.095));
   const pad  = Math.max(14, Math.round(dome * 0.085));
 
-  // 오리경주 탭: 별도 레이아웃 (fs/pad 선언 이후에 위치)
+  // 탭 버튼 스타일 헬퍼 (TDZ 방지: isDuck 블록보다 먼저 선언)
+  const _tbP = Math.round(pad * 0.65);
+  const _tbF = Math.max(11, fs - 1);
+  const tbStyle = (active, isSpecial) => active
+    ? `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:800;border:none;border-radius:10px;background:${isSpecial?'linear-gradient(135deg,#0ea5e9,#38bdf8)':'linear-gradient(135deg,#FF4B6E,#FF89AB)'};color:#fff;cursor:pointer;transition:.15s;box-shadow:0 2px 8px ${isSpecial?'rgba(14,165,233,.35)':'rgba(255,75,110,.35)'};white-space:nowrap`
+    : `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:700;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;white-space:nowrap`;
+
+  // 오리경주 탭: 별도 레이아웃 (tbStyle 선언 이후에 위치)
   if (isDuck) {
     return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto">
-  <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
-    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
-    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
-    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
-    <button onclick="_gcSwitchTab('duck')"   style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:#e0f5ff;color:#0d7bb0;cursor:pointer;transition:.1s">🐥 오리경주</button>
+  <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(false)}">🎰 스트리머뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(false)}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(false)}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(true,true)}">🐥 오리경주</button>
   </div>
   <div id="dr-root"></div>
 </div>`;
@@ -125,9 +132,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     : `display:flex;flex-direction:column;align-items:center;padding:${pad}px;max-width:${Math.min(avW-16, isLadder?ldCanvasW+80:dome+80)}px;margin:0 auto`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
-  // 탭 버튼 스타일 헬퍼
-  const tbStyle = (active, borderRight) =>
-    `flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};cursor:pointer;${borderRight?'border-right:2px solid var(--border);':''}transition:.1s`;
+  // 탭 버튼 스타일 헬퍼 (상단에서 이미 선언됨 - 중복 선언 제거)
 
   // 사다리: 항상 표시할 결과 항목 블록 (접기 영역 밖)
   const ldItemsAlways = isLadder ? `
@@ -231,12 +236,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   return `<div style="${containerStyle}">
   <div style="${inputColStyle}">
-    <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
-      <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
-      <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
-      <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
-      <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(false,true)}">🐥 오리경주</button>
-      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${Math.round(pad*0.8)}px ${Math.round(pad*0.6)}px;font-size:${fs}px;font-weight:700;border:none;background:var(--surface);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:${pad}px">
+      <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;flex:1;min-width:0">
+        <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 스트리머뽑기</button>
+        <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
+        <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
+        <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(false,true)}">🐥 오리경주</button>
+      </div>
+      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="padding:${_tbP}px ${Math.round(pad*0.5)}px;font-size:${_tbF}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;white-space:nowrap;transition:.1s;flex-shrink:0">${_gcInputOpen?'접기 ▲':'펼치기 ▼'}</button>
     </div>
     <div id="gc-input-summary" style="display:${_gcInputOpen?'none':'block'};font-size:${fs}px;color:var(--text3);font-weight:600;padding:6px 2px;margin-bottom:${Math.round(pad*0.5)}px">${_inputSummary}</div>
     <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">

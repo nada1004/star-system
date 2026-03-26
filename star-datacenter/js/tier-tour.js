@@ -2282,26 +2282,22 @@ function rCfg(C,T){
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
+    if(u.dissolved) return; // 해체된 대학은 아래 별도 섹션에 표시
     const isHidden = !!u.hidden;
-    const isDissolved = !!u.dissolved;
     h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
-      ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
-      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
+      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
         ${u.icon?`<img id="ulogo-prev-${i}" src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
         <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
           oninput="_ulogoPreview(${i},this.value)"
           onblur="_ulogoSave(${i},this.value)">
       </div>
-      ${isDissolved
-        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
-        : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
-            ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
-          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
-      }
+      <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
+          onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
+          ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
+      <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>
       <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -2309,7 +2305,33 @@ function rCfg(C,T){
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
-  </div></div>
+  </div>`;
+  {
+    const _dissolved=univCfg.map((u,i)=>({u,i})).filter(({u})=>u.dissolved);
+    if(_dissolved.length){
+      h+=`<div style="margin-top:18px;border-top:1.5px dashed var(--border2);padding-top:14px">
+        <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          🏚️ 해체된 대학
+          <span style="font-size:10px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:10px;padding:1px 8px;font-weight:700">${_dissolved.length}개</span>
+        </div>`;
+      _dissolved.forEach(({u,i})=>{
+        h+=`<div class="srow" style="background:var(--surface);border-radius:8px;padding:4px 6px;margin:-2px -6px;opacity:.8;flex-wrap:wrap;gap:4px">
+          <div class="cdot" style="background:${u.color};opacity:.5"></div>
+          <input type="text" value="${u.name}" style="flex:1;max-width:130px;color:var(--text3)" onblur="univCfg[${i}].name=this.value;save()">
+          <span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ ${u.dissolvedDate||'해체'}</span>
+          <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
+            ${u.icon?`<img src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
+            <input type="text" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text3)"
+              onblur="_ulogoSave(${i},this.value)">
+          </div>
+          <button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>
+          <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
+        </div>`;
+      });
+      h+=`</div>`;
+    }
+  }
+  h+=`</div>
   <div class="ssec"><h4>🗺️ 맵 관리</h4>`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
