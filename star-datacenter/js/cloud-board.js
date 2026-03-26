@@ -754,7 +754,7 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'cover';
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.18;pointer-events:none;z-index:0"></div>`:'';
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') center right/contain no-repeat;opacity:0.30;pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
@@ -763,8 +763,8 @@ function buildUnivBoardCard(u, forExport){
     return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,0.9)};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:58px;height:58px;border-radius:15px;background:rgba(255,255,255,.42);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')" ondblclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="클릭: 해당 대학만 보기 / 더블클릭: 대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:50px;height:50px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:30px">🏫</span>'}
+          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')" ondblclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="클릭: 해당 대학만 보기 / 더블클릭: 대학 상세 보기">
+            ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
