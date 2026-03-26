@@ -317,21 +317,21 @@ async function saveB2Img() {
   const btn = document.querySelector('[onclick="saveB2Img()"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
-  const CARD_W = 460;
-  const cols = 1;
-  const gap = 12;
+  const CARD_W = 720;
+  const gap = 14;
+  const PAD = 24;
 
   const tmpDiv = document.createElement('div');
-  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:16px;background:#f0f2f5;box-sizing:border-box;width:${cols * CARD_W + (cols - 1) * gap + 32}px`;
-  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}</style>
-    <div style="display:grid;grid-template-columns:repeat(${cols},${CARD_W}px);gap:${gap}px;align-items:start">
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
+  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}.b2-side-panel{float:right;width:200px;margin:0 0 6px 12px;border-radius:10px;padding:8px;box-sizing:border-box;}</style>
+    <div style="display:flex;flex-direction:column;gap:${gap}px">
       ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
     </div>`;
   document.body.appendChild(tmpDiv);
 
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 400));
   injectUnivIcons(tmpDiv);
-  await new Promise(r => setTimeout(r, 100));
+  await new Promise(r => setTimeout(r, 300));
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
