@@ -228,8 +228,8 @@ function _b2FreeView() {
     </div>
     <div style="background:#64748b${_b2AlphaHex(b2FreeBgAlpha)};padding:6px 14px 12px">`;
 
-  const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;background:#64748b${_b2AlphaHex(b2FreeTierBgAlpha)};padding:2px 4px;border-radius:6px">${contentEl}</div></div></div>`;
-  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
+  const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2FreeTierBgAlpha)};border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
   // 직책 그룹
   roledFree.forEach(p => {

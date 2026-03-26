@@ -2295,7 +2295,7 @@ function rCfg(C,T){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 티어 우측 배경 진하기</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 티어 좌측 배경 진하기</span>
           <span id="b2ftba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2FreeTierBgAlpha}%</span>
         </div>
         <input type="range" min="0" max="60" value="${b2FreeTierBgAlpha}" style="width:100%;accent-color:var(--blue)"
