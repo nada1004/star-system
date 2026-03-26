@@ -2279,6 +2279,14 @@ function rCfg(C,T){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">배경 이미지 진하기 (기본값)</span>
+          <span id="b2bia-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2BgImgAlpha}%</span>
+        </div>
+        <input type="range" min="0" max="60" value="${b2BgImgAlpha}" style="width:100%;accent-color:var(--blue)"
+          oninput="b2BgImgAlpha=+this.value;document.getElementById('b2bia-val').textContent=this.value+'%';localStorage.setItem('su_b2bia',this.value)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 배경 진하기</span>
           <span id="b2fba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2FreeBgAlpha}%</span>
         </div>
@@ -2309,6 +2317,12 @@ function rCfg(C,T){
         <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
           oninput="_ulogoPreview(${i},this.value)"
           onblur="_ulogoSave(${i},this.value)">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-basis:100%;margin-top:2px">
+        <span style="font-size:11px;color:var(--text3);flex-shrink:0">🌅 배경 이미지 진하기</span>
+        <input type="range" min="0" max="60" value="${u.bgImgAlpha??b2BgImgAlpha}" style="flex:1;accent-color:var(--blue)"
+          oninput="univCfg[${i}].bgImgAlpha=+this.value;this.nextElementSibling.textContent=this.value+'%';save()">
+        <span style="font-size:11px;font-weight:700;color:var(--blue);min-width:32px;text-align:right">${u.bgImgAlpha??b2BgImgAlpha}%</span>
       </div>
       <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
           onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
