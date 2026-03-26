@@ -142,9 +142,16 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 하단 메모/이미지 (bMemo/bMemoImgs + 현황판 사이드패널 memo/memoImgs 통합)
-  const _bnote = uCfg.bMemo || uCfg.memo || '';
-  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]).concat(uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
+  // 사이드 패널 (현황판 memoImgs/memo)
+  const _smemo = uCfg.memo || '';
+  const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
+  const sidePanel = (_smemo||_simgs.length) ? `<div class="b2-side-panel" style="background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.08);border-radius:10px">
+    ${_simgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
+    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
+  </div>` : '';
+  // 하단 메모/이미지 (bMemo/bMemoImgs)
+  const _bnote = uCfg.bMemo || '';
+  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
   const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
@@ -173,7 +180,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       </div>
       <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1">${rows}</div>
+        <div style="position:relative;z-index:1">${sidePanel}${rows}</div>
       </div>
       ${bottomSection}
     </div>`;
