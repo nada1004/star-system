@@ -874,7 +874,7 @@ function buildUnivDetailHTML(univName){
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid rgba(255,255,255,.35);flex-shrink:0">
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid rgba(255,255,255,.6);flex-shrink:0">
         ${gUI(univName,'32px')}
       </div>
       <div>
