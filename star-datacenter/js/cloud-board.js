@@ -763,8 +763,8 @@ function buildUnivBoardCard(u, forExport){
     return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,0.9)};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')" ondblclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="클릭: 해당 대학만 보기 / 더블클릭: 대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
+          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.42);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" ${forExport?'':`onclick="event.stopPropagation();toggleBoardUniv('${u.name}')" ondblclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="클릭: 해당 대학만 보기 / 더블클릭: 대학 상세 보기">
+            ${iconUrl?`<img src="${iconUrl}" style="width:38px;height:38px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:24px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
