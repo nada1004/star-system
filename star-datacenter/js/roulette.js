@@ -4,12 +4,14 @@ function rRoulette(C, T) {
   C.innerHTML = `<div style="display:flex;justify-content:center;padding:20px 0">${renderRoulettePanel()}</div>`;
   setTimeout(_gcSetup, 60);
 }
+
 (function _gcInjectCSS(){
   if (document.getElementById('gc-style')) return;
   const s = document.createElement('style');
   s.id = 'gc-style';
-  s.textContent = `@keyframes gcConfettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}80%{opacity:1}100%{transform:translateY(100vh) rotate(800deg) scale(0.4);opacity:0}}
-  @keyframes gcBounceIcon{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(10deg)}80%{transform:scale(0.9) rotate(-5deg)}100%{transform:scale(1) rotate(0deg)}}`;
+  s.textContent = '@keyframes gcConfettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}80%{opacity:1}100%{transform:translateY(100vh) rotate(800deg) scale(0.4);opacity:0}}'
+    + '@keyframes gcBounceIcon{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(10deg)}80%{transform:scale(0.9) rotate(-5deg)}100%{transform:scale(1) rotate(0deg)}}'
+    + '@keyframes gcCardAppear{0%{transform:scale(0.7) translateY(8px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}';
   document.head.appendChild(s);
 })();
 
@@ -29,6 +31,14 @@ const _GC_COLORS = [
   ['#F48FB1','#EC407A'],['#80DEEA','#00BCD4'],['#FFAB91','#FF5722'],
 ];
 
+// 입력값(부분이름)으로 players 배열에서 일치하는 선수 찾기
+function _gcFindPlayer(keyword) {
+  if (typeof players === 'undefined') return null;
+  return players.find(x => x.name === keyword)
+    || players.find(x => x.name.includes(keyword))
+    || players.find(x => keyword.includes(x.name));
+}
+
 function renderRoulettePanel() {
   const isPlayer = _gcTab === 'player';
   const savedText = localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '';
@@ -39,7 +49,7 @@ function renderRoulettePanel() {
     return `<span onclick="_gcToggleMap('${m.replace(/'/g,"\\'").replace(/"/g,'\\"')}',this)" data-map="${m.replace(/"/g,'&quot;')}" style="cursor:pointer;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid ${active?'#FF4B6E':'var(--border)'};background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};transition:.1s;user-select:none">${m}</span>`;
   }).join('') : '';
 
-  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:visible" class="no-export">
+  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:visible;width:300px">
   <!-- 탭 헤더 -->
   <div style="display:flex;border-bottom:1px solid var(--border)">
     <button onclick="_gcSwitchTab('player')" style="flex:1;padding:10px 6px;font-size:12px;font-weight:700;border:none;background:${isPlayer?'#FFF0F3':'var(--surface)'};color:${isPlayer?'#FF4B6E':'var(--text2)'};cursor:pointer;border-right:1px solid var(--border);border-radius:12px 0 0 0;transition:.1s">🎰 선수뽑기</button>
@@ -47,29 +57,24 @@ function renderRoulettePanel() {
   </div>
   <!-- 입력 영역 -->
   <div style="padding:10px 12px 0">
-    <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">${isPlayer?'선수 이름 (쉼표 구분)':'맵 이름 (쉼표 구분)'}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">${isPlayer?'선수 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
     <textarea id="gc-items-input" rows="2" oninput="_gcSaveText(this.value)" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 9px;font-size:11px;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${savedText}</textarea>
     ${!isPlayer && mapBadges ? `<div style="margin-top:6px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:700">등록된 맵 클릭해서 추가:</div><div style="display:flex;flex-wrap:wrap;gap:3px">${mapBadges}</div></div>` : ''}
     <button onclick="_gcClearItems()" style="margin-top:6px;font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">지우기</button>
   </div>
   <!-- 가챠 머신 -->
-  <div style="padding:8px 12px 16px;display:flex;flex-direction:column;align-items:center">
+  <div style="padding:8px 12px 12px;display:flex;flex-direction:column;align-items:center">
     <div style="position:relative;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 6px 16px rgba(255,75,110,0.3))">
-      <!-- 돔 -->
       <div style="position:relative;width:${_GC_DOME}px;height:${_GC_DOME}px">
         <div id="gc-dome" style="width:${_GC_DOME}px;height:${_GC_DOME}px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.52),rgba(255,200,220,0.2) 55%,rgba(255,150,180,0.08));border:7px solid white;border-radius:50%;overflow:hidden;box-shadow:inset 0 0 35px rgba(255,255,255,0.5),0 6px 20px rgba(200,60,90,0.2),0 0 0 4px #FFD6E4;position:relative"></div>
         <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 28% 22%,rgba(255,255,255,0.55) 0%,transparent 55%);pointer-events:none"></div>
       </div>
-      <!-- 링 -->
       <div style="width:${_GC_DOME-18}px;height:18px;background:linear-gradient(180deg,#fff 0%,#f8bbd0 60%,#f48fb1 100%);border-radius:0 0 10px 10px;margin-top:-9px;position:relative;z-index:2;box-shadow:0 4px 0 #FF4B6E"></div>
-      <!-- 바디 -->
       <div style="width:${_GC_DOME+18}px;background:linear-gradient(180deg,#FF4B6E 0%,#e53935 100%);margin-top:-7px;border-radius:14px 14px 36px 36px;position:relative;z-index:1;box-shadow:0 7px 0 #C0274A;padding:10px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:8px">
-        <!-- 크랭크 -->
         <div id="gc-crank" onclick="_gcSpin()" style="width:72px;height:72px;background:radial-gradient(circle at 35% 28%,#ffffff,#d8d8d8);border:6px solid #c8c8c8;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 0 #aaa;transition:transform 0.8s cubic-bezier(0.4,0,0.2,1);user-select:none;position:relative;overflow:hidden" title="클릭해서 뽑기!">
           <div style="width:50px;height:14px;background:linear-gradient(180deg,#ccc,#999);border-radius:9px;box-shadow:0 3px 0 #888"></div>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:.5px">🎰 클릭해서 뽑기!</div>
-        <!-- 출구 -->
         <div style="display:flex;flex-direction:column;align-items:center">
           <div style="position:relative;width:65px;height:42px;background:linear-gradient(180deg,#1a1a1a,#333);border-radius:11px 11px 0 0;box-shadow:inset 0 -5px 10px rgba(0,0,0,0.55)">
             <div id="gc-outcap" style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%) scale(0);width:42px;height:42px;border-radius:50%;z-index:10;transition:0.65s cubic-bezier(0.175,0.885,0.32,1.45);border:3px solid white;box-shadow:0 5px 14px rgba(0,0,0,0.22)"></div>
@@ -79,14 +84,12 @@ function renderRoulettePanel() {
       </div>
     </div>
   </div>
-</div>
-<!-- 결과 팝업 -->
-<div id="gc-popup-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,160,190,0.45);backdrop-filter:blur(10px);z-index:500;align-items:center;justify-content:center" onclick="if(event.target===this)_gcReset()">
-  <div id="gc-popup" style="background:white;border-radius:32px;border:6px solid #FF89AB;padding:36px 48px;text-align:center;box-shadow:0 24px 60px rgba(255,75,110,0.3);transform:scale(0);transition:transform 0.52s cubic-bezier(0.175,0.885,0.32,1.35);max-width:320px;width:88%;position:relative">
-    <div style="font-size:32px;position:absolute;top:-16px;left:50%;transform:translateX(-50%)">🌟</div>
-    <div id="gc-pop-icon" style="font-size:68px;display:block;margin-bottom:6px;animation:gcBounceIcon 0.65s ease 0.2s both"></div>
-    <div id="gc-res-text" style="font-size:clamp(1.4rem,5vw,2rem);font-weight:900;color:#C0274A;margin:8px 0 20px;word-break:keep-all"></div>
-    <button onclick="_gcReset()" style="background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:white;border:none;border-radius:18px;padding:12px 30px;font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 6px 0 #C0274A;transition:transform .1s,box-shadow .1s" onmousedown="this.style.transform='translateY(4px)';this.style.boxShadow='0 2px 0 #C0274A'" onmouseup="this.style.transform='';this.style.boxShadow='0 6px 0 #C0274A'">🎰 다시 뽑기!</button>
+  <!-- 결과 카드 (인라인) -->
+  <div id="gc-result-card" style="display:none;margin:0 12px 16px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2px solid #FF89AB;border-radius:16px;padding:16px 12px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
+    <div style="font-size:10px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:8px">🎊 당첨!</div>
+    <div id="gc-pop-icon" style="font-size:52px;display:block;margin-bottom:6px"></div>
+    <div id="gc-res-text" style="font-size:1.35rem;font-weight:900;color:#C0274A;margin-bottom:14px;word-break:keep-all"></div>
+    <button onclick="_gcReset()" style="background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:white;border:none;border-radius:14px;padding:9px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .1s,box-shadow .1s" onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #C0274A'" onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #C0274A'">🎰 다시 뽑기!</button>
   </div>
 </div>`;
 }
@@ -192,6 +195,10 @@ function _gcSpin() {
   const items = inp.value.split(',').map(v=>v.trim()).filter(v=>v);
   if (!items.length) { alert('항목을 먼저 입력해주세요!'); return; }
 
+  // 결과 카드 숨기기
+  const card = document.getElementById('gc-result-card');
+  if (card) card.style.display = 'none';
+
   _gcSpinning = true;
   if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (_gcAudioCtx.state === 'suspended') _gcAudioCtx.resume();
@@ -203,7 +210,6 @@ function _gcSpin() {
     crank.style.transform = `rotate(${_gcTotalRot}deg)`;
   }
 
-  // 회전 효과음
   (function(){
     const o = _gcAudioCtx.createOscillator(), g = _gcAudioCtx.createGain();
     o.type = 'sawtooth';
@@ -225,7 +231,6 @@ function _gcSpin() {
       outCap.style.transform = 'translateX(-50%) scale(1.4)';
       outCap.style.bottom = '-28px';
     }
-    // 당첨 효과음
     [0,0.08,0.16,0.27].forEach((t,i) => {
       setTimeout(() => {
         const o2 = _gcAudioCtx.createOscillator(), g2 = _gcAudioCtx.createGain();
@@ -238,32 +243,36 @@ function _gcSpin() {
     });
 
     setTimeout(() => {
-      const result = items[Math.floor(Math.random()*items.length)];
-      // 아이콘 결정
+      const keyword = items[Math.floor(Math.random()*items.length)];
+      // 부분 이름으로 선수 매칭
+      const p = _gcFindPlayer(keyword);
+      const displayName = p ? p.name : keyword;
+
       let icon = '';
-      const p = (typeof players !== 'undefined') && players.find(x => x.name === result);
       if (p) {
         if (p.photo) {
-          icon = `<img src="${p.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:4px solid #FF89AB;animation:gcBounceIcon 0.65s ease 0.2s both" onerror="this.outerHTML='🎮'">`;
+          icon = `<img src="${p.photo}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
         } else {
           icon = p.race==='T'?'🤖':p.race==='Z'?'🐛':p.race==='P'?'💎':'🎮';
         }
       } else {
-        const iconMap = {'투혼':'⚔️','블루':'💙','아즈':'🏛️','롱기':'🗡️','개마':'🏔️','신':'✨','포르':'🏰'};
-        for (const [k,v] of Object.entries(iconMap)) if (result.includes(k)) { icon = v; break; }
+        const iconMap = {'투혼':'⚔️','블루':'💙','아즈':'🏛️','롱기':'🗡️','개마':'🏔️','포르':'🏰'};
+        for (const [k,v] of Object.entries(iconMap)) if (keyword.includes(k)) { icon = v; break; }
         if (!icon) icon = ['🎰','⭐','🎮','🎯','✨','🌟','🎊'][Math.floor(Math.random()*7)];
       }
 
       const iconEl = document.getElementById('gc-pop-icon');
-      if (iconEl) iconEl.innerHTML = typeof icon === 'string' && icon.startsWith('<img') ? icon : `<span style="animation:gcBounceIcon 0.65s ease 0.2s both;display:inline-block">${icon}</span>`;
+      if (iconEl) iconEl.innerHTML = icon.startsWith('<img') ? icon : `<span style="animation:gcBounceIcon 0.65s ease 0.1s both;display:inline-block">${icon}</span>`;
       const resEl = document.getElementById('gc-res-text');
-      if (resEl) resEl.textContent = result;
+      if (resEl) resEl.textContent = displayName;
 
-      const overlay = document.getElementById('gc-popup-overlay');
-      const popup = document.getElementById('gc-popup');
-      if (overlay && popup) {
-        overlay.style.display = 'flex';
-        setTimeout(() => { popup.style.transform = 'scale(1)'; }, 20);
+      // 인라인 카드 표시
+      const resultCard = document.getElementById('gc-result-card');
+      if (resultCard) {
+        resultCard.style.display = 'block';
+        resultCard.style.animation = 'none';
+        void resultCard.offsetWidth; // reflow
+        resultCard.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
       }
       _gcConfetti();
     }, 750);
@@ -274,21 +283,19 @@ function _gcReset() {
   _gcSpinning = false;
   const outCap = document.getElementById('gc-outcap');
   if (outCap) { outCap.style.transform = 'translateX(-50%) scale(0)'; outCap.style.bottom = '-18px'; }
-  const popup = document.getElementById('gc-popup');
-  if (popup) popup.style.transform = 'scale(0)';
-  const overlay = document.getElementById('gc-popup-overlay');
-  if (overlay) setTimeout(() => { overlay.style.display = 'none'; }, 320);
+  const card = document.getElementById('gc-result-card');
+  if (card) card.style.display = 'none';
 }
 
 function _gcConfetti() {
   const colors = ['#FF4B6E','#FFD54F','#CE93D8','#80DEEA','#A5D6A7','#FF80AB','#FFF176'];
-  for (let i = 0; i < 55; i++) {
+  for (let i = 0; i < 40; i++) {
     setTimeout(() => {
       const el = document.createElement('div');
-      const sz = 6 + Math.random() * 9;
-      el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-15px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'4px'};z-index:600;pointer-events:none;animation:gcConfettiFall ${1.2+Math.random()*.9}s ease-in ${Math.random()*.5}s forwards`;
+      const sz = 6 + Math.random() * 8;
+      el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-15px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'4px'};z-index:600;pointer-events:none;animation:gcConfettiFall ${1.2+Math.random()*.9}s ease-in ${Math.random()*.4}s forwards`;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2400);
-    }, i * 18);
+      setTimeout(() => el.remove(), 2200);
+    }, i * 20);
   }
 }
