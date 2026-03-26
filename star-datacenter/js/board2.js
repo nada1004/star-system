@@ -40,6 +40,10 @@ function rBoard2(C, T) {
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+    </div>`
+  : _b2View === 'free' ? `
+    <div style="margin-left:auto;flex-shrink:0">
+      <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>` : '';
 
   const filterBar = `
@@ -344,6 +348,37 @@ async function saveB2Img() {
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
   const fname = (_b2SaveUniv === '전체' ? '대학별현황판_전체' : `대학별현황판_${_b2SaveUniv}`) + '_' + new Date().toISOString().slice(0,10) + '.png';
+
+  try {
+    await _captureAndSave(tmpDiv, w, h, fname);
+  } catch(e) { alert('저장 실패: ' + e.message); }
+  finally {
+    document.body.removeChild(tmpDiv);
+    if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
+  }
+}
+
+async function saveB2FreeImg() {
+  const btn = document.querySelector('[onclick="saveB2FreeImg()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+  const CARD_W = 720;
+  const PAD = 24;
+
+  const tmpDiv = document.createElement('div');
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
+  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>${_b2FreeView()}`;
+  document.body.appendChild(tmpDiv);
+
+  await new Promise(r => setTimeout(r, 300));
+  injectUnivIcons(tmpDiv);
+  await new Promise(r => setTimeout(r, 200));
+  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 6000);
+  await new Promise(r => setTimeout(r, 100));
+
+  const h = tmpDiv.scrollHeight + 32;
+  const w = tmpDiv.scrollWidth;
+  const fname = '무소속현황판_' + new Date().toISOString().slice(0,10) + '.png';
 
   try {
     await _captureAndSave(tmpDiv, w, h, fname);
