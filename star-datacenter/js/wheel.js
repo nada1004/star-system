@@ -87,7 +87,8 @@ function _whRender(root) {
     + '<div id="wh-result-card" style="display:none;width:100%;max-width:480px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:20px;text-align:center;box-sizing:border-box;animation:whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">'
     + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
     + '<div id="wh-res-icon" style="font-size:52px;margin-bottom:6px;line-height:1.1">🏆</div>'
-    + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:8px"></div>'
+    + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:14px"></div>'
+    + '<button onclick="_whSpin()" style="font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#FF4B6E,#FF89AB);border:none;border-radius:22px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🎡 다시 돌리기</button>'
     + '</div>'
     // 히스토리
     + _whHistHTML()
@@ -209,7 +210,7 @@ function _whSpin() {
     } else {
       _whAngle = startAng + totalRot;
       _whSpinning = false;
-      if (btn) { btn.textContent = '🎡 돌려라!'; btn.classList.remove('spinning'); }
+      if (btn) { btn.disabled = false; btn.textContent = '🎡 돌려라!'; btn.classList.remove('spinning'); }
       const winner = names[winIdx];
       _whAddHistory(winner);
       setTimeout(function() { _whShowResult(winner); }, 250);
