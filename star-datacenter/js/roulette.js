@@ -759,17 +759,8 @@ function _ldInit() {
 }
 
 function _ldRebuild() {
-  const namesText = localStorage.getItem('su_ld_names') || '';
-  const itemsText = localStorage.getItem('su_ld_items') || '';
-  const names = namesText.split(',').map(v=>v.trim()).filter(v=>v);
-  const items = itemsText.split(',').map(v=>v.trim()).filter(v=>v);
-  if (names.length < 2) return;
-  const n = names.length;
-  const normItems = Array.from({length: n}, (_, i) => items[i] || `${i+1}번`);
-  _ldLadder = _ldBuildLadder(names, normItems);
-  const rc = document.getElementById('ld-result-card');
-  if (rc) rc.style.display = 'none';
-  _ldDrawCanvas(_ldLadder, null, null);
+  _ldLadder = null; // 강제 초기화 → _ldInit에서 새 사다리 빌드 + onclick 재등록
+  _ldInit();
 }
 
 function _ldAnimate(nameIdx) {

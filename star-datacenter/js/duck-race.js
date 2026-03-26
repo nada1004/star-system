@@ -13,11 +13,10 @@
     '.dr-duck-emoji{font-size:30px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));display:inline-block;transform:scaleX(-1)}',
     '.dr-duck-name{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;background:rgba(0,0,0,.28);padding:1px 4px;border-radius:4px;margin-top:1px}',
     '.dr-finish-flag{position:absolute;top:0;display:flex;flex-direction:column;pointer-events:none}',
-    '.dr-result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999;animation:drFadeIn .3s ease}',
-    '.dr-result-box{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:3px solid #FF89AB;border-radius:20px;padding:28px 36px;text-align:center;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.25);animation:drPopIn .45s cubic-bezier(.175,.885,.32,1.35)}',
-    '.dr-result-trophy{font-size:56px;display:block;margin-bottom:6px}',
-    '.dr-result-winner{font-size:24px;font-weight:900;color:#C0274A;margin:6px 0;word-break:keep-all}',
-    '.dr-result-rank{font-size:13px;color:var(--text2);margin-bottom:18px;line-height:2;text-align:left}',
+    '.dr-result-card{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:20px 24px;text-align:center;margin-top:12px;animation:drPopIn .4s cubic-bezier(.175,.885,.32,1.35)}',
+    '.dr-result-trophy{font-size:52px;display:block;margin-bottom:4px}',
+    '.dr-result-winner{font-size:clamp(22px,5vw,36px);font-weight:900;color:#C0274A;margin:6px 0 12px;word-break:keep-all}',
+    '.dr-result-rank{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:2;text-align:left;background:var(--white);border-radius:10px;padding:8px 14px;border:1px solid var(--border)}',
     '.dr-btn-primary{background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .1s,box-shadow .1s;font-family:inherit}',
     '.dr-btn-primary:active{transform:translateY(3px);box-shadow:0 1px 0 #C0274A}',
     '.dr-btn-secondary{background:var(--surface);color:var(--text2);border:2px solid var(--border);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.1s}',
@@ -468,24 +467,31 @@ function _drShowResult(winner) {
   });
   _drSaveHistory(hist);
 
-  // 결과 화면
+  // 결과 카드 (인라인)
   var rankLines = sorted.map(function(d, i) {
-    var medal = i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'위 ';
-    return medal + d.emoji + ' ' + d.name;
-  }).join('<br>');
+    var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':((i+1)+'위');
+    return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'
+      + '<span style="font-weight:900;min-width:28px">' + medal + '</span>'
+      + '<span style="font-size:18px">' + d.emoji + '</span>'
+      + '<span style="font-weight:700;font-size:14px">' + d.name + '</span>'
+      + '</div>';
+  }).join('');
 
-  var overlay = document.createElement('div');
-  overlay.className = 'dr-result-overlay';
-  overlay.id = 'dr-result-overlay';
-  overlay.innerHTML =
-    '<div class="dr-result-box">'
-    + '<span class="dr-result-trophy">🏆</span>'
-    + '<div style="font-size:13px;color:var(--text3);margin-bottom:4px">🥇 우승</div>'
+  var card = document.createElement('div');
+  card.className = 'dr-result-card';
+  card.id = 'dr-result-overlay';
+  card.innerHTML =
+    '<span class="dr-result-trophy">🏆</span>'
+    + '<div style="font-size:13px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:6px">🎉 경주 결과!</div>'
     + '<div class="dr-result-winner">' + winner.emoji + ' ' + winner.name + '</div>'
     + '<div class="dr-result-rank">' + rankLines + '</div>'
-    + '<button onclick="document.getElementById(\'dr-result-overlay\').remove();_drResetRace()" class="dr-btn-primary">🔄 다시하기</button>'
-    + '</div>';
-  document.body.appendChild(overlay);
+    + '<button onclick="_drResetRace()" class="dr-btn-primary">🔄 다시하기</button>';
+
+  var root = document.getElementById('dr-root');
+  if (root) {
+    root.appendChild(card);
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
   var status = document.getElementById('dr-status');
   if (status) status.innerHTML = '🏆 ' + winner.emoji + ' <strong>' + winner.name + '</strong> 우승! (' + timeStr + ')';
