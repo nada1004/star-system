@@ -186,8 +186,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       </div>
       <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1;display:flex;align-items:flex-start;gap:0">
-          <div style="flex:1;min-width:0">${rows}</div>
+        <div style="position:relative;z-index:1;display:grid;grid-template-columns:1fr${hasSide?' 190px':''};align-items:start">
+          <div>${rows}</div>
           ${sidePanelHtml}
         </div>
       </div>
