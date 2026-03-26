@@ -123,12 +123,12 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const resTextSz = Math.max(20, Math.round(dome * 0.135));
 
   // 사다리 캔버스 크기
-  const ldCanvasW = isWide ? Math.min(420, Math.round(avW * 0.43)) : Math.min(avW - 40, 380);
-  const ldCanvasH = Math.max(300, Math.round(avH * 0.58));
+  const ldCanvasW = isWide ? Math.min(600, Math.round(avW * 0.55)) : Math.min(avW - 40, 420);
+  const ldCanvasH = Math.max(380, Math.round(avH * 0.68));
 
   const inputW = isWide ? Math.min(360, Math.round(avW * 0.38)) : '100%';
   const innerLayout = isWide
-    ? `display:flex;gap:${pad*2}px;align-items:flex-start;justify-content:center`
+    ? `display:flex;gap:${pad*2}px;align-items:flex-start`
     : `display:flex;flex-direction:column;align-items:center`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
@@ -198,7 +198,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 오른쪽 패널: 사다리 캔버스 or 가챠 머신
   const rightPanelHTML = isLadder ? `
-  <div style="display:flex;flex-direction:column;align-items:center;${isWide?'':'margin-top:'+pad+'px'}">
+  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center':'display:flex;flex-direction:column;align-items:center;margin-top:'+pad+'px'}">
     <div id="ld-instruction" style="font-size:${fs}px;color:var(--text3);font-weight:600;margin-bottom:10px;text-align:center">이름을 클릭하면 사다리를 타요!</div>
     <canvas id="ld-canvas" width="${ldCanvasW}" height="${ldCanvasH}"
       style="width:${ldCanvasW}px;height:${ldCanvasH}px;border-radius:14px;border:2px solid var(--border);background:var(--white);cursor:pointer;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))"></canvas>
@@ -210,7 +210,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     </div>
   </div>
   ` : `
-  <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;${isWide?'':'margin-top:'+pad+'px'}">
+  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center':'display:flex;flex-direction:column;align-items:center;margin-top:'+pad+'px'}">
     <div style="position:relative;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 8px 22px rgba(255,75,110,0.35))">
       <div style="position:relative;width:${dome}px;height:${dome}px">
         <div id="gc-dome" style="width:${dome}px;height:${dome}px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.52),rgba(255,200,220,0.2) 55%,rgba(255,150,180,0.08));border:${Math.round(dome*0.042)}px solid white;border-radius:50%;overflow:hidden;box-shadow:inset 0 0 ${Math.round(dome*0.21)}px rgba(255,255,255,0.5),0 ${Math.round(dome*0.035)}px ${Math.round(dome*0.12)}px rgba(200,60,90,0.22),0 0 0 ${Math.round(dome*0.024)}px #FFD6E4;position:relative"></div>

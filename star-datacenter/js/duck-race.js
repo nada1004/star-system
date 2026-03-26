@@ -149,8 +149,10 @@ function _drBeginRace() {
   if (names.length < 2)  { alert('참가자를 2명 이상 입력해 주세요.'); return; }
   if (names.length > 12) { alert('최대 12명까지 가능합니다.'); return; }
 
+  var laneH = Math.min(_DR_LANE_H, Math.max(48, Math.floor((window.innerHeight * 0.55) / names.length)));
   _drSt = {
     names: names,
+    laneH: laneH,
     ducks: names.map(function(name, i) {
       var base = 1.4 + Math.random() * 1.6;
       return {
@@ -184,7 +186,8 @@ function _drBeginRace() {
 function _drRenderRace(root) {
   if (!root || !_drSt) return;
   const n       = _drSt.ducks.length;
-  const canvasH = _DR_LANE_H * n;
+  const laneH   = _drSt.laneH || _DR_LANE_H;
+  const canvasH = laneH * n;
   const viewW   = Math.min(window.innerWidth - 32, 920);
 
   root.innerHTML =
@@ -223,7 +226,7 @@ function _drRenderRace(root) {
     var el = document.createElement('div');
     el.className = 'dr-duck-el';
     el.id = 'dr-duck-' + i;
-    el.style.top  = (i * _DR_LANE_H + Math.round(_DR_LANE_H / 2) - 28) + 'px';
+    el.style.top  = (i * laneH + Math.round(laneH / 2) - 28) + 'px';
     el.style.left = duck.x + 'px';
     el.innerHTML  = '<span class="dr-duck-emoji">' + duck.emoji + '</span>'
                   + '<span class="dr-duck-name">'  + duck.name  + '</span>';
@@ -247,6 +250,7 @@ function _drDrawBG(camX) {
   var w   = cv.width;
   var h   = cv.height;
   var n   = _drSt.ducks.length;
+  var lH  = _drSt.laneH || _DR_LANE_H;
   var off = _drSt.waveOff;
 
   var bg = ctx.createLinearGradient(0, 0, 0, h);
@@ -259,7 +263,7 @@ function _drDrawBG(camX) {
   ctx.strokeStyle = 'rgba(255,255,255,.18)';
   ctx.lineWidth   = 1;
   for (var i = 1; i < n; i++) {
-    var ly = i * _DR_LANE_H;
+    var ly = i * lH;
     ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(w, ly); ctx.stroke();
   }
 
@@ -284,8 +288,7 @@ function _drDrawBG(camX) {
   }
 
   for (var lane = 0; lane < n; lane++) {
-    var lTop = lane * _DR_LANE_H;
-    var lH   = _DR_LANE_H;
+    var lTop = lane * lH;
     for (var wi = 0; wi < 2; wi++) {
       var freq  = 0.007 + wi * 0.004;
       var amp   = 7   + wi * 5;
@@ -310,8 +313,6 @@ function _drLoop() {
   if (!_drSt || !_drSt.running) return;
   _drSt.frame++;
   _drSt.waveOff++;
-
-  var leadX = 0;
 
   _drSt.ducks.forEach(function(duck, i) {
     if (duck.finished) return;
@@ -351,8 +352,11 @@ function _drLoop() {
       }
     }
 
-    if (duck.x > leadX) leadX = duck.x;
   });
+
+  // leadX: 완주 포함 전체 오리 중 가장 앞선 위치
+  var leadX = 0;
+  _drSt.ducks.forEach(function(d) { if (d.x > leadX) leadX = d.x; });
 
   // DOM 위치 갱신
   _drSt.ducks.forEach(function(duck, i) {
@@ -437,8 +441,9 @@ function _drShowEvBadge(idx, label) {
   var badge = document.createElement('div');
   badge.className  = 'dr-ev-badge';
   badge.textContent = label;
+  var lH2 = _drSt.laneH || _DR_LANE_H;
   badge.style.left = Math.round(duck.x) + 'px';
-  badge.style.top  = (idx * _DR_LANE_H + 4) + 'px';
+  badge.style.top  = (idx * lH2 + 4) + 'px';
   inner.appendChild(badge);
   setTimeout(function(){ badge.remove(); }, 1600);
 }
