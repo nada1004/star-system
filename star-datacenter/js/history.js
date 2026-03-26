@@ -495,7 +495,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   let h='';
   arr.forEach(m=>{
-    if(isCKmode){if(!m.teamAMembers||!m.teamBMembers) return;}
+    if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
@@ -571,7 +571,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   let filtered=arr.map((m,i)=>({m,i:_srcArr!==arr?_srcArr.indexOf(m):i})).filter(({m})=>{
     if(extraFilter&&!extraFilter(m)) return false;
     if(isCKmode){
-      if(!m.teamAMembers||!m.teamBMembers) return false;
+      if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return false;
     } else {
       if(!m.a||!m.b) return false;
     }
