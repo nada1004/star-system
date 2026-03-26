@@ -300,6 +300,8 @@ function _gcSpin() {
 
   const card = document.getElementById('gc-result-card');
   if (card) card.style.display = 'none';
+  // 뽑기 시작 시 입력창 자동 접기
+  if (_gcInputOpen) _gcToggleInput();
 
   _gcSpinning = true;
   if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
