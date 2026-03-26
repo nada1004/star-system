@@ -83,8 +83,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const _tbP = Math.round(pad * 0.65);
   const _tbF = Math.max(11, fs - 1);
   const tbStyle = (active, isSpecial) => active
-    ? `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:800;border:none;border-radius:10px;background:${isSpecial?'linear-gradient(135deg,#0ea5e9,#38bdf8)':'linear-gradient(135deg,#FF4B6E,#FF89AB)'};color:#fff;cursor:pointer;transition:.15s;box-shadow:0 2px 8px ${isSpecial?'rgba(14,165,233,.35)':'rgba(255,75,110,.35)'};white-space:nowrap`
-    : `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:700;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;white-space:nowrap`;
+    ? `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:800;border:none;border-radius:10px;background:${isSpecial?'linear-gradient(135deg,#0ea5e9,#38bdf8)':'linear-gradient(135deg,#FF4B6E,#FF89AB)'};color:#fff;cursor:pointer;transition:.15s;box-shadow:0 2px 8px ${isSpecial?'rgba(14,165,233,.35)':'rgba(255,75,110,.35)'};text-align:center;line-height:1.3;min-width:0`
+    : `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:700;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;text-align:center;line-height:1.3;min-width:0`;
 
   // 오리경주 탭: 별도 레이아웃 (tbStyle 선언 이후에 위치)
   if (isDuck) {

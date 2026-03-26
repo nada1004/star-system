@@ -18,7 +18,6 @@ function rTotal(C,T){
   let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
     <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
-    <button class="pill ${totalHideNoRecord?'on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}">전적없는 스트리머 숨기기</button>
     <button class="pill ${totalShowRetired?'on':''}" onclick="totalShowRetired=!totalShowRetired;render()" style="${totalShowRetired?'background:#6b7280;border-color:#6b7280;color:#fff':''}">🎗️ 은퇴 스트리머 포함</button>
     ${isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''}
     ${_showBulk?`<button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>`:''}
