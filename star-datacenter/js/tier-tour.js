@@ -985,17 +985,29 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 선수 상태 아이콘 관리</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 선수별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+    <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 사용 가능한 상태 아이콘</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px" title="${d.label}">${d.emoji}</span>`).join('')}
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🔗 커스텀 아이콘 추가 (URL · 이모지)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input type="text" id="si-url" placeholder="이미지 URL 또는 이모지 입력" style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="text" id="si-label" placeholder="이름 (선택)" style="width:110px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <button class="btn btn-b btn-sm" onclick="var e=document.getElementById('si-url').value.trim(),l=document.getElementById('si-label').value.trim();if(!e){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(l||'커스텀',e);document.getElementById('si-url').value='';document.getElementById('si-label').value='';render()">+ 추가</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
+      ${_customStatusIcons.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${_customStatusIcons.map((c,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:var(--white);border:1.5px solid var(--blue);font-size:14px"><span style="display:inline-flex;align-items:center">${_siRender(c.emoji,'20px')||c.emoji}</span><span style="font-size:11px;color:var(--gray-l);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.label||''}</span><button onclick="removeCustomStatusIcon(${i});render()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:0;line-height:1;margin-left:2px" title="삭제">×</button></span>`).join('')}</div>`
+      :'<div style="font-size:11px;color:var(--gray-l)">추가된 커스텀 아이콘 없음</div>'}
     </div>
+    <!-- 기본 아이콘 목록 -->
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 기본 상태 아이콘</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none'&&!id.startsWith('_c')).map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:16px" title="${d.label}">${_siRender(d.emoji,'20px')||d.emoji}</span>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 아이콘을 설정하세요.</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
+    <!-- 스트리머별 아이콘 지정 -->
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">스트리머별 상태 아이콘 지정</div>
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
         [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
@@ -1004,10 +1016,11 @@ function rCfg(C,T){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
-            <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+            <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+            <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
+            ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
           </div>`;
         }).join('')
       }
@@ -2436,17 +2449,29 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 선수 상태 아이콘 관리</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 선수별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
+    <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 사용 가능한 상태 아이콘</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none').map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:14px" title="${d.label}">${d.emoji}</span>`).join('')}
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🔗 커스텀 아이콘 추가 (URL · 이모지)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input type="text" id="si-url" placeholder="이미지 URL 또는 이모지 입력" style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="text" id="si-label" placeholder="이름 (선택)" style="width:110px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <button class="btn btn-b btn-sm" onclick="var e=document.getElementById('si-url').value.trim(),l=document.getElementById('si-label').value.trim();if(!e){alert('URL 또는 이모지를 입력하세요.');return;}addCustomStatusIcon(l||'커스텀',e);document.getElementById('si-url').value='';document.getElementById('si-label').value='';render()">+ 추가</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 각 스트리머의 아이콘을 설정하세요.</div>
+      ${_customStatusIcons.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${_customStatusIcons.map((c,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:var(--white);border:1.5px solid var(--blue);font-size:14px"><span style="display:inline-flex;align-items:center">${_siRender(c.emoji,'20px')||c.emoji}</span><span style="font-size:11px;color:var(--gray-l);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.label||''}</span><button onclick="removeCustomStatusIcon(${i});render()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:0;line-height:1;margin-left:2px" title="삭제">×</button></span>`).join('')}</div>`
+      :'<div style="font-size:11px;color:var(--gray-l)">추가된 커스텀 아이콘 없음</div>'}
     </div>
+    <!-- 기본 아이콘 목록 -->
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🎭 기본 상태 아이콘</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${Object.entries(STATUS_ICON_DEFS).filter(([id])=>id!=='none'&&!id.startsWith('_c')).map(([id,d])=>`<span style="padding:4px 10px;border-radius:7px;background:var(--white);border:1px solid var(--border);font-size:16px" title="${d.label}">${_siRender(d.emoji,'20px')||d.emoji}</span>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">스트리머 정보 수정 또는 현황판 클릭 팝업에서 아이콘을 설정하세요.</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">선수별 상태 아이콘 지정</div>
+    <!-- 스트리머별 아이콘 지정 -->
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">스트리머별 상태 아이콘 지정</div>
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
         [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
@@ -2455,10 +2480,11 @@ function rCfg(C,T){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border)">
             ${getPlayerPhotoHTML(p.name,'32px')}
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-            <span style="font-size:18px;min-width:24px;text-align:center">${cur}</span>
-            <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:110px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+            <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+            <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
+            ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
           </div>`;
         }).join('')
       }
