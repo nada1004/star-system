@@ -152,20 +152,16 @@ function _b2UnivBlock(univName, col, members) {
   </div>` : '';
 
   const _bgPos = uCfg.bgImgPos || 'center center';
-  const _bgSize = uCfg.bgImgSize || 'contain';
+  const _bgSize = uCfg.bgImgSize || 'cover';
   const bgImgHtml = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.20;pointer-events:none;z-index:0"></div>`
-    : '';
-  const bgImgHeader = uCfg.bgImg
-    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.15;pointer-events:none;z-index:0"></div>`
+    ? `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.12;pointer-events:none;z-index:0"></div>`
     : '';
 
   return `
     <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
-      <div style="background:${col};padding:10px 16px;position:relative;overflow:hidden">
-        ${bgImgHeader}
-        <div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:''}
+      <div style="background:${col};padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
+          ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain;border-radius:8px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
