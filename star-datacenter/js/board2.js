@@ -142,10 +142,11 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 사이드 패널 (현황판 memoImgs/memo)
+  // 사이드 패널 (현황판 memoImgs/memo) — flex 오른쪽 고정
   const _smemo = uCfg.memo || '';
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
-  const sidePanel = (_smemo||_simgs.length) ? `<div class="b2-side-panel" style="background:${lightCol};border:1px solid ${col}44;border-radius:10px">
+  const hasSide = !!((_smemo||_simgs.length));
+  const sidePanelHtml = hasSide ? `<div style="width:190px;flex-shrink:0;background:${lightCol};border:1px solid ${col}44;border-radius:10px;padding:8px;box-sizing:border-box;align-self:flex-start">
     ${_simgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
   </div>` : '';
@@ -180,7 +181,10 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       </div>
       <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1">${sidePanel}${rows}</div>
+        <div style="position:relative;z-index:1;display:flex;align-items:flex-start;gap:0">
+          <div style="flex:1;min-width:0">${rows}</div>
+          ${sidePanelHtml}
+        </div>
       </div>
       ${bottomSection}
     </div>`;
@@ -323,7 +327,7 @@ async function saveB2Img() {
 
   const tmpDiv = document.createElement('div');
   tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
-  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}.b2-side-panel{float:right;width:200px;margin:0 0 6px 12px;border-radius:10px;padding:8px;box-sizing:border-box;}</style>
+  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>
     <div style="display:flex;flex-direction:column;gap:${gap}px">
       ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
     </div>`;
