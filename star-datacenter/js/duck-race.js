@@ -73,6 +73,35 @@ function _drCleanup() {
 }
 
 // ─── 셋업 화면 ───────────────────────────────────────────────────────────────
+function _drGetHistory() {
+  try { return JSON.parse(localStorage.getItem('su_dr_hist') || '[]'); } catch(e) { return []; }
+}
+function _drSaveHistory(hist) {
+  localStorage.setItem('su_dr_hist', JSON.stringify(hist.slice(0, 10)));
+}
+function _drRenderHistory() {
+  var hist = _drGetHistory();
+  if (!hist.length) return '';
+  var rows = hist.map(function(h, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border-radius:8px;font-size:12px">'
+      + '<span style="color:var(--text3);min-width:90px;flex-shrink:0">' + h.time + '</span>'
+      + '<span style="font-weight:800;color:#C0274A;flex:1">' + h.winner + ' 🏆 1등</span>'
+      + '<span style="color:var(--text3);font-size:11px">' + h.participants + '명 참가</span>'
+      + '</div>';
+  }).join('');
+  return '<div style="margin-top:14px;border-top:1.5px solid var(--border);padding-top:12px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<div style="font-size:12px;font-weight:800;color:var(--text2)">📋 최근 경주 결과</div>'
+    + '<button onclick="_drClearHistory()" class="dr-btn-secondary" style="font-size:11px;padding:3px 8px">전체 삭제</button>'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px">' + rows + '</div></div>';
+}
+function _drClearHistory() {
+  localStorage.removeItem('su_dr_hist');
+  var root = document.getElementById('dr-root');
+  if (root) _drRenderSetup(root, localStorage.getItem('su_dr_n') || '');
+}
+
 function _drRenderSetup(root, saved) {
   root.innerHTML = `
 <div class="dr-setup">
@@ -87,7 +116,8 @@ function _drRenderSetup(root, saved) {
 </div>
 <div style="text-align:center;padding:8px 0 4px">
   <button onclick="_drBeginRace()" class="dr-btn-primary" style="font-size:18px;padding:14px 44px">🚀 경주 시작!</button>
-</div>`;
+</div>
+${_drRenderHistory()}`;
 }
 
 function _drSaveNames(val) {
@@ -154,7 +184,8 @@ function _drRenderRace(root) {
 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
   <div id="dr-status" style="font-size:14px;font-weight:700;color:var(--text2)">🏁 경주 중!</div>
   <button onclick="_drResetRace()" class="dr-btn-secondary">🔄 다시하기</button>
-</div>`;
+</div>
+<div id="dr-rank-board" style="margin-top:10px;background:var(--surface);border-radius:10px;padding:8px 12px;font-size:12px;display:flex;flex-wrap:wrap;gap:6px"></div>`;
 
   // 캔버스 크기 설정
   var cv = document.getElementById('dr-bg-canvas');
@@ -332,6 +363,25 @@ function _drLoop() {
   // 배경 재그리기 (매 2프레임)
   if (_drSt.frame % 2 === 0) _drDrawBG(_drSt.cameraX);
 
+  // 순위판 업데이트 (매 15프레임)
+  if (_drSt.frame % 15 === 0) {
+    var board = document.getElementById('dr-rank-board');
+    if (board) {
+      var sorted2 = _drSt.ducks.slice().sort(function(a, b) {
+        if (a.finished !== b.finished) return a.finished ? -1 : 1;
+        return b.x - a.x;
+      });
+      board.innerHTML = sorted2.map(function(d, i) {
+        var pct = Math.min(100, Math.round(d.x / _DR_FINISH_PX * 100));
+        var bg = d.finished ? '#fef9c3' : 'var(--white)';
+        var bdr = d.finished ? '#fbbf24' : 'var(--border)';
+        return '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;border:1.5px solid '+bdr+';background:'+bg+';font-weight:700">'
+          + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위') + ' ' + d.emoji + ' ' + d.name
+          + '<span style="color:var(--text3);font-weight:400;font-size:10px;margin-left:2px">' + pct + '%</span></span>';
+      }).join('');
+    }
+  }
+
   if (_drSt.running) {
     _drAnimId = requestAnimationFrame(_drLoop);
   }
@@ -354,6 +404,10 @@ function _drShowEvBadge(idx, label) {
 // ─── 결과 오버레이 ────────────────────────────────────────────────────────────
 function _drShowResult(winner) {
   var timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  // 결과 이력 저장
+  var hist = _drGetHistory();
+  hist.unshift({ time: new Date().toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}) + ' ' + timeStr, winner: winner.emoji + ' ' + winner.name, participants: _drSt.ducks.length });
+  _drSaveHistory(hist);
 
   // 순위 목록 (2등 이후)
   var rankLines = '';

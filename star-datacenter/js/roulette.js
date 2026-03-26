@@ -129,7 +129,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const inputW = isWide ? Math.min(360, Math.round(avW * 0.38)) : '100%';
   const containerStyle = isWide
     ? `display:flex;gap:${pad*2}px;align-items:flex-start;justify-content:center;padding:${pad}px;max-width:${avW-32}px;margin:0 auto`
-    : `display:flex;flex-direction:column;align-items:center;padding:${pad}px;max-width:${Math.min(avW-16, isLadder?ldCanvasW+80:dome+80)}px;margin:0 auto`;
+    : `display:flex;flex-direction:column;align-items:center;padding:${pad}px;max-width:${avW-16}px;margin:0 auto`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
   // 탭 버튼 스타일 헬퍼 (상단에서 이미 선언됨 - 중복 선언 제거)
