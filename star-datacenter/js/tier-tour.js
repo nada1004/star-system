@@ -2285,6 +2285,14 @@ function rCfg(C,T){
         <input type="range" min="0" max="60" value="${b2FreeBgAlpha}" style="width:100%;accent-color:var(--blue)"
           oninput="b2FreeBgAlpha=+this.value;document.getElementById('b2fba-val').textContent=this.value+'%';localStorage.setItem('su_b2fba',this.value)">
       </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">무소속 티어 우측 배경 진하기</span>
+          <span id="b2ftba-val" style="font-size:12px;font-weight:700;color:var(--blue)">${b2FreeTierBgAlpha}%</span>
+        </div>
+        <input type="range" min="0" max="60" value="${b2FreeTierBgAlpha}" style="width:100%;accent-color:var(--blue)"
+          oninput="b2FreeTierBgAlpha=+this.value;document.getElementById('b2ftba-val').textContent=this.value+'%';localStorage.setItem('su_b2ftba',this.value)">
+      </div>
     </div>
   </div>
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
