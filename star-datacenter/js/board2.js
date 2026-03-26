@@ -145,7 +145,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 사이드 패널 (현황판 memoImgs/memo)
   const _smemo = uCfg.memo || '';
   const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
-  const sidePanel = (_smemo||_simgs.length) ? `<div class="b2-side-panel" style="background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.08);border-radius:10px">
+  const sidePanel = (_smemo||_simgs.length) ? `<div class="b2-side-panel" style="background:${lightCol};border:1px solid ${col}44;border-radius:10px">
     ${_simgs.map(src=>`<img src="${src}" style="width:100%;border-radius:7px;margin-bottom:5px;display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5">${_smemo}</div>`:''}
   </div>` : '';
