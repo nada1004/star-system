@@ -81,7 +81,28 @@ function getRoleBadgeHTML(role, size='11px'){
 /* ══════════════════════════════════════
    DATA LOAD
 ══════════════════════════════════════ */
-function J(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}}
+function J(k){
+  try{
+    const v=localStorage.getItem(k);
+    if(!v)return null;
+    // LZ-String 압축 여부 자동 감지: 압축된 데이터는 JSON으로 파싱 불가
+    if(typeof LZString!=='undefined'){
+      try{return JSON.parse(v);}catch{
+        const d=LZString.decompressFromUTF16(v);
+        return d?JSON.parse(d):null;
+      }
+    }
+    return JSON.parse(v);
+  }catch{return null;}
+}
+function _lsSave(k,obj){
+  const s=JSON.stringify(obj);
+  if(typeof LZString!=='undefined'){
+    localStorage.setItem(k,LZString.compressToUTF16(s));
+  }else{
+    localStorage.setItem(k,s);
+  }
+}
 
 let players    = J('su_p')  || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
@@ -246,7 +267,7 @@ function fixPoints(){
 
 function localSave(){
   try{
-    localStorage.setItem('su_tiers',JSON.stringify(TIERS));
+    _lsSave('su_tiers',TIERS);
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
     const _pNoPhoto=players.map(p=>{
@@ -267,35 +288,35 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
-    localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
-    localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
-    localStorage.setItem('su_u', JSON.stringify(univCfg));
-    localStorage.setItem('su_m', JSON.stringify(maps));
-    localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
-    localStorage.setItem('su_t', JSON.stringify(tourD));
-    localStorage.setItem('su_mm',JSON.stringify(miniM));
-    localStorage.setItem('su_um',JSON.stringify(univM));
-    localStorage.setItem('su_cm',JSON.stringify(comps));
-    localStorage.setItem('su_ck',JSON.stringify(_trimM(ckM)));
-    localStorage.setItem('su_cn',JSON.stringify(compNames));
-    localStorage.setItem('su_cc',JSON.stringify(curComp));
-    localStorage.setItem('su_pro',JSON.stringify(_trimM(proM)));
-    localStorage.setItem('su_ptn',JSON.stringify(proTourneys));
-    localStorage.setItem('su_ptc',JSON.stringify(curProComp));
-    localStorage.setItem('su_tn',JSON.stringify(tourneys));
-    localStorage.setItem('su_ttm',JSON.stringify(_trimM(ttM)));
-    localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));
-    localStorage.setItem('su_indm',JSON.stringify(indM));
-    localStorage.setItem('su_gjm',JSON.stringify(gjM));
-    if(typeof boardOrder!=='undefined') localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
-    if(typeof boardPlayerOrder!=='undefined') localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
-    if(typeof playerStatusIcons!=='undefined') localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
-    localStorage.setItem('su_notices',JSON.stringify(notices));
-    localStorage.setItem('su_seasons',JSON.stringify(seasons));
-    localStorage.setItem('su_cal_sched',JSON.stringify(calScheduled));
+    _lsSave('su_pp',_pPhotoMap);
+    _lsSave('su_p',_pNoPhoto);
+    _lsSave('su_u',univCfg);
+    _lsSave('su_m',maps);
+    _lsSave('su_mAlias',userMapAlias);
+    _lsSave('su_t',tourD);
+    _lsSave('su_mm',miniM);
+    _lsSave('su_um',univM);
+    _lsSave('su_cm',comps);
+    _lsSave('su_ck',_trimM(ckM));
+    _lsSave('su_cn',compNames);
+    _lsSave('su_cc',curComp);
+    _lsSave('su_pro',_trimM(proM));
+    _lsSave('su_ptn',proTourneys);
+    _lsSave('su_ptc',curProComp);
+    _lsSave('su_tn',tourneys);
+    _lsSave('su_ttm',_trimM(ttM));
+    _lsSave('su_ttcur',_ttCurComp);
+    _lsSave('su_indm',indM);
+    _lsSave('su_gjm',gjM);
+    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
+    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    _lsSave('su_notices',notices);
+    _lsSave('su_seasons',seasons);
+    _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
-    if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
-    if(BLD['pro'])localStorage.setItem('su_bld_pro',JSON.stringify({date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]}));
+    if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
+    if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
       if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
