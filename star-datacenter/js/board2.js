@@ -184,7 +184,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
-          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33">${members.length}명</span>
+          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
         </div>
       </div>
       <div style="position:relative;overflow:hidden">
@@ -320,6 +320,42 @@ function _b2AvatarFallback(letter, col, size) {
   return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
+
+function openB2MemberBreakdown(el, univName) {
+  const existing = document.getElementById('b2-mbp');
+  if (existing) { const wasEl = existing._forEl; existing.remove(); if (wasEl === el) return; }
+  const col = gc(univName);
+  const members = players.filter(p => p.univ === univName && !p.hidden && !p.retired && !p.hideFromBoard);
+  const roled = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const tiered = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const tierCounts = {};
+  tiered.forEach(p => { const t = p.tier||'?'; tierCounts[t] = (tierCounts[t]||0)+1; });
+  const orderedTiers = TIERS.filter(t => tierCounts[t]).concat(Object.keys(tierCounts).filter(t => !TIERS.includes(t)));
+  const row = (label, val, c) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:2px 0">
+    <span style="color:${c||'var(--text2)'};font-size:12px">${label}</span>
+    <span style="font-weight:700;color:var(--text1);font-size:12px">${val}명</span></div>`;
+  const popup = document.createElement('div');
+  popup.id = 'b2-mbp';
+  popup.style.cssText = 'position:fixed;z-index:9999;background:var(--white);border:1px solid var(--border2);border-radius:12px;box-shadow:0 4px 20px #0003;padding:12px 14px;min-width:170px';
+  popup.innerHTML = `
+    <div style="font-weight:800;font-size:13px;color:${col};margin-bottom:8px">${univName} 구성</div>
+    ${row('직책자', roled.length)}
+    ${row('일반 스트리머', tiered.length)}
+    ${orderedTiers.length ? `<div style="border-top:1px solid var(--border2);margin:6px 0"></div>${orderedTiers.map(t=>row(t, tierCounts[t], getTierBtnColor(t))).join('')}` : ''}`;
+  popup._forEl = el;
+  document.body.appendChild(popup);
+  const rect = el.getBoundingClientRect();
+  popup.style.top = (rect.bottom + 6) + 'px';
+  popup.style.left = rect.left + 'px';
+  requestAnimationFrame(() => {
+    if (rect.left + popup.offsetWidth > window.innerWidth - 8) popup.style.left = (rect.right - popup.offsetWidth) + 'px';
+    if (rect.bottom + popup.offsetHeight + 6 > window.innerHeight) popup.style.top = (rect.top - popup.offsetHeight - 6) + 'px';
+  });
+  setTimeout(() => {
+    function _c(e) { if (!popup.contains(e.target) && e.target !== el) { popup.remove(); document.removeEventListener('click', _c); } }
+    document.addEventListener('click', _c);
+  }, 0);
+}
 
 async function saveB2Img() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
