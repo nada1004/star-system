@@ -165,7 +165,7 @@ function _b2UnivBlock(univName, col, members) {
       <div style="background:${col};padding:10px 16px;position:relative;overflow:hidden">
         ${bgImgHeader}
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.45);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.style.display='none'"></div>`:''}
+          ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
