@@ -334,7 +334,6 @@ function _gcSpin() {
         void resultCard.offsetWidth;
         resultCard.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
       }
-      _gcConfetti();
     }, 750);
   }, 950);
 }
