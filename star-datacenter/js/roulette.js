@@ -1,4 +1,9 @@
 // ─── 가챠 룰렛 시스템 ─────────────────────────────────────────────────────
+function rRoulette(C, T) {
+  T.textContent = '🎰 룰렛';
+  C.innerHTML = `<div style="display:flex;justify-content:center;padding:20px 0">${renderRoulettePanel()}</div>`;
+  setTimeout(_gcSetup, 60);
+}
 (function _gcInjectCSS(){
   if (document.getElementById('gc-style')) return;
   const s = document.createElement('style');
