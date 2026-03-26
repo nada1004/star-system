@@ -425,7 +425,7 @@ function saveUnivEdit(){
   injectUnivIcons(document.getElementById('univModalBody'));
   window._univEditOpen=false;
   const btn=document.getElementById('univEditBtn');
-  if(btn) btn.textContent='✏️ 수정';
+  if(btn){ btn.textContent='✏️ 수정'; btn.style.display=isLoggedIn?'inline-flex':'none'; }
 }
 
 function buildPlayerDetailHTML(p){

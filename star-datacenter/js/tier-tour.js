@@ -896,6 +896,12 @@ function rCfg(C,T){
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
+      <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
+        ${u.icon?`<img id="ulogo-prev-${i}" src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
+        <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
+          oninput="_ulogoPreview(${i},this.value)"
+          onblur="_ulogoSave(${i},this.value)">
+      </div>
       ${isDissolved
         ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
@@ -2283,6 +2289,12 @@ function rCfg(C,T){
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
+      <div style="display:flex;align-items:center;gap:4px;flex-basis:100%;margin-top:2px">
+        ${u.icon?`<img id="ulogo-prev-${i}" src="${u.icon}" style="width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:''}
+        <input type="text" id="ulogo-inp-${i}" value="${u.icon||''}" placeholder="🖼 로고 이미지 URL" style="flex:1;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--text2)"
+          oninput="_ulogoPreview(${i},this.value)"
+          onblur="_ulogoSave(${i},this.value)">
+      </div>
       ${isDissolved
         ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
@@ -3685,6 +3697,30 @@ function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
   if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
+}
+
+// 설정 > 대학 관리: 로고 미리보기 & 저장 헬퍼
+function _ulogoPreview(i, val) {
+  let prev = document.getElementById('ulogo-prev-'+i);
+  if (!val) { if (prev) prev.style.display='none'; return; }
+  if (prev && prev.tagName==='IMG') {
+    prev.src = val;
+    prev.style.display = '';
+  } else {
+    const inp = document.getElementById('ulogo-inp-'+i);
+    if (!inp) return;
+    const img = document.createElement('img');
+    img.id = 'ulogo-prev-'+i;
+    img.src = val;
+    img.style.cssText = 'width:22px;height:22px;object-fit:contain;border-radius:4px;border:1px solid var(--border);flex-shrink:0';
+    img.onerror = function(){ this.style.display='none'; };
+    inp.parentNode.insertBefore(img, inp);
+  }
+}
+function _ulogoSave(i, val) {
+  const v = val.trim();
+  if (v) univCfg[i].icon = v; else delete univCfg[i].icon;
+  save();
 }
 
 /* ══════════════════════════════════════
