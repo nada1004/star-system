@@ -68,22 +68,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isLadder = _gcTab === 'ladder';
   const isDuck   = _gcTab === 'duck';
 
-  // 오리경주 탭: 별도 레이아웃
-  if (isDuck) {
-    const tbStyleDuck = (active, borderRight) =>
-      `flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:${active?'#e0f5ff':'var(--surface)'};color:${active?'#0d7bb0':'var(--text2)'};cursor:pointer;${borderRight?'border-right:2px solid var(--border);':''}transition:.1s`;
-    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto">
-  <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
-    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
-    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
-    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
-    <button onclick="_gcSwitchTab('duck')"   style="${tbStyleDuck(_gcTab==='duck',false)}">🐥 오리경주</button>
-  </div>
-  <div id="dr-root"></div>
-</div>`;
-  }
-
-  const savedText   = (!isLadder) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
+  const savedText   = (!isLadder && !isDuck) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
   const activeItems = savedText.split(',').map(v=>v.trim()).filter(v=>v);
 
   const ldNamesText = isLadder ? (localStorage.getItem('su_ld_names') || '') : '';
@@ -93,6 +78,19 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const fs   = Math.max(13, Math.round(dome * 0.075));
   const fsLg = Math.max(16, Math.round(dome * 0.095));
   const pad  = Math.max(14, Math.round(dome * 0.085));
+
+  // 오리경주 탭: 별도 레이아웃 (fs/pad 선언 이후에 위치)
+  if (isDuck) {
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto">
+  <div style="display:flex;border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player',true)}">🎰 스트리머뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map',true)}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder',true)}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="flex:1;padding:${Math.round(pad*0.8)}px;font-size:${fs}px;font-weight:700;border:none;background:#e0f5ff;color:#0d7bb0;cursor:pointer;transition:.1s">🐥 오리경주</button>
+  </div>
+  <div id="dr-root"></div>
+</div>`;
+  }
 
   const mapBadges = (!isLadder && !isPlayer) ? (maps||[]).map(m => {
     const active = activeItems.includes(m);
