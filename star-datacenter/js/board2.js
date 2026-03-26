@@ -116,9 +116,15 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
+  // 사이드 패널 (현황판 memoImgs/memo) — _tableRow 정의 전에 계산해야 padding-right에 사용 가능
+  const _smemo = uCfg.memo || '';
+  const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
+  const hasSide = !!((_smemo||_simgs.length));
+
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
+  // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
   const _tableRow = (label, isRole, chips) => `
-    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44">
+    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44${hasSide?';padding-right:190px':''}">
       <div style="background:${labelCol};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
         <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
@@ -146,12 +152,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
 
-  // 사이드 패널 (현황판 memoImgs/memo)
-  const _smemo = uCfg.memo || '';
-  const _simgs = (uCfg.memoImgs||[]).concat(uCfg.memoImg?[uCfg.memoImg]:[]);
-  const hasSide = !!((_smemo||_simgs.length));
-  // 오른쪽 컬럼 전체를 대학색으로 채우는 래퍼 — 이미지 아래 공백도 같은 색
-  const sidePanelHtml = hasSide ? `<div style="background:${lightCol};border-left:1px solid ${col}33;padding:8px;box-sizing:border-box">
+  // 사이드 패널 — 절대 위치로 오른쪽에 오버레이 (가로 구분선이 padding-right 덕에 전체 폭으로 이어짐)
+  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};border-left:1px solid ${col}33;padding:8px;box-sizing:border-box;overflow:hidden">
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
@@ -186,7 +188,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       </div>
       <div style="position:relative;overflow:hidden">
         ${bgImgHtml}
-        <div style="position:relative;z-index:1;display:grid;grid-template-columns:1fr${hasSide?' 190px':''}">
+        <div style="position:relative;z-index:1">
           <div>${rows}</div>
           ${sidePanelHtml}
         </div>
