@@ -1258,6 +1258,7 @@ function grpSaveMatch(){
     sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);
   }
   m.sa=sa;m.sb=sb;
+  const _modeLabel=tn.type==='tier'?'티어대회':'조별리그';
   // 선수 개인 전적 자동 반영 (경기 시점 대학 저장)
   (m.sets||[]).forEach(set=>{
     (set.games||[]).forEach(g=>{
@@ -1265,9 +1266,15 @@ function grpSaveMatch(){
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'조별리그');
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_modeLabel);
     });
   });
+  // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
+  if(tn.type==='tier'){
+    const _ei=ttM.findIndex(x=>x._id===matchId);
+    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
+    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
+  }
   save();cm('grpMatchModal');render();
 }
 
