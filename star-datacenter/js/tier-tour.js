@@ -431,6 +431,8 @@ function rTierTourTab(C, T){
     C.innerHTML=h; return;
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
+  // id/groups/bracket 없으면 자동 생성 (구버전 데이터 호환)
+  if(_curTierTn){let _ns=false;if(!_curTierTn.id){_curTierTn.id=genId();_ns=true;}if(!_curTierTn.groups){_curTierTn.groups=[];_ns=true;}if(!_curTierTn.bracket){_curTierTn.bracket={slots:{},winners:{},champ:''};_ns=true;}if(_ns)save();}
   // 유효하지 않은 _ttSub 리셋
   const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
@@ -497,7 +499,8 @@ function ttFixOrphanRecords(compName){
 
 // 스트리머 상세 최근 기록에서 티어대회 클릭 → 해당 경기로 이동
 function navToTierMatch(matchId){
-  const m=(ttM||[]).find(x=>x._id===matchId);
+  let m=(ttM||[]).find(x=>x._id===matchId);
+  if(!m&&matchId){for(const tn of (tourneys||[]).filter(t=>t.type==='tier')){for(const grp of (tn.groups||[])){const found=(grp.matches||[]).find(x=>x._id===matchId);if(found&&found.sa!=null){const _rec={_id:matchId,d:found.d,a:found.a,b:found.b,sa:found.sa,sb:found.sb,sets:found.sets,n:tn.name,compName:tn.name,teamALabel:found.a,teamBLabel:found.b};if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;}}if(m)break;}}
   if(m&&m.compName) _ttCurComp=m.compName;
   _ttSub='records';
   _mergedCompSub='tiertour';
@@ -1907,6 +1910,8 @@ function rTierTourTab(C, T){
     C.innerHTML=h; return;
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
+  // id/groups/bracket 없으면 자동 생성 (구버전 데이터 호환)
+  if(_curTierTn){let _ns=false;if(!_curTierTn.id){_curTierTn.id=genId();_ns=true;}if(!_curTierTn.groups){_curTierTn.groups=[];_ns=true;}if(!_curTierTn.bracket){_curTierTn.bracket={slots:{},winners:{},champ:''};_ns=true;}if(_ns)save();}
   // 유효하지 않은 _ttSub 리셋
   const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
@@ -1973,7 +1978,8 @@ function ttFixOrphanRecords(compName){
 
 // 스트리머 상세 최근 기록에서 티어대회 클릭 → 해당 경기로 이동
 function navToTierMatch(matchId){
-  const m=(ttM||[]).find(x=>x._id===matchId);
+  let m=(ttM||[]).find(x=>x._id===matchId);
+  if(!m&&matchId){for(const tn of (tourneys||[]).filter(t=>t.type==='tier')){for(const grp of (tn.groups||[])){const found=(grp.matches||[]).find(x=>x._id===matchId);if(found&&found.sa!=null){const _rec={_id:matchId,d:found.d,a:found.a,b:found.b,sa:found.sa,sb:found.sb,sets:found.sets,n:tn.name,compName:tn.name,teamALabel:found.a,teamBLabel:found.b};if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;}}if(m)break;}}
   if(m&&m.compName) _ttCurComp=m.compName;
   _ttSub='records';
   _mergedCompSub='tiertour';
