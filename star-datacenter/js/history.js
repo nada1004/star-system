@@ -107,6 +107,7 @@
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='procomptn') h+=histProCompTourneyHTML();
   else if(histSub==='procompteam') h+=histProCompTeamHTML();
+  else if(histSub==='procompgj') h+=histProCompGJHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
 }
@@ -1416,8 +1417,16 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
    대전 기록 > 프로리그 대회 탭
 ══════════════════════════════════════ */
 function histProCompHTML() {
+  // 프로리그 대회 서브탭 바
+  const _pcSubBar=`<div class="stabs no-export" style="margin-bottom:10px">
+    <button class="stab ${histSub==='procomp'?'on':''}" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="stab ${histSub==='procomptn'?'on':''}" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
+    <button class="stab ${histSub==='procompteam'?'on':''}" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="stab ${histSub==='procompgj'?'on':''}" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+  </div>`;
   // proTourneys에서 완료된 경기만 추출 (조별리그)
   const allItems = [];
+  const _pcSubBarH=_pcSubBar;
   (proTourneys||[]).forEach(tn => {
     // 조별리그 경기
     (tn.groups||[]).forEach((grp, gi) => {
@@ -1437,8 +1446,9 @@ function histProCompHTML() {
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
   </div>`;
-  if (!allItems.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🏅</div><div class="empty-state-title">프로리그 대회 기록이 없습니다</div><div class="empty-state-desc">대회 경기를 입력하면 여기에 표시됩니다</div></div>`;
+  if (!allItems.length) return _pcSubBarH+sortBar+`<div class="empty-state"><div class="empty-state-icon">🏅</div><div class="empty-state-title">프로리그 대회 기록이 없습니다</div><div class="empty-state-desc">대회 경기를 입력하면 여기에 표시됩니다</div></div>`;
 
+  let h = _pcSubBarH;
   // 대회명별 그룹화
   const groups = {};
   allItems.forEach(m => {
@@ -1450,7 +1460,7 @@ function histProCompHTML() {
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
   const _photo = p => p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
 
-  let h = sortBar;
+  h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
     h += `<div style="background:linear-gradient(135deg,var(--blue-l) 0%,var(--white) 100%);border:1.5px solid var(--blue-ll);border-left:4px solid #0891b2;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:16px">🏅</span>
@@ -1501,6 +1511,12 @@ function histProCompHTML() {
    대전 기록 > 프로리그 토너먼트 탭 (대진표 + 3위전)
 ══════════════════════════════════════ */
 function histProCompTourneyHTML() {
+  const _pcSubBar2=`<div class="stabs no-export" style="margin-bottom:10px">
+    <button class="stab" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="stab on">🗂️ 토너먼트</button>
+    <button class="stab" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="stab" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+  </div>`;
   const allItems = [];
   (proTourneys||[]).forEach(tn => {
     const rounds = tn.bracket||[];
@@ -1527,13 +1543,13 @@ function histProCompTourneyHTML() {
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
     <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
   </div>`;
-  if (!allItems.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🗂️</div><div class="empty-state-title">토너먼트 기록이 없습니다</div><div class="empty-state-desc">대진표 결과를 입력하면 여기에 표시됩니다</div></div>`;
+  if (!allItems.length) return _pcSubBar2+sortBar+`<div class="empty-state"><div class="empty-state-icon">🗂️</div><div class="empty-state-title">토너먼트 기록이 없습니다</div><div class="empty-state-desc">대진표 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const groups={};
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
   const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
-  let h=sortBar;
+  let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div style="background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border:1.5px solid #ddd6fe;border-left:4px solid #7c3aed;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:16px">🗂️</span>
@@ -1643,6 +1659,50 @@ function histProCompTeamHTML() {
         }).join('')}
       </div>`;
     });
+  });
+  return h;
+}
+
+/* ══════════════════════════════════════
+   ⚔️ 프로리그 대회 끝장전 기록
+══════════════════════════════════════ */
+function histProCompGJHTML(){
+  const _pcGjBar=`<div class="stabs no-export" style="margin-bottom:10px">
+    <button class="stab" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="stab" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
+    <button class="stab" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="stab on">⚔️ 끝장전</button>
+  </div>`;
+  const allSess=[];
+  (proTourneys||[]).forEach(tn=>{
+    (tn.gjMatches||[]).forEach(sess=>{
+      allSess.push({...sess,tnName:tn.name});
+    });
+  });
+  if(!allSess.length)return _pcGjBar+`<div class="empty-state"><div class="empty-state-icon">⚔️</div><div class="empty-state-title">프로리그 대회 끝장전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 탭 → 끝장전에서 입력하세요</div></div>`;
+  allSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  let h=_pcGjBar;
+  allSess.forEach(sess=>{
+    const p1w=(sess.games||[]).filter(g=>g.winner===sess.a).length;
+    const p2w=(sess.games||[]).filter(g=>g.winner===sess.b).length;
+    const winner=p1w>p2w?sess.a:p2w>p1w?sess.b:'';
+    h+=`<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+      <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--gray-l)">${sess.d||'날짜 미정'}</span>
+        <span style="font-size:11px;background:#0891b2;color:#fff;padding:1px 8px;border-radius:4px;font-weight:700">🎖️ ${sess.tnName||''}</span>
+        <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\'")}'">${sess.a||'?'}</span>
+        <span style="font-weight:900;color:var(--blue)">${p1w} - ${p2w}</span>
+        <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\'")}'">${sess.b||'?'}</span>
+        ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
+      </div>
+      <table style="margin:0;border-radius:0"><thead><tr><th>게임</th><th>${sess.a||'A'}</th><th style="color:var(--gray-l)">vs</th><th>${sess.b||'B'}</th><th>맵</th></tr></thead><tbody>
+      ${(sess.games||[]).map((g,gi)=>{
+        const aWin=g.winner===sess.a;
+        return`<tr><td style="font-size:11px;color:var(--gray-l)">${gi+1}게임</td><td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${aWin?'▶ '+sess.a:sess.a}</td><td style="color:var(--gray-l);text-align:center">vs</td><td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${!aWin?'▶ '+sess.b:sess.b}</td><td style="font-size:11px;color:var(--gray-l)">${g.map||''}</td></tr>`;
+      }).join('')}
+      </tbody></table>
+    </div>`;
   });
   return h;
 }

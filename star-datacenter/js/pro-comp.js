@@ -155,6 +155,7 @@ function rProComp(C, T) {
     {id:'grprank', lbl:'📊 조별 순위'},
     {id:'tour', lbl:'🗂️ 토너먼트'},
     {id:'team', lbl:'🤝 팀전'},
+    {id:'gj', lbl:'⚔️ 끝장전'},
     {id:'stats', lbl:'🏅 개인 순위'},
     ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
   ];
@@ -175,6 +176,7 @@ function rProComp(C, T) {
   else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
   else if (proCompSub === 'tour') h += proCompBracket(tn);
   else if (proCompSub === 'team') h += proCompTeamSection(tn);
+  else if (proCompSub === 'gj') h += proCompGJSection(tn);
   else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
   else if (proCompSub === 'grpedit') h += proCompGrpEdit();
   C.innerHTML = h;
@@ -2540,4 +2542,130 @@ function _renderProCompGrpShareCard(tnId, gi) {
       <span style="font-size:9px;color:#94a3b8">🌟 스타대학 데이터 센터</span>
     </div>
   </div>`;
+}
+
+/* ══════════════════════════════════════
+   ⚔️ 프로리그 대회 끝장전
+══════════════════════════════════════ */
+function proCompGJSection(tn) {
+  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
+  if (!tn.gjMatches) tn.gjMatches = [];
+  const _pOpts = (players||[]).map(p=>`<option value="${p.name}">${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
+  let h = '';
+  if (isLoggedIn) {
+    h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">⚔️ 끝장전 추가</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:3px">🔵 선수 A</div>
+          <select id="pcgj-a" style="min-width:120px"><option value="">— 선수 선택 —</option>${_pOpts}</select>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--gray-l);padding-bottom:4px">VS</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:3px">🔴 선수 B</div>
+          <select id="pcgj-b" style="min-width:120px"><option value="">— 선수 선택 —</option>${_pOpts}</select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:3px">📅 날짜</div>
+          <input type="date" id="pcgj-date" value="${new Date().toISOString().slice(0,10)}" style="width:140px">
+        </div>
+      </div>
+      <div id="pcgj-games" style="margin-top:10px"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="pcgjAddGame()">+ 게임 추가</button>
+        <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">✅ 저장</button>
+      </div>
+    </div>`;
+  }
+  if (!tn.gjMatches.length) {
+    h += `<div class="empty-state"><div class="empty-state-icon">⚔️</div><div class="empty-state-title">끝장전 기록이 없습니다</div><div class="empty-state-desc">위에서 경기를 추가하세요</div></div>`;
+    return h;
+  }
+  tn.gjMatches.slice().reverse().forEach((sess, ri) => {
+    const si = tn.gjMatches.length - 1 - ri;
+    const p1w = (sess.games||[]).filter(g=>g.winner===sess.a).length;
+    const p2w = (sess.games||[]).filter(g=>g.winner===sess.b).length;
+    const winner = p1w>p2w?sess.a:p2w>p1w?sess.b:'';
+    h += `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+      <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--gray-l)">${sess.d||'날짜 미정'}</span>
+        <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}'">${sess.a||'?'}</span>
+        <span style="font-weight:900;color:var(--blue)">${p1w} - ${p2w}</span>
+        <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}'">${sess.b||'?'}</span>
+        ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
+        <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
+        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="proCompGJDel('${tn.id}',${si})">🗑️ 삭제</button>`:'<span style="margin-left:auto"></span>'}
+      </div>
+      <table style="margin:0;border-radius:0"><thead><tr><th>게임</th><th>${sess.a||'A'}</th><th style="color:var(--gray-l)">vs</th><th>${sess.b||'B'}</th><th>맵</th></tr></thead><tbody>
+      ${(sess.games||[]).map((g,gi)=>{
+        const aWin=g.winner===sess.a;
+        return `<tr>
+          <td style="font-size:11px;color:var(--gray-l)">${gi+1}게임</td>
+          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${aWin?'▶ '+sess.a:sess.a}</td>
+          <td style="color:var(--gray-l);text-align:center">vs</td>
+          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${!aWin?'▶ '+sess.b:sess.b}</td>
+          <td style="font-size:11px;color:var(--gray-l)">${g.map||''}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table>
+    </div>`;
+  });
+  return h;
+}
+
+let _pcgjGames = [];
+function pcgjAddGame() {
+  _pcgjGames.push({winner:'', map:''});
+  _pcgjRender();
+}
+function _pcgjRender() {
+  const cont = document.getElementById('pcgj-games');
+  if (!cont) return;
+  const a = document.getElementById('pcgj-a')?.value||'A선수';
+  const b = document.getElementById('pcgj-b')?.value||'B선수';
+  cont.innerHTML = _pcgjGames.map((g,i)=>`
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--gray-l);min-width:40px">${i+1}게임</span>
+      <select onchange="_pcgjGames[${i}].winner=this.value" style="flex:1;min-width:120px">
+        <option value="">— 승자 선택 —</option>
+        <option value="${a}"${g.winner===a?' selected':''}>🔵 ${a} 승</option>
+        <option value="${b}"${g.winner===b?' selected':''}>🔴 ${b} 승</option>
+      </select>
+      <input type="text" value="${g.map||''}" placeholder="맵명" style="flex:1;min-width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:5px;font-size:12px" oninput="_pcgjGames[${i}].map=this.value">
+      <button class="btn btn-r btn-xs" onclick="_pcgjGames.splice(${i},1);_pcgjRender()">×</button>
+    </div>`).join('');
+}
+function proCompGJSave(tnId) {
+  const tn = proTourneys.find(t=>t.id===tnId); if (!tn) return;
+  const a = document.getElementById('pcgj-a')?.value||'';
+  const b = document.getElementById('pcgj-b')?.value||'';
+  const d = document.getElementById('pcgj-date')?.value||'';
+  if (!a||!b) return alert('선수 A와 B를 선택하세요.');
+  if (!_pcgjGames.length) return alert('게임을 1개 이상 추가하세요.');
+  const matchId = genId();
+  if (!tn.gjMatches) tn.gjMatches = [];
+  const sess = {_id:matchId, d, a, b, games:_pcgjGames.map(g=>({...g}))};
+  tn.gjMatches.unshift(sess);
+  // 선수 전적 반영
+  sess.games.forEach(g => {
+    if (!g.winner) return;
+    const wn = g.winner; const ln = wn===a?b:a;
+    applyGameResult(wn, ln, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
+  });
+  _pcgjGames = [];
+  save(); render();
+}
+function proCompGJDel(tnId, si) {
+  if (!confirm('끝장전 기록을 삭제합니다.\n⚠️ 선수 전적도 롤백됩니다.')) return;
+  const tn = proTourneys.find(t=>t.id===tnId); if (!tn||!tn.gjMatches) return;
+  const sess = tn.gjMatches[si]; if (!sess) return;
+  // 전적 롤백
+  if (sess._id) {
+    (players||[]).forEach(p => {
+      if (!p.history) return;
+      p.history = p.history.filter(h => h.matchId !== sess._id);
+    });
+  }
+  tn.gjMatches.splice(si, 1);
+  save(); render();
 }
