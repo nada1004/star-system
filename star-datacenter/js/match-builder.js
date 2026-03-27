@@ -1,4 +1,35 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
+   공통: 스트리머 검색 제안
+══════════════════════════════════════ */
+function _matchSearchSug(q, side, type) {
+  const sugId = type === 'ind' ? `indSug_${side}` : `gjSug_${side}`;
+  const inputId = type === 'ind' ? `indP_${side}` : `gjP_${side}`;
+  const sug = document.getElementById(sugId);
+  if (!sug) return;
+  if (!q) { sug.innerHTML = ''; return; }
+  
+  const matched = players.filter(p => p.name.includes(q)).slice(0, 8);
+  sug.innerHTML = matched.map(p => `
+    <button onclick="_matchSelectPlayer('${p.name.replace(/'/g, "\\'")}', '${side}', '${type}')"
+      style="padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
+      ${p.photo ? `<img src="${p.photo}" style="width:18px;height:18px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+      ${p.name}
+      ${p.tier ? `<span style="background:${_TIER_BG[p.tier] || '#64748b'};color:${_TIER_TEXT[p.tier] || '#fff'};font-size:9px;padding:1px 4px;border-radius:3px">${p.tier}</span>` : ''}
+    </button>`).join('');
+}
+
+function _matchSelectPlayer(name, side, type) {
+  if (type === 'ind') {
+    if (side === 'A') _indInput.playerA = name; else _indInput.playerB = name;
+    _indInput.games = [];
+  } else {
+    if (side === 'A') _gjInput.playerA = name; else _gjInput.playerB = name;
+    _gjInput.games = [];
+  }
+  render();
+}
+
+/* ══════════════════════════════════════
    미니대전
 ══════════════════════════════════════ */
 function rMini(C,T){
@@ -429,7 +460,10 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_indInput.playerA='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<select onchange="_indInput.playerA=this.value;_indInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pA)}</select>`}
+          </div>`:`<div style="position:relative">
+            <input id="indP_A" placeholder="A 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'A','ind')">
+            <div id="indSug_A" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
+          </div>`}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -438,7 +472,10 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_indInput.playerB='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<select onchange="_indInput.playerB=this.value;_indInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pB)}</select>`}
+          </div>`:`<div style="position:relative">
+            <input id="indP_B" placeholder="B 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'B','ind')">
+            <div id="indSug_B" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
+          </div>`}
         </div>
       </div>
     </div>
@@ -684,7 +721,10 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_gjInput.playerA='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<select onchange="_gjInput.playerA=this.value;_gjInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pA)}</select>`}
+          </div>`:`<div style="position:relative">
+            <input id="gjP_A" placeholder="A 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'A','gj')">
+            <div id="gjSug_A" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
+          </div>`}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -694,7 +734,10 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_gjInput.playerB='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<select onchange="_gjInput.playerB=this.value;_gjInput.games=[];render()" style="width:100%;padding:6px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${pOpts(pB)}</select>`}
+          </div>`:`<div style="position:relative">
+            <input id="gjP_B" placeholder="B 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'B','gj')">
+            <div id="gjSug_B" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
+          </div>`}
         </div>
       </div>
     </div>
