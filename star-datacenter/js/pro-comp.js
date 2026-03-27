@@ -1667,40 +1667,91 @@ function proCompOpenBktMatchPaste(tnId, ri, mi) {
   const tn = _findTourneyById(tnId); if (!tn) return;
   const m = (tn.bracket||[])[ri]?.[mi];
   if (!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return alert('양 선수가 모두 확정된 경기에서만 이용 가능합니다.');
-  if (typeof openPasteModal !== 'function') return;
-  _grpPasteState = {mode:'procomp-bkt', tnId, ri, mi};
-  openPasteModal();
-  window._grpPasteMode = true;
-  window._pasteForceTeamA = m.a;
-  window._pasteForceTeamB = m.b;
-  const sel = document.getElementById('paste-mode');
-  const lbl = document.getElementById('paste-mode-label');
-  if (sel) { sel.value = 'ind'; sel.style.display = 'none'; if(typeof onPasteModeChange==='function') onPasteModeChange('ind'); }
-  if (lbl) lbl.style.display = 'none';
-  const hint = document.getElementById('paste-mode-hint');
-  if (hint) hint.innerHTML = `<span style="color:#7c3aed;font-weight:700">대진표 <b>${m.a}</b> vs <b>${m.b}</b> 승자 이름 입력</span>`;
-  const title = document.querySelector('#pasteModal .mtitle');
-  if (title) title.textContent = '대진표 결과 입력';
-  const compWrap = document.getElementById('paste-comp-wrap');
-  if (compWrap) compWrap.style.display = 'none';
-  if (m.d) { const dateEl = document.getElementById('paste-date'); if (dateEl) dateEl.value = m.d; }
+
+  const modal = document.createElement('div');
+  modal.id = '_pcBktMatchPaste';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  const defDate = m.d || new Date().toISOString().slice(0,10);
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:22px;width:420px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 결과 붙여넣기</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+      <b>${m.a}</b> vs <b>${m.b}</b><br>
+      한 줄 형식: <code>승자이름 패자이름 [맵]</code> (또는 <code>승자이름 [맵]</code>)
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);min-width:44px">날짜</div>
+      <input id="_pcBktPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);box-sizing:border-box">
+    </div>
+    <textarea id="_pcBktPasteText" rows="5" placeholder="${m.a} ${m.b} 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktMatchPaste('${tnId}',${ri},${mi})">적용</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcBktMatchPaste').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const ta = document.getElementById('_pcBktPasteText');
+  if (ta) ta.focus();
 }
 
-function _proCompBktPasteApplyLogic(savable) {
-  const {tnId, ri, mi} = _grpPasteState;
-  if (!savable.length) return false;
-  const r = savable[0];
-  const winName = r.wPlayer?.name; if (!winName) return false;
-  const tn = _findTourneyById(tnId); if (!tn) return false;
-  const m = (tn.bracket||[])[ri]?.[mi]; if (!m) return false;
-  let winner;
-  if (winName===m.a) winner='A';
-  else if (winName===m.b) winner='B';
-  else { alert(`"${winName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`); return false; }
-  const dateEl = document.getElementById('paste-date');
-  if (dateEl?.value) m.d = dateEl.value;
-  proCompSetBktWinner(tnId, ri, mi, winner);
-  return true;
+function proCompSaveBktMatchPaste(tnId, ri, mi) {
+  const tn = _findTourneyById(tnId); if (!tn) return;
+  const m = (tn.bracket||[])[ri]?.[mi];
+  if (!m||!m.a||!m.b) return;
+
+  const text = (document.getElementById('_pcBktPasteText')||{}).value||'';
+  if (!text.trim()) return;
+  const line = text.trim().split('\n').map(l=>l.trim()).filter(Boolean)[0] || '';
+  if (!line) return;
+  const parts = line.split(/[\s\t]+/).filter(Boolean);
+  if (!parts.length) return;
+
+  let wName = parts[0] || '';
+  let lName = '';
+  let map = '';
+  if (parts.length >= 2) {
+    lName = parts[1] || '';
+    map = parts.slice(2).join(' ').trim();
+  } else {
+    map = parts.slice(1).join(' ').trim();
+  }
+
+  if (!wName) return;
+  if (wName !== m.a && wName !== m.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`);
+
+  const winner = wName === m.a ? 'A' : 'B';
+  const expectedLoser = winner === 'A' ? m.b : m.a;
+  if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${m.a} vs ${m.b}`);
+
+  const dateVal = (document.getElementById('_pcBktPasteDate')||{}).value || '';
+  if (dateVal) m.d = dateVal;
+  if (map) m.map = map;
+
+  const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
+  if (m.winner) _revertProMatch(bktMatchId);
+  m.winner = winner;
+
+  const nextMi = Math.floor(mi/2);
+  const isA = mi%2===0;
+  if (tn.bracket[ri+1] && tn.bracket[ri+1][nextMi]) {
+    const next = tn.bracket[ri+1][nextMi];
+    const wSlot = winner==='A'?m.a:m.b;
+    if (isA) next.a = wSlot; else next.b = wSlot;
+  }
+
+  const semiRi = tn.bracket.length - 2;
+  if (tn.thirdPlace && ri === semiRi && tn.bracket.length >= 2 && (mi === 0 || mi === 1)) {
+    const thirdKey = `pbn_${tnId}_3rd`;
+    if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
+    tn.thirdPlace.winner = '';
+    const loser = winner==='A'?m.b:m.a;
+    if (mi === 0) tn.thirdPlace.a = loser||'TBD';
+    else tn.thirdPlace.b = loser||'TBD';
+  }
+
+  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+  const modal = document.getElementById('_pcBktMatchPaste');
+  if (modal) modal.remove();
+  save(); render();
 }
 
 // 조별리그 날짜별 붙여넣기
@@ -2026,7 +2077,7 @@ function proCompSaveBktBatch(tnId) {
           const prevWinner = m.winner;
           const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
           
-          if (prevWinner && prevWinner !== winner) _revertProMatch(bktMatchId);
+          if (prevWinner) _revertProMatch(bktMatchId);
           
           m.winner = winner;
           if (map) m.map = map;
@@ -2057,7 +2108,7 @@ function proCompSaveBktBatch(tnId) {
 
         if (winner) {
           const bktMatchId = `pbn_${tnId}_3rd`;
-          if (tp.winner && tp.winner !== winner) _revertProMatch(bktMatchId);
+          if (tp.winner) _revertProMatch(bktMatchId);
           tp.winner = winner;
           if (map) tp.map = map;
           _syncBktMatchToHistory(tn, tp, bktMatchId, '3rd', 0);

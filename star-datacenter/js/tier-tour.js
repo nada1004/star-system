@@ -449,7 +449,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
+  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
@@ -1906,7 +1906,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
+  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
@@ -1916,8 +1916,7 @@ function rTierTourTab(C, T){
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tour',lbl:'🗂️ 대진표',fn:`_ttSub='tour';render()`},
-    {id:'tourschedule',lbl:'📋 토너먼트',fn:`_ttSub='tourschedule';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
@@ -1931,8 +1930,6 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompLeague(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='tour'){
-    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
     h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grpedit'){
