@@ -48,6 +48,57 @@ function _matchSelectPlayer(name, side, type) {
   render();
 }
 
+function _matchPlayerAssignPoolHTML(type) {
+  const pList = players.filter(p => p.name).sort((a,b) => a.name.localeCompare(b.name));
+  const poolId = `pool_${type}_AB`;
+  const searchId = `search_${type}_AB`;
+  const st = type==='ind'
+    ? {a:_indInput.playerA||'', b:_indInput.playerB||''}
+    : type==='gj'
+      ? {a:_gjInput.playerA||'', b:_gjInput.playerB||''}
+      : {a:'', b:''};
+
+  return `
+    <div style="margin-top:10px;border:1px solid var(--border);border-radius:10px;background:var(--white);overflow:hidden">
+      <div style="padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--text3)">스트리머 클릭 → A/B 배정</span>
+        <input type="text" id="${searchId}" placeholder="이름·대학·티어 검색..." 
+          oninput="_matchFilterAssignPool('${searchId}', '${poolId}')" 
+          style="flex:1;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+      </div>
+      <div id="${poolId}" style="padding:8px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px">
+        ${pList.map(p => {
+          const inA = st.a===p.name;
+          const inB = st.b===p.name;
+          const bg = inA ? '#2563eb' : inB ? '#dc2626' : gc(p.univ);
+          const dim = (inA||inB) ? 'opacity:.6' : '';
+          const info = `${p.univ||''}${p.tier?`/${p.tier}`:''}`;
+          return `
+            <span class="p-ab-row" data-q="${(p.name+' '+(p.univ||'')+' '+(p.tier||'')).toLowerCase()}"
+              style="display:inline-flex;align-items:center;gap:6px;background:${bg};color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;${dim}">
+              <span style="font-weight:800">${p.name}</span>
+              ${info?`<span style="opacity:.85;font-size:10px">${info}</span>`:''}
+              <button onclick="_matchSelectPlayer('${p.name.replace(/'/g, "\\'")}', 'A', '${type}')"
+                style="background:rgba(255,255,255,.92);color:#2563eb;border:none;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:900;cursor:pointer">A</button>
+              <button onclick="_matchSelectPlayer('${p.name.replace(/'/g, "\\'")}', 'B', '${type}')"
+                style="background:rgba(255,255,255,.92);color:#dc2626;border:none;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:900;cursor:pointer">B</button>
+              ${(inA||inB)?`<span style="background:rgba(255,255,255,.28);border-radius:4px;padding:1px 5px;font-size:9px;font-weight:900">${inA?'A':''}${inB?'B':''}선택</span>`:''}
+            </span>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function _matchFilterAssignPool(searchId, poolId) {
+  const q = (document.getElementById(searchId)?.value||'').trim().toLowerCase();
+  const pool = document.getElementById(poolId);
+  if (!pool) return;
+  pool.querySelectorAll('.p-ab-row').forEach(el => {
+    const hay = el.getAttribute('data-q')||'';
+    el.style.display = q==='' || hay.includes(q) ? '' : 'none';
+  });
+}
+
 /* ══════════════════════════════════════
    미니대전
 ══════════════════════════════════════ */
@@ -442,8 +493,6 @@ function openMoveIndPop(btn, idsArr, srcMode){
 function indInputHTML(){
   const gi=_indInput;
   const pA=gi.playerA, pB=gi.playerB;
-  const pList=players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const pOpts=name=>`<option value="">— 스트리머 선택 —</option>`+pList.map(p=>`<option value="${p.name}"${p.name===name?' selected':''}>${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
   const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
   const pAObj=players.find(p=>p.name===pA)||{};
   const pBObj=players.find(p=>p.name===pB)||{};
@@ -479,7 +528,7 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_indInput.playerA='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>` : _matchPlayerPoolHTML('A', 'ind')}
+          </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -488,9 +537,10 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_indInput.playerB='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>` : _matchPlayerPoolHTML('B', 'ind')}
+          </div>` : ''}
         </div>
       </div>
+      ${!(pA&&pB)?_matchPlayerAssignPoolHTML('ind'):''}
     </div>
     ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
@@ -698,8 +748,6 @@ function openGJProPasteModal(){
 function gjInputHTML(){
   const gi=_gjInput;
   const pA=gi.playerA, pB=gi.playerB;
-  const pList=players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const pOpts=name=>`<option value="">— 스트리머 선택 —</option>`+pList.map(p=>`<option value="${p.name}"${p.name===name?' selected':''}>${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
   const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
   const pAObj=players.find(p=>p.name===pA)||{};
   const pBObj=players.find(p=>p.name===pB)||{};
@@ -734,7 +782,7 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_gjInput.playerA='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>` : _matchPlayerPoolHTML('A', 'gj')}
+          </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -744,9 +792,10 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_gjInput.playerB='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>` : _matchPlayerPoolHTML('B', 'gj')}
+          </div>` : ''}
         </div>
       </div>
+      ${!(pA&&pB)?_matchPlayerAssignPoolHTML('gj'):''}
     </div>
     ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
