@@ -856,7 +856,7 @@ function buildPlayerDetailHTML(p){
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${hh.opp}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
-        <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace}</span></td>
+        <td><span class="rbadge r${hh.oppRace||''}" style="font-size:10px">${hh.oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
         <td>${eloStr}</td>
         ${editBtnHTML}

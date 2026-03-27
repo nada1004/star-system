@@ -67,7 +67,7 @@ ${isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkE
         return nm&&(!_rf||p.race===_rf)&&(!_gf||p.gender===_gf);
       });
     }
-    if(totalHideNoRecord) up=up.filter(p=>(p.win+p.loss)>0);
+    if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length)return;
     totalShown+=up.length;
     const _univTotal=players.filter(p=>p.univ===u.name).length; // 은퇴 포함 전체 인원

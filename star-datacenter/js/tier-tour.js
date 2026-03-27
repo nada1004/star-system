@@ -3061,7 +3061,7 @@ function bulkChangeMap(){
     });
   });
   // indM, gjM은 m.map 직접
-  [...indM, ...gjM].forEach(m => {
+  [...(indM||[]), ...(gjM||[])].forEach(m => {
     if(m.map === fromM){ m.map = toM; total++; }
   });
   if(total === 0){
@@ -3276,6 +3276,7 @@ function addPlayer(){
 }
 function openEP(name){
   editName=name;const p=players.find(x=>x.name===name);
+  if(!p) return;
   document.getElementById('emBody').innerHTML=`
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
