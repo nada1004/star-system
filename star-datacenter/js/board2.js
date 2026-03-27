@@ -71,12 +71,12 @@ function rBoard2(C, T) {
   const extraBtns = _b2View === 'univ' ? `
     <button onclick="boardGridCols=boardGridCols===2?1:2;render()" style="padding:5px 12px;border-radius:20px;border:2px solid ${boardGridCols===2?'var(--blue)':'var(--border2)'};background:${boardGridCols===2?'var(--blue)':'var(--white)'};color:${boardGridCols===2?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer" title="1열/2열 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
     <button onclick="${allCollapsed?'_b2ExpandAll()':'_b2CollapseAll()'}" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border2);background:var(--white);color:var(--text3);font-weight:700;font-size:12px;cursor:pointer" title="${allCollapsed?'모두 펼치기':'모두 접기'}">${allCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
-    <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--white)">
+    ${isLoggedIn?`<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--white)">
       <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
       <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:52px;height:4px;cursor:pointer" title="배경 진하기" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);const s=document.getElementById('b2-content');if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}">
       <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">라벨</span>
       <input type="range" min="0" max="50" value="${b2LabelAlpha}" style="width:52px;height:4px;cursor:pointer" title="라벨 진하기" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);const s=document.getElementById('b2-content');if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}">
-    </div>` : '';
+    </div>`:''}` : '';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
