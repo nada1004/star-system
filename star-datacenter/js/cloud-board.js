@@ -81,11 +81,11 @@ function _applyCloudData(d) {
     if(arr !== null){
       tourneys=arr;
       tourneys.forEach(tn=>{
-        if(tn.groups) tn.groups=_fbArr(tn.groups,[]);
-        tn.groups&&tn.groups.forEach(g=>{
-          if(g.univs) g.univs=_fbArr(g.univs,[]);
-          if(g.matches) g.matches=_fbArr(g.matches,[]);
-          g.matches&&g.matches.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);});
+        tn.groups=_fbArr(tn.groups,[]);
+        tn.groups.forEach(g=>{
+          g.univs=_fbArr(g.univs,[]);
+          g.matches=_fbArr(g.matches,[]);
+          g.matches.forEach(m=>{m.sets=_fbArr(m.sets,[]);});
         });
       });
     }

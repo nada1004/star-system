@@ -395,7 +395,7 @@ function saveMatch(mode){
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
             const _ttComp=_ttCurComp||'';
-            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp});
+            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp, stage:'general'});
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
@@ -500,7 +500,7 @@ function saveMatch(mode){
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:_ttCurComp||''
+      compName:_ttCurComp||'',stage:'general'
     });
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
