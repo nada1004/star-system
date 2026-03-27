@@ -118,7 +118,36 @@ let proCompMatchState = {tnId:null, gi:null, mi:null};
 let proCompBktState = {tnId:null, rnd:null, mi:null, playerA:'', playerB:''};
 
 function _findTourneyById(tnId) {
-  return _findTourneyById(tnId) || tourneys.find(t=>t.id===tnId);
+  return proTourneys.find(t=>t.id===tnId) || tourneys.find(t=>t.id===tnId);
+}
+
+function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
+  if (m.winner && m.a && m.b) {
+    const d = m.d || new Date().toISOString().slice(0,10);
+    const mode = tn.type === 'tier' ? '티어대회' : '프로리그대회';
+    applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
+
+    if (tn.type === 'tier') {
+      const _ei = ttM.findIndex(x => x._id === matchId);
+      let rndLbl = '';
+      if (ri === '3rd') {
+        rndLbl = '3·4위전';
+      } else {
+        const totalRnd = tn.bracket.length;
+        rndLbl = ri === totalRnd - 1 ? '결승' : ri === totalRnd - 2 ? '준결승' : ri === totalRnd - 3 ? '4강' : `${Math.pow(2, totalRnd - ri)}강`;
+      }
+      const _rec = {
+        _id: matchId, _proKey: `ptn_${tn.id}_${ri}_${mi}`,
+        d, a: m.a, b: m.b, sa: m.winner === 'A' ? 1 : 0, sb: m.winner === 'B' ? 1 : 0,
+        sets: [{ games: [{ playerA: m.a, playerB: m.b, winner: m.winner, map: m.map || '' }], scoreA: m.winner === 'A' ? 1 : 0, scoreB: m.winner === 'B' ? 1 : 0, winner: m.winner, label: rndLbl }],
+        n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b
+      };
+      if (_ei >= 0) ttM[_ei] = _rec; else ttM.unshift(_rec);
+    }
+  } else {
+    const _ei = ttM.findIndex(x => x._id === matchId);
+    if (_ei >= 0) ttM.splice(_ei, 1);
+  }
 }
 
 function getCurrentProTourney() {
@@ -1164,14 +1193,7 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   // player history 반영
   const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
   if (prevWinner && m.a && m.b) _revertProMatch(bktMatchId);
-  if (m.winner && m.a && m.b) {
-    const d = m.d||new Date().toISOString().slice(0,10);
-    applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktMatchId, '', '', '?�로리그?�??);
-  }
-  // 기존??ttM???�못 ?�?�된 ?�로리그 ?�진??기록 ?�리
-  const proKey = `ptn_${tnId}_${ri}_${mi}`;
-  const existIdx = ttM.findIndex(r=>r._proKey===proKey);
-  if (existIdx>=0) ttM.splice(existIdx,1);
+  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
   save(); render();
 }
 
@@ -1258,7 +1280,7 @@ function proCompSaveBktPaste(tnId) {
         // player history 반영
         const bktMatchId=`pbn_${tnId}_${ri}_${mi}`;
         if (prevWinner&&m.a&&m.b) _revertProMatch(bktMatchId);
-        if (m.a&&m.b) applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', map||m.map||'', bktMatchId, '', '', '?�로리그?�??);
+        _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
         applied++; found=true; break;
       }
       if (found) break;
@@ -1280,7 +1302,7 @@ function proCompBktSetDate(tnId, ri, mi) {
     <div style="font-weight:900;font-size:14px;margin-bottom:14px">?�� ?�짜 ?�력</div>
     <input id="_bktDateInp" type="date" value="${m.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}])t2.bracket[${ri}][${mi}].d=v;document.body.removeChild(document.getElementById('_bktDateModal'));save();render();})()">확인</button>
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.d=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.body.removeChild(document.getElementById('_bktDateModal'));save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.body.removeChild(document.getElementById('_bktDateModal'))">취소</button>
     </div>
   </div>`;
@@ -1300,7 +1322,7 @@ function proCompBktSetMap(tnId, ri, mi) {
     <div style="font-weight:900;font-size:15px;margin-bottom:14px">?���?�??�정</div>
     <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="�??�름 ?�력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}])t2.bracket[${ri}][${mi}].map=v;document.getElementById('_bktMapModal').remove();save();render();})()">확인</button>
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.map=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.getElementById('_bktMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktMapModal').remove()">취소</button>
     </div>
   </div>`;
@@ -1350,6 +1372,7 @@ function proCompBktEditPlayers(tnId, ri, mi) {
         const bktId='pbn_${tnId}_${ri}_${mi}';
         if(m2.winner)_revertProMatch(bktId);
         m2.a=aV;m2.b=bV;m2.d=dV;m2.map=mapV;m2.winner='';
+        _syncBktMatchToHistory(t2,m2,bktId,${ri},${mi});
         document.body.removeChild(document.getElementById('_bktEditModal'));
         save();render();
       })()">확인</button>
@@ -1419,10 +1442,7 @@ function proCompSetThirdWinner(tnId, winner) {
   const thirdKey = `pbn_${tnId}_3rd`;
   if (m.winner) _revertProMatch(thirdKey);
   m.winner = m.winner===winner ? '' : winner;
-  if (m.winner && m.a && m.b) {
-    const d = m.d || new Date().toISOString().slice(0,10);
-    applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, d, m.map||'', thirdKey, '', '', '?�로리그?�??);
-  }
+  _syncBktMatchToHistory(tn, m, thirdKey, '3rd', 0);
   save(); render();
 }
 
@@ -1436,7 +1456,7 @@ function proCompSetThirdDate(tnId) {
     <div style="font-weight:900;font-size:14px;margin-bottom:14px">?�� 3?�전 ?�짜 ?�력</div>
     <input id="_thirdDateInp" type="date" value="${tn.thirdPlace.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.thirdPlace)t2.thirdPlace.d=v;document.body.removeChild(document.getElementById('_thirdDateModal'));save();render();})()">확인</button>
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.thirdPlace){const tp=t2.thirdPlace;tp.d=v;if(tp.winner)_syncBktMatchToHistory(t2,tp,'pbn_${tnId}_3rd','3rd',0);}document.body.removeChild(document.getElementById('_thirdDateModal'));save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.body.removeChild(document.getElementById('_thirdDateModal'))">취소</button>
     </div>
   </div>`;
@@ -1453,7 +1473,7 @@ function proCompSetThirdMap(tnId) {
     <div style="font-weight:900;font-size:15px;margin-bottom:14px">?���?3?�전 �??�정</div>
     <input id="_thirdMapInp" value="${((tn.thirdPlace.map)||'').replace(/"/g,'&quot;')}" placeholder="�??�름 ?�력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.thirdPlace)t2.thirdPlace.map=v;document.getElementById('_thirdMapModal').remove();save();render();})()">확인</button>
+      <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.thirdPlace){const tp=t2.thirdPlace;tp.map=v;if(tp.winner)_syncBktMatchToHistory(t2,tp,'pbn_${tnId}_3rd','3rd',0);}document.getElementById('_thirdMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_thirdMapModal').remove()">취소</button>
     </div>
   </div>`;

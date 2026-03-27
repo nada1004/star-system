@@ -299,7 +299,7 @@ function _grpPasteApplyLogic(savable){
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
   if(tn.type==='tier'){
     const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
+    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'};
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
 
