@@ -2913,9 +2913,19 @@ function proCompGJSection(tn) {
         </div>
       </div>
       <div id="pcgj-games" style="margin-top:10px"></div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-b btn-sm" onclick="pcgjAddGame()">+ 게임 추가</button>
+        <button class="btn btn-p btn-sm" onclick="pcgjTogglePaste()">📋 일괄 입력</button>
         <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">💾 저장</button>
+      </div>
+      <div id="pcgj-paste-wrap" style="display:none;margin-top:10px;background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:8px;padding:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">📋 게임 결과 일괄 입력</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">한 줄에 게임 1개 · <b>A</b> 또는 <b>B</b> (또는 선수명) 입력 · 뒤에 맵명 추가 가능<br>예) <code>A 투혼</code> / <code>B 블리츠</code> / <code>${tn.gjMatches&&tn.gjMatches[0]?tn.gjMatches[0].a||'선수A':'선수A'} 맵명</code></div>
+        <textarea id="pcgj-paste-txt" rows="6" placeholder="A 투혼&#10;B 블리츠&#10;A&#10;B 신백두산..." style="width:100%;box-sizing:border-box;font-size:12px;padding:8px;border:1px solid var(--border2);border-radius:6px;font-family:monospace;resize:vertical"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn btn-b btn-sm" onclick="pcgjApplyPaste()">✅ 적용</button>
+          <button class="btn btn-w btn-sm" onclick="pcgjTogglePaste()">취소</button>
+        </div>
       </div>
     </div>`;
   }
@@ -2959,6 +2969,43 @@ let _pcgjGames = [], _pcgjA = '', _pcgjB = '';
 function pcgjAddGame() {
   _pcgjGames.push({winner:'', map:''});
   _pcgjRender();
+}
+function pcgjTogglePaste() {
+  const w = document.getElementById('pcgj-paste-wrap');
+  if (!w) return;
+  w.style.display = w.style.display==='none' ? 'block' : 'none';
+  if (w.style.display==='block') {
+    const t = document.getElementById('pcgj-paste-txt');
+    if (t) { t.value=''; t.focus(); }
+  }
+}
+function pcgjApplyPaste() {
+  const txt = document.getElementById('pcgj-paste-txt')?.value||'';
+  const a = _pcgjA||'A선수', b = _pcgjB||'B선수';
+  const lines = txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) { alert('내용을 입력하세요.'); return; }
+  const added = [];
+  lines.forEach(line => {
+    const parts = line.split(/\s+/);
+    const raw = parts[0].toUpperCase();
+    const map = parts.slice(1).join(' ') || '';
+    let winner = '';
+    if (raw==='A' || raw===a.toUpperCase()) winner = a;
+    else if (raw==='B' || raw===b.toUpperCase()) winner = b;
+    else {
+      // 이름 부분 일치 시도
+      const matchA = a&&a.toUpperCase().includes(raw)||raw.includes(a.toUpperCase()&&a.slice(0,2).toUpperCase());
+      const matchB = b&&b.toUpperCase().includes(raw)||raw.includes(b.toUpperCase()&&b.slice(0,2).toUpperCase());
+      if (matchA) winner=a; else if (matchB) winner=b;
+    }
+    if (winner) added.push({winner, map});
+  });
+  if (!added.length) { alert('인식된 게임 결과가 없습니다.\nA 또는 B로 승자를 표시해주세요.'); return; }
+  _pcgjGames.push(...added);
+  _pcgjRender();
+  const w = document.getElementById('pcgj-paste-wrap');
+  if (w) w.style.display='none';
+  alert(`${added.length}게임이 추가되었습니다. 확인 후 저장하세요.`);
 }
 function _pcgjRender() {
   const cont = document.getElementById('pcgj-games');
