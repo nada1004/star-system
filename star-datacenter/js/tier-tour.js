@@ -1932,9 +1932,9 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tour'){
-    h+=_curTierTn ? rCompTourDynamic(_curTierTn) : _noTnMsg;
+    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? rBracketSchedule(_curTierTn) : _noTnMsg;
+    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환

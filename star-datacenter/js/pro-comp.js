@@ -982,7 +982,7 @@ function proCompSaveTeamPaste(tnId, tmi) {
 function proCompBracket(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   if (!tn.bracket || !tn.bracket.length) {
-    const hasGroups = tn.groups && tn.groups.length>0 && tn.groups.some(g=>(g.players||[]).length>0||(g.matches||[]).length>0);
+    const hasGroups = tn.groups && tn.groups.length>0 && tn.groups.some(g=>(g.players||g.univs||[]).length>0||(g.matches||[]).length>0);
     return `<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:36px;margin-bottom:12px">🗂️</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:8px">대진표가 없습니다</div>
@@ -994,6 +994,7 @@ function proCompBracket(tn) {
   }
   const rounds = tn.bracket;
   const _pc = name => players.find(x=>x.name===name)||null;
+  const isTierTourney = tn.type === 'tier';
   const _photo = (name, isWin, col) => {
     const p=_pc(name);
     if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:50%;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
@@ -1005,8 +1006,9 @@ function proCompBracket(tn) {
   const _info = name => {
     const p=_pc(name); if(!p) return '';
     const rb = p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
-    // 선수 중심: 티어와 대학을 작게 표시
-    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:9px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${p.tier?p.tier+' · ':''}${p.univ||''}</span></div>`;
+    const meta = isTierTourney ? (p.tier||'') : `${p.tier?p.tier+' · ':''}${p.univ||''}`;
+    return meta ? `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:9px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${meta}</span></div>`
+      : (rb ? `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}</div>` : '');
   };
   const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'🥈 준결승':ri===rounds.length-3?'🥉 4강':`${Math.pow(2,rounds.length-ri)}강`;
   const rndColor = ri => ri===rounds.length-1?'#d97706':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
@@ -1029,7 +1031,7 @@ function proCompBracket(tn) {
       <div>
         <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">FINAL CHAMPION</div>
         <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
-        ${cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:''}
+        ${isTierTourney ? (cp?.tier?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.tier}${cp.race?' · '+cp.race:''}</div>`:'') : (cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:'')}
       </div>
       <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`;
@@ -1283,7 +1285,7 @@ function proCompSaveBktPaste(tnId) {
         
         // 2. 대학명으로 매칭 (보조 - 대진표에 선수명이 있어도 대학명으로 붙여넣는 경우 대비)
         if (!winner) {
-          const pa = _pc(m.a), pb = _pc(m.b);
+          const pa = players.find(x=>x.name===m.a)||null, pb = players.find(x=>x.name===m.b)||null;
           if (pa && pb) {
             if (pa.univ===wName && pb.univ===lName) winner='A';
             else if (pb.univ===wName && pa.univ===lName) winner='B';
@@ -1980,7 +1982,7 @@ function proCompOpenBktBatchModal(tnId) {
       <textarea id="_bktBatchText" style="width:100%;height:200px;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;margin-bottom:16px;box-sizing:border-box;resize:none" placeholder="여기에 복사해서 붙여넣으세요..."></textarea>
       <div style="display:flex;gap:10px">
         <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktBatch('${tnId}')">적용하기</button>
-        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktBatchModal').remove()">취son</button>
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktBatchModal').remove()">취소</button>
       </div>
     </div>
   `;
@@ -2007,10 +2009,20 @@ function proCompSaveBktBatch(tnId) {
       for (let mi=0; mi<tn.bracket[ri].length; mi++) {
         const m = tn.bracket[ri][mi];
         if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') continue;
-        
-        const isMatch = (m.a===p1 && m.b===p2) || (m.a===p2 && m.b===p1);
-        if (isMatch) {
-          const winner = (m.a===p1) ? 'A' : 'B';
+
+        let winner = '';
+        if (m.a===p1 && m.b===p2) winner = 'A';
+        else if (m.a===p2 && m.b===p1) winner = 'B';
+        if (!winner) {
+          const pa = players.find(x=>x.name===m.a)||null;
+          const pb = players.find(x=>x.name===m.b)||null;
+          if (pa && pb) {
+            if (pa.univ===p1 && pb.univ===p2) winner = 'A';
+            else if (pa.univ===p2 && pb.univ===p1) winner = 'B';
+          }
+        }
+
+        if (winner) {
           const prevWinner = m.winner;
           const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
           
@@ -2031,8 +2043,19 @@ function proCompSaveBktBatch(tnId) {
     if (!found && tn.thirdPlace) {
       const tp = tn.thirdPlace;
       if (tp.a && tp.b && tp.a!=='TBD' && tp.b!=='TBD') {
-        if ((tp.a===p1 && tp.b===p2) || (tp.a===p2 && tp.b===p1)) {
-          const winner = (tp.a===p1) ? 'A' : 'B';
+        let winner = '';
+        if (tp.a===p1 && tp.b===p2) winner = 'A';
+        else if (tp.a===p2 && tp.b===p1) winner = 'B';
+        if (!winner) {
+          const pa = players.find(x=>x.name===tp.a)||null;
+          const pb = players.find(x=>x.name===tp.b)||null;
+          if (pa && pb) {
+            if (pa.univ===p1 && pb.univ===p2) winner = 'A';
+            else if (pa.univ===p2 && pb.univ===p1) winner = 'B';
+          }
+        }
+
+        if (winner) {
           const bktMatchId = `pbn_${tnId}_3rd`;
           if (tp.winner && tp.winner !== winner) _revertProMatch(bktMatchId);
           tp.winner = winner;
