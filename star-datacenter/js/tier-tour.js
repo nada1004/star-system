@@ -491,18 +491,6 @@ function rTierTourTab(C, T){
   C.innerHTML=h;
 }
 
-function ttFixOrphanRecords(compName,includeWrong){
-  const orphans=ttM.filter(m=>!m.compName||m.compName==='');
-  const wrongComp=includeWrong?ttM.filter(m=>m.compName&&m.compName!==compName):[];
-  const targets=[...orphans,...wrongComp];
-  if(!targets.length){alert('연결할 기록이 없습니다.');return;}
-  const wrongNames=[...new Set(wrongComp.map(m=>m.compName))].join(', ');
-  const msg=`기록 ${targets.length}건을 "${compName}"에 연결합니다.${wrongNames?`\n(다른 대회명: ${wrongNames})`:''}\n계속할까요?`;
-  if(!confirm(msg))return;
-  targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
-  save();render();
-}
-
 // 스트리머 상세 최근 기록에서 티어대회 클릭 → 해당 경기로 이동
 function navToTierMatch(matchId){
   let m=(ttM||[]).find(x=>x._id===matchId);
@@ -1957,17 +1945,6 @@ function rTierTourTab(C, T){
     // records 탭
     const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
-    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
-    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
-    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
-    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
-      const _totalBad=_orphans.length+_wrongComp.length;
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
-        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
-      </div>`;
-    }
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
