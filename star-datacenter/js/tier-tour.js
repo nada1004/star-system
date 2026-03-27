@@ -1,4 +1,20 @@
 /* ══════════════════════════════════════
+   🔧 구버전 티어대회 데이터 1회 마이그레이션
+══════════════════════════════════════ */
+let _ttMigrated = false;
+function _migrateTierTourneys(){
+  if(_ttMigrated) return;
+  _ttMigrated = true;
+  let changed = false;
+  (tourneys||[]).filter(t=>t.type==='tier').forEach(tn=>{
+    if(!tn.id){tn.id=genId();changed=true;}
+    if(!tn.groups){tn.groups=[];changed=true;}
+    if(!tn.bracket){tn.bracket={slots:{},winners:{},champ:''};changed=true;}
+  });
+  if(changed) save();
+}
+
+/* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */
 let _grpPasteState = null; // {mode:'grp', tnId, gi, mi} or {mode:'bkt', tnId, rnd, mi}
@@ -410,6 +426,7 @@ function _bktPasteApplyLogic(savable, tn){
 // _ttSub, _ttCurComp: constants.js에서 선언 및 localStorage 복원
 
 function rTierTourTab(C, T){
+  _migrateTierTourneys();
   T.innerText = '🎯 티어대회';
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
@@ -431,8 +448,6 @@ function rTierTourTab(C, T){
     C.innerHTML=h; return;
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
-  // id/groups/bracket 없으면 자동 생성 (구버전 데이터 호환)
-  if(_curTierTn){let _ns=false;if(!_curTierTn.id){_curTierTn.id=genId();_ns=true;}if(!_curTierTn.groups){_curTierTn.groups=[];_ns=true;}if(!_curTierTn.bracket){_curTierTn.bracket={slots:{},winners:{},champ:''};_ns=true;}if(_ns)save();}
   // 유효하지 않은 _ttSub 리셋
   const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
@@ -1893,6 +1908,7 @@ function _bktPasteApplyLogic(savable, tn){
 // _ttSub, _ttCurComp: constants.js에서 선언 및 localStorage 복원
 
 function rTierTourTab(C, T){
+  _migrateTierTourneys();
   T.innerText = '🎯 티어대회';
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
@@ -1914,8 +1930,6 @@ function rTierTourTab(C, T){
     C.innerHTML=h; return;
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
-  // id/groups/bracket 없으면 자동 생성 (구버전 데이터 호환)
-  if(_curTierTn){let _ns=false;if(!_curTierTn.id){_curTierTn.id=genId();_ns=true;}if(!_curTierTn.groups){_curTierTn.groups=[];_ns=true;}if(!_curTierTn.bracket){_curTierTn.bracket={slots:{},winners:{},champ:''};_ns=true;}if(_ns)save();}
   // 유효하지 않은 _ttSub 리셋
   const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
