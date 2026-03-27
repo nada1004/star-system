@@ -1019,9 +1019,36 @@ function proCompBracket(tn) {
   const rndColor = ri => ri===rounds.length-1?'#d97706':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
   const rndBg   = ri => ri===rounds.length-1?'linear-gradient(135deg,#f59e0b,#d97706)':ri===rounds.length-2?'linear-gradient(135deg,#8b5cf6,#6d28d9)':ri===rounds.length-3?'linear-gradient(135deg,#ef4444,#b91c1c)':'linear-gradient(135deg,#3b82f6,#1d4ed8)';
 
-  let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+  // 브라켓 경기 목록 (매치 셀렉터용)
+  const _allBktMatches = [];
+  (rounds||[]).forEach((rnd,ri)=>{
+    (rnd||[]).forEach((m,mi)=>{
+      if(m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') _allBktMatches.push({ri,mi,a:m.a,b:m.b,label:`${rnd.length>1?`${Math.pow(2,rounds.length-ri)}강 경기${mi+1}`:ri===rounds.length-1?'결승':'준결승'} — ${m.a} vs ${m.b}`});
+    });
+  });
+
+  let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
-  </div>`;
+    ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="pcBktBulkToggle()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>`:''}
+  </div>
+  ${isLoggedIn&&_allBktMatches.length?`<div id="pcbkt-paste-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">📋 결과 붙여넣기</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+      <label style="font-size:12px;font-weight:700;white-space:nowrap">경기 선택</label>
+      <select id="pcbkt-match-sel" style="flex:1;min-width:180px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <option value="">경기를 선택하세요</option>
+        ${_allBktMatches.map(m=>`<option value="${m.ri}-${m.mi}">${m.label}</option>`).join('')}
+      </select>
+      <label style="font-size:12px;font-weight:700">날짜</label>
+      <input id="pcbkt-paste-date" type="date" value="${new Date().toISOString().slice(0,10)}" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">형식: <code>A [맵]</code> 또는 <code>B [맵]</code> 또는 <code>승자이름 [패자이름] [맵]</code></div>
+    <textarea id="pcbkt-paste-txt" rows="4" placeholder="A 투혼&#10;B 서킷&#10;A 블리츠" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical;margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" style="flex:1" onclick="pcBktBulkApply('${tn.id}')">✅ 적용</button>
+      <button class="btn btn-w btn-xs" onclick="pcBktBulkToggle()">닫기</button>
+    </div>
+  </div>`:''}`;
 
   // 챔피언 배너
   const finalMatch = (rounds[rounds.length-1]||[])[0];
@@ -1783,6 +1810,89 @@ function proCompSaveBktMatchPaste(tnId, ri, mi) {
   const modal = document.getElementById('_pcBktMatchPaste');
   if (modal) modal.remove();
   save(); render();
+}
+
+function pcBktBulkToggle() {
+  const w = document.getElementById('pcbkt-paste-wrap');
+  if (!w) return;
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+  if (w.style.display === 'block') {
+    const t = document.getElementById('pcbkt-paste-txt');
+    if (t) { t.value = ''; t.focus(); }
+  }
+}
+
+function pcBktBulkApply(tnId) {
+  const tn = _findTourneyById(tnId); if (!tn) return;
+  const sel = document.getElementById('pcbkt-match-sel');
+  if (!sel || !sel.value) return alert('경기를 선택하세요.');
+  const [ri, mi] = sel.value.split('-').map(Number);
+  const m = (tn.bracket||[])[ri]?.[mi];
+  if (!m || !m.a || !m.b) return alert('경기 정보를 찾을 수 없습니다.');
+
+  const text = document.getElementById('pcbkt-paste-txt')?.value || '';
+  if (!text.trim()) return alert('결과를 입력하세요.');
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return;
+
+  const games = [];
+  for (const line of lines) {
+    const parts = line.split(/[\s\t]+/).filter(Boolean);
+    if (!parts.length) continue;
+    const wTok = (parts[0] || '').toUpperCase();
+    let winner = '', lName = '', map = '';
+    if (wTok === 'A' || wTok === 'B') {
+      winner = wTok;
+      map = parts.slice(1).join(' ').trim();
+    } else {
+      const wName = parts[0] || '';
+      if (!wName) continue;
+      if (wName !== m.a && wName !== m.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`);
+      winner = wName === m.a ? 'A' : 'B';
+      lName = parts[1] || '';
+      const expectedLoser = winner === 'A' ? m.b : m.a;
+      if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${m.a} vs ${m.b}`);
+      map = parts.slice(lName ? 2 : 1).join(' ').trim();
+    }
+    if (!winner) continue;
+    games.push({ winner, map });
+  }
+
+  if (!games.length) return alert('저장 가능한 경기가 없습니다.');
+  const scoreA = games.filter(g => g.winner === 'A').length;
+  const scoreB = games.filter(g => g.winner === 'B').length;
+  if (scoreA === scoreB) return alert(`승패가 동률입니다. A:${scoreA} / B:${scoreB}`);
+
+  const winner = scoreA > scoreB ? 'A' : 'B';
+  const dateVal = document.getElementById('pcbkt-paste-date')?.value || '';
+  if (dateVal) m.d = dateVal;
+  m._games = games.map(g => ({ winner: g.winner, map: g.map || '' }));
+  if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
+
+  const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
+  if (m.winner) _revertProMatch(bktMatchId);
+  m.winner = winner;
+
+  const nextMi = Math.floor(mi / 2);
+  const isA = mi % 2 === 0;
+  if (tn.bracket[ri + 1] && tn.bracket[ri + 1][nextMi]) {
+    const next = tn.bracket[ri + 1][nextMi];
+    const wSlot = winner === 'A' ? m.a : m.b;
+    if (isA) next.a = wSlot; else next.b = wSlot;
+  }
+
+  const semiRi = tn.bracket.length - 2;
+  if (tn.thirdPlace && ri === semiRi && tn.bracket.length >= 2 && (mi === 0 || mi === 1)) {
+    const thirdKey = `pbn_${tnId}_3rd`;
+    if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
+    tn.thirdPlace.winner = '';
+    const loser = winner === 'A' ? m.b : m.a;
+    if (mi === 0) tn.thirdPlace.a = loser || 'TBD'; else tn.thirdPlace.b = loser || 'TBD';
+  }
+
+  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+  save(); render();
+  alert(`✅ 저장 완료! ${m.a} ${scoreA} : ${scoreB} ${m.b} → ${winner === 'A' ? m.a : m.b} 승`);
 }
 
 function proCompOpenThirdPaste(tnId) {
