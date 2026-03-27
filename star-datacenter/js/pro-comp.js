@@ -3043,21 +3043,20 @@ function _openProCompBktShareCard(tnId, ri, mi) {
   const tn = _findTourneyById(tnId);
   if (!tn) return;
   const rounds = tn.bracket||[];
-  const m = (rounds[ri]||[])[mi];
+  const m = ri === '3rd' ? tn.thirdPlace : (rounds[ri]||[])[mi];
   if (!m || !m.winner) return;
-  const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
-  const aWin = m.winner==='A';
-  // ?�진?? ?�버(골드) vs ?�퍼??(?�너먼트/챔피?�십 ?�낌)
+  const rndLabel = ri === '3rd' ? '3·4위전' : ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
+  const games = Array.isArray(m._games) && m._games.length
+    ? m._games.map(g => ({ playerA: m.a||'', playerB: m.b||'', winner: g.winner, map: g.map||'' }))
+    : [{ playerA: m.a||'', playerB: m.b||'', winner: m.winner, map: m.map||'' }];
+  const scoreA = games.filter(g => g.winner==='A').length;
+  const scoreB = games.filter(g => g.winner==='B').length;
   const shareObj = {
     a: m.a||'', b: m.b||'',
-    sa: aWin?1:0, sb: aWin?0:1,
+    sa: scoreA, sb: scoreB,
     d: m.d||'', n: `${tn.name}`,
     _subLabel: rndLabel,
-    sets: [{
-      scoreA: aWin?1:0, scoreB: aWin?0:1,
-      winner: m.winner,
-      games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
-    }],
+    sets: [{ scoreA, scoreB, winner: m.winner, games }],
     _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'procomp-bkt'
   };
   window._shareMatchObj = shareObj;
