@@ -573,6 +573,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
+    <span style="color:var(--border2)">│</span>
+    <input id="rq-${mode}" type="text" value="${initQ.replace(/"/g,'&quot;')}" placeholder="🔍 검색..." oncompositionstart="window._rqComp=true" oncompositionend="window._rqComp=false;recFilterInPlace('${mode}',this.value)" oninput="if(!window._rqComp)recFilterInPlace('${mode}',this.value)" style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;outline:none" autocomplete="off" spellcheck="false">
+    <button id="rq-clear-${mode}" style="display:${initQ?'inline-block':'none'};padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer" onclick="recClearSearch('${mode}')">✕</button>
+    <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l)"></span>
   </div>`;
     return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
@@ -600,7 +604,13 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
-  filtered.sort((a,b)=>recSortDir==='asc'?(a.m.d||'').localeCompare(b.m.d||''):(b.m.d||'').localeCompare(a.m.d||''));
+  filtered.sort((a,b)=>{
+    const da=(a.m.d||''), db=(b.m.d||'');
+    const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
+    if(cmp!==0) return cmp;
+    // 동일 날짜일 때 안정적 보조 정렬: 원본 인덱스 기준
+    return recSortDir==='asc' ? (a.i - b.i) : (b.i - a.i);
+  });
 
   // ── 검색어 필터 (페이지네이션 전에 JS에서 처리) ──
   const _sq=((window._recQ&&window._recQ[mode])||'').toLowerCase().trim();
@@ -635,6 +645,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
+    <span style="color:var(--border2)">│</span>
+    <input id="rq-${mode}" type="text" value="${initQ2.replace(/"/g,'&quot;')}" placeholder="🔍 검색..." oncompositionstart="window._rqComp=true" oncompositionend="window._rqComp=false;recFilterInPlace('${mode}',this.value)" oninput="if(!window._rqComp)recFilterInPlace('${mode}',this.value)" style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;outline:none" autocomplete="off" spellcheck="false">
+    <button id="rq-clear-${mode}" style="display:${initQ2?'inline-block':'none'};padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer" onclick="recClearSearch('${mode}')">✕</button>
     <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
     ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
   </div>
@@ -772,8 +785,10 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const hasWinner=!!(g.winner);
         const winBgA=ca+'22'; const winBgB=cb+'22';
         const winBorderA=ca+'88'; const winBorderB=cb+'88';
-        const clickA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
-        const clickB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        const _pASafe=(g.playerA||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _pBSafe=(g.playerB||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const clickA=g.playerA?`onclick="openPlayerModal('${_pASafe}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        const clickB=g.playerB?`onclick="openPlayerModal('${_pBSafe}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
         const raceA=pA?`<span class="rbadge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
         const raceB=pB?`<span class="rbadge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
         const photoA=pA?getPlayerPhotoHTML(pA.name,'38px','flex-shrink:0;border:2px solid '+ca+';box-shadow:0 1px 6px '+ca+'44'):'';
