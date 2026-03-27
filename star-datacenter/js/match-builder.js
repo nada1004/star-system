@@ -1605,8 +1605,8 @@ function proRankHTML(){
     else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${_ri+1}위</span>`;
     h+=`<tr>
       <td style="text-align:left">${rnkHTML}</td>
-      <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${p.name}')"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}${p.name}${getStatusIconHTML(p.name)}</span></td>
-      <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${pObj.univ||''}')">${pObj.univ||'-'}</span></td>
+      <td style="font-weight:700;cursor:pointer;color:var(--blue);text-align:left" onclick="openPlayerModal('${escJS(p.name)}')"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}${p.name}${getStatusIconHTML(p.name)}</span></td>
+      <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${escJS(pObj.univ||'')}')">${pObj.univ||'-'}</span></td>
       <td style="text-align:center">${pObj.tier?getTierBadge(pObj.tier):'-'}</td>
       <td class="wt" style="font-size:15px;font-weight:800">${p.w}</td>
       <td class="lt" style="font-size:15px;font-weight:800">${p.l}</td>

@@ -193,7 +193,7 @@ function statsOverviewHTML(){
     return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px">
       <span style="font-weight:700;font-size:11px;color:var(--gray-l);min-width:20px;text-align:right">${pi+1}</span>
       ${getPlayerPhotoHTML(p.name,'38px')}
-      <span style="font-weight:800;font-size:14px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${p.name}')">${p.name}${getStatusIconHTML(p.name)}</span>
+      <span style="font-weight:800;font-size:14px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${escJS(p.name)}')">${p.name}${getStatusIconHTML(p.name)}</span>
       <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:55px">${p.univ}</span>
       <span style="display:flex;gap:2px">${icons}</span>
       <span style="font-weight:800;font-size:12px;color:${sc};white-space:nowrap">${si} ${p.streak.n}연${p.streak.type==='승'?'승':'패'}</span>
@@ -555,7 +555,7 @@ function statsAwardHTML(){
     const univIconInner=univIconUrl
       ? `<img src="${univIconUrl}" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:16px;font-weight:900;color:white>${p.univ[0]||'?'}</span>'">`
       : `<span style="font-size:18px;font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${p.univ[0]||'?'}</span>`;
-    return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${p.name}')">
+    return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         ${p.photo?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:50%;background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
@@ -615,7 +615,7 @@ function statsAwardHTML(){
     <table><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th><th title="전월 대비">전월비</th></tr></thead><tbody>
     ${[...curList].sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate).map((p,i)=>`<tr>
       <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'위'}</td>
-      <td style="cursor:pointer;color:var(--blue);font-weight:700" onclick="openPlayerModal('${p.name}')">${p.name}</td>
+      <td style="cursor:pointer;color:var(--blue);font-weight:700" onclick="openPlayerModal('${escJS(p.name)}')">${p.name}</td>
       <td><span class="ubadge" style="background:${gc(p.univ)}">${p.univ}</span></td>
       <td>${p.tier||'-'}</td>
       <td class="wt">${p.mw}</td><td class="lt">${p.ml}</td>
@@ -665,7 +665,7 @@ function statsRecordsHTML(){
       <div style="display:flex;flex-direction:column;gap:6px">
         ${list.map((p,i)=>{
           const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-          return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer;${i===0?'border-color:'+gc(p.univ)+';box-shadow:0 2px 8px '+gc(p.univ)+'33':''}" onclick="openPlayerModal('${p.name}')">
+          return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer;${i===0?'border-color:'+gc(p.univ)+';box-shadow:0 2px 8px '+gc(p.univ)+'33':''}" onclick="openPlayerModal('${escJS(p.name)}')">
             <span style="font-size:16px;min-width:24px">${badge}</span>
             ${getPlayerPhotoHTML(p.name,'30px')}
             <div style="flex:1;min-width:0">
@@ -885,12 +885,12 @@ function statsMismatchHTML(){
     const wCol=gc(winner?.univ||'');const lCol=gc(loser?.univ||'');
     return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--gray-l);min-width:68px">${m.date}</span>
-      <span style="background:var(--green);color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;cursor:pointer" onclick="openPlayerModal('${m.winner}')">${m.winner}</span>
+      <span style="background:var(--green);color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;cursor:pointer" onclick="openPlayerModal('${escJS(m.winner)}')">${m.winner}</span>
       <span style="font-size:12px;font-weight:700;color:${wElo>=1300?'#7c3aed':wElo>=1200?'var(--green)':'var(--red)'}">${wElo}</span>
       <span style="color:var(--gray-l);font-size:11px">ELO차</span>
       <span style="background:var(--red);color:#fff;font-weight:800;font-size:12px;padding:1px 7px;border-radius:6px">${m.diff}↑</span>
       <span style="color:var(--gray-l);font-size:11px">vs</span>
-      <span style="background:var(--red);color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;cursor:pointer;opacity:.7" onclick="openPlayerModal('${m.winner===m.pA?m.pB:m.pA}')">${m.winner===m.pA?m.pB:m.pA}</span>
+      <span style="background:var(--red);color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;cursor:pointer;opacity:.7" onclick="openPlayerModal('${escJS(m.winner===m.pA?m.pB:m.pA)}')">${m.winner===m.pA?m.pB:m.pA}</span>
       <span style="font-size:12px;font-weight:700;color:${lElo>=1300?'#7c3aed':lElo>=1200?'var(--green)':'var(--red)'}">${lElo}</span>
       ${m.upset?'<span style="background:#7c3aed;color:#fff;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px">🔥 이변!</span>':''}
     </div>`;
@@ -1609,12 +1609,14 @@ function statsHeatmapHTML(){
           <input id="heatmap-search-input" type="text" placeholder="🔍 스트리머 검색 (전체보기: 비워두기)"
             value="${_heatmapSelPlayer}"
             style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
-            oninput="heatmapSearchFilter(this.value);if(!this.value){_heatmapSelPlayer='';render();}"
+            oncompositionstart="window._hsComp=true"
+            oncompositionend="window._hsComp=false;heatmapSearchFilter(this.value);if(!this.value){_heatmapSelPlayer='';render();}"
+            oninput="heatmapSearchFilter(this.value);if(!this.value&&!window._hsComp){_heatmapSelPlayer='';render();}"
             onfocus="document.getElementById('heatmap-search-drop').style.display='block'"
             onblur="setTimeout(()=>{const d=document.getElementById('heatmap-search-drop');if(d)d.style.display='none'},200)">
           <div id="heatmap-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
             <div class="sitem" style="color:var(--gray-l);font-style:italic" onmousedown="_heatmapSelPlayer='';document.getElementById('heatmap-search-input').value='';document.getElementById('heatmap-search-drop').style.display='none';render()">— 전체 경기 보기 —</div>
-            ${playersWithHist.map(p=>`<div class="sitem" onmousedown="_heatmapSelPlayer='${p.name.replace(/'/g,"\'")}';document.getElementById('heatmap-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('heatmap-search-drop').style.display='none';render()">
+            ${playersWithHist.map(p=>`<div class="sitem" onmousedown="_heatmapSelPlayer='${escJS(p.name)}';document.getElementById('heatmap-search-input').value='${escAttr(p.name)}';document.getElementById('heatmap-search-drop').style.display='none';render()">
               <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${(p.history||[]).length}경기</span>
             </div>`).join('')}
           </div>
@@ -1845,7 +1847,7 @@ function statsMapRankHTML(){
     <div style="overflow-x:auto"><table>
       <thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th></tr></thead>
       <tbody>
-        ${selData.map((p,i)=>`<tr style="cursor:pointer" onclick="openPlayerModal('${p.name}')">
+        ${selData.map((p,i)=>`<tr style="cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
           <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
           <td style="font-weight:700;color:var(--blue)">${p.name}</td>
           <td><span class="ubadge" style="background:${gc(p.univ)}">${p.univ}</span></td>
