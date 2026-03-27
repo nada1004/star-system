@@ -171,6 +171,9 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
   }
+  if(_grpPasteState.mode==='pcbktedit'){
+    return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
@@ -1636,6 +1639,9 @@ function _grpPasteApplyLogic(savable){
   }
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
+  }
+  if(_grpPasteState.mode==='pcbktedit'){
+    return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){

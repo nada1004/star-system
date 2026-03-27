@@ -127,7 +127,15 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
   if (m.winner && m.a && m.b) {
     const d = m.d || new Date().toISOString().slice(0,10);
     const mode = tn.type === 'tier' ? '티어대회' : '프로리그대회';
-    applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
+    if (Array.isArray(m._games) && m._games.length > 0) {
+      m._games.forEach(g => {
+        const win = g.winner === 'A' ? m.a : m.b;
+        const loss = g.winner === 'A' ? m.b : m.a;
+        applyGameResult(win, loss, d, g.map || '', matchId, '', '', mode);
+      });
+    } else {
+      applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
+    }
 
     if (tn.type === 'tier') {
       const _ei = ttM.findIndex(x => x._id === matchId);
@@ -1090,6 +1098,8 @@ function proCompBracket(tn) {
         </div>
         <!-- 날짜/맵 -->
         ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        <!-- 게임 상세 -->
+        ${Array.isArray(m._games)&&m._games.length>0?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
         <!-- 옵션 버튼 -->
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
           ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:''}
@@ -1382,56 +1392,174 @@ function proCompBktSetMap(tnId, ri, mi) {
   document.getElementById('_bktMapInp').focus();
 }
 
+let _bktEditGames = [], _bktEditTnId = '', _bktEditRi = -1, _bktEditMi = -1;
+
+function _bktEditRenderGames() {
+  const cont = document.getElementById('_bktEditGameList');
+  if (!cont) return;
+  const tn = _findTourneyById(_bktEditTnId);
+  const m = tn && tn.bracket ? tn.bracket[_bktEditRi]?.[_bktEditMi] : null;
+  const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim() || m?.a || 'A';
+  const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim() || m?.b || 'B';
+  if (!_bktEditGames.length) { cont.innerHTML = '<div style="font-size:11px;color:var(--gray-l);padding:6px 0">게임 없음 — 아래 버튼으로 추가</div>'; return; }
+  cont.innerHTML = _bktEditGames.map((g,i)=>`<div style="display:flex;gap:5px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">
+    <span style="font-size:11px;color:var(--gray-l);min-width:26px">${i+1}G</span>
+    <select onchange="_bktEditGames[${i}].winner=this.value;_bktEditRenderGames()" style="flex:1;min-width:90px;font-size:11px;padding:3px">
+      <option value="">승자</option>
+      <option value="A"${g.winner==='A'?' selected':''}>🔵 ${aV}</option>
+      <option value="B"${g.winner==='B'?' selected':''}>🔴 ${bV}</option>
+    </select>
+    <input type="text" value="${g.map||''}" placeholder="맵" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;font-size:11px" oninput="_bktEditGames[${i}].map=this.value">
+    <button class="btn btn-r btn-xs" onclick="_bktEditGames.splice(${i},1);_bktEditRenderGames()">×</button>
+  </div>`).join('');
+}
+
+function _bktEditAddGame() {
+  _bktEditGames.push({winner:'', map:''});
+  _bktEditRenderGames();
+}
+
+function openBktEditPasteModal() {
+  const tn = _findTourneyById(_bktEditTnId); if (!tn) return;
+  const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim() || '';
+  const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim() || '';
+  if (!aV || !bV) return alert('A, B 선수를 먼저 선택하세요.');
+  window._grpPasteState = {tnId: _bktEditTnId, ri: _bktEditRi, mi: _bktEditMi, mode: 'pcbktedit', aV, bV};
+  window._grpPasteMode = true;
+  const textarea = document.getElementById('paste-input');
+  const previewEl = document.getElementById('paste-preview');
+  const applyBtn = document.getElementById('paste-apply-btn');
+  const badge = document.getElementById('paste-summary-badge');
+  const pendWarn = document.getElementById('paste-pending-warn');
+  if (textarea) textarea.value = '';
+  if (previewEl) previewEl.innerHTML = '';
+  if (applyBtn) { applyBtn.style.display='none'; applyBtn.textContent='✅ 게임 목록에 추가'; }
+  if (badge) badge.style.display = 'none';
+  if (pendWarn) pendWarn.style.display = 'none';
+  window._pasteResults = null; window._pasteErrors = null;
+  const dateInput = document.getElementById('paste-date');
+  if (dateInput) dateInput.value = document.getElementById('_bktEditD')?.value || new Date().toISOString().slice(0,10);
+  const modeSel = document.getElementById('paste-mode');
+  if (modeSel) { modeSel.value='comp'; modeSel.style.display='none'; }
+  const modeLabel = document.getElementById('paste-mode-label');
+  if (modeLabel) modeLabel.style.display = 'none';
+  const hintEl = document.getElementById('paste-mode-hint');
+  if (hintEl) hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📝 경기 결과 입력 (게임 목록에 추가)</span> — <b>${aV}</b> vs <b>${bV}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${aV} ${bV} [맵]</code> / <code>${bV} ${aV} [맵]</code></span></div>`;
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) compWrap.style.display = 'none';
+  const _pd = document.querySelector('#pasteModal details');
+  if (_pd) _pd.style.display = 'none';
+  const _pt = document.querySelector('#pasteModal .mtitle');
+  if (_pt) _pt.textContent = '📋 결과 붙여넣기 (경기 수정)';
+  if (typeof om === 'function') om('pasteModal');
+}
+
+function _pcBktEditPasteApplyLogic(savable) {
+  const {aV, bV} = window._grpPasteState;
+  const added = [];
+  for (const r of savable) {
+    if (!r.wPlayer || !r.lPlayer) continue;
+    const wn = r.wPlayer.name;
+    let winner = '';
+    if (wn === aV) winner = 'A';
+    else if (wn === bV) winner = 'B';
+    else { alert(`"${wn}"은(는) 해당 경기 선수가 아닙니다.\n${aV} vs ${bV}`); return false; }
+    added.push({winner, map: r.map || ''});
+  }
+  if (!added.length) { alert('인식된 게임이 없습니다.'); return false; }
+  _bktEditGames.push(...added);
+  _bktEditRenderGames();
+  return true;
+}
+
+function _bktEditSave() {
+  const tn = _findTourneyById(_bktEditTnId); if (!tn) return;
+  if (!tn.bracket || !tn.bracket[_bktEditRi]) return;
+  const m = tn.bracket[_bktEditRi][_bktEditMi]; if (!m) return;
+  const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim();
+  const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim();
+  const dV = document.getElementById('_bktEditD')?.value || '';
+  const bktId = `pbn_${_bktEditTnId}_${_bktEditRi}_${_bktEditMi}`;
+  if (m.winner) _revertProMatch(bktId);
+  m.a = aV; m.b = bV; m.d = dV;
+  const validGames = _bktEditGames.filter(g => g.winner);
+  if (validGames.length > 0) {
+    m._games = validGames;
+    const scoreA = validGames.filter(g=>g.winner==='A').length;
+    const scoreB = validGames.filter(g=>g.winner==='B').length;
+    if (scoreA !== scoreB) {
+      m.winner = scoreA > scoreB ? 'A' : 'B';
+      m.map = validGames.length === 1 ? validGames[0].map || '' : '';
+      const nextMi = Math.floor(_bktEditMi/2), isA = _bktEditMi%2===0;
+      if (tn.bracket[_bktEditRi+1] && tn.bracket[_bktEditRi+1][nextMi]) {
+        const next = tn.bracket[_bktEditRi+1][nextMi];
+        const wSlot = m.winner==='A' ? m.a : m.b;
+        if (isA) next.a = wSlot; else next.b = wSlot;
+      }
+      const semiRi = tn.bracket.length-2;
+      if (tn.thirdPlace && _bktEditRi===semiRi && tn.bracket.length>=2 && (_bktEditMi===0||_bktEditMi===1)) {
+        const thirdKey=`pbn_${_bktEditTnId}_3rd`;
+        if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
+        tn.thirdPlace.winner='';
+        const loser=m.winner==='A'?m.b:m.a;
+        if (_bktEditMi===0) tn.thirdPlace.a=loser||'TBD'; else tn.thirdPlace.b=loser||'TBD';
+      }
+    } else {
+      m.winner = ''; m.map = '';
+    }
+  } else {
+    m.winner = ''; m._games = []; m.map = '';
+  }
+  _syncBktMatchToHistory(tn, m, bktId, _bktEditRi, _bktEditMi);
+  document.getElementById('_bktEditModal')?.remove();
+  save(); render();
+}
+
 function proCompBktEditPlayers(tnId, ri, mi) {
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
+  _bktEditTnId = tnId; _bktEditRi = ri; _bktEditMi = mi;
+  _bktEditGames = Array.isArray(m._games) ? m._games.map(g=>({...g})) : [];
   const pList = players.filter(p=>p.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const pOpts = (sel) => `<option value="">직접 입력</option>` + pList.map(p=>`<option value="${p.name}"${p.name===sel?' selected':''}>${p.name}${p.univ?` (${p.univ})`:''}</option>`).join('');
   const modal = document.createElement('div');
   modal.id = '_bktEditModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:14px;padding:20px;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:14px;padding:20px;width:360px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:900;font-size:14px;margin-bottom:14px">📝 대진표 경기 수정</div>
-    <div style="margin-bottom:10px">
+    <div style="margin-bottom:8px">
       <label style="font-size:11px;font-weight:700;color:var(--text3)">A 선수</label>
-      <select id="_bktEditA" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.a||'')}</select>
-      <input id="_bktEditAInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.a)?'':m.a||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
+      <select id="_bktEditA" onchange="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.a||'')}</select>
+      <input id="_bktEditAInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.a)?'':m.a||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
     </div>
-    <div style="margin-bottom:10px">
+    <div style="margin-bottom:8px">
       <label style="font-size:11px;font-weight:700;color:var(--text3)">B 선수</label>
-      <select id="_bktEditB" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.b||'')}</select>
-      <input id="_bktEditBInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.b)?'':m.b||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
+      <select id="_bktEditB" onchange="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.b||'')}</select>
+      <input id="_bktEditBInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.b)?'':m.b||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
     </div>
     <div style="margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:var(--text3)">날짜</label>
       <input id="_bktEditD" type="date" value="${m.d||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
-    <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:700;color:var(--text3)">맵</label>
-      <input id="_bktEditMap" value="${m.map||''}" placeholder="선택 입력" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
+    <div style="margin-bottom:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <label style="font-size:11px;font-weight:700;color:var(--text3)">게임 결과</label>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-b btn-xs" onclick="_bktEditAddGame()">+ 게임 추가</button>
+          <button class="btn btn-p btn-xs" onclick="openBktEditPasteModal()">📋 붙여넣기</button>
+        </div>
+      </div>
+      <div id="_bktEditGameList"></div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="(function(){
-        const aV=(document.getElementById('_bktEditA').value||document.getElementById('_bktEditAInp').value).trim();
-        const bV=(document.getElementById('_bktEditB').value||document.getElementById('_bktEditBInp').value).trim();
-        const dV=document.getElementById('_bktEditD').value;
-        const mapV=document.getElementById('_bktEditMap').value.trim();
-        const t2=_findTourneyById('${tnId}');
-        if(!t2||!t2.bracket||!t2.bracket[${ri}]||!t2.bracket[${ri}][${mi}])return;
-        const m2=t2.bracket[${ri}][${mi}];
-        const bktId='pbn_${tnId}_${ri}_${mi}';
-        if(m2.winner)_revertProMatch(bktId);
-        m2.a=aV;m2.b=bV;m2.d=dV;m2.map=mapV;m2.winner='';
-        _syncBktMatchToHistory(t2,m2,bktId,${ri},${mi});
-        document.body.removeChild(document.getElementById('_bktEditModal'));
-        save();render();
-      })()">확인</button>
-      <button class="btn btn-w" style="flex:1" onclick="document.body.removeChild(document.getElementById('_bktEditModal'))">취소</button>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-b" style="flex:1" onclick="_bktEditSave()">✅ 저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktEditModal')?.remove()">취소</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
+  _bktEditRenderGames();
 }
 
 function proCompInitBracketManual(tnId) {
