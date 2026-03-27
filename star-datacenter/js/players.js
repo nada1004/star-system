@@ -291,6 +291,27 @@ function saveBulkEdit(){
   render();
 }
 
+function tierRankGoHist(modeId, playerName){
+  const mode=(modeId||'').toLowerCase();
+  let type='전체';
+  if(mode.startsWith('mini_')||mode.startsWith('civ_')) type='mini';
+  else if(mode.startsWith('univm_')) type='univm';
+  else if(mode.startsWith('ck_')) type='ck';
+  else if(mode.startsWith('pro_')) type='pro';
+  else if(mode.startsWith('tt_')) type='tt';
+  else if(mode.startsWith('ind_')) type='ind';
+  else if(mode.startsWith('gj_')) type='gj';
+  else if(mode.startsWith('comp_')) type='tourney';
+  if(!window._recQ) window._recQ={};
+  window._recQ['all']=playerName||'';
+  window._recTypeFilter=type;
+  curTab='hist';
+  histSub='all';
+  openDetails={};
+  if(window.histPage && window.histPage['all']!==undefined) window.histPage['all']=0;
+  render();
+}
+
 /* ══════════════════════════════════════
    티어 순위표
 ══════════════════════════════════════ */
@@ -330,6 +351,7 @@ function rTier(C,T){
     {id:'univm_loss',lbl:'🏟️ 대학대전 패',color:'#7c3aed'},
   ];
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
+  if(!tierRankMode||!allModeIds.has(tierRankMode)) tierRankMode='tier';
   const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
   if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
   if(!window._tierRaceFilter) window._tierRaceFilter='전체';
@@ -465,7 +487,21 @@ function rTier(C,T){
     let h=`<div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">총 ${filtered.length}건</div>`;
     h+=`<table><thead><tr><th>날짜</th><th>종류</th><th>승자</th><th>패자</th><th>맵</th></tr></thead><tbody>`;
     if(!filtered.length)h+=`<tr><td colspan="5" style="padding:30px;color:var(--gray-l);text-align:center">경기 기록 없음</td></tr>`;
-    filtered.slice(0,100).forEach(g=>{
+    const pageSize=100;
+    if(window._recentPage===undefined) window._recentPage=0;
+    const totalPages=Math.max(1,Math.ceil(filtered.length/pageSize));
+    if(window._recentPage>=totalPages) window._recentPage=totalPages-1;
+    const paged=filtered.slice(window._recentPage*pageSize,(window._recentPage+1)*pageSize);
+    if(filtered.length>pageSize){
+      h+=`<tr><td colspan="5" style="padding:10px 0">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <button class="btn btn-w btn-xs" onclick="window._recentPage=Math.max(0,(window._recentPage||0)-1);render()" ${window._recentPage<=0?'disabled':''}>이전</button>
+          <span style="font-size:11px;color:var(--gray-l)">${(window._recentPage||0)+1} / ${totalPages}</span>
+          <button class="btn btn-w btn-xs" onclick="window._recentPage=Math.min(${totalPages-1},(window._recentPage||0)+1);render()" ${window._recentPage>=totalPages-1?'disabled':''}>다음</button>
+        </div>
+      </td></tr>`;
+    }
+    paged.forEach(g=>{
       const wp=players.find(p=>p.name===g.winner);const lp=players.find(p=>p.name===g.loser);
       const wc=wp?gc(wp.univ):'#888';const lc=lp?gc(lp.univ):'#888';
       const lblColors={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','조별대회':'#16a34a','티어대회':'#7c3aed'};
@@ -475,12 +511,12 @@ function rTier(C,T){
         <td><span style="background:${lblColor};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${g.label||'-'}</span></td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;font-weight:800" class="wt">
           ${wp?getPlayerPhotoHTML(g.winner,'22px'):''}
-          <span style="cursor:pointer" onclick="openPlayerModal('${g.winner.replace(/'/g,"\\'")}')">
+          <span style="cursor:pointer" onclick="openPlayerModal('${(g.winner||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
             ${wp?`<span class="rbadge r${wp.race}" style="font-size:10px;margin-right:2px">${wp.race}</span>`:''}${g.winner}${getStatusIconHTML(g.winner)}</span></span>
           ${wp?`<span class="ubadge" style="background:${wc};font-size:10px;padding:1px 6px;margin-left:4px">${wp.univ}</span>`:''}</td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;opacity:.75">
           ${lp?getPlayerPhotoHTML(g.loser,'22px'):''}
-          <span style="cursor:pointer" onclick="openPlayerModal('${g.loser.replace(/'/g,"\\'")}')">
+          <span style="cursor:pointer" onclick="openPlayerModal('${(g.loser||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
             ${lp?`<span class="rbadge r${lp.race}" style="font-size:10px;margin-right:2px">${lp.race}</span>`:''}${g.loser}</span></span>
           ${lp?`<span class="ubadge" style="background:${lc};font-size:10px;padding:1px 6px;margin-left:4px;opacity:.7">${lp.univ}</span>`:''}</td>
         <td style="color:var(--gray-l);font-size:11px">${g.map}</td>
@@ -639,7 +675,6 @@ function rTier(C,T){
     civ_win:'시빌워승',civ_loss:'시빌워패',tt_win:'티어대회승',tt_loss:'티어대회패',
     pro_win:'프로리그승',pro_loss:'프로리그패',univm_win:'대학대전승',univm_loss:'대학대전패'
   };
-  if(tierRankMode==='elo') tierRankMode='tier'; // ELO 제거 후 fallback
   const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
   const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
 
@@ -654,6 +689,10 @@ function rTier(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">${extraHeader}</th>
   </tr></thead><tbody>`;
+  const _canGoHist = (()=>{
+    const pick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
+    return pick && pick.endsWith('_win') || pick && pick.endsWith('_loss');
+  })();
   list.forEach((p,i)=>{
     const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
     let rnkHTML;
@@ -678,16 +717,19 @@ function rTier(C,T){
       extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
     }
     const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
+    const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
+    const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${p.name}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
+      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${extraVal}</td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 10px;${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
     </tr>`;
   });
   h+=`</tbody></table></div>`;
