@@ -265,14 +265,14 @@ function setBuilderHTML(bld, mode){
         <span style="font-weight:700">${mode==='gj'?_gjLabelB:(isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B'))}</span>
         <span style="font-size:11px;color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
       </div>`;
-      h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+      if(mode!=='gj'){h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">⚡ 간편 승수 입력</span>
         <span style="font-size:12px">${teamA||'팀A'}:</span>
         <input type="number" min="0" value="${bld.directSA??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSA=parseInt(this.value)||0;render()">
         <span style="font-size:12px">${teamB||'팀B'}:</span>
         <input type="number" min="0" value="${bld.directSB??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSB=parseInt(this.value)||0;render()">
         <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
-      </div>`;
+      </div>`;}
       freeGames.forEach((g,gi)=>{
         const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
         const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');

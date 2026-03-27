@@ -493,16 +493,17 @@ function openMoveIndPop(btn, idsArr, srcMode){
 function indInputHTML(){
   const gi=_indInput;
   const pA=gi.playerA, pB=gi.playerB;
-  const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
+  const aWins=gi.games.filter(g=>g.winner==='A').length, bWins=gi.games.filter(g=>g.winner==='B').length;
   const pAObj=players.find(p=>p.name===pA)||{};
   const pBObj=players.find(p=>p.name===pB)||{};
   const aCol=gc(pAObj.univ)||'#2563eb', bCol=gc(pBObj.univ)||'#dc2626';
   let gameRows='';
-  gi.games.forEach((w,i)=>{
-    const wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
+  gi.games.forEach((g,i)=>{
+    const w=g.winner, wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
     gameRows+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--surface);border-radius:6px;margin-bottom:4px">
       <span style="font-size:11px;color:var(--gray-l);min-width:20px">${i+1}G</span>
       <span style="font-weight:700;color:${w==='A'?aCol:bCol};flex:1">${wName} 승</span>
+      ${g.map?`<span style="font-size:10px;background:var(--border);padding:1px 5px;border-radius:4px">${g.map}</span>`:''}
       <span style="font-size:10px;color:var(--gray-l)">${lName} 패</span>
       <button onclick="_indInput.games.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 4px">✕</button>
     </div>`;
@@ -544,11 +545,18 @@ function indInputHTML(){
     </div>
     ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:700;white-space:nowrap">🗺️ 맵 선택</label>
+        <select id="ind-map-sel" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;flex:1;min-width:120px;max-width:200px">
+          <option value="">맵 없음</option>
+          ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
+        </select>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button onclick="_indInput.games.push('A');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
+        <button onclick="(function(){var m=document.getElementById('ind-map-sel')?.value||'';_indInput.games.push({winner:'A',map:m});render();})()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
           ${getPlayerPhotoHTML(pA,'20px')} ${pA} 승 (+1)
         </button>
-        <button onclick="_indInput.games.push('B');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
+        <button onclick="(function(){var m=document.getElementById('ind-map-sel')?.value||'';_indInput.games.push({winner:'B',map:m});render();})()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
           ${getPlayerPhotoHTML(pB,'20px')} ${pB} 승 (+1)
         </button>
       </div>
@@ -570,11 +578,11 @@ function indDirectSave(){
   if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
   const sid=genId();
   const dateVal=gi.date||'';
-  const newGames=gi.games.map(w=>({
+  const newGames=gi.games.map(g=>({
     _id:genId(),sid,d:dateVal,
-    wName:w==='A'?gi.playerA:gi.playerB,
-    lName:w==='A'?gi.playerB:gi.playerA,
-    map:''
+    wName:g.winner==='A'?gi.playerA:gi.playerB,
+    lName:g.winner==='A'?gi.playerB:gi.playerA,
+    map:g.map||''
   }));
   newGames.forEach(m=>{
     applyGameResult(m.wName,m.lName,dateVal,'',sid,'','','개인전');
