@@ -1029,19 +1029,8 @@ function proCompBracket(tn) {
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
-    ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="pcBktBulkToggle()" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>`:''}
-  </div>
-  ${isLoggedIn&&_allBktMatches.length?`<div id="pcbkt-paste-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
-    <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">📋 경기 선택 후 결과 입력</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-      <label style="font-size:12px;font-weight:700;white-space:nowrap">경기 선택</label>
-      <select id="pcbkt-match-sel" style="flex:1;min-width:180px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <option value="">경기를 선택하세요</option>
-        ${_allBktMatches.map(m=>`<option value="${m.ri}-${m.mi}">${m.label}</option>`).join('')}
-      </select>
-      <button class="btn btn-p btn-sm" onclick="(function(){var s=document.getElementById('pcbkt-match-sel');if(!s||!s.value)return alert('경기를 선택하세요.');var p=s.value.split('-');openPcBktPasteModal('${tn.id}',+p[0],+p[1]);})()">📋 입력하기</button>
-    </div>
-  </div>`:''}`;
+    ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
+  </div>`;
 
   // 챔피언 배너
   const finalMatch = (rounds[rounds.length-1]||[])[0];
@@ -1805,6 +1794,48 @@ function proCompSaveBktMatchPaste(tnId, ri, mi) {
   save(); render();
 }
 
+function openPcBktBulkPasteModal(tnId) {
+  const tn = _findTourneyById(tnId); if (!tn) return;
+  const rounds = tn.bracket || [];
+  // Collect all confirmed matches for hint
+  const confirmed = [];
+  rounds.forEach((rnd, ri) => rnd.forEach((m, mi) => {
+    if (m.a && m.b && m.a !== 'TBD' && m.b !== 'TBD' && !m.winner)
+      confirmed.push(`${m.a} vs ${m.b}`);
+  }));
+  window._grpPasteState = {tnId, ri: null, mi: null, mode: 'pcbkt'};
+  window._grpPasteMode = true;
+  const textarea = document.getElementById('paste-input');
+  const previewEl = document.getElementById('paste-preview');
+  const applyBtn = document.getElementById('paste-apply-btn');
+  const badge = document.getElementById('paste-summary-badge');
+  const pendWarn = document.getElementById('paste-pending-warn');
+  if (textarea) textarea.value = '';
+  if (previewEl) previewEl.innerHTML = '';
+  if (applyBtn) { applyBtn.style.display='none'; applyBtn.textContent='✅ 경기 결과 적용'; }
+  if (badge) badge.style.display = 'none';
+  if (pendWarn) pendWarn.style.display = 'none';
+  window._pasteResults = null; window._pasteErrors = null;
+  const dateInput = document.getElementById('paste-date');
+  if (dateInput) dateInput.value = new Date().toISOString().slice(0,10);
+  const modeSel = document.getElementById('paste-mode');
+  if (modeSel) { modeSel.value='comp'; modeSel.style.display='none'; }
+  const modeLabel = document.getElementById('paste-mode-label');
+  if (modeLabel) modeLabel.style.display = 'none';
+  const hintEl = document.getElementById('paste-mode-hint');
+  if (hintEl) {
+    const matchList = confirmed.length ? `<br><span style="font-size:11px;color:#6b7280">진행 중인 경기: ${confirmed.join(' / ')}</span>` : '';
+    hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">🏆 토너먼트 여러 경기 일괄 입력</span><br><span style="font-size:11px;color:#6b7280">형식: <code>승자이름 패자이름 [맵]</code> — 선수 이름으로 경기 자동 인식${matchList}</span></div>`;
+  }
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) compWrap.style.display = 'none';
+  const _pd = document.querySelector('#pasteModal details');
+  if (_pd) _pd.style.display = 'none';
+  const _pt = document.querySelector('#pasteModal .mtitle');
+  if (_pt) _pt.textContent = '📋 결과 붙여넣기 (여러 경기)';
+  if (typeof om === 'function') om('pasteModal');
+}
+
 function openPcBktPasteModal(tnId, ri, mi) {
   const tn = _findTourneyById(tnId); if (!tn) return;
   const m = (tn.bracket||[])[ri]?.[mi];
@@ -1840,131 +1871,117 @@ function openPcBktPasteModal(tnId, ri, mi) {
 }
 
 function _pcBktPasteApplyLogic(savable, tn) {
-  const {ri, mi} = window._grpPasteState;
-  const m = (tn.bracket||[])[ri]?.[mi];
-  if (!m || !m.a || !m.b) return false;
-  const games = [];
+  const {ri: stateRi, mi: stateMi} = window._grpPasteState;
+  const isBulk = stateRi === null;
+  const dateEl = document.getElementById('paste-date');
+  const dateVal = dateEl ? dateEl.value : '';
+
+  // Helper: apply games array to a single bracket match
+  function _applyToMatch(m, matchRi, matchMi, games) {
+    const scoreA = games.filter(g=>g.winner==='A').length;
+    const scoreB = games.filter(g=>g.winner==='B').length;
+    if (scoreA === scoreB) { alert(`동률입니다 (${m.a} vs ${m.b}): A:${scoreA} / B:${scoreB}`); return false; }
+    const winner = scoreA > scoreB ? 'A' : 'B';
+    if (dateVal) m.d = dateVal;
+    m._games = games;
+    if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
+    const bktMatchId = `pbn_${tn.id}_${matchRi}_${matchMi}`;
+    if (m.winner) _revertProMatch(bktMatchId);
+    m.winner = winner;
+    const nextMi = Math.floor(matchMi/2), isA = matchMi%2===0;
+    if (tn.bracket[matchRi+1] && tn.bracket[matchRi+1][nextMi]) {
+      const next = tn.bracket[matchRi+1][nextMi];
+      const wSlot = winner==='A'?m.a:m.b;
+      if (isA) next.a = wSlot; else next.b = wSlot;
+    }
+    const semiRi = tn.bracket.length-2;
+    if (tn.thirdPlace && matchRi===semiRi && tn.bracket.length>=2 && (matchMi===0||matchMi===1)) {
+      const thirdKey=`pbn_${tn.id}_3rd`;
+      if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
+      tn.thirdPlace.winner='';
+      const loser=winner==='A'?m.b:m.a;
+      if (matchMi===0) tn.thirdPlace.a=loser||'TBD'; else tn.thirdPlace.b=loser||'TBD';
+    }
+    _syncBktMatchToHistory(tn, m, bktMatchId, matchRi, matchMi);
+    return true;
+  }
+
+  if (!isBulk) {
+    // Single match mode (per-match 📋 button)
+    const m = (tn.bracket||[])[stateRi]?.[stateMi];
+    if (!m || !m.a || !m.b) return false;
+    const games = [];
+    for (const r of savable) {
+      if (!r.wPlayer || !r.lPlayer) continue;
+      const wn = r.wPlayer.name;
+      let winner = '';
+      if (wn === m.a) winner = 'A';
+      else if (wn === m.b) winner = 'B';
+      else { alert(`"${wn}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`); return false; }
+      games.push({ winner, map: r.map||'' });
+    }
+    if (!games.length) { alert('저장 가능한 경기가 없습니다.'); return false; }
+    const ok = _applyToMatch(m, stateRi, stateMi, games);
+    if (!ok) return false;
+    save();
+    return true;
+  }
+
+  // Bulk mode: auto-detect which match each game belongs to
+  const rounds = tn.bracket || [];
+  // Build lookup: playerName → {ri, mi, side:'A'|'B'}
+  const playerMap = {};
+  rounds.forEach((rnd, ri) => rnd.forEach((m, mi) => {
+    if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') return;
+    const key = `${ri}-${mi}`;
+    if (!playerMap[m.a]) playerMap[m.a] = [];
+    if (!playerMap[m.b]) playerMap[m.b] = [];
+    playerMap[m.a].push({ri, mi, side:'A', key});
+    playerMap[m.b].push({ri, mi, side:'B', key});
+  }));
+
+  // Group parsed results by match key
+  const matchGroups = {}; // key → {ri, mi, games:[]}
+  const unmatched = [];
   for (const r of savable) {
     if (!r.wPlayer || !r.lPlayer) continue;
     const wn = r.wPlayer.name;
-    let winner = '';
-    if (wn === m.a) winner = 'A';
-    else if (wn === m.b) winner = 'B';
-    else { alert(`"${wn}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`); return false; }
-    games.push({ winner, map: r.map||'' });
+    const ln = r.lPlayer.name;
+    // Find a match that has both players
+    const wEntries = playerMap[wn] || [];
+    let found = null;
+    for (const e of wEntries) {
+      const m = rounds[e.ri]?.[e.mi];
+      if (!m) continue;
+      const other = e.side==='A' ? m.b : m.a;
+      if (other === ln) { found = e; break; }
+    }
+    if (!found) { unmatched.push(`${wn} vs ${ln}`); continue; }
+    const key = found.key;
+    if (!matchGroups[key]) matchGroups[key] = {ri: found.ri, mi: found.mi, games: []};
+    const winner = found.side; // winner is wPlayer's side
+    matchGroups[key].games.push({winner, map: r.map||''});
   }
-  if (!games.length) { alert('저장 가능한 경기가 없습니다.'); return false; }
-  const scoreA = games.filter(g=>g.winner==='A').length;
-  const scoreB = games.filter(g=>g.winner==='B').length;
-  if (scoreA === scoreB) { alert(`동률입니다. A:${scoreA} / B:${scoreB}\n한 게임 더 추가하세요.`); return false; }
-  const winner = scoreA > scoreB ? 'A' : 'B';
-  const dateEl = document.getElementById('paste-date');
-  if (dateEl && dateEl.value) m.d = dateEl.value;
-  m._games = games;
-  if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
-  const bktMatchId = `pbn_${tn.id}_${ri}_${mi}`;
-  if (m.winner) _revertProMatch(bktMatchId);
-  m.winner = winner;
-  const nextMi = Math.floor(mi/2), isA = mi%2===0;
-  if (tn.bracket[ri+1] && tn.bracket[ri+1][nextMi]) {
-    const next = tn.bracket[ri+1][nextMi];
-    const wSlot = winner==='A'?m.a:m.b;
-    if (isA) next.a = wSlot; else next.b = wSlot;
+
+  const keys = Object.keys(matchGroups);
+  if (!keys.length) {
+    const msg = unmatched.length ? `인식된 경기가 없습니다.\n미인식: ${unmatched.join(', ')}` : '저장 가능한 경기가 없습니다.';
+    alert(msg); return false;
   }
-  const semiRi = tn.bracket.length-2;
-  if (tn.thirdPlace && ri===semiRi && tn.bracket.length>=2 && (mi===0||mi===1)) {
-    const thirdKey=`pbn_${tn.id}_3rd`;
-    if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
-    tn.thirdPlace.winner='';
-    const loser=winner==='A'?m.b:m.a;
-    if (mi===0) tn.thirdPlace.a=loser||'TBD'; else tn.thirdPlace.b=loser||'TBD';
+
+  let saved = 0;
+  for (const key of keys) {
+    const {ri, mi, games} = matchGroups[key];
+    const m = rounds[ri]?.[mi];
+    if (!m) continue;
+    const ok = _applyToMatch(m, ri, mi, games);
+    if (ok) saved++;
   }
-  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+
+  if (unmatched.length) alert(`일부 경기를 인식하지 못했습니다:\n${unmatched.join('\n')}`);
+  if (!saved) return false;
   save();
   return true;
-}
-
-function pcBktBulkToggle() {
-  const w = document.getElementById('pcbkt-paste-wrap');
-  if (!w) return;
-  w.style.display = w.style.display === 'none' ? 'block' : 'none';
-  if (w.style.display === 'block') {
-    const t = document.getElementById('pcbkt-paste-txt');
-    if (t) { t.value = ''; t.focus(); }
-  }
-}
-
-function pcBktBulkApply(tnId) {
-  const tn = _findTourneyById(tnId); if (!tn) return;
-  const sel = document.getElementById('pcbkt-match-sel');
-  if (!sel || !sel.value) return alert('경기를 선택하세요.');
-  const [ri, mi] = sel.value.split('-').map(Number);
-  const m = (tn.bracket||[])[ri]?.[mi];
-  if (!m || !m.a || !m.b) return alert('경기 정보를 찾을 수 없습니다.');
-
-  const text = document.getElementById('pcbkt-paste-txt')?.value || '';
-  if (!text.trim()) return alert('결과를 입력하세요.');
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  if (!lines.length) return;
-
-  const games = [];
-  for (const line of lines) {
-    const parts = line.split(/[\s\t]+/).filter(Boolean);
-    if (!parts.length) continue;
-    const wTok = (parts[0] || '').toUpperCase();
-    let winner = '', lName = '', map = '';
-    if (wTok === 'A' || wTok === 'B') {
-      winner = wTok;
-      map = parts.slice(1).join(' ').trim();
-    } else {
-      const wName = parts[0] || '';
-      if (!wName) continue;
-      if (wName !== m.a && wName !== m.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`);
-      winner = wName === m.a ? 'A' : 'B';
-      lName = parts[1] || '';
-      const expectedLoser = winner === 'A' ? m.b : m.a;
-      if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${m.a} vs ${m.b}`);
-      map = parts.slice(lName ? 2 : 1).join(' ').trim();
-    }
-    if (!winner) continue;
-    games.push({ winner, map });
-  }
-
-  if (!games.length) return alert('저장 가능한 경기가 없습니다.');
-  const scoreA = games.filter(g => g.winner === 'A').length;
-  const scoreB = games.filter(g => g.winner === 'B').length;
-  if (scoreA === scoreB) return alert(`승패가 동률입니다. A:${scoreA} / B:${scoreB}`);
-
-  const winner = scoreA > scoreB ? 'A' : 'B';
-  const dateVal = document.getElementById('pcbkt-paste-date')?.value || '';
-  if (dateVal) m.d = dateVal;
-  m._games = games.map(g => ({ winner: g.winner, map: g.map || '' }));
-  if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
-
-  const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
-  if (m.winner) _revertProMatch(bktMatchId);
-  m.winner = winner;
-
-  const nextMi = Math.floor(mi / 2);
-  const isA = mi % 2 === 0;
-  if (tn.bracket[ri + 1] && tn.bracket[ri + 1][nextMi]) {
-    const next = tn.bracket[ri + 1][nextMi];
-    const wSlot = winner === 'A' ? m.a : m.b;
-    if (isA) next.a = wSlot; else next.b = wSlot;
-  }
-
-  const semiRi = tn.bracket.length - 2;
-  if (tn.thirdPlace && ri === semiRi && tn.bracket.length >= 2 && (mi === 0 || mi === 1)) {
-    const thirdKey = `pbn_${tnId}_3rd`;
-    if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
-    tn.thirdPlace.winner = '';
-    const loser = winner === 'A' ? m.b : m.a;
-    if (mi === 0) tn.thirdPlace.a = loser || 'TBD'; else tn.thirdPlace.b = loser || 'TBD';
-  }
-
-  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
-  save(); render();
-  alert(`✅ 저장 완료! ${m.a} ${scoreA} : ${scoreB} ${m.b} → ${winner === 'A' ? m.a : m.b} 승`);
 }
 
 function proCompOpenThirdPaste(tnId) {
