@@ -138,10 +138,15 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
         const totalRnd = tn.bracket.length;
         rndLbl = ri === totalRnd - 1 ? '결승' : ri === totalRnd - 2 ? '준결승' : ri === totalRnd - 3 ? '4강' : `${Math.pow(2, totalRnd - ri)}강`;
       }
+      const games = Array.isArray(m._games) && m._games.length
+        ? m._games.map(g => ({ playerA: m.a, playerB: m.b, winner: g.winner, map: g.map || '' }))
+        : [{ playerA: m.a, playerB: m.b, winner: m.winner, map: m.map || '' }];
+      const scoreA = games.filter(g => g.winner === 'A').length;
+      const scoreB = games.filter(g => g.winner === 'B').length;
       const _rec = {
         _id: matchId, _proKey: `ptn_${tn.id}_${ri}_${mi}`,
-        d, a: m.a, b: m.b, sa: m.winner === 'A' ? 1 : 0, sb: m.winner === 'B' ? 1 : 0,
-        sets: [{ games: [{ playerA: m.a, playerB: m.b, winner: m.winner, map: m.map || '' }], scoreA: m.winner === 'A' ? 1 : 0, scoreB: m.winner === 'B' ? 1 : 0, winner: m.winner, label: rndLbl }],
+        d, a: m.a, b: m.b, sa: scoreA, sb: scoreB,
+        sets: [{ games, scoreA, scoreB, winner: m.winner, label: rndLbl }],
         n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b
       };
       if (_ei >= 0) ttM[_ei] = _rec; else ttM.unshift(_rec);
@@ -1075,8 +1080,8 @@ function proCompBracket(tn) {
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
           ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
-            <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="붙여넣기">📋</button>`:''}
+            <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px;${hasBoth?'':'opacity:.35'}" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="${hasBoth?'결과 붙여넣기':'선수 확정 후 사용'}">📋</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜">🗓️</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵변경">🗺️</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>`:''}
@@ -1121,8 +1126,9 @@ function proCompBracket(tn) {
         ${(tp.map||tp.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${tp.d?`<span>🗓️ ${tp.d.slice(2).replace(/-/g,'.')}</span>`:''}${tp.map?`<span>🗺️ ${tp.map}</span>`:''}</div>`:''}
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
           ${tp.winner?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${tpCol}18;color:${tpCol};border-color:${tpCol}44" onclick="_openProCompBktShareCard('${tn.id}','3rd',0)" title="공유카드">📷</button>`:''}
-          ${isLoggedIn&&tpBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${tpA?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','A')">${(tp.a||'A').slice(0,5)} 승</button>
-            <button class="btn btn-xs" style="flex:1;font-size:9px;${tpB?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','B')">${(tp.b||'B').slice(0,5)} 승</button>
+          ${isLoggedIn?`${tpBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${tpA?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','A')">${(tp.a||'A').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="flex:1;font-size:9px;${tpB?`background:${tpCol};color:#fff;border-color:${tpCol}`:''}" onclick="proCompSetThirdWinner('${tn.id}','B')">${(tp.b||'B').slice(0,5)} 승</button>`:''}
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px;${tpBoth?'':'opacity:.35'}" onclick="proCompOpenThirdPaste('${tn.id}')" title="${tpBoth?'결과 붙여넣기':'선수 확정 후 사용'}">📋</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdDate('${tn.id}')">🗓️</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompSetThirdMap('${tn.id}')">🗺️</button>`:''}
         </div>
@@ -1675,13 +1681,14 @@ function proCompOpenBktMatchPaste(tnId, ri, mi) {
     <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 결과 붙여넣기</div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">
       <b>${m.a}</b> vs <b>${m.b}</b><br>
-      한 줄 형식: <code>승자이름 패자이름 [맵]</code> (또는 <code>승자이름 [맵]</code>)
+      이 경기 결과만 저장합니다. 여러 줄 입력 가능<br>
+      형식: <code>A [맵]</code> / <code>B [맵]</code> 또는 <code>승자이름 패자이름 [맵]</code>
     </div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--text3);min-width:44px">날짜</div>
       <input id="_pcBktPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);box-sizing:border-box">
     </div>
-    <textarea id="_pcBktPasteText" rows="5" placeholder="${m.a} ${m.b} 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <textarea id="_pcBktPasteText" rows="5" placeholder="A 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
     <div style="display:flex;gap:10px;margin-top:14px">
       <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktMatchPaste('${tnId}',${ri},${mi})">적용</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcBktMatchPaste').remove()">취소</button>
@@ -1699,31 +1706,56 @@ function proCompSaveBktMatchPaste(tnId, ri, mi) {
 
   const text = (document.getElementById('_pcBktPasteText')||{}).value||'';
   if (!text.trim()) return;
-  const line = text.trim().split('\n').map(l=>l.trim()).filter(Boolean)[0] || '';
-  if (!line) return;
-  const parts = line.split(/[\s\t]+/).filter(Boolean);
-  if (!parts.length) return;
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) return;
 
-  let wName = parts[0] || '';
-  let lName = '';
-  let map = '';
-  if (parts.length >= 2) {
-    lName = parts[1] || '';
-    map = parts.slice(2).join(' ').trim();
-  } else {
-    map = parts.slice(1).join(' ').trim();
+  const games = [];
+  for (const line of lines) {
+    const parts = line.split(/[\s\t]+/).filter(Boolean);
+    if (!parts.length) continue;
+
+    let wName = parts[0] || '';
+    const wTok = (wName||'').toUpperCase();
+    let winner = '';
+    let lName = '';
+    let map = '';
+
+    if (wTok === 'A' || wTok === 'B') {
+      winner = wTok;
+      map = parts.slice(1).join(' ').trim();
+    } else {
+      if (parts.length >= 2) {
+        lName = parts[1] || '';
+        map = parts.slice(2).join(' ').trim();
+      } else {
+        map = parts.slice(1).join(' ').trim();
+      }
+
+      if (!wName) continue;
+      if (wName !== m.a && wName !== m.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`);
+
+      winner = wName === m.a ? 'A' : 'B';
+      const expectedLoser = winner === 'A' ? m.b : m.a;
+      if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${m.a} vs ${m.b}`);
+    }
+
+    if (!winner) continue;
+    games.push({ winner, map });
   }
 
-  if (!wName) return;
-  if (wName !== m.a && wName !== m.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`);
+  if (!games.length) return alert('저장 가능한 경기가 없습니다.');
+  const scoreA = games.filter(g => g.winner === 'A').length;
+  const scoreB = games.filter(g => g.winner === 'B').length;
+  if (scoreA === scoreB) return alert(`승패가 동률입니다.\nA:${scoreA} / B:${scoreB}\n한 줄 더 추가하거나 수동으로 승자를 지정하세요.`);
 
-  const winner = wName === m.a ? 'A' : 'B';
-  const expectedLoser = winner === 'A' ? m.b : m.a;
-  if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${m.a} vs ${m.b}`);
+  const winner = scoreA > scoreB ? 'A' : 'B';
 
   const dateVal = (document.getElementById('_pcBktPasteDate')||{}).value || '';
   if (dateVal) m.d = dateVal;
-  if (map) m.map = map;
+  m._games = games.map(g => ({ winner: g.winner, map: g.map || '' }));
+  const onlyOne = games.length === 1;
+  if (onlyOne && games[0].map) m.map = games[0].map;
+  else if (!onlyOne) m.map = '';
 
   const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
   if (m.winner) _revertProMatch(bktMatchId);
@@ -1749,6 +1781,102 @@ function proCompSaveBktMatchPaste(tnId, ri, mi) {
 
   _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
   const modal = document.getElementById('_pcBktMatchPaste');
+  if (modal) modal.remove();
+  save(); render();
+}
+
+function proCompOpenThirdPaste(tnId) {
+  const tn = _findTourneyById(tnId); if (!tn) return;
+  const tp = tn.thirdPlace;
+  if (!tp || !tp.a || !tp.b || tp.a==='TBD' || tp.b==='TBD') return alert('양 선수가 모두 확정된 경기에서만 이용 가능합니다.');
+
+  const modal = document.createElement('div');
+  modal.id = '_pcThirdPaste';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  const defDate = tp.d || new Date().toISOString().slice(0,10);
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:22px;width:420px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 결과 붙여넣기 (3·4위전)</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+      <b>${tp.a}</b> vs <b>${tp.b}</b><br>
+      이 경기 결과만 저장합니다. 여러 줄 입력 가능<br>
+      형식: <code>A [맵]</code> / <code>B [맵]</code> 또는 <code>승자이름 패자이름 [맵]</code>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);min-width:44px">날짜</div>
+      <input id="_pcThirdPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);box-sizing:border-box">
+    </div>
+    <textarea id="_pcThirdPasteText" rows="5" placeholder="A 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveThirdPaste('${tnId}')">적용</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcThirdPaste').remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const ta = document.getElementById('_pcThirdPasteText');
+  if (ta) ta.focus();
+}
+
+function proCompSaveThirdPaste(tnId) {
+  const tn = _findTourneyById(tnId); if (!tn) return;
+  const tp = tn.thirdPlace;
+  if (!tp || !tp.a || !tp.b) return;
+
+  const text = (document.getElementById('_pcThirdPasteText')||{}).value||'';
+  if (!text.trim()) return;
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) return;
+
+  const games = [];
+  for (const line of lines) {
+    const parts = line.split(/[\s\t]+/).filter(Boolean);
+    if (!parts.length) continue;
+
+    let wName = parts[0] || '';
+    const wTok = (wName||'').toUpperCase();
+    let winner = '';
+    let lName = '';
+    let map = '';
+
+    if (wTok === 'A' || wTok === 'B') {
+      winner = wTok;
+      map = parts.slice(1).join(' ').trim();
+    } else {
+      if (parts.length >= 2) {
+        lName = parts[1] || '';
+        map = parts.slice(2).join(' ').trim();
+      } else {
+        map = parts.slice(1).join(' ').trim();
+      }
+      if (!wName) continue;
+      if (wName !== tp.a && wName !== tp.b) return alert(`"${wName}"은(는) 해당 경기 선수가 아닙니다.\n${tp.a} vs ${tp.b}`);
+      winner = wName === tp.a ? 'A' : 'B';
+      const expectedLoser = winner === 'A' ? tp.b : tp.a;
+      if (lName && lName !== expectedLoser) return alert(`패자 이름이 일치하지 않습니다.\n입력: ${wName} ${lName}\n대상: ${tp.a} vs ${tp.b}`);
+    }
+
+    if (!winner) continue;
+    games.push({ winner, map });
+  }
+
+  if (!games.length) return alert('저장 가능한 경기가 없습니다.');
+  const scoreA = games.filter(g => g.winner === 'A').length;
+  const scoreB = games.filter(g => g.winner === 'B').length;
+  if (scoreA === scoreB) return alert(`승패가 동률입니다.\nA:${scoreA} / B:${scoreB}\n한 줄 더 추가하거나 수동으로 승자를 지정하세요.`);
+  const winner = scoreA > scoreB ? 'A' : 'B';
+
+  const dateVal = (document.getElementById('_pcThirdPasteDate')||{}).value || '';
+  if (dateVal) tp.d = dateVal;
+  tp._games = games.map(g => ({ winner: g.winner, map: g.map || '' }));
+  const onlyOne = games.length === 1;
+  if (onlyOne && games[0].map) tp.map = games[0].map;
+  else if (!onlyOne) tp.map = '';
+
+  const bktMatchId = `pbn_${tnId}_3rd`;
+  if (tp.winner) _revertProMatch(bktMatchId);
+  tp.winner = winner;
+  _syncBktMatchToHistory(tn, tp, bktMatchId, '3rd', 0);
+
+  const modal = document.getElementById('_pcThirdPaste');
   if (modal) modal.remove();
   save(); render();
 }
