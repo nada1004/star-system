@@ -7,12 +7,12 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
-let _totalSearchComposing=false;
-let _totalSearchTm=null;
-function _totalSearchDebounce(force){
-  if(_totalSearchTm) clearTimeout(_totalSearchTm);
-  if(_totalSearchComposing && !force) return;
-  _totalSearchTm = setTimeout(()=>render(), force?0:120);
+let _searchComposing=false;
+let _searchRenderTm=null;
+function _searchDebounce(force){
+  if(_searchRenderTm) clearTimeout(_searchRenderTm);
+  if(_searchComposing && !force) return;
+  _searchRenderTm = setTimeout(()=>render(), force?0:120);
 }
 
 function rTotal(C,T){
@@ -27,9 +27,9 @@ function rTotal(C,T){
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
     <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
-      oncompositionstart="_totalSearchComposing=true"
-      oncompositionend="_totalSearchComposing=false;totalSearch=this.value;_totalSearchDebounce(true)"
-      oninput="totalSearch=this.value;_totalSearchDebounce()"
+      oncompositionstart="_searchComposing=true;if(_searchRenderTm)clearTimeout(_searchRenderTm);_searchRenderTm=null"
+      oncompositionend="_searchComposing=false;totalSearch=this.value;_searchDebounce(true)"
+      oninput="totalSearch=this.value;_searchDebounce()"
       autocomplete="off" spellcheck="false"
       style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:220px;flex:1;background:var(--white);color:var(--text)">
     <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
@@ -37,7 +37,9 @@ function rTotal(C,T){
     ${_showBulk?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
-        oninput="_bulkEditSearch=this.value;render()"
+        oncompositionstart="_searchComposing=true;if(_searchRenderTm)clearTimeout(_searchRenderTm);_searchRenderTm=null"
+        oncompositionend="_searchComposing=false;_bulkEditSearch=this.value;_searchDebounce(true)"
+        oninput="_bulkEditSearch=this.value;_searchDebounce()"
         autocomplete="off" spellcheck="false"
         style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">`:''}
   </div>`;
