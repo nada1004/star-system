@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    대회 (조별리그 + 조편성 관리 + 대진표 + 개인순위)
 ══════════════════════════════════════ */
 
@@ -455,6 +455,7 @@ function rBracketSchedule(tn){
         </div>
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 수정</button>
+          <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="bracketMatchState={tnId:'${tn.id}',rnd:${r},mi:${mi},teamA:'${teamA}',teamB:'${teamB}'};openBktPasteModal()">📋 붙여넣기</button>
           ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:`<button class="btn btn-r btn-xs" onclick="bktClearMatchResult('${tn.id}',${r},${mi})">🗑️ 초기화</button>`}
         </div>`:''}
       </div>
@@ -973,7 +974,7 @@ function rCompGrpEdit(){
     h+=`<div style="background:${isActive?'var(--blue-l)':'var(--surface)'};border:${isActive?'2px solid var(--blue)':'1px solid var(--border)'};border-radius:12px;padding:16px 20px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px">${isActive?'✅ ':''} ${tn.name}</span>
-        <span style="font-size:11px;color:var(--gray-l)">${tn.groups.length}개조 / ${tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>
+        <span style="font-size:11px;color:var(--gray-l)">${(tn.groups||[]).length}개조 / ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>
         <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
           ${!isActive?`<button class="btn btn-b btn-xs" onclick="curComp='${tn.name}';save();render()">현재 대회로 설정</button>`:'<span style="font-size:11px;color:var(--blue);font-weight:700">📌 현재 대회</span>'}
           <button class="btn btn-w btn-xs" onclick="grpEditId='${tn.id}';grpSub='edit';render()">📝 조편성 입력</button>
@@ -1292,7 +1293,7 @@ function grpSaveMatch(){
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
   if(tn.type==='tier'){
     const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'grp'};
+    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'};
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
   save();cm('grpMatchModal');render();
