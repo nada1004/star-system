@@ -5,6 +5,7 @@
 
 let _b2View = 'univ';
 let _b2SaveUniv = '전체';
+let _b2Collapsed = new Set();
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
@@ -13,6 +14,23 @@ let b2BgImgAlpha      = J('su_b2bia')  ?? 12; // 배경 이미지 진하기 기�
 let b2FreeBgAlpha     = J('su_b2fba')  ?? 25; // 무소속 배경 진하기 (기본 25%)
 let b2FreeTierBgAlpha = J('su_b2ftba') ?? 15; // 무소속 티어 우측 배경 진하기 (기본 15%)
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
+
+function _b2ToggleCard(btn, univName) {
+  if (_b2Collapsed.has(univName)) _b2Collapsed.delete(univName); else _b2Collapsed.add(univName);
+  const card = btn.closest('[data-b2card]');
+  if (!card) return;
+  const body = card.querySelector('.b2-card-body');
+  if (body) body.style.display = _b2Collapsed.has(univName) ? 'none' : '';
+  btn.textContent = _b2Collapsed.has(univName) ? '▶' : '▼';
+}
+function _b2CollapseAll() {
+  _b2VisUnivs().filter(u=>u.name!=='무소속').forEach(u=>_b2Collapsed.add(u.name));
+  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}
+}
+function _b2ExpandAll() {
+  _b2Collapsed.clear();
+  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}
+}
 
 const _B2_ROLE_ORDER = ['이사장','동아리 회장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
 
@@ -33,6 +51,7 @@ function rBoard2(C, T) {
     : '';
 
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const allCollapsed = _b2View==='univ' && univList.length > 0 && univList.every(u=>_b2Collapsed.has(u.name));
   const saveBar = _b2View === 'univ' ? `
     <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
       <div style="position:relative">
@@ -49,11 +68,21 @@ function rBoard2(C, T) {
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>` : '';
 
+  const extraBtns = _b2View === 'univ' ? `
+    <button onclick="boardGridCols=boardGridCols===2?1:2;render()" style="padding:5px 12px;border-radius:20px;border:2px solid ${boardGridCols===2?'var(--blue)':'var(--border2)'};background:${boardGridCols===2?'var(--blue)':'var(--white)'};color:${boardGridCols===2?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer" title="1열/2열 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
+    <button onclick="${allCollapsed?'_b2ExpandAll()':'_b2CollapseAll()'}" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border2);background:var(--white);color:var(--text3);font-weight:700;font-size:12px;cursor:pointer" title="${allCollapsed?'모두 펼치기':'모두 접기'}">${allCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
+    <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--white)">
+      <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
+      <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:52px;height:4px;cursor:pointer" title="배경 진하기" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);const s=document.getElementById('b2-content');if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}">
+      <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">라벨</span>
+      <input type="range" min="0" max="50" value="${b2LabelAlpha}" style="width:52px;height:4px;cursor:pointer" title="라벨 진하기" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);const s=document.getElementById('b2-content');if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}">
+    </div>` : '';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
       ${oldBtn}
+      ${extraBtns}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -76,8 +105,16 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
+  const _allVis = players.filter(p => univList.some(u=>u.name===p.univ) && !p.hidden && !p.retired && !p.hideFromBoard);
+  const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
+  const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
+    <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
+    <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
+    <span style="font-size:12px;font-weight:800;color:var(--text2)">🏫 ${univList.length}개 대학</span>
+    ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
+  </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
@@ -179,7 +216,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     : '';
 
   return `
-    <div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
+    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
           ${iconUrl?`<img src="${iconUrl}" style="width:36px;height:36px;object-fit:contain;border-radius:8px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
@@ -188,16 +225,19 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
           <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
+          <button onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>
         </div>
       </div>
-      <div style="position:relative;overflow:hidden">
-        ${bgImgHtml}
-        <div style="position:relative;z-index:1">
-          <div>${rows}</div>
-          ${sidePanelHtml}
+      <div class="b2-card-body" style="${_b2Collapsed.has(univName)?'display:none':''}">
+        <div style="position:relative;overflow:hidden">
+          ${bgImgHtml}
+          <div style="position:relative;z-index:1">
+            <div>${rows}</div>
+            ${sidePanelHtml}
+          </div>
         </div>
+        ${bottomSection}
       </div>
-      ${bottomSection}
     </div>`;
 }
 
@@ -355,8 +395,11 @@ function openB2MemberBreakdown(el, univName) {
     if (rect.bottom + popup.offsetHeight + 6 > window.innerHeight) popup.style.top = (rect.top - popup.offsetHeight - 6) + 'px';
   });
   setTimeout(() => {
-    function _c(e) { if (!popup.contains(e.target) && e.target !== el) { popup.remove(); document.removeEventListener('click', _c); } }
+    function _c(e) { if (!popup.contains(e.target) && e.target !== el) { _close(); } }
+    function _s() { _close(); }
+    function _close() { popup.remove(); document.removeEventListener('click', _c); window.removeEventListener('scroll', _s, true); }
     document.addEventListener('click', _c);
+    window.addEventListener('scroll', _s, {capture:true, once:true});
   }, 0);
 }
 
@@ -392,6 +435,7 @@ async function saveB2Img() {
   const fname = (_b2SaveUniv === '전체' ? '대학별현황판_전체' : `대학별현황판_${_b2SaveUniv}`) + '_' + new Date().toISOString().slice(0,10) + '.png';
 
   try {
+    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await _captureAndSave(tmpDiv, w, h, fname);
   } catch(e) { alert('저장 실패: ' + e.message); }
   finally {
@@ -423,6 +467,7 @@ async function saveB2FreeImg() {
   const fname = '무소속현황판_' + new Date().toISOString().slice(0,10) + '.png';
 
   try {
+    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await _captureAndSave(tmpDiv, w, h, fname);
   } catch(e) { alert('저장 실패: ' + e.message); }
   finally {
