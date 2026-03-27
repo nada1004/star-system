@@ -874,6 +874,14 @@ function rCompTourDynamic(tn){
       <span style="font-weight:900;font-size:15px;color:var(--blue)">⚔️ ${tn.name} — 토너먼트 브라켓</span>
       ${isLoggedIn?`<span class="no-export" style="font-size:11px;color:var(--gray-l)">💡 슬롯 클릭으로 팀 변경 · 승 버튼으로 결과 입력</span>`:''}
     </div>
+    ${finalWinner?`<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
+      ${gUI(finalWinner,'52px')}
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">🏆 TOURNAMENT CHAMPION</div>
+        <div style="font-size:20px;font-weight:900;color:#fff">${finalWinner}</div>
+      </div>
+      <div style="margin-left:auto;font-size:32px">👑</div>
+    </div>`:''}
     ${sizeHTML}
     ${grpSummary}
     <div style="overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;touch-action:pan-x">${bracketHTML}</div>
