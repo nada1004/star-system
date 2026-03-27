@@ -390,7 +390,8 @@ function proCompLeague(tn) {
    ══════════════════════════════════════════════════════════════ */
 function _calcProGrpRank(grp) {
   const st = {};
-  (grp.players||[]).forEach(p => { st[p] = {w:0, l:0}; });
+  const members = grp.players || grp.univs || []; // Tier Tournament uses grp.univs
+  members.forEach(p => { st[p] = {w:0, l:0}; });
   (grp.matches||[]).forEach(m => {
     if (!m.a || !m.b || !m.winner) return;
     if (!st[m.a]) st[m.a] = {w:0, l:0};
@@ -1267,15 +1268,28 @@ function proCompSaveBktPaste(tnId) {
     if (parts.length < 2) return;
     const wName = parts[0], lName = parts[1], map = parts.slice(2).join(' ');
     if (!wName||!lName||wName===lName) return;
+
     // 브라켓에서 해당 슬롯 찾기
     let found = false;
     for (let ri=0; ri<tn.bracket.length; ri++) {
       for (let mi=0; mi<tn.bracket[ri].length; mi++) {
         const m = tn.bracket[ri][mi];
         if (!m.a||!m.b) continue;
+
         let winner = '';
-        if (m.a===wName&&m.b===lName) winner='A';
-        else if (m.b===wName&&m.a===lName) winner='B';
+        // 1. 선수 이름으로 정확히 매칭 (우선순위)
+        if (m.a===wName && m.b===lName) winner='A';
+        else if (m.b===wName && m.a===lName) winner='B';
+        
+        // 2. 대학명으로 매칭 (보조 - 대진표에 선수명이 있어도 대학명으로 붙여넣는 경우 대비)
+        if (!winner) {
+          const pa = _pc(m.a), pb = _pc(m.b);
+          if (pa && pb) {
+            if (pa.univ===wName && pb.univ===lName) winner='A';
+            else if (pb.univ===wName && pa.univ===lName) winner='B';
+          }
+        }
+
         if (!winner) continue;
         if (map) m.map = map;
         const prevWinner = m.winner;
