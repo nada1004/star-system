@@ -158,37 +158,37 @@ function getCurrentProTourney() {
    메인 ?�더
 ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
 function rProComp(C, T) {
-  T.innerText = '?���??�로리그 ?�??;
+  T.innerText = '프로리그 대회';
   if (!isLoggedIn && proCompSub === 'grpedit') proCompSub = 'league';
 
   const tn = getCurrentProTourney();
   if (tn && !tn.groups) tn.groups = [];
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
-    <span style="font-weight:700;color:var(--gold);white-space:nowrap">?���??�???�택:</span>
+    <span style="font-weight:700;color:var(--gold);white-space:nowrap">대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curProComp=this.value;proCompFilterDate='';proCompFilterGrp='';save();render()">
-      <option value="">???�?��? ?�택?�세????/option>
+      <option value="">대회를 선택하세요</option>
       ${proTourneys.map(t=>{
         const _grpD=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
         const _bktD=(t.bracket||[]).flat().map(m=>m&&m.d).concat(t.thirdPlace?[t.thirdPlace.d]:[]);
         const _dates=[..._grpD,..._bktD].filter(Boolean).sort();
-        const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})`:t.createdAt?` (${t.createdAt.slice(2).replace(/-/g,'.')} ?�성)`:'';
+        const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})`:t.createdAt?` (${t.createdAt.slice(2).replace(/-/g,'.')} 생성)`:'';
         return`<option value="${t.name}"${curProComp===t.name?' selected':''}>${t.name}${_range}</option>`;
       }).join('')}
     </select>
-    ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ ???�??/button>`:''}
-    ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="?�?�명 ?�정">?�️ ?�름?�정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="?�재 ?�????��">?���???��</button>`:''}
-    ${tn?`<span style="font-size:11px;color:var(--gray-l)">?�� ${tn.groups.length}�?�?· ${tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
+    ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
+    ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
+    ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${tn.groups.length}개 조 · ${tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
   </div>`;
 
   const subOpts = [
-    {id:'league', lbl:'?�� 조별리그 ?�정'},
-    {id:'grprank', lbl:'?�� 조별 ?�위'},
-    {id:'tour', lbl:'?���??�너먼트'},
-    {id:'team', lbl:'?�� ?�??},
-    {id:'gj', lbl:'?�️ ?�장??},
-    {id:'stats', lbl:'?�� 개인 ?�위'},
-    ...(isLoggedIn?[{id:'grpedit', lbl:'?���?조편??관�?}]:[]),
+    {id:'league', lbl:'📅 조별리그 일정'},
+    {id:'grprank', lbl:'📊 조별 순위'},
+    {id:'tour', lbl:'🗂️ 토너먼트'},
+    {id:'team', lbl:'👥 팀전'},
+    {id:'gj', lbl:'📢 공지'},
+    {id:'stats', lbl:'🏆 개인 순위'},
+    ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
   ];
   if (proCompSub === 'progj') proCompSub = 'league';
   h += `<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${proCompSub===o.id?'on':''}" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
@@ -213,11 +213,9 @@ function rProComp(C, T) {
   C.innerHTML = h;
 }
 
-/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?
-   조별리그 ?�정
-?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
+/* 조별리그 일정 */
 function proCompLeague(tn) {
-  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">?�?��? ?�택?�세??</div>`;
+  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   const allMatches = [];
   tn.groups.forEach((grp, gi) => {
     const gl = 'ABCDEFGHIJ'[gi] || gi;
@@ -235,8 +233,8 @@ function proCompLeague(tn) {
   if (_totalM > 0) {
     h += `<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:${_pctColor}">?�� 진행�?/span>
-        <span style="font-size:12px;color:var(--gray-l)">${_doneM}/${_totalM}경기 ?�료</span>
+        <span style="font-size:12px;font-weight:700;color:${_pctColor}">전체 진행률</span>
+        <span style="font-size:12px;color:var(--gray-l)">${_doneM}/${_totalM}경기 완료</span>
         <span style="margin-left:auto;font-size:13px;font-weight:800;color:${_pctColor}">${_pct}%</span>
       </div>
       <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
@@ -245,34 +243,34 @@ function proCompLeague(tn) {
     </div>`;
   }
   h += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">?�� ${tn.name}</div>
+    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
     <div style="margin-left:auto;display:flex;gap:4px">
-      <button class="pill ${proCompSortDir==='desc'?'on':''}" onclick="proCompSortDir='desc';render()">최신??/button>
-      <button class="pill ${proCompSortDir==='asc'?'on':''}" onclick="proCompSortDir='asc';render()">?�래?�순</button>
+      <button class="pill ${proCompSortDir==='desc'?'on':''}" onclick="proCompSortDir='desc';render()">최신순</button>
+      <button class="pill ${proCompSortDir==='asc'?'on':''}" onclick="proCompSortDir='asc';render()">오래된순</button>
     </div>
   </div>`;
   if (isLoggedIn && tn.groups.length) {
     h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추�?:</span>`;
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추가:</span>`;
     tn.groups.forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi];
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h += `<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${gl}�?/button>`;
+      h += `<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
     });
     h += `</div>`;
     h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">결과 붙여?�기:</span>`;
+      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">결과 붙여넣기:</span>`;
     tn.groups.forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi];
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h += `<button class="btn btn-sm" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">?�� ${gl}�?/button>`;
+      h += `<button class="btn btn-sm" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${gl}조</button>`;
     });
     h += `</div>`;
   }
   h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-    <button class="pill ${!proCompFilterDate?'on':''}" onclick="proCompFilterDate='';render()">?�체</button>`;
+    <button class="pill ${!proCompFilterDate?'on':''}" onclick="proCompFilterDate='';render()">전체</button>`;
   dates.forEach(d => {
-    const dt = new Date(d+'T00:00:00'); const days=['??,'??,'??,'??,'�?,'�?,'??];
+    const dt = new Date(d+'T00:00:00'); const days=['일','월','화','수','목','금','토'];
     h += `<button class="pill ${proCompFilterDate===d?'on':''}" onclick="proCompFilterDate='${d}';render()">${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})</button>`;
   });
   h += `</div>`;
