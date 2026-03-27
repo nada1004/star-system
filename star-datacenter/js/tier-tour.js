@@ -11,10 +11,11 @@ function _migrateTierTourneys(){
     if(!tn.groups){tn.groups=[];changed=true;}
     if(!tn.bracket){tn.bracket={slots:{},winners:{},champ:''};changed=true;}
   });
-  // 기존 브라켓 기록(_proKey가 ptn_으로 시작)에 stage:'bkt' 추가
+  // 기존 브라켓 기록(_proKey가 ptn_으로 시작)에 stage:'bkt' 추가 및 _proKey 제거
   (ttM||[]).forEach(r=>{
-    if(r._proKey && r._proKey.startsWith('ptn_') && !r.stage){
-      r.stage='bkt'; changed=true;
+    if(r._proKey && r._proKey.startsWith('ptn_')){
+      if(!r.stage){ r.stage='bkt'; changed=true; }
+      delete r._proKey; changed=true;
     }
   });
   if(changed) save();
