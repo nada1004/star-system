@@ -1,8 +1,10 @@
-/* ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
-   ?�로리그 개인 ?�??   - proTourneys: [{id,name,groups:[{name,players:[],matches:[{a,b,winner,d,map}]}]}]
-   - 조별리그 + 조별?�위 + ?�진??+ 조편?��?�??�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═ */
+/* ══════════════════════════════════════════════════════════════
+   프로리그 개인 대회
+   - proTourneys: [{id,name,groups:[{name,players:[],matches:[{a,b,winner,d,map}]}]}]
+   - 조별리그 + 조별순위 + 대진표 + 조편성 관리
+   ══════════════════════════════════════════════════════════════ */
 
-/* ?�?�?proTourneys ?�적 ?�기??(기존 ?�이????player.history 반영) ?�?�?*/
+/* 프로리그 proTourneys 실시간 동기화 (기존 데이터 player.history 반영) */
 function _proCompSyncSilent() {
   const existing = new Set();
   players.forEach(p => (p.history||[]).forEach(h => { if(h.matchId) existing.add(h.matchId); }));
@@ -13,7 +15,7 @@ function _proCompSyncSilent() {
         if (!m.winner || !m.a || !m.b) return;
         if (!m._id) m._id = 'pco_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
         if (existing.has(m._id)) return;
-        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', m._id, '', '', '?�로리그?�??);
+        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', m._id, '', '', '프로리그대회');
         existing.add(m._id); cnt++;
       });
     });
@@ -22,7 +24,7 @@ function _proCompSyncSilent() {
         if (!m.winner || !m.a || !m.b) return;
         const bktId = `pbn_${tn.id}_${ri}_${mi}`;
         if (existing.has(bktId)) return;
-        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktId, '', '', '?�로리그?�??);
+        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktId, '', '', '프로리그대회');
         existing.add(bktId); cnt++;
       });
     });
@@ -30,17 +32,17 @@ function _proCompSyncSilent() {
       const thirdId = `pbn_${tn.id}_3rd`;
       if (!existing.has(thirdId)) {
         const tp = tn.thirdPlace;
-        applyGameResult(tp.winner==='A'?tp.a:tp.b, tp.winner==='A'?tp.b:tp.a, tp.d||'', tp.map||'', thirdId, '', '', '?�로리그?�??);
+        applyGameResult(tp.winner==='A'?tp.a:tp.b, tp.winner==='A'?tp.b:tp.a, tp.d||'', tp.map||'', thirdId, '', '', '프로리그대회');
         existing.add(thirdId); cnt++;
       }
     }
-    // ?�??게임
+    // 팀전 게임
     (tn.teamMatches||[]).forEach(tm => {
       (tm.games||[]).forEach(g => {
         if (!g.wName||!g.lName) return;
         if (!g._id) g._id = 'ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
         if (existing.has(g._id)) return;
-        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '?�로리그?�??);
+        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그대회');
         existing.add(g._id); cnt++;
       });
     });
@@ -49,7 +51,7 @@ function _proCompSyncSilent() {
 }
 
 function proCompSyncHistory() {
-  // ?��? player.history???�는 matchId 집합
+  // 현재 player.history에 있는 matchId 집합
   const existing = new Set();
   players.forEach(p => (p.history||[]).forEach(h => { if(h.matchId) existing.add(h.matchId); }));
   let cnt = 0;
@@ -60,53 +62,53 @@ function proCompSyncHistory() {
         if (!m.winner || !m.a || !m.b) return;
         if (!m._id) m._id = 'pco_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
         if (existing.has(m._id)) return;
-        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', m._id, '', '', '?�로리그?�??);
+        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', m._id, '', '', '프로리그대회');
         existing.add(m._id);
         cnt++;
       });
     });
-    // ?�진??
+    // 대진표
     (tn.bracket||[]).forEach((rnd, ri) => {
       rnd.forEach((m, mi) => {
         if (!m.winner || !m.a || !m.b) return;
         const bktId = `pbn_${tn.id}_${ri}_${mi}`;
         if (existing.has(bktId)) return;
-        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktId, '', '', '?�로리그?�??);
+        applyGameResult(m.winner==='A'?m.a:m.b, m.winner==='A'?m.b:m.a, m.d||'', m.map||'', bktId, '', '', '프로리그대회');
         existing.add(bktId);
         cnt++;
       });
     });
-    // 3?�전
+    // 3위전
     if (tn.thirdPlace && tn.thirdPlace.winner && tn.thirdPlace.a && tn.thirdPlace.b) {
       const thirdId = `pbn_${tn.id}_3rd`;
       if (!existing.has(thirdId)) {
         const tp = tn.thirdPlace;
-        applyGameResult(tp.winner==='A'?tp.a:tp.b, tp.winner==='A'?tp.b:tp.a, tp.d||'', tp.map||'', thirdId, '', '', '?�로리그?�??);
+        applyGameResult(tp.winner==='A'?tp.a:tp.b, tp.winner==='A'?tp.b:tp.a, tp.d||'', tp.map||'', thirdId, '', '', '프로리그대회');
         existing.add(thirdId);
         cnt++;
       }
     }
-    // ?�??게임
+    // 팀전 게임
     (tn.teamMatches||[]).forEach(tm => {
       (tm.games||[]).forEach(g => {
         if (!g.wName||!g.lName) return;
         if (!g._id) g._id = 'ptg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
         if (existing.has(g._id)) return;
-        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '?�로리그?�??);
+        applyGameResult(g.wName, g.lName, tm.d||'', g.map||'', g._id, '', '', '프로리그대회');
         existing.add(g._id);
         cnt++;
       });
     });
   });
-  // ttM???�못 ?�?�된 ?�로리그 ?�진??기록 ?�리 (_proKey ?�는 ??�� ?�거)
+  // ttM에서 잘못 저장된 프로리그 대진표 기록 정리 (_proKey 또는 티어대회 제거)
   const ttOrig = ttM.length;
   for (let i=ttM.length-1; i>=0; i--) { if(ttM[i]._proKey) ttM.splice(i,1); }
   const ttRemoved = ttOrig - ttM.length;
   if (cnt > 0 || ttRemoved > 0) {
     save();
-    alert(`??${cnt}경기 ?�적 ?�기??{ttRemoved>0?`, ?�어?�???�염 기록 ${ttRemoved}�??�리`:''}`);
+    alert(`총 ${cnt}경기 전적 동기화${ttRemoved>0?`, 티어대회 오염 기록 ${ttRemoved}건 정리`:''}`);
     render();
-  } else alert('?��? 모두 ?�기?�되???�습?�다.');
+  } else alert('이미 모두 동기화되어 있습니다.');
 }
 
 var proCompSub = 'league';
@@ -195,10 +197,10 @@ function rProComp(C, T) {
 
   if (!tn && proCompSub !== 'grpedit') {
     h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
-      <div style="font-size:44px;margin-bottom:14px">?��</div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:8px">?�록???�?��? ?�습?�다</div>
-      <div style="color:var(--gray-l);margin-bottom:20px">???�?��? 만들??조편?�을 ?�작?�세??</div>
-      ${isLoggedIn?`<button class="btn btn-b" onclick="proCompNewTourney()">+ ?�??만들�?/button>`:''}
+      <div style="font-size:44px;margin-bottom:14px">🏆</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">등록된 대회가 없습니다</div>
+      <div style="color:var(--gray-l);margin-bottom:20px">새 대회를 만들고 조편성을 시작해보세요</div>
+      ${isLoggedIn?`<button class="btn btn-b" onclick="proCompNewTourney()">+ 대회 만들기</button>`:''}
     </div>`;
     C.innerHTML = h; return;
   }
@@ -310,16 +312,16 @@ function proCompLeague(tn) {
   filtered.forEach(m => { const k=m.d||'?�짜 미정'; if(!byDate[k])byDate[k]=[]; byDate[k].push(m); });
   Object.keys(byDate).sort((a,b)=>proCompSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date => {
     let dateLabel = date;
-    if (date !== '?�짜 미정') {
+    if (date !== '날짜 미정') {
       const dt=new Date(date+'T00:00:00');
-      const days=['?�요??,'?�요??,'?�요??,'?�요??,'목요??,'금요??,'?�요??];
-      dateLabel = `${dt.getFullYear()}??${dt.getMonth()+1}??${dt.getDate()}??${days[dt.getDay()]}`;
+      const days=['일요','월요','화요','수요','목요','금요','토요'];
+      dateLabel = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${days[dt.getDay()]}일`;
     }
     h += `<div style="margin-bottom:22px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">?�� ${dateLabel}</div>
-        ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추�?</button>
-        ${date!=='?�짜 미정'?`<button class="btn btn-w btn-xs no-export" onclick="proCompOpenDatePaste('${tn.id}','${date}')">?�� 결과 ?�력</button>`:''}`:''}
+        <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
+        ${isLoggedIn?`<button class="btn btn-b btn-xs no-export" onclick="proCompAddMatchOnDate('${tn.id}','${date}')">+ 경기 추가</button>
+        ${date!=='날짜 미정'?`<button class="btn btn-w btn-xs no-export" onclick="proCompOpenDatePaste('${tn.id}','${date}')">📋 결과 입력</button>`:''}`:''}
       </div>`;
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
@@ -332,10 +334,10 @@ function proCompLeague(tn) {
       const _univ = p => p&&p.univ?`<span style="font-size:9px;color:var(--gray-l);font-weight:600">${p.univ}</span>`:'';
       const _pcard = (p, isWin) => {
         const photo = p&&p.photo?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
-          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">?��</div>`;
+          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
         return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'var(--surface)':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px">
           ${photo}
-          <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')`:''}">${p?p.name:'??}</span>
+          <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')`:''}">${p?p.name:'미정'}</span>
           ${_univ(p)}
           <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
         </div>`;
@@ -344,26 +346,26 @@ function proCompLeague(tn) {
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
-          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">?�정</span>`:''}
+          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           ${_pcard(pa, aWin)}
           <div style="text-align:center;min-width:60px">
             ${isDone?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
-              <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'??}</span>
+              <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
-              <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'??}</span>
+              <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
-            <div style="font-size:10px;font-weight:700;color:#16a34a;margin-top:4px">${aWin?m.a+' ??:bWin?m.b+' ??:'결과?�음'}</div>
-            ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">?��${m.map}</div>`:''}
+            <div style="font-size:10px;font-weight:700;color:#16a34a;margin-top:4px">${aWin?m.a+' 승':bWin?m.b+' 승':'결과없음'}</div>
+            ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           </div>
           ${_pcard(pb, bWin)}
         </div>
         <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          ${isDone?`<button class="btn btn-p btn-xs" onclick="_openProCompLeagueShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">?��</button>`:''}
-          ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="proCompEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">?�️ 결과</button>
-          <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">?���???��</button>`:''}
+          ${isDone?`<button class="btn btn-p btn-xs" onclick="_openProCompLeagueShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">공유</button>`:''}
+          ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="proCompEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
+          <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>`:''}
         </div>
       </div>`;
     });
@@ -962,19 +964,17 @@ function proCompSaveTeamPaste(tnId, tmi) {
   if (added>0) alert(`${added}경기가 추�??�었?�니??`);
 }
 
-/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?
-   ?�진??(?�계�??�너먼트)
-?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
+/* 대진표(연계형 토너먼트) */
 function proCompBracket(tn) {
-  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">?�?��? ?�택?�세??</div>`;
+  if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   if (!tn.bracket || !tn.bracket.length) {
     const hasGroups = tn.groups && tn.groups.length>0 && tn.groups.some(g=>(g.players||[]).length>0||(g.matches||[]).length>0);
     return `<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
-      <div style="font-size:36px;margin-bottom:12px">?���?/div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:8px">?�진?��? ?�습?�다</div>
+      <div style="font-size:36px;margin-bottom:12px">🗂️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">대진표가 없습니다</div>
       ${isLoggedIn?`<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-        ${hasGroups?`<button class="btn btn-b" onclick="proCompInitBracket('${tn.id}')">?�� 조별 ?�위�??�진???�성</button>`:''}
-        <button class="btn btn-w" onclick="proCompInitBracketManual('${tn.id}')">?�️ 직접 ?�진??만들�?/button>
+        ${hasGroups?`<button class="btn btn-b" onclick="proCompInitBracket('${tn.id}')">📊 조별 순위로 대진표 생성</button>`:''}
+        <button class="btn btn-w" onclick="proCompInitBracketManual('${tn.id}')">✏️ 직접 대진표 만들기</button>
       </div>`:''}
     </div>`;
   }
@@ -991,14 +991,19 @@ function proCompBracket(tn) {
   const _info = name => {
     const p=_pc(name); if(!p) return '';
     const rb = p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
-    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:9px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${p.univ||''}${p.tier?' · '+p.tier:''}</span></div>`;
+    // 선수 중심으로 표시: 이름(티어) - 대학
+    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:10px;font-weight:700;color:var(--text)">${name}</span><span style="font-size:9px;color:#94a3b8">${p.tier?`(${p.tier})`:''} ${p.univ||''}</span></div>`;
   };
-  const rndLabel = ri => ri===rounds.length-1?'?�� 결승':ri===rounds.length-2?'?�� 준결승':ri===rounds.length-3?'?�️ 4�?:`${Math.pow(2,rounds.length-ri)}�?;
+  const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'🥈 준결승':ri===rounds.length-3?'🥉 4강':`${Math.pow(2,rounds.length-ri)}강`;
   const rndColor = ri => ri===rounds.length-1?'#d97706':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
   const rndBg   = ri => ri===rounds.length-1?'linear-gradient(135deg,#f59e0b,#d97706)':ri===rounds.length-2?'linear-gradient(135deg,#8b5cf6,#6d28d9)':ri===rounds.length-3?'linear-gradient(135deg,#ef4444,#b91c1c)':'linear-gradient(135deg,#3b82f6,#1d4ed8)';
 
-  // 챔피??배너
-  let h = `<div style="font-weight:900;font-size:15px;color:var(--blue);margin-bottom:12px">?���?${tn.name} ???�진??/div>`;
+  let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
+    ${isLoggedIn?`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="proCompOpenBktBatchModal('${tn.id}')">📋 결과 일괄 입력</button>`:''}
+  </div>`;
+
+  // 챔피언 배너
   const finalMatch = (rounds[rounds.length-1]||[])[0];
   const champion = finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
   if (champion) {
@@ -1008,11 +1013,11 @@ function proCompBracket(tn) {
     h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
       ${cpPhoto}
       <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">?�� ?�승</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">FINAL CHAMPION</div>
         <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
         ${cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:''}
       </div>
-      <div style="margin-left:auto;font-size:32px">?��</div>
+      <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`;
   }
 
@@ -1031,7 +1036,7 @@ function proCompBracket(tn) {
       const aTBD=!m.a||m.a==='TBD', bTBD=!m.b||m.b==='TBD';
       const winnerName=aWin?m.a:bWin?m.b:'';
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
-        <!-- A ?�수 -->
+        <!-- A 선수 -->
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
           ${_photo(m.a, aWin, col)}
           <div style="flex:1;min-width:0">
@@ -1040,7 +1045,7 @@ function proCompBracket(tn) {
           </div>
           ${aWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        <!-- B ?�수 -->
+        <!-- B 선수 -->
         <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
           ${_photo(m.b, bWin, col)}
           <div style="flex:1;min-width:0">
@@ -1049,26 +1054,27 @@ function proCompBracket(tn) {
           </div>
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        <!-- ?�짜/�?-->
-        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>?�� ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>?�� ${m.map}</span>`:''}</div>`:''}
-        <!-- ?�션 버튼 -->
+        <!-- 날짜/맵 -->
+        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:9px;color:#94a3b8;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        <!-- 옵션 버튼 -->
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
-          ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">?��</button>`:''}
-          ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} ??/button>
-            <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} ??/button>
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="붙여?�기">?��</button>`:''}
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="?�짜">?��</button>
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="�?>?��</button>
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="?�수 ?�정">?�️</button>`:''}
+          ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:''}
+          ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompOpenBktMatchPaste('${tn.id}',${ri},${mi})" title="붙여넣기">📋</button>`:''}
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetDate('${tn.id}',${ri},${mi})" title="날짜">🗓️</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktSetMap('${tn.id}',${ri},${mi})" title="맵변경">🗺️</button>
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="선수 수정">✏️</button>`:''}
         </div>
       </div>`;
     });
     h += `</div></div>`;
-    // ?�운??�??�살??커넥??    if (ri < rounds.length-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">??/div>`;
+    // 라운드 간 화살표 커넥터
+    if (ri < rounds.length-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">➔</div>`;
     h += `</div>`;
   });
   h += `</div></div>`;
-  // 3?�전
+  // 3위전
   if (rounds.length >= 2 && tn.thirdPlace) {
     const tp = tn.thirdPlace;
     const tpA = tp.winner==='A', tpB = tp.winner==='B';
@@ -1077,8 +1083,8 @@ function proCompBracket(tn) {
     const tpWinner = tpA?tp.a:tpB?tp.b:null;
     h += `<div style="margin-top:20px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:900;color:${tpCol}">?�� 3·4?�전</span>
-        ${tpWinner?`<span style="font-size:11px;background:#78716c18;color:#78716c;padding:2px 10px;border-radius:20px;font-weight:700">3??· ${tpWinner}</span>`:''}
+        <span style="font-size:13px;font-weight:900;color:${tpCol}">🥉 3·4위전</span>
+        ${tpWinner?`<span style="font-size:11px;background:#78716c18;color:#78716c;padding:2px 10px;border-radius:20px;font-weight:700">3위 · ${tpWinner}</span>`:''}
       </div>
       <div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:0 2px 10px rgba(0,0,0,.08);border:${tp.winner?`1.5px solid ${tpCol}44`:'1.5px solid #e2e8f0'};max-width:230px">
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${tpA?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpA?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpA?'opacity:.55':''}">
@@ -1297,7 +1303,7 @@ function proCompBktSetDate(tnId, ri, mi) {
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML = `<div style="background:var(--white);border-radius:14px;padding:20px;min-width:240px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-weight:900;font-size:14px;margin-bottom:14px">?�� ?�짜 ?�력</div>
+    <div style="font-weight:900;font-size:14px;margin-bottom:14px">🗓️ 날짜 입력</div>
     <input id="_bktDateInp" type="date" value="${m.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.d=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.body.removeChild(document.getElementById('_bktDateModal'));save();render();})()">확인</button>
@@ -1317,8 +1323,8 @@ function proCompBktSetMap(tnId, ri, mi) {
   modal.id = '_bktMapModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:14px">?���?�??�정</div>
-    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="�??�름 ?�력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
+    <div style="font-weight:900;font-size:15px;margin-bottom:14px">🗺️ 맵 설정</div>
+    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.map=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.getElementById('_bktMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktMapModal').remove()">취소</button>
@@ -1383,11 +1389,11 @@ function proCompBktEditPlayers(tnId, ri, mi) {
 function proCompInitBracketManual(tnId) {
   const tn = _findTourneyById(tnId);
   if (!tn) return;
-  const szStr = prompt('?�진??규모�??�택?�세??\n2 = 결승\n4 = 4�?n8 = 8�?n16 = 16�?n\n참�? ?�원 ?��? ?�력?�세??', '4');
+  const szStr = prompt('대진표 규모를 선택하세요\n2 = 결승\n4 = 4강\n8 = 8강\n16 = 16강\n\n참가 인원을 숫자로 입력하세요', '4');
   if (!szStr) return;
   let sz = parseInt(szStr);
-  if (isNaN(sz)||sz<2) return alert('2 ?�상???�자�??�력?�세??');
-  // ?�림?�로 2??거듭?�곱
+  if (isNaN(sz)||sz<2) return alert('2 이상의 숫자를 입력하세요');
+  // 올림으로 2의 거듭제곱
   let p=1; while(p<sz) p*=2; sz=p;
   const firstRound=[];
   for(let i=0;i<sz;i+=2) firstRound.push({a:'',b:'',winner:''});
@@ -1402,7 +1408,7 @@ function proCompAddThirdPlace(tnId) {
   const tn = _findTourneyById(tnId);
   if (!tn) return;
   tn.thirdPlace = {a:'', b:'', winner:'', map:''};
-  // 준결승 결과가 ?��? ?�으�??�자 ?�동 배정
+  // 준결승 결과가 있을 경우 패자 자동 배정
   const semiRi = (tn.bracket||[]).length - 2;
   if (semiRi >= 0) {
     const semiRnd = tn.bracket[semiRi] || [];
@@ -1415,7 +1421,7 @@ function proCompAddThirdPlace(tnId) {
 }
 
 function proCompRemoveThirdPlace(tnId) {
-  if (!confirm('3·4?�전???�거?�시겠습?�까?')) return;
+  if (!confirm('3·4위전을 제거하시겠습니까?')) return;
   const tn = _findTourneyById(tnId);
   if (!tn) return;
   const thirdKey = `pbn_${tnId}_3rd`;
@@ -1425,7 +1431,7 @@ function proCompRemoveThirdPlace(tnId) {
 }
 
 function proCompResetBracket(tnId) {
-  if (!confirm('?�진?��?초기?�하?�겠?�니�?')) return;
+  if (!confirm('대진표를 초기화하시겠습니까?')) return;
   const tn = _findTourneyById(tnId);
   if (!tn) return;
   tn.bracket = [];
@@ -1918,13 +1924,102 @@ function proCompSaveMatch() {
 }
 
 function proCompDelMatch(tnId, gi, mi) {
-  if (!confirm('경기�???��?�시겠습?�까?')) return;
+  if (!confirm('경기를 삭제하시겠습니까?')) return;
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return;
   const m = tn.groups[gi].matches[mi];
   if (m && m.winner && m._id) _revertProMatch(m._id);
   tn.groups[gi].matches.splice(mi, 1);
   save(); render();
+}
+
+// 대진표 결과 일괄 입력 모달
+function proCompOpenBktBatchModal(tnId) {
+  const tn = _findTourneyById(tnId);
+  if (!tn || !tn.bracket || !tn.bracket.length) return;
+  
+  const modal = document.createElement('div');
+  modal.id = '_bktBatchModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;padding:24px;width:400px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-weight:900;font-size:16px;margin-bottom:8px">📋 대진표 결과 일괄 입력</div>
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:16px;line-height:1.5">
+        한 줄에 한 경기씩 입력하세요.<br>
+        형식: <b>승자이름 패자이름 [맵이름]</b><br>
+        <span style="color:var(--blue)">예) 홍길동 임꺽정 투혼</span>
+      </div>
+      <textarea id="_bktBatchText" style="width:100%;height:200px;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;margin-bottom:16px;box-sizing:border-box;resize:none" placeholder="여기에 복사해서 붙여넣으세요..."></textarea>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktBatch('${tnId}')">적용하기</button>
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktBatchModal').remove()">취son</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function proCompSaveBktBatch(tnId) {
+  const text = document.getElementById('_bktBatchText').value.trim();
+  if (!text) return;
+  const tn = _findTourneyById(tnId);
+  if (!tn || !tn.bracket) return;
+
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let applied = 0;
+
+  lines.forEach(line => {
+    const parts = line.split(/[\s\t]+/);
+    if (parts.length < 2) return;
+    const p1 = parts[0], p2 = parts[1], map = parts[2] || '';
+
+    // 대진표 전체를 돌며 매칭되는 경기 찾기
+    let found = false;
+    for (let ri=0; ri<tn.bracket.length; ri++) {
+      for (let mi=0; mi<tn.bracket[ri].length; mi++) {
+        const m = tn.bracket[ri][mi];
+        if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') continue;
+        
+        const isMatch = (m.a===p1 && m.b===p2) || (m.a===p2 && m.b===p1);
+        if (isMatch) {
+          const winner = (m.a===p1) ? 'A' : 'B';
+          const prevWinner = m.winner;
+          const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
+          
+          if (prevWinner && prevWinner !== winner) _revertProMatch(bktMatchId);
+          
+          m.winner = winner;
+          if (map) m.map = map;
+          _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+          applied++;
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    
+    // 3위전도 확인
+    if (!found && tn.thirdPlace) {
+      const tp = tn.thirdPlace;
+      if (tp.a && tp.b && tp.a!=='TBD' && tp.b!=='TBD') {
+        if ((tp.a===p1 && tp.b===p2) || (tp.a===p2 && tp.b===p1)) {
+          const winner = (tp.a===p1) ? 'A' : 'B';
+          const bktMatchId = `pbn_${tnId}_3rd`;
+          if (tp.winner && tp.winner !== winner) _revertProMatch(bktMatchId);
+          tp.winner = winner;
+          if (map) tp.map = map;
+          _syncBktMatchToHistory(tn, tp, bktMatchId, '3rd', 0);
+          applied++;
+        }
+      }
+    }
+  });
+
+  document.getElementById('_bktBatchModal').remove();
+  save(); render();
+  if (applied > 0) alert(`${applied}경기의 결과가 반영되었습니다.`);
+  else alert('일치하는 경기를 찾지 못했습니다. 이름을 확인해주세요.');
 }
 
 /* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?
