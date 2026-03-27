@@ -7,12 +7,64 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
-let _searchComposing=false;
-let _searchRenderTm=null;
-function _searchDebounce(force){
-  if(_searchRenderTm) clearTimeout(_searchRenderTm);
-  if(_searchComposing && !force) return;
-  _searchRenderTm = setTimeout(()=>render(), force?0:120);
+
+function _parseTotalSearch(qRaw){
+  const q=(qRaw||'').trim().toLowerCase();
+  const _RMAP={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P','종족미정':'N','미정':'N','?':'N'};
+  const _GMAP={'여':'F','여자':'F','남':'M','남자':'M'};
+  const toks=q.split(/\s+/).filter(Boolean);
+  let rf='', gf='';
+  const inc=[], exc=[];
+  toks.forEach(t=>{
+    if(t.startsWith('-')&&t.length>1){ exc.push(t.slice(1)); return; }
+    if(_RMAP[t]) rf=_RMAP[t];
+    else if(_GMAP[t]) gf=_GMAP[t];
+    else inc.push(t);
+  });
+  return {rf,gf,inc,exc};
+}
+
+function totalApplySearchFilter(){
+  const table=document.querySelector('#rcont table');
+  if(!table) return;
+  const {rf,gf,inc,exc}=_parseTotalSearch(totalSearch);
+  const qHas=rf||gf||inc.length||exc.length;
+  const rows=[...table.querySelectorAll('tr[data-player-row="1"]')];
+  rows.forEach(tr=>{
+    if(!qHas){ tr.style.display=''; return; }
+    const hay=(tr.getAttribute('data-q')||'');
+    const r=tr.getAttribute('data-r')||'';
+    const g=tr.getAttribute('data-g')||'';
+    const okRace=!rf||r===rf;
+    const okGender=!gf||g===gf;
+    const okInc=inc.length===0||inc.every(t=>hay.includes(t));
+    const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
+    tr.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+  });
+  // 대학 헤더 숨김 (해당 대학에 보이는 선수 행이 없으면)
+  table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
+    const u=h.getAttribute('data-univ-header')||'';
+    const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
+    h.style.display=any?'':'none';
+  });
+}
+
+function bulkApplySearchFilter(){
+  const table=document.querySelector('#rcont table');
+  if(!table) return;
+  const q=(_bulkEditSearch||'').trim().toLowerCase();
+  const rows=[...table.querySelectorAll('tr[data-player-row="1"]')];
+  if(!_bulkEditMode || !q) return;
+  rows.forEach(tr=>{
+    if(tr.style.display==='none') return;
+    const hay=(tr.getAttribute('data-q')||'');
+    if(!hay.includes(q)) tr.style.display='none';
+  });
+  table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
+    const u=h.getAttribute('data-univ-header')||'';
+    const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
+    h.style.display=any?'':'none';
+  });
 }
 
 function rTotal(C,T){
@@ -27,9 +79,9 @@ function rTotal(C,T){
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
     <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
-      oncompositionstart="_searchComposing=true;if(_searchRenderTm)clearTimeout(_searchRenderTm);_searchRenderTm=null"
-      oncompositionend="_searchComposing=false;totalSearch=this.value;_searchDebounce(true)"
-      oninput="totalSearch=this.value;_searchDebounce()"
+      oncompositionstart="window._tsComp=true"
+      oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
+      oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false"
       style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:220px;flex:1;background:var(--white);color:var(--text)">
     <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
@@ -37,9 +89,9 @@ function rTotal(C,T){
     ${_showBulk?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
-        oncompositionstart="_searchComposing=true;if(_searchRenderTm)clearTimeout(_searchRenderTm);_searchRenderTm=null"
-        oncompositionend="_searchComposing=false;_bulkEditSearch=this.value;_searchDebounce(true)"
-        oninput="_bulkEditSearch=this.value;_searchDebounce()"
+        oncompositionstart="window._tsComp2=true"
+        oncompositionend="window._tsComp2=false;_bulkEditSearch=this.value;bulkApplySearchFilter()"
+        oninput="_bulkEditSearch=this.value;if(!window._tsComp2)bulkApplySearchFilter()"
         autocomplete="off" spellcheck="false"
         style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">`:''}
   </div>`;
@@ -75,34 +127,11 @@ function rTotal(C,T){
     const _isHiddenUniv=isLoggedIn&&u.hidden;
     let up=players.filter(p=>p.univ===u.name);
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
-    if(totalSearch.trim()){
-      const _tsq=totalSearch.trim().toLowerCase();
-      const _RMAP={'테란':'T','테':'T','저그':'Z','저':'Z','프로토스':'P','프토':'P','프':'P'};
-      const _GMAP={'여':'F','여자':'F','남':'M','남자':'M'};
-      const _toks=_tsq.split(/\s+/).filter(Boolean);
-      let _rf='',_gf='',_nts=[],_ex=[];
-      _toks.forEach(t=>{
-        if(t.startsWith('-')&&t.length>1){ _ex.push(t.slice(1)); return; }
-        if(_RMAP[t]) _rf=_RMAP[t];
-        else if(_GMAP[t]) _gf=_GMAP[t];
-        else _nts.push(t);
-      });
-      up=up.filter(p=>{
-        const hay = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-        const nm=_nts.length===0||_nts.every(t=>hay.includes(t));
-        const ex=_ex.length===0||_ex.every(t=>!hay.includes(t));
-        return nm&&ex&&(!_rf||p.race===_rf)&&(!_gf||p.gender===_gf);
-      });
-    }
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
-    if(_showBulk&&_bulkEditSearch.trim()){
-      const q=_bulkEditSearch.trim().toLowerCase();
-      up=up.filter(p=>`${p.name||''} ${p.univ||''} ${p.tier||''} ${p.role||''}`.toLowerCase().includes(q));
-    }
     if(!up.length)return;
     totalShown+=up.length;
     const _univTotal=players.filter(p=>p.univ===u.name).length; // 은퇴 포함 전체 인원
-    tableHTML+=`<tr class="ugrp" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
+    tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'26px')}${u.name}</span>
@@ -133,7 +162,8 @@ function rTotal(C,T){
       const _pRank = _rankMap[p.name];
       const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
       const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      tableHTML+=`<tr>
+      const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
+      tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
@@ -176,6 +206,8 @@ function rTotal(C,T){
   C.innerHTML = filterBar + tableHTML;
   injectUnivIcons(C);
   requestAnimationFrame(()=>injectUnivIcons(C));
+  totalApplySearchFilter();
+  bulkApplySearchFilter();
   const si=C.querySelector('#total-search');
   if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
 }
