@@ -160,59 +160,70 @@ function getCurrentProTourney() {
    메인 렌더러
    ══════════════════════════════════════════════════════════════ */
 function rProComp(C, T) {
-  T.innerText = '프로리그 대회';
-  if (!isLoggedIn && proCompSub === 'grpedit') proCompSub = 'league';
+  if (T) T.innerText = '프로리그 대회';
+  if (!C) return;
+  
+  try {
+    if (!isLoggedIn && proCompSub === 'grpedit') proCompSub = 'league';
 
-  const tn = getCurrentProTourney();
-  if (tn && !tn.groups) tn.groups = [];
+    const tn = getCurrentProTourney();
+    if (tn && !tn.groups) tn.groups = [];
 
-  let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
-    <span style="font-weight:700;color:var(--gold);white-space:nowrap">대회 선택:</span>
-    <select style="flex:1;max-width:220px;font-weight:700" onchange="curProComp=this.value;proCompFilterDate='';proCompFilterGrp='';save();render()">
-      <option value="">대회를 선택하세요</option>
-      ${proTourneys.map(t=>{
-        const _grpD=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
-        const _bktD=(t.bracket||[]).flat().map(m=>m&&m.d).concat(t.thirdPlace?[t.thirdPlace.d]:[]);
-        const _dates=[..._grpD,..._bktD].filter(d=>typeof d==='string'&&d.length>=2).sort();
-        const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})`:t.createdAt&&t.createdAt.length>=2?` (${t.createdAt.slice(2).replace(/-/g,'.')} 생성)`:'';
-        return`<option value="${t.name||''}"${curProComp===t.name?' selected':''}>${t.name||'이름 없음'}${_range}</option>`;
-      }).join('')}
-    </select>
-    ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
-    ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
-    ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${tn.groups.length}개 조 · ${tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
-  </div>`;
+    const tourneys = Array.isArray(proTourneys) ? proTourneys : [];
 
-  const subOpts = [
-    {id:'league', lbl:'📅 조별리그 일정'},
-    {id:'grprank', lbl:'📊 조별 순위'},
-    {id:'tour', lbl:'🗂️ 토너먼트'},
-    {id:'team', lbl:'👥 팀전'},
-    {id:'gj', lbl:'⚔️ 끝장전'},
-    {id:'stats', lbl:'🏆 대회 통계'},
-    ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
-  ];
-  if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
-  h += `<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${proCompSub===o.id?'on':''}" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
-
-  if (!tn && proCompSub !== 'grpedit') {
-    h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
-      <div style="font-size:44px;margin-bottom:14px">🏆</div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:8px">등록된 대회가 없습니다</div>
-      <div style="color:var(--gray-l);margin-bottom:20px">새 대회를 만들고 조편성을 시작해보세요</div>
-      ${isLoggedIn?`<button class="btn btn-b" onclick="proCompNewTourney()">+ 대회 만들기</button>`:''}
+    let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
+      <span style="font-weight:700;color:var(--gold);white-space:nowrap">대회 선택:</span>
+      <select style="flex:1;max-width:220px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--gold-b)" onchange="curProComp=this.value;proCompFilterDate='';proCompFilterGrp='';save();render()">
+        <option value="">대회를 선택하세요</option>
+        ${tourneys.map(t=>{
+          if (!t) return '';
+          const _grpD=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m?m.d:''));
+          const _bktD=(t.bracket||[]).flat().map(m=>m&&m.d).concat(t.thirdPlace?[t.thirdPlace.d]:[]);
+          const _dates=[..._grpD,..._bktD].filter(d=>typeof d==='string'&&d.length>=2).sort();
+          const _range=_dates.length?` (${_dates[0].slice(2).replace(/-/g,'.')}~${_dates[_dates.length-1].slice(2).replace(/-/g,'.')})`:t.createdAt&&t.createdAt.length>=2?` (${t.createdAt.slice(2).replace(/-/g,'.')} 생성)`:'';
+          return`<option value="${t.name||''}"${curProComp===t.name?' selected':''}>${t.name||'이름 없음'}${_range}</option>`;
+        }).join('')}
+      </select>
+      ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
+      ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
+      ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${(tn.groups||[]).length}개 조 · ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
     </div>`;
-    C.innerHTML = h; return;
-  }
 
-  if (proCompSub === 'league') h += proCompLeague(tn);
-  else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
-  else if (proCompSub === 'tour') h += proCompBracket(tn);
-  else if (proCompSub === 'team') h += proCompTeamSection(tn);
-  else if (proCompSub === 'gj') h += proCompGJSection(tn);
-  else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
-  else if (proCompSub === 'grpedit') h += proCompGrpEdit();
-  C.innerHTML = h;
+    const subOpts = [
+      {id:'league', lbl:'📅 조별리그 일정'},
+      {id:'grprank', lbl:'📊 조별 순위'},
+      {id:'tour', lbl:'🗂️ 토너먼트'},
+      {id:'team', lbl:'👥 팀전'},
+      {id:'gj', lbl:'⚔️ 끝장전'},
+      {id:'stats', lbl:'🏆 대회 통계'},
+      ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
+    ];
+    if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
+    h += `<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${proCompSub===o.id?'on':''}" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+
+    if (!tn && proCompSub !== 'grpedit') {
+      h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
+        <div style="font-size:44px;margin-bottom:14px">🏆</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">등록된 대회가 없습니다</div>
+        <div style="color:var(--gray-l);margin-bottom:20px">새 대회를 만들고 조편성을 시작해보세요</div>
+        ${isLoggedIn?`<button class="btn btn-b" onclick="proCompNewTourney()">+ 대회 만들기</button>`:''}
+      </div>`;
+      C.innerHTML = h; return;
+    }
+
+    if (proCompSub === 'league') h += proCompLeague(tn);
+    else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
+    else if (proCompSub === 'tour') h += proCompBracket(tn);
+    else if (proCompSub === 'team') h += proCompTeamSection(tn);
+    else if (proCompSub === 'gj') h += proCompGJSection(tn);
+    else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
+    else if (proCompSub === 'grpedit') h += proCompGrpEdit();
+    
+    C.innerHTML = h;
+  } catch (e) {
+    console.error(e);
+    C.innerHTML = `<div style="padding:30px;color:red;text-align:center">프로리그 대회 렌더링 중 오류가 발생했습니다.<br>${e.message}</div>`;
+  }
 }
 
 /* 조별리그 일정 */
@@ -602,8 +613,8 @@ function _tmSaveCreate(tnId) {
   const tn = _findTourneyById(tnId);
   if (!tn) return;
   const d = document.getElementById('_tm_d').value;
-  const teamAName = document.getElementById('_tm_an').value.trim()||'A?�?;
-  const teamBName = document.getElementById('_tm_bn').value.trim()||'B?�?;
+  const teamAName = document.getElementById('_tm_an').value.trim()||'A팀';
+  const teamBName = document.getElementById('_tm_bn').value.trim()||'B팀';
   const teamA=[...document.querySelectorAll('#_tm_draftA ._tm_draftTag')].map(el=>el.getAttribute('data-name'));
   const teamB=[...document.querySelectorAll('#_tm_draftB ._tm_draftTag')].map(el=>el.getAttribute('data-name'));
   if (!tn.teamMatches) tn.teamMatches=[];
@@ -782,8 +793,8 @@ function _tmSaveEdit(tnId, tmi) {
   if (!tn||(tn.teamMatches||[])[tmi]==null) return;
   const tm = tn.teamMatches[tmi];
   tm.d = document.getElementById('_tme_d').value;
-  tm.teamAName = document.getElementById('_tme_an').value.trim()||'A?�?;
-  tm.teamBName = document.getElementById('_tme_bn').value.trim()||'B?�?;
+  tm.teamAName = document.getElementById('_tme_an').value.trim()||'A팀';
+  tm.teamBName = document.getElementById('_tme_bn').value.trim()||'B팀';
   document.getElementById('_tmEditModal').remove();
   save(); render();
 }
@@ -1669,7 +1680,7 @@ function _proCompBktPasteApplyLogic(savable) {
   let winner;
   if (winName===m.a) winner='A';
   else if (winName===m.b) winner='B';
-  else { alert(`"${winName}"?�??? ??경기 ?�수가 ?�닙?�다.\n${m.a} vs ${m.b}`); return false; }
+  else { alert(`"${winName}"은(는) 해당 경기 선수가 아닙니다.\n${m.a} vs ${m.b}`); return false; }
   const dateEl = document.getElementById('paste-date');
   if (dateEl?.value) m.d = dateEl.value;
   proCompSetBktWinner(tnId, ri, mi, winner);
@@ -1860,23 +1871,23 @@ function proCompEditMatch(tnId, gi, mi) {
         :`<input id="pm_b" value="${m.b||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">`}
     </div>
     <div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:var(--text3)">?�자</label>
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">승자</label>
       <div style="display:flex;gap:8px;margin-top:6px">
-        <button id="pm_winA" class="btn ${m.winner==='A'?'btn-b':'btn-w'}" style="flex:1" onclick="document.getElementById('pm_winA').className='btn btn-b';document.getElementById('pm_winB').className='btn btn-w';document.getElementById('pm_winNone').className='btn btn-w'">A ??/button>
-        <button id="pm_winB" class="btn ${m.winner==='B'?'btn-b':'btn-w'}" style="flex:1" onclick="document.getElementById('pm_winB').className='btn btn-b';document.getElementById('pm_winA').className='btn btn-w';document.getElementById('pm_winNone').className='btn btn-w'">B ??/button>
+        <button id="pm_winA" class="btn ${m.winner==='A'?'btn-b':'btn-w'}" style="flex:1" onclick="document.getElementById('pm_winA').className='btn btn-b';document.getElementById('pm_winB').className='btn btn-w';document.getElementById('pm_winNone').className='btn btn-w'">A 승</button>
+        <button id="pm_winB" class="btn ${m.winner==='B'?'btn-b':'btn-w'}" style="flex:1" onclick="document.getElementById('pm_winB').className='btn btn-b';document.getElementById('pm_winA').className='btn btn-w';document.getElementById('pm_winNone').className='btn btn-w'">B 승</button>
         <button id="pm_winNone" class="btn ${!m.winner?'btn-b':'btn-w'}" style="flex:1" onclick="document.getElementById('pm_winNone').className='btn btn-b';document.getElementById('pm_winA').className='btn btn-w';document.getElementById('pm_winB').className='btn btn-w'">미정</button>
       </div>
     </div>
     <div style="margin-bottom:10px">
-      <label style="font-size:12px;font-weight:700;color:var(--text3)">?�짜</label>
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">날짜</label>
       <input id="pm_d" type="date" value="${m.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
     <div style="margin-bottom:16px">
-      <label style="font-size:12px;font-weight:700;color:var(--text3)">�?/label>
-      <input id="pm_map" value="${m.map||''}" placeholder="?�택?�력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">맵</label>
+      <input id="pm_map" value="${m.map||''}" placeholder="선택입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-b" style="flex:1" onclick="proCompSaveMatch()">?�??/button>
+      <button class="btn btn-b" style="flex:1" onclick="proCompSaveMatch()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('proMatchModal').remove()">취소</button>
     </div>
   </div>`;
@@ -1889,7 +1900,7 @@ function _revertProMatch(matchId) {
     if (!p.history) return;
     const h = p.history.find(x => x.matchId === matchId);
     if (!h) return;
-    if (h.result === '??) { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
+    if (h.result === '승') { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
     else { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
     p.elo = (p.elo||1200) - h.eloDelta;
     p.history = p.history.filter(x => x.matchId !== matchId);
@@ -1902,25 +1913,25 @@ function proCompSaveMatch() {
   if (!tn||!tn.groups[gi]) return;
   const aVal = document.getElementById('pm_a').value.trim();
   const bVal = document.getElementById('pm_b').value.trim();
-  if (!aVal || !bVal) { alert('A, B ?�수�?모두 ?�택?�세??'); return; }
+  if (!aVal || !bVal) { alert('A, B 선수를 모두 선택하세요.'); return; }
   const winA = document.getElementById('pm_winA').classList.contains('btn-b');
   const winB = document.getElementById('pm_winB').classList.contains('btn-b');
   const winVal = winA?'A':winB?'B':'';
   const dVal = document.getElementById('pm_d').value;
   const mapVal = document.getElementById('pm_map').value.trim();
   if (mi === -1) {
-    // ??경기 추�?
+    // 새 경기 추가
     if (!tn.groups[gi].matches) tn.groups[gi].matches = [];
     const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
     tn.groups[gi].matches.push({a:aVal, b:bVal, winner:winVal, d:dVal, map:mapVal, _id:newMid});
-    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, newMid, '', '', '?�로리그?�??);
+    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, newMid, '', '', '프로리그대회');
   } else {
     const m = tn.groups[gi].matches[mi];
     if (!m) return;
     if (!m._id) m._id = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
     if (m.winner) _revertProMatch(m._id);
     m.a = aVal; m.b = bVal; m.d = dVal; m.map = mapVal; m.winner = winVal;
-    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, m._id, '', '', '?�로리그?�??);
+    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, m._id, '', '', '프로리그대회');
   }
   document.getElementById('proMatchModal').remove();
   save(); render();
@@ -2470,7 +2481,7 @@ function _openProCompTeamShareCard(tnId, tmi) {
   }));
   // ?�?? ?�이�?vs ?�크?�드 (?�??��??�낌)
   const shareObj = {
-    a: tm.teamAName||'A?�?, b: tm.teamBName||'B?�?,
+    a: tm.teamAName||'A팀', b: tm.teamBName||'B팀',
     sa: tm.sa||0, sb: tm.sb||0,
     d: tm.d||'', n: tn.name,
     sets: [{scoreA:tm.sa||0, scoreB:tm.sb||0, winner:tm.sa>tm.sb?'A':tm.sb>tm.sa?'B':'', games}],
@@ -2488,7 +2499,7 @@ function _openProCompBktShareCard(tnId, ri, mi) {
   const rounds = tn.bracket||[];
   const m = (rounds[ri]||[])[mi];
   if (!m || !m.winner) return;
-  const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4�?:`${Math.pow(2,rounds.length-ri)}�?;
+  const rndLabel = ri===rounds.length-1?'결승':ri===rounds.length-2?'준결승':ri===rounds.length-3?'4강':`${Math.pow(2,rounds.length-ri)}강`;
   const aWin = m.winner==='A';
   // ?�진?? ?�버(골드) vs ?�퍼??(?�너먼트/챔피?�십 ?�낌)
   const shareObj = {
@@ -2536,7 +2547,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
   const pendM = allM.filter(m=>!m.winner);
   const pct = allM.length ? Math.round(doneM.length/allM.length*100) : 0;
 
-  // ?�수 ?�바?�???  const avatarRow = ranks.map(r => {
+  // 선수 아바타들
+  const avatarRow = ranks.map(r => {
     const p = players.find(x=>x.name===r.name);
     const photo = p&&p.photo
       ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${col}66" onerror="this.style.display='none'">`
@@ -2547,7 +2559,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
     </div>`;
   }).join('');
 
-  // ?�위????  const rankRows = ranks.map((r, idx) => {
+  // 순위표 행
+  const rankRows = ranks.map((r, idx) => {
     const total = r.w + r.l;
     const wr = total ? Math.round(r.w/total*100) : 0;
     const medal = idx===0?'?��':idx===1?'?��':idx===2?'?��':'';
@@ -2627,8 +2640,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
         <thead><tr style="background:${col}10">
           <th style="padding:5px 8px;text-align:center;width:28px;font-size:10px;color:#64748b;font-weight:700">?�위</th>
           <th style="padding:5px 6px;text-align:left;font-size:10px;color:#64748b;font-weight:700">?�수</th>
-          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#16a34a;font-weight:700">??/th>
-          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#dc2626;font-weight:700">??/th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#16a34a;font-weight:700">승</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:#dc2626;font-weight:700">패</th>
           <th style="padding:5px 8px;text-align:center;font-size:10px;color:#64748b;font-weight:700">?�률</th>
         </tr></thead>
         <tbody>${rankRows}</tbody>
