@@ -1016,7 +1016,6 @@ function proCompBracket(tn) {
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
-    ${isLoggedIn?`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="proCompOpenBktBatchModal('${tn.id}')">📋 결과 일괄 입력</button>`:''}
   </div>`;
 
   // 챔피언 배너
