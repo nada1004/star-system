@@ -493,34 +493,32 @@ function openMoveIndPop(btn, idsArr, srcMode){
 function indInputHTML(){
   const gi=_indInput;
   const pA=gi.playerA, pB=gi.playerB;
-  const aWins=gi.games.filter(g=>g.winner==='A').length, bWins=gi.games.filter(g=>g.winner==='B').length;
   const pAObj=players.find(p=>p.name===pA)||{};
   const pBObj=players.find(p=>p.name===pB)||{};
   const aCol=gc(pAObj.univ)||'#2563eb', bCol=gc(pBObj.univ)||'#dc2626';
-  let gameRows='';
-  gi.games.forEach((g,i)=>{
-    const w=g.winner, wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
-    gameRows+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--surface);border-radius:6px;margin-bottom:4px">
-      <span style="font-size:11px;color:var(--gray-l);min-width:20px">${i+1}G</span>
-      <span style="font-weight:700;color:${w==='A'?aCol:bCol};flex:1">${wName} 승</span>
-      ${g.map?`<span style="font-size:10px;background:var(--border);padding:1px 5px;border-radius:4px">${g.map}</span>`:''}
-      <span style="font-size:10px;color:var(--gray-l)">${lName} 패</span>
-      <button onclick="_indInput.games.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 4px">✕</button>
-    </div>`;
-  });
+  const today=new Date().toISOString().slice(0,10);
+  if(pA&&pB){
+    const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
+    const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
+    if(!BLD['ind']||!BLD['ind'].membersA||!BLD['ind'].membersB||BLD['ind'].membersA[0]?.name!==pA||BLD['ind'].membersB[0]?.name!==pB){
+      BLD['ind']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[]};
+    } else {
+      if(gi.date&&BLD['ind'].date!==gi.date)BLD['ind'].date=gi.date;
+      if(!gi.date&&!BLD['ind'].date)BLD['ind'].date=today;
+    }
+  } else {
+    BLD['ind']=null;
+  }
   return `<div class="match-builder"><h3>🎮 개인전 입력</h3>
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button>
       <span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>
     </div>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#166534">
-      💡 <strong>개인전</strong>: 선수 1:1 단순 승패 기록 &nbsp;|&nbsp; <strong>끝장전</strong>: 동일 대전 상대 연속 시리즈 (세트 승패 추적)
-    </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
         <label style="font-size:12px;font-weight:700">날짜</label>
-        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:140px">
@@ -528,7 +526,7 @@ function indInputHTML(){
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_indInput.playerA='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
@@ -537,37 +535,15 @@ function indInputHTML(){
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_indInput.playerB='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerB='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
       </div>
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('ind'):''}
     </div>
-    ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+    ${pA&&pB&&BLD['ind']?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <label style="font-size:12px;font-weight:700;white-space:nowrap">🗺️ 맵 선택</label>
-        <select id="ind-map-sel" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;flex:1;min-width:120px;max-width:200px">
-          <option value="">맵 없음</option>
-          ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button onclick="(function(){var m=document.getElementById('ind-map-sel')?.value||'';_indInput.games.push({winner:'A',map:m});render();})()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
-          ${getPlayerPhotoHTML(pA,'20px')} ${pA} 승 (+1)
-        </button>
-        <button onclick="(function(){var m=document.getElementById('ind-map-sel')?.value||'';_indInput.games.push({winner:'B',map:m});render();})()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
-          ${getPlayerPhotoHTML(pB,'20px')} ${pB} 승 (+1)
-        </button>
-      </div>
-      ${gi.games.length?`<div style="margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:6px">현재 스코어: <span style="color:${aCol};font-weight:900">${pA} ${aWins}</span> : <span style="color:${bCol};font-weight:900">${bWins} ${pB}</span></div>
-        ${gameRows}
-      </div>`:'<div style="font-size:11px;color:var(--gray-l);padding:10px 0">위 버튼으로 경기 결과를 추가하세요</div>'}
-      ${gi.games.length?`<div style="display:flex;gap:8px">
-        <button onclick="indDirectSave()" class="btn btn-b" style="flex:1">✅ 저장 (${gi.games.length}경기)</button>
-        <button onclick="_indInput.games=[];render()" class="btn btn-r btn-xs">초기화</button>
-      </div>`:''}
+      ${setBuilderHTML(BLD['ind'],'ind')}
     </div>`:''}
   </div>`;
 }
@@ -728,7 +704,9 @@ let _gjInput={date:'',playerA:'',playerB:'',games:[]};
 let _gjProMode=false;
 
 function rGJ(C,T,proOnly,proInput){
-  _gjProMode=!!(proOnly&&proInput);
+  const _newProMode=!!(proOnly&&proInput);
+  if(_newProMode!==_gjProMode){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
+  _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
   if(!isLoggedIn && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;

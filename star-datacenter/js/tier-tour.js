@@ -162,6 +162,10 @@ function grpPasteApply(){
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
+  // 프로컴프 브라켓 모드 분기
+  if(_grpPasteState.mode==='pcbkt'){
+    return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
@@ -1619,6 +1623,10 @@ function grpPasteApply(){
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
+  // 프로컴프 브라켓 모드 분기
+  if(_grpPasteState.mode==='pcbkt'){
+    return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);

@@ -182,7 +182,7 @@ function passDateFilter(dateStr){
 }
 
 function setBuilderHTML(bld, mode){
-  const isCK=(mode==='ck'||mode==='pro'||mode==='tt'||mode==='gj');const isComp=(mode==='comp');
+  const isCK=(mode==='ck'||mode==='pro'||mode==='tt'||mode==='gj'||mode==='ind');const isComp=(mode==='comp');
   const allU=getAllUnivs();
   const uOptsA=allU.map(u=>`<option value="${u.name}"${bld.teamA===u.name?' selected':''}>${u.name}</option>`).join('');
   const uOptsB=allU.map(u=>`<option value="${u.name}"${bld.teamB===u.name?' selected':''}>${u.name}</option>`).join('');
@@ -352,7 +352,7 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
-  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(bld._proLabel?'프로리그끝장전':'끝장전')}[mode]||'';
+  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(bld._proLabel?'프로리그끝장전':'끝장전'),ind:'개인전'}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
     const freeGames=bld.freeGames||[];
@@ -372,6 +372,24 @@ function saveMatch(mode){
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
+      render();
+      return;
+    }
+    if(mode==='ind'){
+      const mA=bld.membersA||[];const mB=bld.membersB||[];
+      if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
+      if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
+      const sid=matchId;
+      freeGames.forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wName=g.winner==='A'?g.playerA:g.playerB;
+        const lName=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wName,lName,date,g.map||'-',sid,'','','개인전');
+        if(typeof indM!=='undefined')indM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||''});
+      });
+      if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
+      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      if(typeof indSub!=='undefined') indSub='records';
       render();
       return;
     }
