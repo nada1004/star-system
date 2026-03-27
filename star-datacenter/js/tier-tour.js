@@ -459,8 +459,7 @@ function rTierTourTab(C, T){
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tour',lbl:'🗂️ 대진표',fn:`_ttSub='tour';render()`},
-    {id:'tourschedule',lbl:'📋 토너먼트',fn:`_ttSub='tourschedule';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
@@ -474,10 +473,8 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompLeague(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='tour'){
-    h+=_curTierTn ? rCompTourDynamic(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? rBracketSchedule(_curTierTn) : _noTnMsg;
+    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환
@@ -488,17 +485,7 @@ function rTierTourTab(C, T){
     // records 탭
     const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
-    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
-    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
-    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
-    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
-      const _totalBad=_orphans.length+_wrongComp.length;
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
-        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
-      </div>`;
-    }
+    
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
