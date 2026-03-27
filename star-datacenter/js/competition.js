@@ -300,9 +300,18 @@ function grpMatchDetail(m){
 
 function rCompGrpRankFull(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
+  const isTier=tn.type==='tier';
   const GL='ABCDEFGHIJ';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:4px">📊 ${tn.name} — 조별 순위</div>
   <div style="font-size:11px;color:var(--gray-l);margin-bottom:14px">승점 → 세트 득실 → 득점 순 · 상위 2팀 토너먼트 진출</div>`;
+  if(!tn.groups||!tn.groups.length){
+    return h+`<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2);color:var(--gray-l)">
+      <div style="font-size:28px;margin-bottom:10px">🏗️</div>
+      <div style="font-weight:700;margin-bottom:8px">조편성이 필요합니다</div>
+      <div style="font-size:12px;margin-bottom:14px">먼저 <b>조편성</b> 탭에서 조를 만들고 ${isTier?'선수':'대학'}를 배정해주세요.</div>
+      ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="${isTier?`_ttSub='grpedit';grpSub='edit';render()`:`compSub='grpedit';grpEditId='${tn.id}';grpSub='edit';render()`}">🏗️ 조편성 하러 가기</button>`:''}
+    </div>`;
+  }
   if(tn.groups.length>1){
     h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
       <button class="pill ${!grpRankFilter?'on':''}" onclick="grpRankFilter='';render()">전체</button>`;
@@ -334,15 +343,15 @@ function rCompGrpRankFull(tn){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <span style="background:${col};color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;padding:3px 14px;border-radius:20px">GROUP ${gl}</span>
         <span style="font-size:11px;color:var(--gray-l)">${played}/${grp.matches.length}경기 완료</span>
-        <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap">${grp.univs.map(u=>`<span class="ubadge" style="background:${gc(u)};font-size:11px">${gUI(u,'10px')}${u}</span>`).join('')}</div>
+        <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap">${grp.univs.map(u=>`<span class="ubadge" style="background:${gc(u)};font-size:11px">${isTier?'':gUI(u,'10px')}${u}</span>`).join('')}</div>
       </div>
-      <table class="grp-rank-table"><thead><tr><th>순위</th><th>대학</th><th>경기</th><th>승</th><th>패</th><th>득</th><th>실</th><th>득실</th><th>승점</th></tr></thead><tbody>`;
+      <table class="grp-rank-table"><thead><tr><th>순위</th><th>${isTier?'선수':'대학'}</th><th>경기</th><th>승</th><th>패</th><th>득</th><th>실</th><th>득실</th><th>승점</th></tr></thead><tbody>`;
     sorted.forEach(([name,s],i)=>{
       const uc=gc(name);const diff=s.gw-s.gl2;const isTop=i<2;
       const rowClass=i===0?'grp-rank-top1':i===1?'grp-rank-top2':'';
       h+=`<tr class="${rowClass}">
         <td>${i===0?`<span class="rk1">1위</span>`:i===1?`<span class="rk2">2위</span>`:i===2?`<span class="rk3">3위</span>`:`${i+1}위`}</td>
-        <td><span class="ubadge clickable-univ" style="background:${uc};font-size:11px" onclick="openUnivModal('${name}')">${name}</span></td>
+        <td><span class="ubadge ${isTier?'':'clickable-univ'}" style="background:${uc};font-size:11px" ${isTier?'':`onclick="openUnivModal('${name}')"`}>${name}</span></td>
         <td style="color:var(--gray-l)">${s.played}</td><td class="wt">${s.w}</td><td class="lt">${s.l}</td>
         <td class="wt">${s.gw}</td><td class="lt">${s.gl2}</td>
         <td style="font-weight:700;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--gray-l)'}">${diff>=0?'+':''}${diff}</td>
