@@ -980,6 +980,9 @@ function rCompGrpEdit(){
 function rGrpEditInner(){
   const tn=tourneys.find(t=>t.id===grpEditId);
   if(!tn){grpSub='list';render();return '';}
+  const isTier=tn.type==='tier';
+  const _memberLbl=isTier?'선수':'대학';
+  const _memberUnit=isTier?'명':'개';
   const GL='ABCDEFGHIJ';
   let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-w btn-sm" onclick="grpSub='list';render()">← 목록</button>
@@ -996,31 +999,36 @@ function rGrpEditInner(){
   }
   tn.groups.forEach((grp,gi)=>{
     const gl=GL[gi]||gi;const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-    const availU=getAllUnivs().map(u=>u.name).filter(n=>!grp.univs.includes(n));
+    const availU=isTier
+      ?(players||[]).filter(p=>p.name&&!grp.univs.includes(p.name)).map(p=>p.name)
+      :getAllUnivs().map(u=>u.name).filter(n=>!grp.univs.includes(n));
+    const _badgeCol=(name)=>isTier?gc((players||[]).find(p=>p.name===name)?.univ||''):gc(name);
     h+=`<div style="background:${col}08;border:2px solid ${col}44;border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <span style="background:${col};color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;padding:3px 16px;border-radius:20px">GROUP ${gl}조</span>
-        <span style="font-size:11px;color:var(--gray-l)">${grp.univs.length}개 대학 · ${(grp.matches||[]).length}경기</span>
+        <span style="font-size:11px;color:var(--gray-l)">${grp.univs.length}${_memberUnit} ${_memberLbl} · ${(grp.matches||[]).length}경기</span>
         <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="grpDelGroup('${tn.id}',${gi})">조 삭제</button>
       </div>
       <div style="margin-bottom:14px">
-        <div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">① 대학 선택</div>
+        <div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">① ${_memberLbl} 선택</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          ${grp.univs.map((u,ui)=>`<span class="ubadge" style="background:${gc(u)};font-size:12px">${u}<button onclick="grpRemoveUniv('${tn.id}',${gi},${ui})" style="background:rgba(255,255,255,.3);border:none;border-radius:50%;color:#fff;width:16px;height:16px;font-size:9px;cursor:pointer;margin-left:3px;line-height:16px;text-align:center">×</button></span>`).join('')}
-          ${!grp.univs.length?'<span style="color:var(--gray-l);font-size:12px">아직 없음</span>':''}
+          ${grp.univs.map((u,ui)=>`<span class="ubadge" style="background:${_badgeCol(u)};font-size:12px">${u}<button onclick="grpRemoveUniv('${tn.id}',${gi},${ui})" style="background:rgba(255,255,255,.3);border:none;border-radius:50%;color:#fff;width:16px;height:16px;font-size:9px;cursor:pointer;margin-left:3px;line-height:16px;text-align:center">×</button></span>`).join('')}
+          ${!grp.univs.length?`<span style="color:var(--gray-l);font-size:12px">아직 없음</span>`:''}
         </div>
         ${availU.length?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <div style="position:relative;flex:1;min-width:150px">
-            <input type="text" id="grp-univ-search-${gi}" placeholder="🔍 대학 검색..." style="width:100%;padding:6px 10px;font-size:12px;border:1px solid var(--border2);border-radius:6px" oninput="grpFilterUnivSel(${gi})">
+            <input type="text" id="grp-univ-search-${gi}" placeholder="🔍 ${_memberLbl} 검색..." style="width:100%;padding:6px 10px;font-size:12px;border:1px solid var(--border2);border-radius:6px" oninput="grpFilterUnivSel(${gi})">
           </div>
-          <select id="grp-univ-sel-${gi}" style="max-width:200px"><option value="">— 대학 선택 —</option>${availU.map(u=>`<option value="${u}">${u}</option>`).join('')}</select>
+          <select id="grp-univ-sel-${gi}" style="max-width:200px"><option value="">— ${_memberLbl} 선택 —</option>${availU.map(u=>`<option value="${u}">${u}</option>`).join('')}</select>
           <button class="btn btn-b btn-sm" onclick="grpAddUniv('${tn.id}',${gi})">+ 추가</button>
-        </div>`:`<div style="font-size:11px;color:var(--gray-l)">모든 대학이 추가됨</div>`}
+        </div>`:`<div style="font-size:11px;color:var(--gray-l)">모든 ${_memberLbl}이 추가됨</div>`}
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">② 경기 일정 (${(grp.matches||[]).length}경기 등록)</div>
         ${(grp.matches||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${grp.matches.map((m,mi)=>{
-          const isDone=m.sa!=null&&m.sb!=null;const ca=gc(m.a||'');const cb=gc(m.b||'');
+          const isDone=m.sa!=null&&m.sb!=null;
+          const ca=isTier?gc((players||[]).find(p=>p.name===m.a)?.univ||''):gc(m.a||'');
+          const cb=isTier?gc((players||[]).find(p=>p.name===m.b)?.univ||''):gc(m.b||'');
           return `<div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:700;color:${col}">${gl}조 ${mi+1}경기</span>
             ${m.d?`<span style="font-size:10px;color:var(--gray-l)">${m.d.slice(5)}</span>`:''}
@@ -1032,7 +1040,7 @@ function rGrpEditInner(){
             <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${gi},${mi})">×</button>
           </div>`;
         }).join('')}</div>`:''}
-        ${grp.univs.length>=2?`<button class="btn btn-b btn-sm" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조 경기 추가</button>`:`<span style="font-size:11px;color:var(--gray-l)">※ 대학 2개 이상 추가 후 경기 등록 가능</span>`}
+        ${grp.univs.length>=2?`<button class="btn btn-b btn-sm" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조 경기 추가</button>`:`<span style="font-size:11px;color:var(--gray-l)">※ ${_memberLbl} 2${_memberUnit} 이상 추가 후 경기 등록 가능</span>`}
       </div>
     </div>`;
   });
@@ -1054,7 +1062,7 @@ function grpAddMatchByDate(tnId, date){
 function grpAddMatch(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const grp=tn.groups[gi];
-  if(grp.univs.length<2){alert('먼저 대학을 2개 이상 추가하세요.');return;}
+  if(grp.univs.length<2){alert(tn.type==='tier'?'먼저 선수를 2명 이상 추가하세요.':'먼저 대학을 2개 이상 추가하세요.');return;}
   tn.groups[gi].matches.push({a:'',b:'',d:'',sa:null,sb:null,sets:[]});
   const mi=tn.groups[gi].matches.length-1;
   save();grpMatchState={tnId,gi,mi};grpOpenMatchModal(tn,gi,mi);
@@ -1074,22 +1082,25 @@ function grpOpenMatchModal(tn,gi,mi){
   const grp=tn.groups[gi];const m=grp.matches[mi];
   const GL=['A','B','C','D','E','F','G','H','I','J'];const gl=GL[gi]||String.fromCharCode(65+gi);
   const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-  const uOpts=`<option value="">— 대학 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.a===u?' selected':''}>${u}</option>`).join('');
-  const uOptsB=`<option value="">— 대학 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.b===u?' selected':''}>${u}</option>`).join('');
+  const isTierGrp=tn.type==='tier';
+  const _glbl=isTierGrp?'선수':'대학';
+  const _badgeColGrp=(name)=>isTierGrp?gc((players||[]).find(p=>p.name===name)?.univ||''):gc(name);
+  const uOpts=`<option value="">— ${_glbl} 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.a===u?' selected':''}>${u}</option>`).join('');
+  const uOptsB=`<option value="">— ${_glbl} 선택 —</option>`+grp.univs.map(u=>`<option value="${u}"${m.b===u?' selected':''}>${u}</option>`).join('');
   document.getElementById('grpMatchTitle').textContent=`GROUP ${gl}조 ${mi+1}경기 결과 입력`;
   document.getElementById('grpMatchBody').innerHTML=`
     <div style="background:${col}10;border:1px solid ${col}44;border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:${col};margin-bottom:10px">
-        📋 GROUP ${gl}조 소속 대학: ${grp.univs.map(u=>`<span style="background:${gc(u)};color:#fff;padding:1px 8px;border-radius:4px;font-size:11px;margin-left:4px">${u}</span>`).join('')}
+        📋 GROUP ${gl}조 소속 ${_glbl}: ${grp.univs.map(u=>`<span style="background:${_badgeColGrp(u)};color:#fff;padding:1px 8px;border-radius:4px;font-size:11px;margin-left:4px">${u}</span>`).join('')}
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:130px">
-          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">🔵 팀 A 대학</div>
+          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">🔵 ${isTierGrp?'선수 A':'팀 A 대학'}</div>
           <select id="gm-a" onchange="grpRefreshSets();" style="width:100%">${uOpts}</select>
         </div>
         <div style="font-size:16px;font-weight:800;color:var(--gray-l);padding-top:22px">VS</div>
         <div style="flex:1;min-width:130px">
-          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🔴 팀 B 대학</div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🔴 ${isTierGrp?'선수 B':'팀 B 대학'}</div>
           <select id="gm-b" onchange="grpRefreshSets();" style="width:100%">${uOptsB}</select>
         </div>
         <div>
@@ -1272,7 +1283,7 @@ function grpSaveMatch(){
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
   if(tn.type==='tier'){
     const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
+    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'grp'};
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
   save();cm('grpMatchModal');render();
@@ -1318,9 +1329,11 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
     const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
     rLabel=roundLabels[totalRounds-rnd]||((totalRounds-rnd)+'강');
   }
-  const allU=getAllUnivs();
-  const uOpts=`<option value="">— 대학 선택 —</option>`+allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('');
-  const uOptsB=`<option value="">— 대학 선택 —</option>`+allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('');
+  const isTierBkt=tn&&tn.type==='tier';
+  const _bktNames=isTierBkt?(players||[]).map(p=>p.name):getAllUnivs().map(u=>u.name);
+  const _bktLbl=isTierBkt?'선수':'대학';
+  const uOpts=`<option value="">— ${_bktLbl} 선택 —</option>`+_bktNames.map(n=>`<option value="${n}"${m.a===n?' selected':''}>${n}</option>`).join('');
+  const uOptsB=`<option value="">— ${_bktLbl} 선택 —</option>`+_bktNames.map(n=>`<option value="${n}"${m.b===n?' selected':''}>${n}</option>`).join('');
   window._bracketMatchMode=true;
   document.getElementById('grpMatchTitle').textContent=isManual?`토너먼트 경기 입력`:`${rLabel} ${mi+1}경기 결과 입력`;
   document.getElementById('grpMatchBody').innerHTML=`
@@ -1496,15 +1509,22 @@ function bktSaveMatch(){
     const w=sa>sb?m.a:sb>sa?m.b:'';
     if(w)br.winners[`${rnd}-${mi}`]=w;
   }
+  const _bktModeLabel=tn&&tn.type==='tier'?'티어대회':'대회';
   (m.sets||[]).forEach(set=>{
     (set.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,'대회');
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_bktModeLabel);
     });
   });
+  // 티어대회 브라켓: ttM에도 동기화
+  if(tn&&tn.type==='tier'){
+    const _ei=ttM.findIndex(x=>x._id===matchId);
+    const _rec={_id:matchId,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
+    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
+  }
   window._bracketMatchMode=false;
   save();cm('grpMatchModal');render();
 }

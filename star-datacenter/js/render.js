@@ -450,7 +450,26 @@ function saveUnivEdit(){
 // 스트리머 상세 최근 경기 배지 클릭 → 해당 기록 탭으로 이동
 function navToMatch(matchId, modeLbl){
   if(!matchId) return;
-  if(modeLbl==='티어대회'){navToTierMatch(matchId);return;}
+  if(modeLbl==='티어대회'){
+    // stage 확인: grp→대전기록 조별리그, bkt→대전기록 대진표, 없으면 tiertour탭
+    const _tm=(ttM||[]).find(x=>x._id===matchId);
+    if(_tm&&_tm.stage==='bkt'){
+      cm('playerModal');curTab='hist';histSub='tiertour-bkt';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else if(_tm&&_tm.stage==='grp'){
+      cm('playerModal');curTab='hist';histSub='tiertour-grp';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else {
+      navToTierMatch(matchId);
+    }
+    return;
+  }
   const _cfg={
     '미니대전':       {histSub:'mini',        arrMode:'mini',  arr:()=>miniM},
     '시빌워':         {histSub:'civil',       arrMode:'mini',  arr:()=>miniM},

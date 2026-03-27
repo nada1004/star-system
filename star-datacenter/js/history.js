@@ -88,7 +88,21 @@
   else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
-  else if(histSub==='tiertour'){const _ttClean=ttM.filter(m=>!m._proKey);h+=_ttClean.length?recSummaryListHTMLFiltered(_ttClean,'tt','hist'):'<div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">티어대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>';}
+  else if(histSub==='tiertour'||histSub==='tiertour-grp'||histSub==='tiertour-bkt'){
+    const _ttSubBar=`<div class="stabs no-export" style="margin-bottom:10px">
+      <button class="stab ${histSub==='tiertour'?'on':''}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
+      <button class="stab ${histSub==='tiertour-grp'?'on':''}" onclick="histSub='tiertour-grp';openDetails={};render()">📅 조별리그</button>
+      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🗂️ 대진표</button>
+    </div>`;
+    h+=_ttSubBar;
+    const _ttAll=ttM.filter(m=>!m._proKey);
+    const _ttGrp=_ttAll.filter(m=>m.stage==='grp'||!m.stage);
+    const _ttBkt=_ttAll.filter(m=>m.stage==='bkt');
+    const _ttSrc=histSub==='tiertour-grp'?_ttGrp:histSub==='tiertour-bkt'?_ttBkt:_ttAll;
+    const _emptyIco=histSub==='tiertour-bkt'?'🗂️':'🎯';
+    const _emptyMsg=histSub==='tiertour-bkt'?'대진표 기록이 없습니다':histSub==='tiertour-grp'?'조별리그 기록이 없습니다':'티어대회 기록이 없습니다';
+    h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist'):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+  }
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='procomptn') h+=histProCompTourneyHTML();
