@@ -1064,6 +1064,9 @@ function proCompBracket(tn) {
       const hasBoth=m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD';
       const aTBD=!m.a||m.a==='TBD', bTBD=!m.b||m.b==='TBD';
       const winnerName=aWin?m.a:bWin?m.b:'';
+      const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
+      const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
+      const showScore=isDone&&Array.isArray(m._games)&&m._games.length>1;
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
         <!-- A 선수 -->
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
@@ -1072,6 +1075,7 @@ function proCompBracket(tn) {
             <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
             ${!aTBD?_info(m.a):''}
           </div>
+          ${showScore?`<span style="font-size:11px;font-weight:900;color:${aWin?col:'#94a3b8'};flex-shrink:0">${scoreA}</span>`:''}
           ${aWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- B 선수 -->
@@ -1081,6 +1085,7 @@ function proCompBracket(tn) {
             <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
             ${!bTBD?_info(m.b):''}
           </div>
+          ${showScore?`<span style="font-size:11px;font-weight:900;color:${bWin?col:'#94a3b8'};flex-shrink:0">${scoreB}</span>`:''}
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- 날짜/맵 -->

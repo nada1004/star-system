@@ -161,6 +161,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 프로컴프 브라켓 모드 분기
@@ -1626,6 +1627,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = tourneys.find(t=>t.id===_grpPasteState.tnId); if(!tn) return false;
   // 프로컴프 브라켓 모드 분기
