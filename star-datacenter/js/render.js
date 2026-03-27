@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    TAB & RENDER
 ══════════════════════════════════════ */
 function sw(t,el){
@@ -451,7 +451,7 @@ function saveUnivEdit(){
 function navToMatch(matchId, modeLbl){
   if(!matchId) return;
   if(modeLbl==='티어대회'){
-    // stage 확인: grp→대전기록 조별리그, bkt→대전기록 대진표, 없으면 tiertour탭
+    // stage 확인: league→대전기록 조별리그, bkt→대전기록 대진표, 그외(general/grp)→대전기록 일반
     const _tm=(ttM||[]).find(x=>x._id===matchId);
     if(_tm&&_tm.stage==='bkt'){
       cm('playerModal');curTab='hist';histSub='tiertour-bkt';openDetails={};
@@ -459,8 +459,14 @@ function navToMatch(matchId, modeLbl){
       render();
       const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
       setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
-    } else if(_tm&&_tm.stage==='grp'){
-      cm('playerModal');curTab='hist';histSub='tiertour-grp';openDetails={};
+    } else if(_tm&&_tm.stage==='league'){
+      cm('playerModal');curTab='hist';histSub='tiertour-league';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else if(_tm&&(_tm.stage==='general'||_tm.stage==='grp')){
+      cm('playerModal');curTab='hist';histSub='tiertour-gen';openDetails={};
       document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
       render();
       const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;

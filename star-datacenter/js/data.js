@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    대전 기록 삭제 시 선수 스탯 완전 롤백
    - matchId 있으면 matchId로 정확히 제거
    - matchId 없으면(구 데이터) 날짜+상대 조합으로 제거
@@ -8,6 +8,13 @@ function revertMatchRecord(matchObj){
   if(!matchObj)return;
   const mid=matchObj._id||null;
   const mdate=matchObj.d||'';
+
+  // ttM(티어대회 기록)에서도 동기화된 데이터 삭제
+  if(mid){
+    const ttIdx=ttM.findIndex(m=>m._id===mid);
+    if(ttIdx>=0) ttM.splice(ttIdx,1);
+  }
+
   // sets 없는 경우(스코어만 입력된 경기): matchId 기반으로 history에서 직접 제거
   if(!matchObj.sets||!matchObj.sets.length){
     if(!mid)return;

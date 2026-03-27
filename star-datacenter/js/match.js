@@ -182,7 +182,7 @@ function passDateFilter(dateStr){
 }
 
 function setBuilderHTML(bld, mode){
-  const isCK=(mode==='ck'||mode==='pro'||mode==='tt');const isComp=(mode==='comp');
+  const isCK=(mode==='ck'||mode==='pro'||mode==='tt'||mode==='gj');const isComp=(mode==='comp');
   const allU=getAllUnivs();
   const uOptsA=allU.map(u=>`<option value="${u.name}"${bld.teamA===u.name?' selected':''}>${u.name}</option>`).join('');
   const uOptsB=allU.map(u=>`<option value="${u.name}"${bld.teamB===u.name?' selected':''}>${u.name}</option>`).join('');
@@ -240,6 +240,10 @@ function setBuilderHTML(bld, mode){
   const mB=rfB?rawMB.filter(p=>p.race===rfB):rawMB;
   const canBuild=(isCK)?(rawMA.length&&rawMB.length):(teamA&&teamB);
   if(canBuild){
+    const _gjLabelA = mode==='gj' ? (mA[0]?.name||'A') : '';
+    const _gjLabelB = mode==='gj' ? (mB[0]?.name||'B') : '';
+    const _gjDefA = mode==='gj' && mA.length===1 ? (mA[0].name||'').replace(/'/g,"\\'") : '';
+    const _gjDefB = mode==='gj' && mB.length===1 ? (mB[0].name||'').replace(/'/g,"\\'") : '';
     // 입력 모드 토글: 세트 방식 / 세트 없는 방식
     const useNoSet=bld.noSetMode||false;
     h+=`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
@@ -254,11 +258,11 @@ function setBuilderHTML(bld, mode){
       const dA=bld.directSA!=null?bld.directSA:fgA;
       const dB=bld.directSB!=null?bld.directSB:fgB;
       h+=`<div class="score-board">
-        <span style="font-weight:700">${isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A')}</span>
+        <span style="font-weight:700">${mode==='gj'?_gjLabelA:(isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A'))}</span>
         <span class="score-num wt">${dA}</span>
         <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
         <span class="score-num lt">${dB}</span>
-        <span style="font-weight:700">${isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B')}</span>
+        <span style="font-weight:700">${mode==='gj'?_gjLabelB:(isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B'))}</span>
         <span style="font-size:11px;color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
       </div>`;
       h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
@@ -284,18 +288,18 @@ function setBuilderHTML(bld, mode){
           <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].freeGames.splice(${gi},1);render()">🗑️ 삭제</button>
         </div>`;
       });
-      h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button>`;
+      h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button>`;
       h+=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
         <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
       </div>`;
     } else {
       h+=`<div class="score-board">
-        <span style="font-weight:700">${isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A')}</span>
+        <span style="font-weight:700">${mode==='gj'?_gjLabelA:(isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A'))}</span>
         <span class="score-num wt">${scoreA}</span>
         <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
         <span class="score-num lt">${scoreB}</span>
-        <span style="font-weight:700">${isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B')}</span>
+        <span style="font-weight:700">${mode==='gj'?_gjLabelB:(isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B'))}</span>
         <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${bld.sets.length}세트</span>
       </div>`;
       bld.sets.forEach((set,si)=>{
@@ -322,7 +326,7 @@ function setBuilderHTML(bld, mode){
             <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">🗑️ 삭제</button>
           </div>`;
         });
-        h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button></div>`;
+        h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button></div>`;
       });
       if(bld.sets.length<3){
         const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
@@ -348,12 +352,29 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
-  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그'}[mode]||'';
+  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(bld._proLabel?'프로리그끝장전':'끝장전')}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
     const freeGames=bld.freeGames||[];
     const date=bld.date||new Date().toISOString().slice(0,10);
     const matchId=genId();
+
+    if(mode==='gj'){
+      const mA=bld.membersA||[];const mB=bld.membersB||[];
+      if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
+      const sid=matchId;
+      freeGames.forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wName=g.winner==='A'?g.playerA:g.playerB;
+        const lName=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
+        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+      });
+      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      if(typeof gjSub!=='undefined') gjSub='records';
+      render();
+      return;
+    }
 
     freeGames.forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
@@ -395,7 +416,7 @@ function saveMatch(mode){
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
             const _ttComp=_ttCurComp||'';
-            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp});
+            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp, stage:'general'});
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
@@ -427,6 +448,24 @@ function saveMatch(mode){
   const date=bld.date||new Date().toISOString().slice(0,10);
   const matchId=genId();
   const setsSnap=bld.sets.map(s=>({scoreA:s.scoreA,scoreB:s.scoreB,winner:s.winner,games:s.games.map(g=>({...g}))}));
+  if(mode==='gj'){
+    const mA=bld.membersA||[];const mB=bld.membersB||[];
+    if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
+    const sid=matchId;
+    setsSnap.forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wName=g.winner==='A'?g.playerA:g.playerB;
+        const lName=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
+        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+      });
+    });
+    BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+    if(typeof gjSub!=='undefined') gjSub='records';
+    render();
+    return;
+  }
   // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
   bld.sets.forEach(set=>{
     set.games.forEach(g=>{
@@ -500,7 +539,7 @@ function saveMatch(mode){
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:_ttCurComp||''
+      compName:_ttCurComp||'',stage:'general'
     });
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();

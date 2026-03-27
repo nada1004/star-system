@@ -299,7 +299,7 @@ function _grpPasteApplyLogic(savable){
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
   if(tn.type==='tier'){
     const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
+    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'};
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
 
@@ -437,7 +437,7 @@ function rTierTourTab(C, T){
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
+      ${tierTourneys.map(t=>{const _tDates=[];(t.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{if(m.d&&m.sa!=null)_tDates.push(m.d);}));(ttM||[]).filter(m=>m.compName===t.name&&m.d).forEach(m=>_tDates.push(m.d));_tDates.sort();const _ds=_tDates.length?` (${_tDates[0].slice(5).replace('-','/')}${_tDates.length>1&&_tDates[0]!==_tDates[_tDates.length-1]?'~'+_tDates[_tDates.length-1].slice(5).replace('-','/'):''})`:(t.createdAt?` (${t.createdAt.slice(0,10)})`:'');return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_ds}</option>`;}).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
@@ -449,7 +449,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
+  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
@@ -459,8 +459,7 @@ function rTierTourTab(C, T){
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tour',lbl:'🗂️ 대진표',fn:`_ttSub='tour';render()`},
-    {id:'tourschedule',lbl:'📋 토너먼트',fn:`_ttSub='tourschedule';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
@@ -474,10 +473,8 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompLeague(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='tour'){
-    h+=_curTierTn ? rCompTourDynamic(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? rBracketSchedule(_curTierTn) : _noTnMsg;
+    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환
@@ -488,32 +485,10 @@ function rTierTourTab(C, T){
     // records 탭
     const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
-    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
-    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
-    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
-    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
-      const _totalBad=_orphans.length+_wrongComp.length;
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
-        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
-      </div>`;
-    }
+    
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
-}
-
-function ttFixOrphanRecords(compName,includeWrong){
-  const orphans=ttM.filter(m=>!m.compName||m.compName==='');
-  const wrongComp=includeWrong?ttM.filter(m=>m.compName&&m.compName!==compName):[];
-  const targets=[...orphans,...wrongComp];
-  if(!targets.length){alert('연결할 기록이 없습니다.');return;}
-  const wrongNames=[...new Set(wrongComp.map(m=>m.compName))].join(', ');
-  const msg=`기록 ${targets.length}건을 "${compName}"에 연결합니다.${wrongNames?`\n(다른 대회명: ${wrongNames})`:''}\n계속할까요?`;
-  if(!confirm(msg))return;
-  targets.forEach(m=>{m.compName=compName;if(!m.n)m.n=compName;});
-  save();render();
 }
 
 // 스트리머 상세 최근 기록에서 티어대회 클릭 → 해당 경기로 이동
@@ -763,8 +738,8 @@ function grpRenameTourney(){
 function grpDelCurTourney(){
   const tn=tourneys.find(t=>t.name===curComp);
   if(!tn){alert('대회를 먼저 선택하세요.');return;}
-  const matchCount=tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0);
-  if(!confirm(`"${tn.name}" 대회를 삭제하시겠습니까?\n(${tn.groups.length}개 조 · ${matchCount}경기 모두 삭제됩니다)`))return;
+  const matchCount=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0);
+  if(!confirm(`"${tn.name}" 대회를 삭제하시겠습니까?\n(${(tn.groups||[]).length}개 조 · ${matchCount}경기 모두 삭제됩니다)`))return;
   const ti=tourneys.indexOf(tn);
   tourneys.splice(ti,1);
   curComp=tourneys.length?tourneys[0].name:'';
@@ -1919,7 +1894,7 @@ function rTierTourTab(C, T){
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}</option>`).join('')}
+      ${tierTourneys.map(t=>{const _tDates=[];(t.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{if(m.d&&m.sa!=null)_tDates.push(m.d);}));(ttM||[]).filter(m=>m.compName===t.name&&m.d).forEach(m=>_tDates.push(m.d));_tDates.sort();const _ds=_tDates.length?` (${_tDates[0].slice(5).replace('-','/')}${_tDates.length>1&&_tDates[0]!==_tDates[_tDates.length-1]?'~'+_tDates[_tDates.length-1].slice(5).replace('-','/'):''})`:(t.createdAt?` (${t.createdAt.slice(0,10)})`:'');return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_ds}</option>`;}).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
@@ -1931,7 +1906,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tour','tourschedule','grpedit'];
+  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
@@ -1941,8 +1916,7 @@ function rTierTourTab(C, T){
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tour',lbl:'🗂️ 대진표',fn:`_ttSub='tour';render()`},
-    {id:'tourschedule',lbl:'📋 토너먼트',fn:`_ttSub='tourschedule';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
@@ -1956,10 +1930,8 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompLeague(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='tour'){
-    h+=_curTierTn ? rCompTourDynamic(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? rBracketSchedule(_curTierTn) : _noTnMsg;
+    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환
@@ -1970,17 +1942,6 @@ function rTierTourTab(C, T){
     // records 탭
     const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    // 대회명 없는 고아 기록이 있으면 이전 버전 버그로 저장된 것 → 마이그레이션 버튼 표시
-    // compName 없거나 현재 대회 아닌 기록 (버그로 저장된 것)
-    const _orphans=ttM.filter(m=>!m.compName||m.compName==='');
-    const _wrongComp=_ttCurComp?ttM.filter(m=>m.compName&&m.compName!==_ttCurComp):[];
-    if(isLoggedIn&&(_orphans.length||_wrongComp.length)){
-      const _totalBad=_orphans.length+_wrongComp.length;
-      h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span>⚠️ 대회 미연결 기록 <b>${_orphans.length}건</b>${_wrongComp.length?` / 다른 대회명 기록 <b>${_wrongComp.length}건</b>`:''}</span>
-        ${_ttCurComp?`<button class="btn btn-xs" style="background:#7c3aed;color:#fff;border:none" onclick="ttFixOrphanRecords('${_ttCurComp.replace(/'/g,"\\'")}',true)">📎 현재 대회(${_ttCurComp})에 모두 연결</button>`:'<span style="color:#92400e">← 먼저 위에서 대회를 선택하세요</span>'}
-      </div>`;
-    }
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
@@ -2245,8 +2206,8 @@ function grpRenameTourney(){
 function grpDelCurTourney(){
   const tn=tourneys.find(t=>t.name===curComp);
   if(!tn){alert('대회를 먼저 선택하세요.');return;}
-  const matchCount=tn.groups.reduce((s,g)=>s+(g.matches||[]).length,0);
-  if(!confirm(`"${tn.name}" 대회를 삭제하시겠습니까?\n(${tn.groups.length}개 조 · ${matchCount}경기 모두 삭제됩니다)`))return;
+  const matchCount=(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0);
+  if(!confirm(`"${tn.name}" 대회를 삭제하시겠습니까?\n(${(tn.groups||[]).length}개 조 · ${matchCount}경기 모두 삭제됩니다)`))return;
   const ti=tourneys.indexOf(tn);
   tourneys.splice(ti,1);
   curComp=tourneys.length?tourneys[0].name:'';
@@ -3316,7 +3277,7 @@ function openEP(name){
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
-        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);return `<button type="button" onclick="setStatusIconFromModal(this,'${p.name}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;font-size:15px;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${d.emoji||'<span style="font-size:11px;font-weight:700">없음</span>'}</button>`}).join('')})()}
+        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);const iconHTML=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'18px'):d.emoji):'<span style="font-size:11px;font-weight:700">없음</span>';return `<button type="button" onclick="setStatusIconFromModal(this,'${p.name}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${iconHTML}</button>`}).join('')})()}
       </div>
       <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">선택: ${(()=>{const c=getStatusIcon(p.name);const found=Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===c);return found?found[1].label:'없음';})()}</div>
     </div>
