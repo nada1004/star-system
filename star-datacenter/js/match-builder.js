@@ -748,21 +748,24 @@ function openGJProPasteModal(){
 function gjInputHTML(){
   const gi=_gjInput;
   const pA=gi.playerA, pB=gi.playerB;
-  const aWins=gi.games.filter(g=>g==='A').length, bWins=gi.games.filter(g=>g==='B').length;
   const pAObj=players.find(p=>p.name===pA)||{};
   const pBObj=players.find(p=>p.name===pB)||{};
   const aCol=gc(pAObj.univ)||'#2563eb', bCol=gc(pBObj.univ)||'#dc2626';
 
-  let gameRows='';
-  gi.games.forEach((w,i)=>{
-    const wName=w==='A'?pA:pB, lName=w==='A'?pB:pA;
-    gameRows+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--surface);border-radius:6px;margin-bottom:4px">
-      <span style="font-size:11px;color:var(--gray-l);min-width:20px">${i+1}G</span>
-      <span style="font-weight:700;color:${w==='A'?aCol:bCol};flex:1">${wName} 승</span>
-      <span style="font-size:10px;color:var(--gray-l)">${lName} 패</span>
-      ${isLoggedIn?`<button onclick="_gjInput.games.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 4px">✕</button>`:''}
-    </div>`;
-  });
+  const today=new Date().toISOString().slice(0,10);
+  if(pA&&pB){
+    const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
+    const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
+    if(!BLD['gj'] || !BLD['gj'].membersA || !BLD['gj'].membersB || BLD['gj'].membersA[0]?.name!==pA || BLD['gj'].membersB[0]?.name!==pB){
+      BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:!!_gjProMode};
+    } else {
+      if(BLD['gj']._proLabel!==!!_gjProMode) BLD['gj']._proLabel=!!_gjProMode;
+      if(gi.date && BLD['gj'].date!==gi.date) BLD['gj'].date=gi.date;
+      if(!gi.date && !BLD['gj'].date) BLD['gj'].date=today;
+    }
+  } else {
+    BLD['gj']=null;
+  }
 
   return `<div class="match-builder"><h3>${_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력'}</h3>
     <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="${_gjProMode?'openGJProPasteModal':'openGJPasteModal'}()" style="display:inline-flex;align-items:center;gap:5px">📋 붙여넣기 일괄 입력</button></div>
@@ -771,7 +774,7 @@ function gjInputHTML(){
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:12px;font-weight:700">날짜</label>
-          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
         </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -781,7 +784,7 @@ function gjInputHTML(){
             ${getPlayerPhotoHTML(pA,'28px')}
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_gjInput.playerA='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
@@ -791,30 +794,15 @@ function gjInputHTML(){
             ${getPlayerPhotoHTML(pB,'28px')}
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_gjInput.playerB='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerB='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
       </div>
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('gj'):''}
     </div>
-    ${pA&&pB?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+    ${pA&&pB&&BLD['gj']?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button onclick="_gjInput.games.push('A');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${aCol};background:${aCol}18;font-size:14px;font-weight:800;color:${aCol};cursor:pointer">
-          ${getPlayerPhotoHTML(pA,'20px')} ${pA} 승 (+1)
-        </button>
-        <button onclick="_gjInput.games.push('B');render()" style="flex:1;padding:12px;border-radius:10px;border:2px solid ${bCol};background:${bCol}18;font-size:14px;font-weight:800;color:${bCol};cursor:pointer">
-          ${getPlayerPhotoHTML(pB,'20px')} ${pB} 승 (+1)
-        </button>
-      </div>
-      ${gi.games.length?`<div style="margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:6px">현재 스코어: <span style="color:${aCol};font-weight:900">${pA} ${aWins}</span> : <span style="color:${bCol};font-weight:900">${bWins} ${pB}</span></div>
-        ${gameRows}
-      </div>`:'<div style="font-size:11px;color:var(--gray-l);padding:10px 0">위 버튼으로 경기 결과를 추가하세요</div>'}
-      ${gi.games.length?`<div style="display:flex;gap:8px">
-        <button onclick="gjDirectSave()" class="btn btn-b" style="flex:1">✅ 저장 (${gi.games.length}경기)</button>
-        <button onclick="_gjInput.games=[];render()" class="btn btn-r btn-xs">초기화</button>
-      </div>`:''}
+      ${setBuilderHTML(BLD['gj'],'gj')}
     </div>`:''}
   </div>`;
 }
