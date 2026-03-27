@@ -425,6 +425,7 @@ let boardSelUniv='전체';
 let boardCompactMode=false; // 소형 칩 보기
 let boardGridCols=1; // 1열/2열 보기
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
+let boardBgMix = J('su_bbm') ?? 72; // 카드 배경 밝기 (0=진함~100=연함, 기본 72)
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
 
@@ -600,6 +601,11 @@ function rBoard(C,T){
       <button class="brd-tbtn brd-tbtn-grid" onclick="boardGridCols=boardGridCols===2?1:2;render()" style="${boardGridCols===2?'background:#e0e7ff;border-color:#4338ca;color:#3730a3;':''}" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
       <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
       <button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
+      ${isLoggedIn?`<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">🌈 밝기</span>
+        <input type="range" min="30" max="95" value="${boardBgMix}" style="width:70px;height:4px;cursor:pointer" title="카드 배경 밝기" oninput="boardBgMix=+this.value;localStorage.setItem('su_bbm',boardBgMix);render();">
+        <span style="font-size:10px;color:var(--gray-l);font-weight:600;min-width:24px">${boardBgMix}%</span>
+      </div>`:''}
     </div>
     ${_brdStatsHtml}
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
@@ -646,7 +652,7 @@ function buildUnivBoardCard(u, forExport){
     const pr=Math.round(r*(1-mix)+255*mix),pg=Math.round(g*(1-mix)+255*mix),pb=Math.round(b*(1-mix)+255*mix);
     return '#'+[pr,pg,pb].map(v=>v.toString(16).padStart(2,'0')).join('');
   };
-  const pastelCol=forExport?col:toPastel(col, 0.72);
+  const pastelCol=forExport?col:toPastel(col, boardBgMix/100);
   const headerCol = col; // 헤더는 대학 상징색 그대로 사용
   const shd=hexToRgba(col,.18);
 
@@ -796,7 +802,7 @@ function buildUnivBoardCard(u, forExport){
       const vs=['top','center','bottom'],hs=['left','center','right'];
       return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${_uNameSafe}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
     })():'';
-    return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,0.9)};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+    return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,Math.min(1,boardBgMix/100+0.18))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
@@ -830,7 +836,7 @@ function buildUnivBoardCard(u, forExport){
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${toPastel(col,0.65)};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
+      <div class="brd-card-body brd-body" style="background:${toPastel(col,Math.max(0,boardBgMix/100-0.07))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
