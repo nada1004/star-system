@@ -152,7 +152,7 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
       const scoreA = games.filter(g => g.winner === 'A').length;
       const scoreB = games.filter(g => g.winner === 'B').length;
       const _rec = {
-        _id: matchId,
+        _id: matchId, _proKey: `ptn_${tn.id}_${ri}_${mi}`,
         d, a: m.a, b: m.b, sa: scoreA, sb: scoreB,
         sets: [{ games, scoreA, scoreB, winner: m.winner, label: rndLbl }],
         n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b,
