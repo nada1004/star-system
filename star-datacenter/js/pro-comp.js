@@ -985,13 +985,13 @@ function proCompBracket(tn) {
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     return p&&p.photo
       ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;${ring}" onerror="this.style.display='none'">`
-      :`<div style="width:36px;height:36px;border-radius:50%;background:${gc(p?.univ||'')||col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
+      :`<div style="width:36px;height:36px;border-radius:50%;background:${col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
     const rb = p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
-    // 선수 중심으로 표시: 이름(티어) - 대학
-    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:10px;font-weight:700;color:var(--text)">${name}</span><span style="font-size:9px;color:#94a3b8">${p.tier?`(${p.tier})`:''} ${p.univ||''}</span></div>`;
+    // 선수 중심: 티어와 대학을 작게 표시
+    return `<div style="display:flex;align-items:center;gap:3px;margin-top:1px">${rb}<span style="font-size:9px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${p.tier?p.tier+' · ':''}${p.univ||''}</span></div>`;
   };
   const rndLabel = ri => ri===rounds.length-1?'🏆 결승':ri===rounds.length-2?'🥈 준결승':ri===rounds.length-3?'🥉 4강':`${Math.pow(2,rounds.length-ri)}강`;
   const rndColor = ri => ri===rounds.length-1?'#d97706':ri===rounds.length-2?'#7c3aed':ri===rounds.length-3?'#dc2626':'#2563eb';
@@ -1093,14 +1093,6 @@ function proCompBracket(tn) {
             ${tp.a&&tp.a!=='TBD'?_info(tp.a):''}
           </div>
           ${tpA?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">?�� 3??/span>`:''}
-        </div>
-        <div style="padding:9px 12px;background:${tpB?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpB?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpB?'opacity:.55':''}">
-          ${_photo(tp.b, tpB, tpCol)}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${tpB?'800':'550'};color:${tpB?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${(tp.b||'').replace(/'/g,"\\'")}')`:''}">${tp.b||'TBD'}</div>
-            ${tp.b&&tp.b!=='TBD'?_info(tp.b):''}
-          </div>
-          ${tpA?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🏆 3위</span>`:''}
         </div>
         <div style="padding:9px 12px;background:${tpB?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpB?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpB?'opacity:.55':''}">
           ${_photo(tp.b, tpB, tpCol)}
@@ -2658,30 +2650,27 @@ function proCompGJSection(tn) {
   let h = '';
   if (isLoggedIn) {
     const pA = _pcgjA, pB = _pcgjB;
-    const pAObj = players.find(p=>p.name===pA), pBObj = players.find(p=>p.name===pB);
+    const pAObj = players.find(p=>p.name===pA)||{}, pBObj = players.find(p=>p.name===pB)||{};
+    const aCol = gc(pAObj.univ)||'#2563eb', bCol = gc(pBObj.univ)||'#dc2626';
     h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
       <div style="font-weight:700;font-size:13px;margin-bottom:10px">📢 끝장전 추가</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:140px">
-          <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">🔵 A 스트리머</div>
-          ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px">
-            ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:var(--blue)">${pA}</span>
+          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_pcgjA='';_pcgjGames=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="pcgjP_A" placeholder="A 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'A','pcgj')">
-            <div id="pcgjSug_A" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('A', 'pcgj')}
         </div>
         <div style="font-size:16px;font-weight:800;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
-          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">🔴 B 스트리머</div>
-          ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:var(--red-bg);border:2px solid var(--red);border-radius:8px">
-            ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:var(--red)">${pB}</span>
+          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
+            ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
+            <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_pcgjB='';_pcgjGames=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="pcgjP_B" placeholder="B 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'B','pcgj')">
-            <div id="pcgjSug_B" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('B', 'pcgj')}
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:3px">📅 날짜</div>

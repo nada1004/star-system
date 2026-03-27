@@ -1,30 +1,49 @@
 /* ══════════════════════════════════════
-   공통: 스트리머 검색 제안
+   공통: 스트리머 선택 (풀 + 필터 방식)
 ══════════════════════════════════════ */
-function _matchSearchSug(q, side, type) {
-  const sugId = type === 'ind' ? `indSug_${side}` : `gjSug_${side}`;
-  const inputId = type === 'ind' ? `indP_${side}` : `gjP_${side}`;
-  const sug = document.getElementById(sugId);
-  if (!sug) return;
-  if (!q) { sug.innerHTML = ''; return; }
+function _matchPlayerPoolHTML(side, type) {
+  const pList = players.filter(p => p.name).sort((a,b) => a.name.localeCompare(b.name));
+  const poolId = `pool_${type}_${side}`;
+  const searchId = `search_${type}_${side}`;
   
-  const matched = players.filter(p => p.name.includes(q)).slice(0, 8);
-  sug.innerHTML = matched.map(p => `
-    <button onclick="_matchSelectPlayer('${p.name.replace(/'/g, "\\'")}', '${side}', '${type}')"
-      style="padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
-      ${p.photo ? `<img src="${p.photo}" style="width:18px;height:18px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
-      ${p.name}
-      ${p.tier ? `<span style="background:${_TIER_BG[p.tier] || '#64748b'};color:${_TIER_TEXT[p.tier] || '#fff'};font-size:9px;padding:1px 4px;border-radius:3px">${p.tier}</span>` : ''}
-    </button>`).join('');
+  return `
+    <div style="margin-top:10px;border:1px solid var(--border);border-radius:10px;background:var(--white);overflow:hidden">
+      <div style="padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--text3)">스트리머 선택</span>
+        <input type="text" id="${searchId}" placeholder="이름 검색..." 
+          oninput="_matchFilterPool('${searchId}', '${poolId}')" 
+          style="flex:1;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+      </div>
+      <div id="${poolId}" style="padding:8px;max-height:160px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:4px">
+        ${pList.map(p => `
+          <button class="p-sel-btn" data-name="${p.name}" onclick="_matchSelectPlayer('${p.name.replace(/'/g, "\\'")}', '${side}', '${type}')"
+            style="display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:11px;cursor:pointer">
+            <span style="font-weight:700">${p.name}</span>
+            <span style="font-size:9px;color:var(--gray-l)">${p.univ||''}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function _matchFilterPool(searchId, poolId) {
+  const q = document.getElementById(searchId).value.trim();
+  const pool = document.getElementById(poolId);
+  if (!pool) return;
+  pool.querySelectorAll('.p-sel-btn').forEach(btn => {
+    btn.style.display = q === '' || btn.getAttribute('data-name').includes(q) ? '' : 'none';
+  });
 }
 
 function _matchSelectPlayer(name, side, type) {
   if (type === 'ind') {
     if (side === 'A') _indInput.playerA = name; else _indInput.playerB = name;
     _indInput.games = [];
-  } else {
+  } else if (type === 'gj') {
     if (side === 'A') _gjInput.playerA = name; else _gjInput.playerB = name;
     _gjInput.games = [];
+  } else if (type === 'pcgj') {
+    if (side === 'A') _pcgjA = name; else _pcgjB = name;
+    _pcgjGames = [];
   }
   render();
 }
@@ -460,10 +479,7 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_indInput.playerA='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="indP_A" placeholder="A 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'A','ind')">
-            <div id="indSug_A" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('A', 'ind')}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -472,10 +488,7 @@ function indInputHTML(){
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_indInput.playerB='';_indInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="indP_B" placeholder="B 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'B','ind')">
-            <div id="indSug_B" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('B', 'ind')}
         </div>
       </div>
     </div>
@@ -721,10 +734,7 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
             <button onclick="_gjInput.playerA='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="gjP_A" placeholder="A 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'A','gj')">
-            <div id="gjSug_A" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('A', 'gj')}
         </div>
         <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
         <div style="flex:1;min-width:140px">
@@ -734,10 +744,7 @@ function gjInputHTML(){
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
             <button onclick="_gjInput.playerB='';_gjInput.games=[];render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
-          </div>`:`<div style="position:relative">
-            <input id="gjP_B" placeholder="B 스트리머 검색" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;box-sizing:border-box" oninput="_matchSearchSug(this.value,'B','gj')">
-            <div id="gjSug_B" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
-          </div>`}
+          </div>` : _matchPlayerPoolHTML('B', 'gj')}
         </div>
       </div>
     </div>
