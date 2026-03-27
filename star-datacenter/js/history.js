@@ -257,6 +257,15 @@ function histAllHTML(){
     const dLabel=d?d.slice(5).replace('-','/'):'미정';
     const dColor=d?'var(--gray-l)':'#f59e0b';
     const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
+    const key=`hist-all-${type}-${d}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
+    const labelA=isCK?'A팀':(m.a||teamA);
+    const labelB=isCK?'B팀':(m.b||teamB);
+    const ca=isCK?'#2563eb':gc(m.a||teamA);
+    const cb=isCK?'#dc2626':gc(m.b||teamB);
+    const aWin=!isInd && Number(scoreA)>Number(scoreB);
+    const bWin=!isInd && Number(scoreB)>Number(scoreA);
+    const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',tourney:'comp',procomp:'comp'};
+    const mode=modeMap[type]||'comp';
     h+=`<div class="rec-summary" style="border-left:3px solid ${ti.col}">
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
@@ -265,14 +274,29 @@ function histAllHTML(){
         </div>
         <span style="font-weight:800;font-size:13px;color:${winner===teamA?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
         ${isInd
-          ?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;white-space:nowrap;flex-shrink:0">승</span>`
-          :`<div class="rec-sum-score" style="font-size:16px;padding:3px 12px">
+          ?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;white-space:nowrap;flex-shrink:0" onclick="toggleDetail('${key}')">승</span>`
+          :`<div class="rec-sum-score score-click" style="font-size:16px;padding:3px 12px" onclick="toggleDetail('${key}')">
             <span style="color:${Number(scoreA)>Number(scoreB)?'#16a34a':Number(scoreB)>Number(scoreA)?'#dc2626':'var(--text)'}">${scoreA}</span>
             <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
             <span style="color:${Number(scoreB)>Number(scoreA)?'#16a34a':Number(scoreA)>Number(scoreB)?'#dc2626':'var(--text)'}">${scoreB}</span>
           </div>`}
         <span style="font-weight:800;font-size:13px;color:${winner===teamB?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${teamB}</span>
         ${winner&&!isInd?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${winCol}18;color:${winCol};border:1px solid ${winCol}33;white-space:nowrap;flex-shrink:0">🏆 ${winner}</span>`:''}
+      </div>
+      <div id="det-${key}" class="rec-detail-area">
+        ${isInd
+          ? (()=> {
+              const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
+              const wc=wp?gc(wp.univ):'#888'; const lc=lp?gc(lp.univ):'#888';
+              const mapStr=m.map&&m.map!=='-'?`<span style="font-size:11px;color:var(--gray-l)">📍 ${m.map}</span>`:'';
+              return `<div style="padding:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
+                ${wp?getPlayerPhotoHTML(wp.name,'24px'):''}<span class="ubadge" style="background:${wc}">${m.wName||''}</span>
+                <span style="color:var(--gray-l)">vs</span>
+                ${lp?getPlayerPhotoHTML(lp.name,'24px'):''}<span class="ubadge" style="background:${lc}">${m.lName||''}</span>
+                ${mapStr}
+              </div>`;
+            })()
+          : _regDet(key, m, mode, labelA, labelB, ca, cb, aWin, bWin)}
       </div>
     </div>`;
   });
