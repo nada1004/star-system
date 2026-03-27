@@ -447,6 +447,68 @@ function saveUnivEdit(){
   if(btn){ btn.textContent='✏️ 수정'; btn.style.display=isLoggedIn?'inline-flex':'none'; }
 }
 
+// 스트리머 상세 최근 경기 배지 클릭 → 해당 기록 탭으로 이동
+function navToMatch(matchId, modeLbl){
+  if(!matchId) return;
+  if(modeLbl==='티어대회'){navToTierMatch(matchId);return;}
+  const _cfg={
+    '미니대전':       {histSub:'mini',        arrMode:'mini',  arr:()=>miniM},
+    '시빌워':         {histSub:'civil',       arrMode:'mini',  arr:()=>miniM},
+    '대학대전':       {histSub:'univm',       arrMode:'univm', arr:()=>univM},
+    '대학CK':         {histSub:'ck',          arrMode:'ck',    arr:()=>ckM},
+    '프로리그':       {histSub:'pro',         arrMode:'pro',   arr:()=>proM},
+    '끝장전':         {histSub:'gj'},
+    '프로리그끝장전': {histSub:'progj'},
+    '개인전':         {histSub:'ind'},
+    '조별리그':       {histSub:'comp'},
+    '대회':           {histSub:'comp'},
+    '토너먼트':       {histSub:'tourney'},
+    '프로리그대회':   {histSub:'procomp'},
+    '프로리그팀전':   {histSub:'procompteam'},
+  }[modeLbl];
+  if(!_cfg) return;
+  cm('playerModal');
+  curTab='hist';
+  histSub=_cfg.histSub;
+  openDetails={};
+  document.querySelectorAll('.tab').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    b.classList.toggle('on',oc.includes("'hist'"));
+  });
+  if(_cfg.arr&&_cfg.arrMode){
+    const srcArr=_cfg.arr();
+    const idx=srcArr.findIndex(m=>m._id===matchId);
+    if(idx>=0){
+      const isCK=(_cfg.arrMode==='ck'||_cfg.arrMode==='pro');
+      filterYear='전체';filterMonth='전체';
+      const filt=srcArr.map((m,i)=>({m,i})).filter(({m})=>{
+        if(isCK){if(!m.teamAMembers||!m.teamBMembers)return false;}
+        else{if(!m.a||!m.b)return false;}
+        return m.sa!=null&&m.sb!=null&&!isNaN(Number(m.sa))&&!isNaN(Number(m.sb));
+      });
+      filt.sort((a,b)=>(b.m.d||'').localeCompare(a.m.d||''));
+      const pos=filt.findIndex(f=>f.i===idx);
+      const ps=typeof getHistPageSize==='function'?getHistPageSize():20;
+      if(pos>=0) histPage[_cfg.arrMode]=Math.floor(pos/ps);
+    }
+  }
+  render();
+  if(_cfg.arr&&_cfg.arrMode){
+    const srcArr=_cfg.arr();
+    const idx=srcArr.findIndex(m=>m._id===matchId);
+    if(idx>=0){
+      const key='hist-'+_cfg.arrMode+'-'+idx;
+      setTimeout(()=>{
+        const el=document.getElementById('det-'+key);
+        if(el){
+          if(!openDetails[key])toggleDetail(key);
+          setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);
+        }
+      },400);
+    }
+  }
+}
+
 function buildPlayerDetailHTML(p){
   const col=gc(p.univ);
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
@@ -758,8 +820,9 @@ function buildPlayerDetailHTML(p){
       const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
       const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
-      const modeCellHTML=modeLbl?(modeLbl==='티어대회'&&_hhMid
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToTierMatch('${_hhMid}')" title="해당 경기로 이동">🎯 ${modeLbl}</span>`
+      const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
+      const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="해당 경기로 이동">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
