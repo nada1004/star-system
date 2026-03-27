@@ -155,7 +155,8 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
         _id: matchId, _proKey: `ptn_${tn.id}_${ri}_${mi}`,
         d, a: m.a, b: m.b, sa: scoreA, sb: scoreB,
         sets: [{ games, scoreA, scoreB, winner: m.winner, label: rndLbl }],
-        n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b
+        n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b,
+        stage: 'bkt'
       };
       if (_ei >= 0) ttM[_ei] = _rec; else ttM.unshift(_rec);
     }

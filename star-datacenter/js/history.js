@@ -93,7 +93,7 @@ function rHist(C,T){
       <button class="stab ${histSub==='tiertour'?'on':''}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
       <button class="stab ${histSub==='tiertour-gen'?'on':''}" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
       <button class="stab ${histSub==='tiertour-league'?'on':''}" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
-      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🗂️ 대진표</button>
+      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트</button>
     </div>`;
     h+=_ttSubBar;
     const _ttAll=ttM.filter(m=>!m._proKey);
@@ -101,8 +101,8 @@ function rHist(C,T){
     const _ttLeague=_ttAll.filter(m=>m.stage==='league');
     const _ttBkt=_ttAll.filter(m=>m.stage==='bkt');
     const _ttSrc=histSub==='tiertour-gen'?_ttGen:histSub==='tiertour-league'?_ttLeague:histSub==='tiertour-bkt'?_ttBkt:_ttAll;
-    const _emptyIco=histSub==='tiertour-bkt'?'🗂️':histSub==='tiertour-league'?'📅':'🎯';
-    const _emptyMsg=histSub==='tiertour-bkt'?'대진표 기록이 없습니다':histSub==='tiertour-league'?'조별리그 기록이 없습니다':histSub==='tiertour-gen'?'일반 기록이 없습니다':'티어대회 기록이 없습니다';
+    const _emptyIco=histSub==='tiertour-bkt'?'🏆':histSub==='tiertour-league'?'📅':'🎯';
+    const _emptyMsg=histSub==='tiertour-bkt'?'토너먼트 기록이 없습니다':histSub==='tiertour-league'?'조별리그 기록이 없습니다':histSub==='tiertour-gen'?'일반 기록이 없습니다':'티어대회 기록이 없습니다';
     h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist'):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
