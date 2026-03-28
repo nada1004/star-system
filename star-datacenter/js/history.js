@@ -254,8 +254,8 @@ function histAllHTML(){
       scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
     }
     const winner=isInd?teamA:(!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
-    const dLabel=d?d.slice(5).replace('-','/'):'미정';
-    const dColor=d?'var(--gray-l)':'#f59e0b';
+    const dLabel=d?d.slice(2).replace(/-/g,'/'):'미정';
+    const dColor=d?'var(--text3)':'#f59e0b';
     const winCol=winner===teamA?gc(teamA):winner===teamB?gc(teamB):ti.col;
     const key=`hist-all-${type}-${d}-${(m.a||teamA)}-${(m.b||teamB)}`.replace(/[^\w\-:.]/g,'');
     const labelA=isCK?'A팀':(m.a||teamA);
@@ -270,7 +270,7 @@ function histAllHTML(){
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
           <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}</span>
-          <span style="font-size:10px;color:${dColor};white-space:nowrap">${dLabel}</span>
+          <span style="font-size:12px;font-weight:600;color:${dColor};white-space:nowrap">${dLabel}</span>
         </div>
         <span style="font-weight:800;font-size:13px;color:${winner===teamA?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
         ${isInd
@@ -365,7 +365,7 @@ function histTourneyHTML(context){
       const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
       h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${_tBorderCol}">
         <div class="rec-sum-header">
-          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):'미정'}</span>
+          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${grpBadge}
           <div class="rec-sum-vs">
             ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
@@ -699,7 +699,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     h+=`<div class="rec-summary" data-hay="${hayData}" style="border-left:3px solid ${_wBorderCol}">
       <div class="rec-sum-header">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
-        <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):''}</span>
+        <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
@@ -1488,7 +1488,7 @@ function histProCompHTML() {
         : `<span style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">대진표</span>`;
       h += `<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div class="rec-sum-header">
-          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):'미정'}</span>
+          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}
           ${stageBadge}
           <div class="rec-sum-vs" style="flex:1">
@@ -1571,7 +1571,7 @@ function histProCompTourneyHTML() {
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div class="rec-sum-header">
-          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(5).replace('-','/'):'미정'}</span>
+          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span style="background:#f5f3ff;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">토너먼트</span>
           ${stageBadge}
           <div class="rec-sum-vs" style="flex:1">
