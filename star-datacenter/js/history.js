@@ -631,7 +631,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return recSortDir==='asc' ? (a.i - b.i) : (b.i - a.i);
   });
 
-  // ── 페이지네이션 계산 ──
+  const initQ2=(window._recQ&&window._recQ[mode])||'';
+
+  // ── 페이지네이션 계산 (검색 중에는 전체 렌더링) ──
   const totalItems=filtered.length;
   const pageSize=getHistPageSize();
   const pageKey=mode;
@@ -639,9 +641,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const totalPages=Math.ceil(totalItems/pageSize)||1;
   if(histPage[pageKey]>=totalPages) histPage[pageKey]=Math.max(0,totalPages-1);
   const curPage=histPage[pageKey];
-  const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
-
-  const initQ2=(window._recQ&&window._recQ[mode])||'';
+  const paged=initQ2?filtered:(totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered);
   // 일괄 이동 컨텍스트
   const _canBulk=isLoggedIn&&(mode==='mini'||mode==='univm');
   const _bulkKey=(mode==='mini'&&histSub==='civil')?'civil':mode;
@@ -735,8 +735,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     </div>`;
   });
 
-  // ── 페이지 컨트롤 ──
-  if(totalItems>getHistPageSize()){
+  // ── 페이지 컨트롤 (검색 중에는 숨김) ──
+  if(!initQ2&&totalItems>getHistPageSize()){
     const pages=totalPages;
     let pager=`<div class="no-export" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0;flex-wrap:wrap">`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=0;render()" ${curPage===0?'disabled':''}>«</button>`;
