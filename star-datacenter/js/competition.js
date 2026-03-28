@@ -141,7 +141,7 @@ function rCompLeague(tn){
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')" title="선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장">📋 붙여넣기 일괄 입력</button>
+      <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')" title="선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장">📋 자동인식</button>
       <span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">경기 추가:</span>`;
     tn.groups.forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi];
@@ -1132,7 +1132,7 @@ function grpOpenMatchModal(tn,gi,mi){
       <button class="btn btn-b btn-sm" onclick="grpAddSet()">+ 1세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
-      <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 붙여넣기 일괄 입력</button>
+      <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 자동인식</button>
       <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
         <option value="set">세트제</option>
         <option value="game">게임수 합산</option>

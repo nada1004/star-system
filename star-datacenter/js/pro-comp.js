@@ -1038,7 +1038,7 @@ function proCompBracket(tn) {
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
-    ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 결과 붙여넣기 일괄 입력</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
+    ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
   </div>`;
 
   // 챔피언 배너
@@ -1106,7 +1106,7 @@ function proCompBracket(tn) {
           ${isDone?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
             <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
-            <button class="btn btn-xs btn-p" style="font-size:9px;padding:0 6px;${hasBoth?'':'opacity:.35'}" onclick="${hasBoth?`openPcBktPasteModal('${tn.id}',${ri},${mi})`:'alert(\"선수 확정 후 사용\")'}" title="붙여넣기 일괄 입력">📋 붙여넣기</button>
+            <button class="btn btn-xs btn-p" style="font-size:9px;padding:0 6px;${hasBoth?'':'opacity:.35'}" onclick="${hasBoth?`openPcBktPasteModal('${tn.id}',${ri},${mi})`:'alert(\"선수 확정 후 사용\")'}" title="자동인식">📋 자동인식</button>
             <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="경기 추가/수정">✏️ 경기수정</button>`:''}
         </div>
       </div>`;
@@ -3245,7 +3245,7 @@ function proCompGJSection(tn) {
       <div id="pcgj-games" style="margin-top:10px"></div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-b btn-sm" onclick="pcgjAddGame()">+ 게임 추가</button>
-        <button class="btn btn-p btn-sm" onclick="openPcGJPasteModal('${tn.id}')">📋 붙여넣기 일괄 입력</button>
+        <button class="btn btn-p btn-sm" onclick="openPcGJPasteModal('${tn.id}')">📋 자동인식</button>
         <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">💾 저장</button>
       </div>
     </div>`;

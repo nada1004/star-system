@@ -946,6 +946,15 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
 
   popup.innerHTML = `
     <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
+    <div style="padding:6px 6px 8px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">✨ 상태 아이콘 <span style="margin-left:4px">${getStatusIconHTML(playerName)||'<span style="color:var(--gray-l);font-size:10px">없음</span>'}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:5px;max-height:90px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px">
+        ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isActive=getStatusIcon(playerName)===(d.emoji||'');return `<button onclick="setBrdStatusIcon('${pNameSafe}','${id}','brd-icon-expiry-${_pnSafeChip}')" title="${d.label.replace(/"/g,'&quot;')}" style="padding:2px 5px;border-radius:4px;border:1.5px solid ${isActive?'var(--blue)':'var(--border2)'};background:${isActive?'#eff6ff':'var(--surface)'};font-size:13px;cursor:pointer;min-width:28px">${d.emoji||'✖'}</button>`;}).join('')}
+      </div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;color:var(--text3)">
+        <input type="checkbox" id="brd-icon-expiry-${_pnSafeChip}" ${playerStatusExpiry[playerName]?'checked':''}>10일 후 자동으로 없음
+      </label>
+    </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;padding:0 6px 4px">
@@ -1032,6 +1041,16 @@ function boardTransferPlayerFromChip(playerName, fromUniv){
   _refreshBoardCard(fromUniv);
   _refreshBoardCard(toUniv);
   _brdToast(`✅ "${playerName}" → "${toUniv}" 이동 완료`);
+}
+
+function setBrdStatusIcon(name, iconId, chkId){
+  const chk = document.getElementById(chkId);
+  const exp = chk && chk.checked ? new Date(Date.now()+10*864e5).toISOString().slice(0,10) : null;
+  setStatusIcon(name, iconId, exp);
+  _brdClose();
+  render();
+  const emoji = STATUS_ICON_DEFS[iconId]?.emoji;
+  _brdToast((emoji || '없음') + ' 상태 아이콘 변경');
 }
 
 function openBrdPlayerPopup(e, playerName, univName, idx, total){

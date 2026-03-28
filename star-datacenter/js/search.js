@@ -1915,7 +1915,7 @@ function pasteApply() {
   }
 
   // 개인 전적 반영 (경기 시점 대학도 저장)
-  const _pasteModeLabel=mode==='mini'?(window._miniPasteType==='civil'?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',gj:'끝장전',comp:'조별리그',individual:'개인전'}[mode]||'';
+  const _pasteModeLabel=mode==='mini'?(window._miniPasteType==='civil'?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',gj:'끝장전',comp:'조별리그',individual:'개인전',ind:'개인전'}[mode]||'';
   savable.forEach(r => {
     const _ab = resolveAB(r);
     const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
