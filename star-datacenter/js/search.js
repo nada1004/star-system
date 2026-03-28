@@ -1026,7 +1026,7 @@ function pastePreview() {
       const _kd = `${_korDateM[1]}-${String(_korDateM[2]).padStart(2,'0')}-${String(_korDateM[3]).padStart(2,'0')}`;
       currentLineDate = _kd;
       const _dateInput = document.getElementById('paste-date');
-      if (_dateInput && !_dateInput.value) _dateInput.value = _kd;
+      if (_dateInput) _dateInput.value = _kd; // 항상 덮어씀 (한국식 날짜가 명시된 경우 우선)
       // 날짜 부분 제거 후 나머지를 게임 줄로 재처리
       const _restLine = trimmed.slice(_korDateM[0].length).trim();
       if (_restLine) {
