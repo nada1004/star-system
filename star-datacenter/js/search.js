@@ -1019,7 +1019,30 @@ function pastePreview() {
     // 무승부 라인: 🐱🆚🐱 → 무승부로 스킵
     if (/🐱[^🆚]*🆚[^🐱]*🐱/.test(trimmed) || (trimmed.includes('🆚') && (trimmed.match(/🐱/g)||[]).length>=2 && !trimmed.includes('✅') && !trimmed.includes('❌'))) return;
 
-    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" ──
+    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" or "YYYY년 MM월 DD일 ..." ──
+    // "YYYY년 MM월 DD일" 형식이 게임 줄 앞에 붙은 경우 → 날짜 추출 후 나머지를 게임 줄로 처리
+    const _korDateM = trimmed.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일\s+/);
+    if (_korDateM) {
+      const _kd = `${_korDateM[1]}-${String(_korDateM[2]).padStart(2,'0')}-${String(_korDateM[3]).padStart(2,'0')}`;
+      currentLineDate = _kd;
+      const _dateInput = document.getElementById('paste-date');
+      if (_dateInput && !_dateInput.value) _dateInput.value = _kd;
+      // 날짜 부분 제거 후 나머지를 게임 줄로 재처리
+      const _restLine = trimmed.slice(_korDateM[0].length).trim();
+      if (_restLine) {
+        const _rp = parsePasteLine(_restLine);
+        if (_rp) {
+          const _wM = findPlayerByPartialName(_rp.winName);
+          const _lM = findPlayerByPartialName(_rp.loseName);
+          results.push({ ..._rp, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
+            wPlayer: _wM.player, lPlayer: _lM.player,
+            wCandidates: _wM.candidates, lCandidates: _lM.candidates,
+            wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _kd });
+        }
+      }
+      return;
+    }
     // 직전 결과에 날짜+메모 적용 (경기 다음 줄 포맷). 결과 없으면 currentLineDate로 이후 적용.
     // 어느 모드든 paste-date 입력 필드도 자동으로 채움.
     const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})(?:.*?[|｜]\s*메모\s*[:：]\s*(.+))?/);

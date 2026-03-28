@@ -610,6 +610,13 @@ function rTier(C,T){
     extractGames(tourItems,'조별대회');
     // 티어대회 포함
     if(ttM&&ttM.length) extractGames(ttM,'티어대회');
+    // 개인전/끝장전 포함 (구조 다름: wName/lName 직접 필드)
+    (indM||[]).forEach(m=>{
+      recentGames.push({date:m.d||'',winner:m.wName,loser:m.lName,map:m.map||'-',label:'개인전'});
+    });
+    (gjM||[]).forEach(m=>{
+      recentGames.push({date:m.d||'',winner:m.wName,loser:m.lName,map:m.map||'-',label:m._proLabel?'프로끝장전':'끝장전'});
+    });
     recentGames.sort((a,b)=>b.date.localeCompare(a.date));
 
     // 종족 필터 상태
