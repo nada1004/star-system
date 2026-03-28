@@ -988,6 +988,7 @@ function pastePreview() {
   const results = [];
   const errors = [];
   let currentSet = 1;
+  let currentLineDate = null; // "일자: YYYY-MM-DD" 줄로 설정되는 현재 날짜
   let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }
   let isFormatC    = false;  // 이번 블록이 형식 C인지
 
@@ -1057,7 +1058,8 @@ function pastePreview() {
         wPlayer: wMatch.player, lPlayer: lMatch.player,
         wCandidates: wMatch.candidates, lCandidates: lMatch.candidates,
         wSimilar: wMatch.similar||[], lSimilar: lMatch.similar||[],
-        lineNum: idx + 1, rawLine: trimmed
+        lineNum: idx + 1, rawLine: trimmed,
+        ...(currentLineDate ? { _lineDate: currentLineDate } : {})
       });
       return;
     }
@@ -1081,9 +1083,17 @@ function pastePreview() {
             wPlayer: wM2.player, lPlayer: lM2.player,
             wCandidates: wM2.candidates, lCandidates: lM2.candidates,
             wSimilar: wM2.similar||[], lSimilar: lM2.similar||[],
-            lineNum: idx+1, rawLine: trimmed });
+            lineNum: idx+1, rawLine: trimmed,
+            ...(currentLineDate ? { _lineDate: currentLineDate } : {}) });
         }
       }
+      return;
+    }
+
+    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" → 이후 결과에 날짜 적용 ──
+    const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})/);
+    if (_dateLineM) {
+      currentLineDate = _dateLineM[1];
       return;
     }
 
@@ -1104,7 +1114,8 @@ function pastePreview() {
       lCandidates: lMatch.candidates,
       wSimilar: wMatch.similar||[],
       lSimilar: lMatch.similar||[],
-      lineNum: idx + 1, rawLine: trimmed
+      lineNum: idx + 1, rawLine: trimmed,
+      ...(currentLineDate ? { _lineDate: currentLineDate } : {})
     });
   });
 
@@ -1222,6 +1233,11 @@ function renderPastePreview(results, errors) {
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:70px">상태</th>
       <th style="text-align:center;padding:6px 8px;font-size:11px;width:52px">관리</th>
     </tr></thead><tbody>`;
+
+    // 날짜 구분선 표시: ind/gj 모드에서 _lineDate가 있는 경우 날짜별 구분선 추가
+    const _pasteMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
+    const _showDateSep = ['ind','gj'].includes(_pasteMode) && results.some(r => r._lineDate);
+    let _prevRowDate = null;
 
     results.forEach((r, i) => {
       const wOk    = !!r.wPlayer;
@@ -1382,6 +1398,19 @@ function renderPastePreview(results, errors) {
         onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
       const _hasSim = wSim||lSim;
+      // 날짜 구분선
+      if (_showDateSep) {
+        const _rowDate = r._lineDate || null;
+        if (_rowDate !== _prevRowDate) {
+          _prevRowDate = _rowDate;
+          if (_rowDate) {
+            html += `<tr><td colspan="6" style="padding:4px 8px;background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:1px solid #bfdbfe">
+              <span style="font-size:11px;font-weight:700;color:#1d4ed8">📅 ${_rowDate}</span>
+              <span style="font-size:10px;color:#6b7280;margin-left:6px">이후 경기 날짜</span>
+            </td></tr>`;
+          }
+        }
+      }
       html += `<tr style="background:${ok ? '' : wAmbig||lAmbig ? '#fffbeb' : _hasSim ? '#fdf4ff' : '#fff5f5'}">
         <td style="padding:4px 6px">${setCell}</td>
         <td style="padding:4px 6px">${mapCell}</td>
@@ -1912,14 +1941,32 @@ function pasteApply() {
     curComp = compName;
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
-    const indSid = genId();
-    const indGames = savable.map(r => ({ _id: genId(), sid: indSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
-    indM.unshift(...indGames);
+    // _lineDate 있으면 날짜별 다른 sid로 분리 저장
+    const _indDateGroups = {};
+    savable.forEach(r => {
+      const d = r._lineDate || dateVal;
+      if (!_indDateGroups[d]) _indDateGroups[d] = [];
+      _indDateGroups[d].push(r);
+    });
+    Object.entries(_indDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
+      const indSid = genId();
+      const games = group.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
+      indM.unshift(...games);
+    });
   } else if (mode === 'gj') {
-    const gjSid = genId(); // 같은 붙여넣기 세션은 동일 sid로 묶음
     const _gjPro = !!window._gjProPaste;
-    const gjGames = savable.map(r => ({ _id: genId(), sid: gjSid, d: dateVal, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}) }));
-    gjM.unshift(...gjGames); // 순서 유지하며 한꺼번에 앞에 삽입
+    // _lineDate 있으면 날짜별 다른 sid로 분리 저장
+    const _gjDateGroups = {};
+    savable.forEach(r => {
+      const d = r._lineDate || dateVal;
+      if (!_gjDateGroups[d]) _gjDateGroups[d] = [];
+      _gjDateGroups[d].push(r);
+    });
+    Object.entries(_gjDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
+      const gjSid = genId();
+      const games = group.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}) }));
+      gjM.unshift(...games);
+    });
   } else if (mode === 'tt') {
     const ttAB = (r) => {
       const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
