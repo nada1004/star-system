@@ -379,7 +379,7 @@ var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
 var vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 
 // 공통 연도/월 필터 상태
-let yearOptions=['2026'];
+let yearOptions=[]; // 하위호환용 — buildYearMonthFilter는 getYearOptions()로 동적 계산
 let filterYear='전체';
 let filterMonth='전체'; // '전체' 또는 '01'~'12'
 

@@ -37,13 +37,7 @@ function init(){
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
   }
-  // 로컬 데이터에서 연도 자동 추출 (Firebase/autoLoad 이전에도 필터가 올바르게 표시되도록)
-  (function(){
-    const allD=[...miniM,...univM,...comps,...ckM,...proM];
-    const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
-    years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
-    yearOptions.sort();
-  })();
+  // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
   try{refreshSel();}catch(e){}

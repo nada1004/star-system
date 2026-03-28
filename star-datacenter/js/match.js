@@ -126,19 +126,29 @@ function stabs(current, opts){
   }).join('')}</div>`;
 }
 
+// 모든 데이터에서 연도를 자동 추출
+function getYearOptions(){
+  const s=new Set();
+  s.add(String(new Date().getFullYear())); // 현재 연도는 항상 포함
+  const flat=[
+    ...(miniM||[]),...(univM||[]),...(ckM||[]),...(proM||[]),
+    ...(gjM||[]),...(indM||[]),...(ttM||[]),...(comps||[])
+  ];
+  flat.forEach(m=>{if(m.d&&m.d.length>=4)s.add(m.d.slice(0,4));});
+  // tourneys 내부 경기 날짜
+  (tourneys||[]).forEach(t=>{(t.matches||[]).forEach(m=>{if(m.d&&m.d.length>=4)s.add(m.d.slice(0,4));});});
+  return [...s].filter(y=>/^\d{4}$/.test(y)).sort();
+}
+
 // 공통 연도/월 필터 UI
 function buildYearMonthFilter(section){
   let h=`<div class="fbar no-export" style="margin-bottom:12px;flex-wrap:wrap">
     <strong>기간</strong>`;
-  const years=['전체',...yearOptions];
-  years.forEach(y=>{
+  ['전체',...getYearOptions()].forEach(y=>{
     const sel=(filterYear===y);
     const label=(y==='전체')?'전체':`${y}년`;
     h+=`<button class="pill ${sel?'on':''}" onclick="setFilterYear('${y}','${section}')">${label}</button>`;
   });
-  if(isLoggedIn){
-    h+=`<button class="pill" onclick="addYear('${section}')">+ 연도 추가</button>`;
-  }
   h+=`<span style="font-size:11px;color:var(--gray-l);margin-left:10px">월</span>`;
   const months=['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
   months.forEach(m=>{
@@ -153,16 +163,6 @@ function buildYearMonthFilter(section){
 function setFilterYear(y, section){
   filterYear=y;
   openDetails={};
-  render();
-}
-
-function addYear(section){
-  if(!isLoggedIn)return;
-  const y=prompt('추가할 연도 (예: 2027)를 입력하세요');
-  if(!y)return;
-  const v=y.trim();
-  if(!/^\d{4}$/.test(v))return;
-  if(!yearOptions.includes(v))yearOptions.push(v);
   render();
 }
 
