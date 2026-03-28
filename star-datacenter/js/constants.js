@@ -152,6 +152,7 @@ let tierRankModeFilter = '전체';
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
 let playerStatusIcons = J('su_psi') || {};
+let playerStatusExpiry = J('su_psi_expiry') || {};
 const STATUS_ICON_DEFS = {
   none:    { label: '없음',     emoji: '' },
   fire:    { label: '🔥 불',    emoji: '🔥' },
@@ -217,14 +218,37 @@ function removeCustomStatusIcon(idx){
 }
 function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
 function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
-function getStatusIcon(name){ return playerStatusIcons[name]||''; }
-function setStatusIcon(name, iconId){
-  if(!iconId||iconId==='none') delete playerStatusIcons[name];
-  else playerStatusIcons[name]=STATUS_ICON_DEFS[iconId]?.emoji||iconId;
+function getStatusIcon(name){
+  const expiry = playerStatusExpiry[name];
+  if(expiry && expiry < new Date().toISOString().slice(0,10)){
+    delete playerStatusIcons[name];
+    delete playerStatusExpiry[name];
+    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+    localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+    return '';
+  }
+  return playerStatusIcons[name]||'';
+}
+function setStatusIcon(name, iconId, expiryDate){
+  if(!iconId||iconId==='none'){
+    delete playerStatusIcons[name];
+    delete playerStatusExpiry[name];
+  } else {
+    playerStatusIcons[name]=STATUS_ICON_DEFS[iconId]?.emoji||iconId;
+    if(expiryDate) playerStatusExpiry[name]=expiryDate;
+    else delete playerStatusExpiry[name];
+  }
   localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
 }
 function setStatusIconFromModal(btn, playerName, iconId){
-  setStatusIcon(playerName, iconId);
+  const expiryChk = document.getElementById('ed-icon-expiry');
+  let expiryDate = null;
+  if(expiryChk && expiryChk.checked && iconId && iconId !== 'none'){
+    const d = new Date(); d.setDate(d.getDate()+10);
+    expiryDate = d.toISOString().slice(0,10);
+  }
+  setStatusIcon(playerName, iconId, expiryDate);
   const container = btn.closest('#ed-icon-btns') || btn.parentElement;
   if(container){
     container.querySelectorAll('button[data-icon-id]').forEach(b=>{
@@ -234,7 +258,14 @@ function setStatusIconFromModal(btn, playerName, iconId){
     });
   }
   const lbl = document.getElementById('ed-icon-label');
-  if(lbl){ const d=STATUS_ICON_DEFS[iconId]; lbl.textContent='선택: '+(d?d.label:'없음'); }
+  if(lbl){
+    const d=STATUS_ICON_DEFS[iconId];
+    const expTxt = expiryDate ? ` (${expiryDate} 만료)` : '';
+    lbl.textContent='선택: '+(d?d.label:'없음')+expTxt;
+  }
+  // 만료 체크박스 표시 제어
+  const expiryRow = document.getElementById('ed-icon-expiry-row');
+  if(expiryRow) expiryRow.style.display = (!iconId||iconId==='none') ? 'none' : 'flex';
 }
 function saveCustomStatusIcon(slot, emoji){
   localStorage.setItem('su_si_c'+slot, emoji);
