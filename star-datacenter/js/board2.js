@@ -414,12 +414,14 @@ async function saveB2Img() {
       ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
     </div>`;
   document.body.appendChild(tmpDiv);
+  // no-export 요소 제거 (접기 버튼 등)
+  tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
 
   await new Promise(r => setTimeout(r, 300));
   injectUnivIcons(tmpDiv);
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 400)); // 아이콘 로드 대기 시간 확보
   // 이미지 먼저 data URL로 변환 후 치수 측정 (측정 전 로드 필수)
-  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 6000);
+  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 8000);
   await new Promise(r => setTimeout(r, 100));
 
   const h = tmpDiv.scrollHeight + 32;
@@ -447,11 +449,13 @@ async function saveB2FreeImg() {
   tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
   tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>${_b2FreeView()}`;
   document.body.appendChild(tmpDiv);
+  // no-export 요소 제거 (접기 버튼 등)
+  tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
 
   await new Promise(r => setTimeout(r, 300));
   injectUnivIcons(tmpDiv);
-  await new Promise(r => setTimeout(r, 200));
-  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 6000);
+  await new Promise(r => setTimeout(r, 400));
+  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 8000);
   await new Promise(r => setTimeout(r, 100));
 
   const h = tmpDiv.scrollHeight + 32;
