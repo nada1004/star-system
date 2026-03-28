@@ -940,6 +940,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const _pnSafeChip = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
+  const pNameSafe = playerName.replace(/'/g,"\\'").replace(/"/g,'&quot;');
   const _tierIdxChip = TIERS.indexOf(p.tier||'미정');
   const _prevTierChip = _tierIdxChip > 0 ? TIERS[_tierIdxChip-1] : null;
   const _nextTierChip = _tierIdxChip < TIERS.length-1 ? TIERS[_tierIdxChip+1] : null;
