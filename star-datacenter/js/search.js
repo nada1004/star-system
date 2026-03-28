@@ -1021,10 +1021,14 @@ function pastePreview() {
 
     // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" ──
     // 직전 결과에 날짜+메모 적용 (경기 다음 줄 포맷). 결과 없으면 currentLineDate로 이후 적용.
+    // 어느 모드든 paste-date 입력 필드도 자동으로 채움.
     const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})(?:.*?[|｜]\s*메모\s*[:：]\s*(.+))?/);
     if (_dateLineM) {
       const _dl = _dateLineM[1];
       const _dm = (_dateLineM[2] || '').trim();
+      // 날짜 입력 필드 자동 채움
+      const _dateInput = document.getElementById('paste-date');
+      if (_dateInput && !_dateInput.value) _dateInput.value = _dl;
       if (results.length > 0) {
         results[results.length - 1]._lineDate = _dl;
         if (_dm) results[results.length - 1]._lineMemo = _dm;
@@ -2375,6 +2379,13 @@ function proPreview() {
             wSimilar: wM2.similar||[], lSimilar: lM2.similar||[], lineNum: idx+1 });
         }
       }
+      return;
+    }
+    // 날짜 줄 감지 → pro-paste-date 자동 채움 (항상 덮어씀 — 프로는 경기 단위 날짜)
+    const _proDateM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})/);
+    if (_proDateM) {
+      const _pdi = document.getElementById('pro-paste-date');
+      if (_pdi) _pdi.value = _proDateM[1];
       return;
     }
     const parsed = parsePasteLine(line);
