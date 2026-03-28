@@ -3396,8 +3396,9 @@ function addPlayer(){
     if(_pPhoto.startsWith('data:')){alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n이미지를 imgur.com 등에 업로드 후 URL을 입력하세요.');return;}
     if(_pPhoto.length>2000&&!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_pPhoto.length}자). 계속 저장하시겠습니까?`))return;
   }
-  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,win:0,loss:0,points:0,history:[]});
-  document.getElementById('p-name').value='';document.getElementById('p-photo').value='';save();render();
+  const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
+  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,win:0,loss:0,points:0,history:[]});
+  document.getElementById('p-name').value='';document.getElementById('p-photo').value='';document.getElementById('p-hide-board').checked=false;save();render();
 }
 function openEP(name){
   editName=name;const p=players.find(x=>x.name===name);
