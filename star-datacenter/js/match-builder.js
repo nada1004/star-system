@@ -953,6 +953,7 @@ function gjRecordsHTML(proOnly){
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}')">🎴 공유카드</button>`;
+    const bulkDateBtn=isLoggedIn?`<button class="btn btn-w btn-xs no-export" style="white-space:nowrap" onclick="event.stopPropagation();bulkEditGjDate('${idsJson}','${escJS(s.d)}')">📅 날짜</button>`:'';
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbGj}
@@ -962,7 +963,7 @@ function gjRecordsHTML(proOnly){
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${moveBtn}${delBtn}</span>
+        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${bulkDateBtn}${moveBtn}${delBtn}</span>
       </summary>
       <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
     s.games.forEach((m,gi)=>{
@@ -992,6 +993,14 @@ function gjRecordsHTML(proOnly){
     h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
   }
   return h;
+}
+
+function bulkEditGjDate(idsJson, curDate){
+  const nd=prompt('날짜 일괄 변경 (YYYY-MM-DD)', curDate||'');
+  if(nd===null)return;
+  const ids=JSON.parse(idsJson.replace(/'/g,'"'));
+  gjM.forEach(m=>{if(ids.includes(m._id))m.d=nd;});
+  save();render();
 }
 
 /* ══════════════════════════════════════
@@ -1196,13 +1205,14 @@ function rUnivM(C,T){
 function univMRankHTML(){
   const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
-  univM.forEach(m=>{
+  const _univFiltered=typeof passDateFilter==='function'?univM.filter(m=>passDateFilter(m.d||'')):univM;
+  _univFiltered.forEach(m=>{
     if(!sc[m.a])sc[m.a]={w:0,l:0,pts:0,total:0};if(!sc[m.b])sc[m.b]={w:0,l:0,pts:0,total:0};
     sc[m.a].total++;sc[m.b].total++;
     if(m.sa>m.sb){sc[m.a].w++;sc[m.a].pts+=3;sc[m.b].l++;sc[m.b].pts-=3;}
     else if(m.sb>m.sa){sc[m.b].w++;sc[m.b].pts+=3;sc[m.a].l++;sc[m.a].pts-=3;}
   });
-  const sorted=Object.entries(sc).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts);
+  const sorted=Object.entries(sc).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts||b[1].w-a[1].w);
   const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 대학대전 대학별 순위</div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
@@ -1220,7 +1230,7 @@ function univMRankHTML(){
   const usk=window._rankSort['univm']||'rate';
   const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
   const upsc={};
-  univM.forEach(m=>{
+  _univFiltered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
       (st.games||[]).forEach(g=>{
         let wn,ln;

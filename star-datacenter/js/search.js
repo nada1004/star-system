@@ -262,6 +262,14 @@ function findPlayerByPartialName(namePart) {
     if (nsExact.length > 1)   return { player: null, candidates: nsExact, similar: [] };
   }
 
+  // 2.7) 메모 포함 일치 (별명 우선 — 이름 부분일치보다 먼저 확인)
+  // 이름 부분일치(step3)보다 앞에 두어야 짧은 선수명이 입력된 별명을 가로채는 것을 방지
+  if (trimmed.length >= 2) {
+    const memoPartial = players.filter(p => p.memo && p.memo.includes(trimmed));
+    if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
+    if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
+  }
+
   // 3) 이름 부분 일치 — 2글자 이상
   if (trimmed.length >= 2) {
     const partial = players.filter(p =>
@@ -274,14 +282,6 @@ function findPlayerByPartialName(namePart) {
       if (sw.length === 1) return { player: sw[0], candidates: partial, similar: [] };
       return { player: null, candidates: partial, similar: [] };
     }
-
-    // 4) 메모 부분 일치
-    const memoPartial = players.filter(p => {
-      if (!p.memo) return false;
-      return p.memo.includes(trimmed);
-    });
-    if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
-    if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
 
     // 4.5) 공백 제거 후 부분 일치
     if (noSpace !== trimmed && noSpace.length >= 2) {
@@ -311,6 +311,13 @@ function findPlayerByPartialName(namePart) {
   // 공백 제거 버전으로도 유사 검색
   const similarNS = noSpace !== trimmed ? _findSimilarPlayers(noSpace) : [];
   similarNS.forEach(p => { if (!similar.some(q => q.name === p.name)) similar.push(p); });
+  // 메모 기반 후보도 '혹시:' 목록에 추가 (Levenshtein으로 찾을 수 없는 별명 대비)
+  if (trimmed.length >= 2) {
+    players.filter(p => p.memo && (
+      p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean).some(t=>t===trimmed) ||
+      p.memo.includes(trimmed)
+    )).forEach(p => { if (!similar.some(q => q.name === p.name)) similar.push(p); });
+  }
   return { player: null, candidates: [], similar };
 }
 
