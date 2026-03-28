@@ -497,7 +497,7 @@ function proCompTeamSection(tn) {
     const colA='#2563eb', colB='#dc2626';
     h += `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-size:11px;color:var(--gray-l);flex-shrink:0">${tm.d||'날짜 미정'}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text3);flex-shrink:0">${tm.d||'날짜 미정'}</span>
         <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
           <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:14px">${tm.teamAName||'A팀'}</span>
           <span style="font-size:20px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:2px 14px;border-radius:8px">${tm.sa||0}:${tm.sb||0}</span>
@@ -2970,7 +2970,7 @@ function rProAll(C, T) {
         result=item.winner?`<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:1px 8px;border-radius:10px">${item.winner==='A'?item.aLabel:item.bLabel} 승</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
       }
       h+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
-        <span style="font-size:10px;color:var(--gray-l);min-width:76px;white-space:nowrap">${item.d||'날짜미정'}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text3);min-width:76px;white-space:nowrap">${item.d||'날짜미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:${typeBg};color:${typeCol}">${item.type}</span>
         <span style="font-size:12px;font-weight:600;flex:1;min-width:0">${item.label}</span>
         <span>${result}</span>
@@ -3261,7 +3261,7 @@ function proCompGJSection(tn) {
     const winner = p1w>p2w?sess.a:p2w>p1w?sess.b:'';
     h += `<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--gray-l)">${sess.d||'날짜 미정'}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>
         <span style="font-weight:900;color:var(--blue)">${p1w} - ${p2w}</span>
         <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}')">${sess.b||'?'}</span>

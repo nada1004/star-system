@@ -859,7 +859,11 @@ function rCfg(C,T){
             ${n.active?'✅ 활성':'⭕ 비활성'}</button>
           <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();render()}">🗑️</button>
         </div>
-        <div style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden;text-overflow:ellipsis">${(n.body||'').slice(0,120)}${(n.body||'').length>120?'...':''}</div>
+        ${(n.body||'').length>120
+          ? `<div id="notice-body-${i}" style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden">${(n.body||'').slice(0,120)}...</div>
+             <button onclick="(function(){const el=document.getElementById('notice-body-${i}');const btn=document.getElementById('notice-exp-${i}');const open=el.style.maxHeight!=='none';el.style.maxHeight=open?'none':'60px';el.innerHTML=open?${JSON.stringify((n.body||''))}:${JSON.stringify((n.body||'').slice(0,120)+'...')};btn.textContent=open?'▲ 접기':'▼ 전체보기';})()" id="notice-exp-${i}" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:2px 0;font-weight:600">▼ 전체보기</button>`
+          : `<div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${n.body||''}</div>`
+        }
       </div>`).join('')
     }
     </div>
@@ -917,6 +921,15 @@ function rCfg(C,T){
                 if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
                 (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
               }));
+              (tourneys||[]).forEach(tn=>{
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+                const br=tn.bracket||{};
+                Object.values(br.matchDetails||{}).forEach(m=>{if(m&&m.a===oldN)m.a=nw;if(m&&m.b===oldN)m.b=nw;});
+                (br.manualMatches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});
+              });
+              (proTourneys||[]).forEach(tn=>{
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+              });
               save();render();
             })()">✅ 적용</button>
           </div>`).join('')}
@@ -931,7 +944,7 @@ function rCfg(C,T){
     const isDissolved = !!u.dissolved;
     h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
-      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
+      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const v=this.value.trim();if(!v){this.value=univCfg[${i}].name;return;}univCfg[${i}].name=v;save()">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
@@ -1035,7 +1048,7 @@ function rCfg(C,T){
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
             <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
             ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
           </div>`;
@@ -1150,10 +1163,10 @@ function rCfg(C,T){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
           <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
             <input type="checkbox" id="bulk-date-chk-${m}" checked style="cursor:pointer">
-            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
           </label>`).join('')}
         </div>
         <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
@@ -1212,10 +1225,10 @@ function rCfg(C,T){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
           <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
             <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
-            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
           </label>`).join('')}
         </div>
         <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
@@ -2325,6 +2338,10 @@ function grpRemoveUniv(tnId,gi,ui){
 ══════════════════════════════════════ */
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
+  if(!isLoggedIn){
+    C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
+    return;
+  }
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
   let h=`<div class="ssec"><h4>📢 공지 관리</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
@@ -2340,7 +2357,11 @@ function rCfg(C,T){
             ${n.active?'✅ 활성':'⭕ 비활성'}</button>
           <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();render()}">🗑️</button>
         </div>
-        <div style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden;text-overflow:ellipsis">${(n.body||'').slice(0,120)}${(n.body||'').length>120?'...':''}</div>
+        ${(n.body||'').length>120
+          ? `<div id="notice-body-${i}" style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden">${(n.body||'').slice(0,120)}...</div>
+             <button onclick="(function(){const el=document.getElementById('notice-body-${i}');const btn=document.getElementById('notice-exp-${i}');const open=el.style.maxHeight!=='none';el.style.maxHeight=open?'none':'60px';el.innerHTML=open?${JSON.stringify((n.body||''))}:${JSON.stringify((n.body||'').slice(0,120)+'...')};btn.textContent=open?'▲ 접기':'▼ 전체보기';})()" id="notice-exp-${i}" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:2px 0;font-weight:600">▼ 전체보기</button>`
+          : `<div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${n.body||''}</div>`
+        }
       </div>`).join('')
     }
     </div>
@@ -2398,6 +2419,15 @@ function rCfg(C,T){
                 if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
                 (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
               }));
+              (tourneys||[]).forEach(tn=>{
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+                const br=tn.bracket||{};
+                Object.values(br.matchDetails||{}).forEach(m=>{if(m&&m.a===oldN)m.a=nw;if(m&&m.b===oldN)m.b=nw;});
+                (br.manualMatches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});
+              });
+              (proTourneys||[]).forEach(tn=>{
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+              });
               save();render();
             })()">✅ 적용</button>
           </div>`).join('')}
@@ -2406,13 +2436,20 @@ function rCfg(C,T){
     </div>`;
   })()}
   <div class="ssec"><h4>🏛️ 대학 관리</h4>
-    <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다. ☰ 핸들을 드래그해 순서를 변경할 수 있습니다.</div>
+    <div id="univ-drag-list">`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
     const isDissolved = !!u.dissolved;
-    h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
+    h+=`<div class="srow" data-univ-idx="${i}" draggable="true"
+      ondragstart="_univDragStart(event,${i})"
+      ondragover="_univDragOver(event)"
+      ondrop="_univDrop(event,${i})"
+      ondragend="_univDragEnd(event)"
+      style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px;transition:opacity .15s">
+      <span style="cursor:grab;color:var(--gray-l);font-size:16px;line-height:1;padding:0 4px;flex-shrink:0" title="드래그로 순서 변경">☰</span>
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
-      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="univCfg[${i}].name=this.value;save()">
+      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const v=this.value.trim();if(!v){this.value=univCfg[${i}].name;return;}univCfg[${i}].name=v;save()">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
@@ -2425,6 +2462,7 @@ function rCfg(C,T){
       <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
   });
+  h+=`</div>`;
   h+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
@@ -2504,7 +2542,7 @@ function rCfg(C,T){
             <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
             <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
             <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
-              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&cur===d.emoji&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
+              ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
             </select>
             ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
           </div>`;
@@ -2619,10 +2657,10 @@ function rCfg(C,T){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
           <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
             <input type="checkbox" id="bulk-date-chk-${m}" checked style="cursor:pointer">
-            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
           </label>`).join('')}
         </div>
         <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
@@ -2681,10 +2719,10 @@ function rCfg(C,T){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-          ${['mini','univm','ck','pro','tt','ind','gj'].map(m=>`
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
           <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
             <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
-            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전' }[m]}
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
           </label>`).join('')}
         </div>
         <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
@@ -2709,7 +2747,34 @@ function rCfg(C,T){
 
     </div>
   </div>
-  `;
+  
+  
+  <div class="ssec"><h4>🎨 현황판 설정</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
+        <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
+        <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
+        <input type="range" min="0" max="50" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
+        <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
+      </div>
+    </div>
+  </div>
+<div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-b" onclick="exportDataJSON()">📥 JSON 내보내기</button>
+      <label class="btn btn-w" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        📤 JSON 가져오기
+        <input type="file" accept=".json" style="display:none" onchange="importDataJSON(event)">
+      </label>
+    </div>
+    <div id="backup-msg" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)"></div>
+  </div>`;
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     renderStorageInfo();
@@ -2732,6 +2797,61 @@ function rCfg(C,T){
   C.innerHTML=h;
   // alias-list는 C.innerHTML 세팅 후 렌더링
   setTimeout(_refreshAliasList, 10);
+}
+function exportDataJSON(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
+  const data={
+    players, miniM, univM, ckM, proM, ttM, indM, gjM,
+    comps, tourneys, proTourneys,
+    univCfg, maps, userMapAlias, notices, crews,
+    seasons: JSON.parse(localStorage.getItem('su_season')||'[]'),
+    exportedAt: new Date().toISOString()
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='star-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const el=document.getElementById('backup-msg');
+  if(el){el.textContent='✅ 내보내기 완료';el.style.color='#16a34a';setTimeout(()=>{if(el)el.textContent='';},3000);}
+}
+function importDataJSON(event){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
+  const file=event.target.files&&event.target.files[0];
+  if(!file)return;
+  if(!confirm('⚠️ 기존 데이터를 모두 덮어씁니다.\n복원 전 현재 데이터를 내보내기 해두세요.\n\n계속하시겠습니까?')){event.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.players){players.length=0;players.push(...d.players);}
+      if(d.miniM){miniM.length=0;miniM.push(...d.miniM);}
+      if(d.univM){univM.length=0;univM.push(...d.univM);}
+      if(d.ckM){ckM.length=0;ckM.push(...d.ckM);}
+      if(d.proM){proM.length=0;proM.push(...d.proM);}
+      if(d.ttM){ttM.length=0;ttM.push(...d.ttM);}
+      if(d.indM){indM.length=0;indM.push(...d.indM);}
+      if(d.gjM){gjM.length=0;gjM.push(...d.gjM);}
+      if(d.comps){comps.length=0;comps.push(...d.comps);}
+      if(d.tourneys){tourneys.length=0;tourneys.push(...d.tourneys);}
+      if(d.proTourneys){proTourneys.length=0;proTourneys.push(...d.proTourneys);}
+      if(d.univCfg){univCfg.length=0;univCfg.push(...d.univCfg);}
+      if(d.maps){maps.length=0;maps.push(...d.maps);}
+      if(d.userMapAlias)Object.assign(userMapAlias,d.userMapAlias);
+      if(d.notices){notices.length=0;notices.push(...d.notices);}
+      if(d.crews){crews.length=0;crews.push(...d.crews);}
+      if(d.seasons)localStorage.setItem('su_season',JSON.stringify(d.seasons));
+      if(typeof fixPoints==='function')fixPoints();
+      save();render();
+      alert('✅ 데이터를 성공적으로 복원했습니다.');
+    }catch(err){
+      alert('파일을 읽을 수 없습니다: '+err.message);
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
 }
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -3012,6 +3132,7 @@ function deleteSeason(i){
 
 // 날짜 일괄 변경
 function bulkChangeDate(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
   const fromD = document.getElementById('bulk-date-from')?.value;
   const toD   = document.getElementById('bulk-date-to')?.value;
   if(!fromD || !toD){ alert('변경 전/후 날짜를 모두 입력하세요.'); return; }
@@ -3019,12 +3140,12 @@ function bulkChangeDate(){
 
   const modeMap = {
     mini: miniM, univm: univM, ck: ckM,
-    pro: proM, tt: ttM, ind: indM, gj: gjM
+    pro: proM, tt: ttM, ind: indM, gj: gjM, comp: comps
   };
   let total = 0;
   Object.entries(modeMap).forEach(([mode, arr]) => {
     if(!document.getElementById('bulk-date-chk-'+mode)?.checked) return;
-    arr.forEach(m => {
+    (arr||[]).forEach(m => {
       if((m.d||'') === fromD){ m.d = toD; total++; }
     });
   });
@@ -3044,16 +3165,17 @@ function bulkChangeDate(){
 
 // 맵 이름 일괄 교체
 function bulkChangeMap(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
   const fromM = (document.getElementById('bulk-map-from')?.value || '').trim();
   const toM   = (document.getElementById('bulk-map-to')?.value || '').trim();
   if(!fromM){ alert('교체 전 맵 이름을 입력하세요.'); return; }
   if(fromM === toM){ alert('교체 전후 맵 이름이 같습니다.'); return; }
 
   let total = 0;
-  // miniM, univM, ckM, proM, ttM, indM, gjM의 sets.games.map 교체
-  const allArrs = [miniM, univM, ckM, proM, ttM];
+  // miniM, univM, ckM, proM, ttM, comps의 sets.games.map 교체
+  const allArrs = [miniM, univM, ckM, proM, ttM, comps];
   allArrs.forEach(arr => {
-    arr.forEach(m => {
+    (arr||[]).forEach(m => {
       (m.sets||[]).forEach(set => {
         (set.games||[]).forEach(g => {
           if(g.map === fromM){ g.map = toM; total++; }
@@ -3081,17 +3203,18 @@ function bulkChangeMap(){
 
 // 날짜 범위 일괄 삭제
 function bulkDeleteByDate(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
   const fromD = document.getElementById('bulk-del-from')?.value;
   const toD   = document.getElementById('bulk-del-to')?.value;
   if(!fromD || !toD){ alert('시작일과 종료일을 모두 입력하세요.'); return; }
   if(fromD > toD){ alert('시작일이 종료일보다 늦습니다.'); return; }
 
-  const checkedModes = ['mini','univm','ck','pro','tt','ind','gj']
+  const checkedModes = ['mini','univm','ck','pro','tt','ind','gj','comp']
     .filter(m => document.getElementById('bulk-del-chk-'+m)?.checked);
   if(!checkedModes.length){ alert('삭제할 대상을 선택하세요.'); return; }
 
   const inRange = m => (m.d||'') >= fromD && (m.d||'') <= toD;
-  const modeMap = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind:indM, gj:gjM };
+  const modeMap = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind:indM, gj:gjM, comp:comps };
 
   let total = 0;
   checkedModes.forEach(mode => { total += (modeMap[mode]||[]).filter(inRange).length; });
@@ -3116,6 +3239,7 @@ function bulkDeleteByDate(){
       else if(mode==='ck')   { ckM.length=0;   ckM.push(...newArr);   }
       else if(mode==='pro')  { proM.length=0;   proM.push(...newArr);  }
       else if(mode==='tt')   { ttM.length=0;    ttM.push(...newArr);   }
+      else if(mode==='comp') { comps.length=0;  comps.push(...newArr); }
     }
   });
   if(typeof fixPoints==='function') fixPoints();
@@ -3720,6 +3844,18 @@ function saveRow(){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
+let _univDragSrc=-1;
+function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
+function _univDrop(e,i){
+  e.stopPropagation();
+  if(_univDragSrc===i)return false;
+  const moved=univCfg.splice(_univDragSrc,1)[0];
+  univCfg.splice(i,0,moved);
+  save();render();
+  return false;
+}
+function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
 let _dissolveIdx = -1;
 function openDissolveModal(i){
@@ -3902,4 +4038,4 @@ function clearGhToken(){
 /* ══════════════════════════════════════
    📊 통계 탭
 ══════════════════════════════════════ */
-let statsSub='overview';
+let statsSub='overview';  

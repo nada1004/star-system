@@ -1080,7 +1080,7 @@ function buildUnivDetailHTML(univName){
       const win=myS>oppS;const oc=gc(opp);
       const modeBg=m.mode==='미니대전'?'#2563eb':'#7c3aed';
       h+=`<tr>
-        <td style="color:var(--gray-l);font-size:11px">${m.d||''}</td>
+        <td style="color:var(--text3);font-size:12px;font-weight:600">${m.d||''}</td>
         <td><span style="background:${modeBg};color:#fff;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700">${m.mode}</span></td>
         <td><span class="ubadge clickable-univ" style="background:${oc};font-size:10px;padding:1px 7px" onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">${opp}</span></td>
         <td>${win?`<span class="wt" style="font-weight:800">${myS}:${oppS} 승</span>`:`<span class="lt" style="font-weight:800">${myS}:${oppS} 패</span>`}</td>

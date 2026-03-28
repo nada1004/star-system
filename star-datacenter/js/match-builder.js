@@ -1526,7 +1526,7 @@ function proTeamResultsHTML(){
     const aCol=aWin?'#16a34a':aWin===false&&bWin?'var(--gray-l)':'var(--text)';
     const bCol=bWin?'#16a34a':bWin===false&&aWin?'var(--gray-l)':'var(--text)';
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--gray-l);white-space:nowrap;min-width:80px">${m.d||'날짜미정'}</span>
+      <span style="font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;min-width:80px">${m.d||'날짜미정'}</span>
       <div style="flex:1;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">
         <span style="font-weight:${aWin?'800':'500'};color:${aCol}">${a}</span>
         <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;padding:3px 10px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">

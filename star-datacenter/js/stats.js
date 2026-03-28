@@ -987,7 +987,7 @@ function statsShareCardHTML(){
           return`<button onclick="window._shareMatchObj=[...miniM,...univM,...ckM,...comps,...(typeof getTourneyMatches==='function'?getTourneyMatches():[])].sort((a,b)=>(b.d||'').localeCompare(a.d||''))[${globalIdx}]||null;renderShareCardByMatchObj(window._shareMatchObj)"
             style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;border:2px solid ${isActive?'var(--blue)':'var(--border)'};background:${isActive?'var(--blue-l)':'transparent'};cursor:pointer;text-align:left;font-size:12px;transition:.1s"
             onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background='${isActive?'var(--blue-l)':'transparent'}'">
-            <span style="color:var(--gray-l);min-width:80px;font-size:10px">${m.d||'-'}</span>
+            <span style="color:var(--text3);min-width:80px;font-size:12px;font-weight:600">${m.d||'-'}</span>
             <span style="background:${ca};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${a}</span>
             <span style="font-weight:900;font-size:15px;color:${aWin?'var(--green)':'#aaa'}">${m.sa}</span>
             <span style="color:var(--gray-l)">:</span>
