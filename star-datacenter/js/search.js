@@ -1019,6 +1019,21 @@ function pastePreview() {
     // 무승부 라인: 🐱🆚🐱 → 무승부로 스킵
     if (/🐱[^🆚]*🆚[^🐱]*🐱/.test(trimmed) || (trimmed.includes('🆚') && (trimmed.match(/🐱/g)||[]).length>=2 && !trimmed.includes('✅') && !trimmed.includes('❌'))) return;
 
+    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" ──
+    // 직전 결과에 날짜+메모 적용 (경기 다음 줄 포맷). 결과 없으면 currentLineDate로 이후 적용.
+    const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})(?:.*?[|｜]\s*메모\s*[:：]\s*(.+))?/);
+    if (_dateLineM) {
+      const _dl = _dateLineM[1];
+      const _dm = (_dateLineM[2] || '').trim();
+      if (results.length > 0) {
+        results[results.length - 1]._lineDate = _dl;
+        if (_dm) results[results.length - 1]._lineMemo = _dm;
+      } else {
+        currentLineDate = _dl;
+      }
+      return;
+    }
+
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
@@ -1086,21 +1101,6 @@ function pastePreview() {
             lineNum: idx+1, rawLine: trimmed,
             ...(currentLineDate ? { _lineDate: currentLineDate } : {}) });
         }
-      }
-      return;
-    }
-
-    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" ──
-    // 직전 결과에 날짜+메모 적용 (경기 다음 줄 포맷). 결과 없으면 currentLineDate로 이후 적용.
-    const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})(?:.*?[|｜]\s*메모\s*[:：]\s*(.+))?/);
-    if (_dateLineM) {
-      const _dl = _dateLineM[1];
-      const _dm = (_dateLineM[2] || '').trim();
-      if (results.length > 0) {
-        results[results.length - 1]._lineDate = _dl;
-        if (_dm) results[results.length - 1]._lineMemo = _dm;
-      } else {
-        currentLineDate = _dl;
       }
       return;
     }
