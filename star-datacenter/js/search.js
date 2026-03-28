@@ -1090,10 +1090,18 @@ function pastePreview() {
       return;
     }
 
-    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" → 이후 결과에 날짜 적용 ──
-    const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})/);
+    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" ──
+    // 직전 결과에 날짜+메모 적용 (경기 다음 줄 포맷). 결과 없으면 currentLineDate로 이후 적용.
+    const _dateLineM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})(?:.*?[|｜]\s*메모\s*[:：]\s*(.+))?/);
     if (_dateLineM) {
-      currentLineDate = _dateLineM[1];
+      const _dl = _dateLineM[1];
+      const _dm = (_dateLineM[2] || '').trim();
+      if (results.length > 0) {
+        results[results.length - 1]._lineDate = _dl;
+        if (_dm) results[results.length - 1]._lineMemo = _dm;
+      } else {
+        currentLineDate = _dl;
+      }
       return;
     }
 
@@ -1411,9 +1419,10 @@ function renderPastePreview(results, errors) {
           }
         }
       }
+      const _memoTag = r._lineMemo ? `<div style="font-size:10px;color:#6b7280;margin-top:2px">📝 ${r._lineMemo.replace(/</g,'&lt;')}</div>` : '';
       html += `<tr style="background:${ok ? '' : wAmbig||lAmbig ? '#fffbeb' : _hasSim ? '#fdf4ff' : '#fff5f5'}">
         <td style="padding:4px 6px">${setCell}</td>
-        <td style="padding:4px 6px">${mapCell}</td>
+        <td style="padding:4px 6px">${mapCell}${_memoTag}</td>
         <td style="padding:4px 8px">${aCell}${aResultBadge}</td>
         <td style="padding:4px 8px">${bCell}${bResultBadge}</td>
         <td style="padding:4px 6px">${statusBadge}</td>
@@ -1950,7 +1959,7 @@ function pasteApply() {
     });
     Object.entries(_indDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const indSid = genId();
-      const games = group.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '' }));
+      const games = group.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       indM.unshift(...games);
     });
   } else if (mode === 'gj') {
@@ -1964,7 +1973,7 @@ function pasteApply() {
     });
     Object.entries(_gjDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const gjSid = genId();
-      const games = group.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}) }));
+      const games = group.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       gjM.unshift(...games);
     });
   } else if (mode === 'tt') {

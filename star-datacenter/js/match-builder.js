@@ -360,7 +360,7 @@ function indRecordsHTML(){
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${escJS(s.p1)}')">${s.p1}</span></span></td>
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${escJS(s.p2)}')">${s.p2}</span></span></td>
-        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
+        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}${m.memo?`<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${m.memo.replace(/</g,'&lt;')}</span>`:''}</td>
         ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="_removeIndResult('${escJS(m.wName)}','${escJS(m.lName)}','${escJS(m.d||'')}','${escJS(m.map||'-')}','${escJS(m._id||'')}');indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
       </tr>`;
     });
@@ -976,7 +976,7 @@ function gjRecordsHTML(proOnly){
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span></span></td>
-        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
+        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}${m.memo?`<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${m.memo.replace(/</g,'&lt;')}</span>`:''}</td>
         ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">✏️ 수정</button><button class="btn btn-r btn-xs" onclick="deleteGjGame(${origIdx})">🗑️ 삭제</button></td>`:''}
       </tr>`;
     });
