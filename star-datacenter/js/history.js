@@ -586,16 +586,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   if(!window._recQ)window._recQ={};
   if(!arr.length){
-    const hasQ=!!(window._recQ&&window._recQ[mode]);
-    const initQ=(window._recQ&&window._recQ[mode])||'';
     const emptyBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="color:var(--border2)">│</span>
-    <input id="rq-${mode}" type="text" value="${initQ.replace(/"/g,'&quot;')}" placeholder="🔍 검색..." oncompositionstart="window._rqComp=true" oncompositionend="window._rqComp=false;recFilterInPlace('${mode}',this.value)" oninput="if(!window._rqComp)recFilterInPlace('${mode}',this.value)" style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;outline:none" autocomplete="off" spellcheck="false">
-    <button id="rq-clear-${mode}" style="display:${initQ?'inline-block':'none'};padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer" onclick="recClearSearch('${mode}')">✕</button>
-    <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l)"></span>
   </div>`;
     return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   }
@@ -631,9 +625,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return recSortDir==='asc' ? (a.i - b.i) : (b.i - a.i);
   });
 
-  const initQ2=(window._recQ&&window._recQ[mode])||'';
-
-  // ── 페이지네이션 계산 (검색 중에는 전체 렌더링) ──
+  // ── 페이지네이션 계산 ──
   const totalItems=filtered.length;
   const pageSize=getHistPageSize();
   const pageKey=mode;
@@ -641,7 +633,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const totalPages=Math.ceil(totalItems/pageSize)||1;
   if(histPage[pageKey]>=totalPages) histPage[pageKey]=Math.max(0,totalPages-1);
   const curPage=histPage[pageKey];
-  const paged=initQ2?filtered:(totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered);
+  const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
   // 일괄 이동 컨텍스트
   const _canBulk=isLoggedIn&&(mode==='mini'||mode==='univm');
   const _bulkKey=(mode==='mini'&&histSub==='civil')?'civil':mode;
@@ -653,11 +645,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="font-size:11px;color:var(--text3)">날짜</span>
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="color:var(--border2)">│</span>
-    <input id="rq-${mode}" type="text" value="${initQ2.replace(/"/g,'&quot;')}" placeholder="🔍 검색..." oncompositionstart="window._rqComp=true" oncompositionend="window._rqComp=false;recFilterInPlace('${mode}',this.value)" oninput="if(!window._rqComp)recFilterInPlace('${mode}',this.value)" style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;outline:none" autocomplete="off" spellcheck="false">
-    <button id="rq-clear-${mode}" style="display:${initQ2?'inline-block':'none'};padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer" onclick="recClearSearch('${mode}')">✕</button>
-    <span id="rq-count-${mode}" style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
-    ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
+    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
+    ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="margin-left:auto;padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
   </div>
   ${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
     <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
@@ -667,7 +656,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="color:var(--border2)">│</span>
     ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
   </div>`:''}
-  <div id="rq-empty-${mode}" style="display:none"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어를 사용해보세요</div><button class="btn btn-w" onclick="recClearSearch('${mode}')">🔄 초기화</button></div></div>`;
+  `;
 
   if(!totalItems){
     return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
@@ -686,17 +675,11 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
     const key=`${context}-${mode}-${i}`;
     // 검색용 hay 데이터
-    const hayData=[m.a||'',m.b||'',m.n||'',m.d||'',labelA,labelB,
-      m.memo||'',
-      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.wName||'',g.lName||''])).join(' '),
-      (m.teamAMembers||[]).map(x=>(x.name||'')+' '+(x.univ||'')).join(' '),
-      (m.teamBMembers||[]).map(x=>(x.name||'')+' '+(x.univ||'')).join(' ')
-    ].join(' ').toLowerCase().replace(/"/g,'&quot;');
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
     const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
-    h+=`<div class="rec-summary" data-hay="${hayData}" style="border-left:3px solid ${_wBorderCol}">
+    h+=`<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
       <div class="rec-sum-header">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
@@ -735,8 +718,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     </div>`;
   });
 
-  // ── 페이지 컨트롤 (검색 중에는 숨김) ──
-  if(!initQ2&&totalItems>getHistPageSize()){
+  // ── 페이지 컨트롤 ──
+  if(totalItems>getHistPageSize()){
     const pages=totalPages;
     let pager=`<div class="no-export" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0;flex-wrap:wrap">`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=0;render()" ${curPage===0?'disabled':''}>«</button>`;
