@@ -230,7 +230,8 @@ function rInd(C,T){
 function indRankHTML(){
   const sc={};const vs={};
   players.forEach(p=>{sc[p.name]={w:0,l:0};});
-  indM.forEach(m=>{
+  const _indFiltered=typeof passDateFilter==='function'?indM.filter(m=>passDateFilter(m.d||'')):indM;
+  _indFiltered.forEach(m=>{
     if(!sc[m.wName])sc[m.wName]={w:0,l:0};
     if(!sc[m.lName])sc[m.lName]={w:0,l:0};
     sc[m.wName].w++; sc[m.lName].l++;
@@ -302,6 +303,8 @@ function indRecordsHTML(){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
+  // 비연속 병합된 세션의 날짜를 가장 최신 게임 날짜로 업데이트
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   // 날짜 필터 적용
   const filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
@@ -333,7 +336,8 @@ function indRecordsHTML(){
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteIndSession(${idsJson})">삭제</button>`:'';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'ind')">↗ 이동</button>`:'';
-    const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}')">📷 공유카드</button>`;
+    const _sIdsJson=JSON.stringify(s.ids).replace(/"/g,"'");
+    const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}','${_sIdsJson}')">📷 공유카드</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
       <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbInd}
@@ -357,7 +361,7 @@ function indRecordsHTML(){
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${escJS(s.p2)}')">${s.p2}</span></span></td>
         <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}</td>
-        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="_removeIndResult('${escJS(m.wName)}','${escJS(m.lName)}','${escJS(m.d||'')}','${escJS(m.map||'-')}');indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
+        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-r btn-xs" onclick="_removeIndResult('${escJS(m.wName)}','${escJS(m.lName)}','${escJS(m.d||'')}','${escJS(m.map||'-')}','${escJS(m._id||'')}');indM.splice(${origIdx},1);save();render()">🗑️ 삭제</button></td>`:''}
       </tr>`;
     });
     h+=`</tbody></table></details>`;
@@ -573,23 +577,26 @@ function indDirectSave(){
 /* ══════════════════════════════════════
    개인전 공유카드
 ══════════════════════════════════════ */
-function openIndShareCard(p1, p2, p1wins, p2wins, date, winner) {
+function openIndShareCard(p1, p2, p1wins, p2wins, date, winner, idsJson) {
   _shareMode = 'match';
   openShareCardModal();
-  setTimeout(() => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner), 80);
+  const ids = idsJson ? JSON.parse(idsJson.replace(/'/g,'"')) : null;
+  setTimeout(() => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids), 80);
 }
 
-function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner) {
+function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const card = document.getElementById('share-card');
   if (!card) return;
   const pp1 = players.find(x => x.name === p1) || {};
   const pp2 = players.find(x => x.name === p2) || {};
 
-  const games = indM.filter(m => {
-    const pair = [m.wName, m.lName].sort();
-    const pair2 = [p1, p2].sort();
-    return (m.d||'') === date && pair[0] === pair2[0] && pair[1] === pair2[1];
-  });
+  const games = ids
+    ? indM.filter(m => ids.includes(m._id))
+    : indM.filter(m => {
+        const pair = [m.wName, m.lName].sort();
+        const pair2 = [p1, p2].sort();
+        return (m.d||'') === date && pair[0] === pair2[0] && pair[1] === pair2[1];
+      });
 
   const WC = '#111';
   const LC = '#94a3b8';
@@ -910,6 +917,7 @@ function gjRecordsHTML(proOnly){
     }
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
+  sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   const filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSessGj.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const pageSize=getHistPageSize();
