@@ -3598,7 +3598,7 @@ function savePlayer(){
   p.race=document.getElementById('ed-r')?.value||p.race||'N';
   p.gender=document.getElementById('ed-g')?.value||p.gender||'F';
   const _rv=(document.getElementById('ed-role')?.value||'').trim();
-  p.role=_rv||undefined;
+  p.role=(!p.univ||p.univ==='무소속')?undefined:(_rv||undefined);
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
   if(_photo){
     if(_photo.startsWith('data:')){
