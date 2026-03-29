@@ -2764,7 +2764,19 @@ function rCfg(C,T){
       </div>
     </div>
   </div>
-<div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
+  <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+      한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
+      종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S &nbsp;|&nbsp; hide: 현황판 제외 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
+      <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K &nbsp;&nbsp; 김선수 T 무소속 hide</span>
+    </div>
+    <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
+      <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
+    </div>
+  </div>
+  <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b" onclick="exportDataJSON()">📥 JSON 내보내기</button>
@@ -3399,6 +3411,41 @@ function addPlayer(){
   const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
   players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,win:0,loss:0,points:0,history:[]});
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';document.getElementById('p-hide-board').checked=false;save();render();
+}
+function bulkAddPlayers(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
+  const raw=document.getElementById('bulk-player-input')?.value||'';
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){alert('등록할 스트리머를 입력하세요.');return;}
+  const RACES=new Set(['T','Z','P','N']);
+  const TIER_SET=new Set(typeof TIERS!=='undefined'?TIERS:['G','K','JA','J','S']);
+  let added=0;const skipped=[];
+  lines.forEach(line=>{
+    const parts=line.split(/\s+/);
+    if(!parts[0])return;
+    const name=parts[0];
+    let race='T',tier='',hideFromBoard=false;
+    const univParts=[];
+    parts.slice(1).forEach(tok=>{
+      if(tok.toLowerCase()==='hide'){hideFromBoard=true;return;}
+      if(RACES.has(tok.toUpperCase())){race=tok.toUpperCase();return;}
+      if(TIER_SET.has(tok)){tier=tok;return;}
+      univParts.push(tok);
+    });
+    const univ=univParts.join(' ')||'무소속';
+    if(players.find(p=>p.name===name)){skipped.push(name);return;}
+    players.push({name,univ,tier:tier||undefined,race,gender:'M',hideFromBoard:hideFromBoard||undefined,win:0,loss:0,points:0,history:[]});
+    added++;
+  });
+  if(added>0){save();render();}
+  const resultEl=document.getElementById('bulk-player-result');
+  if(resultEl){
+    let msg=`✅ ${added}명 등록 완료`;
+    if(skipped.length)msg+=`\n⚠️ 중복 스킵 (${skipped.length}명): ${skipped.join(', ')}`;
+    resultEl.innerHTML=msg.replace('\n','<br>');
+    resultEl.style.display='block';
+    if(added>0)document.getElementById('bulk-player-input').value='';
+  }
 }
 function openEP(name){
   editName=name;const p=players.find(x=>x.name===name);
