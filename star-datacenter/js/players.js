@@ -264,27 +264,77 @@ function openBulkEditModal(){
       <strong style="color:var(--blue)">${sel.length}명</strong> 선택됨: ${first.join(', ')}${more?` 외 ${more}명`:''}
       ${more?`<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gray-l);font-size:11px">전체 보기</summary><div style="margin-top:6px;line-height:1.6">${sel.join(', ')}</div></details>`:''}
     </div>
-    <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">티어</label>
-    <select id="bulk-ed-t" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:14px">
-      <option value="">변경 안함</option>${tierOpts}
-    </select>
-    <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">대학</label>
-    <select id="bulk-ed-u" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-      <option value="">변경 안함</option>${univOpts}
-    </select>`;
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">티어</label>
+        <select id="bulk-ed-t" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <option value="">변경 안함</option>${tierOpts}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">대학</label>
+        <select id="bulk-ed-u" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <option value="">변경 안함</option>${univOpts}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">종족</label>
+        <select id="bulk-ed-r" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <option value="">변경 안함</option>
+          <option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option><option value="N">종족미정</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">성별</label>
+        <select id="bulk-ed-g" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <option value="">변경 안함</option>
+          <option value="F">👩 여자</option><option value="M">👨 남자</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-radius:8px;margin-bottom:4px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">현황판</label>
+      <select id="bulk-ed-h" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <option value="">변경 안함</option>
+        <option value="hide">제외 (숨김)</option>
+        <option value="show">표시</option>
+      </select>
+      <button onclick="bulkDeleteSelected()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:1.5px solid #ef4444;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+    </div>`;
   om('bulkEditModal');
 }
 
 function saveBulkEdit(){
   const t=document.getElementById('bulk-ed-t').value;
   const u=document.getElementById('bulk-ed-u').value;
-  if(!t&&!u){alert('변경할 항목을 선택하세요.');return;}
+  const r=document.getElementById('bulk-ed-r').value;
+  const g=document.getElementById('bulk-ed-g').value;
+  const h=document.getElementById('bulk-ed-h').value;
+  if(!t&&!u&&!r&&!g&&!h){alert('변경할 항목을 선택하세요.');return;}
   _bulkEditSelected.forEach(name=>{
     const p=players.find(x=>x.name===name);
     if(!p) return;
     if(t) p.tier=t;
     if(u) p.univ=u;
+    if(r) p.race=r;
+    if(g) p.gender=g;
+    if(h==='hide') p.hideFromBoard=true;
+    else if(h==='show') p.hideFromBoard=undefined;
   });
+  save();
+  cm('bulkEditModal');
+  _bulkEditMode=false;
+  _bulkEditSelected=new Set();
+  render();
+}
+function bulkDeleteSelected(){
+  if(!_bulkEditSelected.size) return;
+  if(!confirm(`선택한 ${_bulkEditSelected.size}명을 삭제할까요?\n전적·기록은 삭제되지 않습니다.`)) return;
+  _bulkEditSelected.forEach(name=>{
+    const idx=players.findIndex(x=>x.name===name);
+    if(idx>=0) players.splice(idx,1);
+  });
+  if(typeof fixPoints==='function') fixPoints();
   save();
   cm('bulkEditModal');
   _bulkEditMode=false;
