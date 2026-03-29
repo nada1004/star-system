@@ -37,48 +37,6 @@ document.addEventListener('click',function(e){
   if(_fabOpen&&!e.target.closest('#mobileFab')) closeFab();
 });
 
-/* ══════════════════════════════════════
-   📱 스와이프 탭 전환
-══════════════════════════════════════ */
-(function(){
-  // 탭 순서 (sw 함수에 쓰이는 id)
-  var TAB_IDS=['total','board2','tier','hist','ind','univm','comp','pro','stats','cal','cfg'];
-  var _swX=0,_swY=0,_swActive=false;
-  var rcont=document.getElementById('rcont')||document.querySelector('.main');
-  if(!rcont)return;
-
-  rcont.addEventListener('touchstart',function(e){
-    if(e.touches.length!==1)return;
-    _swX=e.touches[0].clientX;
-    _swY=e.touches[0].clientY;
-    _swActive=true;
-  },{passive:true});
-
-  rcont.addEventListener('touchend',function(e){
-    if(!_swActive||e.changedTouches.length!==1){_swActive=false;return;}
-    var dx=e.changedTouches[0].clientX-_swX;
-    var dy=e.changedTouches[0].clientY-_swY;
-    _swActive=false;
-    // 가로 스와이프 조건: |dx|>60, |dx|>|dy|*1.5
-    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
-    // 스크롤 가능한 요소 내에서는 무시
-    var t=e.target;
-    while(t&&t!==rcont){
-      var style=window.getComputedStyle(t);
-      var ox=style.overflowX;
-      if((ox==='auto'||ox==='scroll')&&t.scrollWidth>t.clientWidth+4){return;}
-      t=t.parentElement;
-    }
-    var cur=typeof curTab!=='undefined'?curTab:'total';
-    var idx=TAB_IDS.indexOf(cur);
-    if(idx<0)return;
-    var next=dx<0?Math.min(idx+1,TAB_IDS.length-1):Math.max(idx-1,0);
-    if(next===idx)return;
-    var targetId=TAB_IDS[next];
-    var el=document.querySelector('.tab[onclick*="\''+targetId+'\'"]');
-    if(el&&typeof sw==='function') sw(targetId,el);
-  },{passive:true});
-})();
 
 /* ══════════════════════════════════════
    📱 대진표 핀치줌
