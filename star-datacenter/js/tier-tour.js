@@ -3558,18 +3558,20 @@ function bulkAddPlayers(){
     const parts=line.split(/\s+/);
     if(!parts[0])return;
     const name=parts[0];
-    let race='T',tier='',showOnBoard=false;
+    let race='T',tier='',showOnBoard=false,gender='F';
     const univParts=[];
     parts.slice(1).forEach(tok=>{
       if(tok.toLowerCase()==='show'){showOnBoard=true;return;}
       if(tok.toLowerCase()==='hide'){return;} // hide는 기본값이므로 무시
+      if(tok==='남자'||tok.toUpperCase()==='M'){gender='M';return;}
+      if(tok==='여자'||tok.toUpperCase()==='F'){gender='F';return;}
       if(RACES.has(tok.toUpperCase())){race=tok.toUpperCase();return;}
       if(TIER_SET.has(tok)){tier=tok;return;}
       univParts.push(tok);
     });
     const univ=univParts.join(' ')||'무소속';
     if(players.find(p=>p.name===name)){skipped.push(name);return;}
-    players.push({name,univ,tier:tier||'미정',race,gender:'F',hideFromBoard:showOnBoard?undefined:true,win:0,loss:0,points:0,history:[]});
+    players.push({name,univ,tier:tier||'미정',race,gender,hideFromBoard:showOnBoard?undefined:true,win:0,loss:0,points:0,history:[]});
     added++;
   });
   if(added>0){save();render();}
