@@ -3558,7 +3558,7 @@ function bulkAddPlayers(){
     const parts=line.split(/\s+/);
     if(!parts[0])return;
     const name=parts[0];
-    let race='T',tier='',showOnBoard=false,gender='F';
+    let race='T',tier='',showOnBoard=false,gender='M';
     const univParts=[];
     parts.slice(1).forEach(tok=>{
       if(tok.toLowerCase()==='show'){showOnBoard=true;return;}
