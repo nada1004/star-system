@@ -1061,6 +1061,16 @@ function pastePreview() {
       return;
     }
 
+    // ── 팀명 직접 지정: "팀A: 공주대" / "A팀: 공주대" → _pasteForceTeamA 강제 설정 ──
+    // 형식: "팀A:", "A팀:", "팀B:", "B팀:" 뒤에 오는 대학/팀명을 A팀/B팀으로 고정
+    const _teamForceM = trimmed.match(/^(?:(팀\s*A|A\s*팀)|(팀\s*B|B\s*팀))\s*[：:]\s*(.+)$/);
+    if (_teamForceM) {
+      const _tfName = _teamForceM[3].trim();
+      if (_teamForceM[1]) window._pasteForceTeamA = _tfName;
+      else                window._pasteForceTeamB = _tfName;
+      return;
+    }
+
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
