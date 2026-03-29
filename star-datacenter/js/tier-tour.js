@@ -2767,8 +2767,9 @@ function rCfg(C,T){
   <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
-      종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S &nbsp;|&nbsp; hide: 현황판 제외 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
-      <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K &nbsp;&nbsp; 김선수 T 무소속 hide</span>
+      종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
+      기본값: 티어=미정, 현황판 제외. show 입력 시 현황판에 표시.<br>
+      <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K show &nbsp;&nbsp; 김선수 T</span>
     </div>
     <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
@@ -3424,17 +3425,18 @@ function bulkAddPlayers(){
     const parts=line.split(/\s+/);
     if(!parts[0])return;
     const name=parts[0];
-    let race='T',tier='',hideFromBoard=false;
+    let race='T',tier='',showOnBoard=false;
     const univParts=[];
     parts.slice(1).forEach(tok=>{
-      if(tok.toLowerCase()==='hide'){hideFromBoard=true;return;}
+      if(tok.toLowerCase()==='show'){showOnBoard=true;return;}
+      if(tok.toLowerCase()==='hide'){return;} // hide는 기본값이므로 무시
       if(RACES.has(tok.toUpperCase())){race=tok.toUpperCase();return;}
       if(TIER_SET.has(tok)){tier=tok;return;}
       univParts.push(tok);
     });
     const univ=univParts.join(' ')||'무소속';
     if(players.find(p=>p.name===name)){skipped.push(name);return;}
-    players.push({name,univ,tier:tier||undefined,race,gender:'M',hideFromBoard:hideFromBoard||undefined,win:0,loss:0,points:0,history:[]});
+    players.push({name,univ,tier:tier||'미정',race,gender:'M',hideFromBoard:showOnBoard?undefined:true,win:0,loss:0,points:0,history:[]});
     added++;
   });
   if(added>0){save();render();}
