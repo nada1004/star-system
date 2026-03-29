@@ -3436,7 +3436,7 @@ function bulkAddPlayers(){
     });
     const univ=univParts.join(' ')||'무소속';
     if(players.find(p=>p.name===name)){skipped.push(name);return;}
-    players.push({name,univ,tier:tier||'미정',race,gender:'M',hideFromBoard:showOnBoard?undefined:true,win:0,loss:0,points:0,history:[]});
+    players.push({name,univ,tier:tier||'미정',race,gender:'F',hideFromBoard:showOnBoard?undefined:true,win:0,loss:0,points:0,history:[]});
     added++;
   });
   if(added>0){save();render();}
