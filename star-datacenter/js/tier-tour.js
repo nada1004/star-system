@@ -2818,10 +2818,26 @@ function renderBulkEditTable(){
   const container=document.getElementById('bulk-edit-table-container');
   if(!container)return;
   if(!players.length){container.innerHTML='<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">등록된 스트리머가 없습니다.</div>';return;}
-  let html=`<div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+  const ss='padding:3px 5px;font-size:11px;border:1px solid var(--border2);border-radius:5px;background:var(--white)';
+  const univOptsFull=getAllUnivs().map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const tierOptsFull=(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}">${t}</option>`).join('');
+  let html=`
+  <!-- 일괄 적용 바 -->
+  <div id="_bet-bar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;margin-bottom:8px">
+    <span id="_bet-bar-cnt" style="font-size:12px;font-weight:700;color:#1d4ed8;white-space:nowrap">0명 선택</span>
+    <select id="_bet-b-univ" style="${ss};width:80px"><option value="">소속 변경 안함</option>${univOptsFull}</select>
+    <select id="_bet-b-race" style="${ss}"><option value="">종족 변경 안함</option><option value="T">T</option><option value="Z">Z</option><option value="P">P</option><option value="N">N</option></select>
+    <select id="_bet-b-gender" style="${ss}"><option value="">성별 변경 안함</option><option value="F">👩 여</option><option value="M">👨 남</option></select>
+    <select id="_bet-b-tier" style="${ss}"><option value="">티어 변경 안함</option>${tierOptsFull}</select>
+    <select id="_bet-b-hide" style="${ss}"><option value="">현황판 변경 안함</option><option value="hide">제외</option><option value="show">표시</option></select>
+    <button class="btn btn-b btn-xs" onclick="_betApplyBulk()">✅ 일괄 적용</button>
+    <button class="btn btn-r btn-xs" onclick="_betDeleteBulk()">🗑️ 선택 삭제</button>
+  </div>
+  <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
   <table style="width:100%;border-collapse:collapse;font-size:12px">
     <thead style="position:sticky;top:0;background:var(--surface);z-index:1">
       <tr>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)"><input type="checkbox" id="_bet-chk-all" style="cursor:pointer;width:14px;height:14px"></th>
         <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);white-space:nowrap">이름</th>
         <th style="padding:7px 8px;text-align:left;border-bottom:1px solid var(--border2)">소속</th>
         <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">종족</th>
@@ -2833,19 +2849,39 @@ function renderBulkEditTable(){
     </thead>
     <tbody>`;
   players.forEach((p,i)=>{
-    const selStyle='padding:3px 5px;font-size:11px;border:1px solid var(--border2);border-radius:5px;background:var(--white)';
     html+=`<tr style="border-bottom:1px solid var(--border2);background:${i%2===0?'var(--white)':'var(--surface)'}">
+      <td style="padding:4px 8px;text-align:center"><input type="checkbox" class="_bet-row-chk" data-idx="${i}" style="cursor:pointer;width:14px;height:14px"></td>
       <td style="padding:5px 10px;font-weight:600;white-space:nowrap">${p.name}</td>
-      <td style="padding:4px 6px"><select data-idx="${i}" data-field="univ" class="_bet-s" style="${selStyle};width:80px">${getAllUnivs().map(u=>`<option value="${u.name}"${u.name===p.univ?' selected':''}>${u.name}</option>`).join('')}</select></td>
-      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="race" class="_bet-s" style="${selStyle}"><option value="T"${p.race==='T'?' selected':''}>T</option><option value="Z"${p.race==='Z'?' selected':''}>Z</option><option value="P"${p.race==='P'?' selected':''}>P</option><option value="N"${p.race==='N'?' selected':''}>N</option></select></td>
-      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="gender" class="_bet-s" style="${selStyle}"><option value="F"${p.gender==='F'?' selected':''}>👩 여</option><option value="M"${p.gender==='M'?' selected':''}>👨 남</option></select></td>
-      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="tier" class="_bet-s" style="${selStyle}">${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${t}</option>`).join('')}<option value=""${!p.tier?' selected':''}>-</option></select></td>
+      <td style="padding:4px 6px"><select data-idx="${i}" data-field="univ" class="_bet-s" style="${ss};width:80px">${getAllUnivs().map(u=>`<option value="${u.name}"${u.name===p.univ?' selected':''}>${u.name}</option>`).join('')}</select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="race" class="_bet-s" style="${ss}"><option value="T"${p.race==='T'?' selected':''}>T</option><option value="Z"${p.race==='Z'?' selected':''}>Z</option><option value="P"${p.race==='P'?' selected':''}>P</option><option value="N"${p.race==='N'?' selected':''}>N</option></select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="gender" class="_bet-s" style="${ss}"><option value="F"${p.gender==='F'?' selected':''}>👩 여</option><option value="M"${p.gender==='M'?' selected':''}>👨 남</option></select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="tier" class="_bet-s" style="${ss}">${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${t}</option>`).join('')}<option value=""${!p.tier?' selected':''}>-</option></select></td>
       <td style="padding:4px 6px;text-align:center"><input type="checkbox" data-idx="${i}" class="_bet-c" ${p.hideFromBoard?'checked':''} style="width:15px;height:15px;cursor:pointer"></td>
       <td style="padding:4px 6px;text-align:center"><button data-idx="${i}" class="_bet-d btn btn-r btn-xs">🗑️</button></td>
     </tr>`;
   });
   html+='</tbody></table></div>';
   container.innerHTML=html;
+
+  // 전체 선택 체크박스
+  const chkAll=container.querySelector('#_bet-chk-all');
+  const _updateBar=()=>{
+    const sel=container.querySelectorAll('._bet-row-chk:checked');
+    const bar=container.querySelector('#_bet-bar');
+    const cnt=container.querySelector('#_bet-bar-cnt');
+    if(bar) bar.style.display=sel.length?'flex':'none';
+    if(cnt) cnt.textContent=sel.length+'명 선택';
+    if(chkAll) chkAll.indeterminate=sel.length>0&&sel.length<players.length;
+  };
+  chkAll.addEventListener('change',function(){
+    container.querySelectorAll('._bet-row-chk').forEach(c=>{c.checked=this.checked;});
+    _updateBar();
+  });
+  container.querySelectorAll('._bet-row-chk').forEach(c=>{
+    c.addEventListener('change',_updateBar);
+  });
+
+  // 인라인 개별 편집
   container.querySelectorAll('._bet-s').forEach(sel=>{
     sel.addEventListener('change',function(){
       const idx=+this.dataset.idx,field=this.dataset.field;
@@ -2872,6 +2908,41 @@ function renderBulkEditTable(){
       save();render();
     });
   });
+}
+function _betGetSelectedIdxs(){
+  const container=document.getElementById('bulk-edit-table-container');
+  if(!container)return[];
+  return [...container.querySelectorAll('._bet-row-chk:checked')].map(c=>+c.dataset.idx);
+}
+function _betApplyBulk(){
+  const idxs=_betGetSelectedIdxs();
+  if(!idxs.length){alert('선수를 선택하세요.');return;}
+  const container=document.getElementById('bulk-edit-table-container');
+  const univ=container.querySelector('#_bet-b-univ')?.value||'';
+  const race=container.querySelector('#_bet-b-race')?.value||'';
+  const gender=container.querySelector('#_bet-b-gender')?.value||'';
+  const tier=container.querySelector('#_bet-b-tier')?.value||'';
+  const hide=container.querySelector('#_bet-b-hide')?.value||'';
+  if(!univ&&!race&&!gender&&!tier&&!hide){alert('변경할 항목을 선택하세요.');return;}
+  idxs.forEach(idx=>{
+    const p=players[idx];if(!p)return;
+    if(univ) p.univ=univ;
+    if(race) p.race=race;
+    if(gender) p.gender=gender;
+    if(tier) p.tier=tier;
+    if(hide==='hide') p.hideFromBoard=true;
+    else if(hide==='show') p.hideFromBoard=undefined;
+  });
+  save();render();
+}
+function _betDeleteBulk(){
+  const idxs=_betGetSelectedIdxs();
+  if(!idxs.length){alert('선수를 선택하세요.');return;}
+  const names=idxs.map(i=>players[i]?.name).filter(Boolean);
+  if(!confirm(`선택한 ${names.length}명을 삭제할까요?\n전적·기록은 삭제되지 않습니다.`))return;
+  idxs.slice().reverse().forEach(idx=>{players.splice(idx,1);});
+  if(typeof fixPoints==='function')fixPoints();
+  save();render();
 }
 function exportDataJSON(){
   if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
