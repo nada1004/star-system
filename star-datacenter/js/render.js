@@ -105,7 +105,7 @@ function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
-  if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; }
+  if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; window._playerModalYear=''; }
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
   injectUnivIcons(document.getElementById('playerModalBody'));
@@ -537,8 +537,13 @@ function navToMatch(matchId, modeLbl){
 
 function buildPlayerDetailHTML(p){
   const col=gc(p.univ);
+  // ── 연도 필터 ──
+  const _year=window._playerModalYear||'';
+  const _histAll=p.history||[];
+  const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
+  const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
-  (p.history||[]).forEach(h=>{
+  _hist.forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
     else{opps[h.opp].l++;if(rv[h.oppRace])rv[h.oppRace].l++;}
@@ -654,6 +659,25 @@ function buildPlayerDetailHTML(p){
     }
   }
 
+  // ── 연도 필터 드롭다운 ──
+  if(_availYears.length>0){
+    const _pSafeY=p.name.replace(/'/g,"\\'");
+    const _yWin=_hist.filter(h=>h.result==='승').length;
+    const _yLoss=_hist.filter(h=>h.result==='패').length;
+    const _yTot=_yWin+_yLoss;
+    const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
+    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
+      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'))"
+        style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
+        <option value="" ${!_year?'selected':''}>전체</option>
+        ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
+      </select>
+      ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+    </div>`;
+  }
+
   // ── ELO 추이 차트 ──
   // 🔧 eloAfter 레거시 필드 제거됨 → eloDelta 누적으로 ELO 재계산
   const _eloBase = p.elo || ELO_DEFAULT;
@@ -682,13 +706,13 @@ function buildPlayerDetailHTML(p){
   // ── 모드별 전적 ──
   const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
   const _histModeStats={};
-  (p.history||[]).forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
+  _hist.forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
   // 대회: 조별리그+토너먼트+대회 통합
   const _compW=(_histModeStats['대회']?.w||0)+(_histModeStats['조별리그']?.w||0)+(_histModeStats['토너먼트']?.w||0);
   const _compL=(_histModeStats['대회']?.l||0)+(_histModeStats['조별리그']?.l||0)+(_histModeStats['토너먼트']?.l||0);
   // 끝장전: gjM에서 직접 집계
-  const _gjW=(gjM||[]).filter(g=>g.wName===p.name).length;
-  const _gjL=(gjM||[]).filter(g=>g.lName===p.name).length;
+  const _gjW=(gjM||[]).filter(g=>g.wName===p.name&&(!_year||(g.d||'').startsWith(_year))).length;
+  const _gjL=(gjM||[]).filter(g=>g.lName===p.name&&(!_year||(g.d||'').startsWith(_year))).length;
   const _fixedModes=[
     {key:'미니대전',w:_histModeStats['미니대전']?.w||0,l:_histModeStats['미니대전']?.l||0},
     {key:'대학대전',w:_histModeStats['대학대전']?.w||0,l:_histModeStats['대학대전']?.l||0},
@@ -786,7 +810,7 @@ function buildPlayerDetailHTML(p){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
     if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
-    const allModes=[...new Set((p.history||[]).map(h=>h.mode||'').filter(Boolean))];
+    const allModes=[...new Set(_hist.map(h=>h.mode||'').filter(Boolean))];
     const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
       <button onclick="window._playerHistFilter='전체';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
       ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
@@ -812,8 +836,8 @@ function buildPlayerDetailHTML(p){
       return (typeof seasons!=='undefined'?seasons:[]).find(s=>s.id===window._playerSeasonFilter)||null;
     })();
     const _modeHist = window._playerHistFilter&&window._playerHistFilter!=='전체'
-      ? (p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
-      : (p.history||[]);
+      ? _hist.filter(hh=>hh.mode===window._playerHistFilter)
+      : _hist;
     const filteredHist = _curSeason
       ? _modeHist.filter(hh=>{
           const d=hh.date||'';
@@ -876,7 +900,7 @@ function buildPlayerDetailHTML(p){
   // ── 맵별 승률 ──
   {
     const mapStats = {};
-    (p.history||[]).forEach(h=>{
+    _hist.forEach(h=>{
       if(!h.map || h.map==='-' || h.map==='') return;
       if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
       if(h.result==='승') mapStats[h.map].w++;
