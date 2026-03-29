@@ -190,6 +190,14 @@ window.addEventListener('click',e=>{
   }
   if(!e.target.closest('.swrap'))document.querySelectorAll('.sdrop').forEach(d=>d.style.display='none');
 });
+// Esc 키로 열린 모달 닫기
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  const open=[...document.querySelectorAll('.modal')].filter(m=>m.style.display&&m.style.display!=='none');
+  if(!open.length)return;
+  const top=open[open.length-1];
+  if(!top.dataset.noClose)top.style.display='none';
+});
 
 async function doJpg(){
   const actionBar=document.getElementById('actionBar');

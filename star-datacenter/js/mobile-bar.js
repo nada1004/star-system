@@ -9,6 +9,37 @@
 })();
 
 /* ══════════════════════════════════════
+   💻 PC 탭 스크롤 화살표
+══════════════════════════════════════ */
+(function(){
+  var tabs=document.querySelector('.tabs');
+  if(!tabs)return;
+  // 래퍼로 감싸기
+  var wrap=document.createElement('div');
+  wrap.className='tabs-scroll-wrap no-export';
+  tabs.parentNode.insertBefore(wrap,tabs);
+  wrap.appendChild(tabs);
+  // 화살표 버튼
+  var btnL=document.createElement('button');
+  btnL.className='tabs-arrow';btnL.innerHTML='&#9664;';btnL.title='이전 탭';
+  btnL.addEventListener('click',function(){tabs.scrollBy({left:-200,behavior:'smooth'});});
+  var btnR=document.createElement('button');
+  btnR.className='tabs-arrow';btnR.innerHTML='&#9654;';btnR.title='다음 탭';
+  btnR.addEventListener('click',function(){tabs.scrollBy({left:200,behavior:'smooth'});});
+  wrap.insertBefore(btnL,tabs);
+  wrap.appendChild(btnR);
+  function update(){
+    var canL=tabs.scrollLeft>4;
+    var canR=tabs.scrollLeft<tabs.scrollWidth-tabs.clientWidth-4;
+    btnL.classList.toggle('visible',canL);
+    btnR.classList.toggle('visible',canR);
+  }
+  tabs.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  setTimeout(update,200);
+})();
+
+/* ══════════════════════════════════════
    📱 FAB (플로팅 액션 버튼)
 ══════════════════════════════════════ */
 var _fabOpen=false;
