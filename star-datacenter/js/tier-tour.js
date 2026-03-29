@@ -2777,6 +2777,9 @@ function rCfg(C,T){
       <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
     </div>
   </div>
+  <div class="ssec"><h4>✏️ 스트리머 일괄 수정</h4>
+    <div id="bulk-edit-table-container"></div>
+  </div>
   <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -2808,8 +2811,67 @@ function rCfg(C,T){
     }
   },50);
   C.innerHTML=h;
-  // alias-list는 C.innerHTML 세팅 후 렌더링
   setTimeout(_refreshAliasList, 10);
+  setTimeout(renderBulkEditTable, 10);
+}
+function renderBulkEditTable(){
+  const container=document.getElementById('bulk-edit-table-container');
+  if(!container)return;
+  if(!players.length){container.innerHTML='<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">등록된 스트리머가 없습니다.</div>';return;}
+  let html=`<div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead style="position:sticky;top:0;background:var(--surface);z-index:1">
+      <tr>
+        <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);white-space:nowrap">이름</th>
+        <th style="padding:7px 8px;text-align:left;border-bottom:1px solid var(--border2)">소속</th>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">종족</th>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">성별</th>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">티어</th>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">현황판제외</th>
+        <th style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--border2)">삭제</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  players.forEach((p,i)=>{
+    const selStyle='padding:3px 5px;font-size:11px;border:1px solid var(--border2);border-radius:5px;background:var(--white)';
+    html+=`<tr style="border-bottom:1px solid var(--border2);background:${i%2===0?'var(--white)':'var(--surface)'}">
+      <td style="padding:5px 10px;font-weight:600;white-space:nowrap">${p.name}</td>
+      <td style="padding:4px 6px"><select data-idx="${i}" data-field="univ" class="_bet-s" style="${selStyle};width:80px">${getAllUnivs().map(u=>`<option value="${u.name}"${u.name===p.univ?' selected':''}>${u.name}</option>`).join('')}</select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="race" class="_bet-s" style="${selStyle}"><option value="T"${p.race==='T'?' selected':''}>T</option><option value="Z"${p.race==='Z'?' selected':''}>Z</option><option value="P"${p.race==='P'?' selected':''}>P</option><option value="N"${p.race==='N'?' selected':''}>N</option></select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="gender" class="_bet-s" style="${selStyle}"><option value="F"${p.gender==='F'?' selected':''}>👩 여</option><option value="M"${p.gender==='M'?' selected':''}>👨 남</option></select></td>
+      <td style="padding:4px 6px;text-align:center"><select data-idx="${i}" data-field="tier" class="_bet-s" style="${selStyle}">${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${t}</option>`).join('')}<option value=""${!p.tier?' selected':''}>-</option></select></td>
+      <td style="padding:4px 6px;text-align:center"><input type="checkbox" data-idx="${i}" class="_bet-c" ${p.hideFromBoard?'checked':''} style="width:15px;height:15px;cursor:pointer"></td>
+      <td style="padding:4px 6px;text-align:center"><button data-idx="${i}" class="_bet-d btn btn-r btn-xs">🗑️</button></td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  container.innerHTML=html;
+  container.querySelectorAll('._bet-s').forEach(sel=>{
+    sel.addEventListener('change',function(){
+      const idx=+this.dataset.idx,field=this.dataset.field;
+      if(!players[idx])return;
+      players[idx][field]=this.value||undefined;
+      save();
+    });
+  });
+  container.querySelectorAll('._bet-c').forEach(chk=>{
+    chk.addEventListener('change',function(){
+      const idx=+this.dataset.idx;
+      if(!players[idx])return;
+      players[idx].hideFromBoard=this.checked||undefined;
+      save();
+    });
+  });
+  container.querySelectorAll('._bet-d').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      const idx=+this.dataset.idx;
+      if(!players[idx])return;
+      if(!confirm(`"${players[idx].name}" 선수를 삭제할까요?\n전적·기록은 삭제되지 않습니다.`))return;
+      players.splice(idx,1);
+      if(typeof fixPoints==='function')fixPoints();
+      save();render();
+    });
+  });
 }
 function exportDataJSON(){
   if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
