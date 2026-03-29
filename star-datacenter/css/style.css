@@ -711,7 +711,7 @@ body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
 #mobileFab {
   display: none;
   position: fixed;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   right: 14px;
   z-index: 990;
   flex-direction: column;

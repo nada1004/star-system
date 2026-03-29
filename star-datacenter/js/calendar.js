@@ -463,6 +463,11 @@ function swNav(t,el){
   });
   if(!found){
     curTab=t;openDetails={};
+    // 바텀 네비 동기화
+    document.querySelectorAll('.bnav-item').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      b.classList.toggle('on',oc.includes("'"+t+"'"));
+    });
     const fstrip=document.getElementById('fstrip');
     if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn)?'block':'none';
     const C=document.getElementById('rcont');

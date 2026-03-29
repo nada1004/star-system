@@ -428,6 +428,8 @@
 <!-- 📱 FAB -->
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('cfg')"><span>⚙️</span> 설정</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('mini')"><span>⚡</span> 미니 경기</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('ind')"><span>⚔️</span> 개인전</div>
@@ -439,11 +441,10 @@
 <!-- 📱 하단 고정 네비게이션 바 (모바일) -->
 <div id="bottomNav">
   <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📋</span></div><span class="bnav-label">스트리머</span></button>
-  <button class="bnav-item" id="bn1" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
-  <button class="bnav-item" id="bn2" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
-  <button class="bnav-item" id="bn3" onclick="swNav('mini',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">⚡</span></div><span class="bnav-label">미니</span></button>
+  <button class="bnav-item" id="bn1" onclick="swNav('board2',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📌</span></div><span class="bnav-label">현황판</span></button>
+  <button class="bnav-item" id="bn2" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
+  <button class="bnav-item" id="bn3" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
   <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
-  <button class="bnav-item" id="bn5" onclick="swNav('cal',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">🗓️</span></div><span class="bnav-label">캘린더</span></button>
 </div>
 
 <script>document.write('<sc'+'ript src="js/mobile-bar.js'+_cbv+'"><\/sc'+'ript>')</script>

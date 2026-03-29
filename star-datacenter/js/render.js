@@ -24,6 +24,11 @@ function sw(t,el){
   curTab=t;openDetails={};
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
+  // 바텀 네비 활성화 동기화
+  document.querySelectorAll('.bnav-item').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    b.classList.toggle('on',oc.includes("'"+t+"'"));
+  });
   const _fs=document.getElementById('fstrip');if(_fs)_fs.style.display=(t==='total'&&isLoggedIn)?'block':'none';
   // 이전 내용 제거 후 렌더링
   const C=document.getElementById('rcont');
