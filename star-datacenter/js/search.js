@@ -1019,7 +1019,29 @@ function pastePreview() {
     // 무승부 라인: 🐱🆚🐱 → 무승부로 스킵
     if (/🐱[^🆚]*🆚[^🐱]*🐱/.test(trimmed) || (trimmed.includes('🆚') && (trimmed.match(/🐱/g)||[]).length>=2 && !trimmed.includes('✅') && !trimmed.includes('❌'))) return;
 
-    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" or "YYYY년 MM월 DD일 ..." ──
+    // ── 날짜 줄 감지: "일자: YYYY-MM-DD" or "날짜: YYYY-MM-DD" or "YYYY년 MM월 DD일 ..." or "YYYY-MM-DD ..." ──
+    // "YYYY-MM-DD" 단독 줄 or "YYYY-MM-DD " + 게임줄 형식 처리
+    const _isoDateM = trimmed.match(/^(\d{4}-\d{2}-\d{2})(\s+(.+))?$/);
+    if (_isoDateM && /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/.test(_isoDateM[1])) {
+      const _id = _isoDateM[1];
+      currentLineDate = _id;
+      const _dateInput = document.getElementById('paste-date');
+      if (_dateInput) _dateInput.value = _id;
+      const _restLine = (_isoDateM[3] || '').trim();
+      if (_restLine) {
+        const _rp = parsePasteLine(_restLine);
+        if (_rp) {
+          const _wM = findPlayerByPartialName(_rp.winName);
+          const _lM = findPlayerByPartialName(_rp.loseName);
+          results.push({ ..._rp, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
+            wPlayer: _wM.player, lPlayer: _lM.player,
+            wCandidates: _wM.candidates, lCandidates: _lM.candidates,
+            wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _id });
+        }
+      }
+      return;
+    }
     // "YYYY년 MM월 DD일" 형식이 게임 줄 앞에 붙은 경우 → 날짜 추출 후 나머지를 게임 줄로 처리
     const _korDateM = trimmed.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일\s+/);
     if (_korDateM) {
