@@ -557,6 +557,12 @@ function buildPlayerDetailHTML(p){
   const _hdrBg=_darken>0
     ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
     :`linear-gradient(135deg,${col},${col}ee)`;
+  const _p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
+  const _statsTint=_pdStyle.stats_tint!==undefined?_pdStyle.stats_tint:8;
+  const _modeTint=_pdStyle.mode_tint!==undefined?_pdStyle.mode_tint:10;
+  const _CPM={light:{win:'#22c55e',loss:'#f87171'},normal:{win:'#16a34a',loss:'#dc2626'},dark:{win:'#15803d',loss:'#b91c1c'}};
+  const _cp=_CPM[_pdStyle.color_preset||'normal'];
+  const _cWin=_cp.win; const _cLoss=_cp.loss;
   // ── 연도 필터 ──
   const _year=window._playerModalYear||'';
   const _histAll=p.history||[];
@@ -629,18 +635,18 @@ function buildPlayerDetailHTML(p){
         </div>
       </div>
     </div>
-    <div style="background:${col}16;display:grid;grid-template-columns:repeat(4,1fr)">
+    <div style="background:${col}${_p2h(_statsTint)};display:grid;grid-template-columns:repeat(4,1fr)">
       <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
-        <div style="font-weight:900;font-size:14px"><span style="color:#16a34a">${p.win}W</span> <span style="color:#dc2626">${p.loss}L</span></div>
+        <div style="font-weight:900;font-size:14px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
       </div>
       <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
-        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
+        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
       <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
-        <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?'#16a34a':'#dc2626'}">${pS(p.points)}</div>
+        <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?_cWin:_cLoss}">${pS(p.points)}</div>
       </div>
       <div style="text-align:center;padding:14px 6px">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
@@ -758,10 +764,10 @@ function buildPlayerDetailHTML(p){
   _fixedModes.forEach(({key,w,l})=>{
     const t=w+l;const wr=t?Math.round(w/t*100):0;
     const mc=_modeColors[key]||'#6b7280';
-    const wrCol=t?(wr>=50?'#15803d':'#b91c1c'):'#9ca3af';
-    h+=`<div style="background:${mc}18;border:1.5px solid ${mc}55;border-radius:10px;padding:8px 6px;text-align:center">
+    const wrCol=t?(wr>=50?_cWin:_cLoss):'#9ca3af';
+    h+=`<div style="background:${mc}${_p2h(_modeTint)};border:1.5px solid ${mc}${_p2h(Math.min(99,_modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
-      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:#15803d">${w}승</span> <span style="color:#b91c1c">${l}패</span></div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${_cWin}">${w}승</span> <span style="color:${_cLoss}">${l}패</span></div>
       <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;
   });

@@ -1085,7 +1085,12 @@ function rCfg(C,T){
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
   </div>
-  <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
+      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-fb-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -1115,6 +1120,7 @@ function rCfg(C,T){
       </div>
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
+    </div>
   </div>
   <div class="ssec" id="cfg-season-sec">
     <h4>🏆 시즌 관리</h4>
@@ -1137,7 +1143,11 @@ function rCfg(C,T){
     </div>
   </div>
     <div class="ssec" id="cfg-bulk-edit-sec">
-    <h4>✏️ 경기 일괄 수정</h4>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
+      <button id="cfg-me-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-me-body');const btn=document.getElementById('cfg-me-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-me-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">특정 날짜 범위의 경기 날짜·맵을 한 번에 수정하거나, 맵 이름 오타를 전체 교체합니다.</p>
 
     <div style="display:flex;flex-direction:column;gap:14px">
@@ -2568,7 +2578,12 @@ function rCfg(C,T){
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
   </div>
-  <div class="ssec"><h4>☁️ Firebase 실시간 동기화</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
+      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-fb-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -2598,6 +2613,7 @@ function rCfg(C,T){
       </div>
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
+    </div>
   </div>
   <div class="ssec" id="cfg-season-sec">
     <h4>🏆 시즌 관리</h4>
@@ -2620,7 +2636,11 @@ function rCfg(C,T){
     </div>
   </div>
     <div class="ssec" id="cfg-bulk-edit-sec">
-    <h4>✏️ 경기 일괄 수정</h4>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
+      <button id="cfg-me-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-me-body');const btn=document.getElementById('cfg-me-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-me-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">특정 날짜 범위의 경기 날짜·맵을 한 번에 수정하거나, 맵 이름 오타를 전체 교체합니다.</p>
 
     <div style="display:flex;flex-direction:column;gap:14px">
@@ -2725,9 +2745,10 @@ function rCfg(C,T){
       </div>
 
     </div>
+    </div>
   </div>
-  
-  
+
+
   <div class="ssec"><h4>📱 모바일 UI 설정</h4>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -2780,22 +2801,7 @@ function rCfg(C,T){
       <h4 style="margin:0">🎨 스트리머 상세 스타일</h4>
       <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
-    <div id="cfg-pd-body" style="display:none">
-      <div style="margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="pd-fs-normal" class="btn btn-xs btn-w" onclick="_setPdFontSize('normal')">기본</button>
-          <button id="pd-fs-large"  class="btn btn-xs btn-w" onclick="_setPdFontSize('large')">크게 (×1.12)</button>
-          <button id="pd-fs-xlarge" class="btn btn-xs btn-w" onclick="_setPdFontSize('xlarge')">더 크게 (×1.2)</button>
-        </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
-      </div>
-      <div>
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다 (0% = 원색)</div>
-        <div id="cfg-pd-univ-list"></div>
-      </div>
-    </div>
+    <div id="cfg-pd-body" style="display:none"></div>
   </div>
   <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
@@ -4333,39 +4339,79 @@ function clearGhToken(){
 
 // ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
 function _renderCfgPdSection(){
+  const body=document.getElementById('cfg-pd-body');
+  if(!body) return;
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   const fs=s.font_size||'normal';
-  // 폰트 크기 버튼 상태 반영
-  ['normal','large','xlarge'].forEach(f=>{
-    const btn=document.getElementById('pd-fs-'+f);
-    if(btn) btn.className='btn btn-xs '+(f===fs?'btn-b':'btn-w');
-  });
-  // 대학별 슬라이더 렌더
-  const el=document.getElementById('cfg-pd-univ-list');
-  if(!el) return;
+  const cp=s.color_preset||'normal';
+  const st=s.stats_tint!==undefined?s.stats_tint:8;
+  const mt=s.mode_tint!==undefined?s.mode_tint:10;
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
-  el.innerHTML=univs.map((u,i)=>{
+  const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
+  const cpBtns=[['light','연하게'],['normal','기본'],['dark','진하게']].map(([k,l])=>`<button class="btn btn-xs ${cp===k?'btn-b':'btn-w'}" onclick="_setPdColorPreset('${k}')">${l}</button>`).join('');
+  const univRows=univs.map((u,i)=>{
     const val=Math.round((darken[u.name]||0)*100);
     const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
       <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
-      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)"
-        oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
+      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
       <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
     </div>`;
   }).join('');
+  body.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 전적·승률 배경 색상 강도</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="0" max="30" step="2" value="${st}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('stats',this.value);document.getElementById('pd-st-val').textContent=this.value+'%'">
+        <span id="pd-st-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도 (현재 ${st}%)</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🃏 모드별 전적 배경 색상 강도</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="0" max="30" step="2" value="${mt}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('mode',this.value);document.getElementById('pd-mt-val').textContent=this.value+'%'">
+        <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
+      ${univRows}
+    </div>`;
 }
 
 function _setPdFontSize(size){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.font_size=size;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  ['normal','large','xlarge'].forEach(f=>{
-    const btn=document.getElementById('pd-fs-'+f);
-    if(btn) btn.className='btn btn-xs '+(f===size?'btn-b':'btn-w');
-  });
+  _renderCfgPdSection();
+}
+
+function _setPdColorPreset(cp){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.color_preset=cp;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _setPdTint(type,val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s[type+'_tint']=parseInt(val)||0;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
 }
 
 function _setPdUnivDarken(univ,val,idx){
