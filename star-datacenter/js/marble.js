@@ -31,13 +31,13 @@ const _MB_COLORS = [
 ];
 
 // ─── 물리 상수 ────────────────────────────────────────────────────────────────
-const _MB_G    = 0.26;   // 중력
+const _MB_G    = 0.30;   // 중력
 const _MB_D    = 0.994;  // 감쇠
 const _MB_RBB  = 0.52;   // 공↔공 반발
-const _MB_RPG  = 0.68;   // 공↔핀 반발
+const _MB_RPG  = 0.70;   // 공↔핀 반발
 const _MB_RWL  = 0.44;   // 공↔벽 반발
-const _MB_RST  = 0.75;   // 공↔막대 반발
-const _MB_VCAP = 18;     // 최대 속도
+const _MB_RST  = 0.78;   // 공↔막대 반발
+const _MB_VCAP = 22;     // 최대 속도
 
 // ─── 상태 ────────────────────────────────────────────────────────────────────
 let _mbBalls      = [];
@@ -112,7 +112,7 @@ function _mbSetupCanvas() {
   const cv = document.getElementById('mb-canvas');
   if (!cv) return;
   const avW = Math.min(window.innerWidth - 40, 480);
-  const avH = Math.max(520, Math.min(850, window.innerHeight - 180));
+  const avH = Math.max(640, Math.min(960, window.innerHeight - 80));
   cv.width  = avW;
   cv.height = avH;
   cv.style.width  = avW + 'px';
@@ -149,19 +149,23 @@ function _mbBuildWorld(W, H) {
     { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },     // 바닥
   ];
 
-  // ── 회전 막대 2개 (반대 방향) ──
-  const sLen = (W - padX * 2) * 0.36;
+  // ── 회전 막대 6개 (크기 축소 + 속도 증가) ──
+  const sLen = (W - padX * 2) * 0.19;
   _mbSticks = [
-    { cx: cx - W*0.06, cy: H*0.16, len: sLen,        angle: 0,            omega:  0.017, thick: 5 },
-    { cx: cx + W*0.06, cy: H*0.27, len: sLen * 0.82, angle: Math.PI*0.45, omega: -0.022, thick: 5 },
+    { cx: cx - W*0.13, cy: H*0.10, len: sLen,          angle: 0,            omega:  0.020, thick: 4 }, // 왼상단
+    { cx: cx + W*0.13, cy: H*0.21, len: sLen * 0.88,   angle: Math.PI*0.55, omega: -0.027, thick: 4 }, // 오른중상단
+    { cx: cx,          cy: H*0.33, len: sLen * 0.78,   angle: Math.PI*0.2,  omega:  0.036, thick: 3 }, // 중앙
+    { cx: cx,          cy: funnelTop * 0.94, len: sLen * 0.72, angle: 0,    omega: -0.046, thick: 3 }, // 퍼널 입구 수비
+    { cx: cx,          cy: chuteBot + (floorY - chuteBot) * 0.28, len: hHW * 0.62, angle: Math.PI*0.5, omega: 0.058, thick: 3 }, // 착지 직전 (빠름)
+    { cx: cx,          cy: floorY - 20, len: landW * 0.44, angle: 0,        omega: -0.019, thick: 4 }, // 바닥 스위퍼
   ];
 
-  // ── 핀 장애물 (엇갈린 6행 그리드) ──
+  // ── 핀 장애물 (엇갈린 9행 7열 그리드) ──
   _mbPegs = [];
-  const pR     = Math.max(5, Math.round(W * 0.017));
-  const pegTop = H * 0.35;
-  const pegBot = funnelTop - pR * 2.5;
-  const rows   = 6, baseC = 6;
+  const pR     = Math.max(4, Math.round(W * 0.015));
+  const pegTop = H * 0.28;
+  const pegBot = funnelTop - pR * 2;
+  const rows   = 9, baseC = 7;
   const spX    = (W - padX * 2 - pR * 4) / (baseC - 1);
   const spY    = (pegBot - pegTop) / (rows - 1);
   for (let row = 0; row < rows; row++) {
@@ -183,7 +187,7 @@ function _mbInitBalls(names) {
   const n      = Math.min(names.length, 28);
   const innerW = W - padX * 2;
   // 반지름: 출구(hHW)보다 작아야 한 개씩 빠져나올 수 있음
-  const r    = Math.max(8, Math.min(Math.floor(hHW * 0.75), Math.floor(innerW * 0.34 / Math.sqrt(n))));
+  const r    = Math.max(5, Math.min(Math.floor(hHW * 0.52), Math.floor(innerW * 0.25 / Math.sqrt(n))));
   const cols = Math.max(2, Math.floor((innerW - r * 2) / (r * 2.15)));
   _mbBalls   = [];
   for (let i = 0; i < n; i++) {
