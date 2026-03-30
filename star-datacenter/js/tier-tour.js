@@ -2749,6 +2749,18 @@ function rCfg(C,T){
   </div>
   
   
+  <div class="ssec"><h4>📱 모바일 UI 설정</h4>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+        <input type="checkbox" id="cfg-fab-show" ${localStorage.getItem('su_fabHide')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
+          onchange="localStorage.setItem('su_fabHide',this.checked?'0':'1');const fab=document.getElementById('mobileFab');if(fab)fab.style.display=this.checked?'':'none';">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼 (미니/대학대전/개인전/프로리그/캘린더/설정 바로가기)</div>
+        </div>
+      </label>
+    </div>
+  </div>
   <div class="ssec"><h4>🎨 현황판 설정</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">

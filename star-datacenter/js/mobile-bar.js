@@ -1,4 +1,4 @@
-// 모바일에서 mobileActionBar 표시
+// 모바일에서 mobileActionBar 표시 + FAB 설정 반영
 (function(){
   function checkMobile(){
     const bar=document.getElementById('mobileActionBar');
@@ -6,6 +6,11 @@
   }
   checkMobile();
   window.addEventListener('resize',checkMobile);
+  // FAB 표시 여부 설정 반영
+  if(localStorage.getItem('su_fabHide')==='1'){
+    const fab=document.getElementById('mobileFab');
+    if(fab) fab.style.display='none';
+  }
 })();
 
 /* ══════════════════════════════════════
