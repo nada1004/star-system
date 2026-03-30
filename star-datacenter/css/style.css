@@ -197,10 +197,18 @@ tr:last-child td{border-bottom:none;}
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--blue-l);border-radius:8px;margin-bottom:12px;flex-wrap:wrap;}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:26px;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow .15s;min-height:48px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow .15s,border-left-width .15s;min-height:48px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:var(--sh);}
+.rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
 .rec-sum-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+/* 액션 버튼: 호버·열림 시에만 표시 */
+.rec-actions{display:flex;gap:3px;align-items:center;opacity:0;pointer-events:none;transition:opacity .15s;}
+.rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
+/* 상세 영역: 열릴 때 컬러 상단 테두리로 연결감 */
+.rec-detail-area.open{border-top:2px solid var(--blue-ll);}
+/* 모바일: 액션 항상 표시 */
+@media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
 .rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
 .rec-sum-score{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;padding:4px 14px;white-space:nowrap;flex-shrink:0;}
 .rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);display:none;}
@@ -785,7 +793,9 @@ body.dark .main{background:#1e293b;}
 body.dark .ssec{background:#1e293b;border-color:#2d3f55;}
 body.dark .modal .mbox{background:#1e293b;border-color:#2d3f55;}
 body.dark .rec-summary{background:#1e293b;border-color:#2d3f55;}
+body.dark .rec-summary.detail-open{box-shadow:0 2px 12px rgba(37,99,235,.2)!important;}
 body.dark .rec-detail-area{background:#162032;border-color:#2d3f55;}
+body.dark .rec-detail-area.open{border-top-color:#1e3a5f;}
 body.dark .rec-sum-header{background:#1e293b;}
 body.dark .ck-panel{background:#1e293b;border-color:#2d3f55;}
 body.dark .grp-match-card{background:#1e293b;border-color:#2d3f55;}

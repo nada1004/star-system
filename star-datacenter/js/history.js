@@ -680,9 +680,19 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
     h+=`<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
-      <div class="rec-sum-header">
+      <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
-        <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
+        <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
+        ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
+        <div class="rec-actions no-export" style="margin-left:auto">
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
+          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
+          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
+          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
+          ${isLoggedIn&&(mode==='mini'||mode==='univm')?`<button class="btn btn-w btn-xs no-export" onclick="event.stopPropagation();openMoveMatchPop(this,'${mode}',${i})" title="다른 탭으로 이동">↗ 이동</button>`:''}
+        </div>
+      </div>
+      <div class="rec-sum-header" style="padding:6px 12px 10px">
         <div class="rec-sum-vs">
           <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
@@ -691,16 +701,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
           </div>
           <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
-          ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l)">무승부</span>`}
-        </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
-          <div style="display:flex;gap:4px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
-            ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
-            ${isLoggedIn&&(mode==='mini'||mode==='univm')?`<button class="btn btn-w btn-xs no-export" onclick="event.stopPropagation();openMoveMatchPop(this,'${mode}',${i})" title="다른 탭으로 이동">↗ 이동</button>`:''}
-          </div>
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
@@ -1339,6 +1339,8 @@ function toggleDetail(key){
     openDetails[key]=!openDetails[key];
     area.classList.toggle('open',!!openDetails[key]);
     if(btn){btn.classList.toggle('open',!!openDetails[key]);btn.textContent=openDetails[key]?'🔼 닫기':'📂 상세';}
+    const card=area.closest('.rec-summary');
+    if(card) card.classList.toggle('detail-open',!!openDetails[key]);
   }
 }
 
