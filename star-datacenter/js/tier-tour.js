@@ -1036,31 +1036,8 @@ function rCfg(C,T){
     </div>
     <!-- 스트리머별 아이콘 지정 -->
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">스트리머별 상태 아이콘 지정</div>
-    <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
-        [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
-          const cur=playerStatusIcons[p.name]||'';
-          const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const encN=encodeURIComponent(p.name);
-          return `<div style="border-bottom:1px solid var(--border)">
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 12px 4px">
-              <span id="cfg-photo-wrap-${encN}" style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'32px')}</span>
-              <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-              <span id="cfg-si-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
-              <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
-                ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
-              </select>
-              <span id="cfg-si-clr-${encN}">${cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
-              <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
-              <input type="text" id="cfg-photo-url-${encN}" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0;font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px" onkeydown="if(event.key==='Enter')setProfilePhoto('${pN}',this.value)">
-              <button onclick="setProfilePhoto('${pN}',document.getElementById('cfg-photo-url-${encN}').value)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--blue);background:var(--blue-ll);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">저장</button>
-              ${p.photo?`<button onclick="setProfilePhoto('${pN}','')" style="font-size:11px;padding:2px 6px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;cursor:pointer;flex-shrink:0" title="이미지 삭제">🗑️</button>`:''}
-            </div>
-          </div>`;
-        }).join('')
-      }
+    <div id="cfg-si-list" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
   </div>
@@ -1281,8 +1258,8 @@ function rCfg(C,T){
     }
   },50);
   C.innerHTML=h;
-  // alias-list는 C.innerHTML 세팅 후 렌더링
   setTimeout(_refreshAliasList, 10);
+  setTimeout(_renderCfgSiList, 30);
 }
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -2537,31 +2514,8 @@ function rCfg(C,T){
     </div>
     <!-- 스트리머별 아이콘 지정 -->
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">스트리머별 상태 아이콘 지정</div>
-    <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-      ${players.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>':
-        [...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
-          const cur=playerStatusIcons[p.name]||'';
-          const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const encN=encodeURIComponent(p.name);
-          return `<div style="border-bottom:1px solid var(--border)">
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 12px 4px">
-              <span id="cfg-photo-wrap-${encN}" style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'32px')}</span>
-              <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-              <span id="cfg-si-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
-              <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
-                ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
-              </select>
-              <span id="cfg-si-clr-${encN}">${cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
-              <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
-              <input type="text" id="cfg-photo-url-${encN}" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0;font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px" onkeydown="if(event.key==='Enter')setProfilePhoto('${pN}',this.value)">
-              <button onclick="setProfilePhoto('${pN}',document.getElementById('cfg-photo-url-${encN}').value)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--blue);background:var(--blue-ll);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">저장</button>
-              ${p.photo?`<button onclick="setProfilePhoto('${pN}','')" style="font-size:11px;padding:2px 6px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;cursor:pointer;flex-shrink:0" title="이미지 삭제">🗑️</button>`:''}
-            </div>
-          </div>`;
-        }).join('')
-      }
+    <div id="cfg-si-list" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
   </div>
@@ -2803,8 +2757,12 @@ function rCfg(C,T){
       <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
     </div>
   </div>
-  <div class="ssec"><h4>✏️ 스트리머 일괄 수정</h4>
-    <div id="bulk-edit-table-container"></div>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">✏️ 스트리머 일괄 수정</h4>
+      <button id="bulk-edit-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('bulk-edit-table-container');const btn=document.getElementById('bulk-edit-toggle');if(c.style.display==='none'){c.style.display='';if(!c.dataset.loaded){renderBulkEditTable();c.dataset.loaded='1';}btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="bulk-edit-table-container" style="display:none"></div>
   </div>
   <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
@@ -2838,7 +2796,7 @@ function rCfg(C,T){
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
-  setTimeout(renderBulkEditTable, 10);
+  setTimeout(_renderCfgSiList, 30);
 }
 function renderBulkEditTable(){
   const container=document.getElementById('bulk-edit-table-container');
@@ -4192,6 +4150,36 @@ function delDefaultMapAlias(encK, encV){
   if(!confirm(`기본 약자 '${k}' → '${v}' 를 비활성화할까요?\n(사용자 정의로 덮어쓰거나, 복원하려면 직접 추가하세요)`)) return;
   userMapAlias[k+'__disabled']='1';
   saveCfg(); render();
+}
+
+function _renderCfgSiList(){
+  const el=document.getElementById('cfg-si-list');
+  if(!el)return;
+  if(!players.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>';return;}
+  const iconOptCache=Object.entries(STATUS_ICON_DEFS);
+  el.innerHTML=[...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
+    const cur=playerStatusIcons[p.name]||'';
+    const pN=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const encN=encodeURIComponent(p.name);
+    const opts=iconOptCache.map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('');
+    const delBtn=p.photo?`<button onclick="setProfilePhoto('${pN}','')" style="font-size:11px;padding:2px 6px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;cursor:pointer;flex-shrink:0" title="이미지 삭제">🗑️</button>`:'';
+    const clrBtn=cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:'';
+    return `<div style="border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 12px 4px">
+        <span id="cfg-photo-wrap-${encN}" style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'32px')}</span>
+        <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
+        <span id="cfg-si-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+        <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">${opts}</select>
+        <span id="cfg-si-clr-${encN}">${clrBtn}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
+        <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
+        <input type="text" id="cfg-photo-url-${encN}" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0;font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px" onkeydown="if(event.key==='Enter')setProfilePhoto('${pN}',this.value)">
+        <button onclick="setProfilePhoto('${pN}',document.getElementById('cfg-photo-url-${encN}').value)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--blue);background:var(--blue-ll);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">저장</button>
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function _cfgRefreshSiRow(name){
