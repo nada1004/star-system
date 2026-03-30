@@ -13,6 +13,10 @@ function rRoulette(C, T) {
     setTimeout(_ldInit, 60);
   } else if (_gcTab === 'duck') {
     setTimeout(_drInit, 60);
+  } else if (_gcTab === 'wheel') {
+    setTimeout(_whInit, 60);
+  } else if (_gcTab === 'marble') {
+    setTimeout(_mbInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }
@@ -68,8 +72,9 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isLadder = _gcTab === 'ladder';
   const isDuck   = _gcTab === 'duck';
   const isWheel  = _gcTab === 'wheel';
+  const isMarble = _gcTab === 'marble';
 
-  const savedText   = (!isLadder && !isDuck && !isWheel) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
+  const savedText   = (!isLadder && !isDuck && !isWheel && !isMarble) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
   const activeItems = savedText.split(',').map(v=>v.trim()).filter(v=>v);
 
   const ldNamesText = isLadder ? (localStorage.getItem('su_ld_names') || '') : '';
@@ -94,6 +99,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
     <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
     <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(_gcTab==='wheel',true)}">🎡 휠</button>
+    <button onclick="_gcSwitchTab('marble')" style="${tbStyle(_gcTab==='marble',true)}">🔮 마블</button>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃
@@ -109,6 +115,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
   ${_tabBar}
   <div id="wh-root"></div>
+</div>`;
+  }
+
+  // 마블 물리 룰렛 탭: 별도 레이아웃
+  if (isMarble) {
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_tabBar}
+  <div id="mb-root"></div>
 </div>`;
   }
 
@@ -254,6 +268,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
     <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
     <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(false,true)}">🎡 휠</button>
+    <button onclick="_gcSwitchTab('marble')" style="${tbStyle(false,true)}">🔮 마블</button>
   </div>
   <div style="${innerLayout}">
     <div style="${inputColStyle}">
@@ -279,6 +294,8 @@ function _gcSwitchTab(tab) {
     setTimeout(_drInit, 60);
   } else if (tab === 'wheel') {
     setTimeout(_whInit, 60);
+  } else if (tab === 'marble') {
+    setTimeout(_mbInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }
