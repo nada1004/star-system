@@ -948,9 +948,9 @@ function rCfg(C,T){
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
-        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
+        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;saveCfg();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
             ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
           <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
       }
@@ -1046,11 +1046,11 @@ function rCfg(C,T){
             <div style="display:flex;align-items:center;gap:8px;padding:7px 12px 4px">
               <span id="cfg-photo-wrap-${encN}" style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'32px')}</span>
               <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-              <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
-              <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
+              <span id="cfg-si-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+              <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
                 ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
               </select>
-              ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
+              <span id="cfg-si-clr-${encN}">${cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
               <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
@@ -2460,9 +2460,9 @@ function rCfg(C,T){
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
-        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
+        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;saveCfg();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
             ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
           <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
       }
@@ -2547,11 +2547,11 @@ function rCfg(C,T){
             <div style="display:flex;align-items:center;gap:8px;padding:7px 12px 4px">
               <span id="cfg-photo-wrap-${encN}" style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'32px')}</span>
               <span style="font-weight:600;flex:1;min-width:0;font-size:13px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${p.univ||''}·${p.tier||''}</span></span>
-              <span style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
-              <select onchange="setStatusIcon('${pN}',this.value);render()" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
+              <span id="cfg-si-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+              <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">
                 ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('')}
               </select>
-              ${cur?`<button onclick="setStatusIcon('${pN}','none');render()" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}
+              <span id="cfg-si-clr-${encN}">${cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:''}</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
               <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
@@ -4192,6 +4192,18 @@ function delDefaultMapAlias(encK, encV){
   if(!confirm(`기본 약자 '${k}' → '${v}' 를 비활성화할까요?\n(사용자 정의로 덮어쓰거나, 복원하려면 직접 추가하세요)`)) return;
   userMapAlias[k+'__disabled']='1';
   saveCfg(); render();
+}
+
+function _cfgRefreshSiRow(name){
+  const encN=encodeURIComponent(name);
+  const cur=playerStatusIcons[name]||'';
+  const prevEl=document.getElementById('cfg-si-prev-'+encN);
+  if(prevEl) prevEl.innerHTML=cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):'';
+  const clrEl=document.getElementById('cfg-si-clr-'+encN);
+  if(clrEl){
+    const pN=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    clrEl.innerHTML=cur?`<button onclick="setStatusIcon('${pN}','none');_cfgRefreshSiRow('${pN}')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:#dc2626;cursor:pointer;font-size:12px;padding:2px 7px" title="아이콘 제거">×</button>`:'';
+  }
 }
 
 function setProfilePhoto(name, url){
