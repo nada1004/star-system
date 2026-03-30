@@ -962,7 +962,7 @@ function rCfg(C,T){
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
   </div></div>
-  <div class="ssec"><h4>🗺️ 맵 관리</h4>`;
+  <div class="ssec"><h4>🗺️ 맵 관리</h4><div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -970,8 +970,8 @@ function rCfg(C,T){
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
-  h+=`<div style="margin-top:12px;display:flex;gap:8px">
-    <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px">
+  h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
+    <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></div>
       <div class="ssec">
@@ -1005,12 +1005,10 @@ function rCfg(C,T){
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔧 사용자 정의 약자</div>
     <div id="alias-list" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="text" id="alias-key" placeholder="약자 (예: 녹)" style="width:100px" maxlength="10">
+      <input type="text" id="alias-key" placeholder="약자 (예: 녹)" style="width:90px" maxlength="10" onkeydown="if(event.key==='Enter')addMapAlias()">
       <span style="color:var(--gray-l)">→</span>
-      <select id="alias-val" style="width:180px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
-        <option value="">맵 선택...</option>
-        ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
-      </select>
+      <input type="text" id="alias-val" list="alias-val-list" placeholder="맵 이름 입력..." autocomplete="off" style="width:180px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px" onkeydown="if(event.key==='Enter')addMapAlias()">
+      <datalist id="alias-val-list">${maps.map(m=>`<option value="${m}">`).join('')}</datalist>
       <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
@@ -2468,7 +2466,7 @@ function rCfg(C,T){
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
   </div></div>
-  <div class="ssec"><h4>🗺️ 맵 관리</h4>`;
+  <div class="ssec"><h4>🗺️ 맵 관리</h4><div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -2476,8 +2474,8 @@ function rCfg(C,T){
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
-  h+=`<div style="margin-top:12px;display:flex;gap:8px">
-    <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px">
+  h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
+    <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></div>
   <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
@@ -2499,12 +2497,10 @@ function rCfg(C,T){
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔧 사용자 정의 약자</div>
     <div id="alias-list" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="text" id="alias-key" placeholder="약자 (예: 녹)" style="width:100px" maxlength="10">
+      <input type="text" id="alias-key" placeholder="약자 (예: 녹)" style="width:90px" maxlength="10" onkeydown="if(event.key==='Enter')addMapAlias()">
       <span style="color:var(--gray-l)">→</span>
-      <select id="alias-val" style="width:180px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
-        <option value="">맵 선택...</option>
-        ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
-      </select>
+      <input type="text" id="alias-val" list="alias-val-list" placeholder="맵 이름 입력..." autocomplete="off" style="width:180px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px" onkeydown="if(event.key==='Enter')addMapAlias()">
+      <datalist id="alias-val-list">${maps.map(m=>`<option value="${m}">`).join('')}</datalist>
       <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
@@ -4091,8 +4087,29 @@ function confirmDissolve(){
   render();
   if(typeof renderBoard==='function') renderBoard();
 }
-function addMap(){const n=document.getElementById('nm').value.trim();if(!n)return;maps.push(n);save();render();refreshSel();}
-function delMap(i){maps.splice(i,1);save();render();refreshSel();}
+function _refreshMapList(){
+  const listEl=document.getElementById('map-list');
+  if(!listEl){render();return;}
+  listEl.innerHTML=maps.map((m,i)=>`<div class="srow">
+    <span style="font-size:14px">📍</span>
+    <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
+    <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
+  </div>`).join('');
+  // datalist 업데이트
+  document.querySelectorAll('datalist[id^="alias"]').forEach(dl=>{
+    dl.innerHTML=maps.map(m=>`<option value="${m}">`).join('');
+  });
+  refreshSel();
+}
+function addMap(){
+  const inp=document.getElementById('nm');
+  const n=(inp?.value||'').trim();
+  if(!n)return;
+  maps.push(n);save();
+  if(inp)inp.value='';
+  _refreshMapList();
+}
+function delMap(i){maps.splice(i,1);save();_refreshMapList();}
 
 function _refreshAliasList(){
   const listEl = document.getElementById('alias-list');
@@ -4103,12 +4120,13 @@ function _refreshAliasList(){
     return;
   }
   listEl.innerHTML = entries.filter(([k])=>!k.endsWith('__disabled')).map(([k,v])=>`
-    <div class="srow">
-      <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:50px;text-align:center">${k}</code>
+    <div class="srow" style="flex-wrap:wrap">
+      <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:44px;text-align:center">${k}</code>
       <span style="color:var(--gray-l)">→</span>
-      <input type="text" value="${v}" id="alias-edit-${encodeURIComponent(k)}" style="width:100px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px;font-size:12px">
-      <button class="btn btn-b btn-xs" onclick="editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),document.getElementById('alias-edit-${encodeURIComponent(k)}').value)">✏️ 수정</button>
-      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">🗑️ 삭제</button>
+      <input type="text" value="${v}" id="alias-edit-${encodeURIComponent(k)}" list="alias-edit-list-${encodeURIComponent(k)}" autocomplete="off" style="flex:1;min-width:100px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px;font-size:12px" onkeydown="if(event.key==='Enter')editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),this.value)">
+      <datalist id="alias-edit-list-${encodeURIComponent(k)}">${maps.map(m=>`<option value="${m}">`).join('')}</datalist>
+      <button class="btn btn-b btn-xs" onclick="editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),document.getElementById('alias-edit-${encodeURIComponent(k)}').value)">수정</button>
+      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="if(confirm('약자 \''+decodeURIComponent('${encodeURIComponent(k)}')+'\'를 삭제할까요?'))delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">🗑️ 삭제</button>
     </div>`).join('') || '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
 }
 
