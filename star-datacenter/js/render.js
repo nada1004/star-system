@@ -546,17 +546,9 @@ function navToMatch(matchId, modeLbl){
 }
 
 function buildPlayerDetailHTML(p){
-  const col=gc(p.univ);
-  // 대학 배경색 밝기 판단 → 텍스트 색 자동 적용
-  const _hexR=(h,s,e)=>parseInt(h.slice(s,e),16);
-  const _lum=(c)=>{if(!c||c.length<7)return 0;return 0.299*_hexR(c,1,3)+0.587*_hexR(c,3,5)+0.114*_hexR(c,5,7);};
-  const _light=_lum(col)>148;
-  const _tc   = _light?'rgba(0,0,0,.88)':'#fff';
-  const _tc2  = _light?'rgba(0,0,0,.55)':'rgba(255,255,255,.72)';
-  const _winC = _light?'#15803d':'#86efac';
-  const _lossC= _light?'#b91c1c':'#fca5a5';
-  const _cardBg=_light?'rgba(0,0,0,.07)':'rgba(255,255,255,.15)';
-  const _cardBd=_light?'rgba(0,0,0,.14)':'rgba(255,255,255,.22)';
+  const col=gc(p.univ)||'#6366f1';
+  const _winC ='#16a34a';
+  const _lossC='#dc2626';
   // ── 연도 필터 ──
   const _year=window._playerModalYear||'';
   const _histAll=p.history||[];
@@ -572,64 +564,78 @@ function buildPlayerDetailHTML(p){
   const eloVal=p.elo||ELO_DEFAULT;
   const eloColor=eloVal>=1400?'#7c3aed':eloVal>=1300?'#d97706':eloVal>=1200?'#16a34a':'#dc2626';
 
-  // ── 상단 프로필 패널 ──
-  let h=`<div style="background:linear-gradient(135deg,${col} 0%,${col}dd 60%,${col}bb 100%);border-radius:18px;padding:22px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px ${col}44">
-    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none"></div>
-    <div style="position:absolute;bottom:-50px;left:10px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-    <div style="position:absolute;top:0;right:0;width:200px;height:100%;background:linear-gradient(to left,rgba(255,255,255,.06),transparent);pointer-events:none"></div>
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;position:relative">
-      <div style="width:90px;height:90px;border-radius:18px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid rgba(255,255,255,.45);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.2);position:relative">${(()=>{if(p.photo){const raceL=p.race||'?';return`<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;}const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:44px;height:44px;object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'34\\' height=\\'34\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='34' height='34'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
-      <div style="flex:1;min-width:0;position:relative">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span style="font-size:22px;font-weight:900;color:${_tc};text-shadow:0 1px 6px rgba(0,0,0,.12)">${p.name}${genderIcon(p.gender)}</span>${p.role?`<span style="display:block;margin-top:3px">${getRoleBadgeHTML(p.role,'11px')}</span>`:''}
-          ${p.tier?`<span style="background:${_cardBg};border:1.5px solid ${_cardBd};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:${_tc};letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>`:''}
+  // ── 상단 프로필 카드 (대학색 바 + 흰 배경 분리) ──
+  const _photoHTML=(()=>{
+    if(p.photo){
+      const raceL=p.race||'?';
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:${col}99">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+    }
+    const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
+    return url
+      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'${col}\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${col}' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
+  })();
+  const _channelHTML=(()=>{
+    if(!p.channelUrl) return '';
+    const url=p.channelUrl;
+    let icon='🏠', label='방송';
+    if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
+    else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
+    else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
+    else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
+    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border2);text-decoration:none;font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0">${icon} ${label}</a>`;
+  })();
+  const _eloSparkHTML=(()=>{
+    const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
+    if(deltas.length<2) return '';
+    let cur=eloVal;
+    [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
+    let val=cur; const elos=[val];
+    deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
+    const mn=Math.min(...elos),mx=Math.max(...elos),rng=mx-mn||1;
+    const SW=60,SH=20;
+    const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*SW)},${Math.round(SH-((e-mn)/rng)*SH)}`);
+    const lc=elos[elos.length-1]>=elos[elos.length-2]?_winC:_lossC;
+    return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  })();
+
+  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.07)">
+    <div style="height:7px;background:linear-gradient(90deg,${col} 0%,${col}99 100%)"></div>
+    <div style="padding:16px 18px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="width:76px;height:76px;border-radius:16px;background:${col}14;border:2.5px solid ${col}55;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 2px 12px ${col}30">${_photoHTML}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:20px;font-weight:900;color:var(--text1)">${p.name}${genderIcon(p.gender)}</span>
+          ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
+          ${p.tier?`<span style="background:${col}18;border:1.5px solid ${col}55;border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:${col}">${getTierLabel(p.tier)||p.tier}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1" style="background:${_cardBg};color:${_tc};border:1.5px solid ${_cardBd};font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}" ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-          <span style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:${_tc}">${p.race||''} ${RNAME[p.race]||''}</span>
-          ${(()=>{
-            if(!p.channelUrl) return '';
-            const url=p.channelUrl;
-            let icon='🏠', label='방송';
-            if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
-            else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
-            else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
-            else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
-            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:'+_cardBg+';border:1.5px solid '+_cardBd+';text-decoration:none;font-size:11px;font-weight:700;color:'+_tc+';flex-shrink:0">'+icon+' '+label+'</a>';
-          })()}
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
+            style="background:${col}14;color:var(--text1);border:1.5px solid ${col}44;font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+            ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
+          <span style="background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--text2)">${p.race||''} ${RNAME[p.race]||''}</span>
+          ${_channelHTML}
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative">
-      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">전적</div>
-        <div style="font-weight:900;font-size:13px;color:${_tc}"><span style="color:${_winC}">${p.win}W</span> <span style="color:${_lossC}">${p.loss}L</span></div>
+    <div style="height:1px;background:var(--border);margin:0 14px"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr)">
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">전적</div>
+        <div style="font-weight:900;font-size:14px"><span style="color:#16a34a">${p.win}W</span> <span style="color:#dc2626">${p.loss}L</span></div>
       </div>
-      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">승률</div>
-        <div style="font-weight:900;font-size:16px;color:${tot?(wr>=50?_winC:_lossC):_tc2}">${tot?wr+'%':'-'}</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">승률</div>
+        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">포인트</div>
-        <div style="font-weight:900;font-size:16px;color:${p.points>=0?_winC:_lossC}">${pS(p.points)}</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">포인트</div>
+        <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?'#16a34a':'#dc2626'}">${pS(p.points)}</div>
       </div>
-      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">ELO</div>
-        <div style="font-weight:900;font-size:16px;color:${_tc}">${eloVal}</div>
-        ${(()=>{
-          const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
-          if(deltas.length<2) return '';
-          let cur=eloVal;
-          [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
-          let val=cur;
-          const elos=[val];
-          deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
-          const mn=Math.min(...elos),mx=Math.max(...elos),rng=mx-mn||1;
-          const SW=68,SH=22;
-          const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*SW)},${Math.round(SH-((e-mn)/rng)*SH)}`);
-          const lineColor=elos[elos.length-1]>=elos[elos.length-2]?_winC:_lossC;
-          return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:4px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        })()}
+      <div style="text-align:center;padding:14px 6px">
+        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">ELO</div>
+        <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
+        ${_eloSparkHTML}
       </div>
     </div>
   </div>`;
