@@ -327,6 +327,7 @@ function indRecordsHTML(){
       <span style="color:var(--border2)">│</span>
       <button onclick="bulkMoveInd('ind','gj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">⚔️ 끝장전으로 이동</button>
       <button onclick="bulkMoveInd('ind','progj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #7c3aed;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🏅 프로리그 끝장전으로 이동</button>
+      <button onclick="bulkDeleteInd('ind')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
     </div>`;
   }
   slice.forEach(s=>{
@@ -470,6 +471,19 @@ function bulkMoveInd(bulkKey,destMode){
   if(!confirm(allIds.length+'개 세션을 이동하시겠습니까?'))return;
   const srcMode=bulkKey==='ind'?'ind':'gj';
   allIds.forEach(ids=>moveIndSession(ids,srcMode,destMode,true));
+  if(typeof _bulkModes!=='undefined') _bulkModes[bulkKey]=false;
+  save();render();
+}
+function bulkDeleteInd(bulkKey){
+  const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
+  if(!cbs.length){alert('선택된 세션이 없습니다.');return;}
+  const allIds=cbs.flatMap(cb=>JSON.parse(cb.dataset.bids.replace(/'/g,'"')));
+  if(!confirm(cbs.length+'개 세션('+allIds.length+'경기)을 삭제하시겠습니까?\n\n⚠️ 선수 성적에서 차감됩니다.'))return;
+  const srcArr=bulkKey==='ind'?indM:gjM; // gj, pro_gj 모두 gjM
+  srcArr.filter(m=>allIds.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
+  const keep=new Set(allIds);
+  if(bulkKey==='ind') indM=indM.filter(m=>!keep.has(m._id));
+  else gjM=gjM.filter(m=>!keep.has(m._id)); // gj, pro_gj 모두 gjM
   if(typeof _bulkModes!=='undefined') _bulkModes[bulkKey]=false;
   save();render();
 }
@@ -942,6 +956,7 @@ function gjRecordsHTML(proOnly){
       <span id="bulk-cnt-${_gjBulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
       <span style="color:var(--border2)">│</span>
       ${_gjBulkDests.map(bd=>`<button onclick="bulkMoveInd('${_gjBulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+      <button onclick="bulkDeleteInd('${_gjBulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
     </div>`;
   }
   slice.forEach(s=>{
