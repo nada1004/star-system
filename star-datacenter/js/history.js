@@ -635,7 +635,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const curPage=histPage[pageKey];
   const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
   // 일괄 이동 컨텍스트
-  const _canBulk=isLoggedIn&&(mode==='mini'||mode==='univm');
+  const _canBulk=isLoggedIn;
   const _bulkKey=(mode==='mini'&&histSub==='civil')?'civil':mode;
   const _bulkOn=_canBulk&&!!_bulkModes[_bulkKey];
   const _bulkDests=_bulkKey==='mini'?[{l:'⚔️ 시빌워',d:'civil'},{l:'🏟️ 대학대전',d:'univm'}]
@@ -655,6 +655,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span id="bulk-cnt-${_bulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
     <span style="color:var(--border2)">│</span>
     ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+    <button onclick="bulkDeleteRecs('${_bulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
   </div>`:''}
   `;
 
@@ -1286,6 +1287,20 @@ function bulkMoveTeam(bulkKey,destMode){
   if(!confirm(indices.length+'개 경기를 이동하시겠습니까?'))return;
   const srcMode=bulkKey==='univm'?'univm':'mini';
   indices.forEach(idx=>moveTeamMatch(srcMode,idx,destMode,true));
+  _bulkModes[bulkKey]=false;
+  if(typeof fixPoints==='function')fixPoints();
+  save();render();
+}
+function bulkDeleteRecs(bulkKey){
+  const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
+  if(!cbs.length){alert('선택된 경기가 없습니다.');return;}
+  const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
+  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
+  const arr=bulkKey==='univm'?univM:bulkKey==='ck'?ckM:bulkKey==='pro'?proM:bulkKey==='tt'?ttM:miniM;
+  indices.forEach(idx=>{
+    const matchObj=arr[idx];
+    if(matchObj){arr.splice(idx,1);revertMatchRecord(matchObj);}
+  });
   _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
