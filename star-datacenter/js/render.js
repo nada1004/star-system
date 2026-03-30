@@ -112,8 +112,11 @@ function openPlayerModal(name){
   // REQ4: 다른 선수로 변경 시 페이지 초기화
   if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; window._playerModalYear=''; }
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  const _mbody=document.getElementById('playerModalBody');
+  _mbody.innerHTML=buildPlayerDetailHTML(p);
+  const _pdFs=(JSON.parse(localStorage.getItem('su_pd_style')||'{}').font_size||'normal');
+  _mbody.style.zoom=_pdFs==='xlarge'?'1.2':_pdFs==='large'?'1.12':'1';
+  injectUnivIcons(_mbody);
   // 어드민 전용 수정 버튼 (이름을 data 속성에 직접 저장 → openEP 호출 시 신뢰성 향상)
   const editBtn=document.getElementById('playerModalEditBtn');
   if(editBtn){
@@ -549,6 +552,11 @@ function buildPlayerDetailHTML(p){
   const col=gc(p.univ)||'#6366f1';
   const _winC ='#16a34a';
   const _lossC='#dc2626';
+  const _pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const _darken=((_pdStyle.univ_darken||{})[p.univ]||0);
+  const _hdrBg=_darken>0
+    ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
+    :`linear-gradient(135deg,${col},${col}ee)`;
   // ── 연도 필터 ──
   const _year=window._playerModalYear||'';
   const _histAll=p.history||[];
@@ -600,7 +608,7 @@ function buildPlayerDetailHTML(p){
   })();
 
   let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:linear-gradient(135deg,${col} 0%,${col}ee 100%);padding:18px 18px 16px;position:relative;overflow:hidden">
+    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">

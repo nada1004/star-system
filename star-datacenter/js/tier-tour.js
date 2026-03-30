@@ -2775,6 +2775,28 @@ function rCfg(C,T){
     </div>
     <div id="bulk-edit-table-container" style="display:none"></div>
   </div>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🎨 스트리머 상세 스타일</h4>
+      <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-pd-body" style="display:none">
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="pd-fs-normal" class="btn btn-xs btn-w" onclick="_setPdFontSize('normal')">기본</button>
+          <button id="pd-fs-large"  class="btn btn-xs btn-w" onclick="_setPdFontSize('large')">크게 (×1.12)</button>
+          <button id="pd-fs-xlarge" class="btn btn-xs btn-w" onclick="_setPdFontSize('xlarge')">더 크게 (×1.2)</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다 (0% = 원색)</div>
+        <div id="cfg-pd-univ-list"></div>
+      </div>
+    </div>
+  </div>
   <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -4307,6 +4329,52 @@ function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
   if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
+}
+
+// ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
+function _renderCfgPdSection(){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const fs=s.font_size||'normal';
+  // 폰트 크기 버튼 상태 반영
+  ['normal','large','xlarge'].forEach(f=>{
+    const btn=document.getElementById('pd-fs-'+f);
+    if(btn) btn.className='btn btn-xs '+(f===fs?'btn-b':'btn-w');
+  });
+  // 대학별 슬라이더 렌더
+  const el=document.getElementById('cfg-pd-univ-list');
+  if(!el) return;
+  const darken=s.univ_darken||{};
+  const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
+  el.innerHTML=univs.map((u,i)=>{
+    const val=Math.round((darken[u.name]||0)*100);
+    const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
+      <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
+      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)"
+        oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
+      <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
+    </div>`;
+  }).join('');
+}
+
+function _setPdFontSize(size){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.font_size=size;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  ['normal','large','xlarge'].forEach(f=>{
+    const btn=document.getElementById('pd-fs-'+f);
+    if(btn) btn.className='btn btn-xs '+(f===size?'btn-b':'btn-w');
+  });
+}
+
+function _setPdUnivDarken(univ,val,idx){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  if(!s.univ_darken) s.univ_darken={};
+  s.univ_darken[univ]=parseFloat(val)||0;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  const el=document.getElementById('pd-dv-'+idx);
+  if(el) el.textContent=Math.round(val*100)+'%';
 }
 
 /* ══════════════════════════════════════
