@@ -564,16 +564,16 @@ function buildPlayerDetailHTML(p){
   const eloVal=p.elo||ELO_DEFAULT;
   const eloColor=eloVal>=1400?'#7c3aed':eloVal>=1300?'#d97706':eloVal>=1200?'#16a34a':'#dc2626';
 
-  // ── 상단 프로필 카드 (대학색 바 + 흰 배경 분리) ──
+  // ── 상단 프로필 카드 (이름영역=대학색, 통계영역=연한 대학색) ──
   const _photoHTML=(()=>{
     if(p.photo){
       const raceL=p.race||'?';
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:${col}99">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url
-      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'${col}\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
-      : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${col}' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
+      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   })();
   const _channelHTML=(()=>{
     if(!p.channelUrl) return '';
@@ -583,7 +583,7 @@ function buildPlayerDetailHTML(p){
     else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
     else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
     else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
-    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border2);text-decoration:none;font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0">${icon} ${label}</a>`;
+    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${icon} ${label}</a>`;
   })();
   const _eloSparkHTML=(()=>{
     const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
@@ -599,41 +599,43 @@ function buildPlayerDetailHTML(p){
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   })();
 
-  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.07)">
-    <div style="height:7px;background:linear-gradient(90deg,${col} 0%,${col}99 100%)"></div>
-    <div style="padding:16px 18px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div style="width:76px;height:76px;border-radius:16px;background:${col}14;border:2.5px solid ${col}55;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 2px 12px ${col}30">${_photoHTML}</div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:20px;font-weight:900;color:var(--text1)">${p.name}${genderIcon(p.gender)}</span>
-          ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
-          ${p.tier?`<span style="background:${col}18;border:1.5px solid ${col}55;border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:${col}">${getTierLabel(p.tier)||p.tier}</span>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
-            style="background:${col}14;color:var(--text1);border:1.5px solid ${col}44;font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
-            ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-          <span style="background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--text2)">${p.race||''} ${RNAME[p.race]||''}</span>
-          ${_channelHTML}
+  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+    <div style="background:linear-gradient(135deg,${col} 0%,${col}ee 100%);padding:18px 18px 16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
+        <div style="width:76px;height:76px;border-radius:16px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
+            ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
+            ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
+              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
+            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+            ${_channelHTML}
+          </div>
         </div>
       </div>
     </div>
-    <div style="height:1px;background:var(--border);margin:0 14px"></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr)">
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
-        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">전적</div>
+    <div style="background:${col}16;display:grid;grid-template-columns:repeat(4,1fr)">
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
         <div style="font-weight:900;font-size:14px"><span style="color:#16a34a">${p.win}W</span> <span style="color:#dc2626">${p.loss}L</span></div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
-        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">승률</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
         <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid var(--border)">
-        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">포인트</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?'#16a34a':'#dc2626'}">${pS(p.points)}</div>
       </div>
       <div style="text-align:center;padding:14px 6px">
-        <div style="font-size:9px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;margin-bottom:5px">ELO</div>
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
         ${_eloSparkHTML}
       </div>

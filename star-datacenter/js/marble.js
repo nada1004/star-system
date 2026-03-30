@@ -126,10 +126,10 @@ function _mbBuildWorld(W, H) {
   const cx        = W / 2;
   const padX      = 18;
   const topY      = 12;
-  const funnelTop = H * 0.54;   // 퍼널 시작 (위로 올림)
-  const funnelBot = H * 0.70;   // 퍼널 끝
-  const chuteBot  = H * 0.81;   // 좁은 슈트 끝 → 착지 구역 시작
-  const hHW       = W * 0.076;  // 슈트 반폭
+  const funnelTop = H * 0.52;   // 퍼널 시작
+  const funnelBot = H * 0.67;   // 퍼널 끝
+  const chuteBot  = H * 0.86;   // 좁은 슈트 끝 (길게) → 착지 구역 시작
+  const hHW       = W * 0.10;   // 슈트 반폭 (넓게)
   const landW     = W * 0.43;   // 착지 구역 반폭
   const floorY    = H - 26;     // 바닥 Y
 
@@ -183,7 +183,7 @@ function _mbInitBalls(names) {
   const n      = Math.min(names.length, 28);
   const innerW = W - padX * 2;
   // 반지름: 출구(hHW)보다 작아야 한 개씩 빠져나올 수 있음
-  const r    = Math.max(10, Math.min(Math.floor(hHW * 0.88), Math.floor(innerW * 0.34 / Math.sqrt(n))));
+  const r    = Math.max(8, Math.min(Math.floor(hHW * 0.75), Math.floor(innerW * 0.34 / Math.sqrt(n))));
   const cols = Math.max(2, Math.floor((innerW - r * 2) / (r * 2.15)));
   _mbBalls   = [];
   for (let i = 0; i < n; i++) {
