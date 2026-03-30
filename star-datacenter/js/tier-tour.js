@@ -966,7 +966,7 @@ function rCfg(C,T){
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
-      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
+      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -2479,7 +2479,7 @@ function rCfg(C,T){
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
-      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
+      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -4110,7 +4110,7 @@ function _refreshMapList(){
   if(!listEl){render();return;}
   listEl.innerHTML=maps.map((m,i)=>`<div class="srow">
     <span style="font-size:14px">📍</span>
-    <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
+    <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
     <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
   </div>`).join('');
   // datalist 업데이트
@@ -4123,11 +4123,11 @@ function addMap(){
   const inp=document.getElementById('nm');
   const n=(inp?.value||'').trim();
   if(!n)return;
-  maps.push(n);save();
+  maps.push(n);saveCfg();
   if(inp)inp.value='';
   _refreshMapList();
 }
-function delMap(i){maps.splice(i,1);save();_refreshMapList();}
+function delMap(i){maps.splice(i,1);saveCfg();_refreshMapList();}
 
 function _refreshAliasList(){
   const listEl = document.getElementById('alias-list');
@@ -4153,7 +4153,7 @@ function editMapAlias(key, newVal){
   if(!newVal){alert('맵 이름을 입력하세요.');return;}
   if(key===newVal){alert('약자와 맵 이름이 같습니다.');return;}
   userMapAlias[key]=newVal;
-  save();
+  saveCfg();
   _refreshAliasList();
 }
 
@@ -4168,7 +4168,7 @@ function addMapAlias(){
     if(!confirm(`'${key}'는 기본 내장 약자(${PASTE_MAP_ALIAS_DEFAULT[key]})입니다.\n'${val}'으로 덮어쓸까요?`)) return;
   }
   userMapAlias[key]=val;
-  save();
+  saveCfg();
   if(msg){msg.style.color='var(--green)';msg.textContent=`✅ '${key}' → '${val}' 추가됨`;}
   document.getElementById('alias-key').value='';
   document.getElementById('alias-val').value='';
@@ -4177,22 +4177,21 @@ function addMapAlias(){
 
 function delMapAlias(key){
   delete userMapAlias[key];
-  save();
+  saveCfg();
   _refreshAliasList();
 }
 
 function restoreDefaultMapAlias(encK){
   const k=decodeURIComponent(encK);
   delete userMapAlias[k+'__disabled'];
-  save(); render();
+  saveCfg(); render();
 }
 
 function delDefaultMapAlias(encK, encV){
   const k=decodeURIComponent(encK), v=decodeURIComponent(encV);
   if(!confirm(`기본 약자 '${k}' → '${v}' 를 비활성화할까요?\n(사용자 정의로 덮어쓰거나, 복원하려면 직접 추가하세요)`)) return;
-  // __disabled 마커로 기본 약자 비활성화
   userMapAlias[k+'__disabled']='1';
-  save(); render();
+  saveCfg(); render();
 }
 
 function setProfilePhoto(name, url){
@@ -4200,7 +4199,7 @@ function setProfilePhoto(name, url){
   if(!p)return;
   const trimmed=(url||'').trim();
   if(trimmed) p.photo=trimmed; else delete p.photo;
-  save();
+  savePhotos();
   const encN=encodeURIComponent(name);
   const wrap=document.getElementById('cfg-photo-wrap-'+encN);
   if(wrap) wrap.innerHTML=getPlayerPhotoHTML(name,'32px');

@@ -372,6 +372,27 @@ function localSave(){
   }
 }
 
+// 설정 전용 경량 저장 — 선수 기록·대전 데이터 직렬화 없음, Firebase 스킵
+// 맵·약자·상태아이콘·티어·대학 설정 변경 시 사용
+function saveCfg(){
+  try{
+    _lsSave('su_tiers',TIERS);
+    _lsSave('su_u',univCfg);
+    _lsSave('su_m',maps);
+    _lsSave('su_mAlias',userMapAlias);
+    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    localStorage.setItem('su_last_save_time',Date.now().toString());
+  }catch(e){console.error('[saveCfg error]',e);}
+}
+// 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
+function savePhotos(){
+  try{
+    const _ppm={};
+    players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
+    _lsSave('su_pp',_ppm);
+    localStorage.setItem('su_last_save_time',Date.now().toString());
+  }catch(e){console.error('[savePhotos error]',e);}
+}
 function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
