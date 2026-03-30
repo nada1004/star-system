@@ -112,7 +112,7 @@ function _mbSetupCanvas() {
   const cv = document.getElementById('mb-canvas');
   if (!cv) return;
   const avW = Math.min(window.innerWidth - 40, 480);
-  const avH = Math.max(360, Math.min(600, window.innerHeight - 290));
+  const avH = Math.max(520, Math.min(850, window.innerHeight - 180));
   cv.width  = avW;
   cv.height = avH;
   cv.style.width  = avW + 'px';
@@ -123,43 +123,47 @@ function _mbSetupCanvas() {
 
 // ─── 월드 빌드 (벽 + 막대 + 핀) ──────────────────────────────────────────────
 function _mbBuildWorld(W, H) {
-  const cx       = W / 2;
-  const padX     = 18;
-  const topY     = 12;
-  const funnelTop = H * 0.63;
-  const funnelBot = H * 0.86;
-  const hHW      = W * 0.076;  // 출구 반폭
+  const cx        = W / 2;
+  const padX      = 18;
+  const topY      = 12;
+  const funnelTop = H * 0.54;   // 퍼널 시작 (위로 올림)
+  const funnelBot = H * 0.70;   // 퍼널 끝
+  const chuteBot  = H * 0.81;   // 좁은 슈트 끝 → 착지 구역 시작
+  const hHW       = W * 0.076;  // 슈트 반폭
+  const landW     = W * 0.43;   // 착지 구역 반폭
+  const floorY    = H - 26;     // 바닥 Y
 
-  _mbGeo = { W, H, cx, padX, topY, funnelTop, funnelBot, hHW };
+  _mbGeo = { W, H, cx, padX, topY, funnelTop, funnelBot, chuteBot, hHW, landW, floorY };
 
-  // ── 외벽 선분 ──
+  // ── 외벽 + 슈트 + 착지구역 선분 ──
   _mbSegs = [
-    { x1: padX,   y1: topY,      x2: padX,    y2: funnelTop },   // 왼쪽 수직
-    { x1: padX,   y1: funnelTop, x2: cx-hHW,  y2: funnelBot },   // 왼쪽 대각
-    { x1: W-padX, y1: topY,      x2: W-padX,  y2: funnelTop },   // 오른쪽 수직
-    { x1: W-padX, y1: funnelTop, x2: cx+hHW,  y2: funnelBot },   // 오른쪽 대각
-    { x1: padX,   y1: topY,      x2: W-padX,  y2: topY },        // 천장
-    { x1: cx-hHW, y1: funnelBot, x2: cx-hHW,  y2: H+20 },       // 출구 왼벽
-    { x1: cx+hHW, y1: funnelBot, x2: cx+hHW,  y2: H+20 },       // 출구 오른벽
+    { x1: padX,      y1: topY,      x2: padX,      y2: funnelTop },  // 왼쪽 수직벽
+    { x1: padX,      y1: funnelTop, x2: cx-hHW,    y2: funnelBot },  // 왼쪽 퍼널
+    { x1: W-padX,    y1: topY,      x2: W-padX,    y2: funnelTop },  // 오른쪽 수직벽
+    { x1: W-padX,    y1: funnelTop, x2: cx+hHW,    y2: funnelBot },  // 오른쪽 퍼널
+    { x1: padX,      y1: topY,      x2: W-padX,    y2: topY },       // 천장
+    { x1: cx-hHW,    y1: funnelBot, x2: cx-hHW,    y2: chuteBot },   // 슈트 왼벽
+    { x1: cx+hHW,    y1: funnelBot, x2: cx+hHW,    y2: chuteBot },   // 슈트 오른벽
+    { x1: cx-hHW,    y1: chuteBot,  x2: cx-landW,  y2: floorY },     // 착지 확장 왼쪽
+    { x1: cx+hHW,    y1: chuteBot,  x2: cx+landW,  y2: floorY },     // 착지 확장 오른쪽
+    { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },     // 바닥
   ];
 
-  // ── 회전 막대 2개 (반대 방향으로 회전) ──
+  // ── 회전 막대 2개 (반대 방향) ──
   const sLen = (W - padX * 2) * 0.36;
   _mbSticks = [
-    // 첫 번째 막대: 왼쪽 치우침, 시계 반대 방향
-    { cx: cx - W*0.06, cy: H*0.19, len: sLen,        angle: 0,            omega:  0.017, thick: 5 },
-    // 두 번째 막대: 오른쪽 치우침, 시계 방향
-    { cx: cx + W*0.06, cy: H*0.30, len: sLen * 0.82, angle: Math.PI*0.45, omega: -0.022, thick: 5 },
+    { cx: cx - W*0.06, cy: H*0.16, len: sLen,        angle: 0,            omega:  0.017, thick: 5 },
+    { cx: cx + W*0.06, cy: H*0.27, len: sLen * 0.82, angle: Math.PI*0.45, omega: -0.022, thick: 5 },
   ];
 
-  // ── 핀 장애물 (엇갈린 5행 그리드) ──
+  // ── 핀 장애물 (엇갈린 6행 그리드) ──
   _mbPegs = [];
-  const pR    = Math.max(5, Math.round(W * 0.017));
-  const pegTop = H * 0.38;
+  const pR     = Math.max(5, Math.round(W * 0.017));
+  const pegTop = H * 0.35;
   const pegBot = funnelTop - pR * 2.5;
-  const rows  = 5, baseC = 6;
-  const spX   = (W - padX * 2 - pR * 4) / (baseC - 1);
-  const spY   = (pegBot - pegTop) / (rows - 1);
+  const rows   = 6, baseC = 6;
+  const spX    = (W - padX * 2 - pR * 4) / (baseC - 1);
+  const spY    = (pegBot - pegTop) / (rows - 1);
   for (let row = 0; row < rows; row++) {
     const even = row % 2 === 0;
     const cols = even ? baseC : baseC - 1;
@@ -196,6 +200,7 @@ function _mbInitBalls(names) {
       name:  names[i],
       short: names[i].length > 4 ? names[i].slice(0, 3) + '…' : names[i],
       alive: true,
+      settled: false,
     });
   }
 }
@@ -286,24 +291,37 @@ function _mbCollideStick(b, st) {
 
 // ─── 충돌: 공 ↔ 공 ──────────────────────────────────────────────────────────
 function _mbCollideBalls() {
-  const alive = _mbBalls.filter(b => b.alive);
-  for (let i = 0; i < alive.length; i++) {
-    for (let j = i + 1; j < alive.length; j++) {
-      const a = alive[i], b = alive[j];
+  const active = _mbBalls.filter(b => b.alive || b.settled);
+  for (let i = 0; i < active.length; i++) {
+    for (let j = i + 1; j < active.length; j++) {
+      const a = active[i], b = active[j];
+      if (!a.alive && !b.alive) continue;  // 둘 다 정착 시 skip
       const dx = b.x - a.x, dy = b.y - a.y;
       const d  = Math.sqrt(dx * dx + dy * dy);
       const md = a.r + b.r;
       if (d < md && d > 0.001) {
         const nx = dx / d, ny = dy / d;
-        const ov = (md - d) * 0.5;
-        a.x -= nx * ov; a.y -= ny * ov;
-        b.x += nx * ov; b.y += ny * ov;
-        const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
-        const dot = dvx * nx + dvy * ny;
-        if (dot > 0) {
-          const imp = dot * (1 + _MB_RBB) * 0.5;
-          a.vx -= imp * nx; a.vy -= imp * ny;
-          b.vx += imp * nx; b.vy += imp * ny;
+        const ov = md - d;
+        if (a.alive && b.alive) {
+          a.x -= nx * ov*0.5; a.y -= ny * ov*0.5;
+          b.x += nx * ov*0.5; b.y += ny * ov*0.5;
+          const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
+          const dot = dvx * nx + dvy * ny;
+          if (dot > 0) {
+            const imp = dot * (1 + _MB_RBB) * 0.5;
+            a.vx -= imp * nx; a.vy -= imp * ny;
+            b.vx += imp * nx; b.vy += imp * ny;
+          }
+        } else if (a.alive) {
+          // b 정착 (정적), a만 튕겨남
+          a.x -= nx * ov; a.y -= ny * ov;
+          const dot = a.vx * nx + a.vy * ny;
+          if (dot < 0) { a.vx -= (1 + _MB_RBB) * dot * nx; a.vy -= (1 + _MB_RBB) * dot * ny; }
+        } else {
+          // a 정착 (정적), b만 튕겨남
+          b.x += nx * ov; b.y += ny * ov;
+          const dot = b.vx * nx + b.vy * ny;
+          if (dot > 0) { b.vx -= (1 + _MB_RBB) * dot * nx; b.vy -= (1 + _MB_RBB) * dot * ny; }
         }
       }
     }
@@ -330,14 +348,21 @@ function _mbStep() {
     _mbCollideWall(b);
     _mbCollidePegs(b);
     for (const st of _mbSticks) _mbCollideStick(b, st);
-    if (b.y - b.r > H) b.alive = false;
+    // 바닥 정착 감지
+    const { floorY } = _mbGeo;
+    if (b.y + b.r >= floorY - 1) {
+      const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+      if (spd < 2.2) { b.settled = true; b.alive = false; }
+    }
+    // 화면 밖으로 탈출 시 제거
+    if (b.y - b.r > H + 60) b.alive = false;
   }
   _mbCollideBalls();
 }
 
 // ─── 그리기 ──────────────────────────────────────────────────────────────────
 function _mbDrawIdle(cv) {
-  const { W, H, topY } = _mbGeo;
+  const { W, H, topY, floorY } = _mbGeo;
   const ctx = cv.getContext('2d');
   _mbDrawBg(ctx, W, H);
   _mbDrawWalls(ctx);
@@ -347,7 +372,7 @@ function _mbDrawIdle(cv) {
   ctx.font         = 'bold 13px sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('이름을 입력하고 굴려라! 버튼을 누르세요', W / 2, topY + (H * 0.15));
+  ctx.fillText('이름을 입력하고 굴려라! 버튼을 누르세요', W / 2, topY + (floorY * 0.12));
 }
 
 function _mbDrawFrame(cv) {
@@ -369,7 +394,8 @@ function _mbDrawBg(ctx, W, H) {
 }
 
 function _mbDrawWalls(ctx) {
-  const { cx, funnelBot, H } = _mbGeo;
+  const { cx, funnelBot, chuteBot, landW, floorY } = _mbGeo;
+  // 벽 선분 (바닥 제외: 별도로 그림)
   ctx.save();
   ctx.strokeStyle = 'rgba(160,140,255,0.9)';
   ctx.lineWidth   = 3;
@@ -378,22 +404,71 @@ function _mbDrawWalls(ctx) {
   ctx.shadowColor = 'rgba(140,110,255,0.55)';
   ctx.shadowBlur  = 7;
   ctx.beginPath();
-  for (const s of _mbSegs) {
+  for (let i = 0; i < _mbSegs.length - 1; i++) {  // 마지막 바닥 선분은 제외
+    const s = _mbSegs[i];
     ctx.moveTo(s.x1, s.y1);
     ctx.lineTo(s.x2, s.y2);
   }
   ctx.stroke();
   ctx.restore();
-  // 출구 방향 점선
+
+  // 슈트 내 점선 (중심선)
   ctx.save();
   ctx.strokeStyle = 'rgba(255,210,50,0.35)';
   ctx.lineWidth   = 1.5;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
   ctx.moveTo(cx, funnelBot + 8);
-  ctx.lineTo(cx, H - 6);
+  ctx.lineTo(cx, chuteBot - 4);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.restore();
+
+  // ── 착지 구역 배경 글로우 ──
+  ctx.save();
+  const lx0 = cx - landW, lx1 = cx + landW;
+  const bgGrad = ctx.createLinearGradient(cx, chuteBot, cx, floorY);
+  bgGrad.addColorStop(0, 'rgba(253,203,110,0)');
+  bgGrad.addColorStop(1, 'rgba(253,203,110,0.10)');
+  ctx.fillStyle = bgGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx - _mbGeo.hHW, chuteBot);
+  ctx.lineTo(lx0, floorY);
+  ctx.lineTo(lx1, floorY);
+  ctx.lineTo(cx + _mbGeo.hHW, chuteBot);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // ── 바닥 (황금 발광 라인) ──
+  ctx.save();
+  ctx.shadowColor = 'rgba(253,203,110,0.85)';
+  ctx.shadowBlur  = 14;
+  ctx.strokeStyle = '#FDCB6E';
+  ctx.lineWidth   = 3;
+  ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(lx0, floorY);
+  ctx.lineTo(lx1, floorY);
+  ctx.stroke();
+  ctx.restore();
+
+  // 바닥 아래 반사 효과
+  ctx.save();
+  const refGrad = ctx.createLinearGradient(cx, floorY, cx, floorY + 18);
+  refGrad.addColorStop(0, 'rgba(253,203,110,0.18)');
+  refGrad.addColorStop(1, 'rgba(253,203,110,0)');
+  ctx.fillStyle = refGrad;
+  ctx.fillRect(lx0, floorY, landW * 2, 18);
+  ctx.restore();
+
+  // "LANDING" 텍스트
+  ctx.save();
+  ctx.fillStyle    = 'rgba(253,203,110,0.38)';
+  ctx.font         = 'bold 10px sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('▼  LANDING ZONE  ▼', cx, floorY + 5);
   ctx.restore();
 }
 
@@ -455,9 +530,22 @@ function _mbDrawSticks(ctx) {
 function _mbDrawBalls(ctx) {
   ctx.save();
   for (const b of _mbBalls) {
-    if (!b.alive) continue;
+    if (!b.alive && !b.settled) continue;
+    const isWinner = b.settled && b === _mbWinner;
+
+    // 당첨 공 외곽 발광 링
+    if (isWinner) {
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur  = 22;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth   = 2.5;
+      ctx.stroke();
+    }
+
     ctx.shadowColor = b.color;
-    ctx.shadowBlur  = 11;
+    ctx.shadowBlur  = b.settled ? 18 : 11;
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
     const gr = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.35, b.r*0.05, b.x, b.y, b.r);
@@ -467,8 +555,8 @@ function _mbDrawBalls(ctx) {
     ctx.fillStyle = gr;
     ctx.fill();
     ctx.shadowBlur  = 0;
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth   = 1.5;
+    ctx.strokeStyle = b.settled ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth   = b.settled ? 2 : 1.5;
     ctx.stroke();
     if (b.r >= 12) {
       ctx.fillStyle    = '#fff';
@@ -486,12 +574,12 @@ function _mbLoop(cv) {
   if (!_mbRunning) return;
   _mbStep();
   _mbDrawFrame(cv);
-  const dead  = _mbBalls.filter(b => !b.alive);
-  const alive = _mbBalls.filter(b => b.alive);
-  if (dead.length > 0 && !_mbWinner) {
-    _mbWinner  = dead[0];
+  const settled = _mbBalls.filter(b => b.settled);
+  const alive   = _mbBalls.filter(b => b.alive);
+  if (settled.length > 0 && !_mbWinner) {
+    _mbWinner  = settled[0];
     _mbRunning = false;
-    _mbWinTimeout = setTimeout(() => _mbShowWinner(cv), 500);
+    _mbWinTimeout = setTimeout(() => _mbShowWinner(cv), 700);
   } else if (alive.length === 0 && !_mbWinner) {
     _mbRunning = false;
     const btn = document.getElementById('mb-btn');
