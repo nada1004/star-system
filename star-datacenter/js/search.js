@@ -1042,8 +1042,8 @@ function pastePreview() {
       }
       return;
     }
-    // "YYYY년 MM월 DD일" 형식이 게임 줄 앞에 붙은 경우 → 날짜 추출 후 나머지를 게임 줄로 처리
-    const _korDateM = trimmed.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일\s+/);
+    // "YYYY년 MM월 DD일" 형식 — 단독 줄 or 게임 줄 앞에 붙은 경우 모두 처리
+    const _korDateM = trimmed.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일(?:\s+|$)/);
     if (_korDateM) {
       const _kd = `${_korDateM[1]}-${String(_korDateM[2]).padStart(2,'0')}-${String(_korDateM[3]).padStart(2,'0')}`;
       currentLineDate = _kd;
