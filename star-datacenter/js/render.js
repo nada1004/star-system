@@ -547,6 +547,16 @@ function navToMatch(matchId, modeLbl){
 
 function buildPlayerDetailHTML(p){
   const col=gc(p.univ);
+  // 대학 배경색 밝기 판단 → 텍스트 색 자동 적용
+  const _hexR=(h,s,e)=>parseInt(h.slice(s,e),16);
+  const _lum=(c)=>{if(!c||c.length<7)return 0;return 0.299*_hexR(c,1,3)+0.587*_hexR(c,3,5)+0.114*_hexR(c,5,7);};
+  const _light=_lum(col)>148;
+  const _tc   = _light?'rgba(0,0,0,.88)':'#fff';
+  const _tc2  = _light?'rgba(0,0,0,.55)':'rgba(255,255,255,.72)';
+  const _winC = _light?'#15803d':'#86efac';
+  const _lossC= _light?'#b91c1c':'#fca5a5';
+  const _cardBg=_light?'rgba(0,0,0,.07)':'rgba(255,255,255,.15)';
+  const _cardBd=_light?'rgba(0,0,0,.14)':'rgba(255,255,255,.22)';
   // ── 연도 필터 ──
   const _year=window._playerModalYear||'';
   const _histAll=p.history||[];
@@ -571,12 +581,12 @@ function buildPlayerDetailHTML(p){
       <div style="width:90px;height:90px;border-radius:18px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid rgba(255,255,255,.45);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.2);position:relative">${(()=>{if(p.photo){const raceL=p.race||'?';return`<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;}const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:44px;height:44px;object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'34\\' height=\\'34\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='34' height='34'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
       <div style="flex:1;min-width:0;position:relative">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)">${p.name}${genderIcon(p.gender)}</span>${p.role?`<span style="display:block;margin-top:3px">${getRoleBadgeHTML(p.role,'11px')}</span>`:''}
-          ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>`:''}
+          <span style="font-size:22px;font-weight:900;color:${_tc};text-shadow:0 1px 6px rgba(0,0,0,.12)">${p.name}${genderIcon(p.gender)}</span>${p.role?`<span style="display:block;margin-top:3px">${getRoleBadgeHTML(p.role,'11px')}</span>`:''}
+          ${p.tier?`<span style="background:${_cardBg};border:1.5px solid ${_cardBd};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:${_tc};letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}" ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-          <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+          <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1" style="background:${_cardBg};color:${_tc};border:1.5px solid ${_cardBd};font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}" ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
+          <span style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:${_tc}">${p.race||''} ${RNAME[p.race]||''}</span>
           ${(()=>{
             if(!p.channelUrl) return '';
             const url=p.channelUrl;
@@ -585,44 +595,40 @@ function buildPlayerDetailHTML(p){
             else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
             else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
             else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
-            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+icon+' '+label+'</a>';
+            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:'+_cardBg+';border:1.5px solid '+_cardBd+';text-decoration:none;font-size:11px;font-weight:700;color:'+_tc+';flex-shrink:0">'+icon+' '+label+'</a>';
           })()}
         </div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative">
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">전적</div>
-        <div style="font-weight:900;font-size:13px;color:#fff"><span style="color:#86efac">${p.win}W</span> <span style="color:#fca5a5">${p.loss}L</span></div>
+      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">전적</div>
+        <div style="font-weight:900;font-size:13px;color:${_tc}"><span style="color:${_winC}">${p.win}W</span> <span style="color:${_lossC}">${p.loss}L</span></div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">승률</div>
-        <div style="font-weight:900;font-size:16px;color:${wr>=50?'#86efac':'#fca5a5'}">${tot?wr+'%':'-'}</div>
+      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">승률</div>
+        <div style="font-weight:900;font-size:16px;color:${tot?(wr>=50?_winC:_lossC):_tc2}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">포인트</div>
-        <div style="font-weight:900;font-size:16px;color:${p.points>=0?'#86efac':'#fca5a5'}">${pS(p.points)}</div>
+      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">포인트</div>
+        <div style="font-weight:900;font-size:16px;color:${p.points>=0?_winC:_lossC}">${pS(p.points)}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:4px;letter-spacing:.3px">ELO</div>
-        <div style="font-weight:900;font-size:16px;color:#fff">${eloVal}</div>
+      <div style="background:${_cardBg};border:1px solid ${_cardBd};border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:${_tc2};font-weight:600;margin-bottom:4px;letter-spacing:.3px">ELO</div>
+        <div style="font-weight:900;font-size:16px;color:${_tc}">${eloVal}</div>
         ${(()=>{
-          // ELO 스파크라인: history에서 eloDelta로 추이 계산
           const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
           if(deltas.length<2) return '';
           let cur=eloVal;
-          const points=[];
           [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
           let val=cur;
           const elos=[val];
           deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
-          const min=Math.min(...elos),max=Math.max(...elos);
-          const range=max-min||1;
-          const W=68,H=22;
-          const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*W)},${Math.round(H-((e-min)/range)*H)}`);
-          const last=elos[elos.length-1],prev=elos[elos.length-2];
-          const lineColor=last>=prev?'#86efac':'#fca5a5';
-          return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;margin:4px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+          const mn=Math.min(...elos),mx=Math.max(...elos),rng=mx-mn||1;
+          const SW=68,SH=22;
+          const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*SW)},${Math.round(SH-((e-mn)/rng)*SH)}`);
+          const lineColor=elos[elos.length-1]>=elos[elos.length-2]?_winC:_lossC;
+          return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:4px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         })()}
       </div>
     </div>
@@ -678,30 +684,24 @@ function buildPlayerDetailHTML(p){
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
-      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'))"
+      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
         style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
       </select>
       ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
-      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
     </div>`;
   }
 
-  // ── ELO 추이 차트 ──
-  // 🔧 eloAfter 레거시 필드 제거됨 → eloDelta 누적으로 ELO 재계산
-  const _eloBase = p.elo || ELO_DEFAULT;
-  const _eloDeltas = (p.history||[]).filter(h=>h.eloDelta!=null).reverse();
-  let _eloRunning = _eloBase;
-  const _eloRecalc = [];
-  _eloDeltas.forEach((h,i)=>{ _eloRecalc.unshift({...h, eloAfter:_eloRunning}); _eloRunning -= (h.eloDelta||0); });
-  const _eloHistPts=(p.history||[]).filter(h=>h.eloDelta!=null||h.eloAfter!=null);
-  if(_eloHistPts.length>=3){
+  // ── ELO 추이 차트 (년도 필터 적용) ──
+  const _eloChartPts=_hist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
+  if(_eloChartPts.length>=3){
     h+=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
-        ELO 변화 추이
-        <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloHistPts.length}경기</span>
+        ELO 변화 추이${_year?` (${_year}년)`:''}
+        <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloChartPts.length}경기</span>
         <span style="font-size:10px;font-weight:700;margin-left:auto;color:${eloColor}">${eloVal}</span>
       </div>
       <div style="position:relative">
@@ -733,17 +733,23 @@ function buildPlayerDetailHTML(p){
     {key:'대회',w:_compW,l:_compL},
     {key:'프로리그',w:_histModeStats['프로리그']?.w||0,l:_histModeStats['프로리그']?.l||0},
   ];
-  h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">`;
+  h+=`<div style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:3px;height:14px;background:#6b7280;border-radius:2px"></span>
+      모드별 전적
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
   _fixedModes.forEach(({key,w,l})=>{
     const t=w+l;const wr=t?Math.round(w/t*100):0;
     const mc=_modeColors[key]||'#6b7280';
-    h+=`<div style="background:var(--surface);border:1.5px solid ${mc}33;border-radius:10px;padding:8px 6px;text-align:center">
-      <div style="font-size:10px;color:${mc};font-weight:700;margin-bottom:4px">${key}</div>
-      <div style="font-size:11px"><span class="wt">${w}승</span> <span class="lt">${l}패</span></div>
-      <div style="font-size:12px;font-weight:800;color:${t?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${t?wr+'%':'-'}</div>
+    const wrCol=t?(wr>=50?'#15803d':'#b91c1c'):'#9ca3af';
+    h+=`<div style="background:${mc}18;border:1.5px solid ${mc}55;border-radius:10px;padding:8px 6px;text-align:center">
+      <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:#15803d">${w}승</span> <span style="color:#b91c1c">${l}패</span></div>
+      <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;
   });
-  h+=`</div>`;
+  h+=`</div></div>`;
 
   // ── 상대 전적 ──
   {
@@ -1240,22 +1246,27 @@ function rMergedPro(C, T) {
 /* ══════════════════════════════════════
    선수 모달 ELO 추이 차트
 ══════════════════════════════════════ */
-function initPEloChart(name){
+function initPEloChart(name, year){
   const p=players.find(x=>x.name===name);
   const canvas=document.getElementById('pEloChart');
   const tip=document.getElementById('pEloTip');
   if(!p||!canvas)return;
-  const hist=[...(p.history||[])].reverse();
-  // eloAfter 없는 경우(압축된 데이터) eloDelta 누적으로 재계산
+  // 전체 history로 ELO 재계산 (정확한 누적값 산출)
+  const histAll=[...(p.history||[])].reverse();
   let _eloRc=p.elo||ELO_DEFAULT;
   const _eloRcMap=new Map();
-  [...hist].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
-  const pts=[];let elo=ELO_DEFAULT;
-  hist.forEach((h,i)=>{
-    const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(hist.length-1-i) ?? null);
-    if(_ea!=null) pts.push({i,elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
-    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
+  [...histAll].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
+  const allPts=[];let elo=ELO_DEFAULT;
+  histAll.forEach((h,i)=>{
+    const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(histAll.length-1-i) ?? null);
+    if(_ea!=null) allPts.push({elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
+    else{elo+=(h.eloDelta||0);allPts.push({elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
   });
+  // 년도 필터 적용 (ELO 값은 전체 기반으로 계산된 것 사용)
+  const _yr=year||window._playerModalYear||'';
+  const pts=_yr?allPts.filter(pt=>(pt.date||'').startsWith(_yr)):allPts;
+  // x축 인덱스 재부여
+  pts.forEach((pt,i)=>pt.i=i);
   if(pts.length<2){canvas.style.display='none';return;}
   const W=canvas.offsetWidth||canvas.parentElement?.offsetWidth||300;
   const H=140;
