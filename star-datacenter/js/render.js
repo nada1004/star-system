@@ -292,6 +292,11 @@ function openShareCardFromUniv(){
   openShareCardModal();
   setTimeout(()=>renderShareCardByUniv(name),80);
 }
+function openProCompMatchShare(a,b,sa,sb,d){
+  window._shareMatchObj={a,b,sa,sb,d,_noUnivIcon:true,_matchType:'pro'};
+  _shareMode='match';openShareCardModal();
+  setTimeout(function(){if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+}
 function openShareCardFromMatch(mode,idx){
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:mode==='tt'?ttM:miniM;
   const m=arr[idx]||null;

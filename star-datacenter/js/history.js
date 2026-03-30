@@ -1472,10 +1472,14 @@ function histProCompHTML() {
         ? `<span style="background:#e0f2fe;color:#0891b2;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">조별리그</span>`
         : `<span style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">대진표</span>`;
       h += `<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
-        <div class="rec-sum-header">
-          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
-          ${stageTypeBadge}
-          ${stageBadge}
+        <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
+          <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
+          ${stageTypeBadge}${stageBadge}
+          <div class="rec-actions no-export" style="margin-left:auto">
+            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+          </div>
+        </div>
+        <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${aWin?'':'opacity:.7'}">
               ${_photo(pa)}
@@ -1555,10 +1559,15 @@ function histProCompTourneyHTML() {
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
-        <div class="rec-sum-header">
-          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
+        <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
+          <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span style="background:#f5f3ff;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">토너먼트</span>
           ${stageBadge}
+          <div class="rec-actions no-export" style="margin-left:auto">
+            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+          </div>
+        </div>
+        <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${aWin?'':'opacity:.7'}">
               ${_photo(pa)}<span style="font-weight:${aWin?'800':'500'};font-size:13px;color:${aWin?'#16a34a':'var(--text)'}">${m.a}</span>
@@ -1626,6 +1635,7 @@ function histProCompTeamHTML() {
           <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:13px">${tm.teamAName||'A팀'}</span>
           <span style="font-size:16px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:1px 10px;border-radius:6px">${tm.sa||0}:${tm.sb||0}</span>
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:13px">${tm.teamBName||'B팀'}</span>
+          <button class="btn btn-p btn-xs no-export" style="margin-left:auto" onclick="openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}')">🎴 공유카드</button>
         </div>
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
