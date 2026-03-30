@@ -1013,7 +1013,12 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
+      <button id="cfg-si-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-si-body');const btn=document.getElementById('cfg-si-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgSiList();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-si-body" style="display:none">
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
@@ -1040,6 +1045,7 @@ function rCfg(C,T){
       <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
+    </div>
   </div>
   <div class="ssec"><h4>🎭 티어 관리</h4>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -1259,7 +1265,6 @@ function rCfg(C,T){
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
-  setTimeout(_renderCfgSiList, 30);
 }
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -2491,7 +2496,12 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </div>
-  <div class="ssec"><h4>🏷️ 스트리머 상태 아이콘 관리</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
+      <button id="cfg-si-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-si-body');const btn=document.getElementById('cfg-si-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgSiList();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-si-body" style="display:none">
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
@@ -2518,6 +2528,7 @@ function rCfg(C,T){
       <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
+    </div>
   </div>
   <div class="ssec"><h4>🎭 티어 관리</h4>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -2796,7 +2807,6 @@ function rCfg(C,T){
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
-  setTimeout(_renderCfgSiList, 30);
 }
 function renderBulkEditTable(){
   const container=document.getElementById('bulk-edit-table-container');
