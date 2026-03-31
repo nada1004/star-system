@@ -83,6 +83,16 @@ function _mbRender(root) {
         + 'color:#BD93F9;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">🗺️ 맵 편집</button>'
       : '')
     + '</div>'
+    + '<div style="width:100%;max-width:480px;display:flex;align-items:center;gap:8px">'
+    + '<label style="font-size:12px;color:var(--text2);white-space:nowrap;font-weight:600">🗺️ 맵</label>'
+    + '<select id="mb-map-sel" onchange="_mbOnMapSel(this.value)" style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">'
+    + '<option value="-1">🎲 랜덤</option>'
+    + '<option value="0">🎯 핀볼</option>'
+    + '<option value="1">⚡ 지그재그</option>'
+    + '<option value="2">🌀 카오스</option>'
+    + ((_mbCustom.pegsR.length||_mbCustom.segsR.length||_mbCustom.sticksR.length) ? '<option value="3">✏️ 커스텀</option>' : '')
+    + '</select>'
+    + '</div>'
     + '<div class="mb-canvas-wrap"><canvas id="mb-canvas"></canvas></div>'
     + '<button class="mb-btn" id="mb-btn" onclick="_mbStart()">🔮 굴려라!</button>'
     + '<div id="mb-result-card" style="display:none;width:100%;max-width:480px;'
@@ -105,6 +115,16 @@ function _mbRender(root) {
 }
 
 function _mbOnInput(val) { localStorage.setItem('su_mb_input', val); }
+
+function _mbOnMapSel(val) {
+  localStorage.setItem('su_mb_map_sel', val);
+  const sel = parseInt(val);
+  if (sel >= 0) {
+    _mbCurrentMap = sel;
+    const cv = document.getElementById('mb-canvas');
+    if (cv) { _mbBuildWorld(cv.width, cv.height); _mbDrawIdle(cv); }
+  }
+}
 
 function _mbShuffleInput() {
   const inp = document.getElementById('mb-input');
@@ -129,6 +149,11 @@ function _mbSetupCanvas() {
   cv.height = avH;
   cv.style.width  = avW + 'px';
   cv.style.height = avH + 'px';
+  const _savedSel = localStorage.getItem('su_mb_map_sel') ?? '-1';
+  const _selEl = document.getElementById('mb-map-sel');
+  if (_selEl) _selEl.value = _savedSel;
+  const _fixedMap = parseInt(_savedSel);
+  if (_fixedMap >= 0) _mbCurrentMap = _fixedMap;
   _mbBuildWorld(avW, avH);
   _mbDrawIdle(cv);
   _mbStartIdleAnim(cv);
@@ -877,8 +902,13 @@ function _mbStart() {
   _mbRunning = false;
   _mbWinner  = null;
   _mbTick    = 0;
-  const _mbMapCount = (_mbCustom.pegsR.length || _mbCustom.segsR.length || _mbCustom.sticksR.length) ? 4 : 3;
-  _mbCurrentMap = Math.floor(Math.random() * _mbMapCount);
+  const _mbSelVal = parseInt(localStorage.getItem('su_mb_map_sel') ?? '-1');
+  if (_mbSelVal >= 0) {
+    _mbCurrentMap = _mbSelVal;
+  } else {
+    const _mbMapCount = (_mbCustom.pegsR.length || _mbCustom.segsR.length || _mbCustom.sticksR.length) ? 4 : 3;
+    _mbCurrentMap = Math.floor(Math.random() * _mbMapCount);
+  }
   const card = document.getElementById('mb-result-card');
   if (card) card.style.display = 'none';
   const btn = document.getElementById('mb-btn');
@@ -1223,6 +1253,13 @@ function _mbEditorSave() {
   _mbCustom.heightMul = parseFloat((document.getElementById('mb-ed-height')||{}).value || _mbCustom.heightMul || 3.0);
   localStorage.setItem('su_mb_custom', JSON.stringify(_mbCustom));
   cm('mb-editor-modal');
+  // 커스텀 맵 옵션 드롭다운에 추가
+  const sel = document.getElementById('mb-map-sel');
+  if (sel && !sel.querySelector('option[value="3"]') && (_mbCustom.pegsR.length||_mbCustom.segsR.length||_mbCustom.sticksR.length)) {
+    const opt = document.createElement('option');
+    opt.value = '3'; opt.textContent = '✏️ 커스텀';
+    sel.appendChild(opt);
+  }
   _mbSetupCanvas();
 }
 
