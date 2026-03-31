@@ -257,7 +257,7 @@ function _mbBuildWorld(W, H) {
   }
 
   // ── 맵 2: 카오스 (막대 12개 산란, 핀 밀집) ──
-  else {
+  else if (_mbCurrentMap === 2) {
     const sL = (W - padX * 2) * 0.130;
     const configs = [
       [W*0.22, H*0.08, 1.10, 0,            0.040], [W*0.78, H*0.14, 1.10, Math.PI*0.6, -0.046],
