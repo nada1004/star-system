@@ -2744,6 +2744,14 @@ function rCfg(C,T){
         <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
       </div>
 
+      <!-- 고아 history 정리 -->
+      <div style="padding:14px;background:#fff1f2;border:1px solid #fca5a5;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:6px">🧹 삭제된 경기 기록 정리</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">대전기록에서 삭제했지만 스트리머 상세·상대전적에 남아있는 기록을 일괄 제거합니다.<br>win/loss/points/ELO도 함께 재조정됩니다.</div>
+        <button class="btn btn-r btn-sm" onclick="cleanupOrphanHistory()">🧹 고아 기록 정리 실행</button>
+        <span id="orphan-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
+      </div>
+
     </div>
     </div>
   </div>
@@ -3370,6 +3378,36 @@ function bulkChangeMap(){
 }
 
 // 날짜 범위 일괄 삭제
+function cleanupOrphanHistory(){
+  if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
+  if(!confirm('대전기록에 없는 경기를 스트리머 history에서 제거합니다.\n\n계속하시겠습니까?'))return;
+  // 현재 유효한 matchId 집합
+  const validIds=new Set();
+  [miniM,univM,ckM,proM,ttM,comps].forEach(arr=>{
+    (arr||[]).forEach(m=>{if(m._id)validIds.add(m._id);});
+  });
+  // indM/gjM은 history가 별도 구조라 제외
+  let removedCount=0;
+  players.forEach(p=>{
+    if(!p.history||!p.history.length)return;
+    const before=p.history.length;
+    // matchId가 있으면서 validIds에 없는 항목 = 고아
+    const orphans=p.history.filter(h=>h.matchId&&!validIds.has(h.matchId));
+    if(!orphans.length)return;
+    p.history=p.history.filter(h=>!h.matchId||validIds.has(h.matchId));
+    orphans.forEach(hr=>{
+      if(hr.result==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
+      else if(hr.result==='패'){p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
+      if(hr.eloDelta!=null)p.elo=(p.elo||1500)-hr.eloDelta;
+    });
+    removedCount+=before-p.history.length;
+  });
+  if(typeof fixPoints==='function')fixPoints();
+  save();render();
+  const el=document.getElementById('orphan-result');
+  if(el)el.textContent=removedCount?`✅ ${removedCount}개 기록 정리 완료`:'이미 깨끗합니다 (정리할 항목 없음)';
+}
+
 function bulkDeleteByDate(){
   if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
   const fromD = document.getElementById('bulk-del-from')?.value;
