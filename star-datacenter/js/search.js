@@ -1029,6 +1029,26 @@ function pastePreview() {
       if (_dateInput) _dateInput.value = _id;
       const _restLine = (_isoDateM[3] || '').trim();
       if (_restLine) {
+        // 탭 구분 TSV 형식: 날짜가 이미 추출됐으므로 나머지 컬럼만 파싱
+        // cols: 선수1(종족)\t선수2(종족)\t맵\t승/패(ELO)\t...
+        if (_restLine.includes('\t')) {
+          const _tc = _restLine.split('\t');
+          const _tRes = (_tc[3] || '').trim();
+          const _tIsW = _tRes.startsWith('승'), _tIsL = _tRes.startsWith('패');
+          if (_tc.length >= 4 && (_tIsW || _tIsL) && _tc[0] && _tc[1]) {
+            const _tEx = s => { const m = s.trim().match(/^(.+?)\s*\([TZPN]\)\s*$/i); return m ? m[1].trim() : s.trim(); };
+            const _tP1 = _tEx(_tc[0]), _tP2 = _tEx(_tc[1]);
+            const _tMap = _tc[2] ? resolveMapName(_tc[2].trim()) : '-';
+            const winName = _tIsW ? _tP1 : _tP2, loseName = _tIsW ? _tP2 : _tP1;
+            const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            results.push({ winName, loseName, map: _tMap, _rawMapStr: _tc[2]||'', setNum: currentSet,
+              wPlayer: _wM.player, lPlayer: _lM.player,
+              wCandidates: _wM.candidates, lCandidates: _lM.candidates,
+              wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
+              lineNum: idx+1, rawLine: trimmed, _lineDate: _id });
+            return;
+          }
+        }
         const _rp = parsePasteLine(_restLine);
         if (_rp) {
           const _wM = findPlayerByPartialName(_rp.winName);
