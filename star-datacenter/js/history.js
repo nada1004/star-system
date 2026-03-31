@@ -1297,10 +1297,29 @@ function bulkDeleteRecs(bulkKey){
   const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
   if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   const arr=bulkKey==='univm'?univM:bulkKey==='ck'?ckM:bulkKey==='pro'?proM:bulkKey==='tt'?ttM:miniM;
+  const deletedIds=new Set();
   indices.forEach(idx=>{
     const matchObj=arr[idx];
-    if(matchObj){arr.splice(idx,1);revertMatchRecord(matchObj);}
+    if(matchObj){
+      if(matchObj._id) deletedIds.add(matchObj._id);
+      arr.splice(idx,1);
+      revertMatchRecord(matchObj);
+    }
   });
+  // 안전 처리: revertMatchRecord가 놓친 history 항목 직접 정리
+  if(deletedIds.size>0){
+    players.forEach(p=>{
+      if(!p.history)return;
+      const removed=p.history.filter(h=>h.matchId&&deletedIds.has(h.matchId));
+      if(!removed.length)return;
+      p.history=p.history.filter(h=>!h.matchId||!deletedIds.has(h.matchId));
+      removed.forEach(hr=>{
+        if(hr.result==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
+        else if(hr.result==='패'){p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
+        if(hr.eloDelta!=null)p.elo=(p.elo||1500)-hr.eloDelta;
+      });
+    });
+  }
   _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
