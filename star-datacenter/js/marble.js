@@ -8,13 +8,13 @@
     '#mb-root{font-family:inherit;width:100%}',
     '.mb-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}',
     '.mb-canvas-wrap{position:relative;width:100%;display:flex;justify-content:center}',
-    '#mb-canvas{border-radius:16px;display:block;box-shadow:0 6px 32px rgba(0,0,0,.28)}',
-    '.mb-btn{font-size:clamp(15px,2vw,20px);font-weight:900;color:#fff;background:linear-gradient(135deg,#6C5CE7,#A29BFE);border:none;border-radius:30px;padding:11px 40px;cursor:pointer;box-shadow:0 5px 0 #4834d4;transition:transform .12s,box-shadow .12s;font-family:inherit}',
-    '.mb-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #4834d4}',
-    '.mb-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #4834d4}',
-    '.mb-btn:disabled{background:linear-gradient(135deg,#aaa,#888);box-shadow:0 4px 0 #555;cursor:not-allowed;transform:none}',
-    '.mb-hist-box{width:100%;max-width:480px;background:var(--white);border:2px solid var(--border);border-radius:14px;padding:12px 14px}',
-    '.mb-hist-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}',
+    '#mb-canvas{border-radius:18px;display:block;box-shadow:0 0 40px rgba(0,200,255,0.22),0 0 80px rgba(120,40,255,0.12),0 8px 32px rgba(0,0,0,.5);border:1px solid rgba(0,229,255,0.2)}',
+    '.mb-btn{font-size:clamp(15px,2vw,20px);font-weight:900;color:#fff;background:linear-gradient(135deg,#7B2FFF,#00BFFF);border:none;border-radius:30px;padding:11px 40px;cursor:pointer;box-shadow:0 5px 0 #4a1fa8,0 0 24px rgba(0,180,255,0.35);transition:transform .12s,box-shadow .12s;font-family:inherit;letter-spacing:.3px}',
+    '.mb-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #4a1fa8,0 0 36px rgba(0,200,255,0.5)}',
+    '.mb-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #4a1fa8,0 0 16px rgba(0,180,255,0.3)}',
+    '.mb-btn:disabled{background:linear-gradient(135deg,#444,#333);box-shadow:0 4px 0 #222;cursor:not-allowed;transform:none}',
+    '.mb-hist-box{width:100%;max-width:480px;background:rgba(10,6,30,0.85);border:1.5px solid rgba(0,229,255,0.25);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}',
+    '.mb-hist-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06)}',
     '.mb-hist-item:last-child{border-bottom:none}',
     '@keyframes mbCardAppear{0%{opacity:0;transform:scale(0.7) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}',
     '@keyframes mbParticle{0%{transform:translate(0,0) scale(1) rotate(0deg);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0) rotate(var(--rot));opacity:0}}',
@@ -24,10 +24,10 @@
 
 // ─── 색상 ────────────────────────────────────────────────────────────────────
 const _MB_COLORS = [
-  '#FF6B6B','#FFA502','#2ED573','#1E90FF',
-  '#A29BFE','#FD79A8','#00CEC9','#E17055',
-  '#6C5CE7','#FDCB6E','#55EFC4','#FAB1A0',
-  '#FF4757','#eccc68','#7bed9f','#70a1ff',
+  '#FF2D78','#FF6B00','#FFDD00','#00FF88',
+  '#00E5FF','#BD93F9','#FF79C6','#50FA7B',
+  '#8B5CF6','#FFB86C','#8BE9FD','#FF5555',
+  '#F1FA8C','#44B8FF','#FF6BCB','#00FFC8',
 ];
 
 // ─── 물리 상수 ────────────────────────────────────────────────────────────────
@@ -79,14 +79,18 @@ function _mbRender(root) {
     + '</div>'
     + '<div class="mb-canvas-wrap"><canvas id="mb-canvas"></canvas></div>'
     + '<button class="mb-btn" id="mb-btn" onclick="_mbStart()">🔮 굴려라!</button>'
-    + '<div id="mb-result-card" style="display:none;width:100%;max-width:480px;background:linear-gradient(135deg,#f0ebff,#f8f5ff);'
-    + 'border:2.5px solid #A29BFE;border-radius:16px;padding:20px;text-align:center;box-sizing:border-box">'
-    + '<div style="font-size:15px;font-weight:700;color:#A29BFE;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
+    + '<div id="mb-result-card" style="display:none;width:100%;max-width:480px;'
+    + 'background:linear-gradient(135deg,rgba(10,0,40,0.95),rgba(5,5,30,0.95));'
+    + 'border:2px solid rgba(0,229,255,0.5);border-radius:18px;padding:22px;text-align:center;box-sizing:border-box;'
+    + 'box-shadow:0 0 40px rgba(0,180,255,0.2),0 0 80px rgba(120,40,255,0.15)">'
+    + '<div style="font-size:13px;font-weight:700;color:#00E5FF;letter-spacing:2px;margin-bottom:10px;text-transform:uppercase">🎊 Winner!</div>'
     + '<div id="mb-res-icon" style="font-size:48px;margin-bottom:6px;line-height:1.1">🔮</div>'
-    + '<div id="mb-res-name" style="font-size:clamp(26px,6vw,46px);font-weight:900;color:#6C5CE7;word-break:break-all;margin-bottom:14px"></div>'
+    + '<div id="mb-res-name" style="font-size:clamp(26px,6vw,46px);font-weight:900;'
+    + 'background:linear-gradient(135deg,#00E5FF,#BD93F9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;'
+    + 'background-clip:text;word-break:break-all;margin-bottom:16px"></div>'
     + '<button onclick="_mbStart()" style="font-family:inherit;font-size:15px;font-weight:700;color:#fff;'
-    + 'background:linear-gradient(135deg,#6C5CE7,#A29BFE);border:none;border-radius:22px;padding:10px 28px;'
-    + 'cursor:pointer;box-shadow:0 4px 0 #4834d4" '
+    + 'background:linear-gradient(135deg,#7B2FFF,#00BFFF);border:none;border-radius:22px;padding:10px 28px;'
+    + 'cursor:pointer;box-shadow:0 4px 0 #4a1fa8,0 0 20px rgba(0,180,255,0.3)" '
     + 'onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🔮 다시 굴리기</button>'
     + '</div>'
     + _mbHistHTML()
@@ -389,14 +393,15 @@ function _mbDrawIdle(cv) {
   _mbDrawWalls(ctx);
   _mbDrawPegs(ctx);
   _mbDrawSticks(ctx);
-  // 이름 입력 안내 (핀 영역 위 빈 공간)
-  const msgY = topY + ((_mbGeo.funnelTop * 0.28) - topY) * 0.5 + topY * 0.5;
+  // 이름 입력 안내
   ctx.save();
-  ctx.fillStyle    = 'rgba(255,255,255,0.30)';
-  ctx.font         = 'bold 12px sans-serif';
+  ctx.fillStyle    = 'rgba(0,229,255,0.45)';
+  ctx.font         = 'bold 11px monospace';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('▲  이름 입력 후 굴려라! 버튼  ▲', W / 2, topY + 18);
+  ctx.shadowColor  = 'rgba(0,229,255,0.7)';
+  ctx.shadowBlur   = 8;
+  ctx.fillText('▲  이름 입력 후  굴려라!  ▲', W / 2, topY + 18);
   ctx.restore();
 }
 
@@ -411,25 +416,55 @@ function _mbDrawFrame(cv) {
 }
 
 function _mbDrawBg(ctx, W, H) {
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#0f0c29');
-  bg.addColorStop(1, '#302b63');
-  ctx.fillStyle = bg;
+  // 짙은 다크 배경
+  ctx.fillStyle = '#06061A';
   ctx.fillRect(0, 0, W, H);
+  // 상단 퍼플 방사형 글로우
+  const rg1 = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 0.55);
+  rg1.addColorStop(0, 'rgba(100,40,255,0.20)');
+  rg1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = rg1;
+  ctx.fillRect(0, 0, W, H);
+  // 하단 시안 방사형 글로우
+  const rg2 = ctx.createRadialGradient(W / 2, H, 0, W / 2, H, H * 0.45);
+  rg2.addColorStop(0, 'rgba(0,229,255,0.14)');
+  rg2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = rg2;
+  ctx.fillRect(0, 0, W, H);
+  // 미세 격자 (사이버펑크 회로 느낌)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(80,120,255,0.055)';
+  ctx.lineWidth = 0.5;
+  const gs = 28;
+  for (let x = 0; x <= W; x += gs) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
 }
 
 function _mbDrawWalls(ctx) {
-  const { cx, funnelBot, chuteBot, landW, floorY } = _mbGeo;
-  // 벽 선분 (바닥 제외: 별도로 그림)
+  const { cx, funnelBot, chuteBot, hHW, landW, floorY } = _mbGeo;
+  // ── 벽 선분 — 네온 시안 튜브 ──
   ctx.save();
-  ctx.strokeStyle = 'rgba(160,140,255,0.9)';
-  ctx.lineWidth   = 3;
+  // 외부 글로우 패스 (두꺼운 흐린 레이어)
+  ctx.strokeStyle = 'rgba(0,229,255,0.25)';
+  ctx.lineWidth   = 9;
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
-  ctx.shadowColor = 'rgba(140,110,255,0.55)';
-  ctx.shadowBlur  = 7;
+  ctx.shadowColor = 'rgba(0,229,255,0.9)';
+  ctx.shadowBlur  = 18;
   ctx.beginPath();
-  for (let i = 0; i < _mbSegs.length - 1; i++) {  // 마지막 바닥 선분은 제외
+  for (let i = 0; i < _mbSegs.length - 1; i++) {
+    const s = _mbSegs[i];
+    ctx.moveTo(s.x1, s.y1);
+    ctx.lineTo(s.x2, s.y2);
+  }
+  ctx.stroke();
+  // 내부 밝은 코어
+  ctx.shadowBlur  = 6;
+  ctx.strokeStyle = '#00E5FF';
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+  for (let i = 0; i < _mbSegs.length - 1; i++) {
     const s = _mbSegs[i];
     ctx.moveTo(s.x1, s.y1);
     ctx.lineTo(s.x2, s.y2);
@@ -437,11 +472,11 @@ function _mbDrawWalls(ctx) {
   ctx.stroke();
   ctx.restore();
 
-  // 슈트 내 점선 (중심선)
+  // 슈트 중심선 (점선)
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,210,50,0.35)';
-  ctx.lineWidth   = 1.5;
-  ctx.setLineDash([5, 5]);
+  ctx.strokeStyle = 'rgba(0,229,255,0.18)';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([4, 6]);
   ctx.beginPath();
   ctx.moveTo(cx, funnelBot + 8);
   ctx.lineTo(cx, chuteBot - 4);
@@ -449,48 +484,55 @@ function _mbDrawWalls(ctx) {
   ctx.setLineDash([]);
   ctx.restore();
 
-  // ── 착지 구역 배경 글로우 ──
+  // ── 착지 구역 배경 ──
   ctx.save();
   const lx0 = cx - landW, lx1 = cx + landW;
   const bgGrad = ctx.createLinearGradient(cx, chuteBot, cx, floorY);
-  bgGrad.addColorStop(0, 'rgba(253,203,110,0)');
-  bgGrad.addColorStop(1, 'rgba(253,203,110,0.10)');
+  bgGrad.addColorStop(0, 'rgba(0,255,136,0)');
+  bgGrad.addColorStop(1, 'rgba(0,255,136,0.09)');
   ctx.fillStyle = bgGrad;
   ctx.beginPath();
-  ctx.moveTo(cx - _mbGeo.hHW, chuteBot);
+  ctx.moveTo(cx - hHW, chuteBot);
   ctx.lineTo(lx0, floorY);
   ctx.lineTo(lx1, floorY);
-  ctx.lineTo(cx + _mbGeo.hHW, chuteBot);
+  ctx.lineTo(cx + hHW, chuteBot);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
-  // ── 바닥 (황금 발광 라인) ──
+  // ── 바닥 네온 그린 라인 ──
   ctx.save();
-  ctx.shadowColor = 'rgba(253,203,110,0.85)';
-  ctx.shadowBlur  = 14;
-  ctx.strokeStyle = '#FDCB6E';
-  ctx.lineWidth   = 3;
+  ctx.shadowColor = 'rgba(0,255,136,0.95)';
+  ctx.shadowBlur  = 20;
+  ctx.strokeStyle = 'rgba(0,255,136,0.3)';
+  ctx.lineWidth   = 8;
   ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(lx0, floorY);
+  ctx.lineTo(lx1, floorY);
+  ctx.stroke();
+  ctx.shadowBlur  = 8;
+  ctx.strokeStyle = '#00FF88';
+  ctx.lineWidth   = 2.5;
   ctx.beginPath();
   ctx.moveTo(lx0, floorY);
   ctx.lineTo(lx1, floorY);
   ctx.stroke();
   ctx.restore();
 
-  // 바닥 아래 반사 효과
+  // 착지 반사
   ctx.save();
-  const refGrad = ctx.createLinearGradient(cx, floorY, cx, floorY + 18);
-  refGrad.addColorStop(0, 'rgba(253,203,110,0.18)');
-  refGrad.addColorStop(1, 'rgba(253,203,110,0)');
+  const refGrad = ctx.createLinearGradient(cx, floorY, cx, floorY + 22);
+  refGrad.addColorStop(0, 'rgba(0,255,136,0.16)');
+  refGrad.addColorStop(1, 'rgba(0,255,136,0)');
   ctx.fillStyle = refGrad;
-  ctx.fillRect(lx0, floorY, landW * 2, 18);
+  ctx.fillRect(lx0, floorY, landW * 2, 22);
   ctx.restore();
 
-  // "LANDING" 텍스트
+  // LANDING 텍스트
   ctx.save();
-  ctx.fillStyle    = 'rgba(253,203,110,0.38)';
-  ctx.font         = 'bold 10px sans-serif';
+  ctx.fillStyle    = 'rgba(0,255,136,0.5)';
+  ctx.font         = 'bold 10px monospace';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText('▼  LANDING ZONE  ▼', cx, floorY + 5);
@@ -501,19 +543,27 @@ function _mbDrawPegs(ctx) {
   ctx.save();
   for (const p of _mbPegs) {
     const f = p.flash;
-    // 발광: 히트 직후 노란빛, 평상시 보라빛
-    const r2 = Math.round(f > 0 ? 255 : 110);
-    const g2 = Math.round(f > 0 ? 230 * f + 90 * (1-f) : 85);
-    const b2 = Math.round(f > 0 ? 50  * f + 240*(1-f) : 240);
-    ctx.shadowColor = f > 0 ? `rgba(255,230,50,${f * 0.95})` : 'rgba(110,85,230,0.45)';
-    ctx.shadowBlur  = f > 0 ? 12 : 5;
+    const pr = p.r + (f > 0 ? f * 2.5 : 0);
+    // 글로우
+    ctx.shadowColor = f > 0 ? `rgba(255,255,100,${f})` : 'rgba(255,45,120,0.65)';
+    ctx.shadowBlur  = f > 0 ? 22 : 8;
+    // 핀 본체 — 핫 핑크 / 히트시 화이트
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r + (f > 0 ? f * 1.5 : 0), 0, Math.PI * 2);
-    ctx.fillStyle   = `rgba(${r2},${g2},${b2},1)`;
+    ctx.arc(p.x, p.y, pr, 0, Math.PI * 2);
+    ctx.fillStyle = f > 0
+      ? `rgba(255,255,180,${0.6 + f * 0.4})`
+      : '#FF2D78';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    ctx.lineWidth   = 1.2;
+    // 테두리
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = f > 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,150,200,0.55)';
+    ctx.lineWidth   = 1;
     ctx.stroke();
+    // 상단 반사 하이라이트
+    ctx.beginPath();
+    ctx.arc(p.x - p.r * 0.22, p.y - p.r * 0.28, p.r * 0.36, 0, Math.PI * 2);
+    ctx.fillStyle = f > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.38)';
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -523,34 +573,84 @@ function _mbDrawSticks(ctx) {
   const { funnelBot, chuteBot } = _mbGeo;
   for (let si = 0; si < _mbSticks.length; si++) {
     const st = _mbSticks[si];
-    // 슈트 내 막대 (인덱스 6·7) = 빨강/주황 강조
     const inChute = st.cy > funnelBot && st.cy < chuteBot;
-    const color   = inChute ? (si === 6 ? '#ff6b6b' : '#ff9f43') : '#FDCB6E';
-    const glow    = inChute ? (si === 6 ? 'rgba(255,80,80,0.8)' : 'rgba(255,160,50,0.8)') : 'rgba(253,203,110,0.65)';
+    const isLand  = si === _mbSticks.length - 1; // 착지 스위퍼
     const cos = Math.cos(st.angle), sin = Math.sin(st.angle);
     const ax = st.cx + cos * st.len, ay = st.cy + sin * st.len;
     const bx = st.cx - cos * st.len, by = st.cy - sin * st.len;
-    ctx.shadowColor = glow;
-    ctx.shadowBlur  = inChute ? 16 : 10;
+
+    // 막대 그라디언트 색상 결정
+    let grad, glowCol;
+    if (inChute) {
+      // 슈트: 오렌지→레드 핫 그라디언트
+      grad = ctx.createLinearGradient(ax, ay, bx, by);
+      grad.addColorStop(0,   si === 6 ? '#FF6B00' : '#FF0040');
+      grad.addColorStop(0.5, '#FF2D50');
+      grad.addColorStop(1,   si === 6 ? '#FF0040' : '#FF6B00');
+      glowCol = 'rgba(255,60,30,0.9)';
+    } else if (isLand) {
+      // 착지: 네온 그린
+      grad = ctx.createLinearGradient(ax, ay, bx, by);
+      grad.addColorStop(0, '#00FF88');
+      grad.addColorStop(1, '#00CEC9');
+      glowCol = 'rgba(0,255,136,0.8)';
+    } else {
+      // 일반: 시안→퍼플 쿨 그라디언트
+      grad = ctx.createLinearGradient(ax, ay, bx, by);
+      grad.addColorStop(0,   '#00E5FF');
+      grad.addColorStop(0.5, '#7B2FFF');
+      grad.addColorStop(1,   '#00E5FF');
+      glowCol = 'rgba(0,180,255,0.75)';
+    }
+
+    // 외부 글로우 레이어
+    ctx.shadowColor = glowCol;
+    ctx.shadowBlur  = inChute ? 22 : 16;
     ctx.lineCap     = 'round';
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = grad;
+    ctx.lineWidth   = st.thick * 2.8;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // 막대 본체
+    ctx.shadowBlur  = inChute ? 14 : 10;
+    ctx.strokeStyle = grad;
     ctx.lineWidth   = st.thick * 2;
     ctx.beginPath();
     ctx.moveTo(ax, ay);
     ctx.lineTo(bx, by);
     ctx.stroke();
-    ctx.shadowColor = inChute ? glow : 'rgba(255,245,180,0.9)';
-    ctx.shadowBlur  = 14;
+
+    // 중심 하이라이트 (흰 코어)
+    ctx.shadowBlur  = 0;
+    const coreG = ctx.createLinearGradient(ax, ay, bx, by);
+    coreG.addColorStop(0,   'rgba(255,255,255,0)');
+    coreG.addColorStop(0.5, 'rgba(255,255,255,0.55)');
+    coreG.addColorStop(1,   'rgba(255,255,255,0)');
+    ctx.strokeStyle = coreG;
+    ctx.lineWidth   = st.thick * 0.55;
     ctx.beginPath();
-    ctx.arc(st.cx, st.cy, st.thick + 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    ctx.shadowBlur = 4;
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    // 중심 허브 (흰 점 + 글로우 링)
+    ctx.shadowColor = glowCol;
+    ctx.shadowBlur  = 12;
     ctx.beginPath();
-    ctx.arc(ax, ay, st.thick * 0.7, 0, Math.PI * 2);
-    ctx.arc(bx, by, st.thick * 0.7, 0, Math.PI * 2);
-    ctx.fillStyle = inChute ? color : '#ffe88a';
+    ctx.arc(st.cx, st.cy, st.thick + 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = inChute ? '#FF4400' : (isLand ? '#00FF88' : '#00E5FF');
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.arc(st.cx, st.cy, st.thick + 5.5, 0, Math.PI * 2);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -561,37 +661,62 @@ function _mbDrawBalls(ctx) {
     if (!b.alive && !b.settled) continue;
     const isWinner = b.settled && b === _mbWinner;
 
-    // 당첨 공 외곽 발광 링
+    // 당첨 공 — 이중 글로우 링
     if (isWinner) {
       ctx.shadowColor = '#FFD700';
-      ctx.shadowBlur  = 22;
+      ctx.shadowBlur  = 30;
+      ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+      ctx.lineWidth   = 7;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r + 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur  = 14;
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth   = 2;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 5, 0, Math.PI * 2);
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth   = 2.5;
       ctx.stroke();
     }
 
+    // 외부 색상 글로우
     ctx.shadowColor = b.color;
-    ctx.shadowBlur  = b.settled ? 18 : 11;
+    ctx.shadowBlur  = b.settled ? 22 : 14;
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    const gr = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.35, b.r*0.05, b.x, b.y, b.r);
-    gr.addColorStop(0,    '#ffffffcc');
-    gr.addColorStop(0.3,  b.color + 'ee');
+    // 유리구슬 라디얼 그라디언트
+    const gr = ctx.createRadialGradient(
+      b.x - b.r * 0.32, b.y - b.r * 0.38, b.r * 0.04,
+      b.x,              b.y,               b.r
+    );
+    gr.addColorStop(0,   'rgba(255,255,255,0.90)');
+    gr.addColorStop(0.18,'rgba(255,255,255,0.55)');
+    gr.addColorStop(0.45, b.color + 'DD');
     gr.addColorStop(1,    b.color);
     ctx.fillStyle = gr;
     ctx.fill();
+
+    // 테두리
     ctx.shadowBlur  = 0;
-    ctx.strokeStyle = b.settled ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)';
-    ctx.lineWidth   = b.settled ? 2 : 1.5;
+    ctx.strokeStyle = b.settled ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.22)';
+    ctx.lineWidth   = b.settled ? 1.8 : 1.2;
     ctx.stroke();
+
+    // 하단 역반사 (유리 느낌)
+    ctx.beginPath();
+    ctx.arc(b.x + b.r * 0.18, b.y + b.r * 0.35, b.r * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.fill();
+
+    // 이름 텍스트
     if (b.r >= 12) {
       ctx.fillStyle    = '#fff';
-      ctx.font         = `bold ${Math.max(8, Math.round(b.r * 0.68))}px sans-serif`;
+      ctx.font         = `bold ${Math.max(8, Math.round(b.r * 0.66))}px sans-serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(b.short, b.x, b.y);
+      ctx.shadowColor  = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur   = 3;
+      ctx.fillText(b.short, b.x, b.y + 0.5);
+      ctx.shadowBlur   = 0;
     }
   }
   ctx.restore();
@@ -704,15 +829,15 @@ function _mbHistHTML() {
     return '<div class="mb-hist-item">'
       + `<span style="font-size:11px">${medal}</span>`
       + `<span style="width:14px;height:14px;border-radius:50%;background:${h.color||'#888'};display:inline-block;flex-shrink:0"></span>`
-      + `<span style="font-weight:700;color:var(--text1);flex:1">${h.name}</span>`
-      + `<span style="font-size:11px;color:var(--text3)">${h.time}</span>`
+      + `<span style="font-weight:700;color:rgba(255,255,255,0.88);flex:1">${h.name}</span>`
+      + `<span style="font-size:11px;color:rgba(0,229,255,0.55);font-family:monospace">${h.time}</span>`
       + '</div>';
   }).join('');
   return '<div class="mb-hist-box">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    + '<span style="font-size:13px;font-weight:700;color:var(--text2)">📋 당첨 기록</span>'
+    + '<span style="font-size:13px;font-weight:700;color:#00E5FF;letter-spacing:.5px">📋 당첨 기록</span>'
     + '<button onclick="_mbClearHistory()" style="font-size:11px;padding:3px 8px;border-radius:6px;'
-    + 'border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>'
+    + 'border:1px solid rgba(0,229,255,0.25);background:rgba(0,229,255,0.08);color:rgba(0,229,255,0.7);cursor:pointer">전체 삭제</button>'
     + '</div>' + rows + '</div>';
 }
 
