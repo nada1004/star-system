@@ -1164,6 +1164,37 @@ function pastePreview() {
       return;
     }
 
+    // ── 형식 G: 탭 구분 ELO 형식 ──
+    // 날짜\t선수1(종족)\t선수2(종족)\t맵\t승(+N)/패(-N)\t유형\t...
+    if (trimmed.includes('\t')) {
+      const cols = trimmed.split('\t');
+      const _tsvDate = cols[0] && /^\d{4}-\d{2}-\d{2}$/.test(cols[0].trim()) ? cols[0].trim() : null;
+      const _tsvResult = cols[4] ? cols[4].trim() : '';
+      const _tsvIsWin  = _tsvResult.startsWith('승');
+      const _tsvIsLose = _tsvResult.startsWith('패');
+      if (_tsvDate && cols.length >= 5 && (_tsvIsWin || _tsvIsLose) && cols[1] && cols[2]) {
+        // 선수명 추출: "디임(P)" → 디임 / "디임" → 디임
+        const _tsvExtract = s => { const m = s.trim().match(/^(.+?)\s*\([TZPN]\)\s*$/i); return m ? m[1].trim() : s.trim(); };
+        const _tsvP1 = _tsvExtract(cols[1]);
+        const _tsvP2 = _tsvExtract(cols[2]);
+        const _tsvMap = cols[3] ? resolveMapName(cols[3].trim()) : '-';
+        const winName  = _tsvIsWin  ? _tsvP1 : _tsvP2;
+        const loseName = _tsvIsWin  ? _tsvP2 : _tsvP1;
+        currentLineDate = _tsvDate;
+        const _dateInput = document.getElementById('paste-date');
+        if (_dateInput) _dateInput.value = _tsvDate;
+        const wM = findPlayerByPartialName(winName);
+        const lM = findPlayerByPartialName(loseName);
+        results.push({ winName, loseName, map: _tsvMap, _rawMapStr: cols[3]||'',
+          setNum: currentSet,
+          wPlayer: wM.player, lPlayer: lM.player,
+          wCandidates: wM.candidates, lCandidates: lM.candidates,
+          wSimilar: wM.similar||[], lSimilar: lM.similar||[],
+          lineNum: idx+1, rawLine: trimmed, _lineDate: _tsvDate });
+        return;
+      }
+    }
+
     const parsed = parsePasteLine(line);
     if (!parsed) {
       errors.push({ line: idx + 1, raw: trimmed });

@@ -840,12 +840,19 @@ function grpRemoveUniv(tnId,gi,ui){
 /* ══════════════════════════════════════
 
 /* ══════════════════════════════════════
+   ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
+══════════════════════════════════════ */
+function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
+function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));}catch(e){}}
+function _cfgD(id,title,extra){return `<details class="ssec" ${_cfgOpen(id)?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>`;}
+
+/* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="ssec"><h4>📢 공지 관리</h4>
+  let h=`${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
     ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
@@ -890,7 +897,7 @@ function rCfg(C,T){
           save();render();">📢 공지 등록</button>
       </div>
     </div>
-  </div>
+  </details>
   ${(()=>{
     const seen={};const dupNames=[];
     players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
@@ -937,7 +944,7 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
-  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🏛️ 대학 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>
+  ${_cfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
@@ -962,7 +969,7 @@ function rCfg(C,T){
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
   </div></details>
-  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🗺️ 맵 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary><div id="map-list">`;
+  ${_cfgD('maps','🗺️ 맵 관리')}<div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -986,7 +993,7 @@ function rCfg(C,T){
       </div>`:``}
     </div>
 
-    <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
+    ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
@@ -1012,7 +1019,7 @@ function rCfg(C,T){
       <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
-  </div>
+  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
@@ -1047,7 +1054,7 @@ function rCfg(C,T){
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
     </div>
   </div>
-  <div class="ssec"><h4>🎭 티어 관리</h4>
+  ${_cfgD('tier','🎭 티어 관리')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
         ${getTierBadge(t)}
@@ -1060,8 +1067,8 @@ function rCfg(C,T){
       <button class="btn btn-b" onclick="addTier()">+ 티어 추가</button>
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 기본 티어(G/K/JA/J/S/0티어)는 삭제할 수 없습니다.</div>
-  </div>
-  <div class="ssec"><h4>👤 관리자 계정 관리</h4>
+  </details>
+  ${_cfgD('acct','👤 관리자 계정 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>관리자</b>: 모든 기능 + 설정 접근 가능</div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">• <b>부관리자</b>: 경기 기록 입력만 가능 (설정/회원관리 불가)</div>
     <div style="margin-bottom:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -1080,7 +1087,7 @@ function rCfg(C,T){
       <button class="btn btn-p" onclick="addAdminAccount()">+ 추가</button>
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
-  </div>
+  </details>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
@@ -1122,8 +1129,7 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  <div class="ssec" id="cfg-season-sec">
-    <h4>🏆 시즌 관리</h4>
+  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -1141,7 +1147,7 @@ function rCfg(C,T){
       </div>
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
-  </div>
+  </details>
     <div class="ssec" id="cfg-bulk-edit-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
@@ -2342,7 +2348,7 @@ function rCfg(C,T){
     return;
   }
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="ssec"><h4>📢 공지 관리</h4>
+  let h=`${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
     ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
@@ -2387,7 +2393,7 @@ function rCfg(C,T){
           save();render();">📢 공지 등록</button>
       </div>
     </div>
-  </div>
+  </details>
   ${(()=>{
     const seen={};const dupNames=[];
     players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
@@ -2434,7 +2440,7 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
-  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🏛️ 대학 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>
+  ${_cfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다. ☰ 핸들을 드래그해 순서를 변경할 수 있습니다.</div>
     <div id="univ-drag-list">`;
   univCfg.forEach((u,i)=>{
@@ -2467,7 +2473,7 @@ function rCfg(C,T){
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
   </div></details>
-  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🗺️ 맵 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary><div id="map-list">`;
+  ${_cfgD('maps','🗺️ 맵 관리')}<div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -2479,7 +2485,7 @@ function rCfg(C,T){
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></details>
-  <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
+  ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
@@ -2505,7 +2511,7 @@ function rCfg(C,T){
       <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
-  </div>
+  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
@@ -2540,7 +2546,7 @@ function rCfg(C,T){
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
     </div>
   </div>
-  <div class="ssec"><h4>🎭 티어 관리</h4>
+  ${_cfgD('tier','🎭 티어 관리')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
         ${getTierBadge(t)}
@@ -2553,8 +2559,8 @@ function rCfg(C,T){
       <button class="btn btn-b" onclick="addTier()">+ 티어 추가</button>
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 기본 티어(G/K/JA/J/S/0티어)는 삭제할 수 없습니다.</div>
-  </div>
-  <div class="ssec"><h4>👤 관리자 계정 관리</h4>
+  </details>
+  ${_cfgD('acct','👤 관리자 계정 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>관리자</b>: 모든 기능 + 설정 접근 가능</div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">• <b>부관리자</b>: 경기 기록 입력만 가능 (설정/회원관리 불가)</div>
     <div style="margin-bottom:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -2573,7 +2579,7 @@ function rCfg(C,T){
       <button class="btn btn-p" onclick="addAdminAccount()">+ 추가</button>
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
-  </div>
+  </details>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
@@ -2615,8 +2621,7 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  <div class="ssec" id="cfg-season-sec">
-    <h4>🏆 시즌 관리</h4>
+  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -2634,7 +2639,7 @@ function rCfg(C,T){
       </div>
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
-  </div>
+  </details>
     <div class="ssec" id="cfg-bulk-edit-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
