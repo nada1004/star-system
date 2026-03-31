@@ -78,6 +78,10 @@ function _mbRender(root) {
     + 'placeholder="이름 입력... (쉼표 또는 줄바꿈으로 구분)" oninput="_mbOnInput(this.value)">' + saved + '</textarea>'
     + '<button onclick="_mbShuffleInput()" style="padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);'
     + 'color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">🔀 섞기</button>'
+    + ((typeof isLoggedIn !== 'undefined' && isLoggedIn)
+      ? '<button onclick="_mbOpenEditor()" style="padding:6px 12px;border-radius:10px;border:1.5px solid #7B2FFF;background:rgba(123,47,255,0.12);'
+        + 'color:#BD93F9;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">🗺️ 맵 편집</button>'
+      : '')
     + '</div>'
     + '<div class="mb-canvas-wrap"><canvas id="mb-canvas"></canvas></div>'
     + '<button class="mb-btn" id="mb-btn" onclick="_mbStart()">🔮 굴려라!</button>'
@@ -119,7 +123,8 @@ function _mbSetupCanvas() {
   const cv = document.getElementById('mb-canvas');
   if (!cv) return;
   const avW = Math.min(window.innerWidth - 40, 480);
-  const avH = Math.max(1100, Math.min(1500, Math.round(avW * 3.0)));
+  const _hm = parseFloat(_mbCustom.heightMul || 3.0);
+  const avH = Math.max(800, Math.min(3000, Math.round(avW * _hm)));
   cv.width  = avW;
   cv.height = avH;
   cv.style.width  = avW + 'px';
@@ -145,8 +150,12 @@ function _mbStartIdleAnim(cv) {
   _mbIdleAnimId = requestAnimationFrame(loop);
 }
 
-// ─── 월드 빌드 (벽 + 막대 + 핀) — 3가지 맵 ─────────────────────────────────
-const _MB_MAP_NAMES = ['🎯 핀볼', '⚡ 지그재그', '🌀 카오스'];
+// ─── 커스텀 맵 데이터 ─────────────────────────────────────────────────────────
+let _mbCustom = { pegsR: [], segsR: [], sticksR: [], heightMul: 3.0 };
+try { const _mc = JSON.parse(localStorage.getItem('su_mb_custom') || 'null'); if (_mc) _mbCustom = _mc; } catch(e) {}
+
+// ─── 월드 빌드 (벽 + 막대 + 핀) — 3가지 맵 + 커스텀 ─────────────────────────
+const _MB_MAP_NAMES = ['🎯 핀볼', '⚡ 지그재그', '🌀 카오스', '✏️ 커스텀'];
 
 function _mbBuildWorld(W, H) {
   const cx        = W / 2;
@@ -277,6 +286,18 @@ function _mbBuildWorld(W, H) {
           _mbPegs.push({ x: px, y: py, r: pR, flash: 0 });
       }
     }
+  }
+
+  // ── 맵 3: 커스텀 (관리자 편집) ──
+  else if (_mbCurrentMap === 3) {
+    _mbSticks.push(...chuteSticks);
+    const _cd = _mbCustom;
+    (_cd.pegsR  || []).forEach(p => _mbPegs.push({ x: p.xr*W, y: p.yr*H, r: Math.max(4, p.rr*W), flash: 0 }));
+    (_cd.segsR  || []).forEach(s => _mbSegs.push({ x1: s.x1r*W, y1: s.y1r*H, x2: s.x2r*W, y2: s.y2r*H }));
+    (_cd.sticksR|| []).forEach(s => {
+      const l = s.lenr * W;
+      _mbSticks.push({ cx: s.cxr*W, cy: s.cyr*H, len: l, lenBase: l, lenAmp: s.lenAmp||0.20, lenFreq: s.lenFreq||0.030, lenOff: s.lenOff||0, angle: s.angle||0, omega: s.omega||0.03, thick: s.thick||3 });
+    });
   }
 }
 
@@ -856,7 +877,8 @@ function _mbStart() {
   _mbRunning = false;
   _mbWinner  = null;
   _mbTick    = 0;
-  _mbCurrentMap = Math.floor(Math.random() * _MB_MAP_NAMES.length);
+  const _mbMapCount = (_mbCustom.pegsR.length || _mbCustom.segsR.length || _mbCustom.sticksR.length) ? 4 : 3;
+  _mbCurrentMap = Math.floor(Math.random() * _mbMapCount);
   const card = document.getElementById('mb-result-card');
   if (card) card.style.display = 'none';
   const btn = document.getElementById('mb-btn');
@@ -959,4 +981,253 @@ function _mbClearHistory() {
   _mbHistory = [];
   localStorage.removeItem('su_mb_hist');
   _mbRefreshHist();
+}
+
+// ─── 🗺️ 맵 에디터 (관리자 전용) ──────────────────────────────────────────────
+let _mbEdTool     = 'peg';
+let _mbEdDrawing  = false;
+let _mbEdDragSt   = null;
+let _mbEdPreview  = null;
+let _mbEdSc       = 1;     // scale: editorPx / gamePx
+let _mbEdGW       = 480;
+let _mbEdGH       = 1440;
+
+function _mbOpenEditor() {
+  if (!document.getElementById('mb-editor-modal')) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+<div id="mb-editor-modal" class="modal" style="display:none;z-index:9999">
+  <div class="modal-inner" style="max-width:400px;width:94vw;padding:18px 16px;background:#0a0618;border:1.5px solid rgba(123,47,255,0.5);border-radius:18px;color:#fff;box-sizing:border-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-weight:900;font-size:15px;color:#BD93F9">🗺️ 마블 맵 편집기</span>
+      <button onclick="cm('mb-editor-modal')" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px">
+      <span style="font-size:12px;color:#aaa;white-space:nowrap">📐 세로 길이</span>
+      <input type="range" id="mb-ed-height" min="1.5" max="5.0" step="0.1" style="flex:1;accent-color:#7B2FFF"
+        oninput="document.getElementById('mb-ed-hval').textContent=parseFloat(this.value).toFixed(1)+'x';_mbEdUpdateHeight()">
+      <span id="mb-ed-hval" style="font-size:13px;font-weight:700;color:#BD93F9;min-width:32px">3.0x</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button id="mb-ed-t-peg"   onclick="_mbEdSetTool('peg')"   style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #00E5FF;background:rgba(0,229,255,0.13);color:#00E5FF;font-size:11px;font-weight:700;cursor:pointer">⚫ 핀</button>
+      <button id="mb-ed-t-wall"  onclick="_mbEdSetTool('wall')"  style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">📏 벽</button>
+      <button id="mb-ed-t-stick" onclick="_mbEdSetTool('stick')" style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">🔄 막대</button>
+      <button id="mb-ed-t-erase" onclick="_mbEdSetTool('erase')" style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">🗑️ 지우기</button>
+    </div>
+    <div id="mb-ed-hint" style="font-size:11px;color:#7B6FA0;text-align:center;margin-bottom:8px">클릭으로 핀 추가 / 다시 클릭하면 삭제</div>
+    <div style="display:flex;justify-content:center;overflow:auto;max-height:52vh;border-radius:10px;border:1px solid rgba(123,47,255,0.25)">
+      <canvas id="mb-ed-canvas" style="cursor:crosshair;display:block;touch-action:none"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="_mbEditorClear()" style="flex:1;padding:9px;border-radius:10px;border:1px solid #dc2626;background:rgba(220,38,38,0.1);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🗑️ 초기화</button>
+      <button onclick="_mbEditorSave()" style="flex:2;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#7B2FFF,#00BFFF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">💾 저장하고 적용</button>
+    </div>
+  </div>
+</div>`;
+    document.body.appendChild(wrap.firstElementChild);
+  }
+  const sl = document.getElementById('mb-ed-height');
+  const vl = document.getElementById('mb-ed-hval');
+  const hm = _mbCustom.heightMul || 3.0;
+  if (sl) sl.value = hm;
+  if (vl) vl.textContent = hm.toFixed(1) + 'x';
+  om('mb-editor-modal');
+  _mbEdInit();
+}
+
+function _mbEdInit() {
+  const cv = document.getElementById('mb-ed-canvas');
+  if (!cv) return;
+  const avW  = Math.min(window.innerWidth - 40, 480);
+  const hm   = _mbCustom.heightMul || 3.0;
+  const avH  = Math.max(800, Math.min(3000, Math.round(avW * hm)));
+  const edW  = Math.min(350, window.innerWidth * 0.82);
+  _mbEdSc    = edW / avW;
+  _mbEdGW    = avW;
+  _mbEdGH    = avH;
+  cv.width   = Math.round(avW * _mbEdSc);
+  cv.height  = Math.round(avH * _mbEdSc);
+  cv.style.width  = cv.width  + 'px';
+  cv.style.height = cv.height + 'px';
+  // Build base walls for reference display
+  _mbBuildWorld(avW, avH);
+  cv.onmousedown  = e => _mbEdDown(e);
+  cv.onmousemove  = e => _mbEdMove(e);
+  cv.onmouseup    = e => _mbEdUp(e);
+  cv.onmouseleave = ()  => { _mbEdDrawing = false; _mbEdPreview = null; _mbEdDraw(); };
+  cv.ontouchstart = e => { e.preventDefault(); _mbEdDown(e.touches[0]); };
+  cv.ontouchmove  = e => { e.preventDefault(); _mbEdMove(e.touches[0]); };
+  cv.ontouchend   = e => { e.preventDefault(); _mbEdUp(e.changedTouches[0]); };
+  _mbEdDraw();
+}
+
+function _mbEdPos(e) {
+  const cv = document.getElementById('mb-ed-canvas');
+  const r  = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+}
+
+function _mbEdDown(e) {
+  const pos = _mbEdPos(e);
+  if (_mbEdTool === 'erase') { _mbEdErase(pos); return; }
+  if (_mbEdTool === 'peg') {
+    const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
+    const xr = pos.x / (W * sc), yr = pos.y / (H * sc);
+    const rr = Math.max(4, Math.round(W * 0.015)) / W;
+    const hi = _mbCustom.pegsR.findIndex(p => Math.hypot((p.xr-xr)*W*sc, (p.yr-yr)*H*sc) < Math.max(4,rr*W)*sc*1.8);
+    if (hi >= 0) _mbCustom.pegsR.splice(hi, 1);
+    else _mbCustom.pegsR.push({ xr, yr, rr });
+    _mbEdDraw();
+    return;
+  }
+  _mbEdDrawing = true;
+  _mbEdDragSt  = pos;
+}
+
+function _mbEdMove(e) {
+  if (!_mbEdDrawing) return;
+  const pos = _mbEdPos(e);
+  _mbEdPreview = { tool: _mbEdTool, x1: _mbEdDragSt.x, y1: _mbEdDragSt.y, x2: pos.x, y2: pos.y };
+  _mbEdDraw();
+}
+
+function _mbEdUp(e) {
+  if (!_mbEdDrawing) return;
+  _mbEdDrawing = false;
+  const pos = _mbEdPos(e);
+  const dx = pos.x - _mbEdDragSt.x, dy = pos.y - _mbEdDragSt.y;
+  const dist = Math.hypot(dx, dy);
+  const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
+  if (dist > 8) {
+    if (_mbEdTool === 'wall') {
+      _mbCustom.segsR.push({ x1r: _mbEdDragSt.x/(W*sc), y1r: _mbEdDragSt.y/(H*sc), x2r: pos.x/(W*sc), y2r: pos.y/(H*sc) });
+    } else if (_mbEdTool === 'stick') {
+      const angle = Math.atan2(dy, dx);
+      _mbCustom.sticksR.push({
+        cxr: (_mbEdDragSt.x+pos.x)*0.5/(W*sc), cyr: (_mbEdDragSt.y+pos.y)*0.5/(H*sc),
+        lenr: dist*0.5/(W*sc), angle, omega: 0.035, thick: 3,
+        lenAmp: 0.22, lenFreq: 0.030, lenOff: Math.random()*Math.PI*2
+      });
+    }
+  }
+  _mbEdPreview = null;
+  _mbEdDraw();
+}
+
+function _mbEdErase(pos) {
+  const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
+  const xg = pos.x / sc, yg = pos.y / sc; // game px
+  const THR = 14;
+  const pi = _mbCustom.pegsR.findIndex(p => Math.hypot(p.xr*W-xg, p.yr*H-yg) < THR*1.5);
+  if (pi >= 0) { _mbCustom.pegsR.splice(pi, 1); _mbEdDraw(); return; }
+  const si = _mbCustom.segsR.findIndex(s => _mbEdSegDist(xg,yg, s.x1r*W,s.y1r*H, s.x2r*W,s.y2r*H) < THR);
+  if (si >= 0) { _mbCustom.segsR.splice(si, 1); _mbEdDraw(); return; }
+  const ki = _mbCustom.sticksR.findIndex(s => {
+    const l = s.lenr*W, cx2 = s.cxr*W, cy2 = s.cyr*H;
+    return _mbEdSegDist(xg,yg, cx2-Math.cos(s.angle)*l, cy2-Math.sin(s.angle)*l, cx2+Math.cos(s.angle)*l, cy2+Math.sin(s.angle)*l) < THR;
+  });
+  if (ki >= 0) { _mbCustom.sticksR.splice(ki, 1); _mbEdDraw(); }
+}
+
+function _mbEdSegDist(px,py,x1,y1,x2,y2) {
+  const dx=x2-x1, dy=y2-y1, l2=dx*dx+dy*dy;
+  if (l2 < 0.001) return Math.hypot(px-x1, py-y1);
+  const t = Math.max(0, Math.min(1, ((px-x1)*dx+(py-y1)*dy)/l2));
+  return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+}
+
+function _mbEdSetTool(t) {
+  _mbEdTool = t;
+  const hints = { peg:'클릭으로 핀 추가 / 다시 클릭하면 삭제', wall:'드래그해서 벽을 그립니다', stick:'드래그해서 회전 막대를 추가합니다', erase:'요소를 클릭해 삭제합니다' };
+  const el = document.getElementById('mb-ed-hint');
+  if (el) el.textContent = hints[t] || '';
+  ['peg','wall','stick','erase'].forEach(id => {
+    const btn = document.getElementById('mb-ed-t-' + id);
+    if (!btn) return;
+    const on = id === t;
+    btn.style.border     = on ? '1.5px solid #00E5FF' : '1.5px solid #444';
+    btn.style.background = on ? 'rgba(0,229,255,0.13)' : 'rgba(255,255,255,0.05)';
+    btn.style.color      = on ? '#00E5FF' : '#888';
+  });
+}
+
+function _mbEdUpdateHeight() {
+  const sl = document.getElementById('mb-ed-height');
+  if (!sl) return;
+  _mbCustom.heightMul = parseFloat(sl.value);
+  _mbEdInit();
+}
+
+function _mbEdDraw() {
+  const cv = document.getElementById('mb-ed-canvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
+  ctx.fillStyle = '#0a0618';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  const gs = Math.round(40 * sc);
+  for (let x = 0; x < cv.width; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cv.height); ctx.stroke(); }
+  for (let y = 0; y < cv.height; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cv.width,y); ctx.stroke(); }
+  // Base funnel walls (reference)
+  ctx.strokeStyle = 'rgba(0,229,255,0.35)';
+  ctx.lineWidth = 1.5;
+  for (const s of _mbSegs) { ctx.beginPath(); ctx.moveTo(s.x1*sc, s.y1*sc); ctx.lineTo(s.x2*sc, s.y2*sc); ctx.stroke(); }
+  // Custom walls
+  ctx.strokeStyle = '#FFB86C'; ctx.lineWidth = 2;
+  for (const s of _mbCustom.segsR) {
+    ctx.beginPath(); ctx.moveTo(s.x1r*W*sc, s.y1r*H*sc); ctx.lineTo(s.x2r*W*sc, s.y2r*H*sc); ctx.stroke();
+  }
+  // Custom sticks
+  for (const s of _mbCustom.sticksR) {
+    const cx2=s.cxr*W*sc, cy2=s.cyr*H*sc, l=s.lenr*W*sc;
+    const grad = ctx.createLinearGradient(cx2-Math.cos(s.angle)*l, cy2-Math.sin(s.angle)*l, cx2+Math.cos(s.angle)*l, cy2+Math.sin(s.angle)*l);
+    grad.addColorStop(0, '#7B2FFF'); grad.addColorStop(1, '#BD93F9');
+    ctx.strokeStyle = grad; ctx.lineWidth = Math.max(2, s.thick*sc);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx2-Math.cos(s.angle)*l, cy2-Math.sin(s.angle)*l); ctx.lineTo(cx2+Math.cos(s.angle)*l, cy2+Math.sin(s.angle)*l); ctx.stroke();
+    ctx.fillStyle='#BD93F9'; ctx.beginPath(); ctx.arc(cx2,cy2,3,0,Math.PI*2); ctx.fill();
+    ctx.lineCap = 'butt';
+  }
+  // Custom pegs
+  for (const p of _mbCustom.pegsR) {
+    const pr = Math.max(4, p.rr*W)*sc;
+    const grd = ctx.createRadialGradient(p.xr*W*sc-pr*0.3, p.yr*H*sc-pr*0.3, 0, p.xr*W*sc, p.yr*H*sc, pr);
+    grd.addColorStop(0,'#FF79C6'); grd.addColorStop(1,'#FF2D78');
+    ctx.beginPath(); ctx.arc(p.xr*W*sc, p.yr*H*sc, pr, 0, Math.PI*2);
+    ctx.fillStyle = grd; ctx.fill();
+    ctx.strokeStyle='rgba(255,120,200,0.5)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  // Preview (drag in progress)
+  if (_mbEdPreview) {
+    const { tool, x1, y1, x2, y2 } = _mbEdPreview;
+    ctx.setLineDash([5,4]);
+    if (tool === 'wall') { ctx.strokeStyle='#FFB86C'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+    else if (tool === 'stick') {
+      ctx.strokeStyle='#BD93F9'; ctx.lineWidth=3; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      ctx.lineCap='butt';
+    }
+    ctx.setLineDash([]);
+  }
+  // Legend
+  ctx.fillStyle='rgba(0,229,255,0.4)'; ctx.font=`${Math.max(9,Math.round(10*sc))}px sans-serif`;
+  ctx.fillText('— 기본 벽', 6*sc, 14*sc);
+  ctx.fillStyle='#FFB86C'; ctx.fillText('— 커스텀 벽', 6*sc, 26*sc);
+  ctx.fillStyle='#BD93F9'; ctx.fillText('— 회전 막대', 6*sc, 38*sc);
+}
+
+function _mbEditorSave() {
+  _mbCustom.heightMul = parseFloat((document.getElementById('mb-ed-height')||{}).value || _mbCustom.heightMul || 3.0);
+  localStorage.setItem('su_mb_custom', JSON.stringify(_mbCustom));
+  cm('mb-editor-modal');
+  _mbSetupCanvas();
+}
+
+function _mbEditorClear() {
+  if (!confirm('커스텀 맵 요소를 모두 초기화할까요?')) return;
+  _mbCustom.pegsR = []; _mbCustom.segsR = []; _mbCustom.sticksR = [];
+  _mbEdDraw();
 }
