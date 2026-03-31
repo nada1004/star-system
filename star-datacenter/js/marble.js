@@ -51,6 +51,7 @@ let _mbWinTimeout = null;
 let _mbWinner     = null;
 let _mbHistory    = [];
 let _mbAC         = null;
+let _mbIdleAnimId = null;
 try { _mbHistory = JSON.parse(localStorage.getItem('su_mb_hist') || '[]'); } catch(e) {}
 
 // ─── 진입점 ──────────────────────────────────────────────────────────────────
@@ -119,6 +120,18 @@ function _mbSetupCanvas() {
   cv.style.height = avH + 'px';
   _mbBuildWorld(avW, avH);
   _mbDrawIdle(cv);
+  _mbStartIdleAnim(cv);
+}
+
+function _mbStartIdleAnim(cv) {
+  if (_mbIdleAnimId) cancelAnimationFrame(_mbIdleAnimId);
+  function loop() {
+    if (_mbRunning) { _mbIdleAnimId = null; return; }
+    for (const st of _mbSticks) st.angle += st.omega * 0.6;
+    _mbDrawIdle(cv);
+    _mbIdleAnimId = requestAnimationFrame(loop);
+  }
+  _mbIdleAnimId = requestAnimationFrame(loop);
 }
 
 // ─── 월드 빌드 (벽 + 막대 + 핀) ──────────────────────────────────────────────
@@ -149,15 +162,15 @@ function _mbBuildWorld(W, H) {
     { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },     // 바닥
   ];
 
-  // ── 회전 막대 6개 (크기 축소 + 속도 증가) ──
-  const sLen = (W - padX * 2) * 0.19;
+  // ── 회전 막대 6개 — 좌우 분산 배치 ──
+  const sLen = (W - padX * 2) * 0.155;  // 짧게
   _mbSticks = [
-    { cx: cx - W*0.13, cy: H*0.10, len: sLen,          angle: 0,            omega:  0.020, thick: 4 }, // 왼상단
-    { cx: cx + W*0.13, cy: H*0.21, len: sLen * 0.88,   angle: Math.PI*0.55, omega: -0.027, thick: 4 }, // 오른중상단
-    { cx: cx,          cy: H*0.33, len: sLen * 0.78,   angle: Math.PI*0.2,  omega:  0.036, thick: 3 }, // 중앙
-    { cx: cx,          cy: funnelTop * 0.94, len: sLen * 0.72, angle: 0,    omega: -0.046, thick: 3 }, // 퍼널 입구 수비
-    { cx: cx,          cy: chuteBot + (floorY - chuteBot) * 0.28, len: hHW * 0.62, angle: Math.PI*0.5, omega: 0.058, thick: 3 }, // 착지 직전 (빠름)
-    { cx: cx,          cy: floorY - 20, len: landW * 0.44, angle: 0,        omega: -0.019, thick: 4 }, // 바닥 스위퍼
+    { cx: W*0.24, cy: H*0.08,  len: sLen * 1.15, angle: 0,            omega:  0.019, thick: 4 }, // 왼상단
+    { cx: W*0.76, cy: H*0.17,  len: sLen * 1.15, angle: Math.PI*0.6,  omega: -0.024, thick: 4 }, // 오른상단
+    { cx: cx,     cy: H*0.26,  len: sLen * 0.92, angle: Math.PI*0.2,  omega:  0.031, thick: 3 }, // 중앙 (핀 위)
+    { cx: cx,     cy: funnelTop - H*0.025, len: sLen * 0.80, angle: 0, omega: -0.044, thick: 3 }, // 퍼널 직전 (빠름)
+    { cx: cx,     cy: funnelBot + (chuteBot-funnelBot)*0.48, len: hHW*0.60, angle: Math.PI*0.5, omega: 0.065, thick: 3 }, // 슈트 내부 (극적)
+    { cx: cx,     cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.50, angle: 0, omega: -0.021, thick: 4 }, // 착지 스위퍼
   ];
 
   // ── 핀 장애물 (엇갈린 9행 7열 그리드) ──
@@ -187,7 +200,7 @@ function _mbInitBalls(names) {
   const n      = Math.min(names.length, 28);
   const innerW = W - padX * 2;
   // 반지름: 출구(hHW)보다 작아야 한 개씩 빠져나올 수 있음
-  const r    = Math.max(5, Math.min(Math.floor(hHW * 0.52), Math.floor(innerW * 0.25 / Math.sqrt(n))));
+  const r    = Math.max(6, Math.min(Math.floor(hHW * 0.33), Math.floor(innerW * 0.16 / Math.sqrt(n))));
   const cols = Math.max(2, Math.floor((innerW - r * 2) / (r * 2.15)));
   _mbBalls   = [];
   for (let i = 0; i < n; i++) {
@@ -372,11 +385,15 @@ function _mbDrawIdle(cv) {
   _mbDrawWalls(ctx);
   _mbDrawPegs(ctx);
   _mbDrawSticks(ctx);
-  ctx.fillStyle    = 'rgba(255,255,255,0.22)';
-  ctx.font         = 'bold 13px sans-serif';
+  // 이름 입력 안내 (핀 영역 위 빈 공간)
+  const msgY = topY + ((_mbGeo.funnelTop * 0.28) - topY) * 0.5 + topY * 0.5;
+  ctx.save();
+  ctx.fillStyle    = 'rgba(255,255,255,0.30)';
+  ctx.font         = 'bold 12px sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('이름을 입력하고 굴려라! 버튼을 누르세요', W / 2, topY + (floorY * 0.12));
+  ctx.fillText('▲  이름 입력 후 굴려라! 버튼  ▲', W / 2, topY + 18);
+  ctx.restore();
 }
 
 function _mbDrawFrame(cv) {
@@ -598,6 +615,7 @@ function _mbStart() {
   if (names.length < 2) { alert('이름을 2개 이상 입력하세요.'); return; }
   const cv = document.getElementById('mb-canvas');
   if (!cv) return;
+  if (_mbIdleAnimId) { cancelAnimationFrame(_mbIdleAnimId); _mbIdleAnimId = null; }
   if (_mbAnimId)     { cancelAnimationFrame(_mbAnimId); _mbAnimId = null; }
   if (_mbWinTimeout) { clearTimeout(_mbWinTimeout); _mbWinTimeout = null; }
   _mbRunning = false;
