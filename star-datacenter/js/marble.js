@@ -31,8 +31,8 @@ const _MB_COLORS = [
 ];
 
 // ─── 물리 상수 ────────────────────────────────────────────────────────────────
-const _MB_G    = 0.30;   // 중력
-const _MB_D    = 0.994;  // 감쇠
+const _MB_G    = 0.20;   // 중력 (느리게 — 방해물 체감↑)
+const _MB_D    = 0.997;  // 감쇠
 const _MB_RBB  = 0.52;   // 공↔공 반발
 const _MB_RPG  = 0.70;   // 공↔핀 반발
 const _MB_RWL  = 0.44;   // 공↔벽 반발
@@ -52,6 +52,8 @@ let _mbWinner     = null;
 let _mbHistory    = [];
 let _mbAC         = null;
 let _mbIdleAnimId = null;
+let _mbTick       = 0;
+let _mbCurrentMap = 0;
 try { _mbHistory = JSON.parse(localStorage.getItem('su_mb_hist') || '[]'); } catch(e) {}
 
 // ─── 진입점 ──────────────────────────────────────────────────────────────────
@@ -131,73 +133,149 @@ function _mbStartIdleAnim(cv) {
   if (_mbIdleAnimId) cancelAnimationFrame(_mbIdleAnimId);
   function loop() {
     if (_mbRunning) { _mbIdleAnimId = null; return; }
-    for (const st of _mbSticks) st.angle += st.omega * 0.6;
+    _mbTick++;
+    for (const st of _mbSticks) {
+      st.angle += st.omega * 0.6;
+      if (st.lenBase != null)
+        st.len = st.lenBase * (1 + st.lenAmp * Math.sin(_mbTick * st.lenFreq + st.lenOff));
+    }
     _mbDrawIdle(cv);
     _mbIdleAnimId = requestAnimationFrame(loop);
   }
   _mbIdleAnimId = requestAnimationFrame(loop);
 }
 
-// ─── 월드 빌드 (벽 + 막대 + 핀) ──────────────────────────────────────────────
+// ─── 월드 빌드 (벽 + 막대 + 핀) — 3가지 맵 ─────────────────────────────────
+const _MB_MAP_NAMES = ['🎯 핀볼', '⚡ 지그재그', '🌀 카오스'];
+
 function _mbBuildWorld(W, H) {
   const cx        = W / 2;
   const padX      = 18;
   const topY      = 12;
-  const funnelTop = H * 0.70;   // 퍼널 시작 — 상단 70% 전부 장애물 구간
-  const funnelBot = H * 0.80;   // 퍼널 끝
-  const chuteBot  = H * 0.90;   // 슈트 끝
-  const hHW       = W * 0.10;   // 슈트 반폭
-  const landW     = W * 0.43;   // 착지 반폭
+  const funnelTop = H * 0.70;
+  const funnelBot = H * 0.80;
+  const chuteBot  = H * 0.90;
+  const hHW       = W * 0.10;
+  const landW     = W * 0.43;
   const floorY    = H - 26;
 
   _mbGeo = { W, H, cx, padX, topY, funnelTop, funnelBot, chuteBot, hHW, landW, floorY };
 
+  // 공통 벽
   _mbSegs = [
-    { x1: padX,      y1: topY,      x2: padX,      y2: funnelTop },
-    { x1: padX,      y1: funnelTop, x2: cx-hHW,    y2: funnelBot },
-    { x1: W-padX,    y1: topY,      x2: W-padX,    y2: funnelTop },
-    { x1: W-padX,    y1: funnelTop, x2: cx+hHW,    y2: funnelBot },
-    { x1: padX,      y1: topY,      x2: W-padX,    y2: topY },
-    { x1: cx-hHW,    y1: funnelBot, x2: cx-hHW,    y2: chuteBot },
-    { x1: cx+hHW,    y1: funnelBot, x2: cx+hHW,    y2: chuteBot },
-    { x1: cx-hHW,    y1: chuteBot,  x2: cx-landW,  y2: floorY },
-    { x1: cx+hHW,    y1: chuteBot,  x2: cx+landW,  y2: floorY },
-    { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },
+    { x1: padX,     y1: topY,      x2: padX,     y2: funnelTop },
+    { x1: padX,     y1: funnelTop, x2: cx-hHW,   y2: funnelBot },
+    { x1: W-padX,   y1: topY,      x2: W-padX,   y2: funnelTop },
+    { x1: W-padX,   y1: funnelTop, x2: cx+hHW,   y2: funnelBot },
+    { x1: padX,     y1: topY,      x2: W-padX,   y2: topY },
+    { x1: cx-hHW,   y1: funnelBot, x2: cx-hHW,   y2: chuteBot },
+    { x1: cx+hHW,   y1: funnelBot, x2: cx+hHW,   y2: chuteBot },
+    { x1: cx-hHW,   y1: chuteBot,  x2: cx-landW, y2: floorY },
+    { x1: cx+hHW,   y1: chuteBot,  x2: cx+landW, y2: floorY },
+    { x1: cx-landW, y1: floorY,    x2: cx+landW, y2: floorY },
   ];
 
-  // ── 회전 막대 8개 — 맵 전체에 고르게 분산 (핀볼머신 스타일) ──
-  const sLen = (W - padX * 2) * 0.155;
-  const chuteLen = hHW * 0.58; // 슈트 내 막대 — 벽 안에 딱 맞게
-  _mbSticks = [
-    { cx: W*0.25, cy: H*0.10,  len: sLen * 1.1,  angle: 0,             omega:  0.018, thick: 4 }, // 1 왼상단
-    { cx: W*0.75, cy: H*0.19,  len: sLen * 1.1,  angle: Math.PI*0.55,  omega: -0.022, thick: 4 }, // 2 오른상단
-    { cx: cx,     cy: H*0.29,  len: sLen * 0.95, angle: Math.PI*0.2,   omega:  0.028, thick: 3 }, // 3 중앙 상
-    { cx: W*0.27, cy: H*0.40,  len: sLen * 0.88, angle: Math.PI*0.45,  omega: -0.033, thick: 3 }, // 4 왼중단
-    { cx: W*0.73, cy: H*0.50,  len: sLen * 0.88, angle: Math.PI*0.75,  omega:  0.037, thick: 3 }, // 5 오른중단
-    { cx: cx,     cy: H*0.60,  len: sLen * 0.82, angle: 0,             omega: -0.042, thick: 3 }, // 6 중앙 하 (퍼널 직전)
-    // ── 슈트 내부 2개 — 서로 반대 방향 회전 (최종 관문) ──
-    { cx: cx, cy: funnelBot + (chuteBot-funnelBot)*0.28, len: chuteLen, angle: 0,            omega:  0.072, thick: 3 }, // 7 슈트 상단
-    { cx: cx, cy: funnelBot + (chuteBot-funnelBot)*0.68, len: chuteLen, angle: Math.PI*0.5,  omega: -0.060, thick: 3 }, // 8 슈트 하단 (반대)
-    { cx: cx, cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.32, angle: 0, omega: -0.020, thick: 4 }, // 9 착지 스위퍼
+  // 슈트·착지 공통 막대
+  const chuteLen = hHW * 0.56;
+  const chuteSticks = [
+    { cx: cx, cy: funnelBot+(chuteBot-funnelBot)*0.28, len: chuteLen, lenBase: chuteLen, lenAmp: 0.12, lenFreq: 0.055, lenOff: 0.5,  angle: 0,           omega:  0.080, thick: 3 },
+    { cx: cx, cy: funnelBot+(chuteBot-funnelBot)*0.68, len: chuteLen, lenBase: chuteLen, lenAmp: 0.12, lenFreq: 0.050, lenOff: 1.8,  angle: Math.PI*0.5, omega: -0.068, thick: 3 },
+    { cx: cx, cy: chuteBot+(floorY-chuteBot)*0.50,     len: landW*0.30, lenBase: landW*0.30, lenAmp: 0.18, lenFreq: 0.020, lenOff: 0, angle: 0, omega: -0.022, thick: 4 },
   ];
 
-  // ── 핀 장애물 — 15행 7열, 맵 상단부터 촘촘히 ──
-  _mbPegs = [];
-  const pR     = Math.max(4, Math.round(W * 0.015));
-  const pegTop = H * 0.07;   // 상단 7%부터 시작
-  const pegBot = funnelTop - pR * 3;
-  const rows   = 15, baseC = 7;
-  const spX    = (W - padX * 2 - pR * 4) / (baseC - 1);
-  const spY    = (pegBot - pegTop) / (rows - 1);
-  for (let row = 0; row < rows; row++) {
-    const even = row % 2 === 0;
-    const cols = even ? baseC : baseC - 1;
-    const offX = even ? 0 : spX * 0.5;
-    for (let col = 0; col < cols; col++) {
-      const px = padX + pR * 2 + col * spX + offX;
-      const py = pegTop + row * spY;
-      if (px - pR > padX + 3 && px + pR < W - padX - 3)
-        _mbPegs.push({ x: px, y: py, r: pR, flash: 0 });
+  _mbSticks = [];
+  _mbPegs   = [];
+  const pR  = Math.max(4, Math.round(W * 0.015));
+
+  // ── 맵 0: 핀볼 (표준 균형) ──
+  if (_mbCurrentMap === 0) {
+    const sL = (W - padX * 2) * 0.150;
+    _mbSticks = [
+      { cx: W*0.26, cy: H*0.10, len: sL*1.1,  lenBase: sL*1.1,  lenAmp: 0.28, lenFreq: 0.022, lenOff: 0.0, angle: 0,            omega:  0.020, thick: 4 },
+      { cx: W*0.74, cy: H*0.19, len: sL*1.1,  lenBase: sL*1.1,  lenAmp: 0.26, lenFreq: 0.024, lenOff: 1.2, angle: Math.PI*0.55, omega: -0.024, thick: 4 },
+      { cx: cx,     cy: H*0.29, len: sL*0.95, lenBase: sL*0.95, lenAmp: 0.30, lenFreq: 0.028, lenOff: 2.1, angle: Math.PI*0.2,  omega:  0.030, thick: 3 },
+      { cx: W*0.28, cy: H*0.40, len: sL*0.88, lenBase: sL*0.88, lenAmp: 0.32, lenFreq: 0.026, lenOff: 0.7, angle: Math.PI*0.45, omega: -0.035, thick: 3 },
+      { cx: W*0.72, cy: H*0.50, len: sL*0.88, lenBase: sL*0.88, lenAmp: 0.30, lenFreq: 0.030, lenOff: 1.5, angle: Math.PI*0.75, omega:  0.038, thick: 3 },
+      { cx: cx,     cy: H*0.60, len: sL*0.82, lenBase: sL*0.82, lenAmp: 0.28, lenFreq: 0.032, lenOff: 3.0, angle: 0,            omega: -0.042, thick: 3 },
+      ...chuteSticks,
+    ];
+    const pegTop = H * 0.07, pegBot = funnelTop - pR * 3;
+    const rows = 15, baseC = 7;
+    const spX = (W - padX * 2 - pR * 4) / (baseC - 1);
+    const spY = (pegBot - pegTop) / (rows - 1);
+    for (let row = 0; row < rows; row++) {
+      const even = row % 2 === 0;
+      const cols = even ? baseC : baseC - 1;
+      const offX = even ? 0 : spX * 0.5;
+      for (let col = 0; col < cols; col++) {
+        const px = padX + pR * 2 + col * spX + offX;
+        const py = pegTop + row * spY;
+        if (px - pR > padX + 3 && px + pR < W - padX - 3)
+          _mbPegs.push({ x: px, y: py, r: pR, flash: 0 });
+      }
+    }
+  }
+
+  // ── 맵 1: 지그재그 (좌우 번갈아 막대, 빠른 회전) ──
+  else if (_mbCurrentMap === 1) {
+    const sL = (W - padX * 2) * 0.175;
+    const rows4 = [[H*0.09, H*0.17], [H*0.26, H*0.34], [H*0.43, H*0.51], [H*0.59, H*0.65]];
+    rows4.forEach(([ya, yb], pi) => {
+      const flip = pi % 2 === 0 ? 1 : -1;
+      const mul  = 1.0 - pi * 0.06;
+      _mbSticks.push(
+        { cx: W*0.27, cy: ya, len: sL*mul, lenBase: sL*mul, lenAmp: 0.35, lenFreq: 0.028+pi*0.004, lenOff: pi*1.1,   angle: Math.PI*0.10*flip,  omega:  (0.032+pi*0.006)*flip,  thick: 4 },
+        { cx: W*0.73, cy: yb, len: sL*mul, lenBase: sL*mul, lenAmp: 0.33, lenFreq: 0.025+pi*0.004, lenOff: pi*1.3+1, angle: Math.PI*0.10*(-flip),omega: -(0.036+pi*0.006)*flip,  thick: 4 }
+      );
+    });
+    _mbSticks.push(...chuteSticks);
+    // 핀 — 적당히 (10행)
+    const pegTop = H * 0.07, pegBot = funnelTop - pR * 3;
+    const rows = 10, baseC = 6;
+    const spX = (W - padX * 2 - pR * 4) / (baseC - 1);
+    const spY = (pegBot - pegTop) / (rows - 1);
+    for (let row = 0; row < rows; row++) {
+      const even = row % 2 === 0;
+      const cols = even ? baseC : baseC - 1;
+      const offX = even ? 0 : spX * 0.5;
+      for (let col = 0; col < cols; col++) {
+        const px = padX + pR * 2 + col * spX + offX;
+        const py = pegTop + row * spY;
+        if (px - pR > padX + 3 && px + pR < W - padX - 3)
+          _mbPegs.push({ x: px, y: py, r: pR, flash: 0 });
+      }
+    }
+  }
+
+  // ── 맵 2: 카오스 (막대 12개 산란, 핀 밀집) ──
+  else {
+    const sL = (W - padX * 2) * 0.130;
+    const configs = [
+      [W*0.22, H*0.08, 1.10, 0,            0.040], [W*0.78, H*0.14, 1.10, Math.PI*0.6, -0.046],
+      [W*0.50, H*0.21, 1.00, Math.PI*0.3,  0.054], [W*0.25, H*0.30, 0.92, Math.PI*0.5, -0.062],
+      [W*0.75, H*0.38, 0.92, Math.PI*0.8,  0.060], [W*0.50, H*0.46, 0.86, Math.PI*0.1, -0.068],
+      [W*0.30, H*0.55, 0.88, Math.PI*0.4,  0.075], [W*0.70, H*0.62, 0.88, Math.PI*0.7, -0.078],
+    ];
+    configs.forEach(([cx2, cy2, mul, angle, omega], si) => {
+      const l = sL * mul;
+      _mbSticks.push({ cx: cx2, cy: cy2, len: l, lenBase: l, lenAmp: 0.32+si*0.02, lenFreq: 0.026+si*0.003, lenOff: si*0.9, angle, omega, thick: 3 });
+    });
+    _mbSticks.push(...chuteSticks);
+    // 핀 — 밀집 (18행 8열)
+    const pegTop = H * 0.06, pegBot = funnelTop - pR * 3;
+    const rows = 18, baseC = 8;
+    const spX = (W - padX * 2 - pR * 4) / (baseC - 1);
+    const spY = (pegBot - pegTop) / (rows - 1);
+    for (let row = 0; row < rows; row++) {
+      const even = row % 2 === 0;
+      const cols = even ? baseC : baseC - 1;
+      const offX = even ? 0 : spX * 0.5;
+      for (let col = 0; col < cols; col++) {
+        const px = padX + pR * 2 + col * spX + offX;
+        const py = pegTop + row * spY;
+        if (px - pR > padX + 3 && px + pR < W - padX - 3)
+          _mbPegs.push({ x: px, y: py, r: pR, flash: 0 });
+      }
     }
   }
 }
@@ -356,8 +434,13 @@ function _mbCollideBalls() {
 // ─── 물리 스텝 ────────────────────────────────────────────────────────────────
 function _mbStep() {
   const { H } = _mbGeo;
-  // 막대 회전
-  for (const st of _mbSticks) st.angle += st.omega;
+  _mbTick++;
+  // 막대 회전 + 길이 진동 (pulsing)
+  for (const st of _mbSticks) {
+    st.angle += st.omega;
+    if (st.lenBase != null)
+      st.len = st.lenBase * (1 + st.lenAmp * Math.sin(_mbTick * st.lenFreq + st.lenOff));
+  }
   // 핀 발광 감쇠
   for (const p of _mbPegs) if (p.flash > 0) p.flash = Math.max(0, p.flash - 0.065);
   // 공 적분 + 충돌
@@ -393,26 +476,46 @@ function _mbDrawIdle(cv) {
   _mbDrawWalls(ctx);
   _mbDrawPegs(ctx);
   _mbDrawSticks(ctx);
+  // 맵 이름 (좌상단)
+  ctx.save();
+  ctx.fillStyle    = 'rgba(0,229,255,0.50)';
+  ctx.font         = 'bold 10px monospace';
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'top';
+  ctx.shadowColor  = 'rgba(0,229,255,0.7)';
+  ctx.shadowBlur   = 6;
+  ctx.fillText(_MB_MAP_NAMES[_mbCurrentMap] || '', padX + 2, topY + 4);
+  ctx.restore();
   // 이름 입력 안내
   ctx.save();
-  ctx.fillStyle    = 'rgba(0,229,255,0.45)';
+  ctx.fillStyle    = 'rgba(0,229,255,0.40)';
   ctx.font         = 'bold 11px monospace';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.shadowColor  = 'rgba(0,229,255,0.7)';
-  ctx.shadowBlur   = 8;
+  ctx.shadowColor  = 'rgba(0,229,255,0.6)';
+  ctx.shadowBlur   = 7;
   ctx.fillText('▲  이름 입력 후  굴려라!  ▲', W / 2, topY + 18);
   ctx.restore();
 }
 
 function _mbDrawFrame(cv) {
-  const { W, H } = _mbGeo;
+  const { W, H, padX, topY } = _mbGeo;
   const ctx = cv.getContext('2d');
   _mbDrawBg(ctx, W, H);
   _mbDrawWalls(ctx);
   _mbDrawPegs(ctx);
   _mbDrawSticks(ctx);
   _mbDrawBalls(ctx);
+  // 맵 이름
+  ctx.save();
+  ctx.fillStyle    = 'rgba(0,229,255,0.40)';
+  ctx.font         = 'bold 10px monospace';
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'top';
+  ctx.shadowColor  = 'rgba(0,229,255,0.6)';
+  ctx.shadowBlur   = 5;
+  ctx.fillText(_MB_MAP_NAMES[_mbCurrentMap] || '', padX + 2, topY + 4);
+  ctx.restore();
 }
 
 function _mbDrawBg(ctx, W, H) {
@@ -752,6 +855,8 @@ function _mbStart() {
   if (_mbWinTimeout) { clearTimeout(_mbWinTimeout); _mbWinTimeout = null; }
   _mbRunning = false;
   _mbWinner  = null;
+  _mbTick    = 0;
+  _mbCurrentMap = Math.floor(Math.random() * _MB_MAP_NAMES.length);
   const card = document.getElementById('mb-result-card');
   if (card) card.style.display = 'none';
   const btn = document.getElementById('mb-btn');

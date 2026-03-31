@@ -261,10 +261,18 @@ function indRankHTML(){
   _paged.forEach((p,i)=>{
     const pl=players.find(x=>x.name===p.name);
     const vsEntries=Object.entries(vs[p.name]||{}).sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l));
-    const vsHTML=vsEntries.map(([opp,r])=>{
+    const mkVsSpan=([opp,r])=>{
       const col=r.w>r.l?'#16a34a':r.l>r.w?'#dc2626':'#6b7280';
       return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px 3px 1px 0;font-size:11px">${getPlayerPhotoHTML(opp,'18px')}<span style="cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${escJS(opp)}')">${opp}</span><span style="font-weight:700;color:${col}">${r.w}승${r.l}패</span></span>`;
-    }).join('');
+    };
+    const vsTop=vsEntries.slice(0,3).map(mkVsSpan).join('');
+    const vsRest=vsEntries.slice(3);
+    const uid=`indvs_${_cp}_${i}`;
+    const vsHTML=!vsEntries.length?''
+      : vsRest.length===0 ? vsTop
+      : vsTop
+        +`<span id="${uid}_m" style="display:none">${vsRest.map(mkVsSpan).join('')}</span>`
+        +`<button id="${uid}_b" onclick="var m=document.getElementById('${uid}_m'),b=document.getElementById('${uid}_b');if(m.style.display==='none'){m.style.display='inline';b.textContent='접기'}else{m.style.display='none';b.textContent='+${vsRest.length}명 더보기'}" style="font-size:10px;color:var(--blue);background:none;border:1px solid var(--blue-ll);border-radius:8px;padding:1px 7px;cursor:pointer;margin-left:2px;white-space:nowrap">+${vsRest.length}명 더보기</button>`;
     const _ri=_cp*_PAGE+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
     h+=`<tr>
