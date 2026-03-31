@@ -163,6 +163,7 @@ function _mbBuildWorld(W, H) {
 
   // ── 회전 막대 8개 — 맵 전체에 고르게 분산 (핀볼머신 스타일) ──
   const sLen = (W - padX * 2) * 0.155;
+  const chuteLen = hHW * 0.58; // 슈트 내 막대 — 벽 안에 딱 맞게
   _mbSticks = [
     { cx: W*0.25, cy: H*0.10,  len: sLen * 1.1,  angle: 0,             omega:  0.018, thick: 4 }, // 1 왼상단
     { cx: W*0.75, cy: H*0.19,  len: sLen * 1.1,  angle: Math.PI*0.55,  omega: -0.022, thick: 4 }, // 2 오른상단
@@ -170,8 +171,10 @@ function _mbBuildWorld(W, H) {
     { cx: W*0.27, cy: H*0.40,  len: sLen * 0.88, angle: Math.PI*0.45,  omega: -0.033, thick: 3 }, // 4 왼중단
     { cx: W*0.73, cy: H*0.50,  len: sLen * 0.88, angle: Math.PI*0.75,  omega:  0.037, thick: 3 }, // 5 오른중단
     { cx: cx,     cy: H*0.60,  len: sLen * 0.82, angle: 0,             omega: -0.042, thick: 3 }, // 6 중앙 하 (퍼널 직전)
-    { cx: cx,     cy: funnelBot + (chuteBot-funnelBot)*0.48, len: hHW*0.62, angle: Math.PI*0.5, omega: 0.065, thick: 3 }, // 7 슈트 내부 (빠름)
-    { cx: cx,     cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.32, angle: 0, omega: -0.020, thick: 4 }, // 8 착지 스위퍼
+    // ── 슈트 내부 2개 — 서로 반대 방향 회전 (최종 관문) ──
+    { cx: cx, cy: funnelBot + (chuteBot-funnelBot)*0.28, len: chuteLen, angle: 0,            omega:  0.072, thick: 3 }, // 7 슈트 상단
+    { cx: cx, cy: funnelBot + (chuteBot-funnelBot)*0.68, len: chuteLen, angle: Math.PI*0.5,  omega: -0.060, thick: 3 }, // 8 슈트 하단 (반대)
+    { cx: cx, cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.32, angle: 0, omega: -0.020, thick: 4 }, // 9 착지 스위퍼
   ];
 
   // ── 핀 장애물 — 15행 7열, 맵 상단부터 촘촘히 ──
@@ -517,33 +520,36 @@ function _mbDrawPegs(ctx) {
 
 function _mbDrawSticks(ctx) {
   ctx.save();
-  for (const st of _mbSticks) {
+  const { funnelBot, chuteBot } = _mbGeo;
+  for (let si = 0; si < _mbSticks.length; si++) {
+    const st = _mbSticks[si];
+    // 슈트 내 막대 (인덱스 6·7) = 빨강/주황 강조
+    const inChute = st.cy > funnelBot && st.cy < chuteBot;
+    const color   = inChute ? (si === 6 ? '#ff6b6b' : '#ff9f43') : '#FDCB6E';
+    const glow    = inChute ? (si === 6 ? 'rgba(255,80,80,0.8)' : 'rgba(255,160,50,0.8)') : 'rgba(253,203,110,0.65)';
     const cos = Math.cos(st.angle), sin = Math.sin(st.angle);
     const ax = st.cx + cos * st.len, ay = st.cy + sin * st.len;
     const bx = st.cx - cos * st.len, by = st.cy - sin * st.len;
-    // 막대 본체 (황금빛, 두껍게)
-    ctx.shadowColor = 'rgba(253,203,110,0.65)';
-    ctx.shadowBlur  = 10;
+    ctx.shadowColor = glow;
+    ctx.shadowBlur  = inChute ? 16 : 10;
     ctx.lineCap     = 'round';
-    ctx.strokeStyle = '#FDCB6E';
+    ctx.strokeStyle = color;
     ctx.lineWidth   = st.thick * 2;
     ctx.beginPath();
     ctx.moveTo(ax, ay);
     ctx.lineTo(bx, by);
     ctx.stroke();
-    // 중심 허브 (흰색 원)
-    ctx.shadowColor = 'rgba(255,245,180,0.9)';
+    ctx.shadowColor = inChute ? glow : 'rgba(255,245,180,0.9)';
     ctx.shadowBlur  = 14;
     ctx.beginPath();
     ctx.arc(st.cx, st.cy, st.thick + 3, 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
     ctx.fill();
-    // 양 끝 캡
     ctx.shadowBlur = 4;
     ctx.beginPath();
     ctx.arc(ax, ay, st.thick * 0.7, 0, Math.PI * 2);
     ctx.arc(bx, by, st.thick * 0.7, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffe88a';
+    ctx.fillStyle = inChute ? color : '#ffe88a';
     ctx.fill();
   }
   ctx.restore();
