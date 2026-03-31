@@ -113,7 +113,7 @@ function _mbSetupCanvas() {
   const cv = document.getElementById('mb-canvas');
   if (!cv) return;
   const avW = Math.min(window.innerWidth - 40, 480);
-  const avH = Math.max(900, Math.min(1100, Math.round(avW * 2.1)));
+  const avH = Math.max(1100, Math.min(1500, Math.round(avW * 3.0)));
   cv.width  = avW;
   cv.height = avH;
   cv.style.width  = avW + 'px';
@@ -139,46 +139,47 @@ function _mbBuildWorld(W, H) {
   const cx        = W / 2;
   const padX      = 18;
   const topY      = 12;
-  const funnelTop = H * 0.60;   // 퍼널 시작 (더 아래로 — 위 공간 넓게)
-  const funnelBot = H * 0.72;   // 퍼널 끝
-  const chuteBot  = H * 0.87;   // 좁은 슈트 끝
+  const funnelTop = H * 0.70;   // 퍼널 시작 — 상단 70% 전부 장애물 구간
+  const funnelBot = H * 0.80;   // 퍼널 끝
+  const chuteBot  = H * 0.90;   // 슈트 끝
   const hHW       = W * 0.10;   // 슈트 반폭
-  const landW     = W * 0.43;   // 착지 구역 반폭
-  const floorY    = H - 26;     // 바닥 Y
+  const landW     = W * 0.43;   // 착지 반폭
+  const floorY    = H - 26;
 
   _mbGeo = { W, H, cx, padX, topY, funnelTop, funnelBot, chuteBot, hHW, landW, floorY };
 
-  // ── 외벽 + 슈트 + 착지구역 선분 ──
   _mbSegs = [
-    { x1: padX,      y1: topY,      x2: padX,      y2: funnelTop },  // 왼쪽 수직벽
-    { x1: padX,      y1: funnelTop, x2: cx-hHW,    y2: funnelBot },  // 왼쪽 퍼널
-    { x1: W-padX,    y1: topY,      x2: W-padX,    y2: funnelTop },  // 오른쪽 수직벽
-    { x1: W-padX,    y1: funnelTop, x2: cx+hHW,    y2: funnelBot },  // 오른쪽 퍼널
-    { x1: padX,      y1: topY,      x2: W-padX,    y2: topY },       // 천장
-    { x1: cx-hHW,    y1: funnelBot, x2: cx-hHW,    y2: chuteBot },   // 슈트 왼벽
-    { x1: cx+hHW,    y1: funnelBot, x2: cx+hHW,    y2: chuteBot },   // 슈트 오른벽
-    { x1: cx-hHW,    y1: chuteBot,  x2: cx-landW,  y2: floorY },     // 착지 확장 왼쪽
-    { x1: cx+hHW,    y1: chuteBot,  x2: cx+landW,  y2: floorY },     // 착지 확장 오른쪽
-    { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },     // 바닥
+    { x1: padX,      y1: topY,      x2: padX,      y2: funnelTop },
+    { x1: padX,      y1: funnelTop, x2: cx-hHW,    y2: funnelBot },
+    { x1: W-padX,    y1: topY,      x2: W-padX,    y2: funnelTop },
+    { x1: W-padX,    y1: funnelTop, x2: cx+hHW,    y2: funnelBot },
+    { x1: padX,      y1: topY,      x2: W-padX,    y2: topY },
+    { x1: cx-hHW,    y1: funnelBot, x2: cx-hHW,    y2: chuteBot },
+    { x1: cx+hHW,    y1: funnelBot, x2: cx+hHW,    y2: chuteBot },
+    { x1: cx-hHW,    y1: chuteBot,  x2: cx-landW,  y2: floorY },
+    { x1: cx+hHW,    y1: chuteBot,  x2: cx+landW,  y2: floorY },
+    { x1: cx-landW,  y1: floorY,    x2: cx+landW,  y2: floorY },
   ];
 
-  // ── 회전 막대 6개 — 적당한 위치 분산 ──
+  // ── 회전 막대 8개 — 맵 전체에 고르게 분산 (핀볼머신 스타일) ──
   const sLen = (W - padX * 2) * 0.155;
   _mbSticks = [
-    { cx: W*0.25, cy: H*0.17,  len: sLen * 1.1,  angle: 0,            omega:  0.019, thick: 4 }, // 왼 (핀 시작 근처)
-    { cx: W*0.75, cy: H*0.28,  len: sLen * 1.1,  angle: Math.PI*0.55, omega: -0.024, thick: 4 }, // 오른 (핀 중간)
-    { cx: cx,     cy: H*0.42,  len: sLen * 0.90, angle: Math.PI*0.2,  omega:  0.032, thick: 3 }, // 중앙 (핀 하단)
-    { cx: cx,     cy: funnelTop - H*0.03, len: sLen * 0.80, angle: 0, omega: -0.045, thick: 3 }, // 퍼널 직전
-    { cx: cx,     cy: funnelBot + (chuteBot-funnelBot)*0.48, len: hHW*0.60, angle: Math.PI*0.5, omega: 0.065, thick: 3 }, // 슈트 내부 (빠름)
-    { cx: cx,     cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.32, angle: 0, omega: -0.021, thick: 4 }, // 착지 스위퍼 (짧게)
+    { cx: W*0.25, cy: H*0.10,  len: sLen * 1.1,  angle: 0,             omega:  0.018, thick: 4 }, // 1 왼상단
+    { cx: W*0.75, cy: H*0.19,  len: sLen * 1.1,  angle: Math.PI*0.55,  omega: -0.022, thick: 4 }, // 2 오른상단
+    { cx: cx,     cy: H*0.29,  len: sLen * 0.95, angle: Math.PI*0.2,   omega:  0.028, thick: 3 }, // 3 중앙 상
+    { cx: W*0.27, cy: H*0.40,  len: sLen * 0.88, angle: Math.PI*0.45,  omega: -0.033, thick: 3 }, // 4 왼중단
+    { cx: W*0.73, cy: H*0.50,  len: sLen * 0.88, angle: Math.PI*0.75,  omega:  0.037, thick: 3 }, // 5 오른중단
+    { cx: cx,     cy: H*0.60,  len: sLen * 0.82, angle: 0,             omega: -0.042, thick: 3 }, // 6 중앙 하 (퍼널 직전)
+    { cx: cx,     cy: funnelBot + (chuteBot-funnelBot)*0.48, len: hHW*0.62, angle: Math.PI*0.5, omega: 0.065, thick: 3 }, // 7 슈트 내부 (빠름)
+    { cx: cx,     cy: chuteBot + (floorY-chuteBot)*0.52,     len: landW*0.32, angle: 0, omega: -0.020, thick: 4 }, // 8 착지 스위퍼
   ];
 
-  // ── 핀 장애물 (엇갈린 9행 7열 그리드) ──
+  // ── 핀 장애물 — 15행 7열, 맵 상단부터 촘촘히 ──
   _mbPegs = [];
   const pR     = Math.max(4, Math.round(W * 0.015));
-  const pegTop = H * 0.13;   // 더 위에서 시작 (긴 맵 활용)
-  const pegBot = funnelTop - pR * 2;
-  const rows   = 11, baseC = 7;  // 11행으로 촘촘히
+  const pegTop = H * 0.07;   // 상단 7%부터 시작
+  const pegBot = funnelTop - pR * 3;
+  const rows   = 15, baseC = 7;
   const spX    = (W - padX * 2 - pR * 4) / (baseC - 1);
   const spY    = (pegBot - pegTop) / (rows - 1);
   for (let row = 0; row < rows; row++) {
