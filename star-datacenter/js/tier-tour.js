@@ -937,8 +937,8 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
-  <div class="ssec"><h4>🏛️ 대학 관리</h4>
-    <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
+  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🏛️ 대학 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>
+    <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
     const isDissolved = !!u.dissolved;
@@ -961,8 +961,8 @@ function rCfg(C,T){
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
-  </div></div>
-  <div class="ssec"><h4>🗺️ 맵 관리</h4><div id="map-list">`;
+  </div></details>
+  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🗺️ 맵 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary><div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -973,7 +973,7 @@ function rCfg(C,T){
   h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
-  </div></div>
+  </div></details>
       <div class="ssec">
       <h4>🎮 크루 관리</h4>
       <div id="crew-list" style="margin-bottom:12px"></div>
@@ -2434,8 +2434,8 @@ function rCfg(C,T){
       }).join('')}
     </div>`;
   })()}
-  <div class="ssec"><h4>🏛️ 대학 관리</h4>
-    <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다. ☰ 핸들을 드래그해 순서를 변경할 수 있습니다.</div>
+  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🏛️ 대학 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>
+    <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다. ☰ 핸들을 드래그해 순서를 변경할 수 있습니다.</div>
     <div id="univ-drag-list">`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
@@ -2466,8 +2466,8 @@ function rCfg(C,T){
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
-  </div></div>
-  <div class="ssec"><h4>🗺️ 맵 관리</h4><div id="map-list">`;
+  </div></details>
+  <details class="ssec"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px"><h4 style="margin:0;display:inline">🗺️ 맵 관리</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary><div id="map-list">`;
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
@@ -2478,7 +2478,7 @@ function rCfg(C,T){
   h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
-  </div></div>
+  </div></details>
   <div class="ssec"><h4>⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span></h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
@@ -3381,20 +3381,21 @@ function bulkChangeMap(){
 function cleanupOrphanHistory(){
   if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}
   if(!confirm('대전기록에 없는 경기를 스트리머 history에서 제거합니다.\n\n계속하시겠습니까?'))return;
-  // 현재 유효한 matchId 집합
+  // 현재 유효한 matchId 집합 (팀 경기)
   const validIds=new Set();
   [miniM,univM,ckM,proM,ttM,comps].forEach(arr=>{
     (arr||[]).forEach(m=>{if(m._id)validIds.add(m._id);});
   });
-  // indM/gjM은 history가 별도 구조라 제외
+  // indM/gjM은 history matchId 구조가 달라 별도 제외 대신 mode 필드로 구별
+  const _indGjModes=new Set(['개인전','끝장전','individual','ind','gj']);
   let removedCount=0;
   players.forEach(p=>{
     if(!p.history||!p.history.length)return;
     const before=p.history.length;
-    // matchId가 있으면서 validIds에 없는 항목 = 고아
-    const orphans=p.history.filter(h=>h.matchId&&!validIds.has(h.matchId));
+    // matchId가 있으면서 validIds에 없는 항목 = 고아 (단, 개인전/끝장전 모드는 제외)
+    const orphans=p.history.filter(h=>h.matchId&&!validIds.has(h.matchId)&&!_indGjModes.has(h.mode||''));
     if(!orphans.length)return;
-    p.history=p.history.filter(h=>!h.matchId||validIds.has(h.matchId));
+    p.history=p.history.filter(h=>!h.matchId||validIds.has(h.matchId)||_indGjModes.has(h.mode||''));
     orphans.forEach(hr=>{
       if(hr.result==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
       else if(hr.result==='패'){p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
@@ -4157,11 +4158,11 @@ function addMap(){
   const inp=document.getElementById('nm');
   const n=(inp?.value||'').trim();
   if(!n)return;
-  maps.push(n);saveCfg();
+  maps.push(n);save();
   if(inp)inp.value='';
   _refreshMapList();
 }
-function delMap(i){maps.splice(i,1);saveCfg();_refreshMapList();}
+function delMap(i){maps.splice(i,1);save();_refreshMapList();}
 
 function _refreshAliasList(){
   const listEl = document.getElementById('alias-list');
