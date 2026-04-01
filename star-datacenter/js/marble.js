@@ -183,6 +183,7 @@ try { const _mc = JSON.parse(localStorage.getItem('su_mb_custom') || 'null'); if
 const _MB_MAP_NAMES = ['🎯 핀볼', '⚡ 지그재그', '🌀 카오스', '✏️ 커스텀'];
 
 function _mbBuildWorld(W, H) {
+  const mapData = _mbCurrentMapIndex >= 0 ? _mbMaps[_mbCurrentMapIndex] : null;
   const cx        = W / 2;
   const padX      = 18;
   const topY      = 12;
