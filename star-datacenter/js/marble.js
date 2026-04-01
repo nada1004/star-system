@@ -1094,11 +1094,15 @@ function _mbOpenEditor() {
 </div>`;
     document.body.appendChild(wrap.firstElementChild);
   }
+  const map = _mbMaps[_mbEdCurrentMapIndex];
+  if (!map) return;
+
   const sl = document.getElementById('mb-ed-height');
   const vl = document.getElementById('mb-ed-hval');
-  const hm = _mbCustom.heightMul || 3.0;
+  const hm = map.heightMul || 3.0;
   if (sl) sl.value = hm;
   if (vl) vl.textContent = hm.toFixed(1) + 'x';
+
   om('mb-editor-modal');
   _mbEdInit();
 }
