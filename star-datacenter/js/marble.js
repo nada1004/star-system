@@ -1,4 +1,4 @@
-﻿// ─── 🔮 마블 물리 룰렛 v2 (회전막대 + 핀 장애물) ────────────────────────────────
+// ─── 🔮 마블 물리 룰렛 v2 (회전막대 + 핀 장애물) ────────────────────────────────
 
 (function _mbInjectCSS() {
   if (document.getElementById('mb-style')) return;
@@ -323,6 +323,7 @@ function _mbBuildWorld(W, H) {
       const l = s.lenr * W;
       _mbSticks.push({ cx: s.cxr*W, cy: s.cyr*H, len: l, lenBase: l, lenAmp: s.lenAmp||0.20, lenFreq: s.lenFreq||0.030, lenOff: s.lenOff||0, angle: s.angle||0, omega: s.omega||0.03, thick: s.thick||3 });
     });
+    (_cd.boostersR || []).forEach(b => _mbBoosters.push({ ...b, cx: b.cxr*W, cy: b.cyr*H, len: b.lenr*W }));
   }
 }
 
@@ -391,7 +392,7 @@ function _mbCollidePegs(b) {
       b.y += ny * (md - d);
       const dot = b.vx * nx + b.vy * ny;
       if (dot < 0) {
-        const _rp = p.bumper ? 1.40 : _MB_RPG;
+        const _rp = p.bumper ? 1.80 : _MB_RPG;
         b.vx -= (1 + _rp) * dot * nx;
         b.vy -= (1 + _rp) * dot * ny;
         if (!p.bumper) { b.vx *= 0.95; b.vy *= 0.95; }
@@ -489,6 +490,7 @@ function _mbStep() {
   }
   // 핀 발광 감쇠
   for (const p of _mbPegs) if (p.flash > 0) p.flash = Math.max(0, p.flash - 0.065);
+  for (const b of _mbBoosters) if (b.flash > 0) b.flash = Math.max(0, b.flash - 0.05);
   // 공 적분 + 충돌
   for (const b of _mbBalls) {
     if (!b.alive) continue;
@@ -502,6 +504,7 @@ function _mbStep() {
     _mbCollideWall(b);
     _mbCollidePegs(b);
     for (const st of _mbSticks) _mbCollideStick(b, st);
+    for (const booster of _mbBoosters) _mbCollideBooster(b, booster);
     // 바닥 정착 감지
     const { floorY } = _mbGeo;
     if (b.y + b.r >= floorY - 1) {
@@ -544,6 +547,25 @@ function _mbDrawIdle(cv) {
   ctx.restore();
 }
 
+function _mbCollideBooster(b, booster) {
+  const cos = Math.cos(booster.angle), sin = Math.sin(booster.angle);
+  const hlen = booster.len * 0.5;
+  const ax = booster.cx + cos * hlen, ay = booster.cy + sin * hlen;
+  const bx = booster.cx - cos * hlen, by = booster.cy - sin * hlen;
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  if (len2 < 0.001) return;
+  const t  = Math.max(0, Math.min(1, ((b.x - ax) * dx + (b.y - ay) * dy) / len2));
+  const cx = ax + t * dx, cy = ay + t * dy;
+  const ex = b.x - cx, ey = b.y - cy;
+  const d  = Math.sqrt(ex * ex + ey * ey);
+  if (d < b.r + 5) {
+    b.vx += cos * booster.power * 0.1;
+    b.vy += sin * booster.power * 0.1;
+    booster.flash = 1.0;
+  }
+}
+
 function _mbDrawFrame(cv) {
   const { W, H, padX, topY } = _mbGeo;
   const ctx = cv.getContext('2d');
@@ -551,6 +573,7 @@ function _mbDrawFrame(cv) {
   _mbDrawWalls(ctx);
   _mbDrawPegs(ctx);
   _mbDrawSticks(ctx);
+  _mbDrawBoosters(ctx);
   _mbDrawBalls(ctx);
   // 맵 이름
   ctx.save();
@@ -1043,7 +1066,7 @@ function _mbOpenEditor() {
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px">
       <span style="font-size:12px;color:#aaa;white-space:nowrap">📐 세로 길이</span>
-      <input type="range" id="mb-ed-height" min="1.5" max="5.0" step="0.1" style="flex:1;accent-color:#7B2FFF"
+      <input type="range" id="mb-ed-height" min="1.5" max="8.0" step="0.1" style="flex:1;accent-color:#7B2FFF"
         oninput="document.getElementById('mb-ed-hval').textContent=parseFloat(this.value).toFixed(1)+'x';_mbEdUpdateHeight()">
       <span id="mb-ed-hval" style="font-size:13px;font-weight:700;color:#BD93F9;min-width:32px">3.0x</span>
     </div>
@@ -1077,6 +1100,12 @@ function _mbOpenEditor() {
   if (vl) vl.textContent = hm.toFixed(1) + 'x';
   om('mb-editor-modal');
   _mbEdInit();
+}
+
+function _mbToggleMap(index, isEnabled) {
+  _mbEnabledMaps[index] = isEnabled;
+  localStorage.setItem('su_mb_maps_enabled', JSON.stringify(_mbEnabledMaps));
+  _mbRender(document.getElementById('mb-root')); // Re-render to update dropdown
 }
 
 function _mbEdInit() {
@@ -1322,12 +1351,12 @@ function _mbEditorSave() {
 
 function _mbEditorClear() {
   if (!confirm('요소를 모두 지울까요? (높이 설정은 유지됩니다)')) return;
-  _mbCustom.pegsR = []; _mbCustom.segsR = []; _mbCustom.sticksR = [];
+  _mbCustom.pegsR = []; _mbCustom.segsR = []; _mbCustom.sticksR = []; _mbCustom.boostersR = [];
   _mbEdDraw();
 }
 
 function _mbEditorDelete() {
-  if (!confirm('커스텀 맵을 완전히 삭제할까요?`n모든 요소와 저장 데이터가 제거됩니다.')) return;
+  if (!confirm('현재 커스텀 맵을 완전히 삭제할까요?\n(기본 맵은 삭제되지 않습니다)')) return;
   _mbCustom = { pegsR: [], segsR: [], sticksR: [], heightMul: 3.0 };
   localStorage.removeItem('su_mb_custom');
   // 드롭다운에서 커스텀 옵션 제거, 랜덤으로 초기화
