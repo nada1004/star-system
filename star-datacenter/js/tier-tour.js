@@ -951,7 +951,7 @@ function rCfg(C,T){
     const isDissolved = !!u.dissolved;
     h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
-      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const v=this.value.trim();if(!v){this.value=univCfg[${i}].name;return;}univCfg[${i}].name=v;save()">
+      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
@@ -2454,7 +2454,7 @@ function rCfg(C,T){
       style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px;transition:opacity .15s">
       <span style="cursor:grab;color:var(--gray-l);font-size:16px;line-height:1;padding:0 4px;flex-shrink:0" title="드래그로 순서 변경">☰</span>
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
-      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const v=this.value.trim();if(!v){this.value=univCfg[${i}].name;return;}univCfg[${i}].name=v;save()">
+      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
@@ -4097,6 +4097,76 @@ function saveRow(){
   save();render();cm('reModal');
 }
 
+function renameUnivAcrossData(oldName,newName){
+  oldName=(oldName||'').trim();
+  newName=(newName||'').trim();
+  if(!oldName||!newName||oldName===newName) return false;
+
+  const _renameHistory=(h)=>{
+    if(!h) return;
+    ['univ','myUniv','oppUniv','team','oppTeam','teamA','teamB','teamALabel','teamBLabel'].forEach(k=>{
+      if(h[k]===oldName) h[k]=newName;
+    });
+  };
+  const _renameMember=(m)=>{
+    if(m&&m.univ===oldName) m.univ=newName;
+  };
+  const _renameMatch=(m)=>{
+    if(!m) return;
+    ['a','b','u','hostUniv','teamALabel','teamBLabel'].forEach(k=>{
+      if(m[k]===oldName) m[k]=newName;
+    });
+    (m.teamAMembers||[]).forEach(_renameMember);
+    (m.teamBMembers||[]).forEach(_renameMember);
+    (m.membersA||[]).forEach(_renameMember);
+    (m.membersB||[]).forEach(_renameMember);
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        ['univA','univB','wUniv','lUniv','teamA','teamB'].forEach(k=>{
+          if(g[k]===oldName) g[k]=newName;
+        });
+      });
+    });
+  };
+
+  (players||[]).forEach(p=>{
+    if(p.univ===oldName) p.univ=newName;
+    (p.history||[]).forEach(_renameHistory);
+  });
+
+  [miniM,univM,comps,ckM,proM,ttM,indM,gjM].forEach(arr=>{
+    (arr||[]).forEach(_renameMatch);
+  });
+
+  (tourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      if(Array.isArray(grp.univs)) grp.univs=grp.univs.map(u=>u===oldName?newName:u);
+      (grp.matches||[]).forEach(_renameMatch);
+    });
+    const br=tn.bracket||{};
+    Object.keys(br.slots||{}).forEach(k=>{ if(br.slots[k]===oldName) br.slots[k]=newName; });
+    Object.keys(br.winners||{}).forEach(k=>{ if(br.winners[k]===oldName) br.winners[k]=newName; });
+    if(br.champ===oldName) br.champ=newName;
+    Object.values(br.matchDetails||{}).forEach(_renameMatch);
+    (br.manualMatches||[]).forEach(_renameMatch);
+  });
+
+  (proTourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      if(Array.isArray(grp.univs)) grp.univs=grp.univs.map(u=>u===oldName?newName:u);
+      (grp.matches||[]).forEach(_renameMatch);
+    });
+  });
+
+  if(typeof boardPlayerOrder!=='undefined' && boardPlayerOrder && boardPlayerOrder[oldName]){
+    if(!boardPlayerOrder[newName]) boardPlayerOrder[newName]=boardPlayerOrder[oldName];
+    delete boardPlayerOrder[oldName];
+    if(typeof saveBoardPlayerOrder==='function') saveBoardPlayerOrder();
+  }
+
+  return true;
+}
+
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
 let _univDragSrc=-1;
@@ -4471,4 +4541,3 @@ function _setPdUnivDarken(univ,val,idx){
    📊 통계 탭
 ══════════════════════════════════════ */
 let statsSub='overview';
-  

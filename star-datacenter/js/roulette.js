@@ -890,3 +890,201 @@ function _ldClearHistory() {
   localStorage.removeItem('su_gc_hist_l');
   _ldRefreshHistory();
 }
+
+// ─── 마블 물리 룰렛 ───────────────────────────────────────────────────
+let _mbEngine = null;
+let _mbRunner = null;
+let _mbRender = null;
+let _mbBall = null;
+let _mbSpinning = false;
+
+function _mbLoadDeps(callback) {
+  if (typeof Matter !== 'undefined') {
+    callback();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js';
+  script.onload = callback;
+  script.onerror = () => alert('룰렛 라이브러리를 불러오는 데 실패했습니다.');
+  document.head.appendChild(script);
+}
+
+function _mbInit() {
+  _mbLoadDeps(() => {
+    const root = document.getElementById('mb-root');
+    if (!root) return;
+
+    // 기존 엔진/렌더러 정리
+    if (_mbRunner) Runner.stop(_mbRunner);
+    if (_mbRender) Render.stop(_mbRender);
+    if (_mbEngine) World.clear(_mbEngine.world);
+    if (_mbRender && _mbRender.canvas) _mbRender.canvas.remove();
+
+    const avW = window.innerWidth;
+    const avH = window.innerHeight - 130;
+    const W = Math.min(avW - 32, 600);
+    const H = Math.min(avH - 180, 500);
+
+    const savedItems = localStorage.getItem('su_mb_items') || '항목 1, 항목 2, 항목 3, 항목 4, 항목 5, 항목 6';
+
+    root.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+        <div id="mb-input-container" style="display:flex;gap:8px;width:${W}px">
+          <textarea id="mb-items-input" rows="2" style="flex:1;border-radius:8px;border:2px solid var(--border);padding:8px 10px;font-size:14px">${savedItems}</textarea>
+          <button id="mb-apply-btn" class="btn btn-b">항목 적용</button>
+        </div>
+        <div id="mb-canvas-container" style="width:${W}px;height:${H}px;border:2px solid var(--border);border-radius:14px;background:var(--surface);position:relative;overflow:hidden"></div>
+        <div id="mb-controls" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div>
+        <div id="mb-result" style="font-size:24px;font-weight:900;color:var(--blue);margin-top:10px;display:none;text-align:center"></div>
+      </div>
+    `;
+
+    const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
+
+    _mbEngine = Engine.create({ gravity: { x: 0, y: 0.8 } });
+    _mbRender = Render.create({
+      element: document.getElementById('mb-canvas-container'),
+      engine: _mbEngine,
+      options: { width: W, height: H, wireframes: false, background: 'transparent' }
+    });
+
+    _mbRunner = Runner.create();
+    Runner.run(_mbRunner, _mbEngine);
+    Render.run(_mbRender);
+
+    document.getElementById('mb-apply-btn').onclick = () => {
+      const itemsText = document.getElementById('mb-items-input').value;
+      localStorage.setItem('su_mb_items', itemsText);
+      _mbInit(); // 재초기화
+    };
+
+    _mbSetupWorld(W, H, savedItems.split(',').map(s => s.trim()).filter(Boolean));
+  });
+}
+
+function _mbSetupWorld(W, H, items) {
+  if (!items.length) items = ['항목 없음'];
+  const { World, Bodies, Body, Events } = Matter;
+
+  World.clear(_mbEngine.world, false);
+
+  const numSlots = items.length;
+  const centerX = W / 2;
+  const centerY = H / 2;
+  const radius = Math.min(W, H) * 0.42;
+  const pinRadius = Math.max(2, Math.min(4, 30 / numSlots));
+  const ballRadius = Math.max(6, Math.min(12, 80 / numSlots));
+
+  // 룰렛 판 (핀)
+  const pins = [];
+  const pinLevels = numSlots > 12 ? 3 : 2;
+  for (let level = 1; level <= pinLevels; level++) {
+    const levelRadius = radius * (0.3 + 0.2 * level);
+    const numPins = Math.floor(levelRadius / (pinRadius * 2.5));
+    for (let i = 0; i < numPins; i++) {
+      const angle = (i / numPins) * Math.PI * 2 + (level % 2) * (Math.PI / numPins);
+      const x = centerX + Math.cos(angle) * levelRadius;
+      const y = centerY + Math.sin(angle) * levelRadius;
+      pins.push(Bodies.circle(x, y, pinRadius, { isStatic: true, render: { fillStyle: '#a1a1aa' }, friction: 0.5 }));
+    }
+  }
+
+  // 슬롯 구분 벽과 라벨
+  const dividers = [];
+  const slotAngle = (Math.PI * 2) / numSlots;
+  for (let i = 0; i < numSlots; i++) {
+    const angle = i * slotAngle;
+    const x1 = centerX + Math.cos(angle + slotAngle / 2) * (radius * 0.9);
+    const y1 = centerY + Math.sin(angle + slotAngle / 2) * (radius * 0.9);
+    const x2 = centerX + Math.cos(angle + slotAngle / 2) * radius * 1.05;
+    const y2 = centerY + Math.sin(angle + slotAngle / 2) * radius * 1.05;
+    dividers.push(Bodies.rectangle((x1 + x2) / 2, (y1 + y2) / 2, 4, radius * 0.15, { angle: angle + slotAngle / 2, isStatic: true, render: { fillStyle: '#6b7280' } }));
+    
+    // 라벨 렌더링
+    const labelAngle = angle + slotAngle / 2;
+    const labelX = centerX + Math.cos(labelAngle) * (radius * 0.85);
+    const labelY = centerY + Math.sin(labelAngle) * (radius * 0.85);
+    const labelText = items[i];
+    const labelSize = Math.max(8, Math.min(14, 180 / numSlots));
+    const ctx = _mbRender.context;
+    ctx.save();
+    ctx.translate(labelX, labelY);
+    ctx.rotate(labelAngle + Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'var(--text2)';
+    ctx.font = `bold ${labelSize}px 'Noto Sans KR', sans-serif`;
+    ctx.fillText(labelText, 0, 0);
+    ctx.restore();
+  }
+
+  // 외벽
+  const wall = Bodies.circle(centerX, centerY, radius * 1.05, { isStatic: true, render: { visible: false } });
+
+  _mbBall = Bodies.circle(centerX, centerY - radius * 0.8, ballRadius, {
+    restitution: 0.3, friction: 0.2, density: 0.002,
+    render: { fillStyle: '#3b82f6', strokeStyle: '#fff', lineWidth: 3 }
+  });
+
+  World.add(_mbEngine.world, [...pins, ...dividers, wall, _mbBall]);
+
+  document.getElementById('mb-controls').innerHTML = `<button id="mb-spin-btn" class="btn btn-b">돌리기</button>`;
+  document.getElementById('mb-spin-btn').onclick = () => _mbSpin(items);
+
+  // 렌더링 루프에서 라벨 다시 그리기
+  Events.on(_mbRender, 'afterRender', () => {
+    const ctx = _mbRender.context;
+    for (let i = 0; i < numSlots; i++) {
+      const angle = i * slotAngle;
+      const labelAngle = angle + slotAngle / 2;
+      const labelX = centerX + Math.cos(labelAngle) * (radius * 0.85);
+      const labelY = centerY + Math.sin(labelAngle) * (radius * 0.85);
+      const labelText = items[i];
+      const labelSize = Math.max(8, Math.min(14, 180 / numSlots));
+      ctx.save();
+      ctx.translate(labelX, labelY);
+      ctx.rotate(labelAngle + Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'var(--text2)';
+      ctx.font = `bold ${labelSize}px 'Noto Sans KR', sans-serif`;
+      ctx.fillText(labelText, 0, 0);
+      ctx.restore();
+    }
+  });
+}
+
+function _mbSpin(items) {
+  if (_mbSpinning || !_mbBall) return;
+  _mbSpinning = true;
+
+  const { Body, Events } = Matter;
+  Body.setStatic(_mbBall, false);
+  Body.setVelocity(_mbBall, { x: (Math.random() - 0.5) * 25, y: -15 + Math.random() * 5 });
+  Body.setAngularVelocity(_mbBall, (Math.random() - 0.5) * 0.5);
+
+  document.getElementById('mb-result').style.display = 'none';
+  document.getElementById('mb-spin-btn').disabled = true;
+
+  let resultFound = false;
+  const checkResult = () => {
+    if (resultFound) return;
+    if (_mbBall.speed < 0.1 && _mbBall.angularSpeed < 0.1) {
+      const angle = (Math.atan2(_mbBall.position.y - _mbRender.options.height / 2, _mbBall.position.x - _mbRender.options.width / 2) + Math.PI * 2) % (Math.PI * 2);
+      const slotAngle = (Math.PI * 2) / items.length;
+      const winningIndex = Math.floor(angle / slotAngle);
+      const winner = items[winningIndex];
+      
+      const resultEl = document.getElementById('mb-result');
+      resultEl.innerHTML = `🎊 <b>${winner}</b> 🎊`;
+      resultEl.style.display = 'block';
+
+      _mbSpinning = false;
+      document.getElementById('mb-spin-btn').disabled = false;
+      resultFound = true;
+      Events.off(_mbEngine, 'afterUpdate', checkResult);
+    }
+  };
+
+  Events.on(_mbEngine, 'afterUpdate', checkResult);
+}
+
