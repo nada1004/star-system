@@ -915,6 +915,8 @@ function _mbInit() {
     const root = document.getElementById('mb-root');
     if (!root) return;
 
+    const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
+
     // 기존 엔진/렌더러 정리
     if (_mbRunner) Runner.stop(_mbRunner);
     if (_mbRender) Render.stop(_mbRender);
@@ -939,8 +941,6 @@ function _mbInit() {
         <div id="mb-result" style="font-size:24px;font-weight:900;color:var(--blue);margin-top:10px;display:none;text-align:center"></div>
       </div>
     `;
-
-    const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
 
     _mbEngine = Engine.create({ gravity: { x: 0, y: 0.8 } });
     _mbRender = Render.create({
