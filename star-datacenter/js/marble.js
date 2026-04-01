@@ -1,4 +1,4 @@
-// ─── 🔮 마블 물리 룰렛 v2 (회전막대 + 핀 장애물) ────────────────────────────────
+﻿// ─── 🔮 마블 물리 룰렛 v2 (회전막대 + 핀 장애물) ────────────────────────────────
 
 (function _mbInjectCSS() {
   if (document.getElementById('mb-style')) return;
@@ -391,11 +391,11 @@ function _mbCollidePegs(b) {
       b.y += ny * (md - d);
       const dot = b.vx * nx + b.vy * ny;
       if (dot < 0) {
-        b.vx -= (1 + _MB_RPG) * dot * nx;
-        b.vy -= (1 + _MB_RPG) * dot * ny;
-        b.vx *= 0.95;
-        b.vy *= 0.95;
-        p.flash = 1.0;  // 핀 발광 트리거
+        const _rp = p.bumper ? 1.40 : _MB_RPG;
+        b.vx -= (1 + _rp) * dot * nx;
+        b.vy -= (1 + _rp) * dot * ny;
+        if (!p.bumper) { b.vx *= 0.95; b.vy *= 0.95; }
+        p.flash = 1.0;
       }
     }
   }
@@ -718,12 +718,15 @@ function _mbDrawPegs(ctx) {
 }
 
 function _mbDrawSticks(ctx) {
+  // spinner glow pulse uses _mbTick
   ctx.save();
   const { funnelBot, chuteBot } = _mbGeo;
   for (let si = 0; si < _mbSticks.length; si++) {
     const st = _mbSticks[si];
-    const inChute = st.cy > funnelBot && st.cy < chuteBot;
-    const isLand  = si === _mbSticks.length - 1; // 착지 스위퍼
+    const inChute   = st.cy > funnelBot && st.cy < chuteBot;
+    const isLand    = si === _mbSticks.length - 1;
+    const isSpinner = !!st.spinner;
+    const _sp = isSpinner ? 0.55 + 0.45 * Math.sin(_mbTick * 0.18) : 1;
     const cos = Math.cos(st.angle), sin = Math.sin(st.angle);
     const ax = st.cx + cos * st.len, ay = st.cy + sin * st.len;
     const bx = st.cx - cos * st.len, by = st.cy - sin * st.len;
@@ -743,6 +746,12 @@ function _mbDrawSticks(ctx) {
       grad.addColorStop(0, '#00FF88');
       grad.addColorStop(1, '#00CEC9');
       glowCol = 'rgba(0,255,136,0.8)';
+    } else if (isSpinner) {
+      grad = ctx.createLinearGradient(ax, ay, bx, by);
+      grad.addColorStop(0,   `rgba(255,200,0,${_sp})`);
+      grad.addColorStop(0.5, `rgba(255,80,0,${_sp})`);
+      grad.addColorStop(1,   `rgba(255,200,0,${_sp})`);
+      glowCol = `rgba(255,150,0,${_sp * 0.9})`;
     } else {
       // 일반: 시안→퍼플 쿨 그라디언트
       grad = ctx.createLinearGradient(ax, ay, bx, by);
@@ -1038,19 +1047,24 @@ function _mbOpenEditor() {
         oninput="document.getElementById('mb-ed-hval').textContent=parseFloat(this.value).toFixed(1)+'x';_mbEdUpdateHeight()">
       <span id="mb-ed-hval" style="font-size:13px;font-weight:700;color:#BD93F9;min-width:32px">3.0x</span>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:8px">
-      <button id="mb-ed-t-peg"   onclick="_mbEdSetTool('peg')"   style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #00E5FF;background:rgba(0,229,255,0.13);color:#00E5FF;font-size:11px;font-weight:700;cursor:pointer">⚫ 핀</button>
-      <button id="mb-ed-t-wall"  onclick="_mbEdSetTool('wall')"  style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">📏 벽</button>
-      <button id="mb-ed-t-stick" onclick="_mbEdSetTool('stick')" style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">🔄 막대</button>
-      <button id="mb-ed-t-erase" onclick="_mbEdSetTool('erase')" style="flex:1;padding:7px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:11px;font-weight:700;cursor:pointer">🗑️ 지우기</button>
+    <div style="font-size:11px;font-weight:700;color:#7B6FA0;margin-bottom:5px">장애물 도구</div>
+    <div style="display:flex;gap:5px;margin-bottom:5px;flex-wrap:wrap">
+      <button id="mb-ed-t-peg"     onclick="_mbEdSetTool('peg')"     style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #00E5FF;background:rgba(0,229,255,0.13);color:#00E5FF;font-size:10px;font-weight:700;cursor:pointer">⚫ 핀</button>
+      <button id="mb-ed-t-bumper"  onclick="_mbEdSetTool('bumper')"  style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">🔴 범퍼</button>
+      <button id="mb-ed-t-wall"    onclick="_mbEdSetTool('wall')"    style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">📏 벽</button>
+      <button id="mb-ed-t-stick"   onclick="_mbEdSetTool('stick')"   style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">🔄 막대</button>
+      <button id="mb-ed-t-spinner" onclick="_mbEdSetTool('spinner')" style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">⚡ 스피너</button>
+      <button id="mb-ed-t-vguide"  onclick="_mbEdSetTool('vguide')"  style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">🔽 V가이드</button>
+      <button id="mb-ed-t-erase"   onclick="_mbEdSetTool('erase')"   style="flex:1;min-width:60px;padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:rgba(255,255,255,0.05);color:#888;font-size:10px;font-weight:700;cursor:pointer">🗑️ 지우기</button>
     </div>
     <div id="mb-ed-hint" style="font-size:11px;color:#7B6FA0;text-align:center;margin-bottom:8px">클릭으로 핀 추가 / 다시 클릭하면 삭제</div>
     <div style="display:flex;justify-content:center;overflow:auto;max-height:52vh;border-radius:10px;border:1px solid rgba(123,47,255,0.25)">
       <canvas id="mb-ed-canvas" style="cursor:crosshair;display:block;touch-action:none"></canvas>
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button onclick="_mbEditorClear()" style="flex:1;padding:9px;border-radius:10px;border:1px solid #dc2626;background:rgba(220,38,38,0.1);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🗑️ 초기화</button>
-      <button onclick="_mbEditorSave()" style="flex:2;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#7B2FFF,#00BFFF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">💾 저장하고 적용</button>
+    <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+      <button onclick="_mbEditorClear()" style="flex:1;padding:8px;border-radius:10px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer">🧹 요소 초기화</button>
+      <button onclick="_mbEditorDelete()" style="flex:1;padding:8px;border-radius:10px;border:1px solid #dc2626;background:rgba(220,38,38,0.1);color:#f87171;font-size:11px;font-weight:700;cursor:pointer">🗑️ 맵 삭제</button>
+      <button onclick="_mbEditorSave()" style="flex:2;padding:8px;border-radius:10px;border:none;background:linear-gradient(135deg,#7B2FFF,#00BFFF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">💾 저장하고 적용</button>
     </div>
   </div>
 </div>`;
@@ -1100,13 +1114,25 @@ function _mbEdPos(e) {
 function _mbEdDown(e) {
   const pos = _mbEdPos(e);
   if (_mbEdTool === 'erase') { _mbEdErase(pos); return; }
-  if (_mbEdTool === 'peg') {
+  if (_mbEdTool === 'peg' || _mbEdTool === 'bumper') {
     const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
     const xr = pos.x / (W * sc), yr = pos.y / (H * sc);
-    const rr = Math.max(4, Math.round(W * 0.015)) / W;
-    const hi = _mbCustom.pegsR.findIndex(p => Math.hypot((p.xr-xr)*W*sc, (p.yr-yr)*H*sc) < Math.max(4,rr*W)*sc*1.8);
+    const isBumper = _mbEdTool === 'bumper';
+    const rr = (isBumper ? Math.max(10, Math.round(W * 0.038)) : Math.max(4, Math.round(W * 0.015))) / W;
+    const hi = _mbCustom.pegsR.findIndex(p => Math.hypot((p.xr-xr)*W*sc, (p.yr-yr)*H*sc) < Math.max(4,p.rr*W)*sc*1.8);
     if (hi >= 0) _mbCustom.pegsR.splice(hi, 1);
-    else _mbCustom.pegsR.push({ xr, yr, rr });
+    else _mbCustom.pegsR.push({ xr, yr, rr, bumper: isBumper });
+    _mbEdDraw();
+    return;
+  }
+  if (_mbEdTool === 'vguide') {
+    const W = _mbEdGW, H = _mbEdGH, sc = _mbEdSc;
+    const xr = pos.x / (W * sc), yr = pos.y / (H * sc);
+    const hw = 0.12, depth = 0.08; // half-width and depth in relative coords
+    _mbCustom.segsR.push(
+      { x1r: xr - hw, y1r: yr,        x2r: xr,      y2r: yr + depth, vguide: true },
+      { x1r: xr + hw, y1r: yr,        x2r: xr,      y2r: yr + depth, vguide: true }
+    );
     _mbEdDraw();
     return;
   }
@@ -1131,12 +1157,16 @@ function _mbEdUp(e) {
   if (dist > 8) {
     if (_mbEdTool === 'wall') {
       _mbCustom.segsR.push({ x1r: _mbEdDragSt.x/(W*sc), y1r: _mbEdDragSt.y/(H*sc), x2r: pos.x/(W*sc), y2r: pos.y/(H*sc) });
-    } else if (_mbEdTool === 'stick') {
+    } else if (_mbEdTool === 'stick' || _mbEdTool === 'spinner') {
       const angle = Math.atan2(dy, dx);
+      const fast  = _mbEdTool === 'spinner';
       _mbCustom.sticksR.push({
         cxr: (_mbEdDragSt.x+pos.x)*0.5/(W*sc), cyr: (_mbEdDragSt.y+pos.y)*0.5/(H*sc),
-        lenr: dist*0.5/(W*sc), angle, omega: 0.035, thick: 3,
-        lenAmp: 0.22, lenFreq: 0.030, lenOff: Math.random()*Math.PI*2
+        lenr: dist*0.5/(W*sc), angle,
+        omega: fast ? (Math.random()<0.5?1:-1)*0.13 : 0.035,
+        thick: fast ? 4 : 3,
+        lenAmp: fast ? 0.05 : 0.22, lenFreq: 0.030, lenOff: Math.random()*Math.PI*2,
+        spinner: fast
       });
     }
   }
@@ -1168,10 +1198,18 @@ function _mbEdSegDist(px,py,x1,y1,x2,y2) {
 
 function _mbEdSetTool(t) {
   _mbEdTool = t;
-  const hints = { peg:'클릭으로 핀 추가 / 다시 클릭하면 삭제', wall:'드래그해서 벽을 그립니다', stick:'드래그해서 회전 막대를 추가합니다', erase:'요소를 클릭해 삭제합니다' };
+  const hints = {
+    peg:    '클릭으로 핀 추가 / 다시 클릭하면 삭제',
+    bumper: '클릭으로 큰 범퍼 추가 — 공이 강하게 튕깁니다',
+    wall:   '드래그해서 고정 벽을 그립니다',
+    stick:  '드래그해서 회전 막대를 추가합니다',
+    spinner:'드래그해서 고속 스피너를 추가합니다 (빠른 회전)',
+    vguide: '클릭 위치에 V자 가이드(깔때기)를 배치합니다',
+    erase:  '요소를 클릭해 삭제합니다',
+  };
   const el = document.getElementById('mb-ed-hint');
   if (el) el.textContent = hints[t] || '';
-  ['peg','wall','stick','erase'].forEach(id => {
+  ['peg','bumper','wall','stick','spinner','vguide','erase'].forEach(id => {
     const btn = document.getElementById('mb-ed-t-' + id);
     if (!btn) return;
     const on = id === t;
@@ -1210,43 +1248,62 @@ function _mbEdDraw() {
   for (const s of _mbCustom.segsR) {
     ctx.beginPath(); ctx.moveTo(s.x1r*W*sc, s.y1r*H*sc); ctx.lineTo(s.x2r*W*sc, s.y2r*H*sc); ctx.stroke();
   }
-  // Custom sticks
+  // Custom sticks & spinners
   for (const s of _mbCustom.sticksR) {
     const cx2=s.cxr*W*sc, cy2=s.cyr*H*sc, l=s.lenr*W*sc;
+    const c0 = s.spinner ? '#FFD700' : '#7B2FFF';
+    const c1 = s.spinner ? '#FF6B00' : '#BD93F9';
     const grad = ctx.createLinearGradient(cx2-Math.cos(s.angle)*l, cy2-Math.sin(s.angle)*l, cx2+Math.cos(s.angle)*l, cy2+Math.sin(s.angle)*l);
-    grad.addColorStop(0, '#7B2FFF'); grad.addColorStop(1, '#BD93F9');
-    ctx.strokeStyle = grad; ctx.lineWidth = Math.max(2, s.thick*sc);
+    grad.addColorStop(0, c0); grad.addColorStop(1, c1);
+    ctx.strokeStyle = grad; ctx.lineWidth = Math.max(2, (s.thick||3)*sc);
     ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(cx2-Math.cos(s.angle)*l, cy2-Math.sin(s.angle)*l); ctx.lineTo(cx2+Math.cos(s.angle)*l, cy2+Math.sin(s.angle)*l); ctx.stroke();
-    ctx.fillStyle='#BD93F9'; ctx.beginPath(); ctx.arc(cx2,cy2,3,0,Math.PI*2); ctx.fill();
+    if (s.spinner) { // lightning icon on center
+      ctx.fillStyle='#FFD700'; ctx.font=`${Math.max(8,10*sc)}px sans-serif`; ctx.fillText('⚡',cx2-5*sc,cy2+4*sc);
+    }
+    ctx.fillStyle=c1; ctx.beginPath(); ctx.arc(cx2,cy2,3,0,Math.PI*2); ctx.fill();
     ctx.lineCap = 'butt';
   }
-  // Custom pegs
+  // Custom pegs & bumpers
   for (const p of _mbCustom.pegsR) {
     const pr = Math.max(4, p.rr*W)*sc;
-    const grd = ctx.createRadialGradient(p.xr*W*sc-pr*0.3, p.yr*H*sc-pr*0.3, 0, p.xr*W*sc, p.yr*H*sc, pr);
-    grd.addColorStop(0,'#FF79C6'); grd.addColorStop(1,'#FF2D78');
-    ctx.beginPath(); ctx.arc(p.xr*W*sc, p.yr*H*sc, pr, 0, Math.PI*2);
-    ctx.fillStyle = grd; ctx.fill();
-    ctx.strokeStyle='rgba(255,120,200,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    const px2 = p.xr*W*sc, py2 = p.yr*H*sc;
+    if (p.bumper) {
+      // Bumper: orange ring with glow
+      const grd = ctx.createRadialGradient(px2-pr*0.3,py2-pr*0.3,0,px2,py2,pr);
+      grd.addColorStop(0,'#FFE566'); grd.addColorStop(0.5,'#FF6B00'); grd.addColorStop(1,'#FF2D00');
+      ctx.beginPath(); ctx.arc(px2,py2,pr,0,Math.PI*2);
+      ctx.fillStyle=grd; ctx.fill();
+      ctx.strokeStyle='rgba(255,180,0,0.8)'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='rgba(255,220,0,0.9)'; ctx.font=`${Math.max(8,Math.round(pr*1.0))}px sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('!',px2,py2);
+      ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+    } else {
+      const grd = ctx.createRadialGradient(px2-pr*0.3,py2-pr*0.3,0,px2,py2,pr);
+      grd.addColorStop(0,'#FF79C6'); grd.addColorStop(1,'#FF2D78');
+      ctx.beginPath(); ctx.arc(px2,py2,pr,0,Math.PI*2);
+      ctx.fillStyle=grd; ctx.fill();
+      ctx.strokeStyle='rgba(255,120,200,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    }
   }
   // Preview (drag in progress)
   if (_mbEdPreview) {
     const { tool, x1, y1, x2, y2 } = _mbEdPreview;
     ctx.setLineDash([5,4]);
     if (tool === 'wall') { ctx.strokeStyle='#FFB86C'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
-    else if (tool === 'stick') {
-      ctx.strokeStyle='#BD93F9'; ctx.lineWidth=3; ctx.lineCap='round';
+    else if (tool === 'stick' || tool === 'spinner') {
+      ctx.strokeStyle = tool==='spinner' ? '#FFD700' : '#BD93F9';
+      ctx.lineWidth=3; ctx.lineCap='round';
       ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
       ctx.lineCap='butt';
     }
     ctx.setLineDash([]);
   }
   // Legend
-  ctx.fillStyle='rgba(0,229,255,0.4)'; ctx.font=`${Math.max(9,Math.round(10*sc))}px sans-serif`;
-  ctx.fillText('— 기본 벽', 6*sc, 14*sc);
-  ctx.fillStyle='#FFB86C'; ctx.fillText('— 커스텀 벽', 6*sc, 26*sc);
-  ctx.fillStyle='#BD93F9'; ctx.fillText('— 회전 막대', 6*sc, 38*sc);
+  const fs = Math.max(9, Math.round(10*sc));
+  ctx.font = `${fs}px sans-serif`;
+  const items = [['rgba(0,229,255,0.5)','기본 벽'],['#FFB86C','커스텀 벽'],['#BD93F9','막대'],['#FFD700','스피너'],['#FF6B00','범퍼']];
+  items.forEach(([col,txt],i) => { ctx.fillStyle=col; ctx.fillText('■ '+txt, 5*sc, (12+i*12)*sc); });
 }
 
 function _mbEditorSave() {
@@ -1264,7 +1321,23 @@ function _mbEditorSave() {
 }
 
 function _mbEditorClear() {
-  if (!confirm('커스텀 맵 요소를 모두 초기화할까요?')) return;
+  if (!confirm('요소를 모두 지울까요? (높이 설정은 유지됩니다)')) return;
   _mbCustom.pegsR = []; _mbCustom.segsR = []; _mbCustom.sticksR = [];
   _mbEdDraw();
+}
+
+function _mbEditorDelete() {
+  if (!confirm('커스텀 맵을 완전히 삭제할까요?`n모든 요소와 저장 데이터가 제거됩니다.')) return;
+  _mbCustom = { pegsR: [], segsR: [], sticksR: [], heightMul: 3.0 };
+  localStorage.removeItem('su_mb_custom');
+  // 드롭다운에서 커스텀 옵션 제거, 랜덤으로 초기화
+  const sel = document.getElementById('mb-map-sel');
+  if (sel) {
+    const opt = sel.querySelector('option[value="3"]');
+    if (opt) opt.remove();
+    sel.value = '-1';
+    localStorage.setItem('su_mb_map_sel', '-1');
+  }
+  cm('mb-editor-modal');
+  _mbSetupCanvas();
 }
