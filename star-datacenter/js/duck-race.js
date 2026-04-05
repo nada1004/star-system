@@ -383,8 +383,16 @@ function _drLoop() {
     var lbl = document.getElementById('dr-progress-label');
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
-      var leader = _drSt.ducks.slice().sort(function(a,b){ return b.x - a.x; })[0];
-      lbl.textContent = '🥇 ' + (leader ? leader.emoji + ' ' + leader.name : '선두') + ' — 결승까지 ' + remaining + '% 남음';
+      if (_drSt.firstFinished) {
+        var remFrames = 300 - (_drSt.frame - _drSt.firstFinishedFrame);
+        var remSec = Math.ceil(Math.max(0, remFrames) / 60);
+        lbl.textContent = '⏳ ' + remSec + '초 후 미완주 오리 강제 종료';
+        lbl.style.color = remSec <= 2 ? '#e74c3c' : '#e67e22';
+      } else {
+        var leader = _drSt.ducks.slice().sort(function(a,b){ return b.x - a.x; })[0];
+        lbl.textContent = '🥇 ' + (leader ? leader.emoji + ' ' + leader.name : '선두') + ' — 결승까지 ' + remaining + '% 남음';
+        lbl.style.color = '';
+      }
     }
   }
 

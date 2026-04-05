@@ -273,6 +273,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
 function _gcSwitchTab(tab) {
   if (_gcTab === 'duck' && tab !== 'duck' && typeof _drCleanup === 'function') _drCleanup();
+  if (_gcTab === 'ladder' && tab !== 'ladder') {
+    if (_ldAnimId2) { cancelAnimationFrame(_ldAnimId2); _ldAnimId2 = null; }
+    _ldAnimating = false;
+  }
+  if (_gcTab === 'wheel' && tab !== 'wheel') {
+    if (_whAnimId) { cancelAnimationFrame(_whAnimId); _whAnimId = null; }
+    _whSpinning = false;
+  }
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
@@ -393,8 +401,10 @@ function _gcSpin() {
   if (_gcInputOpen) _gcToggleInput();
 
   _gcSpinning = true;
-  if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (_gcAudioCtx.state === 'suspended') _gcAudioCtx.resume();
+  try {
+    if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_gcAudioCtx.state === 'suspended') _gcAudioCtx.resume().catch(()=>{});
+  } catch(e) {}
 
   const crank = document.getElementById('gc-crank');
   _gcTotalRot += 720;
@@ -463,6 +473,7 @@ function _gcSpin() {
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       _gcHistory[histKey].push({ name: displayName, time: timeStr });
+      if (_gcHistory[histKey].length > 30) _gcHistory[histKey] = _gcHistory[histKey].slice(-30);
       localStorage.setItem(`su_gc_hist_${histKey==='player'?'p':'m'}`, JSON.stringify(_gcHistory[histKey]));
       _gcRefreshHistory();
 
@@ -728,6 +739,12 @@ function _ldInit() {
   const n = names.length;
   const normItems = Array.from({length: n}, (_, i) => items[i] || `${i+1}번`);
 
+  const instr0 = document.getElementById('ld-instruction');
+  if (items.length > 0 && items.length < n && instr0) {
+    instr0.innerHTML = `⚠️ 결과 항목이 ${n}명보다 적습니다 (${items.length}개). 부족한 항목은 번호로 자동 채워집니다.`;
+    instr0.style.color = '#e67e22';
+  }
+
   if (!_ldLadder || _ldLadder.n !== n) {
     _ldLadder = _ldBuildLadder(names, normItems);
   } else {
@@ -738,14 +755,13 @@ function _ldInit() {
   _ldDrawCanvas(_ldLadder, null, null);
   _ldRefreshHistory();
 
-  canvas.onclick = null;
-  canvas.onclick = (e) => {
+  function _ldHandleClick(clientX, clientY) {
     if (_ldAnimating) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const cx = (e.clientX - rect.left) * scaleX;
-    const cy = (e.clientY - rect.top)  * scaleY;
+    const cx = (clientX - rect.left) * scaleX;
+    const cy = (clientY - rect.top)  * scaleY;
     if (cy > 50) return;
     const n2 = _ldLadder.n;
     const spacing2 = n2 > 1 ? (canvas.width - 60) / (n2 - 1) : canvas.width - 60;
@@ -757,6 +773,14 @@ function _ldInit() {
         break;
       }
     }
+  }
+  canvas.onclick = null;
+  canvas.ontouchend = null;
+  canvas.onclick = (e) => _ldHandleClick(e.clientX, e.clientY);
+  canvas.ontouchend = (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    _ldHandleClick(t.clientX, t.clientY);
   };
 }
 
@@ -824,12 +848,15 @@ function _ldAnimate(nameIdx) {
       const now2 = new Date();
       const timeStr = String(now2.getHours()).padStart(2,'0') + ':' + String(now2.getMinutes()).padStart(2,'0');
       _gcHistory.ladder.push({ name: resName, item: resItem, time: timeStr });
+      if (_gcHistory.ladder.length > 30) _gcHistory.ladder = _gcHistory.ladder.slice(-30);
       localStorage.setItem('su_gc_hist_l', JSON.stringify(_gcHistory.ladder));
       _ldRefreshHistory();
 
       // 효과음
-      if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (_gcAudioCtx.state === 'suspended') _gcAudioCtx.resume();
+      try {
+        if (!_gcAudioCtx) _gcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (_gcAudioCtx.state === 'suspended') _gcAudioCtx.resume().catch(()=>{});
+      } catch(e) {}
       [0, 0.08, 0.16, 0.27].forEach((t, i) => {
         setTimeout(() => {
           const o = _gcAudioCtx.createOscillator(), g = _gcAudioCtx.createGain();

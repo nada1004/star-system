@@ -50,7 +50,7 @@ let _whAngle      = 0;
 let _whSpinning   = false;
 let _whAnimId     = null;
 let _whAC         = null;
-let _whSpinDur    = 3500;
+let _whSpinDur    = _WH_SPEED_DUR[+(localStorage.getItem('su_wh_speed') ?? 2)] ?? 3500;
 let _whHistory    = [];
 try { _whHistory = JSON.parse(localStorage.getItem('su_wh_hist') || '[]'); } catch(e) {}
 let _whStats      = {};
@@ -278,6 +278,7 @@ function _whOnInput(val) {
   _whDraw(_whAngle);
 }
 function _whShuffleInput() {
+  if (_whSpinning) return;
   const arr = _whGetNames();
   for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
   const inp = document.getElementById('wh-input');
@@ -289,6 +290,7 @@ function _whUpdateSpeed(val) {
   _whSpinDur = _WH_SPEED_DUR[idx];
   const lbl = document.getElementById('wh-speed-lbl');
   if (lbl) lbl.textContent = _WH_SPEED_LBLS[idx];
+  try { localStorage.setItem('su_wh_speed', idx); } catch(e) {}
 }
 
 // ─── 사운드 ────────────────────────────────────────────────────────────────────
