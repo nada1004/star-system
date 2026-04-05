@@ -241,6 +241,25 @@ function setStatusIcon(name, iconId, expiryDate){
   localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
   localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
 }
+function onStatusExpiryChange(playerName){
+  const expiryChk = document.getElementById('ed-icon-expiry');
+  const curIcon = playerStatusIcons[playerName];
+  if(!curIcon) return;
+  let expiryDate = null;
+  if(expiryChk && expiryChk.checked){
+    const d = new Date(); d.setDate(d.getDate()+10);
+    expiryDate = d.toISOString().slice(0,10);
+  }
+  if(expiryDate) playerStatusExpiry[playerName] = expiryDate;
+  else delete playerStatusExpiry[playerName];
+  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+  const lbl = document.getElementById('ed-icon-label');
+  if(lbl){
+    const found = Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===curIcon);
+    const expTxt = expiryDate ? ` (${expiryDate} 만료)` : '';
+    lbl.textContent = '선택: ' + (found ? found[1].label : '없음') + expTxt;
+  }
+}
 function setStatusIconFromModal(btn, playerName, iconId){
   const expiryChk = document.getElementById('ed-icon-expiry');
   let expiryDate = null;
