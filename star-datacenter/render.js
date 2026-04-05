@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    TAB & RENDER
 ══════════════════════════════════════ */
 function sw(t,el){
@@ -378,39 +378,64 @@ function toggleUnivEdit(){
 }
 
 function saveUnivEdit(){
-  const univName=window._univModalCurrentName;
-  const u=univCfg.find(x=>x.name===univName);
-  if(!u) return;
-  const newName=(document.getElementById('ue-name')?.value||'').trim();
-  const newColor=document.getElementById('ue-color')?.value||u.color;
-  const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
-  if(!newName){alert('이름을 입력하세요.');return;}
-  // 이름 변경 시 players univ 갱신
-  if(newName!==univName){
-    players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
-    [miniM,univM,comps,ckM,proM].forEach(arr=>(arr||[]).forEach(m=>{
-      if(m.a===univName)m.a=newName;if(m.b===univName)m.b=newName;
-      (m.teamAMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
-      (m.teamBMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
-    }));
-    // boardPlayerOrder 키 갱신
-    if(typeof boardPlayerOrder!=='undefined'&&boardPlayerOrder[univName]){
-      boardPlayerOrder[newName]=boardPlayerOrder[univName];
-      delete boardPlayerOrder[univName];
-      if(typeof saveBoardPlayerOrder==='function')saveBoardPlayerOrder();
+  const oldName = window._univModalCurrentName;
+  const name = document.getElementById('ue-name').value.trim();
+  const color = document.getElementById('ue-color').value;
+  const icon = document.getElementById('ue-icon').value.trim();
+  if(!name){alert('대학 이름은 비워둘 수 없습니다.');return;}
+  const uIdx = univCfg.findIndex(x=>x.name===oldName);
+  if(uIdx<0){alert('대학 정보를 찾지 못했습니다.');return;}
+  if(univCfg.some((u,idx)=>idx!==uIdx&&u.name===name)){alert('이미 사용 중인 대학 이름입니다.');return;}
+
+  if (oldName !== name) {
+    const confirmed = confirm(`'${oldName}' 대학의 이름을 '${name}'으로 변경하시겠습니까? 모든 선수 및 경기 기록의 대학명이 업데이트됩니다.`);
+    if (!confirmed) return;
+
+    // 선수 정보 업데이트
+    players.forEach(p => {
+      if (p.univ === oldName) {
+        p.univ = name;
+      }
+    });
+
+    // 모든 매치 데이터 업데이트
+    const allMatches = [
+      ...miniM, ...univM, ...ckM, ...compM, ...tourM, ...proM, ...spM
+    ];
+    allMatches.forEach(m => {
+      if (m.a === oldName) m.a = name;
+      if (m.b === oldName) m.b = name;
+      if (m.p1u === oldName) m.p1u = name;
+      if (m.p2u === oldName) m.p2u = name;
+    });
+    
+    // ELO 히스토리 업데이트
+    if (typeof eloHistory !== 'undefined') {
+      eloHistory.forEach(h => {
+        if (h.univ === oldName) {
+          h.univ = name;
+        }
+      });
     }
   }
-  u.name=newName;
-  u.color=newColor;
-  if(newIcon) u.icon=newIcon; else delete u.icon;
-  save();render();
-  window._univModalCurrentName=newName;
-  document.getElementById('univModalTitle').innerText=`${newName} 대학 상세`;
-  document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);
+
+  univCfg[uIdx].name = name;
+  univCfg[uIdx].color = color;
+  univCfg[uIdx].icon = icon;
+  save();
+  
+  // 모달 내용 및 상태 업데이트
+  window._univModalCurrentName = name;
+  document.getElementById('univModalTitle').innerText = `${name} 대학 상세`;
+  document.getElementById('univModalBody').innerHTML = buildUnivDetailHTML(name);
   injectUnivIcons(document.getElementById('univModalBody'));
-  window._univEditOpen=false;
-  const btn=document.getElementById('univEditBtn');
-  if(btn) btn.textContent='✏️ 수정';
+  toggleUnivEdit(); // 편집 패널 닫기
+
+  // 데이터 변경 후 UI 새로고침
+  if (typeof rMenu === 'function') rMenu();
+  if (typeof rBoard === 'function') rBoard();
+  if (typeof rStats === 'function') rStats();
+  if (typeof rHist === 'function') rHist();
 }
 
 function buildPlayerDetailHTML(p){
