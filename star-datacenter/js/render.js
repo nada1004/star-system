@@ -222,39 +222,92 @@ function openPlayerHistEdit(playerName, histIdx){
   if(saveBtnOrig){
     const _prevOnclick=saveBtnOrig.onclick;
     saveBtnOrig.onclick=function(){
-      const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp;
-      hh.date=document.getElementById('phe-date').value;
-      hh.result=document.getElementById('phe-result').value;
-      hh.opp=document.getElementById('phe-opp').value;
-      hh.oppRace=document.getElementById('phe-race').value;
-      hh.map=document.getElementById('phe-map').value||'-';
+      const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp, oldResult=hh.result;
+      const newDate=document.getElementById('phe-date').value;
+      const newResult=document.getElementById('phe-result').value;
+      const newOpp=document.getElementById('phe-opp').value;
+      const newRace=document.getElementById('phe-race').value;
+      const newMap=document.getElementById('phe-map').value||'-';
       const _newUniv=document.getElementById('phe-univ')?.value;
+
+      // ── 결과(승/패) 변경 시 본인 ELO·승패·포인트 재계산 ──
+      if(newResult!==oldResult){
+        // 기존 결과 되돌리기
+        if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
+        if(oldResult==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
+        else{p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
+        // 새 결과 적용 (ELO delta 부호 반전)
+        const newDelta=hh.eloDelta!=null?-hh.eloDelta:null;
+        if(newDelta!=null){p.elo=(p.elo||ELO_DEFAULT)+newDelta;hh.eloDelta=newDelta;}
+        if(newResult==='승'){p.win=(p.win||0)+1;p.points=(p.points||0)+3;}
+        else{p.loss=(p.loss||0)+1;p.points=(p.points||0)-3;}
+      }
+
+      hh.date=newDate;
+      hh.result=newResult;
+      hh.opp=newOpp;
+      hh.oppRace=newRace;
+      hh.map=newMap;
       if(_newUniv) hh.univ=_newUniv;
-      // 🔧 상대방 history도 날짜/맵 동기화
+
+      // ── 상대방 history도 날짜/맵/결과 동기화 ──
       const oppPlayer=players.find(x=>x.name===oldOpp);
       if(oppPlayer){
         const oppH=(oppPlayer.history||[]).find(o=>
           o.opp===playerName&&o.date===oldDate&&(o.map||'-')===(oldMap||'-')
         );
         if(oppH){
-          oppH.date=hh.date;
-          oppH.map=hh.map;
-          if(hh.opp!==oldOpp) oppH.opp=hh.opp;
+          oppH.date=newDate;
+          oppH.map=newMap;
+          if(newOpp!==oldOpp) oppH.opp=newOpp;
+          // 결과 변경 시 상대방 결과·ELO·승패도 반전
+          if(newResult!==oldResult){
+            const oppOldResult=oppH.result;
+            if(oppH.eloDelta!=null) oppPlayer.elo=(oppPlayer.elo||ELO_DEFAULT)-oppH.eloDelta;
+            if(oppOldResult==='승'){oppPlayer.win=Math.max(0,(oppPlayer.win||0)-1);oppPlayer.points=(oppPlayer.points||0)-3;}
+            else{oppPlayer.loss=Math.max(0,(oppPlayer.loss||0)-1);oppPlayer.points=(oppPlayer.points||0)+3;}
+            const newOppDelta=oppH.eloDelta!=null?-oppH.eloDelta:null;
+            if(newOppDelta!=null){oppPlayer.elo=(oppPlayer.elo||ELO_DEFAULT)+newOppDelta;oppH.eloDelta=newOppDelta;}
+            oppH.result=oppOldResult==='승'?'패':'승';
+            if(oppH.result==='승'){oppPlayer.win=(oppPlayer.win||0)+1;oppPlayer.points=(oppPlayer.points||0)+3;}
+            else{oppPlayer.loss=(oppPlayer.loss||0)+1;oppPlayer.points=(oppPlayer.points||0)-3;}
+          }
         }
       }
-      // 🔧 대전기록 배열(.d)도 날짜 동기화
-      if(hh.matchId && hh.date){
-        const _matchArrs=[miniM,univM,ckM,proM,ttM,comps,
+
+      // ── 대전기록 배열(.d)도 날짜 동기화 (tourneys 포함) ──
+      if(hh.matchId && newDate){
+        const mid=hh.matchId;
+        const _flatArrs=[miniM,univM,ckM,proM,ttM,comps,
           typeof gjM!=='undefined'?gjM:[],
           typeof indM!=='undefined'?indM:[]];
-        for(const arr of _matchArrs){
+        let found=false;
+        for(const arr of _flatArrs){
           if(!arr)continue;
-          const entry=arr.find(m=>m._id===hh.matchId);
-          if(entry){entry.d=hh.date;break;}
+          const entry=arr.find(m=>m._id===mid);
+          if(entry){entry.d=newDate;found=true;break;}
+        }
+        // tourneys 내 경기 탐색 (대회/티어대회)
+        if(!found && typeof tourneys!=='undefined'){
+          outer: for(const tn of tourneys){
+            for(const grp of (tn.groups||[])){
+              for(const m of (grp.matches||[])){
+                if(m._id===mid){m.d=newDate;found=true;break outer;}
+              }
+            }
+            const br=tn.bracket||{};
+            for(const m of Object.values(br.matchDetails||{})){
+              if(m&&m._id===mid){m.d=newDate;found=true;break outer;}
+            }
+            for(const m of (br.manualMatches||[])){
+              if(m&&m._id===mid){m.d=newDate;found=true;break outer;}
+            }
+          }
         }
       }
-      // 버튼 onclick 복원 (다음 openRE 호출을 위해)
+
       saveBtnOrig.onclick=_prevOnclick;
+      if(typeof fixPoints==='function')fixPoints();
       save();
       cm('reModal');
       const pb=document.getElementById('playerModalBody');
