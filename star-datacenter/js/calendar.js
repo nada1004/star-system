@@ -99,12 +99,11 @@ function rCal(C,T){
   let navHTML='';
 
   if(calView==='month'){
-    // Bug fix: 월 변경 시 _calActiveDay 초기화
     navHTML=`
-      <button class="btn btn-w btn-sm" onclick="_calActiveDay='';calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀ 이전</button>
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===0?calYear-1:calYear;calMonth=calMonth===0?11:calMonth-1;render()">◀ 이전</button>
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;min-width:110px;text-align:center">${year}년 ${month+1}월</span>
-      <button class="btn btn-w btn-sm" onclick="_calActiveDay='';calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">다음 ▶</button>
-      <button class="btn btn-w btn-sm" onclick="_calActiveDay='';calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>`;
+      <button class="btn btn-w btn-sm" onclick="calYear=calMonth===11?calYear+1:calYear;calMonth=calMonth===11?0:calMonth+1;render()">다음 ▶</button>
+      <button class="btn btn-w btn-sm" onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();render()">오늘</button>`;
 
     let cells='', day=1;
     for(let row=0;row<6;row++){
@@ -258,8 +257,8 @@ function rCal(C,T){
     }
   }
 
-  // 날짜 미정 (필터 상관없이 전체 기준)
-  const undatedMatches=rawAll.filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
+  // 날짜 미정 (타입 필터 적용)
+  const undatedMatches=(calTypeFilter&&calTypeFilter!=='all'?rawAll.filter(m=>matchType(m)===calTypeFilter):rawAll).filter(m=>!m.d||(typeof m.d==='string'&&m.d.trim()===''));
   const undatedHTML=undatedMatches.length?`<div style="margin-bottom:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
   <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">📋 날짜 미정 경기 (${undatedMatches.length}건)</div>
   <div style="display:flex;flex-wrap:wrap;gap:4px">

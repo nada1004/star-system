@@ -156,7 +156,10 @@ function cancelVote(key){
   const side=voteData[key+'_my'];
   if(!side)return;
   if(!confirm('예측을 취소하시겠습니까?'))return;
-  if(voteData[key]) voteData[key][side]=Math.max(0,voteData[key][side]-1);
+  if(voteData[key]){
+    voteData[key][side]=Math.max(0,voteData[key][side]-1);
+    if((voteData[key].a||0)===0&&(voteData[key].b||0)===0) delete voteData[key];
+  }
   delete voteData[key+'_my'];
   saveVotes();
   render();

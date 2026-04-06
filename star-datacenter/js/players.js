@@ -165,7 +165,7 @@ function rTotal(C,T){
       const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
+        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
@@ -230,9 +230,9 @@ function toggleBulkEditPlayer(name,checked){
 }
 
 function bulkEditToggleAll(checked){
-  document.querySelectorAll('[onchange^="toggleBulkEditPlayer"]').forEach(cb=>{
+  document.querySelectorAll('[data-player-name]').forEach(cb=>{
     cb.checked=checked;
-    const name=cb.getAttribute('onchange').match(/toggleBulkEditPlayer\('(.+?)',/)?.[1];
+    const name=cb.dataset.playerName;
     if(name){if(checked)_bulkEditSelected.add(name);else _bulkEditSelected.delete(name);}
   });
   const cnt=document.getElementById('bulk-edit-cnt');
@@ -249,7 +249,7 @@ function clearBulkEditSelection(){
   if(btn) btn.style.display='none';
   const all=document.getElementById('bulk-check-all');
   if(all) all.checked=false;
-  document.querySelectorAll('[onchange^="toggleBulkEditPlayer"]').forEach(cb=>{cb.checked=false;});
+  document.querySelectorAll('[data-player-name]').forEach(cb=>{cb.checked=false;});
 }
 
 function openBulkEditModal(){
