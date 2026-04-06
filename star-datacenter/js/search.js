@@ -173,8 +173,7 @@ function parseFormatC(line, prevScore) {
   const prev = prevScore || { a: 0, b: 0 };
   const deltaA = scoreA - prev.a;
   const deltaB = scoreB - prev.b;
-  if (deltaA + deltaB !== 1) return null;
-  if (deltaA < 0 || deltaB < 0) return null;
+  if (!((deltaA===1&&deltaB===0)||(deltaA===0&&deltaB===1))) return null;
 
   const aWon = deltaA === 1;
   return {
@@ -379,7 +378,7 @@ function parseFormatD_blocks(raw) {
 
   // 여러 줄에 걸쳐 이름+종족 수집 헬퍼
   // 종족 단독줄: T, Z, P, T선픽, P선픽, Z선픽, T후픽, 선픽, 후픽 등
-  const isRaceLine = l => /^[TZP]?(선픽|후픽)?$/.test(l) && l.length<=5 && /[TZP선픽후]/.test(l);
+  const isRaceLine = l => /^([TZP](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
   const isResultLine = l => l==='승리!'||l==='패배!';
   const isVsLine = l => /^VS$/i.test(l);
   const isMapLine = l => l.startsWith('맵:');
@@ -910,6 +909,22 @@ function parsePasteLine(line) {
       const [q1, q2] = parts;
       if (q1.result === '승' && q2.result === '패') return { winName: q1.name, loseName: q2.name, map, _rawMapStr, leftName: q1.name, rightName: q2.name };
       if (q1.result === '패' && q2.result === '승') return { winName: q2.name, loseName: q1.name, map, _rawMapStr, leftName: q1.name, rightName: q2.name };
+    }
+  }
+
+  // ── 형식 H: 승자:패자 초간단 형식 ──
+  // 예: "이영호:박정석" / "이영호:박정석 라데" / "이영호:박정석 라데리안"
+  {
+    const hm = line.match(/^([^:\s][^:]*):([^:\s][^:]*)(?:\s+(\S.*))?$/);
+    if (hm) {
+      const hWin = hm[1].trim(), hLose = hm[2].trim();
+      const hMapRaw = (hm[3]||'').trim();
+      // 순수 숫자(스코어)는 제외: "3:2" 같은 패턴 차단
+      if (hWin && hLose && !/^\d+$/.test(hWin) && !/^\d+$/.test(hLose)) {
+        const hMap = hMapRaw ? resolveMapName(hMapRaw) : '-';
+        return { winName: hWin, loseName: hLose, map: hMap, _rawMapStr: hMapRaw,
+          leftName: hWin, rightName: hLose };
+      }
     }
   }
 
@@ -1691,9 +1706,12 @@ function renderPastePreview(results, errors) {
   }
 
   if (errors && errors.length > 0) {
-    html += `<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:11px;color:#dc2626">
-      <b>⚠️ 인식 불가 ${errors.length}줄</b> (경기 형식이 아닌 줄은 자동 무시됩니다):<br>
-      ${errors.map(e => `<code style="opacity:.75;font-size:10px">${e.line}행: ${e.raw.slice(0,60)}${e.raw.length>60?'…':''}</code>`).join('<br>')}
+    html += `<div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-top:6px">
+      <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
+      ${errors.map(e => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="flex-shrink:0;font-size:10px;font-weight:700;background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px">${e.line}행</span>
+        <code style="font-size:10px;color:#991b1b;background:#fff1f2;padding:2px 7px;border-radius:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.raw.replace(/"/g,'&quot;')}">${e.raw.slice(0,90)}${e.raw.length>90?'…':''}</code>
+      </div>`).join('')}
     </div>`;
   }
 
@@ -1961,6 +1979,7 @@ function pasteApply() {
 
   const mode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || 'individual';
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
+  try { if(dateVal) localStorage.setItem('su_paste_last_date', dateVal); } catch(e) {}
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
   if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
@@ -2125,11 +2144,10 @@ function pasteApply() {
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
     // 중복 체크: 날짜+맵+선수쌍(순서 무관) 동일하면 차단
+    const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
     const _indIsDup = (d, map, w, l) => indM.some(m => {
       if (m.d !== d) return false;
-      const mMap = m.map || '';
-      const rMap = map || '';
-      if (mMap !== rMap) return false;
+      if (_normMap(m.map) !== _normMap(map)) return false;
       const pair1 = [m.wName, m.lName].sort().join('|');
       const pair2 = [w, l].sort().join('|');
       return pair1 === pair2;
@@ -2255,7 +2273,14 @@ function onPasteModeChange(val) {
   if (val === 'ind') {
     const dl = document.getElementById('paste-ref-player-list');
     if (dl && typeof players !== 'undefined') {
-      dl.innerHTML = players.map(p => `<option value="${(p.name||'').replace(/"/g,'&quot;')}">`).join('');
+      dl.innerHTML = players.flatMap(p => {
+        const opts = [`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`];
+        if (p.memo) {
+          p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
+            .forEach(alias => opts.push(`<option value="${alias.replace(/"/g,'&quot;')}">`));
+        }
+        return opts;
+      }).join('');
     }
   }
 }
@@ -2373,7 +2398,10 @@ function openPasteModal() {
   if (refInput) refInput.value = '';
 
   const dateInput = document.getElementById('paste-date');
-  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+  if (dateInput) {
+    const _saved = localStorage.getItem('su_paste_last_date');
+    dateInput.value = _saved || new Date().toISOString().slice(0, 10);
+  }
 
   // 모드 선택기 원상 복구
   const modeSel = document.getElementById('paste-mode');
@@ -2429,7 +2457,14 @@ function openIndPasteModal() {
   if (refWrap) refWrap.style.display = 'flex';
   const dl = document.getElementById('paste-ref-player-list');
   if (dl && typeof players !== 'undefined') {
-    dl.innerHTML = players.map(p => `<option value="${p.name}">`).join('');
+    dl.innerHTML = players.flatMap(p => {
+      const opts = [`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`];
+      if (p.memo) {
+        p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
+          .forEach(alias => opts.push(`<option value="${alias.replace(/"/g,'&quot;')}">`));
+      }
+      return opts;
+    }).join('');
   }
 }
 
@@ -2451,7 +2486,7 @@ function openTTPasteModal() {
   window._forcedPasteMode = 'tt';
   const sel = document.getElementById('paste-mode');
   const lbl = document.getElementById('paste-mode-label');
-  if (sel) { sel.value = 'mini'; sel.style.display = 'none'; onPasteModeChange('mini'); }
+  if (sel) { sel.value = 'mini'; sel.style.display = 'none'; }
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
