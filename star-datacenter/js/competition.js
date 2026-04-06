@@ -56,6 +56,7 @@ function rComp(C,T){
     </select>
     ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="grpNewLeagueTourney()">+ 일반 대회</button>`:''}
     ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="grpDelCurTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
+    ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncTourneyHistoryBtn()" title="대회 경기를 선수 최근 기록에 소급 반영">🔄 전적 동기화</button>`:''}
     ${tn?`<span style="font-size:11px;color:var(--gray-l)">${tnType==='tier'?'🎯 티어대회':('🏆 '+(tn.groups||[]).length+'개 조 · '+(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)+'경기')}</span>`:''}
   </div>`;
 

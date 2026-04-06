@@ -69,3 +69,53 @@ function revertMatchRecord(matchObj){
     });
   });
 }
+
+/* ══════════════════════════════════════
+   대회/티어대회 경기 → 선수 최근 기록 소급 동기화
+   - tourneys의 모든 경기를 스캔해 p.history에 없는 것만 추가
+   - 이미 반영된 경기(matchId 중복)는 건너뜀
+══════════════════════════════════════ */
+function syncTourneyHistory(){
+  const existingIds=new Set();
+  players.forEach(p=>{
+    (p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});
+  });
+
+  let added=0;
+
+  function processMatch(m, modeLabel){
+    if(!m||!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const univW=g.winner==='A'?(m.a||''):(m.b||'');
+        const univL=g.winner==='A'?(m.b||''):(m.a||'');
+        applyGameResult(wn,ln,m.d,g.map||'',m._id,univW,univL,modeLabel);
+        added++;
+      });
+    });
+    existingIds.add(m._id);
+  }
+
+  tourneys.forEach(tn=>{
+    const isTier=tn.type==='tier';
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>processMatch(m, isTier?'티어대회':'조별리그'));
+    });
+    const br=tn.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(m=>processMatch(m, isTier?'티어대회':'대회'));
+    (br.manualMatches||[]).forEach(m=>{if(m)processMatch(m, isTier?'티어대회':'대회');});
+  });
+
+  if(added>0){save();}
+  return added;
+}
+
+function syncTourneyHistoryBtn(){
+  const n=syncTourneyHistory();
+  if(n>0){alert('✅ '+n+'건의 경기가 선수 최근 기록에 소급 반영되었습니다.\n선수 상세 페이지에서 확인하세요.');render();}
+  else{alert('✅ 이미 모든 대회 경기가 반영되어 있습니다.');}
+}
