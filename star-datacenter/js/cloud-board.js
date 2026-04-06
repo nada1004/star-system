@@ -124,6 +124,8 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
+  // 보라크루
+  if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
@@ -198,7 +200,7 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons, calScheduled,
+    curProComp, _ttCurComp, seasons, calScheduled, crew,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     savedAt

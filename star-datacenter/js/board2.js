@@ -68,13 +68,13 @@ function rBoard2(C, T) {
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>` : '';
 
-  const extraBtns = '';
+  const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
       ${oldBtn}
-      ${extraBtns}
+      ${crewBtn}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -90,6 +90,8 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
+  } else if (_b2View === 'crew') {
+    sub.innerHTML = _b2CrewView();
   }
 }
 
@@ -478,4 +480,99 @@ function _b2ContrastColor(hex) {
     const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
     return (r*299+g*587+b*114)/1000 > 128 ? '#1e293b' : '#ffffff';
   } catch(e){ return '#ffffff'; }
+}
+
+/* ══════════════════════════════════════
+   💜 보라크루 현황판
+══════════════════════════════════════ */
+function _b2CrewView() {
+  const c = typeof crew !== 'undefined' ? crew : [];
+  let h = `<div style="padding:16px 0">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <span style="font-size:18px;font-weight:900;color:#7c3aed">💜 보라크루</span>
+      <span style="font-size:12px;color:var(--gray-l)">${c.length}명</span>
+      ${isLoggedIn ? `<button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed;margin-left:auto" onclick="openCrewAddModal()">+ 크루원 추가</button>` : ''}
+    </div>`;
+  if (!c.length) {
+    h += `<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
+      <div style="font-size:40px;margin-bottom:12px">💜</div>
+      <div style="font-weight:700;margin-bottom:6px">등록된 크루원이 없습니다</div>
+      ${isLoggedIn ? `<div style="font-size:12px">위의 + 크루원 추가 버튼으로 등록하세요</div>` : ''}
+    </div>`;
+  } else {
+    h += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px">`;
+    c.forEach((m, i) => {
+      const photoHTML = m.photo
+        ? `<img src="${m.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #7c3aed;margin-bottom:8px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      const fallback = `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;border:3px solid #7c3aed;margin-bottom:8px${m.photo?';display:none':''}">${(m.name||'?')[0]}</div>`;
+      const linkBtn = m.link
+        ? `<a href="${m.link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#7c3aed;color:#fff;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;margin-top:4px">▶ 방송</a>`
+        : '';
+      const adminBtns = isLoggedIn
+        ? `<div class="no-export" style="display:flex;gap:4px;margin-top:6px">
+            <button class="btn btn-w btn-xs" onclick="openCrewEditModal(${i})" style="padding:2px 6px;font-size:10px">✏️</button>
+            <button class="btn btn-r btn-xs" onclick="deleteCrew(${i})" style="padding:2px 6px;font-size:10px">🗑</button>
+          </div>` : '';
+      h += `<div style="background:var(--surface);border:1.5px solid #ede9fe;border-radius:14px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(124,58,237,.18)'" onmouseout="this.style.boxShadow=''">
+        ${photoHTML}${fallback}
+        <div style="font-weight:800;font-size:13px;color:var(--text1);word-break:break-all">${m.name||''}</div>
+        ${linkBtn}
+        ${adminBtns}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+function openCrewAddModal() {
+  if (!isLoggedIn) return;
+  document.getElementById('crewModalTitle').textContent = '+ 크루원 추가';
+  document.getElementById('crewModalIdx').value = '-1';
+  document.getElementById('crewModalName').value = '';
+  document.getElementById('crewModalPhoto').value = '';
+  document.getElementById('crewModalLink').value = '';
+  om('crewModal');
+}
+
+function openCrewEditModal(idx) {
+  if (!isLoggedIn) return;
+  const m = (typeof crew !== 'undefined' ? crew : [])[idx];
+  if (!m) return;
+  document.getElementById('crewModalTitle').textContent = '✏️ 크루원 수정';
+  document.getElementById('crewModalIdx').value = idx;
+  document.getElementById('crewModalName').value = m.name || '';
+  document.getElementById('crewModalPhoto').value = m.photo || '';
+  document.getElementById('crewModalLink').value = m.link || '';
+  om('crewModal');
+}
+
+function saveCrewModal() {
+  if (!isLoggedIn) return;
+  const idx = parseInt(document.getElementById('crewModalIdx').value);
+  const name = document.getElementById('crewModalName').value.trim();
+  if (!name) { alert('이름을 입력하세요.'); return; }
+  const photo = document.getElementById('crewModalPhoto').value.trim();
+  const link = document.getElementById('crewModalLink').value.trim();
+  if (typeof crew === 'undefined') window.crew = [];
+  if (idx === -1) {
+    crew.push({ name, photo, link });
+  } else {
+    crew[idx] = { name, photo, link };
+  }
+  save();
+  cm('crewModal');
+  const sub = document.getElementById('b2-content');
+  if (sub) sub.innerHTML = _b2CrewView();
+}
+
+function deleteCrew(idx) {
+  if (!isLoggedIn) return;
+  if (!confirm('크루원을 삭제할까요?')) return;
+  if (typeof crew !== 'undefined') crew.splice(idx, 1);
+  save();
+  const sub = document.getElementById('b2-content');
+  if (sub) sub.innerHTML = _b2CrewView();
 }

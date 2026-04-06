@@ -145,6 +145,8 @@ let _ttSub     = 'records';
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
 let notices    = J('su_notices') || [];
+// 보라크루: [{name, photo, link}]
+let crew       = J('su_crew') || [];
 
 let BLD = {};
 let openDetails = {};
@@ -376,6 +378,7 @@ function localSave(){
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     _lsSave('su_notices',notices);
+    _lsSave('su_crew',crew);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());

@@ -198,6 +198,27 @@
   </div>
 </div>
 
+<!-- 보라크루 추가/수정 모달 -->
+<div id="crewModal" class="modal no-export" style="z-index:5000" data-no-close="1">
+  <div class="mbox" style="max-width:360px">
+    <div class="mtitle" id="crewModalTitle">크루원</div>
+    <input type="hidden" id="crewModalIdx" value="-1">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+      <div><label style="font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이름 *</label>
+        <input id="crewModalName" type="text" placeholder="크루원 이름" style="width:100%;box-sizing:border-box"></div>
+      <div><label style="font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">프로필 이미지 URL</label>
+        <input id="crewModalPhoto" type="text" placeholder="https://..." style="width:100%;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:3px">이미지 직접 링크(jpg/png/gif 등) 입력</div></div>
+      <div><label style="font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">방송 링크</label>
+        <input id="crewModalLink" type="text" placeholder="https://chzzk.naver.com/..." style="width:100%;box-sizing:border-box"></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn btn-b" style="flex:1;background:#7c3aed;border-color:#7c3aed" onclick="saveCrewModal()">저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="cm('crewModal')">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- 기록 수정 모달 -->
 <div id="reModal" class="modal no-export" style="z-index:5000" data-no-close="1">
   <div class="mbox">
