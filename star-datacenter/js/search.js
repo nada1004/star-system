@@ -566,6 +566,7 @@ function parsePasteLine(line) {
     .replace(/^\(\d+티어\)\s*/i, '')              // (N티어) 괄호 제거
     .replace(/^\[\d+티어\]\s*/i, '')              // [N티어] 제거
     .replace(/^[\d]+\s*경기[\.\)·\s]*/i, '')      // N경기
+    .replace(/^경기\s*[\d]+[\:\.\)·\s]*/i, '')    // 경기N:
     .replace(/^[\d]+[R라r][\.\)·\s]*/i, '')       // NR, N라운드
     .replace(/^[\d]+[\.\)]\s*/, '')               // N. N)
     .replace(/^[-•·▶▷>\s]+/, '')
@@ -792,6 +793,43 @@ function parsePasteLine(line) {
           if (left.name && right.name) {
             return { winName: lWin ? left.name : right.name, loseName: lWin ? right.name : left.name,
               map: fMap, leftName: left.name, rightName: right.name };
+          }
+        }
+      }
+    }
+  }
+
+  // ── 형식 G: 선수A vs 선수B → 승자 승 | 맵 ──
+  // 예: "야생땃쥐 vs 요시 → 요시 승 | 폴리포이드"
+  {
+    const arrowIdx = line.indexOf('→');
+    if (arrowIdx > 0) {
+      let gLeft = line.slice(0, arrowIdx).trim();
+      let gRight = line.slice(arrowIdx + 1).trim();
+      // | 맵명 추출
+      let gMap = '-';
+      const pipeSep = gRight.match(/\|\s*(.+)$/);
+      if (pipeSep) {
+        gMap = resolveMapName(pipeSep[1].trim());
+        gRight = gRight.slice(0, pipeSep.index).trim();
+      }
+      // "승자 승" 또는 "승자 승리"
+      const winMatch = gRight.match(/^(.+?)\s+(승|승리)$/);
+      if (winMatch) {
+        const winnerRaw = winMatch[1].trim();
+        const vsParts = gLeft.split(/\s+vs\s+/i);
+        if (vsParts.length === 2) {
+          const nameA = vsParts[0].trim();
+          const nameB = vsParts[1].trim();
+          if (nameA && nameB && winnerRaw) {
+            // 승자가 A측인지 B측인지 판별 (포함 관계로 매칭)
+            const aIsWinner = nameA === winnerRaw || nameA.includes(winnerRaw) || winnerRaw.includes(nameA);
+            return {
+              winName:  aIsWinner ? nameA : nameB,
+              loseName: aIsWinner ? nameB : nameA,
+              map: gMap,
+              leftName: nameA, rightName: nameB
+            };
           }
         }
       }
