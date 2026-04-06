@@ -486,40 +486,63 @@ function _b2ContrastColor(hex) {
    💜 보라크루 현황판
 ══════════════════════════════════════ */
 function _b2CrewView() {
-  const c = typeof crew !== 'undefined' ? crew : [];
+  const crewArr = typeof crew !== 'undefined' ? crew : [];
+  // players 중 isCrew=true인 멤버
+  const scCrew = typeof players !== 'undefined' ? players.filter(p => p.isCrew) : [];
+  const total = scCrew.length + crewArr.length;
+
+  function _crewCard(name, photo, link, isSC, crewIdx) {
+    const photoHTML = photo
+      ? `<img src="${photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #7c3aed;margin-bottom:8px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const fallback = `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:${photo?'none':'flex'};align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;border:3px solid #7c3aed;margin-bottom:8px">${(name||'?')[0]}</div>`;
+    const scBadge = isSC ? `<span style="font-size:9px;background:#1e40af;color:#fff;border-radius:6px;padding:1px 5px;font-weight:700;margin-bottom:4px">⚔️ SC2</span>` : '';
+    const nameEl = isSC
+      ? `<div style="font-weight:800;font-size:13px;color:var(--blue);cursor:pointer;word-break:break-all" onclick="openPlayerModal('${(name||'').replace(/'/g,"\\'")}') ">${name||''}</div>`
+      : `<div style="font-weight:800;font-size:13px;color:var(--text1);word-break:break-all">${name||''}</div>`;
+    const linkBtn = link
+      ? `<a href="${link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#7c3aed;color:#fff;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;margin-top:4px">▶ 방송</a>`
+      : '';
+    const adminBtns = isLoggedIn
+      ? (isSC
+        ? `<div class="no-export" style="display:flex;gap:4px;margin-top:6px"><button class="btn btn-w btn-xs" onclick="openEP('${(name||'').replace(/'/g,"\\'")}');cm('playerModal')" style="padding:2px 6px;font-size:10px" title="스트리머 수정">✏️</button></div>`
+        : `<div class="no-export" style="display:flex;gap:4px;margin-top:6px">
+            <button class="btn btn-w btn-xs" onclick="openCrewEditModal(${crewIdx})" style="padding:2px 6px;font-size:10px">✏️</button>
+            <button class="btn btn-r btn-xs" onclick="deleteCrew(${crewIdx})" style="padding:2px 6px;font-size:10px">🗑</button>
+          </div>`)
+      : '';
+    return `<div style="background:var(--surface);border:1.5px solid #ede9fe;border-radius:14px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(124,58,237,.18)'" onmouseout="this.style.boxShadow=''">
+      ${photoHTML}${fallback}
+      ${scBadge}
+      ${nameEl}
+      ${linkBtn}
+      ${adminBtns}
+    </div>`;
+  }
+
   let h = `<div style="padding:16px 0">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
       <span style="font-size:18px;font-weight:900;color:#7c3aed">💜 보라크루</span>
-      <span style="font-size:12px;color:var(--gray-l)">${c.length}명</span>
+      <span style="font-size:12px;color:var(--gray-l)">${total}명</span>
+      ${scCrew.length ? `<span style="font-size:11px;color:#1e40af;background:#dbeafe;padding:2px 8px;border-radius:8px;font-weight:700">⚔️ SC 겸용 ${scCrew.length}명</span>` : ''}
       ${isLoggedIn ? `<button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed;margin-left:auto" onclick="openCrewAddModal()">+ 크루원 추가</button>` : ''}
     </div>`;
-  if (!c.length) {
+
+  if (!total) {
     h += `<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:40px;margin-bottom:12px">💜</div>
       <div style="font-weight:700;margin-bottom:6px">등록된 크루원이 없습니다</div>
-      ${isLoggedIn ? `<div style="font-size:12px">위의 + 크루원 추가 버튼으로 등록하세요</div>` : ''}
+      ${isLoggedIn ? `<div style="font-size:12px">+ 크루원 추가 버튼 또는 스트리머 수정에서 "보라크루 소속" 체크로 등록하세요</div>` : ''}
     </div>`;
   } else {
     h += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px">`;
-    c.forEach((m, i) => {
-      const photoHTML = m.photo
-        ? `<img src="${m.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #7c3aed;margin-bottom:8px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : '';
-      const fallback = `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;border:3px solid #7c3aed;margin-bottom:8px${m.photo?';display:none':''}">${(m.name||'?')[0]}</div>`;
-      const linkBtn = m.link
-        ? `<a href="${m.link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#7c3aed;color:#fff;border-radius:12px;font-size:11px;font-weight:700;text-decoration:none;margin-top:4px">▶ 방송</a>`
-        : '';
-      const adminBtns = isLoggedIn
-        ? `<div class="no-export" style="display:flex;gap:4px;margin-top:6px">
-            <button class="btn btn-w btn-xs" onclick="openCrewEditModal(${i})" style="padding:2px 6px;font-size:10px">✏️</button>
-            <button class="btn btn-r btn-xs" onclick="deleteCrew(${i})" style="padding:2px 6px;font-size:10px">🗑</button>
-          </div>` : '';
-      h += `<div style="background:var(--surface);border:1.5px solid #ede9fe;border-radius:14px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(124,58,237,.18)'" onmouseout="this.style.boxShadow=''">
-        ${photoHTML}${fallback}
-        <div style="font-weight:800;font-size:13px;color:var(--text1);word-break:break-all">${m.name||''}</div>
-        ${linkBtn}
-        ${adminBtns}
-      </div>`;
+    // SC 겸용 멤버 먼저
+    scCrew.forEach(p => {
+      h += _crewCard(p.name, p.photo, p.channelUrl, true, -1);
+    });
+    // 순수 보라크루
+    crewArr.forEach((m, i) => {
+      h += _crewCard(m.name, m.photo, m.link, false, i);
     });
     h += `</div>`;
   }
