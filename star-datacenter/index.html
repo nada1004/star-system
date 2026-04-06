@@ -320,6 +320,15 @@
       </div>
       <div id="paste-mode-hint" style="font-size:11px;color:var(--gray-l);width:100%;margin-top:2px"></div>
     </div>
+    <!-- 기준 선수 입력 (개인전 TSV용) -->
+    <div id="paste-ref-player-wrap" style="display:none;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:#fef9c3;border:1px solid #fde68a;border-radius:8px;flex-wrap:wrap">
+      <label style="font-size:12px;font-weight:700;color:#92400e;white-space:nowrap">👤 기준 선수</label>
+      <input type="text" id="paste-ref-player" placeholder="스트리머 이름 입력" list="paste-ref-player-list"
+        style="border:1px solid #fde68a;border-radius:7px;padding:5px 10px;font-size:13px;min-width:120px;flex:1"
+        oninput="pastePreview()">
+      <datalist id="paste-ref-player-list"></datalist>
+      <span style="font-size:11px;color:#92400e">입력하면 <code style="background:#fef08a;border-radius:3px;padding:1px 4px">날짜 TAB 상대(종족) TAB 맵 TAB ±점수</code> 형식 자동 인식</span>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;flex-wrap:wrap">
       <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
       <div style="display:flex;gap:6px;align-items:center">
