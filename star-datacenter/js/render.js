@@ -103,6 +103,37 @@ function render(){
 }
 
 /* ══════════════════════════════════════
+   스트리머 상세 모달 페이지네이션 헬퍼
+   인라인 onclick 복잡도를 줄이고 스코핑 이슈 방지
+══════════════════════════════════════ */
+window._goPlayerHistPage = function(page, name){
+  playerHistPage = page;
+  const _p = players.find(x=>x.name===name);
+  if(!_p) return;
+  const _mb = document.getElementById('playerModalBody');
+  if(!_mb) return;
+  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  injectUnivIcons(_mb);
+};
+window._goPlayerOppPage = function(page, name){
+  window._oppPage = page;
+  const _p = players.find(x=>x.name===name);
+  if(!_p) return;
+  const _mb = document.getElementById('playerModalBody');
+  if(!_mb) return;
+  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  injectUnivIcons(_mb);
+};
+window._rebuildPlayerDetail = function(name){
+  const _p = players.find(x=>x.name===name);
+  if(!_p) return;
+  const _mb = document.getElementById('playerModalBody');
+  if(!_mb) return;
+  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  injectUnivIcons(_mb);
+};
+
+/* ══════════════════════════════════════
    선수 이름 클릭 → 모달
    대학 클릭 → 모달
 ══════════════════════════════════════ */
@@ -763,20 +794,20 @@ function buildPlayerDetailHTML(p){
 
   // ── 연도 필터 드롭다운 ──
   if(_availYears.length>0){
-    const _pSafeY=p.name.replace(/'/g,"\\'");
+    const _pSafeY=escJS(p.name);
     const _yWin=_hist.filter(h=>h.result==='승').length;
     const _yLoss=_hist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
-      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
+      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
         style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
       </select>
       ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
-      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
     </div>`;
   }
 
@@ -842,8 +873,8 @@ function buildPlayerDetailHTML(p){
     if(!window._oppSort) window._oppSort='tot';
     const oppList=Object.entries(opps);
     if(oppList.length){
-      const _pSafeOpp=p.name.replace(/'/g,"\'");
-      const _rebuildOpp=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeOpp}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      const _pSafeOpp=escJS(p.name);
+      const _rebuildOpp=`window._rebuildPlayerDetail('${_pSafeOpp}')`;
       if(window._oppSort==='wr') oppList.sort((a,b)=>{const ta=a[1].w+a[1].l,tb=b[1].w+b[1].l;const wa=ta?a[1].w/ta:0,wb=tb?b[1].w/tb:0;return wb-wa;});
       else if(window._oppSort==='w') oppList.sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
       else oppList.sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
@@ -898,9 +929,9 @@ function buildPlayerDetailHTML(p){
             </tbody>
           </table>
           ${_oppTotalPages>1?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
-            <button class="btn btn-w btn-xs" ${_oppCurPage===0?'disabled':''} onclick="window._oppPage=${_oppCurPage-1};${_rebuildOpp}">◀ 이전</button>
+            <button class="btn btn-w btn-xs" ${_oppCurPage===0?'disabled':''} onclick="window._goPlayerOppPage(${_oppCurPage-1},'${escJS(p.name)}')">◀ 이전</button>
             <span style="font-size:12px;color:var(--gray-l)">${_oppCurPage+1} / ${_oppTotalPages} 페이지</span>
-            <button class="btn btn-w btn-xs" ${_oppCurPage>=_oppTotalPages-1?'disabled':''} onclick="window._oppPage=${_oppCurPage+1};${_rebuildOpp}">다음 ▶</button>
+            <button class="btn btn-w btn-xs" ${_oppCurPage>=_oppTotalPages-1?'disabled':''} onclick="window._goPlayerOppPage(${_oppCurPage+1},'${escJS(p.name)}')">다음 ▶</button>
           </div>`:''}
         </div>
       </div>`;
@@ -912,22 +943,22 @@ function buildPlayerDetailHTML(p){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
     if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
+    const _pNameSafe=escJS(p.name);
     const allModes=[...new Set(_hist.map(h=>h.mode||'').filter(Boolean))];
     const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-      <button onclick="window._playerHistFilter='전체';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
-      ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
+      <button onclick="window._playerHistFilter='전체';playerHistPage=0;window._rebuildPlayerDetail('${_pNameSafe}')" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
+      ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m.replace(/'/g,"\\'")}';playerHistPage=0;window._rebuildPlayerDetail('${_pNameSafe}')" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
     </div>`:'';
     // 시즌 필터 UI
     let seasonBar='';
     if(typeof seasons!=='undefined' && seasons && seasons.length){
-      const _pSafe=p.name.replace(/'/g,"\'");
-      const _rbFn=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafe}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      const _rbFn=`window._rebuildPlayerDetail('${_pNameSafe}')`;
       seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
         <button onclick="window._playerSeasonFilter='전체';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
         ${seasons.map(s=>{
           const isOn=window._playerSeasonFilter===s.id;
-          const _sid=s.id.replace(/'/g,"\'");
+          const _sid=escJS(s.id);
           return `<button onclick="window._playerSeasonFilter='${_sid}';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
         }).join('')}
       </div>`;
@@ -992,9 +1023,9 @@ function buildPlayerDetailHTML(p){
     h+=`</tbody></table>`;
     if(totalPages>1){
       h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
-        <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="playerHistPage=${curPage-1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${escJS(p.name)}'));injectUnivIcons(document.getElementById('playerModalBody'))">◀ 이전</button>
+        <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="window._goPlayerHistPage(${curPage-1},'${escJS(p.name)}')">◀ 이전</button>
         <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
-        <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="playerHistPage=${curPage+1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${escJS(p.name)}'));injectUnivIcons(document.getElementById('playerModalBody'))">다음 ▶</button>
+        <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="window._goPlayerHistPage(${curPage+1},'${escJS(p.name)}')">다음 ▶</button>
       </div>`;
     }
     h+=`</div>`;
