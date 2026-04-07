@@ -216,6 +216,7 @@ function rInd(C,T){
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
   let h=stabs(indSub,subOpts);
+  if(isLoggedIn) h+=`<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px"><button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 개인전 동기화</button><button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button></div>`;
   if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
@@ -287,50 +288,12 @@ function indRankHTML(){
   <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
   <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
   <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
+</div>`:'';
   return h+`</tbody></table>`+_pageNav;
 }
 
 function indRecordsHTML(){
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  // Get all unique players from individual matches
-  const uniquePlayers = new Set();
-  indM.forEach(m => {
-    uniquePlayers.add(m.wName);
-    uniquePlayers.add(m.lName);
-  });
-  
-  // Convert to array and filter existing players
-  const playerList = Array.from(uniquePlayers)
-    .map(name => players.find(p => p.name === name))
-    .filter(p => p && !p.retired && !p.hidden);
-  
-  // If card view is enabled, show card layout
-  if (typeof boardCardView !== 'undefined' && boardCardView) {
-    const col = '#3b82f6'; // Default blue color for individual tab
-    try {
-      const chips = playerList.map((p, idx) => {
-        try {
-          if (typeof buildGlobalPlayerChip !== 'function') {
-            return `<div style="padding:10px;border:1px solid #ccc;border-radius:8px;text-align:center">${p.name}</div>`;
-          }
-          return buildGlobalPlayerChip(p, col, false, idx, playerList);
-        } catch(e) {
-          console.error('buildGlobalPlayerChip error for player:', p.name, e);
-          return `<div style="padding:10px;color:red;border:1px solid red;border-radius:8px">Error: ${p.name}</div>`;
-        }
-      }).join('');
-      return `<div style="padding:20px">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px">
-          ${chips}
-        </div>
-      </div>`;
-    } catch(e) {
-      console.error('indRecordsHTML card view error:', e);
-      return `<div style="padding:20px;color:red">Card view error: ${e.message}</div>`;
-    }
-  }
-  
-  // Original list view logic continues below...
   // 세션 그룹화: sid+페어 기준 (비연속 병합), 없으면 연속+날짜+페어 기준
   const sessions=[];
   const sidPairMap=new Map();
@@ -614,8 +577,8 @@ function indInputHTML(){
 
 function indDirectSave(){
   const gi=_indInput;
-  if(!gi.playerA||!gi.playerB){alert('');return;}
-  if(!gi.games.length){alert('');return;}
+  if(!gi.playerA||!gi.playerB){alert('스트리머 두 명을 선택하세요.');return;}
+  if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
   const sid=genId();
   const dateVal=gi.date||'';
   const newGames=gi.games.map(g=>({
@@ -624,30 +587,8 @@ function indDirectSave(){
     lName:g.winner==='A'?gi.playerB:gi.playerA,
     map:g.map||''
   }));
-  
-  // Real-time duplicate checking
-  const duplicateGames = [];
-  newGames.forEach(newGame => {
-    const duplicates = indM.filter(existingGame => 
-      existingGame.wName === newGame.wName &&
-      existingGame.lName === newGame.lName &&
-      existingGame.d === newGame.d
-    );
-    if(duplicates.length) duplicateGames.push({newGame, duplicates});
-  });
-  
-  if(duplicateGames.length){
-    const dupList = duplicateGames.map(({newGame, duplicates}) => 
-      ` ${newGame.wName} vs ${newGame.lName} (${newGame.d})\n   ${duplicates.length}`
-    ).join('\n');
-    
-    if(!confirm(`:\n\n${dupList}\n\n?`)){
-      return;
-    }
-  }
-  
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','');
+    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','','개인전');
   });
   indM.unshift(...newGames);
   _indInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
@@ -1272,60 +1213,16 @@ function ckRankHTML(){
    대학대전
 ══════════════════════════════════════ */
 function rUnivM(C,T){
-  T.innerText='';
+  T.innerText='🏟️ 대학대전';
   if(!isLoggedIn && univmSub==='input') univmSub='records';
-  const subOpts=[{id:'input',lbl:'',fn:`univmSub='input';render()`},{id:'rank',lbl:'',fn:`univmSub='rank';render()`},{id:'records',lbl:'',fn:`univmSub='records';openDetails={};render()`}];
+  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
   let h=stabs(univmSub,subOpts);
   if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('univm');
   }
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>''</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px"></button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
-  else{
-    // Get all unique players from university matches
-    const uniquePlayers = new Set();
-    univM.forEach(m => {
-      (m.sets||[]).forEach(set => {
-        (set.games||[]).forEach(game => {
-          if(game.playerA) uniquePlayers.add(game.playerA);
-          if(game.playerB) uniquePlayers.add(game.playerB);
-        });
-      });
-    });
-    
-    // Convert to array and filter existing players
-    const playerList = Array.from(uniquePlayers)
-      .map(name => players.find(p => p.name === name))
-      .filter(p => p && !p.retired && !p.hidden);
-    
-    // If card view is enabled, show card layout
-    if (typeof boardCardView !== 'undefined' && boardCardView) {
-      const col = '#10b981'; // Green color for university matches
-      try {
-        const chips = playerList.map((p, idx) => {
-          try {
-            if (typeof buildGlobalPlayerChip !== 'function') {
-              return `<div style="padding:10px;border:1px solid #ccc;border-radius:8px;text-align:center">${p.name}</div>`;
-            }
-            return buildGlobalPlayerChip(p, col, false, idx, playerList);
-          } catch(e) {
-            console.error('buildGlobalPlayerChip error for player:', p.name, e);
-            return `<div style="padding:10px;color:red;border:1px solid red;border-radius:8px">Error: ${p.name}</div>`;
-          }
-        }).join('');
-        h += `<div style="padding:20px">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px">
-            ${chips}
-          </div>
-        </div>`;
-      } catch(e) {
-        console.error('rUnivM card view error:', e);
-        h += `<div style="padding:20px;color:red">Card view error: ${e.message}</div>`;
-      }
-    } else {
-      h+=recSummaryListHTML(univM,'univm','tab');
-    }
-  }
+  else{h+=recSummaryListHTML(univM,'univm','tab');}
   C.innerHTML=h;
 }
 
