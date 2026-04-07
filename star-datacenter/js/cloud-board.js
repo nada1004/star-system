@@ -716,7 +716,7 @@ function buildUnivBoardCard(u, forExport){
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
           : `openPlayerModal('${pNameSafeCard}')`;
         return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s"`
+          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};background:rgba(255,255,255,0.85);cursor:pointer;transition:box-shadow .15s"`
           + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
           + ` onmouseout="this.style.boxShadow=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
@@ -843,7 +843,8 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'cover';
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.25;pointer-events:none;z-index:0"></div>`:'';
+    const _bgOpacity=boardCardView?0.55:0.25;
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
@@ -883,7 +884,7 @@ function buildUnivBoardCard(u, forExport){
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
+      <div class="brd-card-body brd-body" style="background:${u.bgImg&&boardCardView?'rgba(255,255,255,0.4)':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
