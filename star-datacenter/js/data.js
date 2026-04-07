@@ -121,77 +121,29 @@ function syncTourneyHistoryBtn(){
 }
 
 function syncIndHistory(){
-  console.log('syncIndHistory: Starting synchronization...');
-  
-  // Check if required variables are available
-  if (typeof players === 'undefined') {
-    console.error('syncIndHistory: players is undefined');
-    return 0;
-  }
-  
-  if (typeof indM === 'undefined') {
-    console.error('syncIndHistory: indM is undefined');
-    return 0;
-  }
-  
-  if (typeof applyGameResult === 'undefined') {
-    console.error('syncIndHistory: applyGameResult is undefined');
-    return 0;
-  }
-  
-  console.log('syncIndHistory: players length:', players.length);
-  console.log('syncIndHistory: indM length:', indM.length);
-  
-  // already have matchId in history
+  // 이미 history에 있는 matchId 수집
   const existingIds=new Set();
   players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
-  console.log('syncIndHistory: existing matchIds count:', existingIds.size);
-  
   let added=0;
-  // indM (individual matches)
-  indM.forEach(m=>{
-    if(!m._id||!m.wName||!m.lName){
-      console.warn('syncIndHistory: Skipping invalid match:', m);
-      return;
-    }
-    if(existingIds.has(m._id)){
-      return;
-    }
+  // indM (개인전)
+  (typeof indM!=='undefined'?indM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
     const mode=m._proLabel?'프로리그':'개인전';
-    console.log('syncIndHistory: Processing match:', m._id, m.wName, 'vs', m.lName);
-    try {
-      applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-      existingIds.add(m._id);
-      added++;
-    } catch (error) {
-      console.error('syncIndHistory: Error applying game result for match', m._id, ':', error);
-    }
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
   });
-  
-  // gjM (end matches)
-  if (typeof gjM !== 'undefined') {
-    gjM.forEach(m=>{
-      if(!m._id||!m.wName||!m.lName){
-        console.warn('syncIndHistory: Skipping invalid gjM match:', m);
-        return;
-      }
-      if(existingIds.has(m._id)){
-        return;
-      }
-      const mode=m._proLabel?'프로리그끝장전':'끝장전';
-      console.log('syncIndHistory: Processing gjM match:', m._id, m.wName, 'vs', m.lName);
-      try {
-        applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-        existingIds.add(m._id);
-        added++;
-      } catch (error) {
-        console.error('syncIndHistory: Error applying gjM game result for match', m._id, ':', error);
-      }
-    });
-  }
-  
+  // gjM (끝장전)
+  (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
+    const mode=m._proLabel?'프로리그끝장전':'끝장전';
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
+  });
   if(added>0)save();
-  console.log('syncIndHistory: Completed. Added', added, 'matches to history');
   return added;
 }
 function syncIndHistoryBtn(){

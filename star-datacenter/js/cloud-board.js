@@ -624,10 +624,16 @@ function rBoard(C,T){
   injectUnivIcons(C);
   requestAnimationFrame(()=>{
     injectUnivIcons(C);
+    initBoardDrag();
   });
+  // 팝업 닫기 이벤트 (한 번만 등록)
+  if(!_brdPopupListenerAdded){
+    document.addEventListener('click', _closeBrdPopup, {capture:true});
+    _brdPopupListenerAdded = true;
+  }
 }
 
-function buildUnivBoardCard(u, forExport=false){
+function buildUnivBoardCard(u, forExport){
   if(!u)return'';
   const col=gc(u.name);
   const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
@@ -687,15 +693,14 @@ function buildUnivBoardCard(u, forExport=false){
           + (forExport?'':`<div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`)
           : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`;
         // 종족/티어 배지 (좌상단)
-        const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap;z-index:10">`
-          + `<span style="font-size:9px;font-weight:900;background:${rc.col||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,0.3)">${rTxtCard}</span>`
-          + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol||'#64748b'};color:${cardTierText||'#fff'};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,0.3)">${p.tier}</span>`:'')
+        const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap">`
+          + `<span style="font-size:9px;font-weight:900;background:${rc.col||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4)">${rTxtCard}</span>`
+          + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
           + `</div>`;
-        // Improved overlay with better text positioning (removed duplicate badges)
-        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.85));border-radius:0 0 10px 10px;padding:16px 8px 6px;text-align:center">
-          ${p.role?`<div style="font-size:8px;font-weight:700;color:#ffffffbb;margin-bottom:2px;letter-spacing:0.5px">${p.role}</div>`:''}
-          <div style="font-weight:900;font-size:12px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a;line-height:1.2">${p.name}</div>
-        </div>`;
+        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));border-radius:0 0 10px 10px;padding:20px 6px 5px;text-align:center">`
+          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
+          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
+          + `</div>`;
         const cardInner = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
           + (p.channelUrl
             ? (forExport
