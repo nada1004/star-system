@@ -157,7 +157,7 @@ function syncIndHistory(){
     if(existingIds.has(m._id)){
       return;
     }
-    const mode=m._proLabel?'pro-league':'individual';
+    const mode=m._proLabel?'프로리그':'개인전';
     console.log('syncIndHistory: Processing match:', m._id, m.wName, 'vs', m.lName);
     try {
       applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
@@ -178,7 +178,7 @@ function syncIndHistory(){
       if(existingIds.has(m._id)){
         return;
       }
-      const mode=m._proLabel?'pro-league-end':'end';
+      const mode=m._proLabel?'프로리그끝장전':'끝장전';
       console.log('syncIndHistory: Processing gjM match:', m._id, m.wName, 'vs', m.lName);
       try {
         applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
