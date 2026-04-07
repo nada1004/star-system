@@ -188,62 +188,27 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       : `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
     : '';
 
-  // 카드뷰 여부 (이미지 저장 시에도 적용)
-  const _useCardView = (typeof boardCardView !== 'undefined') && boardCardView;
-
-  let bodyContent;
-  if (_useCardView) {
-    // 포토카드 그리드: 직책 → 티어별 섹션으로 구분
-    const _sectionStyle = `font-size:11px;font-weight:800;color:${col};background:${col}18;border-left:3px solid ${col};padding:3px 10px;border-radius:0 6px 6px 0;margin:8px 0 4px`;
-    const _gridStyle = `display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:0 8px 8px`;
-    let _cardHtml = '<div style="padding:10px 4px 4px">';
-    // 직책 그룹
-    if (roledMembers.length) {
-      const _roleGrouped = {};
-      const _roleOrderArr = [];
-      roledMembers.forEach(p => {
-        const r = p.role || '';
-        if (!_roleGrouped[r]) { _roleGrouped[r] = []; _roleOrderArr.push(r); }
-        _roleGrouped[r].push(p);
-      });
-      _roleOrderArr.forEach(role => {
-        _cardHtml += `<div style="${_sectionStyle}">${role}</div>`;
-        _cardHtml += `<div style="${_gridStyle}">` + _roleGrouped[role].map(p => _b2PhotoCard(p, col)).join('') + `</div>`;
-      });
-    }
-    // 티어 그룹
-    orderedTierKeys.forEach(tier => {
-      const g = [...tierGroups[tier]];
-      g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-      _cardHtml += `<div style="${_sectionStyle}">${tier}</div>`;
-      _cardHtml += `<div style="${_gridStyle}">` + g.map(p => _b2PhotoCard(p, col)).join('') + `</div>`;
-    });
-    _cardHtml += '</div>';
-    bodyContent = _cardHtml;
-  } else {
-    let rows = '';
-    roleOrder.forEach(role => {
-      const group = roleGroups[role];
-      rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
-    });
-    orderedTierKeys.forEach(tier => {
-      const group = tierGroups[tier];
-      group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-      rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
-    });
-    // 사이드 패널 — 절대 위치로 오른쪽에 오버레이
-    const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
-      ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
-      ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
-    </div>` : '';
-    bodyContent = `<div style="position:relative;overflow:hidden">
-      ${bgImgHtml}
-      <div style="position:relative;z-index:1">
-        <div>${rows}</div>
-        ${sidePanelHtml}
-      </div>
-    </div>`;
-  }
+  let rows = '';
+  roleOrder.forEach(role => {
+    const group = roleGroups[role];
+    rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
+  });
+  orderedTierKeys.forEach(tier => {
+    const group = tierGroups[tier];
+    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
+  });
+  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
+    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
+  </div>` : '';
+  const bodyContent = `<div style="position:relative;overflow:hidden">
+    ${bgImgHtml}
+    <div style="position:relative;z-index:1">
+      <div>${rows}</div>
+      ${sidePanelHtml}
+    </div>
+  </div>`;
 
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
@@ -304,76 +269,20 @@ function _b2FreeView() {
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2FreeTierBgAlpha)};border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
-  const _freeCardView = (typeof boardCardView !== 'undefined') && boardCardView;
-
-  if (_freeCardView) {
-    // 포토카드 그리드: 직책/티어 섹션으로 구분
-    const _fSectionStyle = `font-size:11px;font-weight:800;color:#fff;background:#64748b55;border-left:3px solid #fff9;padding:3px 10px;border-radius:0 6px 6px 0;margin:8px 0 4px`;
-    const _fGridStyle = `display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:0 8px 8px`;
-    h += '<div style="padding:10px 4px 4px">';
-    // 직책 그룹
-    if (roledFree.length) {
-      const _rfGrouped = {};
-      const _rfOrderArr = [];
-      roledFree.forEach(p => {
-        const r = p.role || '';
-        if (!_rfGrouped[r]) { _rfGrouped[r] = []; _rfOrderArr.push(r); }
-        _rfGrouped[r].push(p);
-      });
-      _rfOrderArr.forEach(role => {
-        h += `<div style="${_fSectionStyle}">${role}</div>`;
-        h += `<div style="${_fGridStyle}">` + _rfGrouped[role].map(p => _b2PhotoCard(p, defCol)).join('') + `</div>`;
-      });
-    }
-    // 티어 그룹
-    orderedTierKeys.forEach(tier => {
-      const g = [...tierGroups[tier]];
-      g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-      h += `<div style="${_fSectionStyle}">${tier}</div>`;
-      h += `<div style="${_fGridStyle}">` + g.map(p => _b2PhotoCard(p, defCol)).join('') + `</div>`;
-    });
-    h += '</div>';
-  } else {
-    // 직책 그룹
-    roledFree.forEach(p => {
-      h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
-    });
-    orderedTierKeys.forEach(tier => {
-      const group = tierGroups[tier];
-      group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-      const col = getTierBtnColor(tier);
-      h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
-    });
-  }
+  // 직책 그룹
+  roledFree.forEach(p => {
+    h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
+  });
+  orderedTierKeys.forEach(tier => {
+    const group = tierGroups[tier];
+    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    const col = getTierBtnColor(tier);
+    h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
+  });
   h += `</div></div>`;
   return h;
 }
 
-/* ── 포토카드 (카드뷰용) ── */
-function _b2PhotoCard(p, col) {
-  const rc = (typeof RACE_CFG !== 'undefined' && RACE_CFG) ? (RACE_CFG[p.race]||{}) : {};
-  const rTxt = rc.txt || p.race || '?';
-  const rcBg = rc.col || col;
-  const cardTierCol = p.tier ? ((typeof _TIER_BG !== 'undefined' ? _TIER_BG[p.tier] : null) || '#64748b') : null;
-  const cardTierText = p.tier ? ((typeof _TIER_TEXT !== 'undefined' ? _TIER_TEXT[p.tier] : null) || '#fff') : '#fff';
-  const imgInner = p.photo
-    ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxt}</div>`
-    : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxt}</div>`;
-  const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap">`
-    + `<span style="font-size:9px;font-weight:900;background:${rcBg||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4)">${rTxt}</span>`
-    + (p.tier&&cardTierCol?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
-    + `</div>`;
-  const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));border-radius:0 0 10px 10px;padding:18px 5px 5px;text-align:center">`
-    + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
-    + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name||''}</div>`
-    + `</div>`;
-  const cardImgBox = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`;
-  const cardBottom = p.channelUrl
-    ? `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 8px 8px">▶ 방송</a>`
-    : `<div style="height:4px;background:${col};border-radius:0 0 8px 8px"></div>`;
-  const pNameSafe = (p.name||'').replace(/'/g,"\\'");
-  return `<div onclick="openPlayerModal('${pNameSafe}')" style="border-radius:10px;overflow:hidden;border:2px solid ${col}80;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px ${col}80'" onmouseout="this.style.boxShadow='';">${cardImgBox}${cardBottom}</div>`;
-}
 
 /* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
 function _b2NameTag(p, accentCol, showTier) {
