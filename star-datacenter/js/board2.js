@@ -72,13 +72,18 @@ function rBoard2(C, T) {
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>` : '';
 
+  const _bCardView = (typeof boardCardView !== 'undefined') ? boardCardView : false;
   const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
+  const cardViewBtn = (_b2View==='univ'||_b2View==='free')
+    ? `<button onclick="boardCardView=!boardCardView;render()" style="padding:5px 12px;border-radius:20px;border:2px solid ${_bCardView?'#a855f7':'var(--border2)'};background:${_bCardView?'#fdf4ff':'var(--white)'};color:${_bCardView?'#7e22ce':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer" title="포토카드/목록 보기 전환">🖼️ ${_bCardView?'목록':'카드'}</button>`
+    : '';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
       ${oldBtn}
       ${crewBtn}
+      ${cardViewBtn}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -179,31 +184,6 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     if (!roleGroups[r]) { roleGroups[r] = []; roleOrder.push(r); }
     roleGroups[r].push(p);
   });
-  let rows = '';
-  roleOrder.forEach(role => {
-    const group = roleGroups[role];
-    rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
-  });
-  orderedTierKeys.forEach(tier => {
-    const group = tierGroups[tier];
-    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
-  });
-
-  // 사이드 패널 — 절대 위치로 오른쪽에 오버레이 (가로 구분선이 padding-right 덕에 전체 폭으로 이어짐)
-  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
-    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
-    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
-  </div>` : '';
-  // 하단 메모/이미지 (bMemo/bMemoImgs)
-  const _bnote = uCfg.bMemo || '';
-  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
-  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
-    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
-    ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
-  </div>` : '';
-
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'cover';
   const _bgOpacity = ((uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100).toFixed(2);
@@ -212,6 +192,57 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize};opacity:${_bgOpacity};pointer-events:none;z-index:0">`
       : `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
     : '';
+
+  // 카드뷰 여부
+  const _useCardView = !forExport && (typeof boardCardView !== 'undefined') && boardCardView;
+
+  let bodyContent;
+  if (_useCardView) {
+    // 포토카드 그리드: 직책 → 티어 순서로 전체 멤버
+    const _cardMembers = [
+      ...roledMembers,
+      ...orderedTierKeys.flatMap(tier => {
+        const g = [...tierGroups[tier]];
+        g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+        return g;
+      })
+    ];
+    bodyContent = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:12px">`
+      + _cardMembers.map(p => _b2PhotoCard(p, col)).join('')
+      + `</div>`;
+  } else {
+    let rows = '';
+    roleOrder.forEach(role => {
+      const group = roleGroups[role];
+      rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
+    });
+    orderedTierKeys.forEach(tier => {
+      const group = tierGroups[tier];
+      group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+      rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
+    });
+    // 사이드 패널 — 절대 위치로 오른쪽에 오버레이
+    const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
+      ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
+      ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
+    </div>` : '';
+    bodyContent = `<div style="position:relative;overflow:hidden">
+      ${bgImgHtml}
+      <div style="position:relative;z-index:1">
+        <div>${rows}</div>
+        ${sidePanelHtml}
+      </div>
+    </div>`;
+  }
+
+  // 하단 메모/이미지 (bMemo/bMemoImgs)
+  const _bnote = uCfg.bMemo || '';
+  const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
+    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
+    ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
+  </div>` : '';
 
   return `
     <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
@@ -227,13 +258,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
         </div>
       </div>
       <div class="b2-card-body" style="${_b2Collapsed.has(univName)?'display:none':''}">
-        <div style="position:relative;overflow:hidden">
-          ${bgImgHtml}
-          <div style="position:relative;z-index:1">
-            <div>${rows}</div>
-            ${sidePanelHtml}
-          </div>
-        </div>
+        ${bodyContent}
         ${bottomSection}
       </div>
     </div>`;
@@ -269,19 +294,61 @@ function _b2FreeView() {
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2FreeTierBgAlpha)};border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
-  // 직책 그룹
-  roledFree.forEach(p => {
-    h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
-  });
+  const _freeCardView = (typeof boardCardView !== 'undefined') && boardCardView;
 
-  orderedTierKeys.forEach(tier => {
-    const group = tierGroups[tier];
-    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-    const col = getTierBtnColor(tier);
-    h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
-  });
+  if (_freeCardView) {
+    // 포토카드 그리드
+    const _allFree = [
+      ...roledFree,
+      ...orderedTierKeys.flatMap(tier => {
+        const g = [...tierGroups[tier]];
+        g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+        return g;
+      })
+    ];
+    h += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:12px">`;
+    _allFree.forEach(p => { h += _b2PhotoCard(p, defCol); });
+    h += `</div>`;
+  } else {
+    // 직책 그룹
+    roledFree.forEach(p => {
+      h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
+    });
+    orderedTierKeys.forEach(tier => {
+      const group = tierGroups[tier];
+      group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+      const col = getTierBtnColor(tier);
+      h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
+    });
+  }
   h += `</div></div>`;
   return h;
+}
+
+/* ── 포토카드 (카드뷰용) ── */
+function _b2PhotoCard(p, col) {
+  const rc = (typeof RACE_CFG !== 'undefined' && RACE_CFG) ? (RACE_CFG[p.race]||{}) : {};
+  const rTxt = rc.txt || p.race || '?';
+  const rcBg = rc.col || col;
+  const cardTierCol = p.tier ? ((typeof _TIER_BG !== 'undefined' ? _TIER_BG[p.tier] : null) || '#64748b') : null;
+  const cardTierText = p.tier ? ((typeof _TIER_TEXT !== 'undefined' ? _TIER_TEXT[p.tier] : null) || '#fff') : '#fff';
+  const imgInner = p.photo
+    ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxt}</div>`
+    : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxt}</div>`;
+  const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap">`
+    + `<span style="font-size:9px;font-weight:900;background:${rcBg||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4)">${rTxt}</span>`
+    + (p.tier&&cardTierCol?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
+    + `</div>`;
+  const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));border-radius:0 0 10px 10px;padding:18px 5px 5px;text-align:center">`
+    + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
+    + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name||''}</div>`
+    + `</div>`;
+  const cardImgBox = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`;
+  const cardBottom = p.channelUrl
+    ? `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 8px 8px">▶ 방송</a>`
+    : `<div style="height:4px;background:${col};border-radius:0 0 8px 8px"></div>`;
+  const pNameSafe = (p.name||'').replace(/'/g,"\\'");
+  return `<div onclick="openPlayerModal('${pNameSafe}')" style="border-radius:10px;overflow:hidden;border:2px solid ${col}80;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px ${col}80'" onmouseout="this.style.boxShadow='';">${cardImgBox}${cardBottom}</div>`;
 }
 
 /* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
