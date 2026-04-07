@@ -624,6 +624,10 @@ function rBoard(C,T){
   injectUnivIcons(C);
   requestAnimationFrame(()=>{
     injectUnivIcons(C);
+  });
+}
+
+function buildUnivBoardCard(u, forExport=false){
   if(!u)return'';
   const col=gc(u.name);
   const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
