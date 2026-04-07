@@ -216,7 +216,7 @@ function rInd(C,T){
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
   let h=stabs(indSub,subOpts);
-  if(isLoggedIn) h+=`<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 전적 동기화</button></div>`;
+  if(isLoggedIn) h+=`<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:6px"><button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 개인전 동기화</button><button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button></div>`;
   if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
@@ -588,7 +588,7 @@ function indDirectSave(){
     map:g.map||''
   }));
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','','개인전');
+    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','','개인전');
   });
   indM.unshift(...newGames);
   _indInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
