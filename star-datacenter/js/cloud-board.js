@@ -700,7 +700,7 @@ function buildUnivBoardCard(u, forExport){
           + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
           + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
           + `</div>`;
-        const cardInner = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
+        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:90px;padding-top:0':'aspect-ratio:1/1'};overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
           + (p.channelUrl
             ? (forExport
                 ? `<div style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;border-radius:0 0 8px 8px">▶ 방송</div>`
@@ -715,7 +715,7 @@ function buildUnivBoardCard(u, forExport){
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
           : `openPlayerModal('${pNameSafeCard}')`;
         return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s"`
+          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};background:#fff;cursor:pointer;transition:box-shadow .15s"`
           + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
           + ` onmouseout="this.style.boxShadow=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
@@ -842,13 +842,12 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'cover';
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.25;pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
       return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${_uNameSafe}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
     })():'';
-    return `<div class="brd-card" data-univ="${u.name}" style="--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+    return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
@@ -882,7 +881,7 @@ function buildUnivBoardCard(u, forExport){
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
+      <div class="brd-card-body brd-body" style="background:${u.bgImg?'transparent':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${u.bgImgPos||'center center'}/${u.bgImgSize||'cover'} no-repeat;opacity:0.35;pointer-events:none;z-index:0"></div>`:''}<div style="position:relative;z-index:1;background:${u.bgImg?'rgba(255,255,255,0.75)':'transparent'};min-height:100%">${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -929,7 +928,7 @@ function buildUnivBoardCard(u, forExport){
         }
         const mainLayout=`<div style="overflow:hidden">${sidePanelHtml}${roleSection}${tierRows}</div>`;
         return `<div style="position:relative;z-index:1">${mainLayout}${bottomHtml}</div>`;
-      })()}</div>
+      })()}</div></div>
     </div>`;
   };
 

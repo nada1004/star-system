@@ -142,9 +142,6 @@ window._rebuildPlayerDetail = function(name){
    대학 클릭 → 모달
 ══════════════════════════════════════ */
 function openPlayerModal(name){
-  // Sync all history first to ensure individual matches are reflected in player history
-  if(typeof syncAllHistory==='function') syncAllHistory();
-  
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
@@ -654,9 +651,26 @@ function buildPlayerDetailHTML(p){
   const _CPM={light:{win:'#22c55e',loss:'#f87171'},normal:{win:'#16a34a',loss:'#dc2626'},dark:{win:'#15803d',loss:'#b91c1c'}};
   const _cp=_CPM[_pdStyle.color_preset||'normal'];
   const _cWin=_cp.win; const _cLoss=_cp.loss;
-  // ── 연도 필터 ──
+  // ── 연도 필터 (indM/gjM 포함) ──
   const _year=window._playerModalYear||'';
-  const _histAll=p.history||[];
+  // p.history에 indM/gjM 매치도 포함하여 표시
+  const _indMatches = (typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
+    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
+    opp:m.wName===p.name?m.lName:m.wName,
+    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
+    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그':'개인전'
+  }));
+  const _gjMatches = (typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
+    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
+    opp:m.wName===p.name?m.lName:m.wName,
+    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
+    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전'
+  }));
+  // p.history의 matchId Set (중복 제거용)
+  const _existingMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
+  // 중복되지 않는 indM/gjM 매치만 추가
+  const _extraMatches=[..._indMatches,..._gjMatches].filter(m=>!_existingMatchIds.has(m.matchId));
+  const _histAll=[...(p.history||[]),..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
