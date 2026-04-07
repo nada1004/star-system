@@ -12,11 +12,11 @@ function sw(t,el){
   // 통합탭 서브탭 초기값 (탭 진입 시에만 설정)
   if(t==='ind')      _mergedIndSub='ind';
   if(t==='gj')       _mergedIndSub='gj';
-  if(t==='univm'||t==='mini') _mergedUnivSub='mini';
+  if(t==='univm'||t==='mini') { _mergedUnivSub='mini'; miniType='mini'; }
   if(t==='univck')   _mergedUnivSub='univck';
   if(t==='comp')     _mergedCompSub='comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') { proSub='records'; _mergedProSub='pro'; }
+  if(t==='pro') { _mergedProSub='pro'; }
   if(t==='hist') histSub='mini'; // 대전 기록 탭으로 돌아올 때 초기화
   // 탭 전환 시 해당 탭 검색어 초기화
   if(window._recQ){const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};const m=tabModeMap[t];if(m)window._recQ[m]='';}
@@ -24,6 +24,11 @@ function sw(t,el){
   curTab=t;openDetails={};
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   el.classList.add('on');
+  // 바텀 네비 활성화 동기화
+  document.querySelectorAll('.bnav-item').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    b.classList.toggle('on',oc.includes("'"+t+"'"));
+  });
   const _fs=document.getElementById('fstrip');if(_fs)_fs.style.display=(t==='total'&&isLoggedIn)?'block':'none';
   // 이전 내용 제거 후 렌더링
   const C=document.getElementById('rcont');
@@ -58,6 +63,7 @@ function render(){
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
+    case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
     case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
@@ -104,10 +110,13 @@ function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
-  if(window._playerModalCurrentName!==name) playerHistPage=0;
+  if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; window._playerModalYear=''; }
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  const _mbody=document.getElementById('playerModalBody');
+  _mbody.innerHTML=buildPlayerDetailHTML(p);
+  const _pdFs=(JSON.parse(localStorage.getItem('su_pd_style')||'{}').font_size||'normal');
+  _mbody.style.zoom=_pdFs==='xlarge'?'1.2':_pdFs==='large'?'1.12':'1';
+  injectUnivIcons(_mbody);
   // 어드민 전용 수정 버튼 (이름을 data 속성에 직접 저장 → openEP 호출 시 신뢰성 향상)
   const editBtn=document.getElementById('playerModalEditBtn');
   if(editBtn){
@@ -173,7 +182,8 @@ function openPlayerHistEdit(playerName, histIdx){
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
   const races=['T','Z','P'];
-  const mapOpts=maps.map(m=>`<option value="${m}"${hh.map===m?' selected':''}>${m}</option>`).join('');
+  // mapOpts: select는 항상 "목록에서 선택" 기본값, selected 없음
+  const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
   document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${hh.opp}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -191,33 +201,113 @@ function openPlayerHistEdit(playerName, histIdx){
         </select>
       </div>
       <div><label>맵</label>
-        <select id="phe-map" style="width:100%">
-          <option value="">-</option>${mapOpts}
+        <div style="display:flex;gap:6px">
+          <select id="phe-map-sel" style="flex:1" onchange="const v=this.value;const inp=document.getElementById('phe-map');if(v)inp.value=v;">
+            <option value="">목록에서 선택</option>${mapOpts}
+          </select>
+          <input id="phe-map" type="text" value="${!hh.map||hh.map==='-'?'':hh.map}" placeholder="맵 이름 직접 입력" style="flex:1">
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:2px">기록값: ${hh.map||'-'}</div>
+      </div>
+      <div><label>당시 소속 대학</label>
+        <select id="phe-univ" style="width:100%">
+          <option value="">미지정</option>
+          ${getAllUnivs().map(u=>`<option value="${u.name}"${(hh.univ||p.univ)===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:2px">현재: ${p.univ||'무소속'} · 기록: ${hh.univ||'(미저장)'}</div>
       </div>
     </div>`;
-  // 저장 버튼 임시 교체
+  // 저장 버튼 임시 교체 (완료 후 원래 saveRow 복원)
   const saveBtnOrig=document.querySelector('#reModal .btn-b');
   if(saveBtnOrig){
+    const _prevOnclick=saveBtnOrig.onclick;
     saveBtnOrig.onclick=function(){
-      const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp;
-      hh.date=document.getElementById('phe-date').value;
-      hh.result=document.getElementById('phe-result').value;
-      hh.opp=document.getElementById('phe-opp').value;
-      hh.oppRace=document.getElementById('phe-race').value;
-      hh.map=document.getElementById('phe-map').value;
-      // 🔧 상대방 history도 날짜/맵 동기화
+      const oldDate=hh.date, oldMap=hh.map, oldOpp=hh.opp, oldResult=hh.result;
+      const newDate=document.getElementById('phe-date').value;
+      const newResult=document.getElementById('phe-result').value;
+      const newOpp=document.getElementById('phe-opp').value;
+      const newRace=document.getElementById('phe-race').value;
+      const newMap=document.getElementById('phe-map').value||'-';
+      const _newUniv=document.getElementById('phe-univ')?.value;
+
+      // ── 결과(승/패) 변경 시 본인 ELO·승패·포인트 재계산 ──
+      if(newResult!==oldResult){
+        // 기존 결과 되돌리기
+        if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
+        if(oldResult==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
+        else{p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
+        // 새 결과 적용 (ELO delta 부호 반전)
+        const newDelta=hh.eloDelta!=null?-hh.eloDelta:null;
+        if(newDelta!=null){p.elo=(p.elo||ELO_DEFAULT)+newDelta;hh.eloDelta=newDelta;}
+        if(newResult==='승'){p.win=(p.win||0)+1;p.points=(p.points||0)+3;}
+        else{p.loss=(p.loss||0)+1;p.points=(p.points||0)-3;}
+      }
+
+      hh.date=newDate;
+      hh.result=newResult;
+      hh.opp=newOpp;
+      hh.oppRace=newRace;
+      hh.map=newMap;
+      if(_newUniv) hh.univ=_newUniv;
+
+      // ── 상대방 history도 날짜/맵/결과 동기화 ──
       const oppPlayer=players.find(x=>x.name===oldOpp);
       if(oppPlayer){
         const oppH=(oppPlayer.history||[]).find(o=>
           o.opp===playerName&&o.date===oldDate&&(o.map||'-')===(oldMap||'-')
         );
         if(oppH){
-          oppH.date=hh.date;
-          oppH.map=hh.map;
-          if(hh.opp!==oldOpp) oppH.opp=hh.opp; // 상대 이름 변경 시
+          oppH.date=newDate;
+          oppH.map=newMap;
+          if(newOpp!==oldOpp) oppH.opp=newOpp;
+          // 결과 변경 시 상대방 결과·ELO·승패도 반전
+          if(newResult!==oldResult){
+            const oppOldResult=oppH.result;
+            if(oppH.eloDelta!=null) oppPlayer.elo=(oppPlayer.elo||ELO_DEFAULT)-oppH.eloDelta;
+            if(oppOldResult==='승'){oppPlayer.win=Math.max(0,(oppPlayer.win||0)-1);oppPlayer.points=(oppPlayer.points||0)-3;}
+            else{oppPlayer.loss=Math.max(0,(oppPlayer.loss||0)-1);oppPlayer.points=(oppPlayer.points||0)+3;}
+            const newOppDelta=oppH.eloDelta!=null?-oppH.eloDelta:null;
+            if(newOppDelta!=null){oppPlayer.elo=(oppPlayer.elo||ELO_DEFAULT)+newOppDelta;oppH.eloDelta=newOppDelta;}
+            oppH.result=oppOldResult==='승'?'패':'승';
+            if(oppH.result==='승'){oppPlayer.win=(oppPlayer.win||0)+1;oppPlayer.points=(oppPlayer.points||0)+3;}
+            else{oppPlayer.loss=(oppPlayer.loss||0)+1;oppPlayer.points=(oppPlayer.points||0)-3;}
+          }
         }
       }
+
+      // ── 대전기록 배열(.d)도 날짜 동기화 (tourneys 포함) ──
+      if(hh.matchId && newDate){
+        const mid=hh.matchId;
+        const _flatArrs=[miniM,univM,ckM,proM,ttM,comps,
+          typeof gjM!=='undefined'?gjM:[],
+          typeof indM!=='undefined'?indM:[]];
+        let found=false;
+        for(const arr of _flatArrs){
+          if(!arr)continue;
+          const entry=arr.find(m=>m._id===mid);
+          if(entry){entry.d=newDate;found=true;break;}
+        }
+        // tourneys 내 경기 탐색 (대회/티어대회)
+        if(!found && typeof tourneys!=='undefined'){
+          outer: for(const tn of tourneys){
+            for(const grp of (tn.groups||[])){
+              for(const m of (grp.matches||[])){
+                if(m._id===mid){m.d=newDate;found=true;break outer;}
+              }
+            }
+            const br=tn.bracket||{};
+            for(const m of Object.values(br.matchDetails||{})){
+              if(m&&m._id===mid){m.d=newDate;found=true;break outer;}
+            }
+            for(const m of (br.manualMatches||[])){
+              if(m&&m._id===mid){m.d=newDate;found=true;break outer;}
+            }
+          }
+        }
+      }
+
+      saveBtnOrig.onclick=_prevOnclick;
+      if(typeof fixPoints==='function')fixPoints();
       save();
       cm('reModal');
       const pb=document.getElementById('playerModalBody');
@@ -257,6 +347,11 @@ function openShareCardFromUniv(){
   _shareUnivSearch=name;
   openShareCardModal();
   setTimeout(()=>renderShareCardByUniv(name),80);
+}
+function openProCompMatchShare(a,b,sa,sb,d){
+  window._shareMatchObj={a,b,sa,sb,d,_noUnivIcon:true,_matchType:'pro'};
+  _shareMode='match';openShareCardModal();
+  setTimeout(function(){if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
 }
 function openShareCardFromMatch(mode,idx){
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:mode==='tt'?ttM:miniM;
@@ -336,9 +431,14 @@ function openUnivModal(univName){
   injectUnivIcons(document.getElementById('univModalBody'));
   window._univModalCurrentName=univName;
   window._univEditOpen=false;
+  om('univModal');
   const editBtn=document.getElementById('univEditBtn');
   if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
-  om('univModal');
+  // 비동기 업데이트(Firebase 등)로 버튼이 숨겨지는 경우를 방지
+  requestAnimationFrame(()=>{
+    const btn=document.getElementById('univEditBtn');
+    if(btn) btn.style.display=isLoggedIn?'inline-flex':'none';
+  });
 }
 
 function toggleUnivEdit(){
@@ -378,70 +478,151 @@ function toggleUnivEdit(){
 }
 
 function saveUnivEdit(){
-  const oldName = window._univModalCurrentName;
-  const name = document.getElementById('ue-name').value.trim();
-  const color = document.getElementById('ue-color').value;
-  const icon = document.getElementById('ue-icon').value.trim();
-  if(!name){alert('대학 이름은 비워둘 수 없습니다.');return;}
-  const uIdx = univCfg.findIndex(x=>x.name===oldName);
-  if(uIdx<0){alert('대학 정보를 찾지 못했습니다.');return;}
-  if(univCfg.some((u,idx)=>idx!==uIdx&&u.name===name)){alert('이미 사용 중인 대학 이름입니다.');return;}
-
-  if (oldName !== name) {
-    const confirmed = confirm(`'${oldName}' 대학의 이름을 '${name}'으로 변경하시겠습니까? 모든 선수 및 경기 기록의 대학명이 업데이트됩니다.`);
-    if (!confirmed) return;
-
-    // 선수 정보 업데이트
-    players.forEach(p => {
-      if (p.univ === oldName) {
-        p.univ = name;
-      }
-    });
-
-    // 모든 매치 데이터 업데이트
-    const allMatches = [
-      ...miniM, ...univM, ...ckM, ...compM, ...tourM, ...proM, ...spM
-    ];
-    allMatches.forEach(m => {
-      if (m.a === oldName) m.a = name;
-      if (m.b === oldName) m.b = name;
-      if (m.p1u === oldName) m.p1u = name;
-      if (m.p2u === oldName) m.p2u = name;
-    });
-    
-    // ELO 히스토리 업데이트
-    if (typeof eloHistory !== 'undefined') {
-      eloHistory.forEach(h => {
-        if (h.univ === oldName) {
-          h.univ = name;
-        }
-      });
+  const univName=window._univModalCurrentName;
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u) return;
+  const newName=(document.getElementById('ue-name')?.value||'').trim();
+  const newColor=document.getElementById('ue-color')?.value||u.color;
+  const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
+  if(!newName){alert('이름을 입력하세요.');return;}
+  // 이름 변경 시 players univ 갱신
+  if(newName!==univName){
+    players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
+    [miniM,univM,comps,ckM,proM].forEach(arr=>(arr||[]).forEach(m=>{
+      if(m.a===univName)m.a=newName;if(m.b===univName)m.b=newName;
+      (m.teamAMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
+      (m.teamBMembers||[]).forEach(x=>{if(x.univ===univName)x.univ=newName;});
+    }));
+    // boardPlayerOrder 키 갱신
+    if(typeof boardPlayerOrder!=='undefined'&&boardPlayerOrder[univName]){
+      boardPlayerOrder[newName]=boardPlayerOrder[univName];
+      delete boardPlayerOrder[univName];
+      if(typeof saveBoardPlayerOrder==='function')saveBoardPlayerOrder();
     }
   }
-
-  univCfg[uIdx].name = name;
-  univCfg[uIdx].color = color;
-  univCfg[uIdx].icon = icon;
-  save();
-  
-  // 모달 내용 및 상태 업데이트
-  window._univModalCurrentName = name;
-  document.getElementById('univModalTitle').innerText = `${name} 대학 상세`;
-  document.getElementById('univModalBody').innerHTML = buildUnivDetailHTML(name);
+  u.name=newName;
+  u.color=newColor;
+  if(newIcon) u.icon=newIcon; else delete u.icon;
+  save();render();
+  window._univModalCurrentName=newName;
+  document.getElementById('univModalTitle').innerText=`${newName} 대학 상세`;
+  document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);
   injectUnivIcons(document.getElementById('univModalBody'));
-  toggleUnivEdit(); // 편집 패널 닫기
+  window._univEditOpen=false;
+  const btn=document.getElementById('univEditBtn');
+  if(btn){ btn.textContent='✏️ 수정'; btn.style.display=isLoggedIn?'inline-flex':'none'; }
+}
 
-  // 데이터 변경 후 UI 새로고침
-  if (typeof rMenu === 'function') rMenu();
-  if (typeof rBoard === 'function') rBoard();
-  if (typeof rStats === 'function') rStats();
-  if (typeof rHist === 'function') rHist();
+// 스트리머 상세 최근 경기 배지 클릭 → 해당 기록 탭으로 이동
+function navToMatch(matchId, modeLbl){
+  if(!matchId) return;
+  if(modeLbl==='티어대회'){
+    // stage 확인: league→대전기록 조별리그, bkt→대전기록 대진표, 그외(general/grp)→대전기록 일반
+    const _tm=(ttM||[]).find(x=>x._id===matchId);
+    if(_tm&&_tm.stage==='bkt'){
+      cm('playerModal');curTab='hist';histSub='tiertour-bkt';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else if(_tm&&_tm.stage==='league'){
+      cm('playerModal');curTab='hist';histSub='tiertour-league';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else if(_tm&&(_tm.stage==='general'||_tm.stage==='grp')){
+      cm('playerModal');curTab='hist';histSub='tiertour-gen';openDetails={};
+      document.querySelectorAll('.tab').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('on',oc.includes("'hist'"));});
+      render();
+      const idx=(ttM||[]).indexOf(_tm);const key='hist-tt-'+idx;
+      setTimeout(()=>{const el=document.getElementById('det-'+key);if(el){if(!openDetails[key])toggleDetail(key);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);}},400);
+    } else {
+      navToTierMatch(matchId);
+    }
+    return;
+  }
+  const _cfg={
+    '미니대전':       {histSub:'mini',        arrMode:'mini',  arr:()=>miniM},
+    '시빌워':         {histSub:'civil',       arrMode:'mini',  arr:()=>miniM},
+    '대학대전':       {histSub:'univm',       arrMode:'univm', arr:()=>univM},
+    '대학CK':         {histSub:'ck',          arrMode:'ck',    arr:()=>ckM},
+    '프로리그':       {histSub:'pro',         arrMode:'pro',   arr:()=>proM},
+    '끝장전':         {histSub:'gj'},
+    '프로리그끝장전': {histSub:'progj'},
+    '프로리그대회끝장전':{histSub:'procompgj'},
+    '개인전':         {histSub:'ind'},
+    '조별리그':       {histSub:'comp'},
+    '대회':           {histSub:'comp'},
+    '토너먼트':       {histSub:'tourney'},
+    '프로리그대회':   {histSub:'procomp'},
+    '프로리그팀전':   {histSub:'procompteam'},
+  }[modeLbl];
+  if(!_cfg) return;
+  cm('playerModal');
+  curTab='hist';
+  histSub=_cfg.histSub;
+  openDetails={};
+  document.querySelectorAll('.tab').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    b.classList.toggle('on',oc.includes("'hist'"));
+  });
+  if(_cfg.arr&&_cfg.arrMode){
+    const srcArr=_cfg.arr();
+    const idx=srcArr.findIndex(m=>m._id===matchId);
+    if(idx>=0){
+      const isCK=(_cfg.arrMode==='ck'||_cfg.arrMode==='pro');
+      filterYear='전체';filterMonth='전체';
+      const filt=srcArr.map((m,i)=>({m,i})).filter(({m})=>{
+        if(isCK){if(!m.teamAMembers||!m.teamBMembers)return false;}
+        else{if(!m.a||!m.b)return false;}
+        return m.sa!=null&&m.sb!=null&&!isNaN(Number(m.sa))&&!isNaN(Number(m.sb));
+      });
+      filt.sort((a,b)=>(b.m.d||'').localeCompare(a.m.d||''));
+      const pos=filt.findIndex(f=>f.i===idx);
+      const ps=typeof getHistPageSize==='function'?getHistPageSize():20;
+      if(pos>=0) histPage[_cfg.arrMode]=Math.floor(pos/ps);
+    }
+  }
+  render();
+  if(_cfg.arr&&_cfg.arrMode){
+    const srcArr=_cfg.arr();
+    const idx=srcArr.findIndex(m=>m._id===matchId);
+    if(idx>=0){
+      const key='hist-'+_cfg.arrMode+'-'+idx;
+      setTimeout(()=>{
+        const el=document.getElementById('det-'+key);
+        if(el){
+          if(!openDetails[key])toggleDetail(key);
+          setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),80);
+        }
+      },400);
+    }
+  }
 }
 
 function buildPlayerDetailHTML(p){
-  const col=gc(p.univ);
+  const col=gc(p.univ)||'#6366f1';
+  const _winC ='#16a34a';
+  const _lossC='#dc2626';
+  const _pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const _darken=((_pdStyle.univ_darken||{})[p.univ]||0);
+  const _hdrBg=_darken>0
+    ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
+    :`linear-gradient(135deg,${col},${col}ee)`;
+  const _p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
+  const _statsTint=_pdStyle.stats_tint!==undefined?_pdStyle.stats_tint:8;
+  const _modeTint=_pdStyle.mode_tint!==undefined?_pdStyle.mode_tint:10;
+  const _CPM={light:{win:'#22c55e',loss:'#f87171'},normal:{win:'#16a34a',loss:'#dc2626'},dark:{win:'#15803d',loss:'#b91c1c'}};
+  const _cp=_CPM[_pdStyle.color_preset||'normal'];
+  const _cWin=_cp.win; const _cLoss=_cp.loss;
+  // ── 연도 필터 ──
+  const _year=window._playerModalYear||'';
+  const _histAll=p.history||[];
+  const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
+  const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
-  (p.history||[]).forEach(h=>{
+  _hist.forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
     else{opps[h.opp].l++;if(rv[h.oppRace])rv[h.oppRace].l++;}
@@ -450,68 +631,88 @@ function buildPlayerDetailHTML(p){
   const eloVal=p.elo||ELO_DEFAULT;
   const eloColor=eloVal>=1400?'#7c3aed':eloVal>=1300?'#d97706':eloVal>=1200?'#16a34a':'#dc2626';
 
-  // ── 상단 프로필 패널 ──
-  let h=`<div style="background:linear-gradient(135deg,${col} 0%,${col}dd 60%,${col}bb 100%);border-radius:18px;padding:22px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px ${col}44">
-    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none"></div>
-    <div style="position:absolute;bottom:-50px;left:10px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-    <div style="position:absolute;top:0;right:0;width:200px;height:100%;background:linear-gradient(to left,rgba(255,255,255,.06),transparent);pointer-events:none"></div>
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;position:relative">
-      <div style="width:90px;height:90px;border-radius:18px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid rgba(255,255,255,.45);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.2);position:relative">${(()=>{if(p.photo){const raceL=p.race||'?';return`<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;}const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:44px;height:44px;object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'34\\' height=\\'34\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='34' height='34'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
-      <div style="flex:1;min-width:0;position:relative">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)">${p.name}${genderIcon(p.gender)}</span>${p.role?`<span style="display:block;margin-top:3px">${getRoleBadgeHTML(p.role,'11px')}</span>`:''}
-          <span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px">${getTierLabel(p.tier)||p.tier}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span class="ubadge clickable-univ" data-icon-done="1" style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:11px;padding:3px 11px;display:inline-flex;align-items:center;gap:4px;border-radius:6px" onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)">${gUI(p.univ,'12px')}${p.univ}</span>
-          <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">${p.race} ${RNAME[p.race]||''}</span>
-          ${(()=>{
-            if(!p.channelUrl) return '';
-            const url=p.channelUrl;
-            let icon='🏠', label='방송';
-            if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
-            else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
-            else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
-            else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:14px;height:14px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
-            return '<a href="'+url+'" target="_blank" title="'+label+' 바로가기" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.4);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+icon+' '+label+'</a>';
-          })()}
+  // ── 상단 프로필 카드 (이름영역=대학색, 통계영역=연한 대학색) ──
+  const _photoHTML=(()=>{
+    if(p.photo){
+      const raceL=p.race||'?';
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+    }
+    const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
+    return url
+      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
+  })();
+  const _channelHTML=(()=>{
+    if(!p.channelUrl) return '';
+    const url=p.channelUrl;
+    let icon='🏠', label='방송';
+    if(url.includes('chzzk.naver.com')){icon='<img src="https://ssl.pstatic.net/static/nng/glive/icon/favicon.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'🎮\'">';label='치지직';}
+    else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📺\'">';label='아프리카';}
+    else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'▶️\'">';label='유튜브';}
+    else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:13px;height:13px;border-radius:3px" onerror="this.outerHTML=\'📡\'">';label='트위치';}
+    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${icon} ${label}</a>`;
+  })();
+  const _eloSparkHTML=(()=>{
+    const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
+    if(deltas.length<2) return '';
+    let cur=eloVal;
+    [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
+    let val=cur; const elos=[val];
+    deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
+    const mn=Math.min(...elos),mx=Math.max(...elos),rng=mx-mn||1;
+    const SW=60,SH=20;
+    const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*SW)},${Math.round(SH-((e-mn)/rng)*SH)}`);
+    const lc=elos[elos.length-1]>=elos[elos.length-2]?_winC:_lossC;
+    return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  })();
+
+  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
+        <div style="width:76px;height:76px;border-radius:16px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
+            ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
+            ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
+              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
+            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+            ${(()=>{
+              const _cn=p.crewName||(p.isCrew?'보라크루':'');
+              if(!_cn)return '';
+              const _cfg=(typeof crewCfg!=='undefined'?crewCfg:[]).find(c=>c.name===_cn)||{};
+              const _cc=_cfg.color||'#7c3aed';
+              const _logo=_cfg.logo?`<img src="${_cfg.logo}" style="width:13px;height:13px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'"> `:'';
+              return `<span style="background:${_cc}33;border:1.5px solid ${_cc}88;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:3px">${_logo}${_cn}</span>`;
+            })()}
+            ${_channelHTML}
+          </div>
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative">
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">전적</div>
-        <div style="font-weight:900;font-size:13px;color:#fff"><span style="color:#86efac">${p.win}W</span> <span style="color:#fca5a5">${p.loss}L</span></div>
+    <div style="background:${col}${_p2h(_statsTint)};display:grid;grid-template-columns:repeat(4,1fr)">
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
+        <div style="font-weight:900;font-size:14px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">승률</div>
-        <div style="font-weight:900;font-size:16px;color:${wr>=50?'#86efac':'#fca5a5'}">${tot?wr+'%':'-'}</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
+        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px;letter-spacing:.3px">포인트</div>
-        <div style="font-weight:900;font-size:16px;color:${p.points>=0?'#86efac':'#fca5a5'}">${pS(p.points)}</div>
+      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
+        <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?_cWin:_cLoss}">${pS(p.points)}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
-        <div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:4px;letter-spacing:.3px">ELO</div>
-        <div style="font-weight:900;font-size:16px;color:#fff">${eloVal}</div>
-        ${(()=>{
-          // ELO 스파크라인: history에서 eloDelta로 추이 계산
-          const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
-          if(deltas.length<2) return '';
-          let cur=eloVal;
-          const points=[];
-          [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
-          let val=cur;
-          const elos=[val];
-          deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
-          const min=Math.min(...elos),max=Math.max(...elos);
-          const range=max-min||1;
-          const W=68,H=22;
-          const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*W)},${Math.round(H-((e-min)/range)*H)}`);
-          const last=elos[elos.length-1],prev=elos[elos.length-2];
-          const lineColor=last>=prev?'#86efac':'#fca5a5';
-          return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;margin:4px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        })()}
+      <div style="text-align:center;padding:14px 6px">
+        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
+        <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
+        ${_eloSparkHTML}
       </div>
     </div>
   </div>`;
@@ -557,20 +758,33 @@ function buildPlayerDetailHTML(p){
     }
   }
 
-  // ── ELO 추이 차트 ──
-  // 🔧 eloAfter 레거시 필드 제거됨 → eloDelta 누적으로 ELO 재계산
-  const _eloBase = p.elo || ELO_DEFAULT;
-  const _eloDeltas = (p.history||[]).filter(h=>h.eloDelta!=null).reverse();
-  let _eloRunning = _eloBase;
-  const _eloRecalc = [];
-  _eloDeltas.forEach((h,i)=>{ _eloRecalc.unshift({...h, eloAfter:_eloRunning}); _eloRunning -= (h.eloDelta||0); });
-  const _eloHistPts=(p.history||[]).filter(h=>h.eloDelta!=null||h.eloAfter!=null);
-  if(_eloHistPts.length>=3){
+  // ── 연도 필터 드롭다운 ──
+  if(_availYears.length>0){
+    const _pSafeY=p.name.replace(/'/g,"\\'");
+    const _yWin=_hist.filter(h=>h.result==='승').length;
+    const _yLoss=_hist.filter(h=>h.result==='패').length;
+    const _yTot=_yWin+_yLoss;
+    const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
+    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
+      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
+        style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
+        <option value="" ${!_year?'selected':''}>전체</option>
+        ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
+      </select>
+      ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeY}'));injectUnivIcons(document.getElementById('playerModalBody'));setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+    </div>`;
+  }
+
+  // ── ELO 추이 차트 (년도 필터 적용) ──
+  const _eloChartPts=_hist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
+  if(_eloChartPts.length>=3){
     h+=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
-        ELO 변화 추이
-        <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloHistPts.length}경기</span>
+        ELO 변화 추이${_year?` (${_year}년)`:''}
+        <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloChartPts.length}경기</span>
         <span style="font-size:10px;font-weight:700;margin-left:auto;color:${eloColor}">${eloVal}</span>
       </div>
       <div style="position:relative">
@@ -580,30 +794,18 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }
 
-  // ── 종족별 승률 ──
-  h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">`;
-  RACES.forEach(r=>{
-    const s=rv[r];const t=s.w+s.l;const w=t?Math.round(s.w/t*100):0;
-    const raceColors={T:'#3b82f6',Z:'#7c3aed',P:'#d97706',N:'#6b7280'};
-    const rc=raceColors[r]||'#6b7280';
-    h+=`<div class="rscard" style="border-color:${rc}55;background:${rc}12;flex:1;min-width:80px">
-      <div style="margin-bottom:6px"><span class="rbadge r${r}" style="font-size:11px">${r} ${RNAME[r]||''}</span></div>
-      <div style="font-weight:900;font-size:22px;color:${t?(w>=50?rc:'#94a3b8'):'#d1d5db'}">${t?w+'%':'-'}</div>
-      <div style="font-size:10px;margin-top:4px"><span style="color:#16a34a;font-weight:700">${s.w}W</span> <span style="color:#dc2626;font-weight:700">${s.l}L</span></div>
-    </div>`;
-  });
-  h+=`</div>`;
+
 
   // ── 모드별 전적 ──
   const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
   const _histModeStats={};
-  (p.history||[]).forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
+  _hist.forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
   // 대회: 조별리그+토너먼트+대회 통합
   const _compW=(_histModeStats['대회']?.w||0)+(_histModeStats['조별리그']?.w||0)+(_histModeStats['토너먼트']?.w||0);
   const _compL=(_histModeStats['대회']?.l||0)+(_histModeStats['조별리그']?.l||0)+(_histModeStats['토너먼트']?.l||0);
   // 끝장전: gjM에서 직접 집계
-  const _gjW=(gjM||[]).filter(g=>g.wName===p.name).length;
-  const _gjL=(gjM||[]).filter(g=>g.lName===p.name).length;
+  const _gjW=(gjM||[]).filter(g=>g.wName===p.name&&(!_year||(g.d||'').startsWith(_year))).length;
+  const _gjL=(gjM||[]).filter(g=>g.lName===p.name&&(!_year||(g.d||'').startsWith(_year))).length;
   const _fixedModes=[
     {key:'미니대전',w:_histModeStats['미니대전']?.w||0,l:_histModeStats['미니대전']?.l||0},
     {key:'대학대전',w:_histModeStats['대학대전']?.w||0,l:_histModeStats['대학대전']?.l||0},
@@ -614,37 +816,92 @@ function buildPlayerDetailHTML(p){
     {key:'대회',w:_compW,l:_compL},
     {key:'프로리그',w:_histModeStats['프로리그']?.w||0,l:_histModeStats['프로리그']?.l||0},
   ];
-  h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">`;
+  h+=`<div style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:3px;height:14px;background:#6b7280;border-radius:2px"></span>
+      모드별 전적
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
   _fixedModes.forEach(({key,w,l})=>{
     const t=w+l;const wr=t?Math.round(w/t*100):0;
     const mc=_modeColors[key]||'#6b7280';
-    h+=`<div style="background:var(--surface);border:1.5px solid ${mc}33;border-radius:10px;padding:8px 6px;text-align:center">
-      <div style="font-size:10px;color:${mc};font-weight:700;margin-bottom:4px">${key}</div>
-      <div style="font-size:11px"><span class="wt">${w}승</span> <span class="lt">${l}패</span></div>
-      <div style="font-size:12px;font-weight:800;color:${t?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${t?wr+'%':'-'}</div>
+    const wrCol=t?(wr>=50?_cWin:_cLoss):'#9ca3af';
+    h+=`<div style="background:${mc}${_p2h(_modeTint)};border:1.5px solid ${mc}${_p2h(Math.min(99,_modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
+      <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${_cWin}">${w}승</span> <span style="color:${_cLoss}">${l}패</span></div>
+      <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;
   });
-  h+=`</div>`;
+  h+=`</div></div>`;
 
   // ── 상대 전적 ──
-  const oppList=Object.entries(opps).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
-  if(oppList.length){
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>상대 전적 (${oppList.length}명)</div>
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">`;
-    oppList.forEach(([opp,s])=>{
-      const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
-      const oc=gc((players.find(x=>x.name===opp)||{}).univ||'');
-      const oppUniv=(players.find(x=>x.name===opp)||{}).univ||'';
-      h+=`<div class="ocard" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${opp}'),100)" style="border-color:${oc}44;background:${oc}08">
-        <div style="width:28px;height:28px;border-radius:8px;background:${oc};margin:0 auto 5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:0 2px 6px ${oc}55">${opp[0]}</div>
-        <div style="font-weight:800;font-size:11px;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px">${opp}</div>
-        <div style="font-size:9px;color:var(--gray-l);margin-bottom:3px">${oppUniv}</div>
-        <div style="font-size:10px;margin-bottom:2px"><span class="rbadge r${s.race}" style="font-size:9px;padding:1px 5px">${s.race}</span></div>
-        <div style="font-size:10px"><span style="color:#16a34a;font-weight:700">${s.w}W</span> <span style="color:#dc2626;font-weight:700">${s.l}L</span></div>
-        <div style="font-weight:800;font-size:12px;margin-top:2px;color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
+  {
+    if(!window._oppSort) window._oppSort='tot';
+    const oppList=Object.entries(opps);
+    if(oppList.length){
+      const _pSafeOpp=p.name.replace(/'/g,"\'");
+      const _rebuildOpp=`document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${_pSafeOpp}'));injectUnivIcons(document.getElementById('playerModalBody'))`;
+      if(window._oppSort==='wr') oppList.sort((a,b)=>{const ta=a[1].w+a[1].l,tb=b[1].w+b[1].l;const wa=ta?a[1].w/ta:0,wb=tb?b[1].w/tb:0;return wb-wa;});
+      else if(window._oppSort==='w') oppList.sort((a,b)=>b[1].w-a[1].w||a[1].l-b[1].l);
+      else oppList.sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
+      if(!window._oppPage) window._oppPage=0;
+      const _oppPageSize=10;
+      const _oppTotalPages=Math.ceil(oppList.length/_oppPageSize)||1;
+      const _oppCurPage=Math.max(0,Math.min(window._oppPage,_oppTotalPages-1));
+      const _oppDisplay=oppList.slice(_oppCurPage*_oppPageSize,(_oppCurPage+1)*_oppPageSize);
+      const _oppResetSort=`window._oppPage=0;`;
+      h+=`<div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px">
+            <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
+            상대 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${oppList.length}명)</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <button onclick="${_oppResetSort}window._oppSort='tot';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='tot'?'var(--blue)':'var(--white)'};color:${window._oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
+            <button onclick="${_oppResetSort}window._oppSort='w';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='w'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='w'?'var(--blue)':'var(--white)'};color:${window._oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
+            <button onclick="${_oppResetSort}window._oppSort='wr';${_rebuildOpp}" style="padding:2px 8px;border-radius:8px;border:1px solid ${window._oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${window._oppSort==='wr'?'var(--blue)':'var(--white)'};color:${window._oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <table style="margin:0;border:none;border-radius:0">
+            <thead><tr>
+              <th style="text-align:left;padding:7px 12px">선수</th>
+              <th style="text-align:center;width:40px">종족</th>
+              <th style="text-align:center;width:80px">대학</th>
+              <th style="text-align:center;width:36px">승</th>
+              <th style="text-align:center;width:36px">패</th>
+              <th style="text-align:center;width:52px">승률</th>
+            </tr></thead>
+            <tbody>
+              ${_oppDisplay.map(([opp,s])=>{
+                const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
+                const op=players.find(x=>x.name===opp);
+                const oc=gc(op?.univ||'');
+                const oppSafe=opp.replace(/'/g,"\'");
+                return `<tr style="cursor:pointer;transition:.1s" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${oppSafe}'),100)" onmouseover="this.style.background='${oc}12'" onmouseout="this.style.background=''">
+                  <td style="padding:6px 12px">
+                    <div style="display:flex;align-items:center;gap:7px">
+                      ${getPlayerPhotoHTML(opp,'36px')}
+                      <span style="font-weight:700;font-size:13px">${opp}</span>
+                    </div>
+                  </td>
+                  <td style="text-align:center"><span class="rbadge r${s.race||op?.race||'?'}" style="font-size:10px">${s.race||op?.race||'?'}</span></td>
+                  <td style="text-align:center"><span style="background:${oc};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${op?.univ||'-'}</span></td>
+                  <td style="text-align:center;font-weight:700;color:#16a34a">${s.w}</td>
+                  <td style="text-align:center;font-weight:700;color:#dc2626">${s.l}</td>
+                  <td style="text-align:center;font-weight:800;font-size:12px;color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          ${_oppTotalPages>1?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
+            <button class="btn btn-w btn-xs" ${_oppCurPage===0?'disabled':''} onclick="window._oppPage=${_oppCurPage-1};${_rebuildOpp}">◀ 이전</button>
+            <span style="font-size:12px;color:var(--gray-l)">${_oppCurPage+1} / ${_oppTotalPages} 페이지</span>
+            <button class="btn btn-w btn-xs" ${_oppCurPage>=_oppTotalPages-1?'disabled':''} onclick="window._oppPage=${_oppCurPage+1};${_rebuildOpp}">다음 ▶</button>
+          </div>`:''}
+        </div>
       </div>`;
-    });
-    h+=`</div>`;
+    }
   }
 
   // ── 최근 기록 ──
@@ -652,10 +909,11 @@ function buildPlayerDetailHTML(p){
     // 경기 타입 필터
     if(!window._playerHistFilter) window._playerHistFilter='전체';
     if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
-    const allModes=[...new Set((p.history||[]).map(h=>h.mode||'').filter(Boolean))];
+    const allModes=[...new Set(_hist.map(h=>h.mode||'').filter(Boolean))];
+    const modeLabelMap={'individual':'개인전','pro-league':'프로리그','end':'끝장전','pro-league-end':'프로리그 끝장전'};
     const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-      <button onclick="window._playerHistFilter='전체';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
-      ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${m}</button>`).join('')}
+      <button onclick="window._playerHistFilter='all';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter==='all'?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter==='all'?'var(--blue)':'var(--white)'};color:${window._playerHistFilter==='all'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">all</button>
+      ${allModes.map(m=>`<button onclick="window._playerHistFilter='${m}';playerHistPage=0;document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name.replace(/'/g,"\\'")}'));injectUnivIcons(document.getElementById('playerModalBody'))" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerHistFilter===m?'var(--blue)':'var(--border2)'};background:${window._playerHistFilter===m?'var(--blue)':'var(--white)'};color:${window._playerHistFilter===m?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${modeLabelMap[m]||m}</button>`).join('')}
     </div>`:'';
     // 시즌 필터 UI
     let seasonBar='';
@@ -678,8 +936,8 @@ function buildPlayerDetailHTML(p){
       return (typeof seasons!=='undefined'?seasons:[]).find(s=>s.id===window._playerSeasonFilter)||null;
     })();
     const _modeHist = window._playerHistFilter&&window._playerHistFilter!=='전체'
-      ? (p.history||[]).filter(hh=>hh.mode===window._playerHistFilter)
-      : (p.history||[]);
+      ? _hist.filter(hh=>hh.mode===window._playerHistFilter)
+      : _hist;
     const filteredHist = _curSeason
       ? _modeHist.filter(hh=>{
           const d=hh.date||'';
@@ -687,7 +945,7 @@ function buildPlayerDetailHTML(p){
         })
       : _modeHist;
     const totalGames=filteredHist.length;
-    const pageSize=20;
+    const pageSize=10;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
     const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));
     // 날짜 최신순 정렬 (원본 인덱스 보존)
@@ -709,15 +967,20 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:'';
       const modeLbl=hh.mode||'';
-      const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
+      const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
       const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
-      const modeCellHTML=modeLbl?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`:'';
+      const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
+      const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
+      const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="해당 경기로 이동">${modeLbl}</span>`
+        :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
+        :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
-        <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${hh.opp}'),100)"><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:16px;height:16px;border-radius:4px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp}</span></span></td>
-        <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace}</span></td>
+        <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
+        <td><span class="rbadge r${hh.oppRace||''}" style="font-size:10px">${hh.oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
         <td>${eloStr}</td>
         ${editBtnHTML}
@@ -726,9 +989,9 @@ function buildPlayerDetailHTML(p){
     h+=`</tbody></table>`;
     if(totalPages>1){
       h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
-        <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="playerHistPage=${curPage-1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name}'));injectUnivIcons(document.getElementById('playerModalBody'))">◀ 이전</button>
+        <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="playerHistPage=${curPage-1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${escJS(p.name)}'));injectUnivIcons(document.getElementById('playerModalBody'))">◀ 이전</button>
         <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
-        <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="playerHistPage=${curPage+1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${p.name}'));injectUnivIcons(document.getElementById('playerModalBody'))">다음 ▶</button>
+        <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="playerHistPage=${curPage+1};document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(players.find(x=>x.name==='${escJS(p.name)}'));injectUnivIcons(document.getElementById('playerModalBody'))">다음 ▶</button>
       </div>`;
     }
     h+=`</div>`;
@@ -737,7 +1000,7 @@ function buildPlayerDetailHTML(p){
   // ── 맵별 승률 ──
   {
     const mapStats = {};
-    (p.history||[]).forEach(h=>{
+    _hist.forEach(h=>{
       if(!h.map || h.map==='-' || h.map==='') return;
       if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
       if(h.result==='승') mapStats[h.map].w++;
@@ -778,15 +1041,16 @@ function buildPlayerDetailHTML(p){
   if(p.univ && p.univ !== '무소속'){
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
     if(teammates.length){
-      const tmSorted = [...teammates].sort((a,b)=>(b.points||0)-(a.points||0));
+      // 직책자 먼저, 그 다음 포인트순
+      const tmSorted = [...teammates].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||(b.points||0)-(a.points||0));
       const tmCards = tmSorted.map(q=>{
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-          :`<div style="width:20px;height:20px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
-        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:20px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
-          ${qPhoto}${q.name}${getTierBadge(q.tier)}
+          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          :`<div style="width:32px;height:32px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+        return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+          ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
         </button>`;
       }).join('');
       h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
@@ -802,9 +1066,9 @@ function buildPlayerDetailHTML(p){
   // ── 선수 메모 (관리자만) ──
   if(isLoggedIn){
     h+=`<div style="background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:12px;padding:14px 16px">
-      <div style="font-weight:700;font-size:12px;color:var(--gold);margin-bottom:8px">📝 선수 메모</div>
+      <div style="font-weight:700;font-size:12px;color:var(--gold);margin-bottom:8px">📝 스트리머 메모</div>
       ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
-      <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid var(--gold-b);border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="선수 메모...">${p.memo||''}</textarea>
+      <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid var(--gold-b);border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="스트리머 메모...">${p.memo||''}</textarea>
       <div style="display:flex;gap:6px;margin-top:8px">
         <button class="btn btn-b btn-sm" onclick="savePlayerMemo('${p.name}')">💾 저장</button>
         ${p.memo?`<button class="btn btn-r btn-sm" onclick="savePlayerMemo('${p.name}',true)">🗑️ 삭제</button>`:''}
@@ -828,8 +1092,16 @@ function buildUnivDetailHTML(univName){
   univM.forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   comps.forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
 
-  const tot=members.reduce((s,p)=>s+p.win+p.loss,0);
-  const wins=members.reduce((s,p)=>s+p.win,0);
+  // 개인 전적: 현재 소속이 아니어도 history.univ 기준으로 집계
+  let wins=0, tot=0;
+  players.forEach(p=>{
+    (p.history||[]).forEach(h=>{
+      if((h.univ||p.univ)===univName){
+        tot++;
+        if(h.result==='승') wins++;
+      }
+    });
+  });
   const pts=members.reduce((s,p)=>s+p.points,0);
   const wr=tot?Math.round(wins/tot*100):0;
 
@@ -838,15 +1110,15 @@ function buildUnivDetailHTML(univName){
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid rgba(255,255,255,.35);flex-shrink:0">
-        ${gUI(univName,'32px')}
+      <div style="width:72px;height:72px;border-radius:18px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0">
+        ${gUI(univName,'46px')}
       </div>
       <div>
         <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
           ${univName}
           ${(()=>{const _u=univCfg.find(u=>u.name===univName);return _u?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${_u.dissolvedDate?' '+_u.dissolvedDate:''}</span>`:'';})()}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 선수 ${members.length}명</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 스트리머 ${members.length}명</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
@@ -874,12 +1146,12 @@ function buildUnivDetailHTML(univName){
     const sorted=[...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     const displayList=sorted; // 전체 선수 표시 (남자 포함, 경기 이력 없어도)
     h+=`<div style="font-weight:700;font-size:12px;color:${col};margin-bottom:10px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 선수 (${displayList.length}명)
+      <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 스트리머 (${displayList.length}명)
     </div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:7px 6px">직책</th><th style="text-align:center">티어</th><th style="text-align:center;width:50px">종족</th><th style="text-align:left;padding-left:10px">이름</th><th style="text-align:center;width:40px">성별</th><th style="text-align:center;width:40px">승</th><th style="text-align:center;width:40px">패</th><th style="text-align:center;width:52px">승률</th><th style="text-align:center;width:60px">포인트</th></tr></thead><tbody>`;
     displayList.forEach(p=>{
       const tw=p.win+p.loss;const twr=tw?Math.round(p.win/tw*100):0;
-      h+=`<tr style="cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${p.name}'),100)" onmouseover="this.style.background=gcHex8('${p.univ}',.12)" onmouseout="this.style.background=gcHex8('${p.univ}',.06)"
+      h+=`<tr style="cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${escJS(p.name)}'),100)" onmouseover="this.style.background=gcHex8('${p.univ}',.12)" onmouseout="this.style.background=gcHex8('${p.univ}',.06)"
           style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">\r\n        <td style="text-align:center;padding:5px 4px;white-space:nowrap">${p.role?getRoleBadgeHTML(p.role,'10px'):''}</td>
         <td style="text-align:center">${getTierBadge(p.tier)}</td>
         <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
@@ -932,7 +1204,7 @@ function buildUnivDetailHTML(univName){
       const win=myS>oppS;const oc=gc(opp);
       const modeBg=m.mode==='미니대전'?'#2563eb':'#7c3aed';
       h+=`<tr>
-        <td style="color:var(--gray-l);font-size:11px">${m.d||''}</td>
+        <td style="color:var(--text3);font-size:12px;font-weight:600">${m.d||''}</td>
         <td><span style="background:${modeBg};color:#fff;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700">${m.mode}</span></td>
         <td><span class="ubadge clickable-univ" style="background:${oc};font-size:10px;padding:1px 7px" onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">${opp}</span></td>
         <td>${win?`<span class="wt" style="font-weight:800">${myS}:${oppS} 승</span>`:`<span class="lt" style="font-weight:800">${myS}:${oppS} 패</span>`}</td>
@@ -964,7 +1236,7 @@ function buildUnivDetailHTML(univName){
         const rows=uniqueAces.map(({label,p:ap})=>{
           if(!ap) return '';
           const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
-          const safeName=ap.name.replace(/'/g,"\'");
+          const safeName=escJS(ap.name);
           const photoEl=ap.photo
             ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
             :`<div style="width:30px;height:30px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
@@ -980,7 +1252,7 @@ function buildUnivDetailHTML(univName){
           </div>`;
         }).filter(Boolean).join('');
         return `<div style="margin-top:16px">
-          <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">⭐ 에이스 선수</div>
+          <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${col};margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ${col}33">⭐ 에이스 스트리머</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">${rows}</div>
         </div>`;
       })();
@@ -992,10 +1264,10 @@ function buildUnivDetailHTML(univName){
 }/* ══════════════════════════════════════
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
-let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
-let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'mini' | 'univm'
-let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
-let _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'comp'
+var _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
+var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
+var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -1009,24 +1281,39 @@ function rMergedInd(C, T) {
     [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
     _mergedIndSub, '_mergedIndSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
-  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  try {
+    if(_mergedIndSub==='ind') { 
+      if(typeof rInd==='function') {
+        const tempDiv = document.createElement('div');
+        rInd(tempDiv, T);
+        subHtml = tempDiv.innerHTML;
+      }
+    } else { 
+      if(typeof rGJ==='function') {
+        const tempDiv = document.createElement('div');
+        rGJ(tempDiv, T);
+        subHtml = tempDiv.innerHTML;
+      }
+    }
+    C.innerHTML = bar + subHtml;
+  } catch(e) {
+    console.error('rMergedInd error:', e);
+    C.innerHTML = bar + '<div style="padding:20px;color:red">Error: ' + e.message + '</div>';
+  }
 }
 
 function rMergedUnivM(C, T) {
   const bar = _mergedSubBar(
-    [{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
+    [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
     _mergedUnivSub, '_mergedUnivSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedUnivSub==='mini')        { if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
-  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function') { const temp = document.createElement('div'); rMini(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function') { const temp = document.createElement('div'); rMini(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function') { const temp = document.createElement('div'); rCK(temp,T); subHtml = temp.innerHTML; }}
+  else                                { if(typeof rUnivM==='function') { const temp = document.createElement('div'); rUnivM(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 function rMergedComp(C, T) {
@@ -1034,44 +1321,48 @@ function rMergedComp(C, T) {
     [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}],
     _mergedCompSub, '_mergedCompSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedCompSub==='comp') { if(typeof rComp==='function') { const temp = document.createElement('div'); rComp(temp,T); subHtml = temp.innerHTML; }}
+  else                         { if(typeof rTierTourTab==='function') { const temp = document.createElement('div'); rTierTourTab(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'comp',lbl:'🎖️ 대회'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedProSub==='pro') { if(typeof rPro==='function')      rPro(sub,T); }
-  else                       { if(typeof rProComp==='function') rProComp(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedProSub==='pro')       { if(typeof rPro==='function') { const temp = document.createElement('div'); rPro(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function') { const temp = document.createElement('div'); rGJ(temp,T,true,true); subHtml = temp.innerHTML; }}
+  else                            { if(typeof rProComp==='function') { const temp = document.createElement('div'); rProComp(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 /* ══════════════════════════════════════
    선수 모달 ELO 추이 차트
 ══════════════════════════════════════ */
-function initPEloChart(name){
+function initPEloChart(name, year){
   const p=players.find(x=>x.name===name);
   const canvas=document.getElementById('pEloChart');
   const tip=document.getElementById('pEloTip');
   if(!p||!canvas)return;
-  const hist=[...(p.history||[])].reverse();
-  // eloAfter 없는 경우(압축된 데이터) eloDelta 누적으로 재계산
+  // 전체 history로 ELO 재계산 (정확한 누적값 산출)
+  const histAll=[...(p.history||[])].reverse();
   let _eloRc=p.elo||ELO_DEFAULT;
   const _eloRcMap=new Map();
-  [...hist].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
-  const pts=[];let elo=ELO_DEFAULT;
-  hist.forEach((h,i)=>{
-    const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(hist.length-1-i) ?? null);
-    if(_ea!=null) pts.push({i,elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
-    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
+  [...histAll].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
+  const allPts=[];let elo=ELO_DEFAULT;
+  histAll.forEach((h,i)=>{
+    const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(histAll.length-1-i) ?? null);
+    if(_ea!=null) allPts.push({elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
+    else{elo+=(h.eloDelta||0);allPts.push({elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
   });
+  // 년도 필터 적용 (ELO 값은 전체 기반으로 계산된 것 사용)
+  const _yr=year||window._playerModalYear||'';
+  const pts=_yr?allPts.filter(pt=>(pt.date||'').startsWith(_yr)):allPts;
+  // x축 인덱스 재부여
+  pts.forEach((pt,i)=>pt.i=i);
   if(pts.length<2){canvas.style.display='none';return;}
   const W=canvas.offsetWidth||canvas.parentElement?.offsetWidth||300;
   const H=140;
