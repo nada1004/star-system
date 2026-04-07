@@ -628,7 +628,8 @@ function _b2CrewView() {
 
     // 멤버 그리드 (접혀있으면 숨김)
     if (!isCollapsed) {
-      h += '<div style="background:var(--white);padding:14px">';
+      const cardBgAlpha = Math.round(((c.cardAlpha != null ? c.cardAlpha : 8) / 100) * 255).toString(16).padStart(2, '0');
+      h += '<div style="background:' + col + cardBgAlpha + ';padding:14px">';
       if (!members.total) {
         h += '<div style="text-align:center;padding:20px;color:var(--gray-l);font-size:12px">아직 크루원이 없습니다';
         if (isLoggedIn) h += '<br><button class="btn btn-xs no-export" style="margin-top:6px;border-color:' + col + ';color:' + col + '" onclick="openCrewAddModal(\'' + safeName + '\')">+ 크루원 추가</button>';
@@ -975,9 +976,11 @@ function openCrewCfgAddModal() {
   document.getElementById('crewCfgBgImage').value = '';
   document.getElementById('crewCfgBgAlpha').value = '10';
   document.getElementById('crewCfgLabelAlpha').value = '18';
+  document.getElementById('crewCfgCardAlpha').value = '8';
   document.getElementById('crewCfgDesc').value = '';
   const va = document.getElementById('crewCfgLabelAlphaVal'); if (va) va.textContent = '18';
   const vb = document.getElementById('crewCfgBgAlphaVal'); if (vb) vb.textContent = '10';
+  const vc = document.getElementById('crewCfgCardAlphaVal'); if (vc) vc.textContent = '8';
   om('crewCfgModal');
 }
 function openCrewCfgEditModal(crewName) {
@@ -993,9 +996,11 @@ function openCrewCfgEditModal(crewName) {
   document.getElementById('crewCfgBgImage').value = c.bgImage || '';
   document.getElementById('crewCfgBgAlpha').value = c.bgAlpha != null ? c.bgAlpha : 10;
   document.getElementById('crewCfgLabelAlpha').value = c.labelAlpha != null ? c.labelAlpha : 18;
+  document.getElementById('crewCfgCardAlpha').value = c.cardAlpha != null ? c.cardAlpha : 8;
   document.getElementById('crewCfgDesc').value = c.desc || '';
   const va = document.getElementById('crewCfgLabelAlphaVal'); if (va) va.textContent = c.labelAlpha != null ? c.labelAlpha : 18;
   const vb = document.getElementById('crewCfgBgAlphaVal'); if (vb) vb.textContent = c.bgAlpha != null ? c.bgAlpha : 10;
+  const vc = document.getElementById('crewCfgCardAlphaVal'); if (vc) vc.textContent = c.cardAlpha != null ? c.cardAlpha : 8;
   om('crewCfgModal');
 }
 function saveCrewCfgModal() {
@@ -1011,6 +1016,7 @@ function saveCrewCfgModal() {
     bgImage: document.getElementById('crewCfgBgImage').value.trim(),
     bgAlpha: parseInt(document.getElementById('crewCfgBgAlpha').value) || 10,
     labelAlpha: parseInt(document.getElementById('crewCfgLabelAlpha').value) || 18,
+    cardAlpha: parseInt(document.getElementById('crewCfgCardAlpha').value) || 8,
     desc: document.getElementById('crewCfgDesc').value.trim(),
   };
   if (typeof crewCfg === 'undefined') window.crewCfg = [];
