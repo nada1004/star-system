@@ -722,49 +722,55 @@ function _b2SoloSection(soloPure) {
   return h;
 }
 
-/* ── 크루원 카드 ── */
+/* ── 크루원 카드 (전체 이미지 채우기, 원형) ── */
 function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentCrew, crewRole) {
   const col = accentColor || '#7c3aed';
   const safeName = (name || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  const minW = _crewCardMinWidth();
   const isLarge = _b2CrewCardSize === 'l';
-  const isMedium = _b2CrewCardSize === 'm';
-  const imgSize = isLarge ? 72 : isMedium ? 60 : 48;
-  const nameFontSize = isLarge ? 13 : isMedium ? 12 : 11;
+  const isSmall = _b2CrewCardSize === 's';
+  // 카드 높이: S=120 M=150 L=185
+  const cardH = isLarge ? 185 : isSmall ? 120 : 150;
+  const nameFontSize = isLarge ? 13 : isSmall ? 10 : 12;
+  const roleFontSize = isLarge ? 10 : 9;
 
-  const photoHTML = photo
-    ? '<img src="' + photo + '" style="width:' + imgSize + 'px;height:' + imgSize + 'px;border-radius:50%;object-fit:cover;border:2.5px solid ' + col + ';margin-bottom:6px;flex-shrink:0" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-    : '';
-  const fallback = '<div style="width:' + imgSize + 'px;height:' + imgSize + 'px;border-radius:50%;background:linear-gradient(135deg,' + col + ',' + col + '99);display:' + (photo ? 'none' : 'flex') + ';align-items:center;justify-content:center;font-size:' + (imgSize/2.5|0) + 'px;font-weight:900;color:#fff;border:2.5px solid ' + col + ';margin-bottom:6px;flex-shrink:0">' + (name || '?')[0] + '</div>';
+  // 이미지: 카드 전체를 원형으로 꽉 채움 (aspect-ratio 1:1, 둥근 모서리)
+  const imgInner = photo
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+      + '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:none;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>'
+    : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:flex;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
 
-  // 직책 배지
-  const roleBadge = crewRole
-    ? '<span style="font-size:9px;background:' + col + '22;color:' + col + ';border:1px solid ' + col + '55;border-radius:5px;padding:1px 5px;font-weight:700;margin-bottom:3px">' + crewRole + '</span>'
-    : '';
-  const scBadge = isSC ? '<span style="font-size:9px;background:#1e40af;color:#fff;border-radius:5px;padding:1px 4px;font-weight:700;margin-bottom:3px">⚔️ SC</span>' : '';
+  // 하단 그라데이션 오버레이 + 이름
+  const scDot = isSC ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#60a5fa;margin-right:3px;vertical-align:middle;flex-shrink:0"></span>' : '';
+  const roleTag = crewRole ? '<div style="font-size:' + roleFontSize + 'px;color:#ffffffbb;font-weight:700;line-height:1.2;margin-bottom:1px">' + crewRole + '</div>' : '';
 
-  const nameEl = isSC
-    ? '<div style="font-weight:800;font-size:' + nameFontSize + 'px;color:var(--blue);cursor:pointer;word-break:break-all;text-align:center" onclick="openPlayerModal(\'' + safeName + '\')">' + (name || '') + '</div>'
-    : '<div style="font-weight:800;font-size:' + nameFontSize + 'px;color:var(--text1);word-break:break-all;text-align:center">' + (name || '') + '</div>';
+  const nameClickAttr = isSC ? 'onclick="openPlayerModal(\'' + safeName + '\')" style="cursor:pointer"' : '';
+  const overlay = '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 inherit inherit;padding:' + (isSmall?'14px 6px 6px':'18px 8px 8px') + ';display:flex;flex-direction:column;align-items:center">'
+    + roleTag
+    + '<div ' + nameClickAttr + ' style="font-weight:800;font-size:' + nameFontSize + 'px;color:#fff;text-align:center;word-break:break-all;line-height:1.2;text-shadow:0 1px 3px #000a;display:flex;align-items:center;gap:2px">' + scDot + (name||'') + '</div>'
+    + '</div>';
+
+  // 방송 링크 버튼 (카드 외부 하단)
   const linkBtn = link
-    ? '<a href="' + link + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:' + col + ';color:#fff;border-radius:10px;font-size:10px;font-weight:700;text-decoration:none;margin-top:3px">▶ 방송</a>'
+    ? '<a href="' + link + '" target="_blank" rel="noopener" style="display:block;text-align:center;padding:4px 6px;background:' + col + ';color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 10px 10px">▶ 방송</a>'
     : '';
+
+  // 관리자 버튼 (카드 우상단 절대위치)
   let adminBtns = '';
   if (isLoggedIn) {
-    const moveBtn = '<button class="btn btn-xs no-export" style="padding:1px 5px;font-size:9px;background:#7c3aed15;border-color:#7c3aed66;color:#7c3aed" onclick="openQuickCrewMoveModal(\'' + safeName + '\',' + (isSC?'true':'false') + ',' + crewIdx + ')" title="크루 이동">🔀</button>';
-    if (isSC) {
-      adminBtns = '<div class="no-export" style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;justify-content:center">'
-        + '<button class="btn btn-w btn-xs" onclick="openEP(\'' + safeName + '\');cm(\'playerModal\')" style="padding:1px 5px;font-size:9px" title="수정">✏️</button>'
-        + moveBtn + '</div>';
-    } else {
-      adminBtns = '<div class="no-export" style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;justify-content:center">'
-        + '<button class="btn btn-w btn-xs" onclick="openCrewEditModal(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">✏️</button>'
-        + moveBtn
-        + '<button class="btn btn-r btn-xs" onclick="deleteCrew(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">🗑</button></div>';
-    }
+    const moveBtn = '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#7c3aed;color:#fff;border-color:#7c3aed;opacity:.85" onclick="event.stopPropagation();openQuickCrewMoveModal(\'' + safeName + '\',' + (isSC?'true':'false') + ',' + crewIdx + ')" title="크루 이동">🔀</button>';
+    const editBtn = isSC
+      ? '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151;opacity:.85" onclick="event.stopPropagation();openEP(\'' + safeName + '\');cm(\'playerModal\')" title="수정">✏️</button>'
+      : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151;opacity:.85" onclick="event.stopPropagation();openCrewEditModal(' + crewIdx + ')" title="수정">✏️</button>';
+    const delBtn = isSC ? '' : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#dc2626;color:#fff;border-color:#dc2626;opacity:.85" onclick="event.stopPropagation();deleteCrew(' + crewIdx + ')" title="삭제">🗑</button>';
+    adminBtns = '<div class="no-export" style="position:absolute;top:5px;right:5px;display:flex;gap:2px;z-index:2">' + editBtn + moveBtn + delBtn + '</div>';
   }
-  return '<div style="background:var(--surface);border:1px solid ' + col + '30;border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:box-shadow .15s" onmouseover="this.style.boxShadow=\'0 3px 14px ' + col + '30\'" onmouseout="this.style.boxShadow=\'\'">'
-    + photoHTML + fallback + (crewRole ? roleBadge : '') + scBadge + nameEl + linkBtn + adminBtns + '</div>';
+
+  const cardInner = '<div style="position:relative;width:100%;aspect-ratio:1/1;border-radius:' + (link?'10px 10px 0 0':'10px') + ';overflow:hidden;box-shadow:0 2px 8px ' + col + '30">'
+    + imgInner + overlay + adminBtns
+    + '</div>';
+
+  return '<div style="border-radius:10px;overflow:hidden;border:1.5px solid ' + col + '33;transition:box-shadow .15s;cursor:' + (isSC?'pointer':'default') + '" onmouseover="this.style.boxShadow=\'0 4px 16px ' + col + '44\'" onmouseout="this.style.boxShadow=\'\'"' + (isSC?' onclick="openPlayerModal(\'' + safeName + '\')"':'') + '>'
+    + cardInner + linkBtn + '</div>';
 }
 
 /* ── 크루 상세 모달 ── */
@@ -899,17 +905,19 @@ async function saveCrewImg(target, btn) {
   }
 }
 
-// 이미지 저장용 정적 카드
+// 이미지 저장용 정적 카드 (전체 이미지 채우기)
 function _crewMemberCardStatic(name, photo, link, col, crewRole) {
-  const photoHTML = photo
-    ? '<img src="' + photo + '" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2.5px solid ' + col + ';margin-bottom:6px" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-    : '';
-  const fallback = '<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,' + col + ',' + col + '99);display:' + (photo ? 'none' : 'flex') + ';align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;border:2.5px solid ' + col + ';margin-bottom:6px">' + (name || '?')[0] + '</div>';
-  const roleBadge = crewRole ? '<span style="font-size:9px;background:' + col + '22;color:' + col + ';border:1px solid ' + col + '55;border-radius:5px;padding:1px 5px;font-weight:700;margin-bottom:3px">' + crewRole + '</span>' : '';
-  const linkLabel = link ? '<span style="display:inline-block;padding:2px 8px;background:' + col + ';color:#fff;border-radius:10px;font-size:10px;font-weight:700;margin-top:3px">▶ 방송</span>' : '';
-  return '<div style="background:#f9fafb;border:1px solid ' + col + '30;border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center">'
-    + photoHTML + fallback + roleBadge
-    + '<div style="font-weight:800;font-size:12px;color:#1f2937;word-break:break-all;text-align:center">' + (name || '') + '</div>'
+  const roleTag = crewRole ? '<div style="font-size:9px;color:#ffffffbb;font-weight:700;margin-bottom:1px">' + crewRole + '</div>' : '';
+  const imgInner = photo
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0">'
+    : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
+  const overlay = '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 10px 10px;padding:18px 8px 8px;text-align:center">'
+    + roleTag
+    + '<div style="font-weight:800;font-size:12px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">' + (name||'') + '</div>'
+    + '</div>';
+  const linkLabel = link ? '<div style="text-align:center;padding:4px;background:' + col + ';border-radius:0 0 10px 10px"><span style="font-size:10px;font-weight:700;color:#fff">▶ 방송</span></div>' : '';
+  return '<div style="border-radius:10px;overflow:hidden;border:1.5px solid ' + col + '33">'
+    + '<div style="position:relative;width:100%;aspect-ratio:1/1;border-radius:' + (link?'10px 10px 0 0':'10px') + ';overflow:hidden">' + imgInner + overlay + '</div>'
     + linkLabel + '</div>';
 }
 

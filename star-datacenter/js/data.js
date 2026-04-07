@@ -119,3 +119,35 @@ function syncTourneyHistoryBtn(){
   if(n>0){alert('✅ '+n+'건의 경기가 선수 최근 기록에 소급 반영되었습니다.\n선수 상세 페이지에서 확인하세요.');render();}
   else{alert('✅ 이미 모든 대회 경기가 반영되어 있습니다.');}
 }
+
+function syncIndHistory(){
+  // 이미 history에 있는 matchId 수집
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  // indM (개인전)
+  (typeof indM!=='undefined'?indM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
+    const mode=m._proLabel?'프로리그':'개인전';
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
+  });
+  // gjM (끝장전)
+  (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
+    const mode=m._proLabel?'프로리그끝장전':'끝장전';
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncIndHistoryBtn(){
+  const n=syncIndHistory();
+  if(n>0){alert('✅ '+n+'건의 개인전/끝장전이 선수 최근 기록에 소급 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 개인전/끝장전 기록이 반영되어 있습니다.');}
+}

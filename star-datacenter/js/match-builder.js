@@ -216,6 +216,7 @@ function rInd(C,T){
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
   let h=stabs(indSub,subOpts);
+  if(isLoggedIn) h+=`<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 전적 동기화</button></div>`;
   if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
