@@ -112,7 +112,9 @@ window._goPlayerHistPage = function(page, name){
   if(!_p) return;
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
+  const _st = _mb.scrollTop;
   _mb.innerHTML = buildPlayerDetailHTML(_p);
+  _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
 window._goPlayerOppPage = function(page, name){
@@ -121,7 +123,9 @@ window._goPlayerOppPage = function(page, name){
   if(!_p) return;
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
+  const _st = _mb.scrollTop;
   _mb.innerHTML = buildPlayerDetailHTML(_p);
+  _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
 window._rebuildPlayerDetail = function(name){
