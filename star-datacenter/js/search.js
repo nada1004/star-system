@@ -246,10 +246,13 @@ function findPlayerByPartialName(namePart) {
   if (exact.length > 1)   return { player: null, candidates: exact, similar: [] };
 
   // 2) 메모 완전 일치 (짭제 → 박상현처럼 메모에 닉네임 저장)
+  // - 토큰 분리 일치 + 대소문자 무시 + 원본 메모 전체 일치도 지원
+  const _trimmedLow = trimmed.toLowerCase();
   const memoExact = players.filter(p => {
     if (!p.memo) return false;
+    if (p.memo.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
     const memos = p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean);
-    return memos.some(m => m === trimmed);
+    return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
   if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
   if (memoExact.length > 1)   return { player: null, candidates: memoExact, similar: [] };

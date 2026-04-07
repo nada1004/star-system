@@ -603,8 +603,18 @@ function calcElo(winnerElo, loserElo){
 }
 
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
-  const w=players.find(p=>p.name===winName);
-  const l=players.find(p=>p.name===loseName);
+  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
+  function _findPlayer(name){
+    let p=players.find(x=>x.name===name);
+    if(p)return p;
+    const low=name.toLowerCase();
+    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+    if(p)return p;
+    const ns=name.replace(/\s+/g,'');
+    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+  }
+  const w=_findPlayer(winName);
+  const l=_findPlayer(loseName);
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
