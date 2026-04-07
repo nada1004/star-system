@@ -701,7 +701,7 @@ function buildUnivBoardCard(u, forExport){
           + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
           + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
           + `</div>`;
-        const cardInner = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
+        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:90px;padding-top:0':'aspect-ratio:1/1'};overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
           + (p.channelUrl
             ? (forExport
                 ? `<div style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;border-radius:0 0 8px 8px">▶ 방송</div>`
