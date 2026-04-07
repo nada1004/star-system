@@ -81,9 +81,9 @@ function rBoard2(C, T) {
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
+      ${cardViewBtn}
       ${oldBtn}
       ${crewBtn}
-      ${cardViewBtn}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -193,23 +193,38 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       : `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
     : '';
 
-  // 카드뷰 여부
-  const _useCardView = !forExport && (typeof boardCardView !== 'undefined') && boardCardView;
+  // 카드뷰 여부 (이미지 저장 시에도 적용)
+  const _useCardView = (typeof boardCardView !== 'undefined') && boardCardView;
 
   let bodyContent;
   if (_useCardView) {
-    // 포토카드 그리드: 직책 → 티어 순서로 전체 멤버
-    const _cardMembers = [
-      ...roledMembers,
-      ...orderedTierKeys.flatMap(tier => {
-        const g = [...tierGroups[tier]];
-        g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-        return g;
-      })
-    ];
-    bodyContent = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:12px">`
-      + _cardMembers.map(p => _b2PhotoCard(p, col)).join('')
-      + `</div>`;
+    // 포토카드 그리드: 직책 → 티어별 섹션으로 구분
+    const _sectionStyle = `font-size:11px;font-weight:800;color:${col};background:${col}18;border-left:3px solid ${col};padding:3px 10px;border-radius:0 6px 6px 0;margin:8px 0 4px`;
+    const _gridStyle = `display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:0 8px 8px`;
+    let _cardHtml = '<div style="padding:10px 4px 4px">';
+    // 직책 그룹
+    if (roledMembers.length) {
+      const _roleGrouped = {};
+      const _roleOrderArr = [];
+      roledMembers.forEach(p => {
+        const r = p.role || '';
+        if (!_roleGrouped[r]) { _roleGrouped[r] = []; _roleOrderArr.push(r); }
+        _roleGrouped[r].push(p);
+      });
+      _roleOrderArr.forEach(role => {
+        _cardHtml += `<div style="${_sectionStyle}">${role}</div>`;
+        _cardHtml += `<div style="${_gridStyle}">` + _roleGrouped[role].map(p => _b2PhotoCard(p, col)).join('') + `</div>`;
+      });
+    }
+    // 티어 그룹
+    orderedTierKeys.forEach(tier => {
+      const g = [...tierGroups[tier]];
+      g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+      _cardHtml += `<div style="${_sectionStyle}">${tier}</div>`;
+      _cardHtml += `<div style="${_gridStyle}">` + g.map(p => _b2PhotoCard(p, col)).join('') + `</div>`;
+    });
+    _cardHtml += '</div>';
+    bodyContent = _cardHtml;
   } else {
     let rows = '';
     roleOrder.forEach(role => {
@@ -297,18 +312,32 @@ function _b2FreeView() {
   const _freeCardView = (typeof boardCardView !== 'undefined') && boardCardView;
 
   if (_freeCardView) {
-    // 포토카드 그리드
-    const _allFree = [
-      ...roledFree,
-      ...orderedTierKeys.flatMap(tier => {
-        const g = [...tierGroups[tier]];
-        g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-        return g;
-      })
-    ];
-    h += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:12px">`;
-    _allFree.forEach(p => { h += _b2PhotoCard(p, defCol); });
-    h += `</div>`;
+    // 포토카드 그리드: 직책/티어 섹션으로 구분
+    const _fSectionStyle = `font-size:11px;font-weight:800;color:#fff;background:#64748b55;border-left:3px solid #fff9;padding:3px 10px;border-radius:0 6px 6px 0;margin:8px 0 4px`;
+    const _fGridStyle = `display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:0 8px 8px`;
+    h += '<div style="padding:10px 4px 4px">';
+    // 직책 그룹
+    if (roledFree.length) {
+      const _rfGrouped = {};
+      const _rfOrderArr = [];
+      roledFree.forEach(p => {
+        const r = p.role || '';
+        if (!_rfGrouped[r]) { _rfGrouped[r] = []; _rfOrderArr.push(r); }
+        _rfGrouped[r].push(p);
+      });
+      _rfOrderArr.forEach(role => {
+        h += `<div style="${_fSectionStyle}">${role}</div>`;
+        h += `<div style="${_fGridStyle}">` + _rfGrouped[role].map(p => _b2PhotoCard(p, defCol)).join('') + `</div>`;
+      });
+    }
+    // 티어 그룹
+    orderedTierKeys.forEach(tier => {
+      const g = [...tierGroups[tier]];
+      g.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+      h += `<div style="${_fSectionStyle}">${tier}</div>`;
+      h += `<div style="${_fGridStyle}">` + g.map(p => _b2PhotoCard(p, defCol)).join('') + `</div>`;
+    });
+    h += '</div>';
   } else {
     // 직책 그룹
     roledFree.forEach(p => {
@@ -493,12 +522,8 @@ async function saveB2Img() {
   // no-export 요소 제거 (접기 버튼 등)
   tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
 
-  await new Promise(r => setTimeout(r, 300));
-  injectUnivIcons(tmpDiv);
-  await new Promise(r => setTimeout(r, 400)); // 아이콘 로드 대기 시간 확보
-  // 이미지 먼저 data URL로 변환 후 치수 측정 (측정 전 로드 필수)
-  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 8000);
   await new Promise(r => setTimeout(r, 100));
+  injectUnivIcons(tmpDiv);
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
@@ -528,11 +553,8 @@ async function saveB2FreeImg() {
   // no-export 요소 제거 (접기 버튼 등)
   tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
 
-  await new Promise(r => setTimeout(r, 300));
-  injectUnivIcons(tmpDiv);
-  await new Promise(r => setTimeout(r, 400));
-  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 8000);
   await new Promise(r => setTimeout(r, 100));
+  injectUnivIcons(tmpDiv);
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
