@@ -1281,11 +1281,21 @@ function rMergedInd(C, T) {
     [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
     _mergedIndSub, '_mergedIndSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
-  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedIndSub==='ind') { 
+    if(typeof rInd==='function') {
+      const tempDiv = document.createElement('div');
+      rInd(tempDiv, T);
+      subHtml = tempDiv.innerHTML;
+    }
+  } else { 
+    if(typeof rGJ==='function') {
+      const tempDiv = document.createElement('div');
+      rGJ(tempDiv, T);
+      subHtml = tempDiv.innerHTML;
+    }
+  }
+  C.innerHTML = bar + subHtml;
 }
 
 function rMergedUnivM(C, T) {
@@ -1293,13 +1303,12 @@ function rMergedUnivM(C, T) {
     [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
     _mergedUnivSub, '_mergedUnivSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
-  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function') { const temp = document.createElement('div'); rMini(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function') { const temp = document.createElement('div'); rMini(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function') { const temp = document.createElement('div'); rCK(temp,T); subHtml = temp.innerHTML; }}
+  else                                { if(typeof rUnivM==='function') { const temp = document.createElement('div'); rUnivM(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 function rMergedComp(C, T) {
@@ -1307,11 +1316,10 @@ function rMergedComp(C, T) {
     [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}],
     _mergedCompSub, '_mergedCompSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedCompSub==='comp') { if(typeof rComp==='function') { const temp = document.createElement('div'); rComp(temp,T); subHtml = temp.innerHTML; }}
+  else                         { if(typeof rTierTourTab==='function') { const temp = document.createElement('div'); rTierTourTab(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 function rMergedPro(C, T) {
@@ -1319,12 +1327,11 @@ function rMergedPro(C, T) {
     [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
-  const sub = document.createElement('div');
-  if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
-  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true,true); }
-  else                            { if(typeof rProComp==='function') rProComp(sub,T); }
-  C.innerHTML = bar;
-  C.appendChild(sub);
+  let subHtml = '';
+  if(_mergedProSub==='pro')       { if(typeof rPro==='function') { const temp = document.createElement('div'); rPro(temp,T); subHtml = temp.innerHTML; }}
+  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function') { const temp = document.createElement('div'); rGJ(temp,T,true,true); subHtml = temp.innerHTML; }}
+  else                            { if(typeof rProComp==='function') { const temp = document.createElement('div'); rProComp(temp,T); subHtml = temp.innerHTML; }}
+  C.innerHTML = bar + subHtml;
 }
 
 /* ══════════════════════════════════════
