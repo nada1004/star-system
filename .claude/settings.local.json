@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"openTTPasteModal\\\\|function.*TTPaste\\\\|function.*ttPaste\" star-datacenter/js/*.js)",
+      "Bash(python -c \":*)",
+      "Bash(node -e \":*)",
+      "Bash(grep -v \"//.*ttM\")",
+      "Bash(grep -n \"rTierTourTab\\\\|rTierTour\\\\b\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"_mergedCompSub\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"openTTPasteModal\\\\|TTPaste\\\\|ttPaste\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''d:/projects/star/star-datacenter/data.json'',''utf8''\\)\\); console.log\\(''players:'', d.players.length\\); console.log\\(''savedAt:'', d.savedAt\\);\")",
+      "WebFetch(domain:image.fmkorea.com)",
+      "Bash(grep -n \"openPlayerModal\\\\|function getPlayerModal\\\\|getPlayerModalHTML\" /d/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -l \"buildPlayerDetailHTML\" /d/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -l \"function setBuilderHTML\\\\|setBuilderHTML.*=\" /d/projects/star/star-datacenter/js/*.js)",
+      "Bash(git pull:*)",
+      "Bash(git log:*)",
+      "Bash(grep -n \"_proKey\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"function genId\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"function grpAddUniv\\\\|function grpRemoveUniv\\\\|function grpFilterUnivSel\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"^function om\\\\b\\\\|^var om\\\\b\\\\|window\\\\.om\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"function openBktBulkPaste\\\\|function openCompAutoDetectPaste\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(python3 insert_login_check.py)",
+      "Bash(node insert_login.js)",
+      "Bash(node patch_backup.js)",
+      "Bash(node -e \"const c=require\\(''fs''\\).readFileSync\\(''d:/projects/star/star-datacenter/js/tier-tour.js'',''utf-8''\\);const i=c.indexOf\\(''📦 데이터 백업''\\);const lines=c.slice\\(0,i\\).split\\(''\\\\n''\\);console.log\\(''At line'', lines.length\\);console.log\\(c.slice\\(i-100,i+300\\)\\);\")",
+      "Bash(node fix_backup.js)"
+    ]
+  }
+}

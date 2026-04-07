@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node analyze_temp.js)",
+      "Bash(grep -n \"grpNewTierTourney\\\\|grpNewLeagueTourney\\\\|tourneys\\\\.push\\\\|tourneys\\\\.unshift\" star-datacenter/js/*.js)",
+      "Bash(grep -n \"최근 경기\\\\|buildRecentMatch\\\\|rRecent\\\\|recentM\" star-datacenter/js/*.js)",
+      "Bash(grep -v \"//\")",
+      "Bash(python3 -c \":*)",
+      "Read(//d/projects/star/^\"data\":\"[A-Za-z0-9/**)",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''star-datacenter/data.json'',''r'',encoding=''utf-8''\\)\\); print\\(''players:'', len\\(d.get\\(''players'',[]\\)\\)\\); print\\(''keys:'', list\\(d.keys\\(\\)\\)[:10]\\)\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''data.json'',''r'',encoding=''utf-8''\\)\\); print\\(''players:'', len\\(d.get\\(''players'',[]\\)\\)\\); print\\(''keys:'', list\\(d.keys\\(\\)\\)[:10]\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\(''data.json'',''r'',encoding=''utf-8''\\)\\); print\\(''players:'', len\\(d.get\\(''players'',[]\\)\\)\\);  print\\(''keys:'', list\\(d.keys\\(\\)\\)[:10]\\)\")",
+      "Bash(where python3:*)",
+      "Bash(where python:*)",
+      "Bash(where node:*)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''d:/projects/star/star-datacenter/data.json'',''utf8''\\)\\); console.log\\(''players:'', d.players ? d.players.length : ''no players key''\\); console.log\\(''keys:'', Object.keys\\(d\\).slice\\(0,10\\)\\);\")",
+      "Bash(node -e \":*)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\)\\); console.log\\(''''players:'''',d.players.length\\);\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''''fs''''\\).readFileSync\\(''''/tmp/prev_data.json'''',''''utf8''''\\)\\); console.log\\(''''players:'''',d.players.length\\);\")",
+      "Bash(ls /d/projects/star/*.json)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''''fs''''\\).readFileSync\\(''''d:/projects/star/data.json'''',''''utf8''''\\)\\); console.log\\(''''ROOT data.json players:'''', d.players ? d.players.length : ''''no players key''''\\); console.log\\(''''savedAt:'''', d.savedAt\\);\")",
+      "Bash(\"C:/Users/nicek/root_data.json\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''C:/Users/nicek/root_data.json'',''utf8''\\)\\); console.log\\(''ROOT data.json players:'', d.players ? d.players.length : ''no players key''\\); console.log\\(''savedAt:'', d.savedAt\\); console.log\\(''keys:'', Object.keys\\(d\\).slice\\(0,5\\)\\);\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''C:/Users/nicek/root_data.json'',''utf8''\\)\\); console.log\\(''ROOT data.json players:'', d.players ? d.players.length : ''no''\\); console.log\\(''savedAt:'', d.savedAt\\);\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\nicek"
+    ]
+  }
+}
