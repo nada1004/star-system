@@ -682,8 +682,50 @@ function buildUnivBoardCard(u, forExport){
       const rCol=ROLE_COLORS[p.role]||'';
       const rIcon=ROLE_ICONS[p.role]||'';
       const photoSrcChip = p.photo||'';
+      // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
+      if (boardCardView) {
+        const rcBg = rc.col || col;
+        const cardTierCol = p.tier ? (_TIER_BG[p.tier] || '#64748b') : null;
+        const cardTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+        const rTxtCard = rc.txt||p.race||'?';
+        const imgInner = photoSrcChip
+          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0"${forExport?'':' onerror="this.style.display=\'none\'"'}>`
+          + (forExport?'':`<div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`)
+          : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`;
+        // 종족/티어 배지 (좌상단)
+        const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap;z-index:10">`
+          + `<span style="font-size:9px;font-weight:900;background:${rc.col||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,0.3)">${rTxtCard}</span>`
+          + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol||'#64748b'};color:${cardTierText||'#fff'};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,0.3)">${p.tier}</span>`:'')
+          + `</div>`;
+        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));border-radius:0 0 10px 10px;padding:20px 6px 5px;text-align:center">`
+          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
+          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
+          + `</div>`;
+        const cardInner = `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
+          + (p.channelUrl
+            ? (forExport
+                ? `<div style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;border-radius:0 0 8px 8px">▶ 방송</div>`
+                : `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 8px 8px">▶ 방송</a>`)
+            : `<div style="height:4px;background:${col};border-radius:0 0 8px 8px"></div>`);
+        if (forExport) {
+          return `<div style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)}">${cardInner}</div>`;
+        }
+        const pNameSafeCard=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const totalInUnivCard=sorted.length;
+        const clickFnCard=isLoggedIn
+          ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
+          : `openPlayerModal('${pNameSafeCard}')`;
+        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
+          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s"`
+          + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
+          + ` onmouseout="this.style.boxShadow=''"`
+          + ` onclick="event.stopPropagation();${clickFnCard}"`
+          + ` ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">`
+          + cardInner + `</div>`;
+      }
+
       if(forExport){
-        // 이미지 저장: 화면 칩과 동일한 스타일로 렌더링
+        // 이미지 저장 (목록형): 화면 칩과 동일한 스타일로 렌더링
         const cBgE=hexToRgba(col,.16);
         const cBdE=hexToRgba(col,.45);
         const rTxt=rc.txt||p.race||'?';
@@ -703,35 +745,13 @@ function buildUnivBoardCard(u, forExport){
           </span>
         </span>`;
       }
-      const compact=!forExport&&boardCompactMode;
+      const compact=boardCompactMode;
       const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const totalInUniv=sorted.length;
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
       const clickFn=isLoggedIn
         ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
         : `openPlayerModal('${pNameSafe}')`;
-
-      // ── 포토카드 뷰 ──
-      if (!forExport && boardCardView) {
-        const rcBg = rc.col || col;
-        const imgInner = photoSrcChip
-          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0" onerror="this.style.display='none'">`
-          + `<div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${p.race||'?'}</div>`
-          : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${p.race||'?'}</div>`;
-        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 10px 10px;padding:16px 6px 6px;text-align:center">`
-          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
-          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
-          + `</div>`;
-        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s"`
-          + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
-          + ` onmouseout="this.style.boxShadow=''"`
-          + ` onclick="event.stopPropagation();${clickFn}"`
-          + ` ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">`
-          + `<div style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${overlay}</div>`
-          + (p.channelUrl?`<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 8px 8px">▶ 방송</a>`:`<div style="height:4px;background:${col};border-radius:0 0 8px 8px"></div>`)
-          + `</div>`;
-      }
 
       // 티어 고정 색상 (칩)
       const chipTierCol = p.tier ? (_TIER_BG[p.tier] || col) : '#9ca3af';
