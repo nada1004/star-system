@@ -287,12 +287,34 @@ function indRankHTML(){
   <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
   <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
   <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
-</div>`:'';
   return h+`</tbody></table>`+_pageNav;
 }
 
 function indRecordsHTML(){
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  // Get all unique players from individual matches
+  const uniquePlayers = new Set();
+  indM.forEach(m => {
+    uniquePlayers.add(m.wName);
+    uniquePlayers.add(m.lName);
+  });
+  
+  // Convert to array and filter existing players
+  const playerList = Array.from(uniquePlayers)
+    .map(name => players.find(p => p.name === name))
+    .filter(p => p && !p.retired && !p.hidden);
+  
+  // If card view is enabled, show card layout
+  if (typeof boardCardView !== 'undefined' && boardCardView) {
+    const col = '#3b82f6'; // Default blue color for individual tab
+    return `<div style="padding:20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px">
+        ${playerList.map(p => buildGlobalPlayerChip(p, col, false, 0, playerList)).join('')}
+      </div>
+    </div>`;
+  }
+  
+  // Original list view logic continues below...
   // 세션 그룹화: sid+페어 기준 (비연속 병합), 없으면 연속+날짜+페어 기준
   const sessions=[];
   const sidPairMap=new Map();
@@ -1212,16 +1234,44 @@ function ckRankHTML(){
    대학대전
 ══════════════════════════════════════ */
 function rUnivM(C,T){
-  T.innerText='🏟️ 대학대전';
+  T.innerText='';
   if(!isLoggedIn && univmSub==='input') univmSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
+  const subOpts=[{id:'input',lbl:'',fn:`univmSub='input';render()`},{id:'rank',lbl:'',fn:`univmSub='rank';render()`},{id:'records',lbl:'',fn:`univmSub='records';openDetails={};render()`}];
   let h=stabs(univmSub,subOpts);
   if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('univm');
   }
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>''</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px"></button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
-  else{h+=recSummaryListHTML(univM,'univm','tab');}
+  else{
+    // Get all unique players from university matches
+    const uniquePlayers = new Set();
+    univM.forEach(m => {
+      (m.sets||[]).forEach(set => {
+        (set.games||[]).forEach(game => {
+          if(game.playerA) uniquePlayers.add(game.playerA);
+          if(game.playerB) uniquePlayers.add(game.playerB);
+        });
+      });
+    });
+    
+    // Convert to array and filter existing players
+    const playerList = Array.from(uniquePlayers)
+      .map(name => players.find(p => p.name === name))
+      .filter(p => p && !p.retired && !p.hidden);
+    
+    // If card view is enabled, show card layout
+    if (typeof boardCardView !== 'undefined' && boardCardView) {
+      const col = '#10b981'; // Green color for university matches
+      h += `<div style="padding:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px">
+          ${playerList.map(p => buildGlobalPlayerChip(p, col, false, 0, playerList)).join('')}
+        </div>
+      </div>`;
+    } else {
+      h+=recSummaryListHTML(univM,'univm','tab');
+    }
+  }
   C.innerHTML=h;
 }
 
