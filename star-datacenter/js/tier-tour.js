@@ -1114,24 +1114,7 @@ function rCfg(C,T){
         <button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button>
       </div>
     </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearFbPw()">지우기</button>
-      </div>
-      <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">데이터 동기화</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">개인전/전체 경기를 스트리머 최근 경기에 소급 반영합니다.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()" title="개인전 기록을 선수 최근 기록에 소급 반영">🔄 개인전 동기화</button>
-        <button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button>
-      </div>
-    </div>
+    
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
@@ -2614,32 +2597,8 @@ function rCfg(C,T){
       </div>
       <div id="cfg-fb-sync-result" style="font-size:12px;color:var(--gray-l)">확인 버튼을 눌러 상태를 확인하세요.</div>
     </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">데이터 동기화</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">개인전/전체 경기를 스트리머 최근 경기에 소급 반영합니다.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()" title="개인전 기록을 선수 최근 기록에 소급 반영">🔄 개인전 동기화</button>
-        <button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button>
-      </div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearFbPw()">지우기</button>
-      </div>
-      <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">데이터 동기화</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">개인전/전체 경기를 스트리머 최근 경기에 소급 반영합니다.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-xs no-export" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()" title="개인전 기록을 선수 최근 기록에 소급 반영">🔄 개인전 동기화</button>
-        <button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()" title="모든 대전 기록을 스트리머 최근 경기에 소급 반영">⚡ 전체 동기화</button>
-      </div>
-    </div>
+    
+    
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
