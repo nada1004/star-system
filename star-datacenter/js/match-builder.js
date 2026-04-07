@@ -598,8 +598,8 @@ function indInputHTML(){
 
 function indDirectSave(){
   const gi=_indInput;
-  if(!gi.playerA||!gi.playerB){alert('스트리머 두 명을 선택하세요.');return;}
-  if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
+  if(!gi.playerA||!gi.playerB){alert('');return;}
+  if(!gi.games.length){alert('');return;}
   const sid=genId();
   const dateVal=gi.date||'';
   const newGames=gi.games.map(g=>({
@@ -608,8 +608,30 @@ function indDirectSave(){
     lName:g.winner==='A'?gi.playerB:gi.playerA,
     map:g.map||''
   }));
+  
+  // Real-time duplicate checking
+  const duplicateGames = [];
+  newGames.forEach(newGame => {
+    const duplicates = indM.filter(existingGame => 
+      existingGame.wName === newGame.wName &&
+      existingGame.lName === newGame.lName &&
+      existingGame.d === newGame.d
+    );
+    if(duplicates.length) duplicateGames.push({newGame, duplicates});
+  });
+  
+  if(duplicateGames.length){
+    const dupList = duplicateGames.map(({newGame, duplicates}) => 
+      ` ${newGame.wName} vs ${newGame.lName} (${newGame.d})\n   ${duplicates.length}`
+    ).join('\n');
+    
+    if(!confirm(`:\n\n${dupList}\n\n?`)){
+      return;
+    }
+  }
+  
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','','개인전');
+    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','');
   });
   indM.unshift(...newGames);
   _indInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
