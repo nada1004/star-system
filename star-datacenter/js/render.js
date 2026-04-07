@@ -978,7 +978,7 @@ function buildPlayerDetailHTML(p){
         })
       : _modeHist;
     const totalGames=filteredHist.length;
-    const pageSize=10;
+    const pageSize=(typeof getHistPageSize==='function')?getHistPageSize():HIST_PAGE_SIZE||20;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
     if(typeof playerHistPage!=='number' || isNaN(playerHistPage)) playerHistPage=0;
     const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));

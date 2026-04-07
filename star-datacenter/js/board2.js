@@ -822,22 +822,24 @@ function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentC
     ? '<a href="' + link + '" target="_blank" rel="noopener" style="display:block;text-align:center;padding:4px 6px;background:' + col + ';color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 10px 10px">▶ 방송</a>'
     : '';
 
-  // 관리자 버튼 (카드 우상단 절대위치)
+  // 관리자 버튼 (카드 우상단, hover 시에만 표시 / 이미지저장 시 숨김)
   let adminBtns = '';
   if (isLoggedIn) {
-    const moveBtn = '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#7c3aed;color:#fff;border-color:#7c3aed;opacity:.85" onclick="event.stopPropagation();openQuickCrewMoveModal(\'' + safeName + '\',' + (isSC?'true':'false') + ',' + crewIdx + ')" title="크루 이동">🔀</button>';
+    const moveBtn = '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="event.stopPropagation();openQuickCrewMoveModal(\'' + safeName + '\',' + (isSC?'true':'false') + ',' + crewIdx + ')" title="크루 이동">🔀</button>';
     const editBtn = isSC
-      ? '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151;opacity:.85" onclick="event.stopPropagation();openEP(\'' + safeName + '\');cm(\'playerModal\')" title="수정">✏️</button>'
-      : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151;opacity:.85" onclick="event.stopPropagation();openCrewEditModal(' + crewIdx + ')" title="수정">✏️</button>';
-    const delBtn = isSC ? '' : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#dc2626;color:#fff;border-color:#dc2626;opacity:.85" onclick="event.stopPropagation();deleteCrew(' + crewIdx + ')" title="삭제">🗑</button>';
-    adminBtns = '<div class="no-export" style="position:absolute;top:5px;right:5px;display:flex;gap:2px;z-index:2">' + editBtn + moveBtn + delBtn + '</div>';
+      ? '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151" onclick="event.stopPropagation();openEP(\'' + safeName + '\');cm(\'playerModal\')" title="수정">✏️</button>'
+      : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#374151;color:#fff;border-color:#374151" onclick="event.stopPropagation();openCrewEditModal(' + crewIdx + ')" title="수정">✏️</button>';
+    const delBtn = isSC ? '' : '<button class="btn btn-xs no-export" style="padding:1px 4px;font-size:9px;background:#dc2626;color:#fff;border-color:#dc2626" onclick="event.stopPropagation();deleteCrew(' + crewIdx + ')" title="삭제">🗑</button>';
+    adminBtns = '<div class="no-export b2-admin-btns" style="position:absolute;top:5px;right:5px;display:flex;gap:2px;z-index:2;opacity:0;transition:opacity .18s">' + editBtn + moveBtn + delBtn + '</div>';
   }
 
   const cardInner = '<div style="position:relative;width:100%;aspect-ratio:1/1;border-radius:' + (link?'10px 10px 0 0':'10px') + ';overflow:hidden;box-shadow:0 2px 8px ' + col + '30">'
     + imgInner + overlay + adminBtns
     + '</div>';
 
-  return '<div style="border-radius:10px;overflow:hidden;border:1.5px solid ' + col + '33;transition:box-shadow .15s;cursor:' + (isSC?'pointer':'default') + '" onmouseover="this.style.boxShadow=\'0 4px 16px ' + col + '44\'" onmouseout="this.style.boxShadow=\'\'"' + (isSC?' onclick="openPlayerModal(\'' + safeName + '\')"':'') + '>'
+  const _showBtns = 'var _ab=this.querySelector(\'.b2-admin-btns\');if(_ab)_ab.style.opacity=\'1\'';
+  const _hideBtns = 'var _ab=this.querySelector(\'.b2-admin-btns\');if(_ab)_ab.style.opacity=\'0\'';
+  return '<div style="border-radius:10px;overflow:hidden;border:1.5px solid ' + col + '33;transition:box-shadow .15s;cursor:' + (isSC?'pointer':'default') + '" onmouseover="this.style.boxShadow=\'0 4px 16px ' + col + '44\';' + _showBtns + '" onmouseout="this.style.boxShadow=\'\';' + _hideBtns + '"' + (isSC?' onclick="openPlayerModal(\'' + safeName + '\')"':'') + '>'
     + cardInner + linkBtn + '</div>';
 }
 
