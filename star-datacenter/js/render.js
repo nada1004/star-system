@@ -949,6 +949,7 @@ function buildPlayerDetailHTML(p){
     const totalGames=filteredHist.length;
     const pageSize=10;
     const totalPages=Math.ceil(totalGames/pageSize)||1;
+    if(typeof playerHistPage!=='number' || isNaN(playerHistPage)) playerHistPage=0;
     const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));
     // 날짜 최신순 정렬 (원본 인덱스 보존)
     const sortedHist=[...filteredHist.map((h,i)=>({...h,_origIdx:p.history.indexOf(h)}))]
