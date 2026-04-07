@@ -107,6 +107,9 @@ function render(){
    대학 클릭 → 모달
 ══════════════════════════════════════ */
 function openPlayerModal(name){
+  // Sync all history first to ensure individual matches are reflected in player history
+  if(typeof syncAllHistory==='function') syncAllHistory();
+  
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
