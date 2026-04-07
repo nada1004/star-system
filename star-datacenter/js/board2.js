@@ -6,6 +6,7 @@
 let _b2View = 'univ';
 let _b2SaveUniv = '전체';
 let _b2Collapsed = new Set();
+let _b2ShowSolo = false;
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
@@ -483,6 +484,7 @@ function _b2ContrastColor(hex) {
 }
 
 
+
 /* ════════════════════════════════════════
    💜 보라크루 현황판 — 크루별 블록
 ════════════════════════════════════════ */
@@ -502,29 +504,40 @@ function _b2CrewView() {
     const pure = crewArr.filter(m => m.crewName === crewName);
     return { sc, pure, total: sc.length + pure.length };
   }
+
   const knownNames = cfg.map(c => c.name);
+  // 솔로: channelUrl 있고 crewName 없는 SC 플레이어
+  const soloSC = scPlayers.filter(p => !p.crewName && !p.hidden && p.channelUrl);
+  // 미배정: crewName 있지만 cfg에 없음
   const unassignedSC = scPlayers.filter(p => p.crewName && !knownNames.includes(p.crewName));
   const unassignedPure = crewArr.filter(m => !m.crewName || !knownNames.includes(m.crewName));
-  const totalAll = scPlayers.filter(p => p.crewName).length + crewArr.length;
+  const totalAll = cfg.reduce((s, c) => s + getMembersOf(c.name).total, 0);
 
   let h = '<div style="padding:16px 0">';
   h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">';
   h += '<span style="font-size:18px;font-weight:900;color:#7c3aed">💜 보라크루</span>';
   h += '<span style="font-size:12px;color:var(--gray-l)">' + cfg.length + '개 크루 · ' + totalAll + '명</span>';
+  h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
+  // 솔로 토글
+  if (soloSC.length) {
+    h += '<button class="btn btn-xs" style="' + (_b2ShowSolo ? 'background:#7c3aed;color:#fff;border-color:#7c3aed' : 'border-color:#7c3aed;color:#7c3aed') + '" onclick="_b2ShowSolo=!_b2ShowSolo;document.getElementById(\'b2-content\').innerHTML=_b2CrewView()">🎙️ 솔로 ' + soloSC.length + '명</button>';
+  }
+  // 이미지 저장 (전체)
+  h += '<button class="btn btn-xs no-export" style="border-color:#7c3aed;color:#7c3aed" onclick="saveCrewImg(\'전체\',this)">📷 전체저장</button>';
   if (isLoggedIn) {
-    h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
     h += '<button class="btn btn-xs no-export" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="openCrewCfgAddModal()">+ 크루 추가</button>';
     h += '<button class="btn btn-xs no-export" style="background:#6d28d9;color:#fff;border-color:#6d28d9" onclick="openCrewAddModal()">+ 크루원 추가</button>';
-    h += '</div>';
   }
-  h += '</div>';
+  h += '</div></div>';
 
   if (!cfg.length) {
     h += '<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed #ddd6fe">';
     h += '<div style="font-size:40px;margin-bottom:12px">💜</div>';
     h += '<div style="font-weight:700;margin-bottom:6px">등록된 크루가 없습니다</div>';
     if (isLoggedIn) h += '<div style="font-size:12px">+ 크루 추가로 크루를 먼저 만드세요</div>';
-    h += '</div></div>';
+    h += '</div>';
+    if (_b2ShowSolo && soloSC.length) h += _b2SoloSection(soloSC);
+    h += '</div>';
     return h;
   }
 
@@ -542,8 +555,8 @@ function _b2CrewView() {
     const safeName = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
-    // 헤더
-    h += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'min-height:56px;display:flex;align-items:center;gap:12px">';
+    // 헤더 — 클릭 시 크루 상세
+    h += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'min-height:56px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openCrewDetailModal(\'' + safeName + '\')">';
     h += overlay;
     if (c.logo) {
       h += '<img src="' + c.logo + '" style="position:relative;width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8;flex-shrink:0" onerror="this.style.display=\'none\'">';
@@ -552,14 +565,16 @@ function _b2CrewView() {
     }
     h += '<div style="position:relative;flex:1">';
     h += '<div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px #0006">' + c.name + '</div>';
-    h += '<div style="font-size:11px;color:#ffffffcc">' + members.total + '명</div>';
+    h += '<div style="font-size:11px;color:#ffffffcc">' + members.total + '명 · 클릭하면 상세보기</div>';
     h += '</div>';
+    // 버튼 영역 (클릭 전파 막기)
+    h += '<div class="no-export" style="position:relative;display:flex;gap:5px" onclick="event.stopPropagation()">';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff55;font-size:10px" onclick="saveCrewImg(\'' + safeName + '\',this)">📷</button>';
     if (isLoggedIn) {
-      h += '<div class="no-export" style="position:relative;display:flex;gap:5px">';
       h += '<button class="btn btn-xs" style="background:#ffffff33;color:#fff;border-color:#ffffff55;font-size:10px" onclick="openCrewCfgEditModal(\'' + safeName + '\')">⚙️ 설정</button>';
       h += '<button class="btn btn-xs" style="background:#ef444433;color:#fff;border-color:#ef444455;font-size:10px" onclick="deleteCrewCfg(\'' + safeName + '\')">🗑</button>';
-      h += '</div>';
     }
+    h += '</div>';
     h += '</div>';
     // 멤버 그리드
     h += '<div style="background:var(--white);padding:14px">';
@@ -569,32 +584,47 @@ function _b2CrewView() {
       h += '</div>';
     } else {
       h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
-      members.sc.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col); });
+      members.sc.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, p.crewName); });
       members.pure.forEach(function(m) {
         const realIdx = crewArr.findIndex(function(x) { return x === m; });
-        h += _crewMemberCard(m.name, m.photo, m.link, false, realIdx, col);
+        h += _crewMemberCard(m.name, m.photo, m.link, false, realIdx, col, m.crewName);
       });
       h += '</div>';
     }
     h += '</div></div>';
   });
 
-  // 미배정
+  // 미배정 (cfg에 없는 크루명 가진 멤버)
   const unassigned = unassignedSC.map(function(p) { return {name:p.name,photo:p.photo,link:p.channelUrl,isSC:true,idx:-1}; })
     .concat(unassignedPure.map(function(m) { return {name:m.name,photo:m.photo,link:m.link,isSC:false,idx:crewArr.findIndex(function(x){return x===m;})}; }));
   if (unassigned.length) {
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid var(--border2)">';
     h += '<div style="padding:10px 16px;background:var(--surface);font-size:13px;font-weight:700;color:var(--gray-l)">📌 미배정 크루원</div>';
     h += '<div style="background:var(--white);padding:14px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
-    unassigned.forEach(function(m) { h += _crewMemberCard(m.name,m.photo,m.link,m.isSC,m.idx,'#6b7280'); });
+    unassigned.forEach(function(m) { h += _crewMemberCard(m.name,m.photo,m.link,m.isSC,m.idx,'#6b7280',''); });
     h += '</div></div></div>';
   }
+
+  // 솔로 방송
+  if (_b2ShowSolo && soloSC.length) h += _b2SoloSection(soloSC);
 
   h += '</div>';
   return h;
 }
 
-function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor) {
+function _b2SoloSection(soloSC) {
+  let h = '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid #8b5cf640">';
+  h += '<div style="padding:12px 16px;background:linear-gradient(135deg,#8b5cf620,#7c3aed15);display:flex;align-items:center;gap:8px;border-bottom:1px solid #8b5cf620">';
+  h += '<span style="font-size:14px;font-weight:900;color:#7c3aed">🎙️ 솔로 방송</span>';
+  h += '<span style="font-size:11px;color:var(--gray-l)">크루 미소속 스트리머 ' + soloSC.length + '명</span>';
+  h += '</div>';
+  h += '<div style="background:var(--white);padding:14px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
+  soloSC.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, '#7c3aed', ''); });
+  h += '</div></div></div>';
+  return h;
+}
+
+function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentCrew) {
   const col = accentColor || '#7c3aed';
   const safeName = (name || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const photoHTML = photo
@@ -610,14 +640,203 @@ function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor) {
     : '';
   let adminBtns = '';
   if (isLoggedIn) {
+    const moveBtn = '<button class="btn btn-xs no-export" style="padding:1px 5px;font-size:9px;background:#7c3aed15;border-color:#7c3aed66;color:#7c3aed" onclick="openQuickCrewMoveModal(\'' + safeName + '\',' + (isSC?'true':'false') + ',' + crewIdx + ')" title="크루 이동">🔀</button>';
     if (isSC) {
-      adminBtns = '<button class="btn btn-w btn-xs no-export" onclick="openEP(\'' + safeName + '\');cm(\'playerModal\')" style="padding:1px 5px;font-size:9px;margin-top:4px" title="수정">✏️</button>';
+      adminBtns = '<div class="no-export" style="display:flex;gap:3px;margin-top:4px">'
+        + '<button class="btn btn-w btn-xs" onclick="openEP(\'' + safeName + '\');cm(\'playerModal\')" style="padding:1px 5px;font-size:9px" title="수정">✏️</button>'
+        + moveBtn
+        + '</div>';
     } else {
-      adminBtns = '<div class="no-export" style="display:flex;gap:3px;margin-top:4px"><button class="btn btn-w btn-xs" onclick="openCrewEditModal(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">✏️</button><button class="btn btn-r btn-xs" onclick="deleteCrew(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">🗑</button></div>';
+      adminBtns = '<div class="no-export" style="display:flex;gap:3px;margin-top:4px">'
+        + '<button class="btn btn-w btn-xs" onclick="openCrewEditModal(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">✏️</button>'
+        + moveBtn
+        + '<button class="btn btn-r btn-xs" onclick="deleteCrew(' + crewIdx + ')" style="padding:1px 5px;font-size:9px">🗑</button>'
+        + '</div>';
     }
   }
   return '<div style="background:var(--surface);border:1px solid ' + col + '30;border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:box-shadow .15s" onmouseover="this.style.boxShadow=\'0 3px 14px ' + col + '30\'" onmouseout="this.style.boxShadow=\'\'">'
     + photoHTML + fallback + scBadge + nameEl + linkBtn + adminBtns + '</div>';
+}
+
+/* ── 크루 상세 모달 ── */
+function openCrewDetailModal(crewName) {
+  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  const c = cfg.find(x => x.name === crewName);
+  if (!c) return;
+  const crewArr = typeof crew !== 'undefined' ? crew : [];
+  const scPlayers = typeof players !== 'undefined' ? players : [];
+  const sc = scPlayers.filter(p => p.crewName === crewName);
+  const pure = crewArr.filter(m => m.crewName === crewName);
+
+  const col = c.color || '#7c3aed';
+  const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
+  const bgStyle = c.bgImage
+    ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
+    : 'background:linear-gradient(135deg,' + col + ',' + col + 'cc);';
+  const overlay = c.bgImage
+    ? '<div style="position:absolute;inset:0;background:' + col + bgAlpha + ';pointer-events:none;border-radius:12px 12px 0 0"></div>'
+    : '';
+
+  let html = '<div style="border-radius:12px;overflow:hidden;margin-bottom:14px;border:1.5px solid ' + col + '40">';
+  html += '<div style="position:relative;padding:22px 20px;' + bgStyle + 'display:flex;align-items:center;gap:14px">';
+  html += overlay;
+  if (c.logo) {
+    html += '<img src="' + c.logo + '" style="position:relative;width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fffb;flex-shrink:0;box-shadow:0 2px 12px #0004" onerror="this.style.display=\'none\'">';
+  } else {
+    html += '<div style="position:relative;width:64px;height:64px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border:3px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+  }
+  html += '<div style="position:relative">';
+  html += '<div style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 1px 6px #0008;margin-bottom:4px">' + c.name + '</div>';
+  html += '<div style="font-size:12px;color:#ffffffcc">' + (sc.length + pure.length) + '명</div>';
+  html += '</div>';
+  if (isLoggedIn) {
+    const safeName = crewName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html += '<div style="position:relative;margin-left:auto;display:flex;gap:5px">';
+    html += '<button class="btn btn-xs no-export" style="background:#ffffff33;color:#fff;border-color:#ffffff55;font-size:10px" onclick="cm(\'crewDetailModal\');openCrewCfgEditModal(\'' + safeName + '\')">⚙️ 설정</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="background:var(--white);padding:14px">';
+  if (!sc.length && !pure.length) {
+    html += '<div style="text-align:center;padding:20px;color:var(--gray-l);font-size:12px">크루원이 없습니다</div>';
+  } else {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
+    sc.forEach(p => { html += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, crewName); });
+    pure.forEach(m => {
+      const idx = crewArr.findIndex(x => x === m);
+      html += _crewMemberCard(m.name, m.photo, m.link, false, idx, col, crewName);
+    });
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('crewDetailBody').innerHTML = html;
+  document.getElementById('crewDetailTitle').textContent = c.name + ' 크루 상세';
+  om('crewDetailModal');
+}
+
+/* ── 크루 이미지 저장 ── */
+async function saveCrewImg(target, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  const crewArr = typeof crew !== 'undefined' ? crew : [];
+  const scPlayers = typeof players !== 'undefined' ? players : [];
+
+  const targets = target === '전체' ? cfg : cfg.filter(c => c.name === target);
+  if (!targets.length) {
+    if (btn) { btn.disabled = false; btn.textContent = target === '전체' ? '📷 전체저장' : '📷'; }
+    return;
+  }
+
+  const CARD_W = 720;
+  const PAD = 24;
+  const tmpDiv = document.createElement('div');
+  tmpDiv.style.cssText = 'position:fixed;left:-9999px;top:0;padding:' + PAD + 'px;background:#f0f2f5;box-sizing:border-box;width:' + (CARD_W + PAD * 2) + 'px';
+
+  let innerHtml = '';
+  targets.forEach(function(c) {
+    const col = c.color || '#7c3aed';
+    const bgAlphaHex = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
+    const labelAlphaHex = Math.round(((c.labelAlpha != null ? c.labelAlpha : 18) / 100) * 255).toString(16).padStart(2, '0');
+    const sc = scPlayers.filter(p => p.crewName === c.name);
+    const pure = crewArr.filter(m => m.crewName === c.name);
+    const bgStyle = c.bgImage
+      ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
+      : 'background:' + col + labelAlphaHex + ';';
+    const overlay = c.bgImage
+      ? '<div style="position:absolute;inset:0;background:' + col + bgAlphaHex + ';border-radius:12px 12px 0 0;pointer-events:none"></div>'
+      : '';
+
+    innerHtml += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
+    innerHtml += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'display:flex;align-items:center;gap:12px">' + overlay;
+    if (c.logo) {
+      innerHtml += '<img src="' + c.logo + '" style="position:relative;width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8;flex-shrink:0">';
+    } else {
+      innerHtml += '<div style="position:relative;width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+    }
+    innerHtml += '<div style="position:relative;flex:1"><div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px #0006">' + c.name + '</div><div style="font-size:11px;color:#ffffffcc">' + (sc.length + pure.length) + '명</div></div></div>';
+    innerHtml += '<div style="background:#fff;padding:14px">';
+    if (!sc.length && !pure.length) {
+      innerHtml += '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">크루원이 없습니다</div>';
+    } else {
+      innerHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
+      sc.forEach(p => { innerHtml += _crewMemberCardStatic(p.name, p.photo, p.channelUrl, col); });
+      pure.forEach(m => { innerHtml += _crewMemberCardStatic(m.name, m.photo, m.link, col); });
+      innerHtml += '</div>';
+    }
+    innerHtml += '</div></div>';
+  });
+
+  tmpDiv.innerHTML = '<style>.no-export{display:none!important}</style><div style="display:flex;flex-direction:column;gap:0">' + innerHtml + '</div>';
+  document.body.appendChild(tmpDiv);
+
+  await new Promise(r => setTimeout(r, 300));
+  if (typeof _imgToDataUrls === 'function') await _imgToDataUrls(tmpDiv, 8000);
+  await new Promise(r => setTimeout(r, 100));
+
+  const h = tmpDiv.scrollHeight + 32;
+  const w = tmpDiv.scrollWidth;
+  const fname = (target === '전체' ? '보라크루_전체' : '보라크루_' + target) + '_' + new Date().toISOString().slice(0, 10) + '.png';
+
+  try {
+    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
+    await _captureAndSave(tmpDiv, w, h, fname);
+  } catch(e) { alert('저장 실패: ' + e.message); }
+  finally {
+    document.body.removeChild(tmpDiv);
+    if (btn) { btn.disabled = false; btn.textContent = target === '전체' ? '📷 전체저장' : '📷'; }
+  }
+}
+
+// 이미지 저장용 정적 카드 (버튼 없음)
+function _crewMemberCardStatic(name, photo, link, col) {
+  const photoHTML = photo
+    ? '<img src="' + photo + '" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2.5px solid ' + col + ';margin-bottom:6px" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+    : '';
+  const fallback = '<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,' + col + ',' + col + '99);display:' + (photo ? 'none' : 'flex') + ';align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;border:2.5px solid ' + col + ';margin-bottom:6px">' + (name || '?')[0] + '</div>';
+  const linkLabel = link ? '<span style="display:inline-block;padding:2px 8px;background:' + col + ';color:#fff;border-radius:10px;font-size:10px;font-weight:700;margin-top:3px">▶ 방송</span>' : '';
+  return '<div style="background:#f9fafb;border:1px solid ' + col + '30;border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center">'
+    + photoHTML + fallback
+    + '<div style="font-weight:800;font-size:12px;color:#1f2937;word-break:break-all;text-align:center">' + (name || '') + '</div>'
+    + linkLabel + '</div>';
+}
+
+/* ── 크루 빠른 이동 ── */
+function openQuickCrewMoveModal(name, isSC, idx) {
+  if (!isLoggedIn) return;
+  const currentCrew = isSC
+    ? ((typeof players !== 'undefined' ? players : []).find(p => p.name === name) || {}).crewName || ''
+    : ((typeof crew !== 'undefined' ? crew : [])[idx] || {}).crewName || '';
+  document.getElementById('crewMoveModalName').value = name;
+  document.getElementById('crewMoveModalIsSC').value = isSC ? '1' : '0';
+  document.getElementById('crewMoveModalIdx').value = idx;
+  document.getElementById('crewMoveModalLabel').textContent = name;
+  _refreshCrewSelect('crewMoveCrewSelect', currentCrew);
+  om('crewMoveModal');
+}
+
+function saveQuickCrewMove() {
+  if (!isLoggedIn) return;
+  const name = document.getElementById('crewMoveModalName').value;
+  const isSC = document.getElementById('crewMoveModalIsSC').value === '1';
+  const idx = parseInt(document.getElementById('crewMoveModalIdx').value);
+  const newCrew = document.getElementById('crewMoveCrewSelect').value || '';
+  if (isSC) {
+    const p = (typeof players !== 'undefined' ? players : []).find(x => x.name === name);
+    if (p) { p.crewName = newCrew || undefined; p.isCrew = newCrew ? true : undefined; }
+  } else {
+    const m = (typeof crew !== 'undefined' ? crew : [])[idx];
+    if (m) m.crewName = newCrew || undefined;
+  }
+  save();
+  cm('crewMoveModal');
+  const sub = document.getElementById('b2-content'); if (sub) sub.innerHTML = _b2CrewView();
+  // 크루 상세 모달이 열려있으면 새로고침
+  const det = document.getElementById('crewDetailModal');
+  if (det && det.style.display !== 'none') {
+    const title = document.getElementById('crewDetailTitle').textContent.replace(' 크루 상세','');
+    openCrewDetailModal(title);
+  }
 }
 
 /* ── 크루 설정 관리 ── */
@@ -631,6 +850,8 @@ function openCrewCfgAddModal() {
   document.getElementById('crewCfgBgImage').value = '';
   document.getElementById('crewCfgBgAlpha').value = '10';
   document.getElementById('crewCfgLabelAlpha').value = '18';
+  const va = document.getElementById('crewCfgLabelAlphaVal'); if (va) va.textContent = '18';
+  const vb = document.getElementById('crewCfgBgAlphaVal'); if (vb) vb.textContent = '10';
   om('crewCfgModal');
 }
 function openCrewCfgEditModal(crewName) {
@@ -646,6 +867,8 @@ function openCrewCfgEditModal(crewName) {
   document.getElementById('crewCfgBgImage').value = c.bgImage || '';
   document.getElementById('crewCfgBgAlpha').value = c.bgAlpha != null ? c.bgAlpha : 10;
   document.getElementById('crewCfgLabelAlpha').value = c.labelAlpha != null ? c.labelAlpha : 18;
+  const va = document.getElementById('crewCfgLabelAlphaVal'); if (va) va.textContent = c.labelAlpha != null ? c.labelAlpha : 18;
+  const vb = document.getElementById('crewCfgBgAlphaVal'); if (vb) vb.textContent = c.bgAlpha != null ? c.bgAlpha : 10;
   om('crewCfgModal');
 }
 function saveCrewCfgModal() {

@@ -251,6 +251,36 @@
   </div>
 </div>
 
+<!-- 크루 상세 모달 -->
+<div id="crewDetailModal" class="modal no-export" style="z-index:5200" data-no-close="1">
+  <div class="mbox" style="max-width:560px;max-height:85vh;overflow-y:auto">
+    <div class="mtitle" id="crewDetailTitle">크루 상세</div>
+    <div id="crewDetailBody"></div>
+    <div class="mbtns">
+      <button class="btn btn-w" style="flex:1" onclick="cm('crewDetailModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 크루 빠른 이동 모달 -->
+<div id="crewMoveModal" class="modal no-export" style="z-index:5300" data-no-close="1">
+  <div class="mbox" style="max-width:320px">
+    <div class="mtitle">🔀 크루 이동</div>
+    <input type="hidden" id="crewMoveModalName">
+    <input type="hidden" id="crewMoveModalIsSC">
+    <input type="hidden" id="crewMoveModalIdx">
+    <div style="padding:12px 0 16px">
+      <div style="font-size:13px;font-weight:800;color:var(--text1);margin-bottom:12px;text-align:center" id="crewMoveModalLabel"></div>
+      <label style="font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:6px">이동할 크루 선택</label>
+      <select id="crewMoveCrewSelect" style="width:100%;box-sizing:border-box"><option value="">— 미배정 (솔로) —</option></select>
+    </div>
+    <div class="mbtns">
+      <button class="btn btn-b" style="flex:1;background:#7c3aed;border-color:#7c3aed" onclick="saveQuickCrewMove()">이동</button>
+      <button class="btn btn-w" style="flex:1" onclick="cm('crewMoveModal')">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- 기록 수정 모달 -->
 <div id="reModal" class="modal no-export" style="z-index:5000" data-no-close="1">
   <div class="mbox">
