@@ -72,16 +72,11 @@ function rBoard2(C, T) {
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>` : '';
 
-  const _bCardView = (typeof boardCardView !== 'undefined') ? boardCardView : false;
   const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
-  const cardViewBtn = (_b2View==='univ'||_b2View==='free')
-    ? `<button onclick="boardCardView=!boardCardView;render()" style="padding:5px 12px;border-radius:20px;border:2px solid ${_bCardView?'#a855f7':'var(--border2)'};background:${_bCardView?'#fdf4ff':'var(--white)'};color:${_bCardView?'#7e22ce':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer" title="포토카드/목록 보기 전환">🖼️ ${_bCardView?'목록':'카드'}</button>`
-    : '';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
-      ${cardViewBtn}
       ${oldBtn}
       ${crewBtn}
       ${saveBar}
