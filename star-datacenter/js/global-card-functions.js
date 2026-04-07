@@ -1,5 +1,17 @@
 // Global player card building functions for reuse across tabs
 function buildGlobalPlayerChip(p, col, forExport=false, chipIdx=0, playerList=[]) {
+  // Define fallback constants if not available
+  const RACE_CFG = window.RACE_CFG || {T:{bg:'#dbeafe',col:'#1e40af',txt:'T'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'Z'},P:{bg:'#fef3c7',col:'#92400e',txt:'P'},N:{bg:'#f1f5f9',col:'#475569',txt:'?'}};
+  const MAIN_ROLES = window.MAIN_ROLES || [''];
+  const ROLE_COLORS = window.ROLE_COLORS || {};
+  const ROLE_ICONS = window.ROLE_ICONS || {};
+  const _TIER_BG = window._TIER_BG || {};
+  const _TIER_TEXT = window._TIER_TEXT || {};
+  const hexToRgba = window.hexToRgba || ((h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;});
+  const getStatusIconHTML = window.getStatusIconHTML || (()=>'');
+  const isLoggedIn = window.isLoggedIn || false;
+  const boardCompactMode = window.boardCompactMode || false;
+  
   const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
   const isMain=p.role&&MAIN_ROLES.includes(p.role);
   const rCol=ROLE_COLORS[p.role]||'';
@@ -7,7 +19,7 @@ function buildGlobalPlayerChip(p, col, forExport=false, chipIdx=0, playerList=[]
   const photoSrcChip = p.photo||'';
   
   // Card view style
-  if (boardCardView) {
+  if (window.boardCardView) {
     const rcBg = rc.col || col;
     const cardTierCol = p.tier ? (_TIER_BG[p.tier] || '#64748b') : null;
     const cardTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
