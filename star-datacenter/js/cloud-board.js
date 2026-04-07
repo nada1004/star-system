@@ -428,7 +428,6 @@ let boardSelUniv='전체';
 let boardCompactMode=false; // 소형 칩 보기
 let boardGridCols=1; // 1열/2열 보기
 let boardCardView=false; // 포토카드 뷰
-let boardCardBgOpacity=J('su_cardBgOp')??85; // 카드뷰 배경 밝기 (0-100%, 기본 85%)
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
@@ -606,10 +605,6 @@ function rBoard(C,T){
       <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
       <button class="brd-tbtn" onclick="boardCardView=!boardCardView;render()" style="${boardCardView?'background:#fef3c7;border-color:#f59e0b;color:#b45309;':''}" title="포토카드 보기">${boardCardView?'🃏 카드뷰 OFF':'🃏 카드뷰 ON'}</button>
 <button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
-      ${boardCardView?`<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">카드배경</span>
-        <input type="range" min="30" max="100" value="${boardCardBgOpacity}" style="width:55px;height:4px;cursor:pointer" title="카드 배경 밝기" oninput="boardCardBgOpacity=+this.value;localStorage.setItem('su_cardBgOp',boardCardBgOpacity);render();">
-      </div>`:''}
       ${isLoggedIn?`<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
         <input type="range" min="0" max="40" value="${b2BgAlpha}" style="width:55px;height:4px;cursor:pointer" title="배경 진하기" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();">
@@ -721,7 +716,7 @@ function buildUnivBoardCard(u, forExport){
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
           : `openPlayerModal('${pNameSafeCard}')`;
         return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};background:rgba(255,255,255,${boardCardBgOpacity/100});cursor:pointer;transition:box-shadow .15s"`
+          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};background:#fff;cursor:pointer;transition:box-shadow .15s"`
           + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
           + ` onmouseout="this.style.boxShadow=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
@@ -848,8 +843,7 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'cover';
-    const _bgOpacity=boardCardView?0.55:0.25;
-    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`:'';
+    const _bgOverlay=u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:0.25;pointer-events:none;z-index:0"></div>`:'';
     const _uNameSafe=u.name.replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
@@ -889,7 +883,7 @@ function buildUnivBoardCard(u, forExport){
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${u.bgImg&&boardCardView?'rgba(255,255,255,0.4)':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
+      <div class="brd-card-body brd-body" style="background:${toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${_bgOverlay}${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
