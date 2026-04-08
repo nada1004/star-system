@@ -73,7 +73,7 @@ function rBoard2(C, T) {
     </div>` : '';
 
   const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
-  const gameBtn = `<button onclick="_b2View='game';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='game'?'#10b981':'var(--border2)'};background:${_b2View==='game'?'#10b981':'var(--white)'};color:${_b2View==='game'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">Comprehensive Games</button>`;
+  const gameBtn = `<button onclick="_b2View='game';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='game'?'#10b981':'var(--border2)'};background:${_b2View==='game'?'#10b981':'var(--white)'};color:${_b2View==='game'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">종합게임</button>`;
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
@@ -542,7 +542,7 @@ function _b2CrewView() {
   h += '</div>';
   h += cardSizeBtns;
   h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
-  h += '<button class="btn btn-xs" style="background:#10b981;color:#fff;border-color:#10b981" onclick="_b2View=\'game\';render()">Comprehensive Games</button>';
+  h += '<button class="pill" onclick="sw(\'board2\',document.querySelector(\'.tab[onclick*="board2"]\'))" style="background:#10b981;border-color:#10b981;color:#fff">종합게임</button>';
   // 솔로 토글
   if (soloPure.length) {
     h += '<button class="btn btn-xs" style="' + (_b2ShowSolo ? 'background:#7c3aed;color:#fff;border-color:#7c3aed' : 'border-color:#7c3aed;color:#7c3aed') + '" onclick="_b2ShowSolo=!_b2ShowSolo;document.getElementById(\'b2-content\').innerHTML=_b2CrewView()">🎙️ 솔로 ' + soloPure.length + '명</button>';
@@ -1140,6 +1140,11 @@ function _b2GameView() {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
       <span style="font-size:18px;font-weight:900;color:#10b981">Comprehensive Games</span>
       <span style="font-size:12px;color:var(--gray-l)">${allStreamers.length} Streamers</span>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ Crew</button>`:''}
+        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#059669;color:#fff;border-color:#059669" onclick="openCrewAddModal()">+ Member</button>`:''}
+        <button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg()">Save Image</button>
+      </div>
     </div>`;
 
   // StarCraft Section
@@ -1207,4 +1212,67 @@ function _b2GameStreamerCard(p, col) {
         ${p.gameType === 'general' ? `<div style="font-size:10px;color:#10b981">General</div>` : ''}
       </div>
     </div>`;
+}
+
+// Save comprehensive games image
+async function saveGameImg() {
+  const btn = document.querySelector('[onclick="saveGameImg()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+  const CARD_W = 720;
+  const PAD = 24;
+
+  const tmpDiv = document.createElement('div');
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
+  
+  // Create a simplified version of the game view for image export
+  const allStreamers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard);
+  const scStreamers = allStreamers.filter(p => !p.gameType || p.gameType === 'starcraft');
+  const generalStreamers = allStreamers.filter(p => p.gameType === 'general');
+  
+  let gameHTML = '<div style="font-size:20px;font-weight:900;color:#10b981;margin-bottom:20px">Comprehensive Games</div>';
+  
+  if (scStreamers.length > 0) {
+    gameHTML += '<div style="margin-bottom:24px"><div style="font-size:16px;font-weight:800;color:#2563eb;margin-bottom:12px">StarCraft</div>';
+    gameHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">';
+    scStreamers.forEach(p => {
+      const col = gc(p.univ) || '#2563eb';
+      gameHTML += `<div style="text-align:center;padding:8px;background:var(--white);border:1.5px solid ${col}40;border-radius:8px">
+        <div style="font-weight:700;font-size:11px">${p.name||''}</div>
+        ${p.univ ? `<div style="font-size:9px;color:var(--gray-l)">${p.univ}</div>` : ''}
+      </div>`;
+    });
+    gameHTML += '</div></div>';
+  }
+  
+  if (generalStreamers.length > 0) {
+    gameHTML += '<div style="margin-bottom:24px"><div style="font-size:16px;font-weight:800;color:#10b981;margin-bottom:12px">General Games</div>';
+    gameHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">';
+    generalStreamers.forEach(p => {
+      gameHTML += `<div style="text-align:center;padding:8px;background:var(--white);border:1.5px solid #10b98140;border-radius:8px">
+        <div style="font-weight:700;font-size:11px">${p.name||''}</div>
+        ${p.crewName ? `<div style="font-size:9px;color:#7c3aed">${p.crewName}</div>` : ''}
+      </div>`;
+    });
+    gameHTML += '</div></div>';
+  }
+  
+  tmpDiv.innerHTML = gameHTML;
+  document.body.appendChild(tmpDiv);
+
+  await new Promise(r => setTimeout(r, 100));
+  injectUnivIcons(tmpDiv);
+
+  const h = tmpDiv.scrollHeight + 32;
+  const w = tmpDiv.scrollWidth;
+  const fname = 'Comprehensive_Games_' + new Date().toISOString().slice(0,10) + '.png';
+
+  try {
+    if (typeof _captureAndSave !== 'function') throw new Error('Image save function not available.');
+    await _captureAndSave(tmpDiv, w, h, fname);
+  } catch(e) { alert('Save failed: ' + e.message); }
+  finally {
+    document.body.removeChild(tmpDiv);
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Image'; }
+  }
 }
