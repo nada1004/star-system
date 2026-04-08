@@ -145,16 +145,15 @@
     <span class="flabel">🎬 스트리머 등록</span>
     <select id="p-reg-type" onchange="onRegTypeChange()" style="width:90px;">
       <option value="starcraft">⚔️ 스타크래프트</option>
-      <option value="starcraft-crew">🌟 스타크루</option>
       <option value="general">🎮 종합게임</option>
       <option value="boracrew">💜 보라크루</option>
     </select>
-    <!-- 스타크래프트/스타크루 전용 -->
-    <select id="p-univ" class="reg-sc reg-sc-crew"></select>
-    <select id="p-tier" class="reg-sc reg-sc-crew"></select>
-    <select id="p-race" class="reg-sc reg-sc-crew"><option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option><option value="N">종족미정</option></select>
-    <!-- 크루 선택 (스타크루/종합게임/보라크루) -->
-    <select id="p-crew" class="reg-sc-crew reg-general reg-boracrew" style="display:none;width:100px;"></select>
+    <!-- 스타크래프트 전용 -->
+    <select id="p-univ" class="reg-sc"></select>
+    <select id="p-tier" class="reg-sc"></select>
+    <select id="p-race" class="reg-sc"><option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option><option value="N">종족미정</option></select>
+    <!-- 크루 선택 (종합게임/보라크루) -->
+    <select id="p-crew" class="reg-general reg-boracrew" style="display:none;width:100px;"></select>
     <!-- 공통 -->
     <select id="p-gender" class="reg-general reg-boracrew"><option value="F">👩 여자</option><option value="M">👨 남자</option></select>
     <input type="text" id="p-name" placeholder="스트리머 이름" style="width:110px;">
