@@ -2640,6 +2640,48 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
   </details>
+  ${_cfgD('bulkImport',`📋 경기 대량 입력 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 → 저장 대상 선택 → 적용</span>`)}
+  <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">대전기록/개인전 등에 경기를 한 번에 입력합니다. 선수명 자동인식 후 저장 대상을 선택하세요.</div>
+  <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#0369a1">
+    <div style="font-weight:800;margin-bottom:6px">📌 지원 입력 형식 (경기 붙여넣기 자동인식과 동일)</div>
+    <div style="font-family:monospace;font-size:10px;line-height:1.8;background:#fff;border:1px solid #e0f2fe;border-radius:6px;padding:8px;margin-bottom:8px;white-space:pre">[맵] 승자P (승) vs (패) 패자T
+승자T ✅ 🆚 ❌ 패자Z 🌍맵</div>
+    <div style="font-weight:800;margin-bottom:4px">탭 구분 5열 형식:</div>
+    <div style="font-family:monospace;font-size:10px;line-height:1.8;background:#fff;border:1px solid #e0f2fe;border-radius:6px;padding:8px;white-space:pre">날짜[탭]선수A[탭]선수B[탭]맵[탭]결과(승/패)
+2025-03-10	안아	폴리포이드	투혼	승</div>
+    <div style="margin-top:6px">※ 여러 줄 입력 가능 · 선수명 자동인식 · 미인식 시 빨간색</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+    <div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">저장 대상</label>
+      <select id="bi-mode" style="border:1.5px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;background:var(--white)" onchange="biModeChange()">
+        <option value="individual">⚔️ 개인전</option>
+        <option value="mini">🏟️ 미니리그</option>
+        <option value="univ">🏛️ 대학대전</option>
+        <option value="ck">⚡ CK전</option>
+        <option value="history_only">📝 히스토리만 (대전기록 미포함)</option>
+      </select>
+    </div>
+    <div id="bi-compname-wrap" style="display:none">
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">경기명 (선택)</label>
+      <input type="text" id="bi-compname" placeholder="예: LSSL시즌2 8강" style="border:1.5px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:13px;width:200px">
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">기본 날짜</label>
+      <input type="date" id="bi-date" style="border:1.5px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:13px">
+    </div>
+  </div>
+  <textarea id="bi-input" rows="9"
+    style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;border:1.5px solid var(--border2);border-radius:10px;padding:12px;background:var(--white);resize:vertical;line-height:1.7"
+    placeholder="경기 결과를 여기에 붙여넣기 하세요..."
+    oninput="biPreview()"></textarea>
+  <div id="bi-preview" style="margin-top:12px"></div>
+  <div style="display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-b" onclick="biApply()" style="min-width:100px">✅ 저장하기</button>
+    <button class="btn btn-w" onclick="document.getElementById('bi-input').value='';document.getElementById('bi-preview').innerHTML='';document.getElementById('bi-result-msg').textContent=''">🗑 초기화</button>
+    <span id="bi-result-msg" style="font-size:12px;font-weight:700;color:var(--green)"></span>
+  </div>
+  </details>
     <div class="ssec" id="cfg-bulk-edit-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
