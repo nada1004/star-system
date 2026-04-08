@@ -3636,6 +3636,8 @@ function promptBoardNoteImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   addBoardNoteImg(univName,trimmed);
 }
+
+/* ══════════════════════════════════════
    선수 CRUD
 ══════════════════════════════════════ */
 // 등록 타입 변경 시 폼 필드 동적 표시/숨김
@@ -3644,36 +3646,29 @@ function onRegTypeChange() {
   const scFields = ['p-univ','p-tier','p-race'];
   const crewField = document.getElementById('p-crew');
   const genderField = document.getElementById('p-gender');
+  const displayNameField = document.getElementById('p-display-name');
 
-  // 스타크래프트 전용 필드 (스타크래프트 선택시에만 표시)
+  // 스타크래프트 전용 필드
   scFields.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.style.display = (type === 'starcraft') ? '' : 'none';
+    el.style.display = (type === 'starcraft' || type === 'starcraft-crew') ? '' : 'none';
   });
 
-  // 크루 선택 (종합게임/보라크루 선택시에만 표시)
+  // 크루 선택 (스타크루/종합게임/보라크루)
   if (crewField) {
-    const showCrew = (type === 'general' || type === 'boracrew');
-    crewField.style.display = showCrew ? '' : 'none';
-    if (showCrew) {
-      // 크루 목록 채우기 (타입별 필터링)
+    crewField.style.display = (type !== 'starcraft') ? '' : 'none';
+    if (type !== 'starcraft') {
+      // 크루 목록 채우기
       const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
-      let filteredCrews;
-      if (type === 'general') {
-        // 종합게임: general 타입 크루만
-        filteredCrews = cfg.filter(c => c.type === 'general');
-      } else {
-        // 보라크루: 보라크루 타입 또는 타입 없음 (하위 호환)
-        filteredCrews = cfg.filter(c => !c.type || c.type === '보라크루');
-      }
       crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
-        filteredCrews.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        cfg.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
     }
   }
 
-  // 성별 (종합게임/보라크루 선택시에만 표시)
+  // 성별/프로필이름 (종합게임/보라크루)
   if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
+  if (displayNameField) displayNameField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
 }
 
 function addPlayer(){
@@ -3683,6 +3678,7 @@ function addPlayer(){
   const _pRegType=(document.getElementById('p-reg-type')?.value||'starcraft');
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
+  const _pDisplayName=(document.getElementById('p-display-name')?.value||'').trim();
   if(_pPhoto){
     if(_pPhoto.startsWith('data:')){alert('base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용');return;}
     if(_pPhoto.length>2000&&!confirm(`이미지 URL이 매우 깁니다 (${_pPhoto.length}자). 계속할까요?`))return;
@@ -3699,22 +3695,29 @@ function addPlayer(){
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
       gameType:'starcraft',win:0,loss:0,points:0,history:[]};
 
+  } else if(_pRegType==='starcraft-crew'){
+    // 스타크루 — 스타크래프트 + 크루 소속
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
+      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
+      gameType:'starcraft',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+
   } else if(_pRegType==='general'){
     // 종합게임 스트리머
-    const crewSelect=document.getElementById('p-crew');
-    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,
+      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
       hideFromBoard:_pHideBoard||undefined,
-      gameType:'general',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      gameType:'종합게임',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
 
   } else if(_pRegType==='boracrew'){
     // 보라크루 스트리머
-    const crewSelect=document.getElementById('p-crew');
-    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,
+      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
       hideFromBoard:_pHideBoard||undefined,
       gameType:'보라크루',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
@@ -3727,6 +3730,7 @@ function addPlayer(){
   players.push(playerData);
   document.getElementById('p-name').value='';
   document.getElementById('p-photo').value='';
+  if(document.getElementById('p-display-name')) document.getElementById('p-display-name').value='';
   document.getElementById('p-hide-board').checked=false;
   save();render();
 }
@@ -3768,7 +3772,7 @@ function bulkAddPlayers(){
     if(added>0)document.getElementById('bulk-player-input').value='';
   }
 }
-window.openEP=function openEP(name){
+window.openEP=function(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
   document.getElementById('emBody').innerHTML=`
@@ -3872,18 +3876,11 @@ window.openEP=function openEP(name){
     </div>
     <div style="margin-top:10px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px">
       <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <select id="ed-crew-name" style="flex:1;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
-          <option value="">— 소속 없음 —</option>
-          ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
-        </select>
-        <input type="text" id="ed-crew-role" value="${p.crewRole||''}" placeholder="직책 (대표/부대표...)" style="width:130px;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px">
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        ${['대표','부대표','매니저','리더','부리더'].map(r=>`<button type="button" onclick="document.getElementById('ed-crew-role').value=document.getElementById('ed-crew-role').value==='${r}'?'':'${r}'" style="padding:2px 8px;border-radius:6px;border:1.5px solid #7c3aed;background:${p.crewRole===r?'#7c3aed22':'var(--white)'};color:#7c3aed;font-size:11px;font-weight:700;cursor:pointer">${r}</button>`).join('')}
-        <button type="button" onclick="document.getElementById('ed-crew-role').value=''" style="padding:2px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">✕ 없음</button>
-      </div>
-      <div style="font-size:10px;color:var(--gray-l)">크루 직책은 보라크루 탭에서 정렬 기준이 됩니다 (대표→1번, 부대표→2번)</div>
+      <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
+        <option value="">— 소속 없음 —</option>
+        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
     </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
@@ -4013,8 +4010,6 @@ function savePlayer(){
   const _crewName=(document.getElementById('ed-crew-name')?.value||'').trim();
   p.crewName=_crewName||undefined;
   p.isCrew=_crewName?true:undefined; // 하위 호환
-  const _crewRole=(document.getElementById('ed-crew-role')?.value||'').trim();
-  p.crewRole=_crewRole||undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
