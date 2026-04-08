@@ -1042,7 +1042,8 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">📋 스트리머 상세 보기</button>
+    ${(p.gameType==='general'||p.gameType==='?? ???')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName} ??? ??? ???????\\n\\n?? ??? ???? ???? ??????.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('?? ??? ????.');}}">?? ??</button>`:''}
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">?? ????? ???? ?</button>
   `;
 
   document.body.appendChild(popup);
