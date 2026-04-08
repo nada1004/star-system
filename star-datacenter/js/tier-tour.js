@@ -3659,10 +3659,18 @@ function onRegTypeChange() {
   if (crewField) {
     crewField.style.display = (type !== 'starcraft') ? '' : 'none';
     if (type !== 'starcraft') {
-      // 크루 목록 채우기
+      // 크루 목록 채우기 (타입별 필터링)
       const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+      let filteredCrews;
+      if (type === 'general') {
+        // 종합게임: general 타입 크루만
+        filteredCrews = cfg.filter(c => c.type === 'general');
+      } else {
+        // 스타크루/보라크루: 보라크루 타입 또는 타입 없음 (하위 호환)
+        filteredCrews = cfg.filter(c => !c.type || c.type === '보라크루');
+      }
       crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
-        cfg.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        filteredCrews.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
     }
   }
 

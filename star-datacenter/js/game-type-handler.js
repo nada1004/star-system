@@ -56,23 +56,23 @@ function toggleGameFields() {
 function populateCrewOptions(filterType) {
   const crewSelect = document.getElementById('p-crew');
   if (!crewSelect) return;
-  
+
   // Get crew configurations
   const crewCfg = typeof window.crewCfg !== 'undefined' ? window.crewCfg : [];
-  
+
   // Clear existing options
   crewSelect.innerHTML = '<option value="">Select Crew</option>';
-  
+
   // Filter crews based on type
   let filteredCrews = crewCfg;
-  if (filterType === '스타크루') {
-    // Show only 스타크루 crews (you can add logic to filter by crew type)
-    filteredCrews = crewCfg.filter(crew => crew.name && crew.name.includes('스타'));
+  if (filterType === '스타크루' || filterType === '보라크루') {
+    // 스타크루/보라크루: 보라크루 타입 또는 타입 없음 (하위 호환)
+    filteredCrews = crewCfg.filter(crew => !crew.type || crew.type === '보라크루');
   } else if (filterType === '종합게임') {
-    // Show only 종합게임 crews
-    filteredCrews = crewCfg.filter(crew => crew.name && !crew.name.includes('스타'));
+    // 종합게임: general 타입 크루만
+    filteredCrews = crewCfg.filter(crew => crew.type === 'general');
   }
-  
+
   // Add crew options
   filteredCrews.forEach(crew => {
     const option = document.createElement('option');
@@ -80,7 +80,7 @@ function populateCrewOptions(filterType) {
     option.textContent = crew.name;
     crewSelect.appendChild(option);
   });
-  
+
   // Add "No Crew" option
   const noCrewOption = document.createElement('option');
   noCrewOption.value = '';

@@ -517,7 +517,8 @@ function _crewCardMinWidth() {
 }
 
 function _b2CrewView() {
-  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  // 보라크루 타입 크루만 필터링 (하위 호환: type이 없으면 보라크루로 간주)
+  const cfg = (typeof crewCfg !== 'undefined' ? crewCfg : []).filter(c => !c.type || c.type === '보라크루');
   const crewArr = typeof crew !== 'undefined' ? crew : [];
   const scPlayers = players || [];
 
@@ -1051,8 +1052,11 @@ function openCrewCfgAddModal() {
   if (!isLoggedIn) return;
   document.getElementById('crewCfgModalTitle').textContent = '+ 크루 추가';
   document.getElementById('crewCfgModalIdx').value = '-1';
+  // 현재 뷰에 따라 크루 타입 자동 설정
+  const crewType = _b2View === 'game' ? 'general' : '보라크루';
+  document.getElementById('crewCfgType').value = crewType;
   document.getElementById('crewCfgName').value = '';
-  document.getElementById('crewCfgColor').value = '#7c3aed';
+  document.getElementById('crewCfgColor').value = crewType === 'general' ? '#10b981' : '#7c3aed';
   document.getElementById('crewCfgLogo').value = '';
   document.getElementById('crewCfgBgImage').value = '';
   document.getElementById('crewCfgBgAlpha').value = '10';
@@ -1092,6 +1096,7 @@ function saveCrewCfgModal() {
   const entry = {
     id: (idx >= 0 && crewCfg[idx]) ? crewCfg[idx].id : ('crew_' + Date.now().toString(36)),
     name: name,
+    type: document.getElementById('crewCfgType').value || '보라크루', // 크루 타입: '보라크루' 또는 'general'
     color: document.getElementById('crewCfgColor').value || '#7c3aed',
     logo: document.getElementById('crewCfgLogo').value.trim(),
     bgImage: document.getElementById('crewCfgBgImage').value.trim(),
@@ -1176,7 +1181,8 @@ function deleteCrew(idx) {
 ════════════════════════════════════════ */
 
 function _b2GameView() {
-  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  // 종합게임 타입 크루만 필터링
+  const cfg = (typeof crewCfg !== 'undefined' ? crewCfg : []).filter(c => c.type === 'general');
   const crewArr = typeof crew !== 'undefined' ? crew : [];
   // 종합게임/general 타입 선수만
   const gamePlayers = (players || [])
