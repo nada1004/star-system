@@ -599,7 +599,7 @@ function _b2CrewView() {
       ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
       : 'background:' + col + labelAlpha + ';';
     const overlay = c.bgImage
-      ? '<div style="position:absolute;inset:0;background:' + col + bgAlpha + ';border-radius:12px 12px 0 0;pointer-events:none"></div>'
+      ? '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + bgAlpha + ' 0%,' + col + ' 100%);border-radius:12px 12px 0 0;pointer-events:none;z-index:1"></div>'
       : '';
     const safeName = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const isCollapsed = _b2CrewCollapsed.has(c.name);
@@ -1280,7 +1280,7 @@ function _b2GameView() {
       ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
       : 'background:' + col + labelAlpha + ';';
     const overlay = c.bgImage
-      ? '<div style="position:absolute;inset:0;background:' + col + bgAlpha + ';border-radius:12px 12px 0 0;pointer-events:none"></div>'
+      ? '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + bgAlpha + ' 0%,' + col + ' 100%);border-radius:12px 12px 0 0;pointer-events:none;z-index:1"></div>'
       : '';
     const safeName = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const isCollapsed = _b2CrewCollapsed.has('game_' + c.name);
