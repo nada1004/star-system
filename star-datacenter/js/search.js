@@ -253,11 +253,15 @@ function findPlayerByPartialName(namePart) {
 
   // 2) 메모 완전 일치 (짭제 → 박상현처럼 메모에 닉네임 저장)
   // - 토큰 분리 일치 + 대소문자 무시 + 원본 메모 전체 일치도 지원
-  const _trimmedLow = trimmed.toLowerCase();
+  // - NFC 정규화: 다른 앱에서 복사 시 유니코드 형식 불일치 방지
+  const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
+  const _trimmedLow = _nfc(trimmed).toLowerCase();
+  const _noSpaceLow = _nfc(noSpace).toLowerCase();
   const memoExact = players.filter(p => {
     if (!p.memo) return false;
-    if (p.memo.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
-    const memos = p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean);
+    const memoNorm = _nfc(p.memo);
+    if (memoNorm.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
+    const memos = memoNorm.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
   if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
@@ -268,6 +272,18 @@ function findPlayerByPartialName(namePart) {
     const nsExact = players.filter(p => p.name.replace(/\s+/g,'') === noSpace);
     if (nsExact.length === 1) return { player: nsExact[0], candidates: nsExact, similar: [] };
     if (nsExact.length > 1)   return { player: null, candidates: nsExact, similar: [] };
+  }
+
+  // 2.6) 메모 공백 제거 후 정확 일치: 메모에 "이 광 용" 처럼 공백 포함 저장된 경우
+  if (_noSpaceLow.length >= 1) {
+    const memoNS = players.filter(p => {
+      if (!p.memo) return false;
+      const memoNorm = _nfc(p.memo);
+      const tokens = memoNorm.split(/[\s,，\n]+/).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
+      return tokens.some(t => t === _noSpaceLow);
+    });
+    if (memoNS.length === 1) return { player: memoNS[0], candidates: memoNS, similar: [] };
+    if (memoNS.length > 1)   return { player: null, candidates: memoNS, similar: [] };
   }
 
   // 2.7) 메모 포함 일치 (별명 우선 — 이름 부분일치보다 먼저 확인)
