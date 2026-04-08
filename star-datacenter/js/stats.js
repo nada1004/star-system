@@ -2895,7 +2895,8 @@ let _psearchQ = '';
 function statsPlayerSearchHTML(){
   const q = _psearchQ.trim().toLowerCase();
   const list = q
-    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q))
+    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
+        (p.memo||'').split(/[\s,，\n]+/).some(m=>m.trim()&&m.trim().toLowerCase().includes(q)))
     : [];
   return `<div class="ssec">
     <h4 style="margin:0 0 12px">🔍 스트리머 검색</h4>
@@ -2933,7 +2934,8 @@ function statsPlayerSearchHTML(){
 function _statsPlayerSearchUpdate(){
   const q = _psearchQ.trim().toLowerCase();
   const list = q
-    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q))
+    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
+        (p.memo||'').split(/[\s,，\n]+/).some(m=>m.trim()&&m.trim().toLowerCase().includes(q)))
     : [];
   const res = document.getElementById('psearch-results');
   if(!res) return;

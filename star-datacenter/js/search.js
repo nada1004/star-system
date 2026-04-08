@@ -212,20 +212,26 @@ function _findSimilarPlayers(namePart, maxResults=5) {
   // 각 선수에 대해 유사도 점수 계산
   const scored = players.map(p => {
     const pn = p.name.toLowerCase();
+    const pnNS = pn.replace(/\s+/g,''); // 공백 제거 버전
     const dist = _editDistance(q, pn);
     // 공통 문자 비율 (교집합)
     const qSet = new Set([...q]);
     const pSet = new Set([...pn]);
     const common = [...qSet].filter(c=>pSet.has(c)).length;
     const similarity = common / Math.max(qSet.size, pSet.size, 1);
-    // 최종 점수: 거리 낮을수록, 공통문자 높을수록 좋음
-    const score = dist - similarity * 2;
-    return { player: p, score, dist };
+    // 약자/줄임 보너스: 선수이름이 검색어를 포함하거나(접두/접미/부분), 검색어가 선수이름을 포함하면 점수 향상
+    const containsBonus = (pnNS.includes(q) || q.includes(pnNS)) ? -1.5 : 0;
+    // prefix/suffix 보너스: 선수이름이 검색어로 시작하거나 끝나면 추가 점수
+    const prefixSuffixBonus = (pnNS.startsWith(q) || pnNS.endsWith(q)) ? -0.5 : 0;
+    // 최종 점수: 거리 낮을수록, 공통문자 높을수록, 약자 관계일수록 좋음
+    const score = dist - similarity * 2 + containsBonus + prefixSuffixBonus;
+    const isContains = containsBonus !== 0;
+    return { player: p, score, dist, isContains };
   });
-  // 거리 기준: 이름 길이의 60% 이하인 것만 (너무 다른 건 제외)
+  // 거리 기준: 이름 길이의 70% 이하 OR 포함 관계인 것
   const maxDist = Math.max(2, Math.ceil(namePart.length * 0.7));
   return scored
-    .filter(s => s.dist <= maxDist)
+    .filter(s => s.dist <= maxDist || s.isContains)
     .sort((a,b) => a.score - b.score)
     .slice(0, maxResults)
     .map(s => s.player);
@@ -1885,12 +1891,12 @@ function pasteSelectPlayer(idx, role, name) {
   const p = players.find(pl => pl.name === name);
   if (!p) return;
 
-  // ── 유사이름 선택 시 → 메모에 별칭 자동 저장 (다음번 자동 인식) ──
+  // ── 선택 시 → 메모에 별칭 자동 저장 (다음번 자동 인식) ──
+  // 유사이름(혹시:) 선택뿐 아니라 후보 목록에서 선택할 때도 저장
   const originalName = (role === 'w' ? r.winName : r.loseName) || '';
-  const isFromSimilar = originalName && originalName !== p.name
-    && !(role === 'w' ? r.wCandidates : r.lCandidates)?.length;
+  const shouldSaveAlias = originalName && originalName !== p.name;
 
-  if (isFromSimilar) {
+  if (shouldSaveAlias) {
     const alias = originalName.trim();
     if (alias && alias !== p.name) {
       const existingMemo = (p.memo || '').trim();

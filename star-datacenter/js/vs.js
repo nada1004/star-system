@@ -73,7 +73,8 @@ function _vsInput(slot, val){
   const q=val.trim().toLowerCase();
   if(!q){drop.style.display='none';drop.innerHTML='';return;}
   const results=players.filter(p=>
-    p.name.toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)
+    p.name.toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||
+    (p.memo||'').split(/[\s,，\n]+/).some(m=>m.trim()&&m.trim().toLowerCase().includes(q))
   ).slice(0,20);
   if(!results.length){
     drop.innerHTML='<div style="padding:12px 14px;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';
