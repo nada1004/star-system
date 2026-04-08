@@ -1196,7 +1196,8 @@ function _b2GameView() {
   const soloPure = crewArr.filter(m => !m.crewName || !knownNames.includes(m.crewName));
   const unassignedGame = gamePlayers.filter(p => p.crewName && !knownNames.includes(p.crewName));
   const noCrewGame = gamePlayers.filter(p => !p.crewName);
-  const totalAll = gamePlayers.length + crewArr.length;
+  // 중복 제거된 전체 멤버 수 계산
+  const totalAll = cfg.reduce((s, c) => s + getGameMembersOf(c.name).total, 0) + soloPure.length + unassignedGame.length + noCrewGame.length;
 
   const isListMode = window._b2GameListMode === 'list';
   const cardSize = window._b2GameCardSize || 'm';
@@ -1219,6 +1220,10 @@ function _b2GameView() {
   h += '</div>';
   h += cardSizeBtns;
   h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
+  // 솔로 토글
+  if (soloPure.length) {
+    h += '<button class="btn btn-xs" style="' + (_b2ShowSolo ? 'background:#10b981;color:#fff;border-color:#10b981' : 'border-color:#10b981;color:#10b981') + '" onclick="_b2ShowSolo=!_b2ShowSolo;document.getElementById(\'b2-content\').innerHTML=_b2GameView()">🎙️ 솔로 ' + soloPure.length + '명</button>';
+  }
   h += '<button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg(this)">📷 전체저장</button>';
   if (isLoggedIn) {
     h += '<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ 크루 추가</button>';
@@ -1238,11 +1243,23 @@ function _b2GameView() {
   // ── 전체목록 뷰 ──
   if (isListMode) {
     h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
+    // gamePlayers(players 배열) 표시
     gamePlayers.forEach(function(p) {
       const col = p.crewName ? _gcCrew(p.crewName) : '#10b981';
       h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, p.crewName, p.crewRole||'');
     });
-    h += '</div></div>';
+    // crewArr(순수 크루 멤버) 표시 - 중복 제거
+    const gamePlayerNames = new Set(gamePlayers.map(p => p.name));
+    crewArr.forEach(function(m, mi) {
+      if (!gamePlayerNames.has(m.name)) {
+        const col = m.crewName ? _gcCrew(m.crewName) : '#10b981';
+        h += _crewMemberCard(m.name, m.photo, m.link, false, mi, col, m.crewName, m.role||'');
+      }
+    });
+    h += '</div>';
+    // 솔로 섹션 표시
+    if (_b2ShowSolo && soloPure.length) h += _b2SoloSection(soloPure);
+    h += '</div>';
     return h;
   }
 
@@ -1295,8 +1312,8 @@ function _b2GameView() {
     h += '</div>';
   });
 
-  // 크루 없는 종합게임 선수
-  if (noCrewGame.length || unassignedGame.length) {
+  // 크루 없는 종합게임 선수 (솔로 토글과 연결)
+  if (_b2ShowSolo && (noCrewGame.length || unassignedGame.length)) {
     const soloList = [...noCrewGame, ...unassignedGame];
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid #10b98140">';
     h += '<div style="padding:12px 16px;background:linear-gradient(135deg,#10b98120,#05966915);display:flex;align-items:center;gap:8px;border-bottom:1px solid #10b98120">';
