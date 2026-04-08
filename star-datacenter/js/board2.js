@@ -120,6 +120,8 @@ function _b2UnivView() {
   let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
+    // Skip universities with undefined names
+    if (!u.name) return;
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
@@ -128,6 +130,14 @@ function _b2UnivView() {
 }
 
 function _b2UnivBlock(univName, col, members, forExport=false) {
+  // Safety check for undefined university name
+  if (!univName) {
+    return `<div style="border-radius:14px;border:2px dashed #ccc55;padding:16px 18px;background:#f5f5f5;display:flex;align-items:center;gap:10px;opacity:.7">
+      <span style="font-weight:900;font-size:15px;color:#999;">[Unknown University]</span>
+      <span style="font-size:11px;color:var(--gray-l)"> university name is undefined</span>
+    </div>`;
+  }
+  
   const uCfg = univCfg.find(x => x.name === univName) || {};
   const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
   const textCol = _b2ContrastColor(col);
@@ -294,7 +304,7 @@ function _b2NameTag(p, accentCol, showTier) {
   const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s${crewCol?';border-left:3px solid '+crewCol+';padding-left:5px':''}"
+      style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
       ${_b2Avatar(p, crewCol||accentCol, 58)}
@@ -325,7 +335,7 @@ function _b2PlayerRow(p, accentCol) {
 /* ── 칩 ── */
 function _b2Chip(p, accentCol) {
   const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
-  const borderStyle = crewCol ? `border:1.5px solid ${crewCol}88;border-left:4px solid ${crewCol}` : `border:1.5px solid ${accentCol}44`;
+  const borderStyle = `border:1.5px solid ${accentCol}44`;
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
       style="display:flex;align-items:center;gap:7px;padding:5px 13px 5px 5px;border-radius:24px;background:var(--white);${borderStyle};cursor:pointer;box-shadow:0 1px 3px #0001;transition:transform .1s,box-shadow .1s"
