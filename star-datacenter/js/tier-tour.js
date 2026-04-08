@@ -3636,8 +3636,6 @@ function promptBoardNoteImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   addBoardNoteImg(univName,trimmed);
 }
-
-/* ══════════════════════════════════════
    선수 CRUD
 ══════════════════════════════════════ */
 // 등록 타입 변경 시 폼 필드 동적 표시/숨김
@@ -3646,7 +3644,6 @@ function onRegTypeChange() {
   const scFields = ['p-univ','p-tier','p-race'];
   const crewField = document.getElementById('p-crew');
   const genderField = document.getElementById('p-gender');
-  const displayNameField = document.getElementById('p-display-name');
 
   // 스타크래프트 전용 필드
   scFields.forEach(id => {
@@ -3674,9 +3671,8 @@ function onRegTypeChange() {
     }
   }
 
-  // 성별/프로필이름 (종합게임/보라크루)
+  // 성별 (종합게임/보라크루)
   if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
-  if (displayNameField) displayNameField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
 }
 
 function addPlayer(){
@@ -3686,7 +3682,6 @@ function addPlayer(){
   const _pRegType=(document.getElementById('p-reg-type')?.value||'starcraft');
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
-  const _pDisplayName=(document.getElementById('p-display-name')?.value||'').trim();
   if(_pPhoto){
     if(_pPhoto.startsWith('data:')){alert('base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용');return;}
     if(_pPhoto.length>2000&&!confirm(`이미지 URL이 매우 깁니다 (${_pPhoto.length}자). 계속할까요?`))return;
@@ -3705,7 +3700,8 @@ function addPlayer(){
 
   } else if(_pRegType==='starcraft-crew'){
     // 스타크루 — 스타크래프트 + 크루 소속
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    const crewSelect=document.getElementById('p-crew');
+    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
     playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
       race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
@@ -3714,18 +3710,20 @@ function addPlayer(){
 
   } else if(_pRegType==='general'){
     // 종합게임 스트리머
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    const crewSelect=document.getElementById('p-crew');
+    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
+      photo:_pPhoto||undefined,
       hideFromBoard:_pHideBoard||undefined,
       gameType:'general',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
 
   } else if(_pRegType==='boracrew'){
     // 보라크루 스트리머
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    const crewSelect=document.getElementById('p-crew');
+    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
+      photo:_pPhoto||undefined,
       hideFromBoard:_pHideBoard||undefined,
       gameType:'보라크루',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
@@ -3738,7 +3736,6 @@ function addPlayer(){
   players.push(playerData);
   document.getElementById('p-name').value='';
   document.getElementById('p-photo').value='';
-  if(document.getElementById('p-display-name')) document.getElementById('p-display-name').value='';
   document.getElementById('p-hide-board').checked=false;
   save();render();
 }
