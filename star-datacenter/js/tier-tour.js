@@ -3768,7 +3768,7 @@ function bulkAddPlayers(){
     if(added>0)document.getElementById('bulk-player-input').value='';
   }
 }
-function openEP(name){
+window.openEP=function openEP(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
   document.getElementById('emBody').innerHTML=`

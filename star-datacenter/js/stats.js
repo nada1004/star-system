@@ -15,8 +15,9 @@ function rStats(C,T){
   T.textContent='📊 통계';
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
-  if(_savedSub&&statsSub==='overview'&&_savedSub!=='overview'){
-    if(_savedSub!=='csvexport'||isLoggedIn) statsSub=_savedSub;
+  window.statsSub = window.statsSub || 'overview';
+  if(_savedSub&&window.statsSub==='overview'&&_savedSub!=='overview'){
+    if(_savedSub!=='csvexport'||isLoggedIn) window.statsSub=_savedSub;
   }
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
@@ -56,7 +57,7 @@ function rStats(C,T){
   _statsGroups.forEach(grp=>{
     const _cgKey='su_statsGrp_'+grp.label;
     const _collapsed=localStorage.getItem(_cgKey)==='1';
-    const _hasActive=grp.tabs.some(o=>o.id===statsSub);
+    const _hasActive=grp.tabs.some(o=>o.id===(window.statsSub||'overview'));
     const _open=!_collapsed||_hasActive;
     h+=`<div style="margin-bottom:4px">
       <div style="display:flex;align-items:center;gap:3px;cursor:pointer;user-select:none" onclick="(function(){const k='${_cgKey}';const v=localStorage.getItem(k)==='1';localStorage.setItem(k,v?'0':'1');render()})()">
@@ -66,7 +67,7 @@ function rStats(C,T){
     if(_open){
       h+=`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px">`;
       grp.tabs.forEach(o=>{
-        h+=`<button class="stab ${statsSub===o.id?'on':''}" onclick="statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()" style="margin:1px 1px">${o.lbl}</button>`;
+        h+=`<button class="stab ${(window.statsSub||'overview')===o.id?'on':''}" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()" style="margin:1px 1px">${o.lbl}</button>`;
       });
       h+=`</div>`;
     }
@@ -122,37 +123,39 @@ function rStats(C,T){
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
   const _CACHEABLE=['overview','records','killer','clutch','streakhist','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
   function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
-  if(statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
-  else if(statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
-  else if(statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
-  else if(statsSub==='award')  h+=_cached('award', statsAwardHTML);
-  else if(statsSub==='records')h+=_cached('records', statsRecordsHTML);
-  else if(statsSub==='radar')  h+=statsRadarHTML();       // 차트 초기화 필요
-  else if(statsSub==='mismatch')h+=_cached('mismatch', statsMismatchHTML);
-  else if(statsSub==='heatmap')  h+=_cached('heatmap', statsHeatmapHTML);
-  else if(statsSub==='tierwin')  h+=_cached('tierwin', statsTierWinHTML);
-  else if(statsSub==='maprank')  h+=_cached('maprank', statsMapRankHTML);
-  else if(statsSub==='univmatrix')h+=_cached('univmatrix', statsUnivMatrixHTML);
-  else if(statsSub==='racetrend')h+=statsRaceTrendHTML(); // 차트 초기화 필요
-  else if(statsSub==='csvexport')h+=statsCsvExportHTML();
-  else if(statsSub==='psearch')   h+=statsPlayerSearchHTML();
-  else if(statsSub==='sharecard')h+=statsShareCardHTML();
-  else if(statsSub==='advsearch')h+=statsAdvSearchHTML(); // 검색 필터 상태 있음
-  else if(statsSub==='killer')   h+=_cached('killer', statsKillerHTML);
-  else if(statsSub==='seasonal') h+=_cached('seasonal', statsSeasonalHTML);
-  else if(statsSub==='clutch')   h+=_cached('clutch', statsClutchHTML);
-  else if(statsSub==='streakhist')h+=_cached('streakhist', statsStreakHistHTML);
-  else if(statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
-  else if(statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
-  else if(statsSub==='playervs')  h+=statsPlayerVsHTML();
-  else if(statsSub==='univwinbar') h+=statsUnivWinBarHTML();
+  if(window.statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
+  else if(window.statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
+  else if(window.statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
+  else if(window.statsSub==='award')  h+=_cached('award', statsAwardHTML);
+  else if(window.statsSub==='records')h+=_cached('records', statsRecordsHTML);
+  else if(window.statsSub==='radar')  h+=statsRadarHTML();       // 차트 초기화 필요
+  else if(window.statsSub==='mismatch')h+=_cached('mismatch', statsMismatchHTML);
+  else if(window.statsSub==='heatmap')  h+=_cached('heatmap', statsHeatmapHTML);
+  else if(window.statsSub==='tierwin')  h+=_cached('tierwin', statsTierWinHTML);
+  else if(window.statsSub==='maprank')  h+=_cached('maprank', statsMapRankHTML);
+  else if(window.statsSub==='univmatrix')h+=_cached('univmatrix', statsUnivMatrixHTML);
+  else if(window.statsSub==='racetrend')h+=statsRaceTrendHTML(); // 차트 초기화 필요
+  else if(window.statsSub==='csvexport')h+=statsCsvExportHTML();
+  else if(window.statsSub==='psearch')   h+=statsPlayerSearchHTML();
+  else if(window.statsSub==='sharecard')h+=statsShareCardHTML();
+  else if(window.statsSub==='advsearch')h+=statsAdvSearchHTML(); // 검색 필터 상태 있음
+  else if(window.statsSub==='killer')   h+=_cached('killer', statsKillerHTML);
+  else if(window.statsSub==='seasonal') h+=_cached('seasonal', statsSeasonalHTML);
+  else if(window.statsSub==='clutch')   h+=_cached('clutch', statsClutchHTML);
+  else if(window.statsSub==='streakhist')h+=_cached('streakhist', statsStreakHistHTML);
+  else if(window.statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
+  else if(window.statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
+  else if(window.statsSub==='playervs')  h+=statsPlayerVsHTML();
+  else if(window.statsSub==='univwinbar') h+=statsUnivWinBarHTML();
   C.innerHTML=h;
   // 서브탭별 후처리
-  if(statsSub==='elo')         initEloChart();
-  else if(statsSub==='growth') initGrowthChart();
-  else if(statsSub==='radar')  initRadarChart();
-  else if(statsSub==='racetrend') initRaceTrendChart();
-  else if(statsSub==='univwinbar') initUnivWinBarChart();
+  if(window.statsSub==='elo')         initEloChart();
+  else if(window.statsSub==='growth') initGrowthChart();
+  else if(window.statsSub==='radar')  initRadarChart();
+  else if(window.statsSub==='racetrend') initRaceTrendChart();
+  else if(window.statsSub==='univwinbar') initUnivWinBarChart();
+  else if(window.statsSub==='racetrend') initRaceTrendChart();
+  else if(window.statsSub==='univwinbar') initUnivWinBarChart();
 }
 
 /* ─── 공통 유틸 ─── */
