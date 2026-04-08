@@ -3647,10 +3647,10 @@ function addPlayer(){
     delete playerData.tier;
     delete playerData.univ;
   } else if(_pGameType==='일반'){
-    // 일반 - no specific category
+    // 일반 - no specific category, assign to 무소속
     delete playerData.race;
     delete playerData.tier;
-    delete playerData.univ;
+    playerData.univ = '무소속';
     delete playerData.crewName;
     delete playerData.isCrew;
   }
@@ -3802,7 +3802,7 @@ function openEP(name){
       <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
       <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
         <option value="">— 소속 없음 —</option>
-        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${(p.crewName||p.isCrew&&'보라크루')===c.name?' selected':''}>${c.name}</option>`).join('')}
+        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
       </select>
       <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
     </div>
@@ -3940,6 +3940,16 @@ function savePlayer(){
   p.channelUrl=_channel||undefined;
   save();
   cm('emModal');
+  
+  // Auto-switch to 보라크루 view if player was assigned to crew or has position
+  if(_crewName || (_rv && _rv.trim())){
+    // Check if current tab is board2 and switch to crew view
+    const currentTab = document.querySelector('.tab.on');
+    if(currentTab && currentTab.onclick && currentTab.onclick.toString().includes('board2')){
+      _b2View = 'crew';
+    }
+  }
+  
   render();
   if(typeof openPlayerModal==='function'){
     const _savedName=p.name;
