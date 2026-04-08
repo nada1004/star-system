@@ -542,7 +542,6 @@ function _b2CrewView() {
   h += '</div>';
   h += cardSizeBtns;
   h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
-  h += '<button class="pill" onclick="sw(\'board2\',document.querySelector(\'.tab[onclick*="board2"]\'))" style="background:#10b981;border-color:#10b981;color:#fff">종합게임</button>';
   // 솔로 토글
   if (soloPure.length) {
     h += '<button class="btn btn-xs" style="' + (_b2ShowSolo ? 'background:#7c3aed;color:#fff;border-color:#7c3aed' : 'border-color:#7c3aed;color:#7c3aed') + '" onclick="_b2ShowSolo=!_b2ShowSolo;document.getElementById(\'b2-content\').innerHTML=_b2CrewView()">🎙️ 솔로 ' + soloPure.length + '명</button>';
@@ -1131,164 +1130,166 @@ function deleteCrew(idx) {
   const sub = document.getElementById('b2-content'); if (sub) sub.innerHTML = _b2CrewView();
 }
 
-/* Comprehensive Games View */
+/* ════════════════════════════════════════
+   🎮 종합게임 현황판 — 크루별 블록 (보라크루 스타일)
+════════════════════════════════════════ */
+
 function _b2GameView() {
-  // Get all streamers including general game streamers
-  const allStreamers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard);
-  
-  // Separate StarCraft and General game streamers
-  const scStreamers = allStreamers.filter(p => !p.gameType || p.gameType === 'starcraft');
-  const generalStreamers = allStreamers.filter(p => p.gameType === 'general');
-  
-  // Group general streamers by game type if available, or put them in "General" category
-  const generalGroups = {};
-  generalStreamers.forEach(p => {
-    const gameCategory = p.gameCategory || 'General Games';
-    if (!generalGroups[gameCategory]) generalGroups[gameCategory] = [];
-    generalGroups[gameCategory].push(p);
-  });
+  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  const crewArr = typeof crew !== 'undefined' ? crew : [];
+  // 종합게임/general 타입 선수만
+  const gamePlayers = (typeof players !== 'undefined' ? players : [])
+    .filter(p => !p.hidden && !p.retired && !p.hideFromBoard &&
+      (p.gameType === '종합게임' || p.gameType === 'general'));
 
-  let h = `<div style="padding:16px 0">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      <span style="font-size:18px;font-weight:900;color:#10b981">종합게임</span>
-      <span style="font-size:12px;color:var(--gray-l)">총 ${allStreamers.length}명 (StarCraft ${scStreamers.length}명, General ${generalStreamers.length}명)</span>
-      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ 크루</button>`:''}
-        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#059669;color:#fff;border-color:#059669" onclick="openCrewAddModal()">+ 멤버</button>`:''}
-        <button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg()">이미지 저장</button>
-      </div>
-    </div>`;
-
-  // StarCraft Section
-  if (scStreamers.length > 0) {
-    h += `<div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <span style="font-size:16px;font-weight:800;color:#2563eb">StarCraft</span>
-        <span style="font-size:11px;color:var(--gray-l)">${scStreamers.length} streamers</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">`;
-    
-    scStreamers.forEach(p => {
-      const col = gc(p.univ) || '#2563eb';
-      h += _b2GameStreamerCard(p, col);
-    });
-    
-    h += `</div></div>`;
+  function getGameMembersOf(crewName) {
+    const sc = gamePlayers.filter(p => p.crewName === crewName);
+    const pure = crewArr.filter(m => m.crewName === crewName);
+    return { sc, pure, total: sc.length + pure.length };
   }
 
-  // General Games Sections
-  const crewCfg = typeof window.crewCfg !== 'undefined' ? window.crewCfg : [];
-  const hasCrews = crewCfg && crewCfg.length > 0;
-  
-  Object.keys(generalGroups).forEach(category => {
-    const streamers = generalGroups[category];
-    h += `<div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <span style="font-size:16px;font-weight:800;color:#10b981">${category}</span>
-        <span style="font-size:11px;color:var(--gray-l)">${streamers.length} streamers</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">`;
-    
-    streamers.forEach(p => {
-      const col = '#10b981';
-      const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
-      h += _b2GameStreamerCard(p, col);
-    });
-    
-    h += `</div></div>`;
-  });
+  const knownNames = cfg.map(c => c.name);
+  const soloPure = crewArr.filter(m => !m.crewName || !knownNames.includes(m.crewName));
+  const unassignedGame = gamePlayers.filter(p => p.crewName && !knownNames.includes(p.crewName));
+  const noCrewGame = gamePlayers.filter(p => !p.crewName);
+  const totalAll = gamePlayers.length + crewArr.length;
 
-  if (allStreamers.length === 0) {
-    h += `<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed #10b98140">
-      <div style="font-size:40px;margin-bottom:12px">Game Streamers</div>
-      <div style="font-weight:700;margin-bottom:6px">No streamers registered</div>
-      <div style="font-size:12px">Register streamers to see them here</div>
+  const isListMode = window._b2GameListMode === 'list';
+  const cardSize = window._b2GameCardSize || 'm';
+  const minW = cardSize === 's' ? 88 : cardSize === 'l' ? 150 : 110;
+
+  const cardSizeBtns = `
+    <div style="display:flex;gap:2px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:2px">
+      <button class="btn btn-xs" style="${cardSize==='s'?'background:#10b981;color:#fff;border-color:#10b981':'background:none;border:none;color:var(--gray-l)'}" onclick="window._b2GameCardSize='s';document.getElementById('b2-content').innerHTML=_b2GameView()" title="소">S</button>
+      <button class="btn btn-xs" style="${cardSize==='m'?'background:#10b981;color:#fff;border-color:#10b981':'background:none;border:none;color:var(--gray-l)'}" onclick="window._b2GameCardSize='m';document.getElementById('b2-content').innerHTML=_b2GameView()" title="중">M</button>
+      <button class="btn btn-xs" style="${cardSize==='l'?'background:#10b981;color:#fff;border-color:#10b981':'background:none;border:none;color:var(--gray-l)'}" onclick="window._b2GameCardSize='l';document.getElementById('b2-content').innerHTML=_b2GameView()" title="대">L</button>
     </div>`;
+
+  let h = '<div style="padding:16px 0">';
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">';
+  h += '<span style="font-size:18px;font-weight:900;color:#10b981">🎮 종합게임</span>';
+  h += '<span style="font-size:12px;color:var(--gray-l)">' + totalAll + '명</span>';
+  h += '<div style="display:flex;gap:2px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:2px">';
+  h += '<button class="btn btn-xs" style="' + (!isListMode ? 'background:#10b981;color:#fff;border-color:#10b981' : 'background:none;border:none;color:var(--gray-l)') + '" onclick="window._b2GameListMode=\'grid\';document.getElementById(\'b2-content\').innerHTML=_b2GameView()">크루별</button>';
+  h += '<button class="btn btn-xs" style="' + (isListMode ? 'background:#10b981;color:#fff;border-color:#10b981' : 'background:none;border:none;color:var(--gray-l)') + '" onclick="window._b2GameListMode=\'list\';document.getElementById(\'b2-content\').innerHTML=_b2GameView()">전체목록</button>';
+  h += '</div>';
+  h += cardSizeBtns;
+  h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
+  h += '<button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg(this)">📷 전체저장</button>';
+  if (isLoggedIn) {
+    h += '<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ 크루 추가</button>';
+    h += '<button class="btn btn-xs no-export" style="background:#059669;color:#fff;border-color:#059669" onclick="openCrewAddModal()">+ 크루원 추가</button>';
+  }
+  h += '</div></div>';
+
+  if (!gamePlayers.length && !crewArr.length) {
+    h += '<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed #10b98140">';
+    h += '<div style="font-size:40px;margin-bottom:12px">🎮</div>';
+    h += '<div style="font-weight:700;margin-bottom:6px">등록된 종합게임 스트리머가 없습니다</div>';
+    if (isLoggedIn) h += '<div style="font-size:12px">스트리머 등록 시 gameType을 종합게임으로 설정하세요</div>';
+    h += '</div></div>';
+    return h;
   }
 
-  h += `</div>`;
+  // ── 전체목록 뷰 ──
+  if (isListMode) {
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
+    gamePlayers.forEach(function(p) {
+      const col = p.crewName ? _gcCrew(p.crewName) : '#10b981';
+      h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, p.crewName, p.crewRole||'');
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  // ── 크루별 그리드 뷰 ──
+  cfg.forEach(function(c, ci) {
+    const members = getGameMembersOf(c.name);
+    if (!members.total) return; // 이 크루에 종합게임 멤버 없으면 건너뜀
+    const col = c.color || '#10b981';
+    const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
+    const labelAlpha = Math.round(((c.labelAlpha != null ? c.labelAlpha : 18) / 100) * 255).toString(16).padStart(2, '0');
+    const bgStyle = c.bgImage
+      ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
+      : 'background:' + col + labelAlpha + ';';
+    const overlay = c.bgImage
+      ? '<div style="position:absolute;inset:0;background:' + col + bgAlpha + ';border-radius:12px 12px 0 0;pointer-events:none"></div>'
+      : '';
+    const safeName = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const isCollapsed = _b2CrewCollapsed.has('game_' + c.name);
+
+    h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
+    h += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'min-height:56px;display:flex;align-items:center;gap:12px">';
+    h += overlay;
+    h += '<div style="position:relative;flex-shrink:0">';
+    if (c.logo) {
+      h += '<img src="' + c.logo + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\'none\'">';
+    } else {
+      h += '<div style="width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name||'?')[0] + '</div>';
+    }
+    h += '</div>';
+    h += '<div style="position:relative;flex:1;min-width:0">';
+    h += '<div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px #0006">' + c.name + '</div>';
+    h += '<div style="font-size:11px;color:#ffffffcc">' + members.total + '명' + (c.desc ? ' · ' + c.desc : '') + '</div>';
+    h += '</div>';
+    h += '<div class="no-export" style="position:relative;display:flex;gap:4px;align-items:center">';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px" onclick="event.stopPropagation();_b2CrewCollapsed[' + (isCollapsed ? 'delete' : 'add') + '](' + "'game_" + safeName + "'" + ');document.getElementById(\'b2-content\').innerHTML=_b2GameView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
+    h += '</div>';
+    h += '</div>';
+
+    if (!isCollapsed) {
+      const cardBgAlpha = Math.round(((c.cardAlpha != null ? c.cardAlpha : 8) / 100) * 255).toString(16).padStart(2, '0');
+      h += '<div style="background:' + col + cardBgAlpha + ';padding:14px">';
+      h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
+      members.sc.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, p.crewName, p.crewRole||''); });
+      members.pure.forEach(function(m) {
+        const realIdx = crewArr.findIndex(function(x) { return x === m; });
+        h += _crewMemberCard(m.name, m.photo, m.link, false, realIdx, col, m.crewName, m.crewRole||'');
+      });
+      h += '</div></div>';
+    }
+    h += '</div>';
+  });
+
+  // 크루 없는 종합게임 선수
+  if (noCrewGame.length || unassignedGame.length) {
+    const soloList = [...noCrewGame, ...unassignedGame];
+    h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid #10b98140">';
+    h += '<div style="padding:12px 16px;background:linear-gradient(135deg,#10b98120,#05966915);display:flex;align-items:center;gap:8px;border-bottom:1px solid #10b98120">';
+    h += '<span style="font-size:14px;font-weight:900;color:#10b981">🎮 미배정</span>';
+    h += '<span style="font-size:11px;color:var(--gray-l)">크루 미소속 ' + soloList.length + '명</span>';
+    h += '</div>';
+    h += '<div style="padding:14px;background:var(--white)">';
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
+    soloList.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, '#10b981', '', p.crewRole||''); });
+    h += '</div></div></div>';
+  }
+
+  h += '</div>';
   return h;
 }
 
-function _b2GameStreamerCard(p, col) {
-  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
-  const isRepresentative = p.role === 'representative' || p.crewRole === 'representative';
-  
-  return `
-    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;background:var(--white);border:1.5px solid ${col}40;border-radius:12px;cursor:pointer;transition:all 0.2s;position:relative;${crewCol ? `border-left:4px solid ${crewCol}` : ''}"
-      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${col}30'"
-      onmouseout="this.style.transform='';this.style.boxShadow=''">
-      ${isRepresentative ? `<div style="position:absolute;top:4px;right:4px;background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px">Representative</div>` : ''}
-      ${_b2Avatar(p, col, 48)}
-      <div style="text-align:center;flex:1;width:100%">
-        <div style="font-weight:700;font-size:12px;color:var(--text1);margin-bottom:4px;line-height:1.2">${p.name||''}</div>
-        ${p.univ && p.univ !== 'No University' ? `<div style="font-size:10px;color:var(--gray-l);margin-bottom:2px">${p.univ}</div>` : ''}
-        ${p.crewName ? `<div style="font-size:10px;color:#7c3aed;margin-bottom:2px">${p.crewName}</div>` : ''}
-        ${p.gameType === 'general' ? `<div style="font-size:10px;color:#10b981">General</div>` : ''}
-      </div>
-    </div>`;
-}
-
-// Save comprehensive games image
-async function saveGameImg() {
-  const btn = document.querySelector('[onclick="saveGameImg()"]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
-  const CARD_W = 720;
+async function saveGameImg(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
   const PAD = 24;
-
+  const CARD_W = 720;
   const tmpDiv = document.createElement('div');
   tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
-  
-  // Create a simplified version of the game view for image export
-  const allStreamers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard);
-  const scStreamers = allStreamers.filter(p => !p.gameType || p.gameType === 'starcraft');
-  const generalStreamers = allStreamers.filter(p => p.gameType === 'general');
-  
-  let gameHTML = '<div style="font-size:20px;font-weight:900;color:#10b981;margin-bottom:20px">Comprehensive Games</div>';
-  
-  if (scStreamers.length > 0) {
-    gameHTML += '<div style="margin-bottom:24px"><div style="font-size:16px;font-weight:800;color:#2563eb;margin-bottom:12px">StarCraft</div>';
-    gameHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">';
-    scStreamers.forEach(p => {
-      const col = gc(p.univ) || '#2563eb';
-      gameHTML += `<div style="text-align:center;padding:8px;background:var(--white);border:1.5px solid ${col}40;border-radius:8px">
-        <div style="font-weight:700;font-size:11px">${p.name||''}</div>
-        ${p.univ ? `<div style="font-size:9px;color:var(--gray-l)">${p.univ}</div>` : ''}
-      </div>`;
-    });
-    gameHTML += '</div></div>';
-  }
-  
-  if (generalStreamers.length > 0) {
-    gameHTML += '<div style="margin-bottom:24px"><div style="font-size:16px;font-weight:800;color:#10b981;margin-bottom:12px">General Games</div>';
-    gameHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">';
-    generalStreamers.forEach(p => {
-      gameHTML += `<div style="text-align:center;padding:8px;background:var(--white);border:1.5px solid #10b98140;border-radius:8px">
-        <div style="font-weight:700;font-size:11px">${p.name||''}</div>
-        ${p.crewName ? `<div style="font-size:9px;color:#7c3aed">${p.crewName}</div>` : ''}
-      </div>`;
-    });
-    gameHTML += '</div></div>';
-  }
-  
-  tmpDiv.innerHTML = gameHTML;
+  tmpDiv.innerHTML = _b2GameView();
+  // no-export 요소 숨기기
+  tmpDiv.querySelectorAll('.no-export').forEach(el => { el.style.display = 'none'; });
   document.body.appendChild(tmpDiv);
-
   await new Promise(r => setTimeout(r, 100));
   injectUnivIcons(tmpDiv);
-
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
-  const fname = 'Comprehensive_Games_' + new Date().toISOString().slice(0,10) + '.png';
-
+  const fname = '종합게임_' + new Date().toISOString().slice(0,10) + '.png';
   try {
-    if (typeof _captureAndSave !== 'function') throw new Error('Image save function not available.');
+    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 함수를 찾을 수 없습니다.');
     await _captureAndSave(tmpDiv, w, h, fname);
-  } catch(e) { alert('Save failed: ' + e.message); }
+  } catch(e) { alert('저장 실패: ' + e.message); }
   finally {
     document.body.removeChild(tmpDiv);
-    if (btn) { btn.disabled = false; btn.textContent = 'Save Image'; }
+    if (btn) { btn.disabled = false; btn.textContent = '📷 전체저장'; }
   }
 }

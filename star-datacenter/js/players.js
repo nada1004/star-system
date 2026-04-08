@@ -75,8 +75,6 @@ function rTotal(C,T){
   const _showBulk=isLoggedIn&&_bulkEditMode;
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
   let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
-    <button class="pill" onclick="sw('board2',document.querySelector('.tab[onclick*=\"board2\"]'))" style="background:#10b981;border-color:#10b981;color:#fff">Comprehensive Games</button>
-    <span style="color:var(--border2);align-self:center">|</span>
     <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
