@@ -126,7 +126,9 @@ function _applyCloudData(d) {
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
   // 보라크루
   if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
+  else if(typeof crew!=='undefined') crew=[]; // crew가 undefined인 경우 빈 배열로 초기화
   if(d.crewCfg!==undefined&&typeof crewCfg!=='undefined') crewCfg=_fbArr(d.crewCfg,[]);
+  else if(typeof crewCfg!=='undefined') crewCfg=[]; // crewCfg가 undefined인 경우 빈 배열로 초기화
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
