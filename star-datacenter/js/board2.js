@@ -10,6 +10,9 @@ let _b2ShowSolo = false;
 let _b2CrewCollapsed = new Set();
 let _b2CrewCardSize = 'm'; // 's' | 'm' | 'l'
 let _b2CrewListMode = 'grid'; // 'grid' | 'list'
+// 종합게임 뷰 전역 변수
+window._b2GameListMode = 'grid'; // 'grid' | 'list'
+window._b2GameCardSize = 'm'; // 's' | 'm' | 'l'
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
@@ -516,12 +519,15 @@ function _crewCardMinWidth() {
 function _b2CrewView() {
   const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
   const crewArr = typeof crew !== 'undefined' ? crew : [];
-  const scPlayers = typeof players !== 'undefined' ? players : [];
+  const scPlayers = players || [];
 
   function getMembersOf(crewName) {
     const sc = scPlayers.filter(p => p.crewName === crewName);
     const pure = crewArr.filter(m => m.crewName === crewName);
-    return { sc, pure, total: sc.length + pure.length };
+    // 이름으로 중복 제거 (SC 선수와 순수 크루 멤버가 같은 사람일 경우)
+    const seenNames = new Set(sc.map(p => p.name));
+    const uniquePure = pure.filter(m => !seenNames.has(m.name));
+    return { sc, pure: uniquePure, total: sc.length + uniquePure.length };
   }
 
   const knownNames = cfg.map(c => c.name);
@@ -811,8 +817,8 @@ function openCrewDetailModal(crewName) {
   if (!c) return;
   const crewArr = typeof crew !== 'undefined' ? crew : [];
   const scPlayers = typeof players !== 'undefined' ? players : [];
-  const sc = scPlayers.filter(p => p.crewName === crewName);
-  const pure = crewArr.filter(m => m.crewName === crewName);
+  const sc = scPlayers.filter(p => p.gameType === 'general' && p.crewName === crewName);
+  const pure = crewArr.filter(m => m.gameType === 'general' && m.crewName === crewName);
 
   const col = c.color || '#7c3aed';
   const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
@@ -1173,14 +1179,17 @@ function _b2GameView() {
   const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
   const crewArr = typeof crew !== 'undefined' ? crew : [];
   // 종합게임/general 타입 선수만
-  const gamePlayers = (typeof players !== 'undefined' ? players : [])
+  const gamePlayers = (players || [])
     .filter(p => !p.hidden && !p.retired && !p.hideFromBoard &&
       (p.gameType === '종합게임' || p.gameType === 'general'));
 
   function getGameMembersOf(crewName) {
     const sc = gamePlayers.filter(p => p.crewName === crewName);
     const pure = crewArr.filter(m => m.crewName === crewName);
-    return { sc, pure, total: sc.length + pure.length };
+    // 이름으로 중복 제거 (종합게임 선수와 순수 크루 멤버가 같은 사람일 경우)
+    const seenNames = new Set(sc.map(p => p.name));
+    const uniquePure = pure.filter(m => !seenNames.has(m.name));
+    return { sc, pure: uniquePure, total: sc.length + uniquePure.length };
   }
 
   const knownNames = cfg.map(c => c.name);
