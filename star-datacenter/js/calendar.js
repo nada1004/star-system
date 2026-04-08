@@ -231,7 +231,7 @@ function rCal(C,T){
           </div>`;
         }
         const detKey=`calday-${calDayDate}-${mi}`;
-        const modeKey=miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
+        const modeKey=(typeof indM!=='undefined'&&indM.includes(m))?'ind':(typeof gjM!=='undefined'&&gjM.includes(m))?'gj':miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
         const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
         return `<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden">
           <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)">
@@ -396,7 +396,7 @@ function calShowDay(ds){
     const typeBg=miniM.includes(m)?'#2563eb':univM.includes(m)?'#7c3aed':ckM.includes(m)?'#d97706':proM.includes(m)?'#7c3aed':'#16a34a';
     const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
     const detKey='caldm-'+ds+'-'+mi;
-    const modeKey=miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
+    const modeKey=(typeof indM!=='undefined'&&indM.includes(m))?'ind':(typeof gjM!=='undefined'&&gjM.includes(m))?'gj':miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
     const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
     const winLabel=aWin?'▶ '+tA+' 승':bWin?'▶ '+tB+' 승':'무승부';
     const winColor=aWin?ca:bWin?cb:'#888';

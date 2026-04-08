@@ -2656,7 +2656,7 @@ function rCfg(C,T){
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">저장 대상</label>
       <select id="bi-mode" style="border:1.5px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;background:var(--white)" onchange="biModeChange()">
         <option value="individual">⚔️ 개인전</option>
-        <option value="mini">🏟️ 미니리그</option>
+        <option value="mini">⚡ 미니대전</option>
         <option value="univ">🏛️ 대학대전</option>
         <option value="ck">⚡ CK전</option>
         <option value="history_only">📝 히스토리만 (대전기록 미포함)</option>

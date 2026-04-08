@@ -53,14 +53,20 @@ function _b2VisUnivs() {
 
 function rBoard2(C, T) {
   T.innerText = '📊 현황판';
-  const oldBtn = isLoggedIn
-    ? `<button onclick="_b2View='old';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='old'?'var(--blue)':'var(--border2)'};background:${_b2View==='old'?'var(--blue)':'var(--white)'};color:${_b2View==='old'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">📊 구현황판</button>`
-    : '';
 
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
-  const allCollapsed = _b2View==='univ' && univList.length > 0 && univList.every(u=>_b2Collapsed.has(u.name));
-  const saveBar = _b2View === 'univ' ? `
-    <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+
+  // 탭 버튼 스타일 헬퍼
+  function _b2TabBtn(view, color, label) {
+    const on = _b2View === view;
+    const c = color || 'var(--blue)';
+    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+  }
+
+  // 저장/초기화 바
+  let saveBar = '';
+  if (_b2View === 'univ') {
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
       <div style="position:relative">
         <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체">🏫 전체</option>
@@ -69,21 +75,30 @@ function rBoard2(C, T) {
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
-    </div>`
-  : _b2View === 'free' ? `
-    <div style="margin-left:auto;flex-shrink:0">
+    </div>`;
+  } else if (_b2View === 'free') {
+    saveBar = `<div style="margin-left:auto;flex-shrink:0">
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
-    </div>` : '';
+    </div>`;
+  } else if (_b2View === 'game') {
+    saveBar = `<div style="margin-left:auto;flex-shrink:0;display:flex;gap:6px">
+      <button onclick="(function(){window._b2GameListMode='grid';window._b2GameCardSize='m';document.getElementById('b2-content').innerHTML=_b2GameView();})()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer" title="뷰 초기화">🔄 초기화</button>
+      <button onclick="saveCrewImg('전체_game',this)" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+    </div>`;
+  } else if (_b2View === 'crew') {
+    saveBar = `<div style="margin-left:auto;flex-shrink:0;display:flex;gap:6px">
+      <button onclick="(function(){_b2CrewCollapsed.clear();_b2CrewCardSize='m';_b2CrewListMode='grid';_b2ShowSolo=false;document.getElementById('b2-content').innerHTML=_b2CrewView();})()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer" title="뷰 초기화">🔄 초기화</button>
+      <button onclick="saveCrewImg('전체',this)" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+    </div>`;
+  }
 
-  const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
-  const gameBtn = `<button onclick="_b2View='game';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='game'?'#10b981':'var(--border2)'};background:${_b2View==='game'?'#10b981':'var(--white)'};color:${_b2View==='game'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">종합게임</button>`;
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
-      <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
-      ${oldBtn}
-      ${crewBtn}
-      ${gameBtn}
+      ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
+      ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
+      ${_b2TabBtn('game','#10b981','🎮 종합게임')}
+      ${_b2TabBtn('crew','#7c3aed','💜 보라크루')}
+      ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -97,13 +112,15 @@ function rBoard2(C, T) {
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
-  } else if (_b2View === 'old') {
-    if (typeof rBoard === 'function') rBoard(sub, T);
-  } else if (_b2View === 'crew') {
-    sub.innerHTML = _b2CrewView();
   } else if (_b2View === 'game') {
     sub.innerHTML = _b2GameView();
     injectUnivIcons(sub);
+  } else if (_b2View === 'crew') {
+    sub.innerHTML = _b2CrewView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'old') {
+    if (typeof rBoard === 'function') rBoard(sub, T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
   }
 }
 
@@ -595,20 +612,22 @@ function _b2CrewView() {
     const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
     const labelAlpha = Math.round(((c.labelAlpha != null ? c.labelAlpha : 18) / 100) * 255).toString(16).padStart(2, '0');
     const members = getMembersOf(c.name);
-    const bgStyle = c.bgImage
+    // 헤더: 항상 단색 배경 (크루 컬러)
+    const hdrStyle = 'background:linear-gradient(135deg,' + col + ',' + col + 'dd);';
+    // 본문(스트리머 영역): bgImage 적용
+    const bodyBgStyle = c.bgImage
       ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
-      : 'background:' + col + labelAlpha + ';';
-    const overlay = c.bgImage
-      ? '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + bgAlpha + ' 0%,' + col + ' 100%);border-radius:12px 12px 0 0;pointer-events:none;z-index:1"></div>'
+      : 'background:' + col + Math.round(((c.cardAlpha != null ? c.cardAlpha : 8) / 100) * 255).toString(16).padStart(2, '0') + ';';
+    const bodyOverlay = c.bgImage
+      ? '<div style="position:absolute;inset:0;background:' + col + Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0') + ';pointer-events:none"></div>'
       : '';
     const safeName = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const isCollapsed = _b2CrewCollapsed.has(c.name);
     const minW = _crewCardMinWidth();
 
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
-    // 헤더
-    h += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'min-height:56px;display:flex;align-items:center;gap:12px">';
-    h += overlay;
+    // 헤더 (단색)
+    h += '<div style="position:relative;padding:14px 18px;' + hdrStyle + 'min-height:56px;display:flex;align-items:center;gap:12px">';
     // 로고 (클릭 → 상세)
     h += '<div style="position:relative;cursor:pointer;flex-shrink:0" onclick="openCrewDetailModal(\'' + safeName + '\')" title="크루 상세보기">';
     if (c.logo) {
@@ -644,14 +663,15 @@ function _b2CrewView() {
 
     // 멤버 그리드 (접혀있으면 숨김)
     if (!isCollapsed) {
-      const cardBgAlpha = Math.round(((c.cardAlpha != null ? c.cardAlpha : 8) / 100) * 255).toString(16).padStart(2, '0');
-      h += '<div style="background:' + col + cardBgAlpha + ';padding:14px">';
+      // 본문: bgImage 있으면 이미지 배경 + 반투명 오버레이, 없으면 단색
+      h += '<div style="position:relative;' + bodyBgStyle + 'padding:14px">';
+      if (bodyOverlay) h += bodyOverlay;
       if (!members.total) {
-        h += '<div style="text-align:center;padding:20px;color:var(--gray-l);font-size:12px">아직 크루원이 없습니다';
+        h += '<div style="position:relative;text-align:center;padding:20px;color:var(--gray-l);font-size:12px">아직 크루원이 없습니다';
         if (isLoggedIn) h += '<br><button class="btn btn-xs no-export" style="margin-top:6px;border-color:' + col + ';color:' + col + '" onclick="openCrewAddModal(\'' + safeName + '\')">+ 크루원 추가</button>';
         h += '</div>';
       } else {
-        h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
+        h += '<div style="position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
         // 직책 순서: 대표(0) > 부대표(1) > 리더/매니저 > 나머지
         const _crewRankOrder = function(p) {
           const cr = (p.crewRole||p.role||'').replace(/\s/g,'');
