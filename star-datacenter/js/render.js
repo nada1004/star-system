@@ -646,7 +646,7 @@ function buildPlayerDetailHTML(p){
   // 보라크루/종합게임 전용 UI 분기
   const _gt = p.gameType || 'starcraft';
   if (_gt === '보라크루') return _buildCrewPlayerDetailHTML(p, '#7c3aed', '💜 보라크루');
-  if (_gt === '종합게임') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
+  if (_gt === 'general') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
 
   const col=gc(p.univ)||'#6366f1';
   const _winC ='#16a34a';

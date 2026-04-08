@@ -1000,7 +1000,7 @@ function openCrewBulkMoveModal(crewName) {
   const totalCount = sc.length + pure.length;
   if (!totalCount) { alert('이 크루에 소속된 멤버가 없습니다.'); return; }
 
-  const gameTypes = ['starcraft','종합게임','보라크루'];
+  const gameTypes = ['starcraft','general','보라크루'];
   const currentType = sc.length > 0 ? (sc[0].gameType || 'starcraft') : 'starcraft';
 
   const choice = prompt(
@@ -1181,7 +1181,7 @@ function _b2GameView() {
   // 종합게임/general 타입 선수만
   const gamePlayers = (players || [])
     .filter(p => !p.hidden && !p.retired && !p.hideFromBoard &&
-      (p.gameType === '종합게임' || p.gameType === 'general'));
+      p.gameType === 'general');
 
   function getGameMembersOf(crewName) {
     const sc = gamePlayers.filter(p => p.crewName === crewName);
@@ -1235,7 +1235,7 @@ function _b2GameView() {
     h += '<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed #10b98140">';
     h += '<div style="font-size:40px;margin-bottom:12px">🎮</div>';
     h += '<div style="font-weight:700;margin-bottom:6px">등록된 종합게임 스트리머가 없습니다</div>';
-    if (isLoggedIn) h += '<div style="font-size:12px">스트리머 등록 시 gameType을 종합게임으로 설정하세요</div>';
+    if (isLoggedIn) h += '<div style="font-size:12px">스트리머 등록 시 gameType을 general로 설정하세요</div>';
     h += '</div></div>';
     return h;
   }

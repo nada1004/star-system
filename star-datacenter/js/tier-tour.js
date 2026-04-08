@@ -3701,7 +3701,7 @@ function addPlayer(){
     playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
       race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
-      gameType:'starcraft',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      gameType:'general',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
 
   } else if(_pRegType==='general'){
@@ -3710,7 +3710,7 @@ function addPlayer(){
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
       hideFromBoard:_pHideBoard||undefined,
-      gameType:'종합게임',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      gameType:'general',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
 
   } else if(_pRegType==='boracrew'){
@@ -3876,11 +3876,18 @@ function openEP(name){
     </div>
     <div style="margin-top:10px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px">
       <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
-      <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
-        <option value="">— 소속 없음 —</option>
-        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
-      </select>
-      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <select id="ed-crew-name" style="flex:1;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
+          <option value="">— 소속 없음 —</option>
+          ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
+        </select>
+        <input type="text" id="ed-crew-role" value="${p.crewRole||''}" placeholder="직책 (대표/부대표...)" style="width:130px;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px">
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${['대표','부대표','매니저','리더','부리더'].map(r=>`<button type="button" onclick="document.getElementById('ed-crew-role').value=document.getElementById('ed-crew-role').value==='${r}'?'':'${r}'" style="padding:2px 8px;border-radius:6px;border:1.5px solid #7c3aed;background:${p.crewRole===r?'#7c3aed22':'var(--white)'};color:#7c3aed;font-size:11px;font-weight:700;cursor:pointer">${r}</button>`).join('')}
+        <button type="button" onclick="document.getElementById('ed-crew-role').value=''" style="padding:2px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">✕ 없음</button>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l)">크루 직책은 보라크루 탭에서 정렬 기준이 됩니다 (대표→1번, 부대표→2번)</div>
     </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
@@ -4010,6 +4017,8 @@ function savePlayer(){
   const _crewName=(document.getElementById('ed-crew-name')?.value||'').trim();
   p.crewName=_crewName||undefined;
   p.isCrew=_crewName?true:undefined; // 하위 호환
+  const _crewRole=(document.getElementById('ed-crew-role')?.value||'').trim();
+  p.crewRole=_crewRole||undefined;
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
