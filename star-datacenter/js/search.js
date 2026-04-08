@@ -1214,6 +1214,17 @@ function pastePreview() {
       return;
     }
 
+    // ── [N세트] 팀A(score) : 팀B(score) 헤더 처리 ──
+    const _setHeaderM = trimmed.match(/^\[(\d+)\s*(?:세트|셋)\]\s*(.+?)\s*[：:]\s*(.+)$/);
+    if (_setHeaderM) {
+      currentSet = parseInt(_setHeaderM[1]);
+      const _hTeamA = _setHeaderM[2].replace(/\s*\(\d+\)\s*$/, '').trim();
+      const _hTeamB = _setHeaderM[3].replace(/\s*\(\d+\)\s*$/, '').trim();
+      if (_hTeamA && !window._pasteForceTeamA) window._pasteForceTeamA = _hTeamA;
+      if (_hTeamB && !window._pasteForceTeamB) window._pasteForceTeamB = _hTeamB;
+      return;
+    }
+
     // ── 팀 로스터 라인 감지: "팀명 : 멤버1 멤버2 멤버3 ..." (CK 모드 제외) ──
     const _curMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
     if (_curMode !== 'ck' &&
