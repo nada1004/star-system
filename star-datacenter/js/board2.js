@@ -616,6 +616,7 @@ function _b2CrewView() {
     }
     h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff55;font-size:10px" onclick="event.stopPropagation();saveCrewImg(\'' + safeName + '\',this)">📷</button>';
     if (isLoggedIn) {
+      h += '<button class="btn btn-xs" style="background:#10b98133;color:#fff;border-color:#10b98155;font-size:10px" onclick="event.stopPropagation();openCrewBulkMoveModal(\'' + safeName + '\')" title="크루 전체 종합게임으로 이동">🎮</button>';
       h += '<button class="btn btn-xs" style="background:#ffffff33;color:#fff;border-color:#ffffff55;font-size:10px" onclick="event.stopPropagation();openCrewCfgEditModal(\'' + safeName + '\')">⚙️</button>';
       h += '<button class="btn btn-xs" style="background:#ef444433;color:#fff;border-color:#ef444455;font-size:10px" onclick="event.stopPropagation();deleteCrewCfg(\'' + safeName + '\')">🗑</button>';
     }
@@ -634,34 +635,21 @@ function _b2CrewView() {
         h += '</div>';
       } else {
         h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + minW + 'px,1fr));gap:10px">';
-        // 직책 순서로 정렬: 대표 > 부대표 > 나머지
-        const rankOrder = {'대표':0,'부대표':1,'리더':0,'부리더':1,'매니저':2};
-        const sortedSC = [...members.sc].sort((a,b) => {
-          // Check main role first (representative gets highest priority)
-          const aRoleOrder = a.role === 'representative' ? 0 : (a.role && MAIN_ROLES.includes(a.role) ? getRoleOrder(a.role) : 99);
-          const bRoleOrder = b.role === 'representative' ? 0 : (b.role && MAIN_ROLES.includes(b.role) ? getRoleOrder(b.role) : 99);
-          if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
-          
-          // Then check crew role
-          const ra = rankOrder[a.crewRole||''] ?? 99;
-          const rb = rankOrder[b.crewRole||''] ?? 99;
-          return ra - rb;
-        });
-        const sortedPure = [...members.pure].sort((a,b) => {
-          // Check main role first (representative gets highest priority)
-          const aRoleOrder = a.role === 'representative' ? 0 : (a.role && MAIN_ROLES.includes(a.role) ? getRoleOrder(a.role) : 99);
-          const bRoleOrder = b.role === 'representative' ? 0 : (b.role && MAIN_ROLES.includes(b.role) ? getRoleOrder(b.role) : 99);
-          if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
-          
-          // Then check crew role
-          const ra = rankOrder[a.crewRole||''] ?? 99;
-          const rb = rankOrder[b.crewRole||''] ?? 99;
-          return ra - rb;
-        });
-        sortedSC.forEach(function(p) { h += _crewMemberCard(p.name, p.photo, p.channelUrl, true, -1, col, p.crewName, p.crewRole||''); });
-        sortedPure.forEach(function(m) {
-          const realIdx = crewArr.findIndex(function(x) { return x === m; });
-          h += _crewMemberCard(m.name, m.photo, m.link, false, realIdx, col, m.crewName, m.crewRole||'');
+        // 직책 순서: 대표(0) > 부대표(1) > 리더/매니저 > 나머지
+        const _crewRankOrder = function(p) {
+          const cr = (p.crewRole||p.role||'').replace(/\s/g,'');
+          if(cr==='대표'||cr==='리더'||p.role==='representative') return 0;
+          if(cr==='부대표'||cr==='부리더') return 1;
+          if(cr==='매니저') return 2;
+          return 99;
+        };
+        const _allMembers = [
+          ...members.sc.map(p=>({...p, _isSC:true, _idx:-1})),
+          ...members.pure.map(m=>({...m, _isSC:false, _idx:crewArr.findIndex(x=>x===m)}))
+        ].sort((a,b) => _crewRankOrder(a) - _crewRankOrder(b));
+        _allMembers.forEach(function(m) {
+          if(m._isSC) h += _crewMemberCard(m.name, m.photo, m.channelUrl, true, -1, col, m.crewName, m.crewRole||'');
+          else h += _crewMemberCard(m.name, m.photo, m.link, false, m._idx, col, m.crewName, m.crewRole||'');
         });
         h += '</div>';
       }
@@ -985,6 +973,43 @@ function openQuickCrewMoveModal(name, isSC, idx) {
   document.getElementById('crewMoveModalLabel').textContent = name;
   _refreshCrewSelect('crewMoveCrewSelect', currentCrew);
   om('crewMoveModal');
+}
+
+/* ── 크루 전체 종합게임/보라크루 이동 ── */
+function openCrewBulkMoveModal(crewName) {
+  if (!isLoggedIn) return;
+  const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  const sc = (typeof players !== 'undefined' ? players : []).filter(p => p.crewName === crewName);
+  const pure = (typeof crew !== 'undefined' ? crew : []).filter(m => m.crewName === crewName);
+  const totalCount = sc.length + pure.length;
+  if (!totalCount) { alert('이 크루에 소속된 멤버가 없습니다.'); return; }
+
+  const gameTypes = ['starcraft','종합게임','보라크루'];
+  const currentType = sc.length > 0 ? (sc[0].gameType || 'starcraft') : 'starcraft';
+
+  const choice = prompt(
+    `"${crewName}" 크루 전체(${totalCount}명) gameType 일괄 변경\n\n` +
+    `현재: ${currentType}\n\n` +
+    `변경할 타입을 입력하세요:\n` +
+    `  starcraft — 스타크래프트\n` +
+    `  종합게임  — 종합게임\n` +
+    `  보라크루  — 보라크루`,
+    currentType
+  );
+  if (choice === null) return;
+  const newType = choice.trim();
+  if (!['starcraft','종합게임','보라크루'].includes(newType)) {
+    alert('올바른 타입을 입력하세요: starcraft / 종합게임 / 보라크루');
+    return;
+  }
+  if (!confirm(`"${crewName}" 크루 ${totalCount}명을 모두 "${newType}"으로 변경할까요?`)) return;
+
+  sc.forEach(p => { p.gameType = newType; });
+  // pure(crew 배열) 는 별도 데이터이므로 gameType 미지원이지만 참고로 기록
+  save();
+  const sub = document.getElementById('b2-content');
+  if (sub) sub.innerHTML = _b2CrewView();
+  alert(`완료: ${sc.length}명 변경됨`);
 }
 
 function saveQuickCrewMove() {

@@ -3598,65 +3598,99 @@ function promptBoardNoteImgUrl(univName){
 /* ══════════════════════════════════════
    선수 CRUD
 ══════════════════════════════════════ */
+// 등록 타입 변경 시 폼 필드 동적 표시/숨김
+function onRegTypeChange() {
+  const type = document.getElementById('p-reg-type')?.value || 'starcraft';
+  const scFields = ['p-univ','p-tier','p-race'];
+  const crewField = document.getElementById('p-crew');
+  const genderField = document.getElementById('p-gender');
+  const displayNameField = document.getElementById('p-display-name');
+
+  // 스타크래프트 전용 필드
+  scFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (type === 'starcraft' || type === 'starcraft-crew') ? '' : 'none';
+  });
+
+  // 크루 선택 (스타크루/종합게임/보라크루)
+  if (crewField) {
+    crewField.style.display = (type !== 'starcraft') ? '' : 'none';
+    if (type !== 'starcraft') {
+      // 크루 목록 채우기
+      const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+      crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
+        cfg.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
+  }
+
+  // 성별/프로필이름 (종합게임/보라크루)
+  if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
+  if (displayNameField) displayNameField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
+}
+
 function addPlayer(){
   const n=document.getElementById('p-name').value.trim();
-  if(!n)return alert('Please enter a name.');
-  if(players.find(p=>p.name===n)&&!confirm(`"${n}" name already exists.\nRegister as namesake?`))return;
+  if(!n)return alert('이름을 입력하세요.');
+  if(players.find(p=>p.name===n)&&!confirm(`"${n}" 이름이 이미 있습니다.\n동명이인으로 등록할까요?`))return;
+  const _pRegType=(document.getElementById('p-reg-type')?.value||'starcraft');
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
-  const _pGameType=(document.getElementById('p-game-type')?.value||'starcraft').trim();
+  const _pDisplayName=(document.getElementById('p-display-name')?.value||'').trim();
   if(_pPhoto){
-    if(_pPhoto.startsWith('data:')){alert('Direct base64 image input not allowed. Please upload to imgur.com and use URL.');return;}
-    if(_pPhoto.length>2000&&!confirm(`Image URL is very long (${_pPhoto.length} chars). Continue?`))return;
+    if(_pPhoto.startsWith('data:')){alert('base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용');return;}
+    if(_pPhoto.length>2000&&!confirm(`이미지 URL이 매우 깁니다 (${_pPhoto.length}자). 계속할까요?`))return;
   }
   const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
-  const playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,gameType:_pGameType,win:0,loss:0,points:0,history:[]};
-  
-  // Handle different registration types
-  if(_pGameType==='starcraft'){
-    // StarCraft streamer - use university, race, tier
-    delete playerData.crewName;
-    delete playerData.isCrew;
-  } else if(_pGameType==='general'){
-    // General streamer - use crew
-    const crewName=document.getElementById('p-crew').value;
-    if(crewName){
-      playerData.crewName=crewName;
-      playerData.isCrew=true;
-    }
-    delete playerData.race;
-    delete playerData.tier;
-    delete playerData.univ; // General streamers don't use university
-  } else if(_pGameType==='스타크루'){
-    // 스타크루 - use crew and mark as StarCraft type
-    const crewName=document.getElementById('p-crew').value;
-    if(crewName){
-      playerData.crewName=crewName;
-      playerData.isCrew=true;
-    }
-    playerData.gameType='starcraft'; // Still StarCraft but in crew
-    // Keep race and tier for 스타크루
-  } else if(_pGameType==='종합게임'){
-    // 종합게임 - use crew
-    const crewName=document.getElementById('p-crew').value;
-    if(crewName){
-      playerData.crewName=crewName;
-      playerData.isCrew=true;
-    }
-    delete playerData.race;
-    delete playerData.tier;
-    delete playerData.univ;
-  } else if(_pGameType==='일반'){
-    // 일반 - no specific category, assign to 무소속
-    delete playerData.race;
-    delete playerData.tier;
-    playerData.univ = '무소속';
-    delete playerData.crewName;
-    delete playerData.isCrew;
+  const _pGender=document.getElementById('p-gender')?.value||'M';
+
+  let playerData;
+
+  if(_pRegType==='starcraft'){
+    // 순수 스타크래프트 스트리머
+    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
+      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
+      gameType:'starcraft',win:0,loss:0,points:0,history:[]};
+
+  } else if(_pRegType==='starcraft-crew'){
+    // 스타크루 — 스타크래프트 + 크루 소속
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
+      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
+      gameType:'starcraft',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+
+  } else if(_pRegType==='general'){
+    // 종합게임 스트리머
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
+      hideFromBoard:_pHideBoard||undefined,
+      gameType:'종합게임',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+
+  } else if(_pRegType==='boracrew'){
+    // 보라크루 스트리머
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
+      hideFromBoard:_pHideBoard||undefined,
+      gameType:'보라크루',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+  } else {
+    playerData={name:n,univ:'무소속',gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
+      gameType:'starcraft',win:0,loss:0,points:0,history:[]};
   }
-  
+
   players.push(playerData);
-  document.getElementById('p-name').value='';document.getElementById('p-photo').value='';document.getElementById('p-hide-board').checked=false;save();render();
+  document.getElementById('p-name').value='';
+  document.getElementById('p-photo').value='';
+  if(document.getElementById('p-display-name')) document.getElementById('p-display-name').value='';
+  document.getElementById('p-hide-board').checked=false;
+  save();render();
 }
 function bulkAddPlayers(){
   if(!isLoggedIn){alert('관리자만 사용 가능합니다.');return;}

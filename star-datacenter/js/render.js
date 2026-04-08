@@ -643,6 +643,11 @@ function navToMatch(matchId, modeLbl){
 }
 
 function buildPlayerDetailHTML(p){
+  // 보라크루/종합게임 전용 UI 분기
+  const _gt = p.gameType || 'starcraft';
+  if (_gt === '보라크루') return _buildCrewPlayerDetailHTML(p, '#7c3aed', '💜 보라크루');
+  if (_gt === '종합게임') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
+
   const col=gc(p.univ)||'#6366f1';
   const _winC ='#16a34a';
   const _lossC='#dc2626';
@@ -1513,4 +1518,95 @@ async function _saveCanvasImage(canvas, filename, fmt){
       window.location.href = fmt==='jpg' ? canvas.toDataURL('image/jpeg', 0.95) : canvas.toDataURL('image/png');
     }
   }
+}
+
+/* ══════════════════════════════════════
+   보라크루 / 종합게임 스트리머 상세 UI
+══════════════════════════════════════ */
+function _buildCrewPlayerDetailHTML(p, accentCol, typeLabel) {
+  const crewCfgArr = typeof crewCfg !== 'undefined' ? crewCfg : [];
+  const crewInfo = p.crewName ? crewCfgArr.find(c => c.name === p.crewName) : null;
+  const crewCol = crewInfo ? (crewInfo.color || accentCol) : accentCol;
+
+  // 헤더 배경
+  const hdrBg = crewInfo && crewInfo.bgImage
+    ? `url(${JSON.stringify(crewInfo.bgImage)}) center/cover no-repeat`
+    : `linear-gradient(135deg, ${crewCol}, ${crewCol}cc)`;
+
+  // 프로필 이미지
+  const photoHTML = p.photo
+    ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none'">`
+    : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${(p.name||'?')[0]}</div>`;
+
+  // 방송 링크
+  const channelHTML = (()=>{
+    if (!p.channelUrl) return '';
+    const url = p.channelUrl;
+    let icon = '🏠', label = '방송';
+    if (url.includes('chzzk.naver.com')) { icon = '🎮'; label = '치지직'; }
+    else if (url.includes('afreecatv.com')) { icon = '📺'; label = '아프리카'; }
+    else if (url.includes('youtube.com') || url.includes('youtu.be')) { icon = '▶️'; label = '유튜브'; }
+    else if (url.includes('twitch.tv')) { icon = '📡'; label = '트위치'; }
+    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff">${icon} ${label}</a>`;
+  })();
+
+  // 크루 로고
+  const crewLogoHTML = crewInfo && crewInfo.logo
+    ? `<img src="${crewInfo.logo}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'"> `
+    : '';
+
+  // 직책 뱃지
+  const crewRoleHTML = (p.crewRole||p.role)
+    ? `<span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:#fff">${p.crewRole||p.role}</span>`
+    : '';
+
+  // 성별
+  const genderIcon = p.gender === 'M' ? '👨' : p.gender === 'F' ? '👩' : '';
+
+  let h = `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+    <div style="background:${hdrBg};padding:20px 18px 18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
+        <div style="width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${photoHTML}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name} ${genderIcon}</span>
+            ${crewRoleHTML}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${p.crewName ? `<span style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700">${crewLogoHTML}${p.crewName}</span>` : ''}
+            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${typeLabel}</span>
+            ${channelHTML}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // 메모가 있으면 표시
+  if (p.memo) {
+    h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6">
+      <span style="font-weight:700;color:${crewCol}">📝 메모</span><br>${p.memo.replace(/\n/g,'<br>')}
+    </div>`;
+  }
+
+  // 같은 크루 멤버 보기
+  if (p.crewName) {
+    const crewMembers = (typeof players !== 'undefined' ? players : [])
+      .filter(q => q.crewName === p.crewName && q.name !== p.name && !q.hidden && !q.retired);
+    if (crewMembers.length) {
+      h += `<div style="background:var(--white);border:1.5px solid ${crewCol}33;border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;color:${crewCol};margin-bottom:10px">${crewLogoHTML}${p.crewName} 크루원 (${crewMembers.length}명)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+      crewMembers.forEach(q => {
+        const qSafe = escJS(q.name);
+        h += `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),100)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${crewCol}44;background:${crewCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+          ${getPlayerPhotoHTML(q.name,'22px','pointer-events:none;border-radius:50%')} ${q.name}${q.crewRole?` <span style="font-size:9px;color:${crewCol}">${q.crewRole}</span>`:''}
+        </button>`;
+      });
+      h += `</div></div>`;
+    }
+  }
+
+  return h;
 }
