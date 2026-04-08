@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>스트리머 데이터 센터 V49.9</title>
+<title>⭐ 스타대학 데이터 센터 V49.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
@@ -105,7 +105,7 @@
 <div class="app">
 <div class="hdr">
   <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
-  <div class="hdr-title">스트리머 데이터 센터</div>
+  <div class="hdr-title">스타대학 데이터 센터</div>
   <div class="hdr-ver">V49.9</div>
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 전체 선수 검색 -->
@@ -142,24 +142,15 @@
 
 <div id="fstrip" class="fstrip no-export lock-admin">
   <div class="form-row">
-    <span class="flabel">등록 타입</span>
-    <select id="p-game-type" onchange="toggleGameFields()" style="width:100px;">
-      <option value="starcraft">StarCraft</option>
-      <option value="general">General</option>
-      <option value="스타크루">스타크루</option>
-      <option value="종합게임">종합게임</option>
-      <option value="일반">일반</option>
-    </select>
-    <span class="flabel">스트리머 등록</span>
+    <span class="flabel">🎬 스트리머 등록</span>
     <select id="p-univ"></select>
-    <select id="p-crew" style="display:none;"></select>
     <select id="p-tier"></select>
-    <select id="p-race"><option value="T">Terran</option><option value="Z">Zerg</option><option value="P">Protoss</option><option value="N">Race Undecided</option></select>
-    <select id="p-gender"><option value="F">Female</option><option value="M">Male</option></select>
+    <select id="p-race"><option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option><option value="N">종족미정</option></select>
+    <select id="p-gender"><option value="F">👩 여자</option><option value="M">👨 남자</option></select>
     <input type="text" id="p-name" placeholder="스트리머 이름" style="width:120px;">
-    <input type="text" id="p-role" placeholder="직책 (선택)" style="width:90px;">
-    <input type="text" id="p-photo" placeholder="프로필 이미지 URL (선택)" style="width:170px;">
-    <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap"><input type="checkbox" id="p-hide-board" style="width:14px;height:14px;cursor:pointer"> 현황판에서 제외</label>
+    <input type="text" id="p-role" placeholder="직책(선택)" style="width:90px;">
+    <input type="text" id="p-photo" placeholder="프로필 이미지 URL(선택)" style="width:170px;">
+    <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap"><input type="checkbox" id="p-hide-board" style="width:14px;height:14px;cursor:pointer"> 현황판 제외</label>
     <button class="btn btn-b" onclick="addPlayer()">+ 등록</button>
   </div>
 </div>
@@ -577,7 +568,6 @@
 
 <script>document.write('<sc'+'ript src="js/modal-drag.js'+_cbv+'"><\/sc'+'ript>')</script>
 <script type="module" src="js/firebase-init.js"></script>
-<script src="js/game-type-handler.js"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 
 
