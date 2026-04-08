@@ -63,8 +63,9 @@ function rBoard2(C, T) {
     return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
   }
 
-  // 잘못된 뷰 리셋 (삭제된 탭으로 설정된 경우)
+  // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
   if (_b2View === 'game' || _b2View === 'crew') _b2View = 'univ';
+  if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
 
   // 저장/초기화 바
   let saveBar = '';

@@ -12,20 +12,28 @@ function biModeChange() {
   const wrap = document.getElementById('bi-compname-wrap');
   if (wrap) {
     // 경기명이 의미있는 모드만 표시
-    wrap.style.display = (mode === 'mini' || mode === 'univ' || mode === 'ck') ? '' : 'none';
+    wrap.style.display = ['mini','univ','ck','gj','pro','individual'].includes(mode) ? '' : 'none';
   }
 }
 
 /* ── 한 줄 파싱 ──
- * 우선순위 1: 기존 parsePasteLine (search.js)
- * 우선순위 2: 탭 구분 5열 형식 (날짜 선수A 선수B 맵 결과)
+ * 우선순위 1: parsePasteLine (search.js) — 이모지/vs/🆚 등 포괄 형식
+ * 우선순위 2: 탭 구분 5열 형식 (날짜 선수A 선수B 맵 결과) — 스프레드시트 붙여넣기
  * 우선순위 3: 탭 구분 4열 형식 (선수A 선수B 맵 결과)
  */
 function _biParseLine(line, defaultDate) {
   line = line.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!line) return null;
 
-  // 탭 구분 형식 시도
+  // 우선순위 1: parsePasteLine — 이모지/vs/화살표 등 기존 붙여넣기 시스템과 동일
+  if (typeof parsePasteLine === 'function') {
+    const p = parsePasteLine(line);
+    if (p && p.winName && p.loseName) {
+      return { winName: p.winName, loseName: p.loseName, map: p.map || '-', date: defaultDate };
+    }
+  }
+
+  // 우선순위 2/3: 탭 구분 형식 (스프레드시트 복사 등)
   if (line.includes('\t')) {
     const cols = line.split('\t').map(c => c.trim());
     // 5열: 날짜 선수A 선수B 맵 결과
@@ -40,7 +48,6 @@ function _biParseLine(line, defaultDate) {
         const isALose = res === '패' || res.toLowerCase() === 'loss' || res === 'L' || res === 'l';
         if (isAWin)  return { winName: nameA, loseName: nameB, map, date };
         if (isALose) return { winName: nameB, loseName: nameA, map, date };
-        // 결과 불명 → 첫번째를 승자로 처리
         return { winName: nameA, loseName: nameB, map, date, _ambiguous: true };
       }
     }
@@ -60,13 +67,6 @@ function _biParseLine(line, defaultDate) {
     }
   }
 
-  // 기존 parsePasteLine 시도 (search.js)
-  if (typeof parsePasteLine === 'function') {
-    const p = parsePasteLine(line);
-    if (p && p.winName && p.loseName) {
-      return { winName: p.winName, loseName: p.loseName, map: p.map || '-', date: defaultDate };
-    }
-  }
   return null;
 }
 
@@ -223,6 +223,10 @@ function biApply() {
       ckM.unshift(entry);
     } else if (mode === 'individual' && typeof indM !== 'undefined') {
       indM.unshift(entry);
+    } else if (mode === 'gj' && typeof gjM !== 'undefined') {
+      gjM.unshift(entry);
+    } else if (mode === 'pro' && typeof proM !== 'undefined') {
+      proM.unshift(entry);
     }
     savedCount++;
   });
