@@ -63,6 +63,9 @@ function rBoard2(C, T) {
     return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
   }
 
+  // 잘못된 뷰 리셋 (삭제된 탭으로 설정된 경우)
+  if (_b2View === 'game' || _b2View === 'crew') _b2View = 'univ';
+
   // 저장/초기화 바
   let saveBar = '';
   if (_b2View === 'univ') {
@@ -80,24 +83,12 @@ function rBoard2(C, T) {
     saveBar = `<div style="margin-left:auto;flex-shrink:0">
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>`;
-  } else if (_b2View === 'game') {
-    saveBar = `<div style="margin-left:auto;flex-shrink:0;display:flex;gap:6px">
-      <button onclick="(function(){window._b2GameListMode='grid';window._b2GameCardSize='m';document.getElementById('b2-content').innerHTML=_b2GameView();})()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer" title="뷰 초기화">🔄 초기화</button>
-      <button onclick="saveCrewImg('전체_game',this)" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
-    </div>`;
-  } else if (_b2View === 'crew') {
-    saveBar = `<div style="margin-left:auto;flex-shrink:0;display:flex;gap:6px">
-      <button onclick="(function(){_b2CrewCollapsed.clear();_b2CrewCardSize='m';_b2CrewListMode='grid';_b2ShowSolo=false;document.getElementById('b2-content').innerHTML=_b2CrewView();})()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer" title="뷰 초기화">🔄 초기화</button>
-      <button onclick="saveCrewImg('전체',this)" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
-    </div>`;
   }
 
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
-      ${_b2TabBtn('game','#10b981','🎮 종합게임')}
-      ${_b2TabBtn('crew','#7c3aed','💜 보라크루')}
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -111,12 +102,6 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
-    injectUnivIcons(sub);
-  } else if (_b2View === 'game') {
-    sub.innerHTML = _b2GameView();
-    injectUnivIcons(sub);
-  } else if (_b2View === 'crew') {
-    sub.innerHTML = _b2CrewView();
     injectUnivIcons(sub);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
