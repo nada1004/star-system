@@ -3645,17 +3645,18 @@ function onRegTypeChange() {
   const crewField = document.getElementById('p-crew');
   const genderField = document.getElementById('p-gender');
 
-  // 스타크래프트 전용 필드
+  // 스타크래프트 전용 필드 (스타크래프트 선택시에만 표시)
   scFields.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.style.display = (type === 'starcraft' || type === 'starcraft-crew') ? '' : 'none';
+    el.style.display = (type === 'starcraft') ? '' : 'none';
   });
 
-  // 크루 선택 (스타크루/종합게임/보라크루)
+  // 크루 선택 (종합게임/보라크루 선택시에만 표시)
   if (crewField) {
-    crewField.style.display = (type !== 'starcraft') ? '' : 'none';
-    if (type !== 'starcraft') {
+    const showCrew = (type === 'general' || type === 'boracrew');
+    crewField.style.display = showCrew ? '' : 'none';
+    if (showCrew) {
       // 크루 목록 채우기 (타입별 필터링)
       const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
       let filteredCrews;
@@ -3663,7 +3664,7 @@ function onRegTypeChange() {
         // 종합게임: general 타입 크루만
         filteredCrews = cfg.filter(c => c.type === 'general');
       } else {
-        // 스타크루/보라크루: 보라크루 타입 또는 타입 없음 (하위 호환)
+        // 보라크루: 보라크루 타입 또는 타입 없음 (하위 호환)
         filteredCrews = cfg.filter(c => !c.type || c.type === '보라크루');
       }
       crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
@@ -3671,7 +3672,7 @@ function onRegTypeChange() {
     }
   }
 
-  // 성별 (종합게임/보라크루)
+  // 성별 (종합게임/보라크루 선택시에만 표시)
   if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
 }
 
@@ -3697,16 +3698,6 @@ function addPlayer(){
       race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
       gameType:'starcraft',win:0,loss:0,points:0,history:[]};
-
-  } else if(_pRegType==='starcraft-crew'){
-    // 스타크루 — 스타크래프트 + 크루 소속
-    const crewSelect=document.getElementById('p-crew');
-    const crewName=crewSelect&&crewSelect.value?crewSelect.value.trim():'';
-    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
-      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
-      gameType:'general',crewName:crewName||undefined,isCrew:crewName?true:undefined,
-      win:0,loss:0,points:0,history:[]};
 
   } else if(_pRegType==='general'){
     // 종합게임 스트리머

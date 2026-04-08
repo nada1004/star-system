@@ -125,9 +125,9 @@ function rTotal(C,T){
 
   let totalShown=0;
   
-  // Add crew section for general streamers
+  // Add crew section for general/boracrew streamers
   if(typeof crewCfg !== 'undefined' && crewCfg.length > 0) {
-    const crewMembers = players.filter(p => p.gameType === 'general' && !p.retired);
+    const crewMembers = players.filter(p => (p.gameType === 'general' || p.gameType === '보라크루') && !p.retired);
     if(totalRaceFilter!=='전체') crewMembers = crewMembers.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) crewMembers = crewMembers.filter(p=>((p.win||0)+(p.loss||0))>0);
     
@@ -209,17 +209,17 @@ function rTotal(C,T){
               if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="?? ?? (30? ??)">?</span>`;
               return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="??? (30? ??)">?</span>';
             })()}</td>
-            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">?? ??</button>`)}</td>`:''}
+            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${pSafe}')">수정</button>`)}</td>`:''}
           </tr>`;
         });
       });
     }
   }
   
-  // University section for StarCraft streamers
+  // University section for StarCraft streamers (exclude general/boracrew)
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     const _isHiddenUniv=isLoggedIn&&u.hidden;
-    let up=players.filter(p=>p.univ===u.name);
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루');
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length)return;
@@ -288,7 +288,7 @@ function rTotal(C,T){
           if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
           return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
         })()}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEP('${p.name}')">✏️ 수정</button>`)}</td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="if(typeof openEP==='function')openEP('${p.name}');else alert('수정 기능 로드 중입니다. 잠시 후 다시 시도해주세요.')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
