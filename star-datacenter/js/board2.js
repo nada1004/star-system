@@ -632,11 +632,23 @@ function _b2CrewView() {
         // 직책 순서로 정렬: 대표 > 부대표 > 나머지
         const rankOrder = {'대표':0,'부대표':1,'리더':0,'부리더':1,'매니저':2};
         const sortedSC = [...members.sc].sort((a,b) => {
+          // Check main role first (representative gets highest priority)
+          const aRoleOrder = a.role === 'representative' ? 0 : (a.role && MAIN_ROLES.includes(a.role) ? getRoleOrder(a.role) : 99);
+          const bRoleOrder = b.role === 'representative' ? 0 : (b.role && MAIN_ROLES.includes(b.role) ? getRoleOrder(b.role) : 99);
+          if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
+          
+          // Then check crew role
           const ra = rankOrder[a.crewRole||''] ?? 99;
           const rb = rankOrder[b.crewRole||''] ?? 99;
           return ra - rb;
         });
         const sortedPure = [...members.pure].sort((a,b) => {
+          // Check main role first (representative gets highest priority)
+          const aRoleOrder = a.role === 'representative' ? 0 : (a.role && MAIN_ROLES.includes(a.role) ? getRoleOrder(a.role) : 99);
+          const bRoleOrder = b.role === 'representative' ? 0 : (b.role && MAIN_ROLES.includes(b.role) ? getRoleOrder(b.role) : 99);
+          if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
+          
+          // Then check crew role
           const ra = rankOrder[a.crewRole||''] ?? 99;
           const rb = rankOrder[b.crewRole||''] ?? 99;
           return ra - rb;
@@ -682,9 +694,17 @@ function _b2CrewListView(cfg, crewArr, scPlayers) {
     if (!sc.length && !pure.length) return;
     const rankOrder = {'대표':0,'부대표':1,'리더':0,'부리더':1,'매니저':2};
     const allMembers = [
-      ...sc.map(p=>({name:p.name,photo:p.photo,link:p.channelUrl,isSC:true,idx:-1,crewRole:p.crewRole||''})),
-      ...pure.map(m=>({name:m.name,photo:m.photo,link:m.link,isSC:false,idx:crewArr.findIndex(x=>x===m),crewRole:m.crewRole||''}))
-    ].sort((a,b)=>(rankOrder[a.crewRole]??99)-(rankOrder[b.crewRole]??99));
+      ...sc.map(p=>({name:p.name,photo:p.photo,link:p.channelUrl,isSC:true,idx:-1,crewRole:p.crewRole||'',role:p.role||''})),
+      ...pure.map(m=>({name:m.name,photo:m.photo,link:m.link,isSC:false,idx:crewArr.findIndex(x=>x===m),crewRole:m.crewRole||'',role:m.role||''}))
+    ].sort((a,b)=>{
+      // Check main role first (representative gets highest priority)
+      const aRoleOrder = a.role === 'representative' ? 0 : (a.role && MAIN_ROLES.includes(a.role) ? getRoleOrder(a.role) : 99);
+      const bRoleOrder = b.role === 'representative' ? 0 : (b.role && MAIN_ROLES.includes(b.role) ? getRoleOrder(b.role) : 99);
+      if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
+      
+      // Then check crew role
+      return (rankOrder[a.crewRole]??99)-(rankOrder[b.crewRole]??99);
+    });
 
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40">';
     h += '<div style="padding:10px 16px;background:' + col + labelAlpha + ';display:flex;align-items:center;gap:8px">';
@@ -814,9 +834,17 @@ function openCrewDetailModal(crewName) {
     html += '<div style="text-align:center;padding:20px;color:var(--gray-l);font-size:12px">크루원이 없습니다</div>';
   } else {
     const allMem = [
-      ...sc.map(p=>({name:p.name,photo:p.photo,link:p.channelUrl,isSC:true,idx:-1,role:p.crewRole||''})),
-      ...pure.map(m=>({name:m.name,photo:m.photo,link:m.link,isSC:false,idx:crewArr.findIndex(x=>x===m),role:m.crewRole||''}))
-    ].sort((a,b)=>(rankOrder[a.role]??99)-(rankOrder[b.role]??99));
+      ...sc.map(p=>({name:p.name,photo:p.photo,link:p.channelUrl,isSC:true,idx:-1,role:p.crewRole||'',mainRole:p.role||''})),
+      ...pure.map(m=>({name:m.name,photo:m.photo,link:m.link,isSC:false,idx:crewArr.findIndex(x=>x===m),role:m.crewRole||'',mainRole:m.role||''}))
+    ].sort((a,b)=>{
+      // Check main role first (representative gets highest priority)
+      const aRoleOrder = a.mainRole === 'representative' ? 0 : (a.mainRole && MAIN_ROLES.includes(a.mainRole) ? getRoleOrder(a.mainRole) : 99);
+      const bRoleOrder = b.mainRole === 'representative' ? 0 : (b.mainRole && MAIN_ROLES.includes(b.mainRole) ? getRoleOrder(b.mainRole) : 99);
+      if (aRoleOrder !== bRoleOrder) return aRoleOrder - bRoleOrder;
+      
+      // Then check crew role
+      return (rankOrder[a.role]??99)-(rankOrder[b.role]??99);
+    });
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
     allMem.forEach(m => { html += _crewMemberCard(m.name, m.photo, m.link, m.isSC, m.idx, col, crewName, m.role); });
     html += '</div>';

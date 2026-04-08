@@ -70,13 +70,13 @@ function getTierBtnTextColor(tier){ return _TIER_TEXT[tier]||'#fff'; }
    - MAIN_ROLES: 정렬 순서에 영향, 표시+정렬
    - SUB_ROLES: 표시만 (학생회장, 오락부장 등)
 ══════════════════════════════════════ */
-const MAIN_ROLES = ['이사장','동아리 회장','총장','부총장','총괄','교수','코치'];
-const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯'};
-const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490'};
+const MAIN_ROLES = ['이사장','동아리 회장','총장','부총장','총괄','교수','코치','대표'];
+const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯','대표':'👥'};
+const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490','대표':'#8b5cf6'};
 
 function getRoleOrder(role){
-  // 이사장/선장/동아리장/동아리 회장/반장=0, 총장=1, 부총장=2, 총괄=2(동률), 교수=3, 코치=4, 기타=99
-  const ORDER = {'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
+  // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
+  const ORDER = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
   if(!role) return 99;
   return role in ORDER ? ORDER[role] : 99;
 }

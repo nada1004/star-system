@@ -294,6 +294,40 @@ function findPlayerByPartialName(namePart) {
     if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
   }
 
+  // 2.8) 종족 접미사(T/Z/P, 대소문자 무관) 제거 후 재시도
+  // "샤이니T" → "샤이니" 로 재검색. parsePartWithRace가 종족을 못 걸러낸 경우 또는
+  // 사용자가 종족 포함 이름을 그대로 입력했을 때도 메모/이름 매칭이 되도록 보장
+  const _raceStripped = trimmed.replace(/\s*[TZPtzp]$/i, '').trim();
+  if (_raceStripped && _raceStripped !== trimmed) {
+    const _rsLow = _nfc(_raceStripped).toLowerCase();
+    const _rsNS  = _nfc(_raceStripped).replace(/\s+/g,'').toLowerCase();
+    // 이름 정확 일치
+    const rsExact = players.filter(p => p.name === _raceStripped);
+    if (rsExact.length === 1) return { player: rsExact[0], candidates: rsExact, similar: [] };
+    // 메모 정확 일치 + 공백 제거 일치
+    const rsMemo = players.filter(p => {
+      if (!p.memo) return false;
+      const mn = _nfc(p.memo);
+      if (mn.trim().toLowerCase() === _rsLow) return true;
+      const toks = mn.split(/[\s,，\n]+/).map(m => m.trim()).filter(Boolean);
+      return toks.some(t => t.toLowerCase() === _rsLow) ||
+             toks.some(t => t.replace(/\s+/g,'').toLowerCase() === _rsNS);
+    });
+    if (rsMemo.length === 1) return { player: rsMemo[0], candidates: rsMemo, similar: [] };
+    if (rsMemo.length > 1)   return { player: null, candidates: rsMemo, similar: [] };
+    // 이름 부분 일치
+    if (_raceStripped.length >= 2) {
+      const rsPartial = players.filter(p =>
+        p.name.includes(_raceStripped) || _raceStripped.includes(p.name));
+      if (rsPartial.length === 1) return { player: rsPartial[0], candidates: rsPartial, similar: [] };
+      if (rsPartial.length > 1) {
+        const rsSW = rsPartial.filter(p => p.name.startsWith(_raceStripped));
+        if (rsSW.length === 1) return { player: rsSW[0], candidates: rsPartial, similar: [] };
+        return { player: null, candidates: rsPartial, similar: [] };
+      }
+    }
+  }
+
   // 3) 이름 부분 일치 — 2글자 이상
   if (trimmed.length >= 2) {
     const partial = players.filter(p =>

@@ -3600,16 +3600,22 @@ function promptBoardNoteImgUrl(univName){
 ══════════════════════════════════════ */
 function addPlayer(){
   const n=document.getElementById('p-name').value.trim();
-  if(!n)return alert('이름을 입력하세요.');
-  if(players.find(p=>p.name===n)&&!confirm(`"${n}" 이름의 스트리머가 이미 존재합니다.\n동명이인으로 등록하시겠습니까?`))return;
+  if(!n)return alert('Please enter a name.');
+  if(players.find(p=>p.name===n)&&!confirm(`"${n}" name already exists.\nRegister as namesake?`))return;
   const _pRole=(document.getElementById('p-role')?.value||'').trim();
   const _pPhoto=(document.getElementById('p-photo')?.value||'').trim();
+  const _pGameType=(document.getElementById('p-game-type')?.value||'starcraft').trim();
   if(_pPhoto){
-    if(_pPhoto.startsWith('data:')){alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n이미지를 imgur.com 등에 업로드 후 URL을 입력하세요.');return;}
-    if(_pPhoto.length>2000&&!confirm(`⚠️ 사진 URL이 매우 깁니다 (${_pPhoto.length}자). 계속 저장하시겠습니까?`))return;
+    if(_pPhoto.startsWith('data:')){alert('Direct base64 image input not allowed. Please upload to imgur.com and use URL.');return;}
+    if(_pPhoto.length>2000&&!confirm(`Image URL is very long (${_pPhoto.length} chars). Continue?`))return;
   }
   const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
-  players.push({name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,win:0,loss:0,points:0,history:[]});
+  const playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,gameType:_pGameType,win:0,loss:0,points:0,history:[]};
+  if(_pGameType!=='starcraft'){
+    delete playerData.race;
+    delete playerData.tier;
+  }
+  players.push(playerData);
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';document.getElementById('p-hide-board').checked=false;save();render();
 }
 function bulkAddPlayers(){
