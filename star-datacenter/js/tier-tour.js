@@ -3611,10 +3611,19 @@ function addPlayer(){
   }
   const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
   const playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,gameType:_pGameType,win:0,loss:0,points:0,history:[]};
-  if(_pGameType!=='starcraft'){
+  
+  // Handle crew selection for general game streamers
+  if(_pGameType==='general'){
+    const crewName=document.getElementById('p-crew').value;
+    if(crewName){
+      playerData.crewName=crewName;
+      playerData.isCrew=true;
+    }
     delete playerData.race;
     delete playerData.tier;
+    delete playerData.univ; // General streamers don't use university
   }
+  
   players.push(playerData);
   document.getElementById('p-name').value='';document.getElementById('p-photo').value='';document.getElementById('p-hide-board').checked=false;save();render();
 }

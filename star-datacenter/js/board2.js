@@ -73,12 +73,14 @@ function rBoard2(C, T) {
     </div>` : '';
 
   const crewBtn = `<button onclick="_b2View='crew';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='crew'?'#7c3aed':'var(--border2)'};background:${_b2View==='crew'?'#7c3aed':'var(--white)'};color:${_b2View==='crew'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">💜 보라크루</button>`;
+  const gameBtn = `<button onclick="_b2View='game';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='game'?'#10b981':'var(--border2)'};background:${_b2View==='game'?'#10b981':'var(--white)'};color:${_b2View==='game'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">Comprehensive Games</button>`;
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button onclick="_b2View='univ';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='univ'?'var(--blue)':'var(--border2)'};background:${_b2View==='univ'?'var(--blue)':'var(--white)'};color:${_b2View==='univ'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🏟️ 대학별</button>
       <button onclick="_b2View='free';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${_b2View==='free'?'var(--blue)':'var(--border2)'};background:${_b2View==='free'?'var(--blue)':'var(--white)'};color:${_b2View==='free'?'#fff':'var(--text3)'};font-weight:700;font-size:12px;cursor:pointer">🚶 무소속</button>
       ${oldBtn}
       ${crewBtn}
+      ${gameBtn}
       ${saveBar}
     </div>
     <div id="b2-content"></div>`;
@@ -96,6 +98,9 @@ function rBoard2(C, T) {
     if (typeof rBoard === 'function') rBoard(sub, T);
   } else if (_b2View === 'crew') {
     sub.innerHTML = _b2CrewView();
+  } else if (_b2View === 'game') {
+    sub.innerHTML = _b2GameView();
+    injectUnivIcons(sub);
   }
 }
 
@@ -537,6 +542,7 @@ function _b2CrewView() {
   h += '</div>';
   h += cardSizeBtns;
   h += '<div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">';
+  h += '<button class="btn btn-xs" style="background:#10b981;color:#fff;border-color:#10b981" onclick="_b2View=\'game\';render()">Comprehensive Games</button>';
   // 솔로 토글
   if (soloPure.length) {
     h += '<button class="btn btn-xs" style="' + (_b2ShowSolo ? 'background:#7c3aed;color:#fff;border-color:#7c3aed' : 'border-color:#7c3aed;color:#7c3aed') + '" onclick="_b2ShowSolo=!_b2ShowSolo;document.getElementById(\'b2-content\').innerHTML=_b2CrewView()">🎙️ 솔로 ' + soloPure.length + '명</button>';
@@ -1111,4 +1117,94 @@ function deleteCrew(idx) {
   if (typeof crew !== 'undefined') crew.splice(idx, 1);
   save();
   const sub = document.getElementById('b2-content'); if (sub) sub.innerHTML = _b2CrewView();
+}
+
+/* Comprehensive Games View */
+function _b2GameView() {
+  // Get all streamers including general game streamers
+  const allStreamers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard);
+  
+  // Separate StarCraft and General game streamers
+  const scStreamers = allStreamers.filter(p => !p.gameType || p.gameType === 'starcraft');
+  const generalStreamers = allStreamers.filter(p => p.gameType === 'general');
+  
+  // Group general streamers by game type if available, or put them in "General" category
+  const generalGroups = {};
+  generalStreamers.forEach(p => {
+    const gameCategory = p.gameCategory || 'General Games';
+    if (!generalGroups[gameCategory]) generalGroups[gameCategory] = [];
+    generalGroups[gameCategory].push(p);
+  });
+
+  let h = `<div style="padding:16px 0">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <span style="font-size:18px;font-weight:900;color:#10b981">Comprehensive Games</span>
+      <span style="font-size:12px;color:var(--gray-l)">${allStreamers.length} Streamers</span>
+    </div>`;
+
+  // StarCraft Section
+  if (scStreamers.length > 0) {
+    h += `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:16px;font-weight:800;color:#2563eb">StarCraft</span>
+        <span style="font-size:11px;color:var(--gray-l)">${scStreamers.length} streamers</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">`;
+    
+    scStreamers.forEach(p => {
+      const col = gc(p.univ) || '#2563eb';
+      h += _b2GameStreamerCard(p, col);
+    });
+    
+    h += `</div></div>`;
+  }
+
+  // General Games Sections
+  Object.keys(generalGroups).forEach(category => {
+    const streamers = generalGroups[category];
+    h += `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:16px;font-weight:800;color:#10b981">${category}</span>
+        <span style="font-size:11px;color:var(--gray-l)">${streamers.length} streamers</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">`;
+    
+    streamers.forEach(p => {
+      const col = '#10b981';
+      h += _b2GameStreamerCard(p, col);
+    });
+    
+    h += `</div></div>`;
+  });
+
+  if (allStreamers.length === 0) {
+    h += `<div style="text-align:center;padding:60px 20px;color:var(--gray-l);background:var(--surface);border-radius:12px;border:2px dashed #10b98140">
+      <div style="font-size:40px;margin-bottom:12px">Game Streamers</div>
+      <div style="font-weight:700;margin-bottom:6px">No streamers registered</div>
+      <div style="font-size:12px">Register streamers to see them here</div>
+    </div>`;
+  }
+
+  h += `</div>`;
+  return h;
+}
+
+function _b2GameStreamerCard(p, col) {
+  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
+  const isRepresentative = p.role === 'representative' || p.crewRole === 'representative';
+  
+  return `
+    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
+      style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;background:var(--white);border:1.5px solid ${col}40;border-radius:12px;cursor:pointer;transition:all 0.2s;position:relative;${crewCol ? `border-left:4px solid ${crewCol}` : ''}"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${col}30'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''">
+      ${isRepresentative ? `<div style="position:absolute;top:4px;right:4px;background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px">Representative</div>` : ''}
+      ${_b2Avatar(p, col, 48)}
+      <div style="text-align:center;flex:1;width:100%">
+        <div style="font-weight:700;font-size:12px;color:var(--text1);margin-bottom:4px;line-height:1.2">${p.name||''}</div>
+        ${p.univ && p.univ !== 'No University' ? `<div style="font-size:10px;color:var(--gray-l);margin-bottom:2px">${p.univ}</div>` : ''}
+        ${p.crewName ? `<div style="font-size:10px;color:#7c3aed;margin-bottom:2px">${p.crewName}</div>` : ''}
+        ${p.gameType === 'general' ? `<div style="font-size:10px;color:#10b981">General</div>` : ''}
+      </div>
+    </div>`;
 }
