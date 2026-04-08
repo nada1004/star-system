@@ -3612,8 +3612,13 @@ function addPlayer(){
   const _pHideBoard=document.getElementById('p-hide-board')?.checked||false;
   const playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,race:document.getElementById('p-race').value,gender:document.getElementById('p-gender').value,role:_pRole||undefined,photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,gameType:_pGameType,win:0,loss:0,points:0,history:[]};
   
-  // Handle crew selection for general game streamers
-  if(_pGameType==='general'){
+  // Handle different registration types
+  if(_pGameType==='starcraft'){
+    // StarCraft streamer - use university, race, tier
+    delete playerData.crewName;
+    delete playerData.isCrew;
+  } else if(_pGameType==='general'){
+    // General streamer - use crew
     const crewName=document.getElementById('p-crew').value;
     if(crewName){
       playerData.crewName=crewName;
@@ -3622,6 +3627,32 @@ function addPlayer(){
     delete playerData.race;
     delete playerData.tier;
     delete playerData.univ; // General streamers don't use university
+  } else if(_pGameType==='스타크루'){
+    // 스타크루 - use crew and mark as StarCraft type
+    const crewName=document.getElementById('p-crew').value;
+    if(crewName){
+      playerData.crewName=crewName;
+      playerData.isCrew=true;
+    }
+    playerData.gameType='starcraft'; // Still StarCraft but in crew
+    // Keep race and tier for 스타크루
+  } else if(_pGameType==='종합게임'){
+    // 종합게임 - use crew
+    const crewName=document.getElementById('p-crew').value;
+    if(crewName){
+      playerData.crewName=crewName;
+      playerData.isCrew=true;
+    }
+    delete playerData.race;
+    delete playerData.tier;
+    delete playerData.univ;
+  } else if(_pGameType==='일반'){
+    // 일반 - no specific category
+    delete playerData.race;
+    delete playerData.tier;
+    delete playerData.univ;
+    delete playerData.crewName;
+    delete playerData.isCrew;
   }
   
   players.push(playerData);

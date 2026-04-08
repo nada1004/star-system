@@ -681,7 +681,19 @@ function _b2CrewView() {
   }
 
   // 솔로 방송 (crew배열 미배정)
-  if (_b2ShowSolo && soloPure.length) h += _b2SoloSection(soloPure);
+  if (_b2ShowSolo && soloPure.length) {
+    h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid #8b5cf640">';
+    h += '<div style="padding:12px 16px;background:linear-gradient(135deg,#8b5cf620,#7c3aed15);display:flex;align-items:center;gap:8px;border-bottom:1px solid #8b5cf620">';
+    h += '<span style="font-size:14px;font-weight:900;color:#7c3aed">🎙️ 무소속</span>';
+    h += '<span style="font-size:11px;color:var(--gray-l)">크루 미소속 ' + soloPure.length + '명</span>';
+    h += '</div>';
+    h += '<div style="background:var(--white);padding:14px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' + _crewCardMinWidth() + 'px,1fr));gap:10px">';
+    soloPure.forEach(function(m) {
+      const idx = (typeof crew !== 'undefined' ? crew : []).findIndex(x => x === m);
+      h += _crewMemberCard(m.name, m.photo, m.link, false, idx, '#7c3aed', '', '');
+    });
+    h += '</div></div></div>';
+  }
 
   h += '</div>';
   return h;
@@ -1138,12 +1150,12 @@ function _b2GameView() {
 
   let h = `<div style="padding:16px 0">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      <span style="font-size:18px;font-weight:900;color:#10b981">Comprehensive Games</span>
-      <span style="font-size:12px;color:var(--gray-l)">${allStreamers.length} Streamers</span>
+      <span style="font-size:18px;font-weight:900;color:#10b981">종합게임</span>
+      <span style="font-size:12px;color:var(--gray-l)">총 ${allStreamers.length}명 (StarCraft ${scStreamers.length}명, General ${generalStreamers.length}명)</span>
       <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ Crew</button>`:''}
-        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#059669;color:#fff;border-color:#059669" onclick="openCrewAddModal()">+ Member</button>`:''}
-        <button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg()">Save Image</button>
+        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#10b981;color:#fff;border-color:#10b981" onclick="openCrewCfgAddModal()">+ 크루</button>`:''}
+        ${isLoggedIn?`<button class="btn btn-xs no-export" style="background:#059669;color:#fff;border-color:#059669" onclick="openCrewAddModal()">+ 멤버</button>`:''}
+        <button class="btn btn-xs no-export" style="border-color:#10b981;color:#10b981" onclick="saveGameImg()">이미지 저장</button>
       </div>
     </div>`;
 
@@ -1165,6 +1177,9 @@ function _b2GameView() {
   }
 
   // General Games Sections
+  const crewCfg = typeof window.crewCfg !== 'undefined' ? window.crewCfg : [];
+  const hasCrews = crewCfg && crewCfg.length > 0;
+  
   Object.keys(generalGroups).forEach(category => {
     const streamers = generalGroups[category];
     h += `<div style="margin-bottom:24px">
@@ -1176,6 +1191,7 @@ function _b2GameView() {
     
     streamers.forEach(p => {
       const col = '#10b981';
+      const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
       h += _b2GameStreamerCard(p, col);
     });
     

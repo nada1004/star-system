@@ -10,35 +10,50 @@ function toggleGameFields() {
   const crewLabel = crewField.previousElementSibling;
   const univLabel = univField.previousElementSibling;
   
-  if (gameType === 'general') {
-    // Hide race and tier fields for general streamers
-    raceField.style.display = 'none';
-    tierField.style.display = 'none';
-    if (raceLabel && raceLabel.tagName === 'SPAN') raceLabel.style.display = 'none';
-    if (tierLabel && tierLabel.tagName === 'SPAN') tierLabel.style.display = 'none';
-    
-    // Show crew field and hide university field for general streamers
-    crewField.style.display = '';
-    univField.style.display = 'none';
-    if (univLabel && univLabel.tagName === 'SPAN') univLabel.style.display = 'none';
-    
-    // Populate crew options
-    populateCrewOptions();
-  } else {
+  // Hide all fields first
+  raceField.style.display = 'none';
+  tierField.style.display = 'none';
+  crewField.style.display = 'none';
+  univField.style.display = 'none';
+  if (raceLabel && raceLabel.tagName === 'SPAN') raceLabel.style.display = 'none';
+  if (tierLabel && tierLabel.tagName === 'SPAN') tierLabel.style.display = 'none';
+  if (crewLabel && crewLabel.tagName === 'SPAN') crewLabel.style.display = 'none';
+  if (univLabel && univLabel.tagName === 'SPAN') univLabel.style.display = 'none';
+  
+  if (gameType === 'starcraft') {
     // Show race and tier fields for StarCraft streamers
     raceField.style.display = '';
     tierField.style.display = '';
+    univField.style.display = '';
     if (raceLabel && raceLabel.tagName === 'SPAN') raceLabel.style.display = '';
     if (tierLabel && tierLabel.tagName === 'SPAN') tierLabel.style.display = '';
-    
-    // Hide crew field and show university field for StarCraft streamers
-    crewField.style.display = 'none';
-    univField.style.display = '';
     if (univLabel && univLabel.tagName === 'SPAN') univLabel.style.display = '';
+  } else if (gameType === 'general') {
+    // Show crew field and hide university field for general streamers
+    crewField.style.display = '';
+    if (crewLabel && crewLabel.tagName === 'SPAN') crewLabel.style.display = '';
+    // Populate crew options
+    populateCrewOptions();
+  } else if (gameType === '스타크루') {
+    // Show crew field for 스타크루
+    crewField.style.display = '';
+    if (crewLabel && crewLabel.tagName === 'SPAN') crewLabel.style.display = '';
+    // Filter crew options to show only 스타크루 crews
+    populateCrewOptions('스타크루');
+  } else if (gameType === '종합게임') {
+    // Show crew field for 종합게임
+    crewField.style.display = '';
+    if (crewLabel && crewLabel.tagName === 'SPAN') crewLabel.style.display = '';
+    // Filter crew options to show only 종합게임 crews
+    populateCrewOptions('종합게임');
+  } else if (gameType === '일반') {
+    // Hide all specific fields for 일반
+    // 일반 streamers don't belong to any specific category
+    // No fields to show
   }
 }
 
-function populateCrewOptions() {
+function populateCrewOptions(filterType) {
   const crewSelect = document.getElementById('p-crew');
   if (!crewSelect) return;
   
@@ -48,8 +63,18 @@ function populateCrewOptions() {
   // Clear existing options
   crewSelect.innerHTML = '<option value="">Select Crew</option>';
   
-  // Add crew options including Bora Crew and general game crews
-  crewCfg.forEach(crew => {
+  // Filter crews based on type
+  let filteredCrews = crewCfg;
+  if (filterType === '스타크루') {
+    // Show only 스타크루 crews (you can add logic to filter by crew type)
+    filteredCrews = crewCfg.filter(crew => crew.name && crew.name.includes('스타'));
+  } else if (filterType === '종합게임') {
+    // Show only 종합게임 crews
+    filteredCrews = crewCfg.filter(crew => crew.name && !crew.name.includes('스타'));
+  }
+  
+  // Add crew options
+  filteredCrews.forEach(crew => {
     const option = document.createElement('option');
     option.value = crew.name;
     option.textContent = crew.name;
