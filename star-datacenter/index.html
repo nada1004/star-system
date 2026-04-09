@@ -532,7 +532,6 @@
 </div>
 
 <!-- 📱 FAB -->
-<script src="js/mobile-bar.js"></script>
 <script>
 var _fabOpen=false;
 var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
@@ -635,10 +634,21 @@ function addChatbotMessage(text,sender){
   container.scrollTop=container.scrollHeight;
 }
 function processChatbotQuery(query){
+  console.log('Chatbot Debug - processChatbotQuery called with:', query);
+  console.log('Chatbot Debug - generateChatbotResponse exists:', typeof generateChatbotResponse==='function');
+  console.log('Chatbot Debug - players exists:', typeof players!=='undefined');
+  
   if(typeof generateChatbotResponse==='function'){
-    const response=generateChatbotResponse(query);
-    addChatbotMessage(response,'bot');
+    try{
+      const response=generateChatbotResponse(query);
+      console.log('Chatbot Debug - Response generated:', response);
+      addChatbotMessage(response,'bot');
+    }catch(e){
+      console.error('Chatbot Debug - Error in generateChatbotResponse:', e);
+      addChatbotMessage('챗봇 응답 생성 중 오류가 발생했습니다: '+e.message,'bot');
+    }
   }else{
+    console.error('Chatbot Debug - generateChatbotResponse not available');
     addChatbotMessage('챗봇 기능이 로드되지 않았습니다. 페이지를 새로고침해주세요.','bot');
   }
 }
@@ -646,6 +656,7 @@ window.sendChatbotMessage=sendChatbotMessage;
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
 </script>
+<script src="js/mobile-bar.js"></script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
