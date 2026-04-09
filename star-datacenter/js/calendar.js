@@ -57,11 +57,13 @@ function rCal(C,T){
 
   function getTeamA(m){
     const t=matchType(m);
+    if(t==='ind'||t==='gj') return m.wName||'';
     if(t==='ck'||t==='pro') return (m.teamALabel||'').replace(/^\$\{.*\}$/,'')||'A팀';
     return m.a||'';
   }
   function getTeamB(m){
     const t=matchType(m);
+    if(t==='ind'||t==='gj') return m.lName||'';
     if(t==='ck'||t==='pro') return (m.teamBLabel||'').replace(/^\$\{.*\}$/,'')||'B팀';
     return m.b||'';
   }
@@ -168,10 +170,11 @@ function rCal(C,T){
               const type=matchType(m);
               const ti=TYPE_INFO[type]||TYPE_INFO.comp;
               const tA=getTeamA(m), tB=getTeamB(m);
-              const ca=(type==='ck'||type==='pro')?'#2563eb':gc(m.a||'');
-              const cb=(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
-              const aWin=(m.sa??-1)>(m.sb??-1), bWin=(m.sb??-1)>(m.sa??-1);
-              const hasResult=(m.sa!=null&&m.sa!=='');
+              const _isIG=type==='ind'||type==='gj';
+              const ca=_isIG?ti.bg:(type==='ck'||type==='pro')?'#2563eb':gc(m.a||'');
+              const cb=_isIG?'#64748b':(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
+              const aWin=_isIG?!!m.wName:(m.sa??-1)>(m.sb??-1), bWin=_isIG?false:(m.sb??-1)>(m.sa??-1);
+              const hasResult=_isIG?!!m.wName:(m.sa!=null&&m.sa!=='');
               // Feature 1: 시간 표시
               const timeStr=m.time?`<span style="font-size:9px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:1px 5px;color:var(--blue);font-weight:700">🕐 ${m.time}</span>`:'';
               if(type==='sched'){
@@ -182,9 +185,10 @@ function rCal(C,T){
               return `<div style="font-size:11px;font-weight:600;padding:4px 8px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:5px;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <span style="color:${ti.bg};font-size:10px">${ti.emoji}</span>
                 <span style="font-weight:700;color:${aWin&&hasResult?ca:'var(--text)'}">${tA}</span>
-                ${hasResult?`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${m.sa}:${m.sb}</span>`:`<span style="color:var(--gray-l)">vs</span>`}
+                ${hasResult&&!_isIG?`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${m.sa}:${m.sb}</span>`:`<span style="color:var(--gray-l)">vs</span>`}
                 <span style="font-weight:700;color:${bWin&&hasResult?cb:'var(--text)'}">${tB}</span>
                 ${hasResult?(aWin?`<span style="font-size:10px;color:${ca};font-weight:800">▶ ${tA} 승</span>`:bWin?`<span style="font-size:10px;color:${cb};font-weight:800">▶ ${tB} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">무</span>'):''}
+                ${m.map&&_isIG?`<span style="font-size:10px;color:var(--gray-l)">📍${m.map}</span>`:''}
                 ${timeStr}
               </div>`;
             }).join('')
@@ -215,10 +219,11 @@ function rCal(C,T){
         const type=matchType(m);
         const ti=TYPE_INFO[type]||TYPE_INFO.comp;
         const tA=getTeamA(m), tB=getTeamB(m);
-        const ca=(type==='ck'||type==='pro')?'#2563eb':gc(m.a||'');
-        const cb=(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
-        const aWin=(m.sa??-1)>(m.sb??-1), bWin=(m.sb??-1)>(m.sa??-1);
-        const hasResult=(m.sa!=null&&m.sa!=='');
+        const _isIG=type==='ind'||type==='gj';
+        const ca=_isIG?ti.bg:(type==='ck'||type==='pro')?'#2563eb':gc(m.a||'');
+        const cb=_isIG?'#64748b':(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
+        const aWin=_isIG?!!m.wName:(m.sa??-1)>(m.sb??-1), bWin=_isIG?false:(m.sb??-1)>(m.sa??-1);
+        const hasResult=_isIG?!!m.wName:(m.sa!=null&&m.sa!=='');
         // Feature 1: 시간 표시
         const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${m.time}</span>`:'';
         if(type==='sched'){
@@ -238,9 +243,9 @@ function rCal(C,T){
             <span style="font-size:11px;font-weight:700;color:${ti.bg}">${ti.lbl}</span>
             ${timeStr}
             <span class="ubadge${aWin&&hasResult?'':hasResult?' loser':''}" style="background:${ca}">${tA}</span>
-            ${hasResult?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`:`<span style="color:var(--gray-l);font-weight:700">vs</span>`}
+            ${hasResult&&!_isIG?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`:`<span style="color:var(--gray-l);font-weight:700">vs</span>`}
             <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tB}</span>
-            ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>'}
+            ${hasResult?(aWin?`<span style="font-size:12px;font-weight:800;color:${ca}">▶ ${tA} 승</span>`:bWin?`<span style="font-size:12px;font-weight:800;color:${cb}">▶ ${tB} 승</span>`:'<span style="color:var(--gray-l)">무승부</span>'):(!_isIG?'<span style="font-size:11px;color:var(--gray-l)">결과 미입력</span>':'')}
             <div style="margin-left:auto;display:flex;gap:4px;align-items:center" class="no-export">
               <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">📂 상세</button>
               <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유</button>
@@ -248,7 +253,7 @@ function rCal(C,T){
           </div>
           <div id="det-${detKey}" class="rec-detail-area" style="padding:12px 16px">
             ${detHTML}
-            ${hasResult?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px" class="no-export">
+            ${hasResult&&!_isIG?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px" class="no-export">
               <button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>
             </div>`:''}
           </div>

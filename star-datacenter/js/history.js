@@ -749,6 +749,24 @@ function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW){
 }
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
+  // ind/gj: sets 없이 wName/lName/map 구조
+  if(mode==='ind'||mode==='gj'){
+    const pW=players.find(p=>p.name===m.wName), pL=players.find(p=>p.name===m.lName);
+    const rW=pW?`<span class="rbadge r${pW.race}" style="font-size:10px">${pW.race}</span>`:'';
+    const rL=pL?`<span class="rbadge r${pL.race}" style="font-size:10px">${pL.race}</span>`:'';
+    const mapStr=m.map?`<span style="font-size:11px;color:var(--text3);white-space:nowrap">📍 ${m.map}</span>`:'';
+    const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
+    return `<div style="padding:6px 0">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px">WIN</span>
+        <span style="font-weight:700;font-size:13px">${m.wName||''}</span>${rW}
+        <span style="color:var(--gray-l);font-size:12px">vs</span>
+        <span style="font-size:13px;opacity:.7">${m.lName||''}</span>${rL}
+        ${mapStr}
+      </div>
+      ${memoStr}
+    </div>`;
+  }
   if(!m.sets||!m.sets.length) return '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>';
   let h='';
   m.sets.forEach((set,si)=>{
