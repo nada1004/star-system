@@ -304,7 +304,16 @@ function generateChatbotResponse(query){
   if(q.includes('개인전')){
     return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: <스트리머 이름> 개인전 기록';
   }
-  if(q.includes('대회')){
+  if(q.includes('끝장전')){
+    return '🔥 끝장전 기록을 보려면 "선수명 끝장전 기록"이라고 입력하세요.\n예: <스트리머 이름> 끝장전 기록';
+  }
+  if(q.includes('ck')||q.includes('대학ck')){
+    return '🤝 대학CK 기록을 보려면 "선수명 ck 기록"이라고 입력하세요.\n예: <스트리머 이름> ck 기록';
+  }
+  if(q.includes('시빌원')){
+    return '🏛️ 시빌원 기록을 보려면 "선수명 시빌원 기록"이라고 입력하세요.\n예: <스트리머 이름> 시빌원 기록';
+  }
+  if(q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
     return '🏆 대회 기록을 보려면 "선수명 대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 대회 기록';
   }
   if(q.includes('티어대회')){
@@ -313,11 +322,23 @@ function generateChatbotResponse(query){
   if(q.includes('프로리그')){
     return '🏅 프로리그 기록을 보려면 "선수명 프로리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 프로리그 기록';
   }
+  if(q.includes('토너먼트')){
+    return '🏆 토너먼트 기록을 보려면 "선수명 토너먼트 기록"이라고 입력하세요.\n예: <스트리머 이름> 토너먼트 기록';
+  }
+  if(q.includes('조별리그')){
+    return '📋 조별리그 기록을 보려면 "선수명 조별리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 조별리그 기록';
+  }
+  if(q.includes('팀전')){
+    return '👥 팀전 기록을 보려면 "선수명 팀전 기록"이라고 입력하세요.\n예: <스트리머 이름> 팀전 기록';
+  }
+  if(q.includes('일반')){
+    return '📝 일반 기록을 보려면 "선수명 일반 기록"이라고 입력하세요.\n예: <스트리머 이름> 일반 기록';
+  }
   if(q.includes('랭킹')||q.includes('순위')){
     return '📊 랭킹은 상단 탭의 "티어 순위표"에서 확인할 수 있습니다.';
   }
   if(q.includes('도움')||q.includes('help')||q.includes('?')){
-    return '📖 사용법:\n• "<스트리머 이름> 기록" - 선수 전체 기록\n• "<스트리머 이름> 미니대전 성적" - 미니대전 기록\n• "<스트리머 이름> 대학대전 기록" - 대학대전 기록\n• "<스트리머 이름> 개인전 기록" - 개인전 기록\n• "<스트리머 이름> 대회 기록" - 대회 기록\n• "<스트리머 이름> 티어대회 기록" - 티어대회 기록\n• "<스트리머 이름> 프로리그 기록" - 프로리그 기록';
+    return '📖 사용법:\n• "<스트리머 이름> 기록" - 선수 전체 기록\n• "<스트리머 이름> 미니대전 성적" - 미니대전 기록\n• "<스트리머 이름> 대학대전 기록" - 대학대전 기록\n• "<스트리머 이름> 개인전 기록" - 개인전 기록\n• "<스트리머 이름> 끝장전 기록" - 끝장전 기록\n• "<스트리머 이름> ck 기록" - 대학CK 기록\n• "<스트리머 이름> 시빌원 기록" - 시빌원 기록\n• "<스트리머 이름> 대회 기록" - 대회 기록\n• "<스트리머 이름> 티어대회 기록" - 티어대회 기록\n• "<스트리머 이름> 프로리그 기록" - 프로리그 기록\n• "<스트리머 이름> 토너먼트 기록" - 토너먼트 기록\n• "<스트리머 이름> 조별리그 기록" - 조별리그 기록\n• "<스트리머 이름> 팀전 기록" - 팀전 기록\n• "<스트리머 이름> 일반 기록" - 일반 기록';
   }
   
   return '🤔 질문을 이해하지 못했습니다.\n• "<스트리머 이름> 기록"\n• "<스트리머 이름> 미니대전 성적"\n• "도움" - 사용법 보기';
@@ -492,6 +513,208 @@ function formatPlayerProRecord(player){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   let info='🏅 '+player.name+' 프로리그 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerGJRecord(player){
+  const gjM=typeof gjM!=='undefined'?gjM:[];
+  const playerMatches=gjM.filter(m=>m.wName===player.name||m.lName===player.name);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 끝장전 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>m.wName===player.name).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🔥 '+player.name+' 끝장전 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.wName===player.name?m.lName:m.wName;
+    const result=m.wName===player.name?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerCKRecord(player){
+  const ckM=typeof ckM!=='undefined'?ckM:[];
+  const playerMatches=ckM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 대학CK 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🤝 '+player.name+' 대학CK 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerSevilRecord(player){
+  const univM=typeof univM!=='undefined'?univM:[];
+  const playerMatches=univM.filter(m=>(m.p1===player.name||m.p2===player.name)&&(m.type==='시빌원'||m.stage==='시빌원'));
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🏛️ '+player.name+' 시빌원 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerTournamentRecord(player){
+  const allMatches=[];
+  if(typeof compM!=='undefined') allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof ttM!=='undefined') allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof proM!=='undefined') allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 토너먼트 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🏆 '+player.name+' 토너먼트 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerGroupRecord(player){
+  const allMatches=[];
+  if(typeof compM!=='undefined') allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof ttM!=='undefined') allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof proM!=='undefined') allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 조별리그 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='📋 '+player.name+' 조별리그 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerTeamRecord(player){
+  const proM=typeof proM!=='undefined'?proM:[];
+  const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='팀전'||m.format==='팀전');
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 팀전 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='👥 '+player.name+' 팀전 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerNormalRecord(player){
+  const proM=typeof proM!=='undefined'?proM:[];
+  const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='일반'||m.format==='일반'||!m.type&&!m.format);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 일반 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='📝 '+player.name+' 일반 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
