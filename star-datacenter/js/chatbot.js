@@ -640,32 +640,31 @@ function formatPlayerBasicInfo(player) {
   const safeUniv = escapeHtml(player.univ);
   
   if (player.photo) {
-    // 프로필 사진을 상단에, 정보를 하단에 배치
-    return `<div style="display:flex;flex-direction:column;align-items:center;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
-      <img src="${player.photo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:200px;height:200px;object-fit:cover;border-radius:12px;margin-bottom:20px;border:4px solid var(--blue)">
-      <div style="display:none;width:200px;height:200px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:64px;color:white;margin-bottom:20px;border:4px solid var(--blue)">👤</div>
-      <div style="text-align:center;width:100%">
-        <div style="font-size:28px;font-weight:700;color:var(--text);margin-bottom:8px">${safePlayerName}</div>
-        <div style="font-size:18px;color:var(--text2);margin-bottom:12px">${safeUniv}</div>
-        <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;font-size:15px;color:var(--text2)">
-          <span>🎖️ ${player.tier}</span>
-          <span>🎮 ${player.race}</span>
-          <span>⭐ ${player.elo}</span>
-        </div>
-        <div style="font-size:24px;font-weight:700;color:var(--blue);margin-bottom:12px">
-          ${player.win}승 ${player.loss}패 (${rate}%)
-        </div>
-        <div style="font-size:14px;color:var(--text3);margin-bottom:16px">
-          📝 총 ${total}경기
-        </div>
+    // 프로필 사진을 전체 배경으로, 정보를 카드 외부에 배치
+    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:200px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.6) 100%);border-radius:12px"></div>
+      <div style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;z-index:1">
       </div>
-      <div style="width:100%;border-top:1px solid var(--border);padding-top:16px;margin-top:12px">
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-          <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:8px 16px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">최근전적</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:8px 16px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">통계</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:8px 16px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">이번달</button>
-        </div>
+    </div>
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:4px">${safePlayerName}</div>
+      <div style="font-size:16px;color:var(--text2);margin-bottom:6px">${safeUniv}</div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:6px;font-size:14px;color:var(--text2)">
+        <span>🎖️${player.tier}</span>
+        <span>🎮${player.race}</span>
+        <span>⭐${player.elo}</span>
       </div>
+      <div style="font-size:20px;font-weight:700;color:var(--blue);margin-bottom:6px">
+        ${player.win}승 ${player.loss}패 (${rate}%)
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:10px">
+        총 ${total}경기
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">이번달</button>
     </div>`;
   }
   
