@@ -542,7 +542,13 @@ function formatPlayerMiniRecord(player, miniM){
   }
   
   // 날짜순 정렬 (최신순)
-  historyMatches=historyMatches.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+  try{
+    historyMatches=historyMatches.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+    console.log('Chatbot Debug - After sorting, first 3 matches:', historyMatches.slice(0, 3).map(h=>({date:h.date,map:h.map,result:h.result,opp:h.opp})));
+    console.log('Chatbot Debug - After sorting, last 3 matches:', historyMatches.slice(-3).map(h=>({date:h.date,map:h.map,result:h.result,opp:h.opp})));
+  }catch(e){
+    console.error('Chatbot Debug - Sorting error:', e);
+  }
   
   const wins=historyMatches.filter(h=>h.result==='승').length;
   const losses=historyMatches.filter(h=>h.result==='패').length;
@@ -556,6 +562,7 @@ function formatPlayerMiniRecord(player, miniM){
   info+='━━━━━━━━━━━━━━━━━━\n';
   
   const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  console.log('Chatbot Debug - Paginated matches to display:', paginatedMatches.slice(0, 3).map(h=>({date:h.date,map:h.map,result:h.result,opp:h.opp})));
   paginatedMatches.forEach(h=>{
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
