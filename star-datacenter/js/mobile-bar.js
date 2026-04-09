@@ -739,6 +739,10 @@ function formatPlayerTTRecord(player, ttM){
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  
+  return info;
+}
 function formatPlayerProRecord(player, proM){
   // player.history에서 프로리그 기록 추출 (스트리머 상세와 동일한 데이터 소스)
   const historyMatches=(player.history||[]).filter(h=>h.mode==='프로리그'||h.mode==='pro'||h.mode==='프로');
@@ -764,6 +768,10 @@ function formatPlayerProRecord(player, proM){
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  
+  return info;
+}
 function formatPlayerGJRecord(player, gjM){
   // player.history에서 끝장전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
   const historyMatches=(player.history||[]).filter(h=>h.mode==='끝장전'||h.mode==='gj'||h.mode==='결승');
