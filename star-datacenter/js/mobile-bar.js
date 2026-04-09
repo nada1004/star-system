@@ -314,7 +314,7 @@ function generateChatbotResponse(query){
   }
   
   // 선수 이름 + 기록 유형 입력된 경우
-  const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
+  const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌워|시빌원|ck|토너먼트|조별리그|팀전|일반|조별|총|토탈)/);
   console.log('Chatbot Debug - Pattern match result:', !!playerMatch, 'query:', query);
   if(playerMatch){
     const playerName=playerMatch[1];
@@ -334,32 +334,44 @@ function generateChatbotResponse(query){
       return formatPlayerUnivMatchRecord(player, univM);
     }else if(mode==='개인전'){
       return formatPlayerIndRecord(player);
-    }else if(mode==='끝장전'||q.includes('끝장전')){
+    }else if(mode==='끝장전'||q.includes('끝장전')&&!q.includes('프로리그')&&!q.includes('대회')){
       return formatPlayerGJRecord(player, gjM);
     }else if(mode==='ck'||q.includes('ck')){
       return formatPlayerCKRecord(player, ckM);
-    }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
-      // 대회 기록 검색 시 compM, ttM, proM 모두 포함
-      return formatPlayerCompRecord(player, compM, ttM, proM);
-    }else if(mode==='티어대회'||q.includes('티어대회')){
-      return formatPlayerTTRecord(player, ttM);
-    }else if(mode==='프로리'||q.includes('프로리그')){
-      return formatPlayerProRecord(player, proM);
-    }else if(mode==='시빌원'||q.includes('시빌원')){
+    }else if(mode==='시빌워'||mode==='시빌원'||q.includes('시빌')){
       return formatPlayerSevilRecord(player, univM);
+    }else if(q.includes('대회 조별리그')||q.includes('프로리그 대회 조별리그')){
+      return formatPlayerGroupRecord(player, compM, ttM, proM);
     }else if(mode==='토너먼트'||q.includes('토너먼트')){
       return formatPlayerTournamentRecord(player, compM, ttM, proM);
-    }else if(mode==='조별리그'||q.includes('조별리그')){
+    }else if(q.includes('티어대회 조별리그')){
       return formatPlayerGroupRecord(player, compM, ttM, proM);
+    }else if(mode==='조별리그'||mode==='조별'){
+      return formatPlayerGroupRecord(player, compM, ttM, proM);
+    }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')&&!q.includes('조별리그')&&!q.includes('토너먼트')&&!q.includes('끝장전')){
+      return formatPlayerCompRecord(player, compM, ttM, proM);
+    }else if(mode==='티어대회'||q.includes('티어대회')&&!q.includes('조별리그')){
+      return formatPlayerTTRecord(player, ttM);
+    }else if(q.includes('프로리그 일반')||q.includes('프로리그')&&q.includes('일반')){
+      return formatPlayerNormalRecord(player, proM);
+    }else if(q.includes('프로리그 끝장전')||q.includes('프로리그')&&q.includes('끝장전')&&!q.includes('대회')){
+      return formatPlayerGJRecord(player, gjM);
+    }else if(q.includes('프로리그 대회 토탈')||q.includes('프로리그 대회')&&(q.includes('토탈')||q.includes('총'))){
+      return formatPlayerCompRecord(player, compM, ttM, proM);
+    }else if(q.includes('프로리그 대회 조별리그')){
+      return formatPlayerGroupRecord(player, compM, ttM, proM);
+    }else if(q.includes('대회 끝장전')||q.includes('대회')&&q.includes('끝장전')){
+      return formatPlayerGJRecord(player, gjM);
     }else if(mode==='팀전'||q.includes('팀전')){
       return formatPlayerTeamRecord(player, proM);
-    }else if(mode==='일반'||q.includes('일반')){
+    }else if(mode==='일반'||q.includes('일반')&&!q.includes('프로리그')){
       return formatPlayerNormalRecord(player, proM);
+    }else if(mode==='프로리'||q.includes('프로리그')&&!q.includes('일반')&&!q.includes('끝장전')&&!q.includes('대회')&&!q.includes('조별리그')&&!q.includes('팀전')){
+      return formatPlayerProRecord(player, proM);
+    }else{
+      return '❌ 지원하지 않는 기록 유형입니다.';
     }
-  }
-  
-  // 간단한 명령어
-  if(q.includes('미니대전')||q.includes('미니')){
+  }if(q.includes('미니대전')||q.includes('미니')){
     return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: <스트리머 이름> 미니대전 성적';
   }
   if(q.includes('대학대전')){
@@ -1131,16 +1143,35 @@ function formatPlayerStats(player){
 function formatRecordMenu(playerName){
   let menu='👤 '+playerName+' - 어떤 기록을 보시겠습니까?\n\n';
   menu+='<div class="chatbot-menu" style="display:flex;flex-direction:column;gap:8px;margin-top:8px">\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">5. 대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">6. 티어대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">7. 프로리그 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">8. 대학CK 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">9. 끝장전 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:4px">개인전탭</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">개인전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">끝장전 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">대학대전탭</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 시빌워 기록\')">시빌워 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">미니대전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">대학대전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">대학CK 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">대회탭</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 조별리그 기록\')">대회 조별리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 토너먼트 기록\')">토너먼트 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">티어대회 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">종합 기록</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 조별리그 기록\')">티어대회 조별리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 조별리그 기록\')">조별리그 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">프로리그</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 일반 기록\')">프로리그 일반 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 끝장전 기록\')">프로리그 끝장전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 대회 토탈 기록\')">프로리그 대회 토탈 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 대회 조별리그 기록\')">프로리그 대회 조별리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 팀전 기록\')">팀전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 끝장전 기록\')">대회 끝장전 기록</button>\n';
+  
   menu+='</div>';
-  menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">번호나 버튼을 클릭하세요</div>';
+  menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">버튼을 클릭하세요</div>';
   return menu;
 }
