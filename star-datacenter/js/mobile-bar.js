@@ -421,13 +421,37 @@ function formatPlayerInfo(player){
   return info;
 }
 function formatPlayerMiniRecord(player, miniM){
-  const playerMatches=miniM.filter(m=>m.p1===player.name||m.p2===player.name);
+  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, miniM: miniM.length });
+  if(miniM.length > 0){
+    console.log('Chatbot Debug - miniM[0]:', miniM[0]);
+  }
+  
+  const playerMatches=miniM.filter(m=>{
+    if(m.p1){
+      return m.p1===player.name||m.p2===player.name;
+    }else{
+      const teamA=m.teamAMembers||[];
+      const teamB=m.teamBMembers||[];
+      return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
+    }
+  });
+  
+  console.log('Chatbot Debug - miniMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const wins=playerMatches.filter(m=>{
+    if(m.p1){
+      return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
+    }else{
+      const teamA=m.teamAMembers||[];
+      const teamB=m.teamBMembers||[];
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
+      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
+    }
+  }).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
@@ -435,14 +459,23 @@ function formatPlayerMiniRecord(player, miniM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
-    const opp=m.p1===player.name?m.p2:m.p1;
-    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  playerMatches.slice(-10).reverse().forEach(m=>{
+    if(m.p1){
+      const opp=m.p1===player.name?m.p2:m.p1;
+      const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+    }else{
+      const teamA=m.teamAMembers||[];
+      const teamB=m.teamBMembers||[];
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
+      const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
+      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
+      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    }
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -479,7 +512,7 @@ function formatPlayerUnivMatchRecord(player, univM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -494,8 +527,8 @@ function formatPlayerUnivMatchRecord(player, univM){
     }
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -514,12 +547,12 @@ function formatPlayerIndRecord(player){
   info+='📊 '+player.win+'승 '+player.loss+'패\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  player.history.slice(-5).reverse().forEach(h=>{
+  player.history.slice(-10).reverse().forEach(h=>{
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  if(player.history.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(player.history.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -589,7 +622,7 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -604,8 +637,8 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -634,7 +667,7 @@ function formatPlayerTTRecord(player, ttM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -643,8 +676,8 @@ function formatPlayerTTRecord(player, ttM){
     info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -673,7 +706,7 @@ function formatPlayerProRecord(player, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -682,8 +715,8 @@ function formatPlayerProRecord(player, proM){
     info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -739,7 +772,7 @@ function formatPlayerCKRecord(player, ckM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -748,8 +781,8 @@ function formatPlayerCKRecord(player, ckM){
     info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -819,7 +852,7 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -834,8 +867,8 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -878,7 +911,7 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -893,8 +926,8 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -923,7 +956,7 @@ function formatPlayerTeamRecord(player, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -932,8 +965,8 @@ function formatPlayerTeamRecord(player, proM){
     info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -962,7 +995,7 @@ function formatPlayerNormalRecord(player, proM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -971,8 +1004,8 @@ function formatPlayerNormalRecord(player, proM){
     info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
