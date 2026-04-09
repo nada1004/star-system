@@ -59,7 +59,7 @@ function saveChatHistory() {
 
 // 마크다운 렌더링
 function renderMarkdown(text) {
-  if (!text) return '';
+  if (!text || typeof text !== 'string') return '';
   
   // HTML 태그가 포함된 경우 그대로 반환
   if (text.includes('<')) return text;
