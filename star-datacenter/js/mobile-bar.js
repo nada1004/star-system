@@ -349,8 +349,6 @@ function generateChatbotResponse(query){
       return formatPlayerGroupRecord(player, compM, ttM, proM);
     }else if(mode==='토너먼트'||q.includes('토너먼트')){
       return formatPlayerTournamentRecord(player, compM, ttM, proM);
-    }else if(q.includes('티어대회 조별리그')){
-      return formatPlayerGroupRecord(player, compM, ttM, proM);
     }else if(mode==='조별리그'||mode==='조별'){
       return formatPlayerGroupRecord(player, compM, ttM, proM);
     }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')&&!q.includes('조별리그')&&!q.includes('토너먼트')&&!q.includes('끝장전')){
@@ -361,14 +359,8 @@ function generateChatbotResponse(query){
       return formatPlayerNormalRecord(player, proM);
     }else if(q.includes('프로리그 끝장전')||q.includes('프로리그')&&q.includes('끝장전')&&!q.includes('대회')){
       return formatPlayerProRecord(player, proM);
-    }else if(q.includes('프로리그 대회 토탈')||q.includes('프로리그 대회')&&(q.includes('토탈')||q.includes('총'))){
-      return formatPlayerCompRecord(player, compM, ttM, proM);
     }else if(q.includes('프로리그 대회 조별리그')){
       return formatPlayerGroupRecord(player, [], [], proM);
-    }else if(q.includes('대회 끝장전')||q.includes('대회')&&q.includes('끝장전')){
-      return formatPlayerGJRecord(player, gjM);
-    }else if(mode==='팀전'||q.includes('팀전')){
-      return formatPlayerTeamRecord(player, proM);
     }else if(mode==='일반'||q.includes('일반')&&!q.includes('프로리그')){
       return formatPlayerNormalRecord(player, proM);
     }else if(mode==='프로리'||q.includes('프로리그')&&!q.includes('일반')&&!q.includes('끝장전')&&!q.includes('대회')&&!q.includes('조별리그')&&!q.includes('팀전')){
@@ -620,7 +612,25 @@ function formatPlayerUnivMatchRecord(player, univM){
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | 대학대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | 대학대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }
   });
   
