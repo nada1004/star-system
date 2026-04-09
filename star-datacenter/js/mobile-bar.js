@@ -296,25 +296,19 @@ function generateChatbotResponse(query){
     miniM: miniM.length
   });
   
-  // 선수 이름만 입력된 경우 - 메뉴와 통계 표시
+  // 선수 이름만 입력된 경우 - 메뉴만 표시
   const playerOnlyMatch=query.match(/^([^\s]+)$/);
   if(playerOnlyMatch){
     const playerName=playerOnlyMatch[1];
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
     if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
     
-    // 메뉴와 통계 표시
-    const menu=formatRecordMenu(playerName);
-    const stats=formatPlayerStats(player);
-    
-    // 메뉴에서 "상세 기록 보기" 버튼 제거 (이미 메뉴가 있으므로)
-    const statsWithoutButton=stats.replace(/<div class="chatbot-menu">\n<button class="chatbot-menu-btn" onclick="window\.sendChatbotMessage\('[^']+' 기록'\)">상세 기록 보기<\/button>\n<\/div>/g, '');
-    
-    return menu+'\n\n'+statsWithoutButton;
+    // 메뉴만 표시
+    return formatRecordMenu(playerName);
   }
   
   // 선수 이름 + 기록 유형 입력된 경우
-  const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌워|시빌원|ck|토너먼트|조별리그|팀전|일반|조별|총|토탈)/);
+  const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌워|시빌원|ck|토너먼트|조별리그|팀전|일반|조별|총|토탈|통계|10)/);
   console.log('Chatbot Debug - Pattern match result:', !!playerMatch, 'query:', query);
   if(playerMatch){
     const playerName=playerMatch[1];
@@ -326,7 +320,9 @@ function generateChatbotResponse(query){
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
     if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
     
-    if(mode==='기록'||mode==='정보'||mode==='전적'){
+    if(mode==='통계'||mode==='10'){
+      return formatPlayerStats(player);
+    }else if(mode==='기록'||mode==='정보'||mode==='전적'){
       return formatPlayerInfo(player);
     }else if(mode==='미니대전'||mode==='성적'){
       return formatPlayerMiniRecord(player, miniM);
@@ -1170,6 +1166,9 @@ function formatRecordMenu(playerName){
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 대회 조별리그 기록\')">프로리그 대회 조별리그 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 팀전 기록\')">팀전 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 끝장전 기록\')">대회 끝장전 기록</button>\n';
+  
+  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">통계</div>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#3b82f6;border:1px solid #3b82f6;border-radius:8px;font-size:14px;font-weight:500;color:#ffffff;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 통계\')">10. 통계</button>\n';
   
   menu+='</div>';
   menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">버튼을 클릭하세요</div>';
