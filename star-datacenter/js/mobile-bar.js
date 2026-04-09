@@ -557,6 +557,7 @@ function formatPlayerUnivMatchRecord(player, univM){
   return info;
 }
 function formatPlayerIndRecord(player){
+  console.log('Chatbot Debug - formatPlayerIndRecord:', { playerName: player.name, history: player.history ? player.history.length : 0, win: player.win, loss: player.loss });
   if(!player.history||player.history.length===0){
     return '📭 '+player.name+'의 개인전 기록이 없습니다.';
   }
@@ -745,7 +746,14 @@ function formatPlayerProRecord(player, proM){
   return info;
 }
 function formatPlayerGJRecord(player, gjM){
+  console.log('Chatbot Debug - formatPlayerGJRecord:', { playerName: player.name, gjM: gjM.length });
+  if(gjM.length > 0){
+    console.log('Chatbot Debug - gjM[0]:', gjM[0]);
+  }
+  
   const playerMatches=gjM.filter(m=>m.wName===player.name||m.lName===player.name);
+  
+  console.log('Chatbot Debug - gjMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 끝장전 기록이 없습니다.';
@@ -759,24 +767,31 @@ function formatPlayerGJRecord(player, gjM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const opp=m.wName===player.name?m.lName:m.wName;
     const result=m.wName===player.name?'승':'패';
     info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
 }
 function formatPlayerCKRecord(player, ckM){
+  console.log('Chatbot Debug - formatPlayerCKRecord:', { playerName: player.name, ckM: ckM.length });
+  if(ckM.length > 0){
+    console.log('Chatbot Debug - ckM[0]:', ckM[0]);
+  }
+  
   const playerMatches=ckM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   });
+  
+  console.log('Chatbot Debug - ckMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 대학CK 기록이 없습니다.';
@@ -811,7 +826,14 @@ function formatPlayerCKRecord(player, ckM){
   return info;
 }
 function formatPlayerSevilRecord(player, univM){
+  console.log('Chatbot Debug - formatPlayerSevilRecord:', { playerName: player.name, univM: univM.length });
+  if(univM.length > 0){
+    console.log('Chatbot Debug - univM[0]:', univM[0]);
+  }
+  
   const playerMatches=univM.filter(m=>(m.p1===player.name||m.p2===player.name)&&(m.type==='시빌원'||m.stage==='시빌원'));
+  
+  console.log('Chatbot Debug - sevilMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
@@ -825,14 +847,14 @@ function formatPlayerSevilRecord(player, univM){
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-5).reverse().forEach(m=>{
+  playerMatches.slice(-10).reverse().forEach(m=>{
     const opp=m.p1===player.name?m.p2:m.p1;
     const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>5){
-    info+='... (최근 5경기만 표시)';
+  if(playerMatches.length>10){
+    info+='... (최근 10경기만 표시)';
   }
   
   return info;
@@ -1177,7 +1199,7 @@ function formatRecordMenu(playerName){
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 끝장전 기록\')">대회 끝장전 기록</button>\n';
   
   menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">통계</div>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#3b82f6;border:1px solid #3b82f6;border-radius:8px;font-size:14px;font-weight:500;color:#ffffff;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 통계\')">10. 통계</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 통계\')">통계</button>\n';
   
   menu+='</div>';
   menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">버튼을 클릭하세요</div>';
