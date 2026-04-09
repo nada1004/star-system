@@ -525,8 +525,19 @@ function formatPlayerInfo(player){
 function formatPlayerMiniRecord(player, miniM){
   console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0 });
   
+  // 연도 필터 적용 (스트리머 상세와 동일)
+  const _year=window._playerModalYear||'';
+  console.log('Chatbot Debug - Year filter:', _year||'none');
+  
   // player.history에서 미니대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
   let historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
+  
+  // 연도 필터 적용
+  if(_year){
+    historyMatches=historyMatches.filter(h=>(h.date||'').startsWith(_year));
+    console.log('Chatbot Debug - After year filter, matches:', historyMatches.length);
+  }
+  
   console.log('Chatbot Debug - history mini matches:', historyMatches.length);
   
   if(historyMatches.length===0){
