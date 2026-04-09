@@ -244,12 +244,12 @@ function sendMessage() {
   }
   
   // 챗봇 응답 생성
-  setTimeout(() => {
+  setTimeout(async () => {
     // 로딩 인디케이터 제거
     const loadingEl = document.getElementById('chatbot-loading');
     if (loadingEl) loadingEl.remove();
     
-    const response = generateResponse(message);
+    const response = await generateResponse(message);
     addMessage('bot', response);
   }, 300);
 }
