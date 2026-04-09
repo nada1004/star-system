@@ -955,15 +955,16 @@ function formatUniversityInfo(univName) {
   
   let result = '';
   
-  // 대학 로고를 상단에, 정보를 하단에 배치
+  // 대학 로고를 전체 배경으로, 정보를 카드 외부에 배치
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<div style="display:flex;flex-direction:column;align-items:center;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
-      <img src="${UNIV_ICONS[univName]}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:120px;height:120px;object-fit:contain;border-radius:12px;margin-bottom:16px;border:4px solid var(--blue)">
-      <div style="display:none;width:120px;height:120px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:16px;border:4px solid var(--blue)">🏫</div>
-      <div style="text-align:center">
-        <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">${univName}</div>
-        <div style="font-size:16px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:6px 16px;border-radius:20px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
+    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:12px;margin-bottom:8px;min-height:150px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.3) 100%);border-radius:12px"></div>
+      <div style="position:relative;height:150px;display:flex;align-items:center;justify-content:center;z-index:1">
       </div>
+    </div>
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px">${univName}</div>
+      <div style="font-size:14px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:4px 12px;border-radius:16px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
     </div>\n\n`;
   } else {
     result += `🏫 ${univName} 대학 정보\n\n`;
@@ -974,7 +975,8 @@ function formatUniversityInfo(univName) {
   result += `👤 선수 목록:\n`;
   
   univPlayers.forEach(p => {
-    result += `• ${p.name} (${p.tier}, ${p.race})\n`;
+    const safeName = escapeHtml(p.name).replace(/'/g, "\\'");
+    result += `• <span onclick="sendQuickMessage('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(p.name)}</span> (${p.tier}, ${p.race})\n`;
   });
   
   return result;
