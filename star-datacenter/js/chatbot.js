@@ -362,15 +362,29 @@ function generateResponse(userMessage) {
   }
   
   // 선수 이름 + 월 전적
-  const monthMatch = userMessage.match(/([^\s]+)\s+(\d+월)\s+전적/);
+  const monthMatch = userMessage.match(/([^\s]+)\s+(\d+)월\s+전적/i);
   if (monthMatch) {
     const playerName = monthMatch[1];
     const month = monthMatch[2];
     let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
     if (!player) player = findSimilarPlayer(playerName);
-    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
-    if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMonthRecord(player, month);
-    return formatPlayerMonthRecord(player, month);
+    if (player) {
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMonthRecord(player, month);
+      return formatPlayerMonthRecord(player, month);
+    }
+  }
+  
+  // 선수 이름 + 이번달 전적 / 이번년도 전적
+  const thisMonthMatch = userMessage.match(/([^\s]+)\s+(이번달|이번년도)\s+전적/i);
+  if (thisMonthMatch) {
+    const playerName = thisMonthMatch[1];
+    const period = thisMonthMatch[2];
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    if (!player) player = findSimilarPlayer(playerName);
+    if (player) {
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerPeriodRecord(player, period);
+      return formatPlayerPeriodRecord(player, period);
+    }
   }
   
   // 선수 이름 + 종족전
@@ -543,29 +557,32 @@ function formatPlayerBasicInfo(player) {
   const safePlayerName = escapeHtml(player.name);
   
   if (player.photo) {
-    // 프로필 사진을 전체 배경으로 표시 (가독성 개선)
-    return `<div style="position:relative;padding:24px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:180px">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.85) 100%);border-radius:12px"></div>
-      <div style="position:relative;color:white;text-align:center;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,0.5)">
-        <div style="font-size:22px;font-weight:700;margin-bottom:8px">${safePlayerName}</div>
-        <div style="font-size:15px;opacity:1;background:rgba(0,0,0,0.3);padding:4px 12px;border-radius:20px;display:inline-block;margin-bottom:8px">${player.univ}</div>
-        <div style="font-size:13px;margin-top:8px;opacity:1">
-          🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
+    // 프로필 사진과 정보 분리된 레이아웃
+    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+      <img src="${player.photo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid var(--blue);margin-bottom:12px">
+      <div style="display:none;width:120px;height:120px;background:var(--blue);border-radius:50%;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:12px">👤</div>
+      <div style="text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px">${safePlayerName}</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:8px">${player.univ}</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:13px;color:var(--text2)">
+          <span>🎖️ ${player.tier}</span>
+          <span>🎮 ${player.race}</span>
+          <span>⭐ ${player.elo}</span>
         </div>
-        <div style="font-size:16px;margin-top:10px;font-weight:700;background:rgba(255,255,255,0.2);padding:6px 16px;border-radius:8px;display:inline-block">
+        <div style="font-size:16px;font-weight:600;color:var(--blue);margin-bottom:12px">
           ${player.win}승 ${player.loss}패 (${rate}%)
         </div>
       </div>
-    </div>
-    <div style="margin-top:10px">
-      <div style="font-size:13px;color:var(--text3)">📝 총 ${total}경기</div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
-        <button onclick="sendQuickMessage('${safePlayerName} ${currentMonthName} 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">${currentMonthName} 전적</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
+      <div style="width:100%;border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+        <div style="font-size:13px;color:var(--text3);text-align:center;margin-bottom:8px">📝 총 ${total}경기</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+          <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
+        </div>
       </div>
     </div>`;
   }
@@ -656,6 +673,55 @@ function formatPlayerStats(player) {
   }
   
   return stats;
+}
+
+// 선수 기간별 전적 (이번달, 이번년도)
+function formatPlayerPeriodRecord(player, period) {
+  if (!player.history || player.history.length === 0) {
+    return `📭 ${player.name}의 경기 기록이 없습니다.`;
+  }
+  
+  const now = new Date();
+  let filteredGames = [];
+  let periodName = '';
+  
+  if (period === '이번달') {
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    filteredGames = player.history.filter(h => {
+      const gameDate = new Date(h.date);
+      return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
+    });
+    periodName = `${currentMonth + 1}월`;
+  } else if (period === '이번년도') {
+    const currentYear = now.getFullYear();
+    filteredGames = player.history.filter(h => {
+      const gameDate = new Date(h.date);
+      return gameDate.getFullYear() === currentYear;
+    });
+    periodName = `${currentYear}년`;
+  }
+  
+  if (filteredGames.length === 0) {
+    return `📭 ${player.name}의 ${periodName} 경기 기록이 없습니다.`;
+  }
+  
+  // 날짜 기준 정렬 (최신순)
+  const sortedGames = [...filteredGames].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const wins = sortedGames.filter(h => h.result === '승').length;
+  const losses = sortedGames.length - wins;
+  const rate = sortedGames.length > 0 ? ((wins / sortedGames.length) * 100).toFixed(1) : 0;
+  
+  let result = `📊 ${player.name} ${periodName} 전적\n\n`;
+  result += `승: ${wins} | 패: ${losses} | 승률: ${rate}%\n`;
+  result += `총 경기 수: ${sortedGames.length}경기\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  sortedGames.slice(0, 30).forEach(h => {
+    result += `📅 ${h.date} | ${h.map} | ${h.result} vs ${h.opp}\n`;
+  });
+  
+  return result;
 }
 
 // 선수 월별 전적
