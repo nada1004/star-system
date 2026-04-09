@@ -641,23 +641,23 @@ function formatPlayerBasicInfo(player) {
   
   if (player.photo) {
     // 프로필 사진을 전체 배경으로, 정보를 카드 외부에 배치
-    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:2px;min-height:180px">
-      <div style="position:relative;height:180px;display:flex;align-items:center;justify-content:center">
+    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:1px;min-height:120px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+      <div style="position:relative;height:120px;display:flex;align-items:center;justify-content:center">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:2px;line-height:1">
-      <div style="font-size:18px;font-weight:700;color:var(--text)">${safePlayerName} <span style="font-size:12px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
-      <div style="font-size:11px;color:var(--text2)">
+    <div style="text-align:center;margin-bottom:1px;line-height:1">
+      <div style="font-size:16px;font-weight:800;color:var(--text)">${safePlayerName} <span style="font-size:11px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
+      <div style="font-size:10px;color:var(--text2)">
         🎖️${player.tier} 🎮${player.race} ⭐${player.elo}
       </div>
-      <div style="font-size:14px;font-weight:700;color:var(--blue)">
-        ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:11px;color:var(--text3);font-weight:400">총 ${total}경기</span>
+      <div style="font-size:13px;font-weight:800;color:#2563eb">
+        ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:10px;color:var(--text3);font-weight:400">총 ${total}경기</span>
       </div>
     </div>
-    <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:2px">
-      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">최근전적</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">통계</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">이번달</button>
+    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:1px">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">이번달</button>
     </div>`;
   }
   
@@ -950,13 +950,13 @@ function formatUniversityInfo(univName) {
   
   // 대학 로고를 전체 배경으로, 정보를 카드 외부에 배치
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:12px;margin-bottom:2px;min-height:150px">
-      <div style="position:relative;height:150px;display:flex;align-items:center;justify-content:center">
+    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:8px;margin-bottom:1px;min-height:100px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+      <div style="position:relative;height:100px;display:flex;align-items:center;justify-content:center">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:2px">
-      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px">${univName}</div>
-      <div style="font-size:12px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:2px 10px;border-radius:12px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
+    <div style="text-align:center;margin-bottom:1px">
+      <div style="font-size:16px;font-weight:800;color:var(--text)">${univName}</div>
+      <div style="font-size:11px;color:#2563eb;font-weight:700;background:rgba(37,99,235,0.1);padding:2px 8px;border-radius:8px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
     </div>\n\n`;
   } else {
     result += `🏫 ${univName} 대학 정보\n\n`;
@@ -1052,8 +1052,9 @@ function createWinRateChart(player) {
         labels: ['승', '패'],
         datasets: [{
           data: [player.win, player.loss],
-          backgroundColor: ['#3b82f6', '#ef4444'],
-          borderWidth: 0
+          backgroundColor: ['#2563eb', '#ef4444'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
         }]
       },
       options: {
@@ -1063,8 +1064,10 @@ function createWinRateChart(player) {
           legend: {
             position: 'bottom',
             labels: {
-              font: { size: 12 },
-              padding: 10
+              font: { size: 11, weight: '600' },
+              padding: 8,
+              usePointStyle: true,
+              pointStyle: 'circle'
             }
           },
           tooltip: {
@@ -1082,8 +1085,8 @@ function createWinRateChart(player) {
     });
   }, 100);
   
-  return `<div style="margin:16px 0">
-    <canvas id="${chartId}" style="max-height:200px"></canvas>
+  return `<div style="margin:8px 0">
+    <canvas id="${chartId}" style="max-height:180px"></canvas>
   </div>`;
 }
 
@@ -1124,10 +1127,14 @@ function createTrendChart(player) {
         datasets: [{
           label: '승률 (%)',
           data: winRates,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.15)',
           fill: true,
-          tension: 0.4
+          tension: 0.4,
+          pointBackgroundColor: '#2563eb',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 4
         }]
       },
       options: {
@@ -1142,10 +1149,22 @@ function createTrendChart(player) {
           y: {
             beginAtZero: true,
             max: 100,
+            grid: {
+              color: 'rgba(0,0,0,0.05)'
+            },
             ticks: {
+              font: { size: 10 },
               callback: function(value) {
                 return value + '%';
               }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 9 }
             }
           }
         }
@@ -1153,9 +1172,9 @@ function createTrendChart(player) {
     });
   }, 100);
   
-  return `<div style="margin:16px 0">
-    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">📈 최근 승률 추세</div>
-    <canvas id="${chartId}" style="max-height:200px"></canvas>
+  return `<div style="margin:8px 0">
+    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">📈 최근 승률 추세</div>
+    <canvas id="${chartId}" style="max-height:160px"></canvas>
   </div>`;
 }
 
