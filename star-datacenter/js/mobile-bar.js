@@ -444,7 +444,7 @@ function formatPlayerInfo(player){
   return info;
 }
 function formatPlayerMiniRecord(player, miniM){
-  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, miniM: miniM.length });
+  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, miniM: miniM.length, playerUniv: player.univ });
   if(miniM.length > 0){
     console.log('Chatbot Debug - miniM[0]:', miniM[0]);
   }
@@ -452,11 +452,15 @@ function formatPlayerMiniRecord(player, miniM){
   const playerMatches=miniM.filter(m=>{
     if(m.p1){
       return m.p1===player.name||m.p2===player.name;
-    }else{
+    }else if(m.teamAMembers&&m.teamBMembers){
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
       return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
+    }else if(m.a&&m.b){
+      // 팀 이름으로 매칭 (선수의 대학/팀 확인)
+      return m.a===player.univ||m.b===player.univ;
     }
+    return false;
   });
   
   console.log('Chatbot Debug - miniMatches:', playerMatches.length);
@@ -468,17 +472,21 @@ function formatPlayerMiniRecord(player, miniM){
   const wins=playerMatches.filter(m=>{
     if(m.p1){
       return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
-    }else{
+    }else if(m.teamAMembers&&m.teamBMembers){
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
+    }else if(m.a&&m.b){
+      const inTeamA=m.a===player.univ;
+      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
     }
+    return false;
   }).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
-  let info='⚡ '+player.name+' 미니대전 성적\n';
+  let info='⚡ '+player.name+' 미니대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
@@ -486,12 +494,17 @@ function formatPlayerMiniRecord(player, miniM){
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
-    }else{
+      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
+    }else if(m.teamAMembers&&m.teamBMembers){
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
+      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
+      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    }else if(m.a&&m.b){
+      const inTeamA=m.a===player.univ;
+      const oppTeam=inTeamA?m.b:m.a;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
       info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
     }
@@ -826,12 +839,12 @@ function formatPlayerCKRecord(player, ckM){
   return info;
 }
 function formatPlayerSevilRecord(player, univM){
-  console.log('Chatbot Debug - formatPlayerSevilRecord:', { playerName: player.name, univM: univM.length });
+  console.log('Chatbot Debug - formatPlayerSevilRecord:', { playerName: player.name, playerUniv: player.univ, univM: univM.length });
   if(univM.length > 0){
     console.log('Chatbot Debug - univM[0]:', univM[0]);
   }
   
-  const playerMatches=univM.filter(m=>m.a===player.name||m.b===player.name);
+  const playerMatches=univM.filter(m=>m.a===player.univ||m.b===player.univ);
   
   console.log('Chatbot Debug - sevilMatches:', playerMatches.length);
   
@@ -839,7 +852,7 @@ function formatPlayerSevilRecord(player, univM){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>(m.a===player.name&&m.sa>m.sb)||(m.b===player.name&&m.sb>m.sa)).length;
+  const wins=playerMatches.filter(m=>(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
@@ -848,8 +861,8 @@ function formatPlayerSevilRecord(player, univM){
   info+='━━━━━━━━━━━━━━━━━━\n';
   
   playerMatches.slice(-10).reverse().forEach(m=>{
-    const opp=m.a===player.name?m.b:m.a;
-    const result=(m.a===player.name&&m.sa>m.sb)||(m.b===player.name&&m.sb>m.sa)?'승':'패';
+    const opp=m.a===player.univ?m.b:m.a;
+    const result=(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
   });
   
