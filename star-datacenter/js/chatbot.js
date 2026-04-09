@@ -142,7 +142,7 @@ function renderChatHistory() {
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'bot-message'}`;
     
-    const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain">';
+    const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px">';
     const content = msg.content;
     
     // 타임스탬프 형식화 (없으면 빈 문자열)
