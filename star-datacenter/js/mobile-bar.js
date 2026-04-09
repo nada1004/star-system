@@ -296,15 +296,21 @@ function generateChatbotResponse(query){
     miniM: miniM.length
   });
   
-  // 선수 이름만 입력된 경우 - 통계 표시
+  // 선수 이름만 입력된 경우 - 메뉴와 통계 표시
   const playerOnlyMatch=query.match(/^([^\s]+)$/);
   if(playerOnlyMatch){
     const playerName=playerOnlyMatch[1];
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
     if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
     
-    // 통계 표시
-    return formatPlayerStats(player);
+    // 메뉴와 통계 표시
+    const menu=formatRecordMenu(playerName);
+    const stats=formatPlayerStats(player);
+    
+    // 메뉴에서 "상세 기록 보기" 버튼 제거 (이미 메뉴가 있으므로)
+    const statsWithoutButton=stats.replace(/<div class="chatbot-menu">\n<button class="chatbot-menu-btn" onclick="window\.sendChatbotMessage\('[^']+' 기록'\)">상세 기록 보기<\/button>\n<\/div>/g, '');
+    
+    return menu+'\n\n'+statsWithoutButton;
   }
   
   // 선수 이름 + 기록 유형 입력된 경우
