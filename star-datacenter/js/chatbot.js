@@ -644,18 +644,12 @@ function formatPlayerBasicInfo(player) {
     return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:0;min-height:120px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
       <div style="position:relative;height:120px;display:flex;align-items:center;justify-content:center">
       </div>
-    </div><div style="text-align:center;margin-bottom:0;line-height:1">
-      <div style="font-size:16px;font-weight:800;color:var(--text)">${safePlayerName} <span style="font-size:11px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
-      <div style="font-size:10px;color:var(--text2)">
-        🎖️${player.tier} 🎮${player.race} ⭐${player.elo}
-      </div>
-      <div style="font-size:13px;font-weight:800;color:#2563eb">
-        ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:10px;color:var(--text3);font-weight:400">총 ${total}경기</span>
-      </div>
-    </div><div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:0">
-      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">최근전적</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">통계</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">이번달</button>
+    </div><div style="text-align:center;margin-bottom:0;line-height:1.2">
+      <span style="font-size:18px;font-weight:800;color:var(--text)">${safePlayerName}</span> <span style="font-size:13px;color:var(--text2);font-weight:400">${safeUniv}</span> <span style="font-size:12px;color:var(--text2)">🎖️${player.tier} 🎮${player.race} ⭐${player.elo}</span> <span style="font-size:15px;font-weight:800;color:#2563eb">${player.win}승 ${player.loss}패 (${rate}%)</span> <span style="font-size:12px;color:var(--text3)">총 ${total}경기</span>
+    </div><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:0">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">이번달</button>
     </div>`;
   }
   
