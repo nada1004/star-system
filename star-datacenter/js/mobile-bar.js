@@ -497,6 +497,10 @@ function formatPlayerIndRecord(player){
   return info;
 }
 function formatPlayerCompRecord(player, compM, ttM, proM){
+  console.log('Chatbot Debug - compM sample:', compM.length > 0 ? compM[0] : 'empty');
+  console.log('Chatbot Debug - ttM sample:', ttM.length > 0 ? ttM[0] : 'empty');
+  console.log('Chatbot Debug - proM sample:', proM.length > 0 ? proM[0] : 'empty');
+  
   const allMatches=[];
   allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
   allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
