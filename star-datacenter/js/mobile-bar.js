@@ -905,6 +905,10 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  
+  return info;
+}
 function formatPlayerGroupRecord(player, compM, ttM, proM){
   // player.history에서 조별리그 기록 추출 (스트리머 상세와 동일한 데이터 소스)
   const historyMatches=(player.history||[]).filter(h=>h.mode==='조별리그'||h.mode==='group'||h.mode==='조별');
