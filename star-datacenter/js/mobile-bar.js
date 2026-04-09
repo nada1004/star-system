@@ -308,11 +308,12 @@ function generateChatbotResponse(query){
   
   // 선수 이름 + 기록 유형 입력된 경우
   const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
+  console.log('Chatbot Debug - Pattern match result:', !!playerMatch, 'query:', query);
   if(playerMatch){
     const playerName=playerMatch[1];
     const mode=playerMatch[playerMatch.length-1];
     
-    console.log('Chatbot Debug - Query:', { playerName, mode, query });
+    console.log('Chatbot Debug - Query:', { playerName, mode, query, fullMatch: playerMatch });
     
     // 전역 players 변수 사용
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
