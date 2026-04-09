@@ -188,14 +188,30 @@ var _paginationState={
   currentPage: 1,
   pageSize: 10,
   totalMatches: 0,
-  matches: []
+  matches: [],
+  formatFunction: null,
+  formatParams: []
 };
 
-function setPaginationState(query, matches){
+function setPaginationState(query, matches, formatFunction, formatParams){
   _paginationState.currentQuery=query;
   _paginationState.currentPage=1;
   _paginationState.totalMatches=matches.length;
   _paginationState.matches=matches;
+  _paginationState.formatFunction=formatFunction;
+  _paginationState.formatParams=formatParams;
+}
+
+function clearPaginationState(){
+  _paginationState={
+    currentQuery: null,
+    currentPage: 1,
+    pageSize: 10,
+    totalMatches: 0,
+    matches: [],
+    formatFunction: null,
+    formatParams: []
+  };
 }
 
 function getPaginatedMatches(matches, page, pageSize){
@@ -220,7 +236,7 @@ function formatPaginationControls(totalMatches, currentPage, pageSize){
 }
 
 function handlePaginationCommand(command){
-  if(!_paginationState.currentQuery) return null;
+  if(!_paginationState.currentQuery||!_paginationState.formatFunction) return null;
   
   const totalPages=Math.ceil(_paginationState.totalMatches/_paginationState.pageSize);
   
@@ -238,7 +254,8 @@ function handlePaginationCommand(command){
     }
   }
   
-  return null;
+  // 저장된 format 함수로 재실행
+  return _paginationState.formatFunction(..._paginationState.formatParams);
 }
 
 function openChatbot(){
@@ -327,14 +344,9 @@ function generateChatbotResponse(query){
   
   // 페이지네이션 명령 처리
   if(q==='이전 페이지'||q==='다음 페이지'){
-    const paginationError=handlePaginationCommand(q);
-    if(paginationError) return paginationError;
-    
-    // 현재 쿼리로 다시 검색 실행
-    if(_paginationState.currentQuery){
-      return generateChatbotResponse(_paginationState.currentQuery);
-    }
-    return '⚠️ 페이지네이션 상태가 초기화되지 않았습니다.';
+    const result=handlePaginationCommand(q);
+    if(result) return result;
+    return null;
   }
   
   // J 함수 사용하여 데이터 로드 (LZ-String 압축 처리 포함)
@@ -391,6 +403,9 @@ function generateChatbotResponse(query){
   const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌워|시빌원|ck|토너먼트|조별리그|팀전|일반|조별|총|토탈|통계|10)/);
   console.log('Chatbot Debug - Pattern match result:', !!playerMatch, 'query:', query);
   if(playerMatch){
+    // 새 쿼리 시 페이지네이션 상태 초기화
+    clearPaginationState();
+    
     const playerName=playerMatch[1];
     const mode=playerMatch[playerMatch.length-1];
     
@@ -434,7 +449,7 @@ function generateChatbotResponse(query){
       return formatPlayerGroupRecord(player, [], [], proM);
     }else if(mode==='일반'||q.includes('일반')&&!q.includes('프로리그')){
       return formatPlayerNormalRecord(player, proM);
-    }else if(mode==='프로리'||q.includes('프로리그')&&!q.includes('일반')&&!q.includes('끝장전')&&!q.includes('대회')&&!q.includes('조별리그')&&!q.includes('팀전')){
+    }else if(mode==='프로리'||q.includes('프로리그')&&!q.includes('일반')&&!q.includes('끝장전')&&!q.includes('대회')&&!q.includes('조별리그')){
       return formatPlayerProRecord(player, proM);
     }else{
       return '❌ 지원하지 않는 기록 유형입니다.';
@@ -522,7 +537,7 @@ function formatPlayerMiniRecord(player, miniM){
     const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
     
     // 페이지네이션 상태 설정
-    setPaginationState(player.name+' 미니대전 기록', historyMatches);
+    setPaginationState(player.name+' 미니대전 기록', historyMatches, formatPlayerMiniRecord, [player, miniM]);
     
     let info='⚡ '+player.name+' 미니대전 기록\n';
     info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -577,7 +592,7 @@ function formatPlayerMiniRecord(player, miniM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 미니대전 기록', playerMatches);
+  setPaginationState(player.name+' 미니대전 기록', playerMatches, formatPlayerMiniRecord, [player, miniM]);
   
   let info='⚡ '+player.name+' 미니대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -673,7 +688,7 @@ function formatPlayerUnivMatchRecord(player, univM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 대학대전 기록', playerMatches);
+  setPaginationState(player.name+' 대학대전 기록', playerMatches, formatPlayerUnivMatchRecord, [player, univM]);
   
   let info='🏟️ '+player.name+' 대학대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -729,7 +744,7 @@ function formatPlayerIndRecord(player){
   }
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 개인전 기록', player.history);
+  setPaginationState(player.name+' 개인전 기록', player.history, formatPlayerIndRecord, [player]);
   
   let info='⚔️ '+player.name+' 개인전 기록\n';
   info+='📊 '+player.win+'승 '+player.loss+'패\n';
@@ -806,7 +821,7 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 대회 기록', playerMatches);
+  setPaginationState(player.name+' 대회 기록', playerMatches, formatPlayerCompRecord, [player, compM, ttM, proM]);
   
   let info='🏆 '+player.name+' 대회 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -871,7 +886,7 @@ function formatPlayerTTRecord(player, ttM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 티어대회 기록', playerMatches);
+  setPaginationState(player.name+' 티어대회 기록', playerMatches, formatPlayerTTRecord, [player, ttM]);
   
   let info='🎖️ '+player.name+' 티어대회 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -937,7 +952,7 @@ function formatPlayerProRecord(player, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 프로리그 기록', playerMatches);
+  setPaginationState(player.name+' 프로리그 기록', playerMatches, formatPlayerProRecord, [player, proM]);
   
   let info='🏅 '+player.name+' 프로리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -994,7 +1009,7 @@ function formatPlayerGJRecord(player, gjM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 끝장전 기록', playerMatches);
+  setPaginationState(player.name+' 끝장전 기록', playerMatches, formatPlayerGJRecord, [player, gjM]);
   
   let info='🔥 '+player.name+' 끝장전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1039,7 +1054,7 @@ function formatPlayerCKRecord(player, ckM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 대학CK 기록', playerMatches);
+  setPaginationState(player.name+' 대학CK 기록', playerMatches, formatPlayerCKRecord, [player, ckM]);
   
   let info='🤝 '+player.name+' 대학CK 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1115,7 +1130,7 @@ function formatPlayerSevilRecord(player, univM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 시빌원 기록', playerMatches);
+  setPaginationState(player.name+' 시빌원 기록', playerMatches, formatPlayerSevilRecord, [player, univM]);
   
   let info='🏛️ '+player.name+' 시빌원 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1176,7 +1191,7 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 토너먼트 기록', playerMatches);
+  setPaginationState(player.name+' 토너먼트 기록', playerMatches, formatPlayerTournamentRecord, [player, compM, ttM, proM]);
   
   let info='🏆 '+player.name+' 토너먼트 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1264,7 +1279,7 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 조별리그 기록', playerMatches);
+  setPaginationState(player.name+' 조별리그 기록', playerMatches, formatPlayerGroupRecord, [player, compM, ttM, proM]);
   
   let info='🏆 '+player.name+' 조별리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1329,7 +1344,7 @@ function formatPlayerTeamRecord(player, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 팀전 기록', playerMatches);
+  setPaginationState(player.name+' 팀전 기록', playerMatches, formatPlayerTeamRecord, [player, proM]);
   
   let info='👥 '+player.name+' 팀전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
@@ -1388,7 +1403,7 @@ function formatPlayerNormalRecord(player, proM){
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 일반 기록', playerMatches);
+  setPaginationState(player.name+' 일반 기록', playerMatches, formatPlayerNormalRecord, [player, proM]);
   
   let info='📝 '+player.name+' 일반 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
