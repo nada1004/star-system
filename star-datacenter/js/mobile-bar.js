@@ -745,11 +745,18 @@ function formatPlayerTTRecord(player, ttM){
   return info;
 }
 function formatPlayerProRecord(player, proM){
+  console.log('Chatbot Debug - formatPlayerProRecord:', { playerName: player.name, proM: proM.length });
+  if(proM.length > 0){
+    console.log('Chatbot Debug - proM[0]:', proM[0]);
+  }
+  
   const playerMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   });
+  
+  console.log('Chatbot Debug - proMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 프로리그 기록이 없습니다.';
@@ -924,6 +931,8 @@ function formatPlayerSevilRecord(player, univM){
   return info;
 }
 function formatPlayerTournamentRecord(player, compM, ttM, proM){
+  console.log('Chatbot Debug - formatPlayerTournamentRecord:', { playerName: player.name, compM: compM.length, ttM: ttM.length, proM: proM.length });
+  
   const allMatches=[];
   
   allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
@@ -938,7 +947,13 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   
+  console.log('Chatbot Debug - allMatches count:', allMatches.length);
+  if(allMatches.length > 0){
+    console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
+  }
+  
   const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
+  console.log('Chatbot Debug - tournament matches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 토너먼트 기록이 없습니다.';
@@ -983,6 +998,8 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
   return info;
 }
 function formatPlayerGroupRecord(player, compM, ttM, proM){
+  console.log('Chatbot Debug - formatPlayerGroupRecord:', { playerName: player.name, compM: compM.length, ttM: ttM.length, proM: proM.length });
+  
   const allMatches=[];
   
   allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
@@ -997,7 +1014,13 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   
+  console.log('Chatbot Debug - allMatches count:', allMatches.length);
+  if(allMatches.length > 0){
+    console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
+  }
+  
   const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
+  console.log('Chatbot Debug - group matches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 조별리그 기록이 없습니다.';
