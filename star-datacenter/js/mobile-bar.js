@@ -194,22 +194,28 @@ function closeChatbot(e){
   }
 }
 function toggleChatbot(){
-  _chatbotEnabled=!_chatbotEnabled;
-  localStorage.setItem('su_chatbotEnabled',_chatbotEnabled?'1':'0');
-  
-  // UI 업데이트
-  const icon=document.getElementById('chatbotToggleIcon');
-  const status=document.getElementById('chatbotToggleStatus');
-  if(icon) icon.textContent=_chatbotEnabled?'🤖':'🤖';
-  if(status) status.textContent=_chatbotEnabled?'(ON)':'(OFF)';
-  if(status) status.style.color=_chatbotEnabled?'#94a3b8':'#ef4444';
-  
-  // 비활성화 시 팝업 닫기
+  // 비활성화 상태면 활성화 후 채팅창 열기
   if(!_chatbotEnabled){
-    closeChatbot();
-  }else{
-    // 활성화 시 팝업 열기
+    _chatbotEnabled=true;
+    localStorage.setItem('su_chatbotEnabled','1');
+    
+    // UI 업데이트
+    const icon=document.getElementById('chatbotToggleIcon');
+    const status=document.getElementById('chatbotToggleStatus');
+    if(icon) icon.textContent='🤖';
+    if(status) status.textContent='(ON)';
+    if(status) status.style.color='#94a3b8';
+    
+    // 채팅창 열기
     openChatbot();
+  }else{
+    // 활성화 상태면 채팅창 열기/닫기 토글
+    const overlay=document.getElementById('chatbotOverlay');
+    if(overlay && overlay.classList.contains('open')){
+      closeChatbot();
+    }else{
+      openChatbot();
+    }
   }
 }
 // 초기화 시 채팅봇 상태 UI 업데이트
@@ -248,7 +254,7 @@ function generateChatbotResponse(query){
   const q=query.toLowerCase();
   
   // 선수 이름 추출 시도
-  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적)/);
+  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그)/);
   if(playerMatch){
     const playerName=playerMatch[1];
     const mode=playerMatch[2];
@@ -265,6 +271,12 @@ function generateChatbotResponse(query){
       return formatPlayerUnivMatchRecord(player);
     }else if(mode==='개인전'){
       return formatPlayerIndRecord(player);
+    }else if(mode==='대회'){
+      return formatPlayerCompRecord(player);
+    }else if(mode==='티어대회'){
+      return formatPlayerTTRecord(player);
+    }else if(mode==='프로리그'){
+      return formatPlayerProRecord(player);
     }
   }
   
@@ -278,11 +290,20 @@ function generateChatbotResponse(query){
   if(q.includes('개인전')){
     return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: <스트리머 이름> 개인전 기록';
   }
+  if(q.includes('대회')){
+    return '🏆 대회 기록을 보려면 "선수명 대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 대회 기록';
+  }
+  if(q.includes('티어대회')){
+    return '🎖️ 티어대회 기록을 보려면 "선수명 티어대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 티어대회 기록';
+  }
+  if(q.includes('프로리그')){
+    return '🏅 프로리그 기록을 보려면 "선수명 프로리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 프로리그 기록';
+  }
   if(q.includes('랭킹')||q.includes('순위')){
     return '📊 랭킹은 상단 탭의 "티어 순위표"에서 확인할 수 있습니다.';
   }
   if(q.includes('도움')||q.includes('help')||q.includes('?')){
-    return '📖 사용법:\n• "<스트리머 이름> 기록" - 선수 전체 기록\n• "<스트리머 이름> 미니대전 성적" - 미니대전 기록\n• "<스트리머 이름> 대학대전 기록" - 대학대전 기록\n• "<스트리머 이름> 개인전 기록" - 개인전 기록';
+    return '📖 사용법:\n• "<스트리머 이름> 기록" - 선수 전체 기록\n• "<스트리머 이름> 미니대전 성적" - 미니대전 기록\n• "<스트리머 이름> 대학대전 기록" - 대학대전 기록\n• "<스트리머 이름> 개인전 기록" - 개인전 기록\n• "<스트리머 이름> 대회 기록" - 대회 기록\n• "<스트리머 이름> 티어대회 기록" - 티어대회 기록\n• "<스트리머 이름> 프로리그 기록" - 프로리그 기록';
   }
   
   return '🤔 질문을 이해하지 못했습니다.\n• "<스트리머 이름> 기록"\n• "<스트리머 이름> 미니대전 성적"\n• "도움" - 사용법 보기';
@@ -376,6 +397,90 @@ function formatPlayerIndRecord(player){
   });
   
   if(player.history.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerCompRecord(player){
+  const compM=typeof compM!=='undefined'?compM:[];
+  const playerMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 대회 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🏆 '+player.name+' 대회 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerTTRecord(player){
+  const ttM=typeof ttM!=='undefined'?ttM:[];
+  const playerMatches=ttM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 티어대회 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🎖️ '+player.name+' 티어대회 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerProRecord(player){
+  const proM=typeof proM!=='undefined'?proM:[];
+  const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
+    return '📭 '+player.name+'의 프로리그 기록이 없습니다.';
+  }
+  
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  let info='🏅 '+player.name+' 프로리그 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+  });
+  
+  if(playerMatches.length>5){
     info+='... (최근 5경기만 표시)';
   }
   
