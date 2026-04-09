@@ -611,6 +611,38 @@ function toggleChatbot(){
     }
   }
 }
+function sendChatbotMessage(query){
+  console.log('Chatbot Debug - sendChatbotMessage called with:', query);
+  if(!query){
+    const input=document.getElementById('chatbotInput');
+    query=input.value.trim();
+    if(!query)return;
+    input.value='';
+  }
+  
+  addChatbotMessage(query,'user');
+  
+  setTimeout(()=>processChatbotQuery(query),100);
+}
+function addChatbotMessage(text,sender){
+  const container=document.getElementById('chatbotMessages');
+  if(!container)return;
+  
+  const msgDiv=document.createElement('div');
+  msgDiv.className='chatbot-message '+sender;
+  msgDiv.innerHTML='<div class="chatbot-bubble">'+text+'</div>';
+  container.appendChild(msgDiv);
+  container.scrollTop=container.scrollHeight;
+}
+function processChatbotQuery(query){
+  if(typeof generateChatbotResponse==='function'){
+    const response=generateChatbotResponse(query);
+    addChatbotMessage(response,'bot');
+  }else{
+    addChatbotMessage('챗봇 기능이 로드되지 않았습니다. 페이지를 새로고침해주세요.','bot');
+  }
+}
+window.sendChatbotMessage=sendChatbotMessage;
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
 </script>
