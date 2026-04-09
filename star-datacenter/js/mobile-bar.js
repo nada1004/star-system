@@ -526,12 +526,48 @@ function formatPlayerMiniRecord(player, miniM){
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }else if(m.a&&m.b){
       const inTeamA=m.a===player.univ;
       const oppTeam=inTeamA?m.b:m.a;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }
   });
   
@@ -695,7 +731,25 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | '+(m.n||'대회')+' | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | '+(m.n||'대회')+' | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }
   });
   
@@ -735,7 +789,25 @@ function formatPlayerTTRecord(player, ttM){
     const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    
+    // sets/games에서 개별 상대방 이름 추출 시도
+    let oppName=oppTeam;
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name&&g.playerB){
+          oppName=g.playerB;
+          break;
+        }else if(g.playerB===player.name&&g.playerA){
+          oppName=g.playerA;
+          break;
+        }
+      }
+      if(oppName!==oppTeam) break;
+    }
+    
+    info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
@@ -781,7 +853,25 @@ function formatPlayerProRecord(player, proM){
     const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    
+    // sets/games에서 개별 상대방 이름 추출 시도
+    let oppName=oppTeam;
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name&&g.playerB){
+          oppName=g.playerB;
+          break;
+        }else if(g.playerB===player.name&&g.playerA){
+          oppName=g.playerA;
+          break;
+        }
+      }
+      if(oppName!==oppTeam) break;
+    }
+    
+    info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
@@ -861,7 +951,25 @@ function formatPlayerCKRecord(player, ckM){
     const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    
+    // sets/games에서 개별 상대방 이름 추출 시도
+    let oppName=oppTeam;
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name&&g.playerB){
+          oppName=g.playerB;
+          break;
+        }else if(g.playerB===player.name&&g.playerA){
+          oppName=g.playerA;
+          break;
+        }
+      }
+      if(oppName!==oppTeam) break;
+    }
+    
+    info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
@@ -921,7 +1029,9 @@ function formatPlayerSevilRecord(player, univM){
   info+='━━━━━━━━━━━━━━━━━━\n';
   
   playerMatches.slice(-10).reverse().forEach(m=>{
-    info+='📅 '+m.d+' | 시빌원 | A팀 vs B팀 ('+m.sa+':'+m.sb+')\n';
+    const oppTeam=m.a===player.univ?m.b:m.a;
+    const result=(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
@@ -988,7 +1098,25 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | 토너먼트 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | 토너먼트 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }
   });
   
@@ -1056,7 +1184,25 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
       const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.d+' | 조별리그 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+      
+      // sets/games에서 개별 상대방 이름 추출 시도
+      let oppName=oppTeam;
+      const sets=m.sets||[];
+      for(const s of sets){
+        const games=s.games||[];
+        for(const g of games){
+          if(g.playerA===player.name&&g.playerB){
+            oppName=g.playerB;
+            break;
+          }else if(g.playerB===player.name&&g.playerA){
+            oppName=g.playerA;
+            break;
+          }
+        }
+        if(oppName!==oppTeam) break;
+      }
+      
+      info+='📅 '+m.d+' | 조별리그 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
     }
   });
   
@@ -1096,7 +1242,25 @@ function formatPlayerTeamRecord(player, proM){
     const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    
+    // sets/games에서 개별 상대방 이름 추출 시도
+    let oppName=oppTeam;
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name&&g.playerB){
+          oppName=g.playerB;
+          break;
+        }else if(g.playerB===player.name&&g.playerA){
+          oppName=g.playerA;
+          break;
+        }
+      }
+      if(oppName!==oppTeam) break;
+    }
+    
+    info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
@@ -1135,7 +1299,25 @@ function formatPlayerNormalRecord(player, proM){
     const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+    
+    // sets/games에서 개별 상대방 이름 추출 시도
+    let oppName=oppTeam;
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name&&g.playerB){
+          oppName=g.playerB;
+          break;
+        }else if(g.playerB===player.name&&g.playerA){
+          oppName=g.playerA;
+          break;
+        }
+      }
+      if(oppName!==oppTeam) break;
+    }
+    
+    info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
