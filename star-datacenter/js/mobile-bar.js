@@ -534,24 +534,28 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   console.log('Chatbot Debug - compMatches:', compMatches.length);
   
   // ttM (팀전 구조 - teamAMembers/teamBMembers는 객체 배열)
+  let ttMatchCount=0;
   const ttMatches=ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const found=teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-    if(found && ttMatches.length < 3){
+    if(found && ttMatchCount < 3){
       console.log('Chatbot Debug - ttM match found:', { teamA: teamA.map(m=>m.name), teamB: teamB.map(m=>m.name), playerName: player.name });
+      ttMatchCount++;
     }
     return found;
   });
   console.log('Chatbot Debug - ttMatches:', ttMatches.length);
   
   // proM (팀전 구조 - teamAMembers/teamBMembers는 객체 배열)
+  let proMatchCount=0;
   const proMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const found=teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-    if(found && proMatches.length < 3){
+    if(found && proMatchCount < 3){
       console.log('Chatbot Debug - proM match found:', { teamA: teamA.map(m=>m.name), teamB: teamB.map(m=>m.name), playerName: player.name });
+      proMatchCount++;
     }
     return found;
   });
