@@ -51,10 +51,56 @@ function renderMarkdown(text) {
   // ```code block``` -> <pre><code>code block</code></pre>
   html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:#f1f5f9;padding:12px;border-radius:8px;overflow-x:auto"><code>$1</code></pre>');
   
+  // 선수명 클릭 가능하게 (playerDetail 모달 열기)
+  html = html.replace(/([가-힣a-zA-Z0-9_]+)/g, (match) => {
+    const player = typeof players !== 'undefined' ? players.find(p => p.name === match) : null;
+    if (player) {
+      const safeName = escapeHtml(match).replace(/'/g, "\\'");
+      return `<span onclick="openPlayerDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(match)}</span>`;
+    }
+    // 대학명 클릭 가능하게
+    if (typeof players !== 'undefined') {
+      const universities = [...new Set(players.map(p => p.univ))];
+      if (universities.includes(match)) {
+        const safeName = escapeHtml(match).replace(/'/g, "\\'");
+        return `<span onclick="openUnivDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(match)}</span>`;
+      }
+    }
+    return escapeHtml(match);
+  });
+  
   // 줄바꿈 -> <br>
   html = html.replace(/\n/g, '<br>');
   
   return html;
+}
+
+// 선수 상세 모달 열기
+function openPlayerDetail(playerName) {
+  const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+  if (player && typeof buildPlayerDetailHTML !== 'undefined') {
+    const modalBody = document.getElementById('playerModalBody');
+    if (modalBody) {
+      modalBody.innerHTML = buildPlayerDetailHTML(player);
+      if (typeof injectUnivIcons !== 'undefined') {
+        injectUnivIcons(modalBody);
+      }
+      document.getElementById('playerModal').style.display = 'flex';
+    }
+  }
+}
+
+// 대학 상세 모달 열기
+function openUnivDetail(univName) {
+  if (typeof players === 'undefined') return;
+  
+  const univPlayers = players.filter(p => p.univ === univName);
+  if (univPlayers.length === 0) return;
+  
+  // 대학 탭으로 이동
+  if (typeof sw !== 'undefined') {
+    sw('univm', null);
+  }
 }
 
 // 채팅 기록 렌더링
@@ -74,6 +120,9 @@ function renderChatHistory() {
     const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain">';
     const content = msg.content;
     
+    // 타임스탬프 형식화
+    const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+    
     // 봇 메시지에 복사 버튼 추가
     const copyBtn = msg.role === 'bot' ? `<button onclick="copyChatMessage(${index})" style="background:none;border:none;font-size:12px;color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
     
@@ -81,7 +130,10 @@ function renderChatHistory() {
       <div class="chat-avatar">${avatar}</div>
       <div style="flex:1;display:flex;flex-direction:column">
         <div class="chat-content" style="white-space:pre-wrap">${renderMarkdown(content)}</div>
-        <div style="display:flex;justify-content:flex-end;margin-top:4px">${copyBtn}</div>
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:4px;gap:8px">
+          ${timestamp ? `<span style="font-size:11px;color:#94a3b8">${timestamp}</span>` : ''}
+          ${copyBtn}
+        </div>
       </div>
     `;
     
@@ -277,7 +329,9 @@ function generateResponse(userMessage) {
            `• '티어 A~B' : 티어 범위 검색\n` +
            `• 'A 티어 이상' : 티어 이상 검색\n` +
            `• '승률 50% 이상' : 승률 범위 검색\n` +
-           `• '저그 선수' : 종족별 선수 검색`;
+           `• '저그 선수' : 종족별 선수 검색\n` +
+           `• '2024-01-01 ~ 2024-01-31' : 날짜 범위 검색\n` +
+           `• '마토전' : 상대별 검색`;
   }
   
   // 선수 이름 + 최근전적 (선수 관련 패턴 먼저 체크)
@@ -429,6 +483,21 @@ function generateResponse(userMessage) {
     return formatRacePlayersSearch(race);
   }
   
+  // 날짜 범위 검색 (예: "2024-01-01 ~ 2024-01-31" 또는 "1월 1일 ~ 1월 31일")
+  const dateRangeMatch = userMessage.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
+  if (dateRangeMatch) {
+    const startDate = dateRangeMatch[1];
+    const endDate = dateRangeMatch[2];
+    return formatDateRangeSearch(startDate, endDate);
+  }
+  
+  // 상대별 검색 (예: "마토전" 또는 "vs 마토")
+  const opponentMatch = userMessage.match(/(.+?)전$/);
+  if (opponentMatch) {
+    const opponentName = opponentMatch[1];
+    return formatOpponentSearch(opponentName);
+  }
+  
   // 인사
   if (msg.includes('안녕') || msg.includes('hello') || msg.includes('hi')) {
     return '안녕하세요! 알등이입니다. 스타대학 데이터에 대해 궁금한 점이 있으신가요? 😊';
@@ -465,12 +534,20 @@ function formatPlayerBasicInfo(player) {
   const total = player.win + player.loss;
   const rate = total > 0 ? ((player.win / total) * 100).toFixed(1) : 0;
   
+  // 현재 월 계산
+  const currentMonth = new Date().getMonth() + 1;
+  const monthNames = ['', '1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+  const currentMonthName = monthNames[currentMonth];
+  
+  // 선수명 이스케이프
+  const safePlayerName = escapeHtml(player.name);
+  
   if (player.photo) {
     // 프로필 사진을 전체 배경으로 표시 (가독성 개선)
     return `<div style="position:relative;padding:24px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:180px">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.85) 100%);border-radius:12px"></div>
       <div style="position:relative;color:white;text-align:center;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,0.5)">
-        <div style="font-size:22px;font-weight:700;margin-bottom:8px">${player.name}</div>
+        <div style="font-size:22px;font-weight:700;margin-bottom:8px">${safePlayerName}</div>
         <div style="font-size:15px;opacity:1;background:rgba(0,0,0,0.3);padding:4px 12px;border-radius:20px;display:inline-block;margin-bottom:8px">${player.univ}</div>
         <div style="font-size:13px;margin-top:8px;opacity:1">
           🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
@@ -483,12 +560,12 @@ function formatPlayerBasicInfo(player) {
     <div style="margin-top:10px">
       <div style="font-size:13px;color:var(--text3)">📝 총 ${total}경기</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <button onclick="sendQuickMessage('${player.name} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
-        <button onclick="sendQuickMessage('${player.name} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
-        <button onclick="sendQuickMessage('${player.name} 5월 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">5월 전적</button>
-        <button onclick="sendQuickMessage('${player.name} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
-        <button onclick="sendQuickMessage('${player.name} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
-        <button onclick="sendQuickMessage('${player.name} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
+        <button onclick="sendQuickMessage('${safePlayerName} ${currentMonthName} 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">${currentMonthName} 전적</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
       </div>
     </div>`;
   }
@@ -512,13 +589,27 @@ function sendQuickMessage(message) {
   }
 }
 
+// 특수문자 이스케이프 함수
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // 선수 최근 전적
 function formatPlayerRecentRecord(player) {
   if (!player.history || player.history.length === 0) {
     return `📭 ${player.name}의 경기 기록이 없습니다.`;
   }
   
-  const recentGames = player.history.slice(-30).reverse();
+  // 날짜 기준으로 정렬 (최신순)
+  const sortedHistory = [...player.history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const recentGames = sortedHistory.slice(0, 30);
   const wins = recentGames.filter(h => h.result === '승').length;
   const losses = recentGames.length - wins;
   const rate = recentGames.length > 0 ? ((wins / recentGames.length) * 100).toFixed(1) : 0;
@@ -630,19 +721,41 @@ function formatPlayerRaceRecord(player, raceType) {
   const raceMap = { '저그전': '저그', '테란전': '테란', '프로토스전': '프로토스' };
   const targetRace = raceMap[raceType];
   
-  // oppRace 필드가 있는 경우 사용, 없으면 필터링 건너뜀
-  const raceGames = player.history.filter(h => h.oppRace === targetRace);
+  // oppRace 필드가 있는 경우 사용, 없으면 상대 선수의 종족으로 추정
+  const raceGames = player.history.filter(h => {
+    if (h.oppRace) {
+      return h.oppRace === targetRace;
+    }
+    // oppRace가 없는 경우, 상대 선수 찾아서 종족 확인
+    if (typeof players !== 'undefined') {
+      const oppPlayer = players.find(p => p.name === h.opp);
+      if (oppPlayer) {
+        return oppPlayer.race === targetRace;
+      }
+    }
+    return false;
+  });
+  
   if (raceGames.length === 0) {
-    return `📭 ${player.name}의 ${raceType} 기록이 없습니다.\n(상대 종족 정보가 기록에 없을 수 있습니다.)`;
+    return `📭 ${player.name}의 ${raceType} 기록이 없습니다. (상대 종족 정보 부족)`;
   }
   
   const wins = raceGames.filter(h => h.result === '승').length;
   const losses = raceGames.length - wins;
   const rate = raceGames.length > 0 ? ((wins / raceGames.length) * 100).toFixed(1) : 0;
   
-  return `🎮 ${player.name} ${raceType} 승률\n\n` +
-         `승: ${wins} | 패: ${losses} | 승률: ${rate}%\n` +
-         `총 경기 수: ${raceGames.length}경기`;
+  let result = `🎮 ${player.name} ${raceType} 승률\n\n`;
+  result += `승: ${wins} | 패: ${losses} | 승률: ${rate}%\n`;
+  result += `총 경기 수: ${raceGames.length}경기\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  // 날짜 기준 정렬
+  const sortedRaceGames = [...raceGames].sort((a, b) => new Date(b.date) - new Date(a.date));
+  sortedRaceGames.slice(0, 10).forEach(h => {
+    result += `📅 ${h.date} | ${h.map} | ${h.result} vs ${h.opp}\n`;
+  });
+  
+  return result;
 }
 
 // 티어 랭킹
@@ -844,6 +957,96 @@ function formatRacePlayersSearch(race) {
   
   if (filteredPlayers.length > 20) {
     result += `\n... (총 ${filteredPlayers.length}명)`;
+  }
+  
+  return result;
+}
+
+// 날짜 범위 검색
+function formatDateRangeSearch(startDate, endDate) {
+  if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (isNaN(start) || isNaN(end)) return `❌ 유효하지 않은 날짜 형식입니다.`;
+  
+  let totalGames = 0;
+  const gameDetails = [];
+  
+  players.forEach(p => {
+    if (!p.history) return;
+    
+    p.history.forEach(h => {
+      const gameDate = new Date(h.date);
+      if (gameDate >= start && gameDate <= end) {
+        totalGames++;
+        gameDetails.push({
+          player: p.name,
+          date: h.date,
+          map: h.map,
+          result: h.result,
+          opp: h.opp
+        });
+      }
+    });
+  });
+  
+  if (totalGames === 0) return `❌ 해당 기간의 경기 기록을 찾을 수 없습니다.`;
+  
+  gameDetails.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  let result = `📅 ${startDate} ~ ${endDate} 기간 경기 기록 (총 ${totalGames}경기)\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  gameDetails.slice(0, 20).forEach(g => {
+    result += `📅 ${g.date} | ${g.player} | ${g.map} | ${g.result} vs ${g.opp}\n`;
+  });
+  
+  if (gameDetails.length > 20) {
+    result += `\n... (총 ${totalGames}경기)`;
+  }
+  
+  return result;
+}
+
+// 상대별 검색
+function formatOpponentSearch(opponentName) {
+  if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
+  
+  let totalGames = 0;
+  const gameDetails = [];
+  
+  players.forEach(p => {
+    if (!p.history) return;
+    
+    p.history.forEach(h => {
+      if (h.opp && h.opp.includes(opponentName)) {
+        totalGames++;
+        gameDetails.push({
+          player: p.name,
+          date: h.date,
+          map: h.map,
+          result: h.result,
+          opp: h.opp
+        });
+      }
+    });
+  });
+  
+  if (totalGames === 0) return `❌ '${opponentName}'와의 경기 기록을 찾을 수 없습니다.`;
+  
+  gameDetails.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  let result = `⚔️ '${opponentName}'와의 경기 기록 (총 ${totalGames}경기)\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  gameDetails.slice(0, 20).forEach(g => {
+    result += `📅 ${g.date} | ${g.player} | ${g.map} | ${g.result} vs ${g.opp}\n`;
+  });
+  
+  if (gameDetails.length > 20) {
+    result += `\n... (총 ${totalGames}경기)`;
   }
   
   return result;
