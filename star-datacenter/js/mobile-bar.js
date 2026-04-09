@@ -226,16 +226,19 @@ function toggleChatbot(){
   if(status) status.textContent=_chatbotEnabled?'(ON)':'(OFF)';
   if(status) status.style.color=_chatbotEnabled?'#94a3b8':'#ef4444';
 })();
-function sendChatbotMessage(){
-  const input=document.getElementById('chatbotInput');
-  const message=input.value.trim();
-  if(!message)return;
+function sendChatbotMessage(query){
+  if(!query){
+    const input=document.getElementById('chatbotInput');
+    query=input.value.trim();
+    if(!query)return;
+    input.value='';
+  }
   
-  addChatbotMessage(message,'user');
-  input.value='';
+  addChatbotMessage(query,'user');
   
-  setTimeout(()=>{processChatbotQuery(message);},300);
+  setTimeout(()=>processChatbotQuery(query),100);
 }
+window.sendChatbotMessage=sendChatbotMessage;
 function addChatbotMessage(text,sender){
   const container=document.getElementById('chatbotMessages');
   if(!container)return;
@@ -318,7 +321,7 @@ function generateChatbotResponse(query){
     if(mode==='기록'||mode==='정보'||mode==='전적'){
       return formatPlayerInfo(player);
     }else if(mode==='미니대전'||mode==='성적'){
-      return formatPlayerMiniRecord(player);
+      return formatPlayerMiniRecord(player, miniM);
     }else if(mode==='대학대전'||q.includes('대학대전')){
       return formatPlayerUnivMatchRecord(player, univM);
     }else if(mode==='개인전'){
@@ -415,30 +418,28 @@ function formatPlayerInfo(player){
   
   return info;
 }
-function formatPlayerMiniRecord(player){
-  if(!player.history||player.history.length===0){
+function formatPlayerMiniRecord(player, miniM){
+  const playerMatches=miniM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
     return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
   }
   
-  const miniRecs=player.history.filter(h=>h.matchId&&h.matchId.startsWith('mm'));
-  if(miniRecs.length===0){
-    return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
-  }
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
-  const wins=miniRecs.filter(h=>h.result==='승').length;
-  const losses=miniRecs.filter(h=>h.result==='패').length;
-  const total=wins+losses;
-  const rate=total>0?((wins/total)*100).toFixed(1):0;
-  
-  let info='⚡ '+player.name+' 미니대전 기록\n';
+  let info='⚡ '+player.name+' 미니대전 성적\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  miniRecs.slice(-5).reverse().forEach(h=>{
-    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(miniRecs.length>5){
+  if(playerMatches.length>5){
     info+='... (최근 5경기만 표시)';
   }
   
@@ -780,15 +781,15 @@ function formatPlayerNormalRecord(player, proM){
 function formatRecordMenu(playerName){
   let menu='👤 '+playerName+' - 어떤 기록을 보시겠습니까?\n\n';
   menu+='<div class="chatbot-menu">\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 끝장전 기록\')">5. 끝장전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' ck 기록\')">6. 대학CK 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 대회 기록\')">7. 대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 티어대회 기록\')">8. 티어대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 프로리그 기록\')">9. 프로리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">5. 끝장전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">6. 대학CK 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">7. 대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">8. 티어대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">9. 프로리그 기록</button>\n';
   menu+='</div>\n';
   menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">번호나 버튼을 클릭하세요</div>';
   return menu;
