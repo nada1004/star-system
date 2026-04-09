@@ -192,6 +192,10 @@ function addMessage(role, content) {
 // 챗봇 모달 열기
 function openChatbot() {
   chatbotOpen = true;
+  // 열 때마다 채팅 초기화
+  chatHistory = [];
+  saveChatHistory();
+  renderChatHistory();
   const overlay = document.getElementById('chatbotOverlay');
   if (overlay) {
     overlay.classList.add('open');
@@ -655,26 +659,24 @@ function formatPlayerBasicInfo(player) {
   const winColor = parseFloat(rate) >= 50 ? '#16a34a' : '#dc2626';
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.12);margin-bottom:6px">
-      <div style="height:110px;background-image:url('${player.photo}');background-size:cover;background-position:center top;position:relative">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(15,23,42,0.75))"></div>
-        <div style="position:absolute;bottom:8px;left:10px;right:10px">
-          <div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${safePlayerName}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.85)">${safeUniv}</div>
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.13);margin-bottom:6px;background:#fff">
+      <div style="width:100%;aspect-ratio:3/2;background-image:url('${player.photo}');background-size:cover;background-position:center;"></div>
+      <div style="padding:10px 12px 8px;border-bottom:1px solid #f1f5f9">
+        <div style="font-size:17px;font-weight:900;color:#1a202c;margin-bottom:2px">${safePlayerName}</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:6px">${safeUniv}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:5px;align-items:center">
+            <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;color:${tierColor};background:${tierBg}">${player.tier}티어</span>
+            <span style="font-size:12px;color:#64748b">${raceIcon} ${player.race}</span>
+            <span style="font-size:11px;color:#94a3b8">ELO ${player.elo}</span>
+          </div>
+          <div style="font-size:13px;font-weight:800;color:${winColor}">${player.win}승 ${player.loss}패 <span style="font-size:11px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>
         </div>
-      </div>
-      <div style="background:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9">
-        <div style="display:flex;gap:5px;align-items:center">
-          <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;color:${tierColor};background:${tierBg}">${player.tier}티어</span>
-          <span style="font-size:12px;color:#64748b">${raceIcon} ${player.race}</span>
-          <span style="font-size:11px;color:#94a3b8">ELO ${player.elo}</span>
-        </div>
-        <div style="font-size:13px;font-weight:800;color:${winColor}">${player.win}승 ${player.loss}패 <span style="font-size:11px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>
       </div>
       <div style="background:#f8fafc;padding:8px 12px;display:flex;gap:5px">
         <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="flex:1;padding:7px 0;background:#2563eb;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">최근전적</button>
         <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="flex:1;padding:7px 0;background:#2563eb;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">통계</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="flex:1;padding:7px 0;background:#f1f5f9;color:#374151;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">이번달</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="flex:1;padding:7px 0;background:#e8f0fe;color:#1d4ed8;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">이번달</button>
       </div>
     </div>`;
   }
@@ -970,7 +972,6 @@ function formatUniversityInfo(univName) {
 
   const univPlayers = players.filter(p => p.univ === univName);
   if (univPlayers.length === 0) {
-    // 대학명 퍼지 매칭 시도 (개선된 알고리즘)
     const universities = [...new Set(players.map(p => p.univ))];
     const similarUniv = findSimilarUniversity(univName, universities);
     if (similarUniv) {
@@ -979,37 +980,49 @@ function formatUniversityInfo(univName) {
     return `❌ '${univName}' 대학을 찾을 수 없습니다. 다시 입력해주세요.`;
   }
 
-  const logoUrl = (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) ? UNIV_ICONS[univName] : '';
+  // univCfg에서 색상 + 아이콘 URL 가져오기 (대학 상세에서 설정한 값 우선)
+  const uCfg = (typeof univCfg !== 'undefined') ? (univCfg.find(x => x.name === univName) || {}) : {};
+  const logoUrl = uCfg.icon || (typeof UNIV_ICONS !== 'undefined' ? UNIV_ICONS[univName] : '') || '';
+  const univColor = uCfg.color || '#1e3a8a';
+
+  // 배경색을 대학 고유 색상으로, 밝기에 따라 텍스트 색상 결정
+  function hexToRgb(hex) {
+    const h = hex.replace('#','');
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return {r,g,b};
+  }
+  const rgb = hexToRgb(univColor);
+  const luminance = (rgb.r*299 + rgb.g*587 + rgb.b*114) / 1000;
+  const textOnColor = luminance > 140 ? '#1a202c' : '#ffffff';
+  const textSubOnColor = luminance > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)';
 
   // 선수 목록 HTML
   const playerListHTML = univPlayers.map(p => {
     const safeName = escapeHtml(p.name).replace(/'/g, "\\'");
-    const tierColor = {'S':['#7c3aed','#ede9fe'],'A':['#2563eb','#dbeafe'],'B':['#16a34a','#dcfce7'],'C':['#d97706','#fef3c7'],'D':['#dc2626','#fee2e2']}[p.tier] || ['#64748b','#f1f5f9'];
+    const tC = {'S':['#7c3aed','#ede9fe'],'A':['#2563eb','#dbeafe'],'B':['#16a34a','#dcfce7'],'C':['#d97706','#fef3c7'],'D':['#dc2626','#fee2e2']}[p.tier] || ['#64748b','#f1f5f9'];
     const raceIcon = p.race === '테란' ? '🔵' : p.race === '저그' ? '🟣' : p.race === '프로토스' ? '🟡' : '⚫';
-    return `<div onclick="sendQuickMessage('${safeName}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background 0.15s;background:#f8fafc;margin-bottom:4px;border:1px solid #e2e8f0" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'">
-      <span style="font-size:13px;font-weight:700;color:var(--text);flex:1">${escapeHtml(p.name)}</span>
-      <span style="font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700;color:${tierColor[0]};background:${tierColor[1]}">${p.tier}티어</span>
+    return `<div onclick="sendQuickMessage('${safeName}')" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2;transition:background 0.13s" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'">
+      <span style="font-size:13px;font-weight:700;color:#1a202c;flex:1">${escapeHtml(p.name)}</span>
+      <span style="font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]}">${p.tier}</span>
       <span style="font-size:11px;color:#64748b">${raceIcon} ${p.race}</span>
     </div>`;
   }).join('');
 
-  if (logoUrl) {
-    return `<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);border-radius:12px;padding:16px;margin-bottom:6px;text-align:center">
-      <img src="${logoUrl}" style="width:72px;height:72px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.15);padding:6px;margin-bottom:8px" onerror="this.style.display='none'">
-      <div style="font-size:17px;font-weight:900;color:#fff;margin-bottom:2px">${escapeHtml(univName)}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.75)">소속 선수 ${univPlayers.length}명</div>
+  const logoHtml = logoUrl
+    ? `<img src="${logoUrl}" style="width:80px;height:80px;object-fit:contain;margin-bottom:10px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.18))" onerror="this.style.display='none'">`
+    : `<div style="font-size:36px;margin-bottom:8px">🏫</div>`;
+
+  return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);margin-bottom:8px">
+    <div style="background:${univColor};padding:20px 16px 16px;text-align:center">
+      ${logoHtml}
+      <div style="font-size:18px;font-weight:900;color:${textOnColor};letter-spacing:-0.3px">${escapeHtml(univName)}</div>
+      <div style="font-size:12px;color:${textSubOnColor};margin-top:3px">소속 선수 ${univPlayers.length}명</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;padding:0 2px">👥 선수 목록 (클릭하면 정보 조회)</div>
-    ${playerListHTML}`;
-  } else {
-    return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:6px;text-align:center">
-      <div style="font-size:30px;margin-bottom:4px">🏫</div>
-      <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:2px">${escapeHtml(univName)}</div>
-      <div style="font-size:12px;color:#64748b">소속 선수 ${univPlayers.length}명</div>
+    <div style="background:#fff;padding:10px 10px 6px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:6px;padding:0 2px;letter-spacing:0.5px">👥 선수 목록 (클릭하면 조회)</div>
+      ${playerListHTML}
     </div>
-    <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;padding:0 2px">👥 선수 목록</div>
-    ${playerListHTML}`;
-  }
+  </div>`;
 }
 
 // 대학명 퍼지 매칭 (개선된 알고리즘)
