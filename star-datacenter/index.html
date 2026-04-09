@@ -597,20 +597,26 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
   <div class="chatbot-sheet" id="chatbotSheet" onclick="event.stopPropagation()">
     <div class="chatbot-sheet-handle"></div>
     <div class="chatbot-sheet-hdr">
-      <div class="chatbot-sheet-title"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;margin-right:4px"> 알등이</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="chatbot-clear-btn" onclick="clearChatHistory()" style="background:none;border:none;font-size:12px;color:#94a3b8;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background 0.2s">🗑️</button>
+      <div class="chatbot-sheet-title">
+        <img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:28px;height:28px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.15);padding:3px">
+        <div>
+          <div>알등이</div>
+          <div class="chatbot-sheet-title-sub">스타대학 데이터 분석 AI</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="chatbot-clear-btn" onclick="clearChatHistory()" style="background:none;border:none;font-size:13px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:background 0.2s" title="대화 초기화">🗑️</button>
         <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
       </div>
     </div>
     <div class="chatbot-messages" id="chatMessages">
       <div class="chat-message bot-message">
-        <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain"></div>
-        <div class="chat-content">안녕하세요! 알등이입니다. 선수 정보, 랭킹, 대학 정보 등을 물어보세요.</div>
+        <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:26px;height:26px;object-fit:contain"></div>
+        <div class="chat-content">안녕하세요! 알등이입니다. 😊<br>선수명, 대학명을 입력하거나 <b>도움</b>을 입력하면 명령어 목록을 볼 수 있어요!</div>
       </div>
     </div>
     <div class="chatbot-input-area">
-      <input type="text" id="chatInput" placeholder="선수명, 랭킹, 대학명 등을 입력하세요..." 
+      <input type="text" id="chatInput" placeholder="선수명, 대학명, 랭킹 등 입력..."
         onkeydown="handleChatInputKeydown(event)">
       <button class="chatbot-send-btn" onclick="sendMessage()">전송</button>
     </div>

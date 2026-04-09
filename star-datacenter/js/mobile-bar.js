@@ -90,7 +90,10 @@ function closeFab(){
 function _fabGo(tabId){
   const el=document.querySelector('.tab[onclick*="\''+tabId+'\'"]')
          ||document.querySelector('.tab[onclick*=\'"'+tabId+'"\']');
-  if(el&&typeof sw==='function') sw(tabId,el);
+  if(el&&typeof sw==='function'){
+    sw(tabId,el);
+    setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),80);
+  }
 }
 // FAB 외부 클릭 시 닫기
 document.addEventListener('click',function(e){
