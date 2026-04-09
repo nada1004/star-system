@@ -454,7 +454,7 @@ function formatPlayerUnivMatchRecord(player, univM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      return teamA.includes(player.name)||teamB.includes(player.name);
+      return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
     }
   });
   
@@ -468,7 +468,7 @@ function formatPlayerUnivMatchRecord(player, univM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
     }
   }).length;
@@ -487,7 +487,7 @@ function formatPlayerUnivMatchRecord(player, univM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
       info+='📅 '+m.d+' | 대학대전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -533,25 +533,25 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   const compMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
   console.log('Chatbot Debug - compMatches:', compMatches.length);
   
-  // ttM (팀전 구조)
+  // ttM (팀전 구조 - teamAMembers/teamBMembers는 객체 배열)
   const ttMatches=ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const found=teamA.includes(player.name)||teamB.includes(player.name);
+    const found=teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
     if(found && ttMatches.length < 3){
-      console.log('Chatbot Debug - ttM match found:', { teamA, teamB, playerName: player.name });
+      console.log('Chatbot Debug - ttM match found:', { teamA: teamA.map(m=>m.name), teamB: teamB.map(m=>m.name), playerName: player.name });
     }
     return found;
   });
   console.log('Chatbot Debug - ttMatches:', ttMatches.length);
   
-  // proM (팀전 구조)
+  // proM (팀전 구조 - teamAMembers/teamBMembers는 객체 배열)
   const proMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const found=teamA.includes(player.name)||teamB.includes(player.name);
+    const found=teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
     if(found && proMatches.length < 3){
-      console.log('Chatbot Debug - proM match found:', { teamA, teamB, playerName: player.name });
+      console.log('Chatbot Debug - proM match found:', { teamA: teamA.map(m=>m.name), teamB: teamB.map(m=>m.name), playerName: player.name });
     }
     return found;
   });
@@ -574,7 +574,7 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
     }
   }).length;
@@ -593,7 +593,7 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
       info+='📅 '+m.d+' | '+(m.n||'대회')+' | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -610,7 +610,7 @@ function formatPlayerTTRecord(player, ttM){
   const playerMatches=ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   });
   
   if(playerMatches.length===0){
@@ -620,7 +620,7 @@ function formatPlayerTTRecord(player, ttM){
   const wins=playerMatches.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
@@ -633,7 +633,7 @@ function formatPlayerTTRecord(player, ttM){
   playerMatches.slice(-5).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -649,7 +649,7 @@ function formatPlayerProRecord(player, proM){
   const playerMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   });
   
   if(playerMatches.length===0){
@@ -659,7 +659,7 @@ function formatPlayerProRecord(player, proM){
   const wins=playerMatches.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
@@ -672,7 +672,7 @@ function formatPlayerProRecord(player, proM){
   playerMatches.slice(-5).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -715,7 +715,7 @@ function formatPlayerCKRecord(player, ckM){
   const playerMatches=ckM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   });
   
   if(playerMatches.length===0){
@@ -725,7 +725,7 @@ function formatPlayerCKRecord(player, ckM){
   const wins=playerMatches.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
@@ -738,7 +738,7 @@ function formatPlayerCKRecord(player, ckM){
   playerMatches.slice(-5).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -784,12 +784,12 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
   allMatches.push(...ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   allMatches.push(...proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   
   const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
@@ -804,7 +804,7 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
     }
   }).length;
@@ -823,7 +823,7 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
       info+='📅 '+m.d+' | 토너먼트 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -843,12 +843,12 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
   allMatches.push(...ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   allMatches.push(...proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }));
   
   const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
@@ -863,7 +863,7 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
     }
   }).length;
@@ -882,7 +882,7 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     }else{
       const teamA=m.teamAMembers||[];
       const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.includes(player.name);
+      const inTeamA=teamA.some(mem=>mem.name===player.name);
       const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
       const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
       info+='📅 '+m.d+' | 조별리그 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -899,7 +899,7 @@ function formatPlayerTeamRecord(player, proM){
   const playerMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }).filter(m=>m.type==='팀전'||m.format==='팀전');
   
   if(playerMatches.length===0){
@@ -909,7 +909,7 @@ function formatPlayerTeamRecord(player, proM){
   const wins=playerMatches.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
@@ -922,7 +922,7 @@ function formatPlayerTeamRecord(player, proM){
   playerMatches.slice(-5).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
@@ -938,7 +938,7 @@ function formatPlayerNormalRecord(player, proM){
   const playerMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
+    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
   }).filter(m=>m.type==='일반'||m.format==='일반'||!m.type&&!m.format);
   
   if(playerMatches.length===0){
@@ -948,7 +948,7 @@ function formatPlayerNormalRecord(player, proM){
   const wins=playerMatches.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
@@ -961,7 +961,7 @@ function formatPlayerNormalRecord(player, proM){
   playerMatches.slice(-5).reverse().forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.includes(player.name);
+    const inTeamA=teamA.some(mem=>mem.name===player.name);
     const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
     const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
