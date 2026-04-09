@@ -253,11 +253,24 @@ function processChatbotQuery(query){
 function generateChatbotResponse(query){
   const q=query.toLowerCase();
   
+  // 디버깅: 데이터 변수 확인
+  console.log('Chatbot Debug - Data availability:', {
+    players: typeof players!=='undefined',
+    compM: typeof window.compM!=='undefined',
+    ttM: typeof window.ttM!=='undefined',
+    proM: typeof window.proM!=='undefined',
+    ckM: typeof window.ckM!=='undefined',
+    gjM: typeof window.gjM!=='undefined',
+    univM: typeof window.univM!=='undefined'
+  });
+  
   // 선수 이름 추출 시도 - 더 광범위한 패턴
   const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
   if(playerMatch){
     const playerName=playerMatch[1];
     const mode=playerMatch[2];
+    
+    console.log('Chatbot Debug - Query:', { playerName, mode, query });
     
     // 전역 players 변수 사용
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
