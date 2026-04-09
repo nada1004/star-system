@@ -257,8 +257,10 @@ function generateChatbotResponse(query){
   const loadData = (key) => {
     try {
       const data = localStorage.getItem(key);
+      console.log('Chatbot Debug - Loading key:', key, 'exists:', !!data);
       return data ? JSON.parse(data) : [];
     } catch(e) {
+      console.error('Chatbot Debug - Error loading key:', key, e);
       return [];
     }
   };
@@ -283,11 +285,11 @@ function generateChatbotResponse(query){
     miniM: miniM.length
   });
   
-  // 선수 이름 추출 시도 - 더 광범위한 패턴
-  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
+  // 선수 이름 추출 시도 - CK 등 키워드를 제외하고 선수 이름 추출
+  const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
   if(playerMatch){
     const playerName=playerMatch[1];
-    const mode=playerMatch[2];
+    const mode=playerMatch[playerMatch.length-1];
     
     console.log('Chatbot Debug - Query:', { playerName, mode, query });
     
