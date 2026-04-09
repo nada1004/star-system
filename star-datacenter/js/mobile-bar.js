@@ -182,6 +182,65 @@ document.addEventListener('click',function(e){
 // 채팅봇 활성화 상태 (기본값: true)
 var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
 
+// 페이지네이션 상태 관리
+var _paginationState={
+  currentQuery: null,
+  currentPage: 1,
+  pageSize: 10,
+  totalMatches: 0,
+  matches: []
+};
+
+function setPaginationState(query, matches){
+  _paginationState.currentQuery=query;
+  _paginationState.currentPage=1;
+  _paginationState.totalMatches=matches.length;
+  _paginationState.matches=matches;
+}
+
+function getPaginatedMatches(matches, page, pageSize){
+  const startIndex=(page-1)*pageSize;
+  const endIndex=startIndex+pageSize;
+  // 최근 날짜가 1번이 되도록 역순 정렬
+  const reversed=[...matches].reverse();
+  return reversed.slice(startIndex, endIndex);
+}
+
+function formatPaginationControls(totalMatches, currentPage, pageSize){
+  const totalPages=Math.ceil(totalMatches/pageSize);
+  if(totalPages<=1) return '';
+  
+  let controls='\n\n━━━━━━━━━━━━━━━━━━\n';
+  controls+='<div style="display:flex;gap:8px;align-items:center;justify-content:center;padding:8px 0">\n';
+  controls+='<button style="padding:6px 12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-weight:500;color:#1e293b;cursor:pointer" onclick="window.sendChatbotMessage(\'이전 페이지\')">◀ 이전</button>\n';
+  controls+='<span style="font-size:13px;font-weight:600;color:#64748b">'+currentPage+' / '+totalPages+'</span>\n';
+  controls+='<button style="padding:6px 12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-weight:500;color:#1e293b;cursor:pointer" onclick="window.sendChatbotMessage(\'다음 페이지\')">다음 ▶</button>\n';
+  controls+='</div>\n';
+  return controls;
+}
+
+function handlePaginationCommand(command){
+  if(!_paginationState.currentQuery) return null;
+  
+  const totalPages=Math.ceil(_paginationState.totalMatches/_paginationState.pageSize);
+  
+  if(command==='이전 페이지'){
+    if(_paginationState.currentPage>1){
+      _paginationState.currentPage--;
+    }else{
+      return '⚠️ 첫 페이지입니다.';
+    }
+  }else if(command==='다음 페이지'){
+    if(_paginationState.currentPage<totalPages){
+      _paginationState.currentPage++;
+    }else{
+      return '⚠️ 마지막 페이지입니다.';
+    }
+  }
+  
+  return null;
+}
+
 function openChatbot(){
   if(!_chatbotEnabled){
     alert('채팅봇이 비활성화되어 있습니다. FAB 메뉴에서 활성화해주세요.');
@@ -265,6 +324,18 @@ function processChatbotQuery(query){
 }
 function generateChatbotResponse(query){
   const q=query.toLowerCase();
+  
+  // 페이지네이션 명령 처리
+  if(q==='이전 페이지'||q==='다음 페이지'){
+    const paginationError=handlePaginationCommand(q);
+    if(paginationError) return paginationError;
+    
+    // 현재 쿼리로 다시 검색 실행
+    if(_paginationState.currentQuery){
+      return generateChatbotResponse(_paginationState.currentQuery);
+    }
+    return '⚠️ 페이지네이션 상태가 초기화되지 않았습니다.';
+  }
   
   // J 함수 사용하여 데이터 로드 (LZ-String 압축 처리 포함)
   const loadData = (key) => {
@@ -450,17 +521,19 @@ function formatPlayerMiniRecord(player, miniM){
     const losses=historyMatches.filter(h=>h.result==='패').length;
     const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
     
+    // 페이지네이션 상태 설정
+    setPaginationState(player.name+' 미니대전 기록', historyMatches);
+    
     let info='⚡ '+player.name+' 미니대전 기록\n';
     info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
     info+='━━━━━━━━━━━━━━━━━━\n';
     
-    historyMatches.slice(-10).reverse().forEach(h=>{
+    const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+    paginatedMatches.forEach(h=>{
       info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
     });
     
-    if(historyMatches.length>10){
-      info+='... (최근 10경기만 표시)';
-    }
+    info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
     
     return info;
   }
@@ -503,11 +576,15 @@ function formatPlayerMiniRecord(player, miniM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 미니대전 기록', playerMatches);
+  
   let info='⚡ '+player.name+' 미니대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -563,9 +640,7 @@ function formatPlayerMiniRecord(player, miniM){
     }
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -597,11 +672,15 @@ function formatPlayerUnivMatchRecord(player, univM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 대학대전 기록', playerMatches);
+  
   let info='🏟️ '+player.name+' 대학대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -634,9 +713,7 @@ function formatPlayerUnivMatchRecord(player, univM){
     }
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -651,17 +728,19 @@ function formatPlayerIndRecord(player){
     return '📭 '+player.name+'의 개인전 기록이 없습니다.';
   }
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 개인전 기록', player.history);
+  
   let info='⚔️ '+player.name+' 개인전 기록\n';
   info+='📊 '+player.win+'승 '+player.loss+'패\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  player.history.slice(-10).reverse().forEach(h=>{
+  const paginatedMatches=getPaginatedMatches(player.history, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
     info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  if(player.history.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(player.history.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -726,11 +805,15 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 대회 기록', playerMatches);
+  
   let info='🏆 '+player.name+' 대회 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -763,9 +846,7 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -789,11 +870,15 @@ function formatPlayerTTRecord(player, ttM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 티어대회 기록', playerMatches);
+  
   let info='🎖️ '+player.name+' 티어대회 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -820,9 +905,7 @@ function formatPlayerTTRecord(player, ttM){
     info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -853,11 +936,15 @@ function formatPlayerProRecord(player, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 프로리그 기록', playerMatches);
+  
   let info='🏅 '+player.name+' 프로리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -884,9 +971,7 @@ function formatPlayerProRecord(player, proM){
     info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -908,19 +993,21 @@ function formatPlayerGJRecord(player, gjM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 끝장전 기록', playerMatches);
+  
   let info='🔥 '+player.name+' 끝장전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const opp=m.wName===player.name?m.lName:m.wName;
     const result=m.wName===player.name?'승':'패';
     info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -951,11 +1038,15 @@ function formatPlayerCKRecord(player, ckM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 대학CK 기록', playerMatches);
+  
   let info='🤝 '+player.name+' 대학CK 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -982,9 +1073,7 @@ function formatPlayerCKRecord(player, ckM){
     info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -1018,35 +1107,28 @@ function formatPlayerSevilRecord(player, univM){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
   }
   
-  // 승패 계산
   const wins=playerMatches.filter(m=>{
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if((g.playerA===player.name&&g.winner==='A')||(g.playerB===player.name&&g.winner==='B')){
-          return true;
-        }
-      }
-    }
-    return false;
+    const inTeamA=m.a===player.univ;
+    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
   }).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 시빌원 기록', playerMatches);
   
   let info='🏛️ '+player.name+' 시빌원 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const oppTeam=m.a===player.univ?m.b:m.a;
     const result=(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)?'승':'패';
     info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -1093,11 +1175,15 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 토너먼트 기록', playerMatches);
+  
   let info='🏆 '+player.name+' 토너먼트 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -1130,9 +1216,7 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -1179,11 +1263,15 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
-  let info='📋 '+player.name+' 조별리그 기록\n';
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 조별리그 기록', playerMatches);
+  
+  let info='🏆 '+player.name+' 조별리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     if(m.p1){
       const opp=m.p1===player.name?m.p2:m.p1;
       const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
@@ -1216,9 +1304,7 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     }
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -1242,11 +1328,15 @@ function formatPlayerTeamRecord(player, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 팀전 기록', playerMatches);
+  
   let info='👥 '+player.name+' 팀전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -1273,9 +1363,7 @@ function formatPlayerTeamRecord(player, proM){
     info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -1299,11 +1387,15 @@ function formatPlayerNormalRecord(player, proM){
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 일반 기록', playerMatches);
+  
   let info='📝 '+player.name+' 일반 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  playerMatches.slice(-10).reverse().forEach(m=>{
+  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
     const inTeamA=teamA.some(mem=>mem.name===player.name);
@@ -1330,9 +1422,7 @@ function formatPlayerNormalRecord(player, proM){
     info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(playerMatches.length>10){
-    info+='... (최근 10경기만 표시)';
-  }
+  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
