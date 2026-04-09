@@ -4,6 +4,34 @@
 let chatHistory = [];
 let chatbotOpen = false;
 
+// 대회 데이터 구조 (예시)
+const tournaments = [
+  {
+    name: '2024 스타대학 리그',
+    date: '2024-03-15',
+    status: '진행중',
+    teams: ['츠캄몬스타즈', '케이대', '포스텍', '서울대'],
+    bracket: [
+      { round: '8강', match1: { team1: '츠캄몬스타즈', team2: '케이대', result: '2-1' }, match2: { team1: '포스텍', team2: '서울대', result: '1-2' } },
+      { round: '4강', match1: { team1: '츠캄몬스타즈', team2: '서울대', result: '2-0' } }
+    ]
+  },
+  {
+    name: '2024 스타대학 컵',
+    date: '2024-06-20',
+    status: '예정',
+    teams: ['연세대', '고려대', '성균관대', '한양대'],
+    bracket: []
+  }
+];
+
+// 대회별 경기 기록
+const tournamentMatches = [
+  { tournament: '2024 스타대학 리그', date: '2024-03-15', team1: '츠캄몬스타즈', team2: '케이대', result: '2-1', map: 'Cactus Valley' },
+  { tournament: '2024 스타대학 리그', date: '2024-03-15', team1: '포스텍', team2: '서울대', result: '1-2', map: 'Terraform' },
+  { tournament: '2024 스타대학 리그', date: '2024-03-20', team1: '츠캄몬스타즈', team2: '서울대', result: '2-0', map: 'Neon Violet Square' }
+];
+
 // 챗봇 초기화
 function initChatbot() {
   loadChatHistory();
@@ -51,23 +79,27 @@ function renderMarkdown(text) {
   // ```code block``` -> <pre><code>code block</code></pre>
   html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:#f1f5f9;padding:12px;border-radius:8px;overflow-x:auto"><code>$1</code></pre>');
   
-  // 선수명 클릭 가능하게 (playerDetail 모달 열기)
-  html = html.replace(/([가-힣a-zA-Z0-9_]+)/g, (match) => {
-    const player = typeof players !== 'undefined' ? players.find(p => p.name === match) : null;
-    if (player) {
-      const safeName = escapeHtml(match).replace(/'/g, "\\'");
-      return `<span onclick="openPlayerDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(match)}</span>`;
-    }
-    // 대학명 클릭 가능하게
-    if (typeof players !== 'undefined') {
-      const universities = [...new Set(players.map(p => p.univ))];
-      if (universities.includes(match)) {
-        const safeName = escapeHtml(match).replace(/'/g, "\\'");
-        return `<span onclick="openUnivDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(match)}</span>`;
-      }
-    }
-    return escapeHtml(match);
-  });
+  // 선수명/대학명만 선택적으로 클릭 가능하게
+  if (typeof players !== 'undefined') {
+    const playerNames = players.map(p => p.name);
+    const universities = [...new Set(players.map(p => p.univ))];
+    
+    // 선수명 먼저 교체
+    playerNames.forEach(playerName => {
+      const escapedName = escapeHtml(playerName);
+      const safeName = escapedName.replace(/'/g, "\\'");
+      const regex = new RegExp(`(${playerName})`, 'g');
+      html = html.replace(regex, `<span onclick="openPlayerDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapedName}</span>`);
+    });
+    
+    // 대학명 교체
+    universities.forEach(univName => {
+      const escapedName = escapeHtml(univName);
+      const safeName = escapedName.replace(/'/g, "\\'");
+      const regex = new RegExp(`(${univName})`, 'g');
+      html = html.replace(regex, `<span onclick="openUnivDetail('${safeName}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapedName}</span>`);
+    });
+  }
   
   // 줄바꿈 -> <br>
   html = html.replace(/\n/g, '<br>');
@@ -116,7 +148,7 @@ function renderChatHistory() {
     const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain">';
     const content = msg.content;
     
-    // 타임스탬프 형식화
+    // 타임스탬프 형식화 (없으면 빈 문자열)
     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
     
     // 봇 메시지에 복사 버튼 추가
@@ -321,7 +353,11 @@ function generateResponse(userMessage) {
            `• '스트리머명 맵명' : 특정 맵 전적\n\n` +
            `2️⃣ 대학 정보\n` +
            `• '대학명' : 소속 선수 및 대학 로고\n\n` +
-           `3️⃣ 검색 기능\n` +
+           `3️⃣ 대회 정보\n` +
+           `• '대회 일정' 또는 '브라켓' : 대회 일정 및 브라켓\n` +
+           `• '대회 목록' : 전체 대회 목록\n` +
+           `• '대회명 대회' : 특정 대회 정보\n\n` +
+           `4️⃣ 검색 기능\n` +
            `• '티어 A~B' : 티어 범위 검색\n` +
            `• 'A 티어 이상' : 티어 이상 검색\n` +
            `• '승률 50% 이상' : 승률 범위 검색\n` +
@@ -515,6 +551,38 @@ function generateResponse(userMessage) {
     return formatOpponentSearch(opponentName);
   }
   
+  // 대회 관련 검색
+  if (msg.includes('대회') || msg.includes('리그') || msg.includes('컵') || msg.includes('브라켓') || msg.includes('일정')) {
+    if (msg.includes('일정') || msg.includes('브라켓')) {
+      return formatTournamentSchedule();
+    }
+    if (msg.includes('리그') || msg.includes('컵')) {
+      return formatTournamentList();
+    }
+    return formatTournamentSchedule();
+  }
+  
+  // 특정 대회 정보 검색
+  const tournamentMatch = userMessage.match(/(.+?)\s+대회$/);
+  if (tournamentMatch) {
+    const tournamentName = tournamentMatch[1];
+    return formatTournamentInfo(tournamentName);
+  }
+  
+  // 팀 대회 기록 검색
+  const teamTournamentMatch = userMessage.match(/(.+?)\s+대회\s+기록$/);
+  if (teamTournamentMatch) {
+    const teamName = teamTournamentMatch[1];
+    return formatTeamTournamentRecord(teamName);
+  }
+  
+  // 대회 통계 검색
+  const tournamentStatsMatch = userMessage.match(/(.+?)\s+대회\s+통계$/);
+  if (tournamentStatsMatch) {
+    const tournamentName = tournamentStatsMatch[1];
+    return formatTournamentStats(tournamentName);
+  }
+  
   // 인사
   if (msg.includes('안녕') || msg.includes('hello') || msg.includes('hi')) {
     return '안녕하세요! 알등이입니다. 스타대학 데이터에 대해 궁금한 점이 있으신가요? 😊';
@@ -561,32 +629,31 @@ function formatPlayerBasicInfo(player) {
   const safeUniv = escapeHtml(player.univ);
   
   if (player.photo) {
-    // 프로필 사진과 정보 분리
-    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
-      <img src="${player.photo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:150px;height:150px;object-fit:cover;border-radius:12px;margin-bottom:16px;border:3px solid var(--blue)">
-      <div style="display:none;width:150px;height:150px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:16px;border:3px solid var(--blue)">👤</div>
-      <div style="text-align:center;width:100%">
-        <div style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px">${safePlayerName}</div>
-        <div style="font-size:16px;color:var(--text2);margin-bottom:12px">${safeUniv}</div>
-        <div style="display:flex;gap:16px;justify-content:center;margin-bottom:12px;font-size:14px;color:var(--text2)">
-          <span>🎖️ ${player.tier}</span>
-          <span>🎮 ${player.race}</span>
-          <span>⭐ ${player.elo}</span>
+    // 프로필 사진을 전체 배경으로 표시 (가독성 개선)
+    return `<div style="position:relative;padding:24px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:220px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.85) 100%);border-radius:12px"></div>
+      <div style="position:relative;color:white;text-align:center;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.8)">
+        <div style="font-size:32px;font-weight:700;margin-bottom:8px">${safePlayerName}</div>
+        <div style="font-size:18px;margin-bottom:12px;background:rgba(0,0,0,0.4);padding:6px 18px;border-radius:20px;display:inline-block">${safeUniv}</div>
+        <div style="font-size:16px;margin-top:12px;letter-spacing:2px">
+          🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
         </div>
-        <div style="font-size:20px;font-weight:700;color:var(--blue);margin-bottom:16px">
+        <div style="font-size:22px;margin-top:16px;font-weight:700;background:rgba(255,255,255,0.25);padding:8px 24px;border-radius:12px;display:inline-block">
           ${player.win}승 ${player.loss}패 (${rate}%)
         </div>
-      </div>
-      <div style="width:100%;border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-        <div style="font-size:13px;color:var(--text3);text-align:center;margin-bottom:8px">📝 총 ${total}경기</div>
-        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-          <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
+        <div style="font-size:14px;margin-top:12px;opacity:0.9">
+          📝 총 ${total}경기
         </div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+        <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">이번달</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">저그전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">테란전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">프로토스전</button>
       </div>
     </div>`;
   }
@@ -641,7 +708,7 @@ function formatPlayerRecentRecord(player) {
   
   recentGames.forEach(h => {
     const safeOpp = escapeHtml(h.opp);
-    const safeOppForClick = safeOpp.replace(/'/g, "\\'");
+    const safeOppForClick = safeOpp.replace(/'/g, "\\'").replace(/"/g, '\\"');
     // 상대명 클릭 가능하게
     const oppPlayer = typeof players !== 'undefined' ? players.find(p => p.name === h.opp) : null;
     const oppDisplay = oppPlayer ? `<span onclick="sendQuickMessage('${safeOppForClick}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${safeOpp}</span>` : safeOpp;
@@ -863,9 +930,9 @@ function formatUniversityInfo(univName) {
   
   const univPlayers = players.filter(p => p.univ === univName);
   if (univPlayers.length === 0) {
-    // 대학명 퍼지 매칭 시도
+    // 대학명 퍼지 매칭 시도 (개선된 알고리즘)
     const universities = [...new Set(players.map(p => p.univ))];
-    const similarUniv = universities.find(u => u.toLowerCase().includes(univName.toLowerCase()) || univName.toLowerCase().includes(u.toLowerCase()));
+    const similarUniv = findSimilarUniversity(univName, universities);
     if (similarUniv) {
       return `🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.\n\n` + formatUniversityInfo(similarUniv);
     }
@@ -897,6 +964,65 @@ function formatUniversityInfo(univName) {
   });
   
   return result;
+}
+
+// 대학명 퍼지 매칭 (개선된 알고리즘)
+function findSimilarUniversity(input, universities) {
+  const inputLower = input.toLowerCase();
+  
+  // 정확히 일치
+  if (universities.includes(input)) return input;
+  
+  // 부분 일치 (입력이 대학명에 포함)
+  const partialMatch = universities.find(u => u.toLowerCase().includes(inputLower));
+  if (partialMatch) return partialMatch;
+  
+  // 대학명이 입력에 포함
+  const reverseMatch = universities.find(u => inputLower.includes(u.toLowerCase()));
+  if (reverseMatch) return reverseMatch;
+  
+  // Levenshtein 거리 계산
+  let bestMatch = null;
+  let bestScore = Infinity;
+  
+  universities.forEach(u => {
+    const score = levenshteinDistance(inputLower, u.toLowerCase());
+    if (score < bestScore && score <= 3) {
+      bestScore = score;
+      bestMatch = u;
+    }
+  });
+  
+  return bestMatch;
+}
+
+// Levenshtein 거리 계산
+function levenshteinDistance(a, b) {
+  const matrix = [];
+  
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[b.length][a.length];
 }
 
 // 선수 대 선수 전적 (head-to-head)
@@ -1132,6 +1258,140 @@ function formatOpponentSearch(opponentName) {
   if (gameDetails.length > 20) {
     result += `\n... (총 ${totalGames}경기)`;
   }
+  
+  return result;
+}
+
+// 대회 일정/브라켓 정보
+function formatTournamentSchedule() {
+  if (tournaments.length === 0) return '❌ 대회 정보가 없습니다.';
+  
+  let result = `🏆 대회 일정 및 브라켓\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  tournaments.forEach(t => {
+    result += `📅 ${t.date} | ${t.name} (${t.status})\n`;
+    result += `참가 팀: ${t.teams.join(', ')}\n\n`;
+    
+    if (t.bracket.length > 0) {
+      result += `브라켓:\n`;
+      t.bracket.forEach(b => {
+        result += `  ${b.round}:\n`;
+        Object.keys(b).forEach(key => {
+          if (key.startsWith('match')) {
+            const m = b[key];
+            result += `    ${m.team1} vs ${m.team2} (${m.result})\n`;
+          }
+        });
+      });
+      result += '\n';
+    }
+  });
+  
+  return result;
+}
+
+// 대회 목록
+function formatTournamentList() {
+  if (tournaments.length === 0) return '❌ 대회 정보가 없습니다.';
+  
+  let result = `🏆 대회 목록\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  tournaments.forEach((t, index) => {
+    result += `${index + 1}. ${t.name}\n`;
+    result += `   📅 ${t.date} | 상태: ${t.status}\n`;
+    result += `   참가 팀: ${t.teams.join(', ')}\n\n`;
+  });
+  
+  return result;
+}
+
+// 특정 대회 정보
+function formatTournamentInfo(tournamentName) {
+  const tournament = tournaments.find(t => t.name.includes(tournamentName) || tournamentName.includes(t.name));
+  
+  if (!tournament) return `❌ '${tournamentName}' 대회를 찾을 수 없습니다.`;
+  
+  let result = `🏆 ${tournament.name}\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  result += `📅 일자: ${tournament.date}\n`;
+  result += `상태: ${tournament.status}\n`;
+  result += `참가 팀: ${tournament.teams.join(', ')}\n\n`;
+  
+  if (tournament.bracket.length > 0) {
+    result += `브라켓:\n`;
+    tournament.bracket.forEach(b => {
+      result += `  ${b.round}:\n`;
+      Object.keys(b).forEach(key => {
+        if (key.startsWith('match')) {
+          const m = b[key];
+          result += `    ${m.team1} vs ${m.team2} (${m.result})\n`;
+        }
+      });
+    });
+  }
+  
+  return result;
+}
+
+// 팀별 대회 기록
+function formatTeamTournamentRecord(teamName) {
+  const teamMatches = tournamentMatches.filter(m => m.team1 === teamName || m.team2 === teamName);
+  
+  if (teamMatches.length === 0) return `❌ '${teamName}'의 대회 기록이 없습니다.`;
+  
+  let result = `🏆 ${teamName} 대회 기록\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  teamMatches.forEach(m => {
+    const opponent = m.team1 === teamName ? m.team2 : m.team1;
+    const teamResult = m.team1 === teamName ? m.result.split('-')[0] : m.result.split('-')[1];
+    result += `📅 ${m.date} | ${m.tournament}\n`;
+    result += `   ${teamName} vs ${opponent} (${m.result}) | ${m.map}\n`;
+  });
+  
+  return result;
+}
+
+// 대회별 통계
+function formatTournamentStats(tournamentName) {
+  const tournament = tournaments.find(t => t.name.includes(tournamentName) || tournamentName.includes(t.name));
+  
+  if (!tournament) return `❌ '${tournamentName}' 대회를 찾을 수 없습니다.`;
+  
+  const matches = tournamentMatches.filter(m => m.tournament === tournament.name);
+  
+  if (matches.length === 0) return `❌ '${tournamentName}' 경기 기록이 없습니다.`;
+  
+  let result = `📊 ${tournament.name} 통계\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  result += `총 경기 수: ${matches.length}경기\n\n`;
+  
+  // 팀별 승률
+  const teamStats = {};
+  matches.forEach(m => {
+    if (!teamStats[m.team1]) teamStats[m.team1] = { wins: 0, losses: 0 };
+    if (!teamStats[m.team2]) teamStats[m.team2] = { wins: 0, losses: 0 };
+    
+    const score1 = parseInt(m.result.split('-')[0]);
+    const score2 = parseInt(m.result.split('-')[1]);
+    
+    if (score1 > score2) {
+      teamStats[m.team1].wins++;
+      teamStats[m.team2].losses++;
+    } else {
+      teamStats[m.team1].losses++;
+      teamStats[m.team2].wins++;
+    }
+  });
+  
+  result += `팀별 승률:\n`;
+  Object.keys(teamStats).forEach(team => {
+    const total = teamStats[team].wins + teamStats[team].losses;
+    const rate = total > 0 ? ((teamStats[team].wins / total) * 100).toFixed(1) : 0;
+    result += `  ${team}: ${teamStats[team].wins}승 ${teamStats[team].losses}패 (${rate}%)\n`;
+  });
   
   return result;
 }
