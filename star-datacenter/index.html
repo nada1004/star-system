@@ -610,7 +610,7 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
     </div>
     <div class="chatbot-input-area">
       <input type="text" id="chatInput" placeholder="선수명, 랭킹, 대학명 등을 입력하세요..." 
-        onkeydown="handleChatInputKeydown(event)">
+        onkeydown="handleChatInputKeydown(event)" oninput="handleChatInputInput(event)">
       <button class="chatbot-send-btn" onclick="sendMessage()">전송</button>
     </div>
   </div>
