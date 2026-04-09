@@ -525,6 +525,13 @@ function formatPlayerInfo(player){
 function formatPlayerMiniRecord(player, miniM){
   console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0, miniM: miniM ? miniM.length : 0 });
   
+  // miniM 데이터 확인
+  if(miniM && miniM.length > 0){
+    const samplePlayers=[...new Set([...miniM.slice(0, 10).map(m=>m.a),...miniM.slice(0, 10).map(m=>m.b)])];
+    console.log('Chatbot Debug - Sample players in miniM:', samplePlayers);
+    console.log('Chatbot Debug - Looking for player name:', player.name);
+  }
+  
   // 스트리머 상세와 동일한 데이터 소스 사용 - miniM에서 해당 선수의 기록 추출
   const miniMatches=(miniM||[]).filter(m=>(m.a===player.name||m.b===player.name));
   console.log('Chatbot Debug - miniM matches for player:', miniMatches.length);
