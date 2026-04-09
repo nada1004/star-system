@@ -1190,10 +1190,11 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   margin-bottom: 2px;
 }
 .chat-message.user-message .chat-avatar {
-  background: #e9eef6;
+  background: #f1f5f9;
   color: #374151;
   font-size: 13px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
 }
 .chat-message.bot-message .chat-avatar {
   background: #fff;
@@ -1214,10 +1215,10 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   color: #1a202c;
 }
 .chat-message.user-message .chat-content {
-  background: #e9eef6;
-  color: #1a202c;
+  background: #f1f5f9;
+  color: #374151;
   border-radius: 16px 16px 4px 16px;
-  border-color: #dde4ef;
+  border-color: #e2e8f0;
   box-shadow: none;
 }
 
