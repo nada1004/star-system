@@ -1221,6 +1221,13 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   border-color: #e2e8f0;
   box-shadow: none;
 }
+.chat-content-card {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  max-width: 100% !important;
+}
 
 /* 모바일 챗봇 최적화 */
 @media(max-width:768px) {
