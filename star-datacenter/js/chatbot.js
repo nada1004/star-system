@@ -491,7 +491,18 @@ function generateResponse(userMessage) {
     return formatUniversityVsRecord(univ1, univ2);
   }
   
-  // 선수 이름만 입력된 경우 - 기본 정보
+  // 대학 관련 검색 (대학명 검색을 먼저 체크)
+  const universityMatch = userMessage.match(/([^\s]+)/);
+  if (universityMatch) {
+    const univName = universityMatch[1];
+    const universities = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
+    // 대학명이거나 "대"가 포함된 경우 대학 정보 우선
+    if (universities.includes(univName) || univName.includes('대') || univName.includes('학')) {
+      return formatUniversityInfo(univName);
+    }
+  }
+  
+  // 선수 이름 검색 (단순 이름)
   const playerOnlyMatch = userMessage.match(/^([^\s]+)$/);
   if (playerOnlyMatch) {
     const playerName = playerOnlyMatch[1];
