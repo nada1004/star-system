@@ -524,7 +524,7 @@
   </div>
 </div>
 
-<script>['js/constants.js','js/data.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/competition.js','js/tier-tour.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/auth.js','js/cloud-board.js','js/init.js','js/board2.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
+<script>['js/constants.js','js/data.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/competition.js','js/tier-tour.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/auth.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
@@ -534,7 +534,6 @@
 <!-- 📱 FAB -->
 <script>
 var _fabOpen=false;
-var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
 
 function toggleFab(){
   _fabOpen=!_fabOpen;
@@ -564,115 +563,14 @@ function updateFabVisibility(){
   }else{
     fab.style.display=hidePC?'none':'flex';
   }
-  
-  if(hideMobile||hidePC){
-    closeChatbot();
-  }
 }
-function openChatbot(){
-  if(!_chatbotEnabled){
-    alert('채팅봇이 비활성화되어 있습니다. FAB 메뉴에서 활성화해주세요.');
-    return;
-  }
-  const overlay=document.getElementById('chatbotOverlay');
-  if(overlay){
-    overlay.classList.add('open');
-    overlay.style.display='flex';
-    setTimeout(()=>{document.getElementById('chatbotInput')?.focus();},100);
-  }
-}
-function closeChatbot(e){
-  if(e&&e.target!==document.getElementById('chatbotOverlay'))return;
-  const overlay=document.getElementById('chatbotOverlay');
-  if(overlay){
-    overlay.classList.remove('open');
-    setTimeout(()=>{overlay.style.display='none';},300);
-  }
-}
-function toggleChatbot(){
-  if(!_chatbotEnabled){
-    _chatbotEnabled=true;
-    localStorage.setItem('su_chatbotEnabled','1');
-    
-    const icon=document.getElementById('chatbotToggleIcon');
-    const status=document.getElementById('chatbotToggleStatus');
-    if(icon) icon.textContent='🤖';
-    if(status) status.textContent='(ON)';
-    if(status) status.style.color='#94a3b8';
-    
-    openChatbot();
-  }else{
-    const overlay=document.getElementById('chatbotOverlay');
-    if(overlay && overlay.classList.contains('open')){
-      closeChatbot();
-    }else{
-      openChatbot();
-    }
-  }
-}
-function sendChatbotMessage(query){
-  console.log('Chatbot Debug - sendChatbotMessage called with:', query);
-  if(!query){
-    const input=document.getElementById('chatbotInput');
-    query=input.value.trim();
-    if(!query)return;
-    input.value='';
-  }
-  
-  addChatbotMessage(query,'user');
-  
-  setTimeout(()=>processChatbotQuery(query),100);
-}
-function addChatbotMessage(text,sender){
-  const container=document.getElementById('chatbotMessages');
-  if(!container)return;
-  
-  const msgDiv=document.createElement('div');
-  msgDiv.className='chatbot-message '+sender;
-  msgDiv.innerHTML='<div class="chatbot-bubble">'+text+'</div>';
-  container.appendChild(msgDiv);
-  container.scrollTop=container.scrollHeight;
-}
-function processChatbotQuery(query){
-  console.log('Chatbot Debug - processChatbotQuery called with:', query);
-  console.log('Chatbot Debug - generateChatbotResponse exists:', typeof generateChatbotResponse==='function');
-  console.log('Chatbot Debug - players exists:', typeof players!=='undefined');
-  
-  if(typeof generateChatbotResponse==='function'){
-    try{
-      const response=generateChatbotResponse(query);
-      console.log('Chatbot Debug - Response generated:', response);
-      addChatbotMessage(response,'bot');
-    }catch(e){
-      console.error('Chatbot Debug - Error in generateChatbotResponse:', e);
-      addChatbotMessage('챗봇 응답 생성 중 오류가 발생했습니다: '+e.message,'bot');
-    }
-  }else{
-    console.error('Chatbot Debug - generateChatbotResponse not available');
-    addChatbotMessage('챗봇 기능이 로드되지 않았습니다. 페이지를 새로고침해주세요.','bot');
-  }
-}
-window.sendChatbotMessage=sendChatbotMessage;
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
-
-// mobile-bar.js 로드 확인
-console.log('Chatbot Debug - Loading mobile-bar.js...');
-var script=document.createElement('script');
-script.src='js/mobile-bar.js'+(typeof _cbv!=='undefined'?_cbv:'');
-script.onload=function(){
-  console.log('Chatbot Debug - mobile-bar.js loaded successfully');
-  console.log('Chatbot Debug - generateChatbotResponse exists after load:', typeof generateChatbotResponse==='function');
-};
-script.onerror=function(){
-  console.error('Chatbot Debug - Failed to load mobile-bar.js');
-};
-document.head.appendChild(script);
 </script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
-    <div class="fab-sub-item" onclick="closeFab();toggleChatbot()"><span id="chatbotToggleIcon">🤖</span> 알등이 <span id="chatbotToggleStatus" style="font-size:10px;color:#94a3b8;margin-left:auto">(ON)</span></div>
+    <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span>🤖</span> 알등이</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('mini')"><span>⚡</span> 미니 경기</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
@@ -701,15 +599,16 @@ document.head.appendChild(script);
       <div class="chatbot-sheet-title">🤖 알등이</div>
       <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
     </div>
-    <div class="chatbot-messages" id="chatbotMessages">
-      <div class="chatbot-message bot">
-        <div class="chatbot-bubble">안녕하세요! 알등이입니다. 선수 정보, 미니대전 성적 등을 물어보세요.</div>
+    <div class="chatbot-messages" id="chatMessages">
+      <div class="chat-message bot-message">
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-content">안녕하세요! 알등이입니다. 선수 정보, 랭킹, 대학 정보 등을 물어보세요.</div>
       </div>
     </div>
     <div class="chatbot-input-area">
-      <input type="text" id="chatbotInput" placeholder="선수명 기록, 미니대전 성적 등을 입력하세요..." 
-        onkeydown="if(event.key==='Enter')sendChatbotMessage()">
-      <button class="chatbot-send-btn" onclick="sendChatbotMessage()">전송</button>
+      <input type="text" id="chatInput" placeholder="선수명, 랭킹, 대학명 등을 입력하세요..." 
+        onkeydown="handleChatInputKeydown(event)">
+      <button class="chatbot-send-btn" onclick="sendMessage()">전송</button>
     </div>
   </div>
 </div>
