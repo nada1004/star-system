@@ -1066,6 +1066,17 @@ function parseSetSeparator(line) {
   return null;
 }
 
+// TSV 5번째 열에서 저장 경로 타입 감지
+// 인식 키워드: mini/미니/미니대전 → 'mini', gj/끝장전 → 'gj', ind/개인전 → 'ind'
+function _parseTsvType(s) {
+  if (!s) return null;
+  const t = s.trim().toLowerCase();
+  if (['mini','미니','미니대전'].includes(t)) return 'mini';
+  if (['gj','끝장전'].includes(t)) return 'gj';
+  if (['ind','개인전','individual'].includes(t)) return 'ind';
+  return null;
+}
+
 function pastePreview() {
   const raw = (document.getElementById('paste-input')?.value || '').trim();
   const previewEl = document.getElementById('paste-preview');
@@ -1168,7 +1179,7 @@ function pastePreview() {
             }
           }
 
-          // ── 2인칭 TSV: 선수1(종족)\t선수2(종족)\t맵\t승/패(ELO)\t... ──
+          // ── 2인칭 TSV: 선수1(종족)\t선수2(종족)\t맵\t승/패(ELO)\t[타입] ──
           const _tRes = (_tc[3] || '').trim();
           const _tIsW = _tRes.startsWith('승'), _tIsL = _tRes.startsWith('패');
           if (_tc.length >= 4 && (_tIsW || _tIsL) && _tc[0] && _tc[1]) {
@@ -1176,11 +1187,14 @@ function pastePreview() {
             const _tMap = _tc[2] ? resolveMapName(_tc[2].trim()) : '-';
             const winName = _tIsW ? _tP1 : _tP2, loseName = _tIsW ? _tP2 : _tP1;
             const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            // 5번째 열: 저장 경로 타입 (mini·gj·ind 등)
+            const _lineType = _parseTsvType(_tc[4]);
             results.push({ winName, loseName, map: _tMap, _rawMapStr: _tc[2]||'', setNum: currentSet,
               wPlayer: _wM.player, lPlayer: _lM.player,
               wCandidates: _wM.candidates, lCandidates: _lM.candidates,
               wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
-              lineNum: idx+1, rawLine: trimmed, _lineDate: _id });
+              lineNum: idx+1, rawLine: trimmed, _lineDate: _id,
+              ...(_lineType ? { _lineType } : {}) });
             return;
           }
         }
@@ -1676,8 +1690,13 @@ function renderPastePreview(results, errors) {
         }
       }
       const _memoTag = r._lineMemo ? `<div style="font-size:10px;color:#6b7280;margin-top:2px">📝 ${r._lineMemo.replace(/</g,'&lt;')}</div>` : '';
+      const _typeBadge = r._lineType ? ({
+        mini: '<span style="background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">미니</span>',
+        gj:   '<span style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">끝장전</span>',
+        ind:  '<span style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">개인전</span>',
+      }[r._lineType] || '') : '';
       html += `<tr style="background:${ok ? '' : wAmbig||lAmbig ? '#fffbeb' : _hasSim ? '#fdf4ff' : '#fff5f5'}">
-        <td style="padding:4px 6px">${setCell}</td>
+        <td style="padding:4px 6px">${setCell}${_typeBadge}</td>
         <td style="padding:4px 6px">${mapCell}${_memoTag}</td>
         <td style="padding:4px 8px">${aCell}${aResultBadge}</td>
         <td style="padding:4px 8px">${bCell}${bResultBadge}</td>
@@ -2150,6 +2169,65 @@ function pasteApply() {
   // 개인 전적 반영 (경기 시점 대학도 저장)
   // ind/gj는 dup 체크 후 반영해야 하므로 아래 모드별 섹션에서 처리
   const _pasteModeLabel=mode==='mini'?(window._miniPasteType==='civil'?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',gj:'끝장전',comp:'조별리그',individual:'개인전',ind:'개인전'}[mode]||'';
+
+  // ── 혼합 타입 모드: _lineType이 하나라도 있으면 타입별 분리 저장 ──
+  const _hasMixedTypes = savable.some(r => r._lineType);
+  if (_hasMixedTypes) {
+    const _mixGroups = { mini: [], gj: [], ind: [] };
+    savable.forEach(r => {
+      const t = r._lineType || (mode === 'gj' ? 'gj' : mode === 'mini' ? 'mini' : 'ind');
+      if (_mixGroups[t]) _mixGroups[t].push(r);
+      else _mixGroups.ind.push(r);
+    });
+    const _normMap2 = s => resolveMapName((s||'').trim()) || (s||'').trim();
+    // ind 저장
+    if (_mixGroups.ind.length) {
+      const _indDG = {};
+      _mixGroups.ind.forEach(r => { const d=r._lineDate||dateVal; (_indDG[d]||(_indDG[d]=[])).push(r); });
+      let _idDup=0;
+      Object.entries(_indDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
+        const sid=genId();
+        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(indM.some(m=>m.d===d&&_normMap2(m.map)===_normMap2(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_idDup++;return false;}return true;});
+        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
+        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        if(games.length) indM.unshift(...games);
+      });
+      if(_idDup>0) alert(`⚠️ 개인전 중복 ${_idDup}건 제외`);
+    }
+    // gj 저장
+    if (_mixGroups.gj.length) {
+      const _gjDG = {};
+      _mixGroups.gj.forEach(r => { const d=r._lineDate||dateVal; (_gjDG[d]||(_gjDG[d]=[])).push(r); });
+      let _gjDup=0;
+      Object.entries(_gjDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
+        const sid=genId();
+        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(gjM.some(m=>m.d===d&&(m.map||'')===(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_gjDup++;return false;}return true;});
+        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
+        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        if(games.length) gjM.unshift(...games);
+      });
+      if(_gjDup>0) alert(`⚠️ 끝장전 중복 ${_gjDup}건 제외`);
+    }
+    // mini 저장
+    if (_mixGroups.mini.length) {
+      const _miniDG = {};
+      _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
+      Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
+        const sid=genId();
+        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
+        const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
+        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
+      });
+    }
+    save();
+    const _tot = savable.length;
+    const _iC=_mixGroups.ind.length, _gC=_mixGroups.gj.length, _mC=_mixGroups.mini.length;
+    alert(`✅ 혼합 저장 완료\n개인전 ${_iC}건 / 끝장전 ${_gC}건 / 미니대전 ${_mC}건 (총 ${_tot}건)`);
+    cm('pasteModal');
+    render();
+    return;
+  }
+
   if (mode !== 'ind' && mode !== 'gj') {
     savable.forEach(r => {
       const _ab = resolveAB(r);
