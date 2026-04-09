@@ -641,11 +641,10 @@ function formatPlayerBasicInfo(player) {
   
   if (player.photo) {
     // 프로필 사진을 전체 배경으로, 정보를 카드 외부에 배치
-    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:1px;min-height:120px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:0;min-height:120px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
       <div style="position:relative;height:120px;display:flex;align-items:center;justify-content:center">
       </div>
-    </div>
-    <div style="text-align:center;margin-bottom:1px;line-height:1">
+    </div><div style="text-align:center;margin-bottom:0;line-height:1">
       <div style="font-size:16px;font-weight:800;color:var(--text)">${safePlayerName} <span style="font-size:11px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
       <div style="font-size:10px;color:var(--text2)">
         🎖️${player.tier} 🎮${player.race} ⭐${player.elo}
@@ -653,8 +652,7 @@ function formatPlayerBasicInfo(player) {
       <div style="font-size:13px;font-weight:800;color:#2563eb">
         ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:10px;color:var(--text3);font-weight:400">총 ${total}경기</span>
       </div>
-    </div>
-    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:1px">
+    </div><div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:0">
       <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">최근전적</button>
       <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">통계</button>
       <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:4px 8px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:10px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">이번달</button>
