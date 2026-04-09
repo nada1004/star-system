@@ -523,7 +523,7 @@ function formatPlayerInfo(player){
   return info;
 }
 function formatPlayerMiniRecord(player, miniM){
-  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0 });
+  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0, miniM: miniM ? miniM.length : 0 });
   
   // player.history의 실제 모드 라벨 디버깅
   if(player.history && player.history.length > 0){
@@ -532,6 +532,13 @@ function formatPlayerMiniRecord(player, miniM){
     const allDates=player.history.map(h=>h.date).filter(Boolean).sort((a,b)=>b.localeCompare(a));
     console.log('Chatbot Debug - All dates in history (sorted):', allDates.slice(0, 5), '...', allDates.slice(-5));
     console.log('Chatbot Debug - Sample history entries:', player.history.slice(0, 3).map(h=>({mode:h.mode,date:h.date,result:h.result})));
+  }
+  
+  // miniM 데이터 확인
+  if(miniM && miniM.length > 0){
+    const miniDates=miniM.map(m=>m.d).filter(Boolean).sort((a,b)=>b.localeCompare(a));
+    console.log('Chatbot Debug - miniM dates (sorted):', miniDates.slice(0, 5), '...', miniDates.slice(-5));
+    console.log('Chatbot Debug - Sample miniM entries:', miniM.slice(0, 3).map(m=>({d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb})));
   }
   
   // player.history에서 미니대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
