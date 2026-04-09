@@ -570,7 +570,7 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
-    <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span>🤖</span> 알등이</div>
+    <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:20px;height:20px;object-fit:contain"></span> 알등이</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('mini')"><span>⚡</span> 미니 경기</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
@@ -596,12 +596,15 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
   <div class="chatbot-sheet" id="chatbotSheet" onclick="event.stopPropagation()">
     <div class="chatbot-sheet-handle"></div>
     <div class="chatbot-sheet-hdr">
-      <div class="chatbot-sheet-title">🤖 알등이</div>
-      <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
+      <div class="chatbot-sheet-title"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;margin-right:4px"> 알등이</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="chatbot-clear-btn" onclick="clearChatHistory()" style="background:none;border:none;font-size:12px;color:#94a3b8;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background 0.2s">🗑️</button>
+        <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
+      </div>
     </div>
     <div class="chatbot-messages" id="chatMessages">
       <div class="chat-message bot-message">
-        <div class="chat-avatar">🤖</div>
+        <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain"></div>
         <div class="chat-content">안녕하세요! 알등이입니다. 선수 정보, 랭킹, 대학 정보 등을 물어보세요.</div>
       </div>
     </div>
