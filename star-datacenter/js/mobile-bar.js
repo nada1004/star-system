@@ -527,33 +527,7 @@ function formatPlayerMiniRecord(player, miniM){
     console.log('Chatbot Debug - miniM[0]:', miniM[0]);
   }
   
-  // player.history에서 미니대전 기록 추출
-  const historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
-  console.log('Chatbot Debug - history mini matches:', historyMatches.length);
-  
-  if(historyMatches.length>0){
-    const wins=historyMatches.filter(h=>h.result==='승').length;
-    const losses=historyMatches.filter(h=>h.result==='패').length;
-    const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
-    
-    // 페이지네이션 상태 설정
-    setPaginationState(player.name+' 미니대전 기록', historyMatches, formatPlayerMiniRecord, [player, miniM]);
-    
-    let info='⚡ '+player.name+' 미니대전 기록\n';
-    info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
-    info+='━━━━━━━━━━━━━━━━━━\n';
-    
-    const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
-    paginatedMatches.forEach(h=>{
-      info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
-    });
-    
-    info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
-    
-    return info;
-  }
-  
-  // miniM 데이터에서도 시도
+  // miniM 데이터에서 선수의 기록 직접 추출 (스트리머 상세와 일치시키기 위해)
   const playerMatches=miniM.filter(m=>{
     if(m.p1){
       return m.p1===player.name||m.p2===player.name;
@@ -562,13 +536,12 @@ function formatPlayerMiniRecord(player, miniM){
       const teamB=m.teamBMembers||[];
       return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
     }else if(m.a&&m.b){
-      // 팀 이름으로 매칭 (선수의 대학/팀 확인)
       return m.a===player.univ||m.b===player.univ;
     }
     return false;
   });
   
-  console.log('Chatbot Debug - miniMatches:', playerMatches.length);
+  console.log('Chatbot Debug - miniM playerMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
