@@ -223,13 +223,7 @@ function generateResponse(userMessage) {
            `• '스트리머명 통계' : 통계\n` +
            `• '스트리머명 5월 전적' : 특정 월 전적\n` +
            `• '스트리머명 저그전' : 특정 종족전 승률\n` +
-           `• '스트리머명 맵명' : 특정 맵 전적\n\n` +
-           `2️⃣ 대전 기록\n` +
-           `• '선수1 vs 선수2' : 선수 간 대전 기록\n` +
-           `• '대학1 vs 대학2' : 대학 대항전 기록 비교\n\n` +
-           `3️⃣ 랭킹 및 대학 정보\n` +
-           `• '티어 랭킹' : 순위표\n` +
-           `• '대학명' : 소속 선수 및 최근 대학 전적`;
+           `• '스트리머명 맵명' : 특정 맵 전적`;
   }
   
   // 선수 이름 + 최근전적 (선수 관련 패턴 먼저 체크)
@@ -368,13 +362,20 @@ function formatPlayerBasicInfo(player) {
   const total = player.win + player.loss;
   const rate = total > 0 ? ((player.win / total) * 100).toFixed(1) : 0;
   
-  return `👤 ${player.name} 선수 정보\n\n` +
+  let result = '';
+  if (player.photo) {
+    result = `<img src="${player.photo}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 10px auto">\n\n`;
+  }
+  
+  result += `👤 ${player.name} 선수 정보\n\n` +
          `🏫 소속: ${player.univ}\n` +
          `🎖️ 티어: ${player.tier}\n` +
          `🎮 종족: ${player.race}\n` +
          `⭐ ELO: ${player.elo}\n` +
          `📊 전체 전적: ${player.win}승 ${player.loss}패 (${rate}%)\n` +
          `📝 총 경기 수: ${total}경기`;
+  
+  return result;
 }
 
 // 선수 최근 전적
@@ -392,13 +393,9 @@ function formatPlayerRecentRecord(player) {
   result += `승: ${wins} | 패: ${losses} | 승률: ${rate}%\n`;
   result += `━━━━━━━━━━━━━━━━━━\n`;
   
-  recentGames.slice(0, 10).forEach(h => {
+  recentGames.forEach(h => {
     result += `📅 ${h.date} | ${h.map} | ${h.result} vs ${h.opp}\n`;
   });
-  
-  if (recentGames.length > 10) {
-    result += `\n... (총 ${recentGames.length}경기)`;
-  }
   
   return result;
 }
