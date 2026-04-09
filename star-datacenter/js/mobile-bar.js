@@ -865,52 +865,47 @@ function formatPlayerCKRecord(player, ckM){
 }
 function formatPlayerSevilRecord(player, univM){
   console.log('Chatbot Debug - formatPlayerSevilRecord:', { playerName: player.name, playerUniv: player.univ, univM: univM.length });
-  if(univM.length > 0){
-    console.log('Chatbot Debug - univM[0]:', univM[0]);
+  
+  // miniM에서 시빌워(type:'civil') 기록 추출
+  const civilMatches=(typeof miniM!=='undefined'?miniM:[]).filter(m=>m.type==='civil');
+  console.log('Chatbot Debug - civil matches in miniM:', civilMatches.length);
+  if(civilMatches.length > 0){
+    console.log('Chatbot Debug - civilMatches[0]:', civilMatches[0]);
   }
   
-  // player.history의 mode 값 확인
-  if(player.history && player.history.length > 0){
-    const uniqueModes=[...new Set(player.history.map(h=>h.mode))];
-    console.log('Chatbot Debug - unique modes in history:', uniqueModes);
-    const sampleHistory=player.history.slice(0, 3);
-    console.log('Chatbot Debug - sample history:', sampleHistory);
-  }
-  
-  // player.history에서 시빌원 기록 추출
-  const historyMatches=(player.history||[]).filter(h=>h.mode==='시빌원'||h.mode==='시빌워'||h.mode==='civil');
-  console.log('Chatbot Debug - history sevil matches:', historyMatches.length);
-  
-  if(historyMatches.length>0){
-    const wins=historyMatches.filter(h=>h.result==='승').length;
-    const losses=historyMatches.filter(h=>h.result==='패').length;
-    const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
-    
-    let info='🏛️ '+player.name+' 시빌원 기록\n';
-    info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
-    info+='━━━━━━━━━━━━━━━━━━\n';
-    
-    historyMatches.slice(-10).reverse().forEach(h=>{
-      info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
-    });
-    
-    if(historyMatches.length>10){
-      info+='... (최근 10경기만 표시)';
+  // 세트/게임 데이터에서 선수 이름 매칭
+  const playerMatches=civilMatches.filter(m=>{
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if(g.playerA===player.name||g.playerB===player.name){
+          return true;
+        }
+      }
     }
-    
-    return info;
-  }
+    return false;
+  });
   
-  // univM 데이터에서도 시도
-  const playerMatches=univM.filter(m=>m.a===player.univ||m.b===player.univ);
-  
-  console.log('Chatbot Debug - sevilMatches:', playerMatches.length);
+  console.log('Chatbot Debug - civil matches with player:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)).length;
+  // 승패 계산
+  const wins=playerMatches.filter(m=>{
+    const sets=m.sets||[];
+    for(const s of sets){
+      const games=s.games||[];
+      for(const g of games){
+        if((g.playerA===player.name&&g.winner==='A')||(g.playerB===player.name&&g.winner==='B')){
+          return true;
+        }
+      }
+    }
+    return false;
+  }).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
@@ -919,9 +914,7 @@ function formatPlayerSevilRecord(player, univM){
   info+='━━━━━━━━━━━━━━━━━━\n';
   
   playerMatches.slice(-10).reverse().forEach(m=>{
-    const opp=m.a===player.univ?m.b:m.a;
-    const result=(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+    info+='📅 '+m.d+' | 시빌원 | A팀 vs B팀 ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
