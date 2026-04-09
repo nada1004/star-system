@@ -535,6 +535,8 @@
 <script src="js/mobile-bar.js"></script>
 <script>
 var _fabOpen=false;
+var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
+
 function toggleFab(){
   _fabOpen=!_fabOpen;
   const btn=document.getElementById('fabMain');
@@ -550,6 +552,67 @@ function closeFab(){
   if(btn) btn.classList.remove('open');
   if(list) list.classList.remove('open');
 }
+function updateFabVisibility(){
+  const fab=document.getElementById('mobileFab');
+  if(!fab)return;
+  
+  const isMobile=window.innerWidth<=768;
+  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
+  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
+  
+  if(isMobile){
+    fab.style.display=hideMobile?'none':'flex';
+  }else{
+    fab.style.display=hidePC?'none':'flex';
+  }
+  
+  if(hideMobile||hidePC){
+    closeChatbot();
+  }
+}
+function openChatbot(){
+  if(!_chatbotEnabled){
+    alert('채팅봇이 비활성화되어 있습니다. FAB 메뉴에서 활성화해주세요.');
+    return;
+  }
+  const overlay=document.getElementById('chatbotOverlay');
+  if(overlay){
+    overlay.classList.add('open');
+    overlay.style.display='flex';
+    setTimeout(()=>{document.getElementById('chatbotInput')?.focus();},100);
+  }
+}
+function closeChatbot(e){
+  if(e&&e.target!==document.getElementById('chatbotOverlay'))return;
+  const overlay=document.getElementById('chatbotOverlay');
+  if(overlay){
+    overlay.classList.remove('open');
+    setTimeout(()=>{overlay.style.display='none';},300);
+  }
+}
+function toggleChatbot(){
+  if(!_chatbotEnabled){
+    _chatbotEnabled=true;
+    localStorage.setItem('su_chatbotEnabled','1');
+    
+    const icon=document.getElementById('chatbotToggleIcon');
+    const status=document.getElementById('chatbotToggleStatus');
+    if(icon) icon.textContent='🤖';
+    if(status) status.textContent='(ON)';
+    if(status) status.style.color='#94a3b8';
+    
+    openChatbot();
+  }else{
+    const overlay=document.getElementById('chatbotOverlay');
+    if(overlay && overlay.classList.contains('open')){
+      closeChatbot();
+    }else{
+      openChatbot();
+    }
+  }
+}
+window.addEventListener('resize',updateFabVisibility);
+window.addEventListener('DOMContentLoaded',updateFabVisibility);
 </script>
 
 <div id="mobileFab">
