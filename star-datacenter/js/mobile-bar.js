@@ -253,8 +253,8 @@ function processChatbotQuery(query){
 function generateChatbotResponse(query){
   const q=query.toLowerCase();
   
-  // 선수 이름 추출 시도
-  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그)/);
+  // 선수 이름 추출 시도 - 더 광범위한 패턴
+  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
   if(playerMatch){
     const playerName=playerMatch[1];
     const mode=playerMatch[2];
@@ -267,16 +267,30 @@ function generateChatbotResponse(query){
       return formatPlayerInfo(player);
     }else if(mode==='미니대전'||mode==='성적'){
       return formatPlayerMiniRecord(player);
-    }else if(mode==='대학대전'){
+    }else if(mode==='대학대전'||q.includes('대학대전')){
       return formatPlayerUnivMatchRecord(player);
     }else if(mode==='개인전'){
       return formatPlayerIndRecord(player);
-    }else if(mode==='대회'){
+    }else if(mode==='끝장전'||q.includes('끝장전')){
+      return formatPlayerGJRecord(player);
+    }else if(mode==='ck'||q.includes('ck')){
+      return formatPlayerCKRecord(player);
+    }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
       return formatPlayerCompRecord(player);
-    }else if(mode==='티어대회'){
+    }else if(mode==='티어대회'||q.includes('티어대회')){
       return formatPlayerTTRecord(player);
-    }else if(mode==='프로리그'){
+    }else if(mode==='프로리'||q.includes('프로리그')){
       return formatPlayerProRecord(player);
+    }else if(mode==='시빌원'||q.includes('시빌원')){
+      return formatPlayerSevilRecord(player);
+    }else if(mode==='토너먼트'||q.includes('토너먼트')){
+      return formatPlayerTournamentRecord(player);
+    }else if(mode==='조별리그'||q.includes('조별리그')){
+      return formatPlayerGroupRecord(player);
+    }else if(mode==='팀전'||q.includes('팀전')){
+      return formatPlayerTeamRecord(player);
+    }else if(mode==='일반'||q.includes('일반')){
+      return formatPlayerNormalRecord(player);
     }
   }
   
@@ -312,7 +326,14 @@ function formatPlayerInfo(player){
   const total=player.win+player.loss;
   const rate=total>0?((player.win/total)*100).toFixed(1):0;
   
-  let info='👤 '+player.name+'\n';
+  let info='';
+  
+  // 프로필 이미지가 있으면 추가
+  if(player.photo){
+    info+='<img src="'+player.photo+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:8px;border:2px solid #e2e8f0;">\n';
+  }
+  
+  info+='<strong>👤 '+player.name+'</strong>\n';
   info+='🏫 '+player.univ+' | '+player.tier+' | '+player.race+'종족\n';
   info+='📊 전적: '+player.win+'승 '+player.loss+'패 ('+rate+'%)\n';
   info+='⭐ ELO: '+player.elo+'\n';
