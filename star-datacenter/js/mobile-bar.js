@@ -869,6 +869,14 @@ function formatPlayerSevilRecord(player, univM){
     console.log('Chatbot Debug - univM[0]:', univM[0]);
   }
   
+  // player.history의 mode 값 확인
+  if(player.history && player.history.length > 0){
+    const uniqueModes=[...new Set(player.history.map(h=>h.mode))];
+    console.log('Chatbot Debug - unique modes in history:', uniqueModes);
+    const sampleHistory=player.history.slice(0, 3);
+    console.log('Chatbot Debug - sample history:', sampleHistory);
+  }
+  
   // player.history에서 시빌원 기록 추출
   const historyMatches=(player.history||[]).filter(h=>h.mode==='시빌원'||h.mode==='시빌워'||h.mode==='civil');
   console.log('Chatbot Debug - history sevil matches:', historyMatches.length);
