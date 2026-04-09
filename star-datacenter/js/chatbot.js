@@ -707,15 +707,21 @@ function formatUniversityInfo(univName) {
   
   let result = '';
   
-  // 대학 로고 추가 (UNIV_ICONS가 있는 경우)
+  // 대학 로고를 전체 배경으로 표시
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<img src="${UNIV_ICONS[univName]}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 10px auto">
-    <div style="display:none;width:80px;height:80px;background:rgba(0,0,0,0.1);border-radius:8px;align-items:center;justify-content:center;font-size:32px;margin:0 auto 10px auto">🏫</div>\n\n`;
+    result += `<div style="position:relative;padding:30px;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:12px;margin-bottom:12px;min-height:120px">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);border-radius:12px"></div>
+      <div style="position:relative;color:white;text-align:center;z-index:1">
+        <div style="font-size:24px;font-weight:700">🏫 ${univName}</div>
+        <div style="font-size:16px;margin-top:8px">소속 선수: ${univPlayers.length}명</div>
+      </div>
+    </div>\n\n`;
+  } else {
+    result += `🏫 ${univName} 대학 정보\n\n`;
+    result += `━━━━━━━━━━━━━━━━━━\n`;
+    result += `소속 선수: ${univPlayers.length}명\n\n`;
   }
   
-  result += `🏫 ${univName} 대학 정보\n\n`;
-  result += `━━━━━━━━━━━━━━━━━━\n`;
-  result += `소속 선수: ${univPlayers.length}명\n\n`;
   result += `👤 선수 목록:\n`;
   
   univPlayers.forEach(p => {
