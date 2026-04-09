@@ -338,8 +338,17 @@ function levenshteinDistance(str1, str2) {
 }
 
 // 챗봇 응답 생성
-function generateResponse(userMessage) {
-  const msg = userMessage.toLowerCase();
+async function generateResponse(msg) {
+  if (!msg || msg.trim() === '') {
+    return '메시지를 입력해주세요.';
+  }
+  
+  const userMessage = msg.trim().toLowerCase();
+  
+  // 입력이 너무 짧거나 유효하지 않은 경우
+  if (userMessage.length < 2) {
+    return '검색 자료가 없습니다.';
+  }
   
   // 도움말
   if (msg.includes('도움') || msg.includes('help') || msg.includes('?') || msg.includes('명령')) {
@@ -508,15 +517,24 @@ function generateResponse(userMessage) {
     const playerName = playerOnlyMatch[1];
     // 선수 먼저 확인
     let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
-    // 퍼지 매칭 시도
-    if (!player) player = findSimilarPlayer(playerName);
+    // 퍼지 매칭 시도 (더 엄격한 조건)
+    if (!player && playerName.length >= 2) {
+      const similarPlayer = findSimilarPlayer(playerName);
+      if (similarPlayer && levenshteinDistance(playerName, similarPlayer.name) <= 2) {
+        player = similarPlayer;
+      }
+    }
     if (player) {
       if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
       return formatPlayerBasicInfo(player);
     }
     
     // 선수가 없으면 대학 정보 확인
-    return formatUniversityInfo(playerName);
+    const univResult = formatUniversityInfo(playerName);
+    if (univResult.includes('찾을 수 없습니다')) {
+      return '검색 자료가 없습니다.';
+    }
+    return univResult;
   }
   
   // 티어 범위 검색 (예: "티어 A~B" 또는 "A 티어 이상")
