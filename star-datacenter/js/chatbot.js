@@ -10,8 +10,11 @@ function initChatbot() {
   renderChatHistory();
 }
 
-// 페이지 로드 시 챗봇 초기화
-window.addEventListener('DOMContentLoaded', initChatbot);
+// 페이지 로드 시 챗봇 초기화 (데이터 로드 후 실행)
+window.addEventListener('DOMContentLoaded', function() {
+  // 데이터 로드 대기
+  setTimeout(initChatbot, 1000);
+});
 
 // 채팅 기록 로드
 function loadChatHistory() {
@@ -29,7 +32,10 @@ function saveChatHistory() {
 // 채팅 기록 렌더링
 function renderChatHistory() {
   const container = document.getElementById('chatMessages');
-  if (!container) return;
+  if (!container) {
+    console.warn('Chat messages container not found');
+    return;
+  }
   
   container.innerHTML = '';
   
@@ -37,7 +43,7 @@ function renderChatHistory() {
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'bot-message'}`;
     
-    const avatar = msg.role === 'user' ? '👤' : '🤖';
+    const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain">';
     const content = msg.content;
     
     msgDiv.innerHTML = `
@@ -96,8 +102,26 @@ function sendMessage() {
   addMessage('user', message);
   input.value = '';
   
+  // 로딩 인디케이터 추가
+  const container = document.getElementById('chatMessages');
+  if (container) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-message bot-message';
+    loadingDiv.id = 'chatbot-loading';
+    loadingDiv.innerHTML = `
+      <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain"></div>
+      <div class="chat-content">...</div>
+    `;
+    container.appendChild(loadingDiv);
+    container.scrollTop = container.scrollHeight;
+  }
+  
   // 챗봇 응답 생성
   setTimeout(() => {
+    // 로딩 인디케이터 제거
+    const loadingEl = document.getElementById('chatbot-loading');
+    if (loadingEl) loadingEl.remove();
+    
     const response = generateResponse(message);
     addMessage('bot', response);
   }, 300);
@@ -120,6 +144,72 @@ function clearChatHistory() {
   }
 }
 
+// 퍼지 매칭을 위한 유사도 계산
+function findSimilarPlayer(name) {
+  if (typeof players === 'undefined') return null;
+  
+  const lowerName = name.toLowerCase();
+  let bestMatch = null;
+  let bestScore = 0;
+  
+  players.forEach(player => {
+    const lowerPlayerName = player.name.toLowerCase();
+    // 정확히 일치하면 점수 100
+    if (lowerPlayerName === lowerName) {
+      bestMatch = player;
+      bestScore = 100;
+      return;
+    }
+    
+    // 포함되면 점수 80
+    if (lowerPlayerName.includes(lowerName) || lowerName.includes(lowerPlayerName)) {
+      if (bestScore < 80) {
+        bestMatch = player;
+        bestScore = 80;
+      }
+      return;
+    }
+    
+    // 레벤슈타인 거리 계산
+    const distance = levenshteinDistance(lowerName, lowerPlayerName);
+    const maxLen = Math.max(lowerName.length, lowerPlayerName.length);
+    const similarity = ((maxLen - distance) / maxLen) * 100;
+    
+    if (similarity > 60 && similarity > bestScore) {
+      bestMatch = player;
+      bestScore = similarity;
+    }
+  });
+  
+  return bestScore >= 70 ? bestMatch : null;
+}
+
+// 레벤슈타인 거리 계산
+function levenshteinDistance(str1, str2) {
+  const m = str1.length;
+  const n = str2.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + 1
+        );
+      }
+    }
+  }
+  
+  return dp[m][n];
+}
+
 // 챗봇 응답 생성
 function generateResponse(userMessage) {
   const msg = userMessage.toLowerCase();
@@ -132,29 +222,26 @@ function generateResponse(userMessage) {
            `• '스트리머명 최근전적' : 최근 30경기 기록\n` +
            `• '스트리머명 통계' : 통계\n` +
            `• '스트리머명 5월 전적' : 특정 월 전적\n` +
-           `• '스트리머명 저그전' : 특정 종족전 승률\n\n` +
-           `2️⃣ 랭킹 및 대학 정보\n` +
+           `• '스트리머명 저그전' : 특정 종족전 승률\n` +
+           `• '스트리머명 맵명' : 특정 맵 전적\n\n` +
+           `2️⃣ 대전 기록\n` +
+           `• '선수1 vs 선수2' : 선수 간 대전 기록\n` +
+           `• '대학1 vs 대학2' : 대학 대항전 기록 비교\n\n` +
+           `3️⃣ 랭킹 및 대학 정보\n` +
            `• '티어 랭킹' : 순위표\n` +
-           `• '대학명' : 소속 선수 및 최근 대학 전적\n` +
-           `• '대학1 대학2' : 대학 대항전 기록 비교`;
+           `• '대학명' : 소속 선수 및 최근 대학 전적`;
   }
   
-  // 선수 이름만 입력된 경우 - 기본 정보
-  const playerOnlyMatch = userMessage.match(/^([^\s]+)$/);
-  if (playerOnlyMatch) {
-    const playerName = playerOnlyMatch[1];
-    const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
-    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
-    return formatPlayerBasicInfo(player);
-  }
-  
-  // 선수 이름 + 최근전적
+  // 선수 이름 + 최근전적 (선수 관련 패턴 먼저 체크)
   if (msg.includes('최근전적')) {
     const nameMatch = userMessage.match(/([^\s]+)\s+최근전적/);
     if (nameMatch) {
       const playerName = nameMatch[1];
-      const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+      let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+      // 퍼지 매칭 시도
+      if (!player) player = findSimilarPlayer(playerName);
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerRecentRecord(player);
       return formatPlayerRecentRecord(player);
     }
   }
@@ -164,8 +251,10 @@ function generateResponse(userMessage) {
     const nameMatch = userMessage.match(/([^\s]+)\s+통계/);
     if (nameMatch) {
       const playerName = nameMatch[1];
-      const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+      let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+      if (!player) player = findSimilarPlayer(playerName);
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerStats(player);
       return formatPlayerStats(player);
     }
   }
@@ -175,8 +264,10 @@ function generateResponse(userMessage) {
   if (monthMatch) {
     const playerName = monthMatch[1];
     const month = monthMatch[2];
-    const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    if (!player) player = findSimilarPlayer(playerName);
     if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMonthRecord(player, month);
     return formatPlayerMonthRecord(player, month);
   }
   
@@ -185,9 +276,46 @@ function generateResponse(userMessage) {
   if (raceMatch) {
     const playerName = raceMatch[1];
     const race = raceMatch[2];
-    const player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    if (!player) player = findSimilarPlayer(playerName);
     if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerRaceRecord(player, race);
     return formatPlayerRaceRecord(player, race);
+  }
+  
+  // 선수 이름 + 맵명 (맵별 전적)
+  const mapMatch = userMessage.match(/([^\s]+)\s+(.+)$/);
+  if (mapMatch && !msg.includes('전적') && !msg.includes('최근') && !msg.includes('통계') && !msg.includes('vs')) {
+    const playerName = mapMatch[1];
+    const mapName = mapMatch[2];
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    if (!player) player = findSimilarPlayer(playerName);
+    if (player) {
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMapRecord(player, mapName);
+      return formatPlayerMapRecord(player, mapName);
+    }
+  }
+  
+  // 선수 대 선수 전적 (head-to-head)
+  const h2hMatch = userMessage.match(/([^\s]+)\s+vs\s+([^\s]+)/i);
+  if (h2hMatch) {
+    const player1Name = h2hMatch[1];
+    const player2Name = h2hMatch[2];
+    
+    let player1 = typeof players !== 'undefined' ? players.find(p => p.name === player1Name) : null;
+    let player2 = typeof players !== 'undefined' ? players.find(p => p.name === player2Name) : null;
+    
+    if (!player1) player1 = findSimilarPlayer(player1Name);
+    if (!player2) player2 = findSimilarPlayer(player2Name);
+    
+    if (!player1) return `❌ '${player1Name}' 선수를 찾을 수 없습니다.`;
+    if (!player2) return `❌ '${player2Name}' 선수를 찾을 수 없습니다.`;
+    
+    let resultMsg = '';
+    if (player1.name !== player1Name) resultMsg = `🤔 '${player1Name}' 대신 '${player1.name}'을 찾았습니다.\n\n`;
+    if (player2.name !== player2Name) resultMsg += `🤔 '${player2Name}' 대신 '${player2.name}'을 찾았습니다.\n\n`;
+    
+    return resultMsg + formatHeadToHeadRecord(player1, player2);
   }
   
   // 티어 랭킹
@@ -200,19 +328,29 @@ function generateResponse(userMessage) {
     return formatTierRanking('');
   }
   
-  // 대학 정보
-  const univMatch = userMessage.match(/^([^\s]+)$/);
-  if (univMatch) {
-    const univName = univMatch[1];
-    return formatUniversityInfo(univName);
-  }
-  
-  // 대학 대항전 비교
-  const univVsMatch = userMessage.match(/([^\s]+)\s+([^\s]+)/);
+  // 대학 대항전 비교 (더 구체적인 패턴)
+  const univVsMatch = userMessage.match(/([^\s]+)\s+vs\s+([^\s]+)/i);
   if (univVsMatch) {
     const univ1 = univVsMatch[1];
     const univ2 = univVsMatch[2];
     return formatUniversityVsRecord(univ1, univ2);
+  }
+  
+  // 선수 이름만 입력된 경우 - 기본 정보
+  const playerOnlyMatch = userMessage.match(/^([^\s]+)$/);
+  if (playerOnlyMatch) {
+    const playerName = playerOnlyMatch[1];
+    // 선수 먼저 확인
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
+    // 퍼지 매칭 시도
+    if (!player) player = findSimilarPlayer(playerName);
+    if (player) {
+      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
+      return formatPlayerBasicInfo(player);
+    }
+    
+    // 선수가 없으면 대학 정보 확인
+    return formatUniversityInfo(playerName);
   }
   
   // 인사
@@ -325,6 +463,33 @@ function formatPlayerMonthRecord(player, month) {
   return result;
 }
 
+// 선수 맵별 전적
+function formatPlayerMapRecord(player, mapName) {
+  if (!player.history || player.history.length === 0) {
+    return `📭 ${player.name}의 경기 기록이 없습니다.`;
+  }
+  
+  const mapGames = player.history.filter(h => h.map && h.map.toLowerCase().includes(mapName.toLowerCase()));
+  if (mapGames.length === 0) {
+    return `📭 ${player.name}의 '${mapName}' 맵 전적 기록이 없습니다.`;
+  }
+  
+  const wins = mapGames.filter(h => h.result === '승').length;
+  const losses = mapGames.length - wins;
+  const rate = mapGames.length > 0 ? ((wins / mapGames.length) * 100).toFixed(1) : 0;
+  
+  let result = `🗺️ ${player.name} '${mapName}' 맵 전적\n\n`;
+  result += `승: ${wins} | 패: ${losses} | 승률: ${rate}%\n`;
+  result += `총 경기 수: ${mapGames.length}경기\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  
+  mapGames.slice(-10).reverse().forEach(h => {
+    result += `📅 ${h.date} | ${h.result} vs ${h.opp}\n`;
+  });
+  
+  return result;
+}
+
 // 선수 종족전 승률
 function formatPlayerRaceRecord(player, raceType) {
   if (!player.history || player.history.length === 0) {
@@ -334,9 +499,10 @@ function formatPlayerRaceRecord(player, raceType) {
   const raceMap = { '저그전': '저그', '테란전': '테란', '프로토스전': '프로토스' };
   const targetRace = raceMap[raceType];
   
+  // oppRace 필드가 있는 경우 사용, 없으면 필터링 건너뜀
   const raceGames = player.history.filter(h => h.oppRace === targetRace);
   if (raceGames.length === 0) {
-    return `📭 ${player.name}의 ${raceType} 기록이 없습니다.`;
+    return `📭 ${player.name}의 ${raceType} 기록이 없습니다.\n(상대 종족 정보가 기록에 없을 수 있습니다.)`;
   }
   
   const wins = raceGames.filter(h => h.result === '승').length;
@@ -391,6 +557,38 @@ function formatUniversityInfo(univName) {
   return result;
 }
 
+// 선수 대 선수 전적 (head-to-head)
+function formatHeadToHeadRecord(player1, player2) {
+  if (!player1.history || player1.history.length === 0) {
+    return `📭 ${player1.name}의 경기 기록이 없습니다.`;
+  }
+  
+  // player1의 history에서 player2와의 대전 기록 찾기
+  const h2hMatches = player1.history.filter(h => h.opp === player2.name);
+  
+  if (h2hMatches.length === 0) {
+    return `📭 ${player1.name}과 ${player2.name} 간의 대전 기록이 없습니다.`;
+  }
+  
+  const wins = h2hMatches.filter(h => h.result === '승').length;
+  const losses = h2hMatches.length - wins;
+  const rate = h2hMatches.length > 0 ? ((wins / h2hMatches.length) * 100).toFixed(1) : 0;
+  
+  let result = `⚔️ ${player1.name} vs ${player2.name}\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  result += `총 대전: ${h2hMatches.length}경기\n`;
+  result += `${player1.name}: ${wins}승 (${rate}%)\n`;
+  result += `${player2.name}: ${losses}승 (${(100 - rate).toFixed(1)}%)\n\n`;
+  result += `━━━━━━━━━━━━━━━━━━\n`;
+  result += `🕐 최근 대전 기록\n`;
+  
+  h2hMatches.slice(-10).reverse().forEach(h => {
+    result += `📅 ${h.date} | ${h.map} | ${h.result}\n`;
+  });
+  
+  return result;
+}
+
 // 대학 대항전 기록 비교
 function formatUniversityVsRecord(univ1, univ2) {
   if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
@@ -405,7 +603,65 @@ function formatUniversityVsRecord(univ1, univ2) {
   result += `━━━━━━━━━━━━━━━━━━\n`;
   result += `${univ1}: ${univ1Players.length}명\n`;
   result += `${univ2}: ${univ2Players.length}명\n\n`;
-  result += `📊 상세 비교 기능은 준비 중입니다.`;
+  
+  // 선수별 대전 기록 확인
+  let univ1Wins = 0;
+  let univ2Wins = 0;
+  let totalMatches = 0;
+  
+  // univ1 선수들의 history에서 univ2 선수들과의 대전 확인
+  univ1Players.forEach(p1 => {
+    if (p1.history) {
+      p1.history.forEach(h => {
+        const oppPlayer = univ2Players.find(p2 => p2.name === h.opp);
+        if (oppPlayer) {
+          totalMatches++;
+          if (h.result === '승') {
+            univ1Wins++;
+          } else {
+            univ2Wins++;
+          }
+        }
+      });
+    }
+  });
+  
+  if (totalMatches === 0) {
+    result += `� 두 대학 간의 대전 기록이 없습니다.`;
+  } else {
+    const univ1Rate = ((univ1Wins / totalMatches) * 100).toFixed(1);
+    const univ2Rate = ((univ2Wins / totalMatches) * 100).toFixed(1);
+    
+    result += `�� 대전 기록 (총 ${totalMatches}경기)\n`;
+    result += `${univ1}: ${univ1Wins}승 (${univ1Rate}%)\n`;
+    result += `${univ2}: ${univ2Wins}승 (${univ2Rate}%)\n\n`;
+    
+    // 최근 대전 기록
+    result += `━━━━━━━━━━━━━━━━━━\n`;
+    result += `🕐 최근 대전 기록 (최근 5경기)\n`;
+    
+    let recentMatches = [];
+    univ1Players.forEach(p1 => {
+      if (p1.history) {
+        p1.history.forEach(h => {
+          const oppPlayer = univ2Players.find(p2 => p2.name === h.opp);
+          if (oppPlayer) {
+            recentMatches.push({
+              date: h.date,
+              map: h.map,
+              result: h.result,
+              p1: p1.name,
+              p2: oppPlayer.name
+            });
+          }
+        });
+      }
+    });
+    
+    recentMatches.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).forEach(m => {
+      result += `📅 ${m.date} | ${m.map} | ${m.result} (${m.p1} vs ${m.p2})\n`;
+    });
+  }
   
   return result;
 }
