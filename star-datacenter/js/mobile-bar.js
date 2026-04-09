@@ -449,6 +449,31 @@ function formatPlayerMiniRecord(player, miniM){
     console.log('Chatbot Debug - miniM[0]:', miniM[0]);
   }
   
+  // player.history에서 미니대전 기록 추출
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
+  console.log('Chatbot Debug - history mini matches:', historyMatches.length);
+  
+  if(historyMatches.length>0){
+    const wins=historyMatches.filter(h=>h.result==='승').length;
+    const losses=historyMatches.filter(h=>h.result==='패').length;
+    const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
+    
+    let info='⚡ '+player.name+' 미니대전 기록\n';
+    info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+    info+='━━━━━━━━━━━━━━━━━━\n';
+    
+    historyMatches.slice(-10).reverse().forEach(h=>{
+      info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+    });
+    
+    if(historyMatches.length>10){
+      info+='... (최근 10경기만 표시)';
+    }
+    
+    return info;
+  }
+  
+  // miniM 데이터에서도 시도
   const playerMatches=miniM.filter(m=>{
     if(m.p1){
       return m.p1===player.name||m.p2===player.name;
@@ -844,6 +869,31 @@ function formatPlayerSevilRecord(player, univM){
     console.log('Chatbot Debug - univM[0]:', univM[0]);
   }
   
+  // player.history에서 시빌원 기록 추출
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='시빌원'||h.mode==='시빌워'||h.mode==='civil');
+  console.log('Chatbot Debug - history sevil matches:', historyMatches.length);
+  
+  if(historyMatches.length>0){
+    const wins=historyMatches.filter(h=>h.result==='승').length;
+    const losses=historyMatches.filter(h=>h.result==='패').length;
+    const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
+    
+    let info='🏛️ '+player.name+' 시빌원 기록\n';
+    info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+    info+='━━━━━━━━━━━━━━━━━━\n';
+    
+    historyMatches.slice(-10).reverse().forEach(h=>{
+      info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+    });
+    
+    if(historyMatches.length>10){
+      info+='... (최근 10경기만 표시)';
+    }
+    
+    return info;
+  }
+  
+  // univM 데이터에서도 시도
   const playerMatches=univM.filter(m=>m.a===player.univ||m.b===player.univ);
   
   console.log('Chatbot Debug - sevilMatches:', playerMatches.length);
