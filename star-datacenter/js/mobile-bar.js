@@ -253,12 +253,19 @@ function processChatbotQuery(query){
 function generateChatbotResponse(query){
   const q=query.toLowerCase();
   
-  // localStorage에서 데이터 직접 읽어오기
+  // J 함수 사용하여 데이터 로드 (LZ-String 압축 처리 포함)
   const loadData = (key) => {
     try {
-      const data = localStorage.getItem(key);
-      console.log('Chatbot Debug - Loading key:', key, 'exists:', !!data);
-      return data ? JSON.parse(data) : [];
+      if(typeof J!=='undefined'){
+        const data = J(key);
+        console.log('Chatbot Debug - Loading key:', key, 'result:', data ? data.length : 0);
+        return data || [];
+      } else {
+        // J 함수가 없으면 localStorage 직접 시도
+        const data = localStorage.getItem(key);
+        console.log('Chatbot Debug - Loading key:', key, 'exists:', !!data, 'J function unavailable');
+        return data ? JSON.parse(data) : [];
+      }
     } catch(e) {
       console.error('Chatbot Debug - Error loading key:', key, e);
       return [];
