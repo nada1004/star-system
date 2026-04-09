@@ -512,15 +512,24 @@ async function generateResponse(msg) {
     const playerName = playerOnlyMatch[1];
     // 선수 먼저 확인
     let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
-    // 퍼지 매칭 시도
-    if (!player) player = findSimilarPlayer(playerName);
+    // 퍼지 매칭 시도 (더 엄격한 조건)
+    if (!player) {
+      const similarPlayer = findSimilarPlayer(playerName);
+      if (similarPlayer && levenshteinDistance(playerName, similarPlayer.name) <= 2) {
+        player = similarPlayer;
+      }
+    }
     if (player) {
       if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
       return formatPlayerBasicInfo(player);
     }
     
     // 선수가 없으면 대학 정보 확인
-    return formatUniversityInfo(playerName);
+    const univResult = formatUniversityInfo(playerName);
+    if (univResult.includes('찾을 수 없습니다')) {
+      return '검색 자료가 없습니다.';
+    }
+    return univResult;
   }
   
   // 티어 범위 검색 (예: "티어 A~B" 또는 "A 티어 이상")
@@ -946,13 +955,15 @@ function formatUniversityInfo(univName) {
   
   let result = '';
   
-  // 대학 로고를 별도 이미지로 표시
+  // 대학 로고를 전체 배경으로 표시
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<div style="text-align:center;margin-bottom:0">
-      <img src="${UNIV_ICONS[univName]}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" onerror="this.style.display='none'">
-      <div style="line-height:1">
-        <span style="font-size:16px;font-weight:800;color:var(--text)">${univName}</span> <span style="font-size:11px;color:#2563eb;font-weight:700;background:rgba(37,99,235,0.1);padding:2px 8px;border-radius:8px;display:inline-block">소속 선수: ${univPlayers.length}명</span>
+    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:4px;min-height:100px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+      <div style="position:relative;height:100px;display:flex;align-items:center;justify-content:center">
       </div>
+    </div><div style="text-align:center;margin-bottom:4px;line-height:1">
+      <span style="font-size:16px;font-weight:800;color:var(--text)">${univName}</span> <span style="font-size:11px;color:#2563eb;font-weight:700;background:rgba(37,99,235,0.1);padding:2px 8px;border-radius:8px;display:inline-block">소속 선수: ${univPlayers.length}명</span>
+    </div><div style="text-align:center;margin-bottom:4px">
+      <span style="font-size:10px;color:var(--gray-l)">🖼 로고 이미지 URL: <a href="${UNIV_ICONS[univName]}" target="_blank" style="color:#2563eb;text-decoration:underline">${UNIV_ICONS[univName]}</a></span>
     </div>\n\n`;
   } else {
     result += `🏫 ${univName} 대학 정보\n\n`;
