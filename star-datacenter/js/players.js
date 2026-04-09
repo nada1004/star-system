@@ -7,6 +7,7 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
+let totalViewMode='table'; // 'table' | 'gallery'
 
 function _parseTotalSearch(qRaw){
   const q=(qRaw||'').trim().toLowerCase();
@@ -25,26 +26,49 @@ function _parseTotalSearch(qRaw){
 }
 
 function totalApplySearchFilter(){
-  const table=document.querySelector('#rcont table');
-  if(!table) return;
   const {rf,gf,inc,exc}=_parseTotalSearch(totalSearch);
   const qHas=rf||gf||inc.length||exc.length;
-  const rows=[...table.querySelectorAll('tr[data-player-row="1"]')];
-  rows.forEach(tr=>{
-    if(!qHas){ tr.style.display=''; return; }
-    const hay=(tr.getAttribute('data-q')||'');
-    const r=tr.getAttribute('data-r')||'';
-    const g=tr.getAttribute('data-g')||'';
+  // 테이블 뷰
+  const table=document.querySelector('#rcont table');
+  if(table){
+    const rows=[...table.querySelectorAll('tr[data-player-row="1"]')];
+    rows.forEach(tr=>{
+      if(!qHas){ tr.style.display=''; return; }
+      const hay=(tr.getAttribute('data-q')||'');
+      const r=tr.getAttribute('data-r')||'';
+      const g=tr.getAttribute('data-g')||'';
+      const okRace=!rf||r===rf;
+      const okGender=!gf||g===gf;
+      const okInc=inc.length===0||inc.every(t=>hay.includes(t));
+      const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
+      tr.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+    });
+    table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
+      const u=h.getAttribute('data-univ-header')||'';
+      const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
+      h.style.display=any?'':'none';
+    });
+  }
+  // 갤러리 뷰
+  const cont=document.getElementById('rcont');
+  if(!cont) return;
+  const cards=[...cont.querySelectorAll('[data-player-card="1"]')];
+  if(!cards.length) return;
+  cards.forEach(card=>{
+    if(!qHas){ card.style.display=''; return; }
+    const hay=(card.getAttribute('data-q')||'');
+    const r=card.getAttribute('data-r')||'';
+    const g=card.getAttribute('data-g')||'';
     const okRace=!rf||r===rf;
     const okGender=!gf||g===gf;
     const okInc=inc.length===0||inc.every(t=>hay.includes(t));
     const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
-    tr.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+    card.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
   });
-  // 대학 헤더 숨김 (해당 대학에 보이는 선수 행이 없으면)
-  table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
-    const u=h.getAttribute('data-univ-header')||'';
-    const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
+  // 갤러리 대학 섹션 헤더 숨김
+  cont.querySelectorAll('[data-gallery-univ-header]').forEach(h=>{
+    const u=h.getAttribute('data-gallery-univ-header')||'';
+    const any=cards.some(c=>c.style.display!=='none'&&c.getAttribute('data-univ')===u);
     h.style.display=any?'':'none';
   });
 }
@@ -85,9 +109,12 @@ function rTotal(C,T){
       autocomplete="off" spellcheck="false"
       style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:220px;flex:1;background:var(--white);color:var(--text)">
     <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
-    ${isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''}
-    ${isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''}
-    ${_showBulk?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
+    <span style="color:var(--border2);align-self:center">│</span>
+    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';_bulkEditMode=false;render()" title="목록 뷰">☰ 목록</button>
+    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';_bulkEditMode=false;render()" title="갤러리 뷰">▦ 갤러리</button>
+    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
+    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
+    ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
         oncompositionstart="window._tsComp2=true"
@@ -122,6 +149,17 @@ function rTotal(C,T){
   const _allRanked = [...players].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
   const _rankMap = {};
   _allRanked.forEach((p,i) => { _rankMap[p.name] = i+1; });
+
+  // 갤러리 뷰 분기
+  if(totalViewMode==='gallery'){
+    C.innerHTML=filterBar+_buildGalleryView(_rankMap);
+    injectUnivIcons(C);
+    requestAnimationFrame(()=>injectUnivIcons(C));
+    totalApplySearchFilter();
+    const si=C.querySelector('#total-search');
+    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    return;
+  }
 
   let totalShown=0;
   
@@ -306,6 +344,60 @@ function rTotal(C,T){
   bulkApplySearchFilter();
   const si=C.querySelector('#total-search');
   if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+}
+
+function _buildGalleryView(rankMap){
+  const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
+  let anyShown=false;
+  getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루'&&!p.retired);
+    if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
+    if(!up.length) return;
+    anyShown=true;
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 4px 4px;border-bottom:2px solid ${u.color||'#6366f1'};margin-top:6px">
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:800;color:${u.color||'#6366f1'}">${gUI(u.name,'20px')}${u.name}</span>
+      <span style="font-size:11px;color:var(--gray-l);font-weight:600">${up.length}명</span>
+    </div>`;
+    sorted.forEach(p=>{
+      const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
+      const clr=RACE_CLR[p.race]||'#64748b';
+      const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
+      const actDot=(()=>{
+        const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
+        if(!lastD) return '#9ca3af';
+        const _7ago=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+        const _30ago=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+        if(lastD>=_7ago) return '#16a34a';
+        if(lastD>=_30ago) return '#f59e0b';
+        return '#9ca3af';
+      })();
+      html+=`<div data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
+        onclick="openPlayerModal('${_pSafe}')"
+        style="background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:12px 8px 10px;cursor:pointer;text-align:center;position:relative;transition:transform .15s,box-shadow .15s"
+        onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.12)'"
+        onmouseleave="this.style.transform='';this.style.boxShadow=''">
+        <div style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot}" title="${actDot==='#16a34a'?'최근 활동 7일 이내':actDot==='#f59e0b'?'활동 중 30일 이내':'비활성'}"></div>
+        <div style="width:72px;height:72px;border-radius:50%;margin:0 auto 8px;position:relative;overflow:hidden;border:3px solid ${clr};background:${clr}22;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${clr};flex-shrink:0">
+          ${p.race||'?'}${p.photo?`<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`:''}
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+        ${p.role?`<div style="font-size:10px;color:var(--gray-l);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>`:''}
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px;flex-wrap:wrap">
+          ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
+        </div>
+        <div style="margin-top:5px;font-size:11px;font-weight:700;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT} ELO</div>
+        <div style="font-size:10px;color:${wr===null?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};font-weight:600;margin-top:2px">${wr===null?'전적없음':`${p.win}승 ${p.loss}패 ${wr}%`}</div>
+        ${rankMap[p.name]?`<div style="position:absolute;top:6px;left:8px;font-size:9px;font-weight:800;color:var(--gray-l)">#${rankMap[p.name]}</div>`:''}
+      </div>`;
+    });
+  });
+  if(!anyShown) html+=`<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div></div></div>`;
+  html+='</div>';
+  return html;
 }
 
 function toggleBulkEditMode(){
