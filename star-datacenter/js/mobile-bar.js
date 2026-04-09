@@ -455,38 +455,42 @@ function generateChatbotResponse(query){
     }else{
       return '❌ 지원하지 않는 기록 유형입니다.';
     }
-  }if(q.includes('미니대전')||q.includes('미니')){
-    return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: <스트리머 이름> 미니대전 성적';
-  }
-  if(q.includes('대학대전')){
-    return '🏟️ 대학대전 기록을 보려면 "선수명 대학대전 기록"이라고 입력하세요.\n예: <스트리머 이름> 대학대전 기록';
-  }
-  if(q.includes('개인전')){
-    return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: <스트리머 이름> 개인전 기록';
-  }
-  if(q.includes('끝장전')){
-    return '🔥 끝장전 기록을 보려면 "선수명 끝장전 기록"이라고 입력하세요.\n예: <스트리머 이름> 끝장전 기록';
-  }
-  if(q.includes('ck')||q.includes('대학ck')){
-    return '🤝 대학CK 기록을 보려면 "선수명 ck 기록"이라고 입력하세요.\n예: <스트리머 이름> ck 기록';
-  }
-  if(q.includes('시빌원')){
-    return '🏛️ 시빌원 기록을 보려면 "선수명 시빌원 기록"이라고 입력하세요.\n예: <스트리머 이름> 시빌원 기록';
-  }
-  if(q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
-    return '🏆 대회 기록을 보려면 "선수명 대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 대회 기록';
-  }
-  if(q.includes('티어대회')){
-    return '🎖️ 티어대회 기록을 보려면 "선수명 티어대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 티어대회 기록';
-  }
-  if(q.includes('프로리그')){
-    return '🏅 프로리그 기록을 보려면 "선수명 프로리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 프로리그 기록';
-  }
-  if(q.includes('토너먼트')){
-    return '🏆 토너먼트 기록을 보려면 "선수명 토너먼트 기록"이라고 입력하세요.\n예: <스트리머 이름> 토너먼트 기록';
-  }
-  if(q.includes('조별리그')){
-    return '📋 조별리그 기록을 보려면 "선수명 조별리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 조별리그 기록';
+  }else{
+    // 패턴 매칭 실패 시 도움 메시지 제공
+    if(q.includes('미니대전')||q.includes('미니')){
+      return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: <스트리머 이름> 미니대전 성적';
+    }
+    if(q.includes('대학대전')){
+      return '🏟️ 대학대전 기록을 보려면 "선수명 대학대전 기록"이라고 입력하세요.\n예: <스트리머 이름> 대학대전 기록';
+    }
+    if(q.includes('개인전')){
+      return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: <스트리머 이름> 개인전 기록';
+    }
+    if(q.includes('끝장전')){
+      return '🔥 끝장전 기록을 보려면 "선수명 끝장전 기록"이라고 입력하세요.\n예: <스트리머 이름> 끝장전 기록';
+    }
+    if(q.includes('ck')||q.includes('대학ck')){
+      return '🤝 대학CK 기록을 보려면 "선수명 ck 기록"이라고 입력하세요.\n예: <스트리머 이름> ck 기록';
+    }
+    if(q.includes('시빌원')){
+      return '🏛️ 시빌원 기록을 보려면 "선수명 시빌원 기록"이라고 입력하세요.\n예: <스트리머 이름> 시빌원 기록';
+    }
+    if(q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
+      return '🏆 대회 기록을 보려면 "선수명 대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 대회 기록';
+    }
+    if(q.includes('티어대회')){
+      return '🎖️ 티어대회 기록을 보려면 "선수명 티어대회 기록"이라고 입력하세요.\n예: <스트리머 이름> 티어대회 기록';
+    }
+    if(q.includes('프로리그')){
+      return '🏅 프로리그 기록을 보려면 "선수명 프로리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 프로리그 기록';
+    }
+    if(q.includes('토너먼트')){
+      return '🏆 토너먼트 기록을 보려면 "선수명 토너먼트 기록"이라고 입력하세요.\n예: <스트리머 이름> 토너먼트 기록';
+    }
+    if(q.includes('조별리그')){
+      return '📋 조별리그 기록을 보려면 "선수명 조별리그 기록"이라고 입력하세요.\n예: <스트리머 이름> 조별리그 기록';
+    }
+    return '❓ 이해하지 못했습니다. "선수명 기록 유형" 형식으로 입력하세요.\n예: 조일장 미니대전 성적';
   }
   if(q.includes('팀전')){
     return '👥 팀전 기록을 보려면 "선수명 팀전 기록"이라고 입력하세요.\n예: <스트리머 이름> 팀전 기록';
@@ -536,6 +540,8 @@ function formatPlayerMiniRecord(player, miniM){
   if(_year){
     historyMatches=historyMatches.filter(h=>(h.date||'').startsWith(_year));
     console.log('Chatbot Debug - After year filter, matches:', historyMatches.length);
+    const filteredModes=[...new Set(historyMatches.map(h=>h.mode).filter(Boolean))];
+    console.log('Chatbot Debug - Modes after year filter:', filteredModes);
   }
   
   console.log('Chatbot Debug - history mini matches:', historyMatches.length);
