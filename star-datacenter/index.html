@@ -532,7 +532,25 @@
 </div>
 
 <!-- 📱 FAB -->
-<script>document.write('<sc'+'ript src="js/mobile-bar.js'+_cbv+'"><\/sc'+'ript>')</script>
+<script src="js/mobile-bar.js"></script>
+<script>
+var _fabOpen=false;
+function toggleFab(){
+  _fabOpen=!_fabOpen;
+  const btn=document.getElementById('fabMain');
+  const list=document.getElementById('fabSubList');
+  if(!btn||!list)return;
+  btn.classList.toggle('open',_fabOpen);
+  list.classList.toggle('open',_fabOpen);
+}
+function closeFab(){
+  _fabOpen=false;
+  const btn=document.getElementById('fabMain');
+  const list=document.getElementById('fabSubList');
+  if(btn) btn.classList.remove('open');
+  if(list) list.classList.remove('open');
+}
+</script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
