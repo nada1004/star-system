@@ -640,31 +640,34 @@ function formatPlayerBasicInfo(player) {
   const safeUniv = escapeHtml(player.univ);
   
   if (player.photo) {
-    // 프로필 사진을 전체 배경으로 표시 (가독성 개선)
-    return `<div style="position:relative;padding:24px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:220px">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.85) 100%);border-radius:12px"></div>
-      <div style="position:relative;color:white;text-align:center;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.8)">
-        <div style="font-size:32px;font-weight:700;margin-bottom:8px">${safePlayerName}</div>
-        <div style="font-size:18px;margin-bottom:12px;background:rgba(0,0,0,0.4);padding:6px 18px;border-radius:20px;display:inline-block">${safeUniv}</div>
-        <div style="font-size:16px;margin-top:12px;letter-spacing:2px">
-          🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
+    // 프로필 사진과 정보 분리
+    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+      <img src="${player.photo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:140px;height:140px;object-fit:cover;border-radius:12px;margin-bottom:16px;border:3px solid var(--blue)">
+      <div style="display:none;width:140px;height:140px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:16px;border:3px solid var(--blue)">👤</div>
+      <div style="text-align:center;width:100%">
+        <div style="font-size:26px;font-weight:700;color:var(--text);margin-bottom:6px">${safePlayerName}</div>
+        <div style="font-size:16px;color:var(--text2);margin-bottom:10px">${safeUniv}</div>
+        <div style="display:flex;gap:16px;justify-content:center;margin-bottom:10px;font-size:14px;color:var(--text2)">
+          <span>🎖️ ${player.tier}</span>
+          <span>🎮 ${player.race}</span>
+          <span>⭐ ${player.elo}</span>
         </div>
-        <div style="font-size:22px;margin-top:16px;font-weight:700;background:rgba(255,255,255,0.25);padding:8px 24px;border-radius:12px;display:inline-block">
+        <div style="font-size:20px;font-weight:700;color:var(--blue);margin-bottom:10px">
           ${player.win}승 ${player.loss}패 (${rate}%)
         </div>
-        <div style="font-size:14px;margin-top:12px;opacity:0.9">
+        <div style="font-size:13px;color:var(--text3);margin-bottom:12px">
           📝 총 ${total}경기
         </div>
       </div>
-    </div>
-    <div style="margin-top:12px">
-      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-        <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">이번달</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">저그전</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">테란전</button>
-        <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">프로토스전</button>
+      <div style="width:100%;border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+          <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">이번달</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">저그전</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">테란전</button>
+          <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">프로토스전</button>
+        </div>
       </div>
     </div>`;
   }
@@ -955,11 +958,11 @@ function formatUniversityInfo(univName) {
   // 대학 로고와 정보 분리
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
     result += `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
-      <img src="${UNIV_ICONS[univName]}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:120px;height:120px;object-fit:contain;border-radius:12px;margin-bottom:16px;border:3px solid var(--blue)">
-      <div style="display:none;width:120px;height:120px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:16px;border:3px solid var(--blue)">🏫</div>
+      <img src="${UNIV_ICONS[univName]}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:100px;height:100px;object-fit:contain;border-radius:12px;margin-bottom:12px;border:3px solid var(--blue)">
+      <div style="display:none;width:100px;height:100px;background:var(--blue);border-radius:12px;align-items:center;justify-content:center;font-size:40px;color:white;margin-bottom:12px;border:3px solid var(--blue)">🏫</div>
       <div style="text-align:center">
-        <div style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:8px">🏫 ${univName}</div>
-        <div style="font-size:18px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:6px 16px;border-radius:20px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">${univName}</div>
+        <div style="font-size:16px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:4px 14px;border-radius:20px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
       </div>
     </div>\n\n`;
   } else {
