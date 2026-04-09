@@ -253,15 +253,34 @@ function processChatbotQuery(query){
 function generateChatbotResponse(query){
   const q=query.toLowerCase();
   
+  // localStorage에서 데이터 직접 읽어오기
+  const loadData = (key) => {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+    } catch(e) {
+      return [];
+    }
+  };
+  
+  const compM = loadData('su_cm');
+  const ttM = loadData('su_ttm');
+  const proM = loadData('su_pro');
+  const ckM = loadData('su_ck');
+  const gjM = loadData('su_gj');
+  const univM = loadData('su_um');
+  const miniM = loadData('su_mm');
+  
   // 디버깅: 데이터 변수 확인
   console.log('Chatbot Debug - Data availability:', {
     players: typeof players!=='undefined',
-    compM: typeof window.compM!=='undefined',
-    ttM: typeof window.ttM!=='undefined',
-    proM: typeof window.proM!=='undefined',
-    ckM: typeof window.ckM!=='undefined',
-    gjM: typeof window.gjM!=='undefined',
-    univM: typeof window.univM!=='undefined'
+    compM: compM.length,
+    ttM: ttM.length,
+    proM: proM.length,
+    ckM: ckM.length,
+    gjM: gjM.length,
+    univM: univM.length,
+    miniM: miniM.length
   });
   
   // 선수 이름 추출 시도 - 더 광범위한 패턴
@@ -281,29 +300,29 @@ function generateChatbotResponse(query){
     }else if(mode==='미니대전'||mode==='성적'){
       return formatPlayerMiniRecord(player);
     }else if(mode==='대학대전'||q.includes('대학대전')){
-      return formatPlayerUnivMatchRecord(player);
+      return formatPlayerUnivMatchRecord(player, univM);
     }else if(mode==='개인전'){
       return formatPlayerIndRecord(player);
     }else if(mode==='끝장전'||q.includes('끝장전')){
-      return formatPlayerGJRecord(player);
+      return formatPlayerGJRecord(player, gjM);
     }else if(mode==='ck'||q.includes('ck')){
-      return formatPlayerCKRecord(player);
+      return formatPlayerCKRecord(player, ckM);
     }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
-      return formatPlayerCompRecord(player);
+      return formatPlayerCompRecord(player, compM);
     }else if(mode==='티어대회'||q.includes('티어대회')){
-      return formatPlayerTTRecord(player);
+      return formatPlayerTTRecord(player, ttM);
     }else if(mode==='프로리'||q.includes('프로리그')){
-      return formatPlayerProRecord(player);
+      return formatPlayerProRecord(player, proM);
     }else if(mode==='시빌원'||q.includes('시빌원')){
-      return formatPlayerSevilRecord(player);
+      return formatPlayerSevilRecord(player, univM);
     }else if(mode==='토너먼트'||q.includes('토너먼트')){
-      return formatPlayerTournamentRecord(player);
+      return formatPlayerTournamentRecord(player, compM, ttM, proM);
     }else if(mode==='조별리그'||q.includes('조별리그')){
-      return formatPlayerGroupRecord(player);
+      return formatPlayerGroupRecord(player, compM, ttM, proM);
     }else if(mode==='팀전'||q.includes('팀전')){
-      return formatPlayerTeamRecord(player);
+      return formatPlayerTeamRecord(player, proM);
     }else if(mode==='일반'||q.includes('일반')){
-      return formatPlayerNormalRecord(player);
+      return formatPlayerNormalRecord(player, proM);
     }
   }
   
@@ -404,30 +423,28 @@ function formatPlayerMiniRecord(player){
   
   return info;
 }
-function formatPlayerUnivMatchRecord(player){
-  if(!player.history||player.history.length===0){
+function formatPlayerUnivMatchRecord(player, univM){
+  const playerMatches=univM.filter(m=>m.p1===player.name||m.p2===player.name);
+  
+  if(playerMatches.length===0){
     return '📭 '+player.name+'의 대학대전 기록이 없습니다.';
   }
   
-  const univRecs=player.history.filter(h=>!h.matchId||!h.matchId.startsWith('mm'));
-  if(univRecs.length===0){
-    return '📭 '+player.name+'의 대학대전 기록이 없습니다.';
-  }
-  
-  const wins=univRecs.filter(h=>h.result==='승').length;
-  const losses=univRecs.filter(h=>h.result==='패').length;
-  const total=wins+losses;
-  const rate=total>0?((wins/total)*100).toFixed(1):0;
+  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const losses=playerMatches.length-wins;
+  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
   let info='🏟️ '+player.name+' 대학대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  univRecs.slice(-5).reverse().forEach(h=>{
-    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  playerMatches.slice(-5).reverse().forEach(m=>{
+    const opp=m.p1===player.name?m.p2:m.p1;
+    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
   });
   
-  if(univRecs.length>5){
+  if(playerMatches.length>5){
     info+='... (최근 5경기만 표시)';
   }
   
@@ -457,8 +474,7 @@ function formatPlayerIndRecord(player){
   
   return info;
 }
-function formatPlayerCompRecord(player){
-  const compM=typeof window.compM!=='undefined'?window.compM:[];
+function formatPlayerCompRecord(player, compM){
   const playerMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -485,8 +501,7 @@ function formatPlayerCompRecord(player){
   
   return info;
 }
-function formatPlayerTTRecord(player){
-  const ttM=typeof window.ttM!=='undefined'?window.ttM:[];
+function formatPlayerTTRecord(player, ttM){
   const playerMatches=ttM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -513,8 +528,7 @@ function formatPlayerTTRecord(player){
   
   return info;
 }
-function formatPlayerProRecord(player){
-  const proM=typeof window.proM!=='undefined'?window.proM:[];
+function formatPlayerProRecord(player, proM){
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -541,8 +555,7 @@ function formatPlayerProRecord(player){
   
   return info;
 }
-function formatPlayerGJRecord(player){
-  const gjM=typeof window.gjM!=='undefined'?window.gjM:[];
+function formatPlayerGJRecord(player, gjM){
   const playerMatches=gjM.filter(m=>m.wName===player.name||m.lName===player.name);
   
   if(playerMatches.length===0){
@@ -569,8 +582,7 @@ function formatPlayerGJRecord(player){
   
   return info;
 }
-function formatPlayerCKRecord(player){
-  const ckM=typeof window.ckM!=='undefined'?window.ckM:[];
+function formatPlayerCKRecord(player, ckM){
   const playerMatches=ckM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -597,8 +609,7 @@ function formatPlayerCKRecord(player){
   
   return info;
 }
-function formatPlayerSevilRecord(player){
-  const univM=typeof window.univM!=='undefined'?window.univM:[];
+function formatPlayerSevilRecord(player, univM){
   const playerMatches=univM.filter(m=>(m.p1===player.name||m.p2===player.name)&&(m.type==='시빌원'||m.stage==='시빌원'));
   
   if(playerMatches.length===0){
@@ -625,11 +636,11 @@ function formatPlayerSevilRecord(player){
   
   return info;
 }
-function formatPlayerTournamentRecord(player){
+function formatPlayerTournamentRecord(player, compM, ttM, proM){
   const allMatches=[];
-  if(typeof window.compM!=='undefined') allMatches.push(...window.compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof window.ttM!=='undefined') allMatches.push(...window.ttM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof window.proM!=='undefined') allMatches.push(...window.proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
   const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
   
   if(playerMatches.length===0){
@@ -656,11 +667,11 @@ function formatPlayerTournamentRecord(player){
   
   return info;
 }
-function formatPlayerGroupRecord(player){
+function formatPlayerGroupRecord(player, compM, ttM, proM){
   const allMatches=[];
-  if(typeof window.compM!=='undefined') allMatches.push(...window.compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof window.ttM!=='undefined') allMatches.push(...window.ttM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof window.proM!=='undefined') allMatches.push(...window.proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
   const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
   
   if(playerMatches.length===0){
@@ -687,8 +698,7 @@ function formatPlayerGroupRecord(player){
   
   return info;
 }
-function formatPlayerTeamRecord(player){
-  const proM=typeof window.proM!=='undefined'?window.proM:[];
+function formatPlayerTeamRecord(player, proM){
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='팀전'||m.format==='팀전');
   
   if(playerMatches.length===0){
@@ -715,8 +725,7 @@ function formatPlayerTeamRecord(player){
   
   return info;
 }
-function formatPlayerNormalRecord(player){
-  const proM=typeof window.proM!=='undefined'?window.proM:[];
+function formatPlayerNormalRecord(player, proM){
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='일반'||m.format==='일반'||!m.type&&!m.format);
   
   if(playerMatches.length===0){
