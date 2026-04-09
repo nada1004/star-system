@@ -2580,6 +2580,15 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </details>
+  <div class="ssec">
+    <h4>🔄 경기 기록 동기화</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">경기 결과를 선수의 최근 기록(개인 전적)에 소급 반영합니다. 데이터 불일치 시 사용하세요.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 개인전 동기화</button>
+      <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncTourneyHistoryBtn==='function')syncTourneyHistoryBtn()">🔄 대회 동기화</button>
+      <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()">⚡ 전체 동기화</button>
+    </div>
+  </div>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
