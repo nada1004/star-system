@@ -6,12 +6,28 @@
   }
   checkMobile();
   window.addEventListener('resize',checkMobile);
-  // FAB 표시 여부 설정 반영
-  if(localStorage.getItem('su_fabHide')==='1'){
-    const fab=document.getElementById('mobileFab');
-    if(fab) fab.style.display='none';
-  }
+  // FAB 표시 여부 설정 반영 (PC/모바일 분리)
+  updateFabVisibility();
 })();
+
+// FAB 표시 여부 업데이트 함수 (PC/모바일 분리)
+function updateFabVisibility(){
+  const fab=document.getElementById('mobileFab');
+  if(!fab)return;
+  
+  const isMobile=window.innerWidth<=768;
+  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
+  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
+  
+  if(isMobile){
+    fab.style.display=hideMobile?'none':'flex';
+  }else{
+    fab.style.display=hidePC?'none':'flex';
+  }
+}
+
+// 창 크기 변경 시 FAB 표시 여부 재계산
+window.addEventListener('resize',updateFabVisibility);
 
 /* ══════════════════════════════════════
    💻 PC 탭 스크롤 화살표
@@ -145,3 +161,183 @@ document.addEventListener('click',function(e){
     if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;_lpEl=null;}
   },{passive:true});
 })();
+
+/* ══════════════════════════════════════
+   🤖 챗봇 기능
+══════════════════════════════════════ */
+function openChatbot(){
+  const overlay=document.getElementById('chatbotOverlay');
+  if(overlay){
+    overlay.classList.add('open');
+    overlay.style.display='flex';
+    setTimeout(()=>{document.getElementById('chatbotInput')?.focus();},100);
+  }
+}
+function closeChatbot(e){
+  if(e&&e.target!==document.getElementById('chatbotOverlay'))return;
+  const overlay=document.getElementById('chatbotOverlay');
+  if(overlay){
+    overlay.classList.remove('open');
+    setTimeout(()=>{overlay.style.display='none';},300);
+  }
+}
+function sendChatbotMessage(){
+  const input=document.getElementById('chatbotInput');
+  const message=input.value.trim();
+  if(!message)return;
+  
+  addChatbotMessage(message,'user');
+  input.value='';
+  
+  setTimeout(()=>{processChatbotQuery(message);},300);
+}
+function addChatbotMessage(text,sender){
+  const container=document.getElementById('chatbotMessages');
+  if(!container)return;
+  
+  const msgDiv=document.createElement('div');
+  msgDiv.className='chatbot-message '+sender;
+  msgDiv.innerHTML='<div class="chatbot-bubble">'+text+'</div>';
+  container.appendChild(msgDiv);
+  container.scrollTop=container.scrollHeight;
+}
+function processChatbotQuery(query){
+  const response=generateChatbotResponse(query);
+  addChatbotMessage(response,'bot');
+}
+function generateChatbotResponse(query){
+  const q=query.toLowerCase();
+  
+  // 선수 이름 추출 시도
+  const playerMatch=query.match(/(\S+)\s*(기록|정보|미니대전|대학대전|개인전|전적|성적)/);
+  if(playerMatch){
+    const playerName=playerMatch[1];
+    const mode=playerMatch[2];
+    
+    const player=window.data?.players?.find(p=>p.name===playerName);
+    if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
+    
+    if(mode==='기록'||mode==='정보'||mode==='전적'){
+      return formatPlayerInfo(player);
+    }else if(mode==='미니대전'||mode==='성적'){
+      return formatPlayerMiniRecord(player);
+    }else if(mode==='대학대전'){
+      return formatPlayerUnivMatchRecord(player);
+    }else if(mode==='개인전'){
+      return formatPlayerIndRecord(player);
+    }
+  }
+  
+  // 간단한 명령어
+  if(q.includes('미니대전')||q.includes('미니')){
+    return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: 찌킹 미니대전 성적';
+  }
+  if(q.includes('대학대전')){
+    return '🏟️ 대학대전 기록을 보려면 "선수명 대학대전 기록"이라고 입력하세요.\n예: 찌킹 대학대전 기록';
+  }
+  if(q.includes('개인전')){
+    return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: 찌킹 개인전 기록';
+  }
+  if(q.includes('랭킹')||q.includes('순위')){
+    return '📊 랭킹은 상단 탭의 "티어 순위표"에서 확인할 수 있습니다.';
+  }
+  if(q.includes('도움')||q.includes('help')||q.includes('?')){
+    return '📖 사용법:\n• "선수명 기록" - 선수 전체 기록\n• "선수명 미니대전 성적" - 미니대전 기록\n• "선수명 대학대전 기록" - 대학대전 기록\n• "선수명 개인전 기록" - 개인전 기록';
+  }
+  
+  return '🤔 질문을 이해하지 못했습니다.\n• "선수명 기록"\n• "선수명 미니대전 성적"\n• "도움" - 사용법 보기';
+}
+function formatPlayerInfo(player){
+  const total=player.win+player.loss;
+  const rate=total>0?((player.win/total)*100).toFixed(1):0;
+  
+  let info='👤 '+player.name+'\n';
+  info+='🏫 '+player.univ+' | '+player.tier+' | '+player.race+'종족\n';
+  info+='📊 전적: '+player.win+'승 '+player.loss+'패 ('+rate+'%)\n';
+  info+='⭐ ELO: '+player.elo+'\n';
+  info+='📝 총 전적 수: '+total+'경기';
+  
+  return info;
+}
+function formatPlayerMiniRecord(player){
+  if(!player.history||player.history.length===0){
+    return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
+  }
+  
+  const miniRecs=player.history.filter(h=>h.matchId&&h.matchId.startsWith('mm'));
+  if(miniRecs.length===0){
+    return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
+  }
+  
+  const wins=miniRecs.filter(h=>h.result==='승').length;
+  const losses=miniRecs.filter(h=>h.result==='패').length;
+  const total=wins+losses;
+  const rate=total>0?((wins/total)*100).toFixed(1):0;
+  
+  let info='⚡ '+player.name+' 미니대전 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  miniRecs.slice(-5).reverse().forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  });
+  
+  if(miniRecs.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerUnivMatchRecord(player){
+  if(!player.history||player.history.length===0){
+    return '📭 '+player.name+'의 대학대전 기록이 없습니다.';
+  }
+  
+  const univRecs=player.history.filter(h=>!h.matchId||!h.matchId.startsWith('mm'));
+  if(univRecs.length===0){
+    return '📭 '+player.name+'의 대학대전 기록이 없습니다.';
+  }
+  
+  const wins=univRecs.filter(h=>h.result==='승').length;
+  const losses=univRecs.filter(h=>h.result==='패').length;
+  const total=wins+losses;
+  const rate=total>0?((wins/total)*100).toFixed(1):0;
+  
+  let info='🏟️ '+player.name+' 대학대전 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  univRecs.slice(-5).reverse().forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  });
+  
+  if(univRecs.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}
+function formatPlayerIndRecord(player){
+  if(!player.history||player.history.length===0){
+    return '📭 '+player.name+'의 개인전 기록이 없습니다.';
+  }
+  
+  const total=player.win+player.loss;
+  if(total===0){
+    return '📭 '+player.name+'의 개인전 기록이 없습니다.';
+  }
+  
+  let info='⚔️ '+player.name+' 개인전 기록\n';
+  info+='📊 '+player.win+'승 '+player.loss+'패\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  player.history.slice(-5).reverse().forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  });
+  
+  if(player.history.length>5){
+    info+='... (최근 5경기만 표시)';
+  }
+  
+  return info;
+}

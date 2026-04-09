@@ -2767,18 +2767,23 @@ function rCfg(C,T){
       </div>
 
     </div>
-    </div>
   </div>
-
-
-  <div class="ssec"><h4>📱 모바일 UI 설정</h4>
+  <div class="ssec"><h4>📱 FAB 버튼 설정</h4>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-        <input type="checkbox" id="cfg-fab-show" ${localStorage.getItem('su_fabHide')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHide',this.checked?'0':'1');const fab=document.getElementById('mobileFab');if(fab)fab.style.display=this.checked?'':'none';">
+        <input type="checkbox" id="cfg-fab-show-mobile" ${localStorage.getItem('su_fabHideMobile')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
+          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility();">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시</div>
-          <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼 (미니/대학대전/개인전/프로리그/캘린더/설정 바로가기)</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (모바일)</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+        <input type="checkbox" id="cfg-fab-show-pc" ${localStorage.getItem('su_fabHidePC')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
+          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility();">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (PC)</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-top:2px">PC 화면 우측 하단 플로팅 버튼</div>
         </div>
       </label>
     </div>
