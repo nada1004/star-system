@@ -454,7 +454,8 @@ async function generateResponse(msg) {
     { key: 'CK', fn: formatPlayerCkM },
     { key: '개인전', fn: formatPlayerIndM },
     { key: '끝장전', fn: formatPlayerGjM },
-    { key: '대회기록', fn: formatPlayerCompM },
+    { key: '티어대회', fn: formatPlayerTtM },   // 티어토너먼트 (ttM) - 대회보다 먼저
+    { key: '대회기록', fn: (p) => formatPlayerCompOnly(p) },
     { key: '전체기록', fn: formatPlayerAllRecords },
     { key: '기록요약', fn: formatPlayerAllRecords },
   ];
@@ -471,14 +472,14 @@ async function generateResponse(msg) {
     }
   }
 
-  // '대회' 키워드 - 선수명 + 대회 (comps 기록)
-  if (msg.includes('대회') && !msg.includes('일정') && !msg.includes('목록') && !msg.includes('브라켓')) {
+  // '대회' 키워드 - 선수명 + 대회 (comps 기록만, 티어대회 제외)
+  if (msg.includes('대회') && !msg.includes('티어대회') && !msg.includes('일정') && !msg.includes('목록') && !msg.includes('브라켓') && !msg.includes('대회기록')) {
     const dcMatch = userMessage.match(/([^\s]+)\s+대회/);
     if (dcMatch) {
       const playerName = dcMatch[1];
       let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
       if (!player) player = findSimilarPlayer(playerName);
-      if (player) return formatPlayerCompM(player);
+      if (player) return formatPlayerCompOnly(player);
     }
   }
 
@@ -713,7 +714,7 @@ function formatPlayerBasicInfo(player) {
 <div style="font-size:14px;font-weight:800;color:${winColor};margin-top:4px">${player.win}승 ${player.loss}패 <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><img src="${player.photo}" style="width:100%;display:block;object-fit:cover;max-height:220px"><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9;display:flex;align-items:center;justify-content:center"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
   // 사진 없는 경우
@@ -1010,22 +1011,25 @@ function formatUniversityInfo(univName) {
   const textOnColor = luminance > 140 ? '#1a202c' : '#ffffff';
   const textSubOnColor = luminance > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)';
 
+  // 티어 순서대로 정렬 (S→A→B→C→D), 같은 티어는 ELO 내림차순
+  const TIER_ORDER = {S:0,A:1,B:2,C:3,D:4};
+  const sortedPlayers = [...univPlayers].sort((a,b) => {
+    const to = (TIER_ORDER[a.tier]??9) - (TIER_ORDER[b.tier]??9);
+    return to !== 0 ? to : (b.elo||0) - (a.elo||0);
+  });
+
   // 선수 목록 HTML
-  const playerListHTML = univPlayers.map(p => {
+  const playerListHTML = sortedPlayers.map(p => {
     const safeName = escapeHtml(p.name).replace(/'/g, "\\'");
     const tC = {'S':['#7c3aed','#ede9fe'],'A':['#2563eb','#dbeafe'],'B':['#16a34a','#dcfce7'],'C':['#d97706','#fef3c7'],'D':['#dc2626','#fee2e2']}[p.tier] || ['#64748b','#f1f5f9'];
     const raceIcon = p.race === '테란' ? '🔵' : p.race === '저그' ? '🟣' : p.race === '프로토스' ? '🟡' : '⚫';
-    return `<div onclick="sendQuickMessage('${safeName}')" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2;transition:background 0.13s" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'">
-      <span style="font-size:13px;font-weight:700;color:#1a202c;flex:1">${escapeHtml(p.name)}</span>
-      <span style="font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]}">${p.tier}</span>
-      <span style="font-size:11px;color:#64748b">${raceIcon} ${p.race}</span>
-    </div>`;
+    return `<div onclick="sendQuickMessage('${safeName}')" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'"><span style="font-size:13px;font-weight:700;color:#1a202c;flex:1">${escapeHtml(p.name)}</span><span style="font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]}">${p.tier}티어</span><span style="font-size:11px;color:#64748b">${raceIcon} ${p.race}</span></div>`;
   }).join('');
 
   if (logoUrl) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13)"><div style="background:${univColor};position:relative"><img src="${logoUrl}" style="width:100%;display:block;object-fit:contain;max-height:160px;padding:16px;box-sizing:border-box" onerror="this.style.display='none'"><div style="padding:0 14px 14px;text-align:center"><div style="font-size:18px;font-weight:900;color:${textOnColor}">${escapeHtml(univName)}</div><div style="font-size:12px;color:${textSubOnColor};margin-top:2px">소속 선수 ${univPlayers.length}명</div></div></div><div style="background:#fff;padding:8px 8px 4px"><div style="font-size:11px;font-weight:700;color:#94a3b8;padding:0 3px 5px;letter-spacing:0.4px">👥 선수 목록 · 클릭하면 조회</div>${playerListHTML}</div></div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13)"><div style="background:${univColor}"><div style="display:flex;align-items:center;justify-content:center;padding:20px 20px 0"><img src="${logoUrl}" style="width:100%;max-width:100%;display:block;object-fit:contain" onerror="this.style.display='none'"></div><div style="padding:12px 14px 16px;text-align:center"><div style="font-size:20px;font-weight:900;color:${textOnColor};letter-spacing:-0.3px">${escapeHtml(univName)}</div><div style="font-size:12px;color:${textSubOnColor};margin-top:3px">소속 선수 ${univPlayers.length}명</div></div></div><div style="background:#fff;padding:8px 8px 4px"><div style="font-size:11px;font-weight:700;color:#94a3b8;padding:0 3px 5px;letter-spacing:0.4px">👥 선수 목록 (티어순 · 클릭하면 조회)</div>${playerListHTML}</div></div>`;
   } else {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:20px 14px 16px;text-align:center"><div style="font-size:36px;margin-bottom:6px">🏫</div><div style="font-size:18px;font-weight:900;color:${textOnColor}">${escapeHtml(univName)}</div><div style="font-size:12px;color:${textSubOnColor};margin-top:2px">소속 선수 ${univPlayers.length}명</div></div><div style="background:#fff;padding:8px 8px 4px"><div style="font-size:11px;font-weight:700;color:#94a3b8;padding:0 3px 5px;letter-spacing:0.4px">👥 선수 목록 · 클릭하면 조회</div>${playerListHTML}</div></div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:24px 14px 18px;text-align:center"><div style="font-size:40px;margin-bottom:8px">🏫</div><div style="font-size:20px;font-weight:900;color:${textOnColor}">${escapeHtml(univName)}</div><div style="font-size:12px;color:${textSubOnColor};margin-top:3px">소속 선수 ${univPlayers.length}명</div></div><div style="background:#fff;padding:8px 8px 4px"><div style="font-size:11px;font-weight:700;color:#94a3b8;padding:0 3px 5px;letter-spacing:0.4px">👥 선수 목록 (티어순 · 클릭하면 조회)</div>${playerListHTML}</div></div>`;
   }
 }
 
@@ -1748,266 +1752,218 @@ function _matchRow(date, leftText, score, rightText, highlight) {
   </div>`;
 }
 
+// ══════════════════════════════════════
+// 페이지네이션 상태 저장소
+// ══════════════════════════════════════
+const _pagState = {};
+
+// 페이지네이션 렌더링 공통 함수
+function _renderPaged(key, items, page, perPage, headerHtml, rowFn, totalWL) {
+  const total = items.length;
+  const maxPage = Math.max(0, Math.ceil(total / perPage) - 1);
+  page = Math.max(0, Math.min(page, maxPage));
+  _pagState[key] = { items, page, perPage, headerHtml, rowFn, totalWL };
+
+  const slice = items.slice(page * perPage, (page + 1) * perPage);
+  const rows = slice.map(rowFn).join('');
+
+  const pageInfo = `${page * perPage + 1}–${Math.min((page + 1) * perPage, total)} / 전체 ${total}건`;
+  const prevBtn = page > 0
+    ? `<button onclick="chatNavPage('${key}',-1)" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">◀ 이전</button>`
+    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:12px;cursor:default">◀ 이전</button>`;
+  const nextBtn = page < maxPage
+    ? `<button onclick="chatNavPage('${key}',1)" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">다음 ▶</button>`
+    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:12px;cursor:default">다음 ▶</button>`;
+
+  const winRate = totalWL && totalWL.w + totalWL.l > 0 ? ((totalWL.w/(totalWL.w+totalWL.l))*100).toFixed(1) : null;
+  const statsText = totalWL ? ` · 개인 ${totalWL.w}승${totalWL.l}패${winRate ? ` (${winRate}%)` : ''}` : '';
+
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${headerHtml.replace('__STATS__', statsText)}<div style="background:#fff;padding:8px 8px 4px">${rows}</div><div style="background:#f8fafc;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e8edf2">${prevBtn}<span style="font-size:11px;color:#94a3b8">${pageInfo}</span>${nextBtn}</div></div>`;
+}
+
+// 페이지 이동 함수 (버튼에서 호출)
+function chatNavPage(key, dir) {
+  const s = _pagState[key];
+  if (!s) return;
+  s.page = Math.max(0, Math.min(s.page + dir, Math.ceil(s.items.length / s.perPage) - 1));
+  const msg = _renderPaged(key, s.items, s.page, s.perPage, s.headerHtml, s.rowFn, s.totalWL);
+  // 마지막 봇 메시지 교체
+  const lastBotIdx = chatHistory.map(m=>m.role).lastIndexOf('bot');
+  if (lastBotIdx >= 0) {
+    chatHistory[lastBotIdx].content = msg;
+    saveChatHistory();
+    renderChatHistory();
+  }
+}
+
+// 개인 누적 W/L 계산 (sets 기반)
+function _calcWL_sets(items, playerName) {
+  let w=0, l=0;
+  items.forEach(m => { const r=_getMemberResult(m.sets||[], playerName); w+=r.wins; l+=r.losses; });
+  return {w, l};
+}
+function _calcWL_simple(items, playerName) {
+  const w = items.filter(m=>m.wName===playerName).length;
+  return {w, l: items.length - w};
+}
+
 // ── 미니대전 기록 ──
 function formatPlayerMiniM(player) {
   if (typeof miniM === 'undefined' || !miniM.length) return _noRecordCard('⚡','미니대전');
-  const matches = miniM.filter(m =>
-    m.sets && m.sets.some(s => s.games && s.games.some(g =>
-      g.playerA === player.name || g.playerB === player.name
-    ))
-  );
+  const matches = miniM.filter(m => m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name)));
   if (!matches.length) return _noRecordCard('⚡', `${player.name} 미니대전`);
-
-  let totalW = 0, totalL = 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const { wins, losses } = _getMemberResult(m.sets, player.name);
-    totalW += wins; totalL += losses;
-    const myTeam = m.sets.some(s => s.games && s.games.some(g => g.playerA === player.name)) ? m.a : m.b;
-    const opp = myTeam === m.a ? m.b : m.a;
-    const teamWon = (myTeam === m.a && m.sa > m.sb) || (myTeam === m.b && m.sb > m.sa);
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('⚡', `${player.name} 미니대전 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#7c3aed,#5b21b6)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const teamWon = (m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa);
     return _matchRow(m.d, `${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
-  }).join('');
-
-  const rate = totalW + totalL > 0 ? ((totalW/(totalW+totalL))*100).toFixed(1) : 0;
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('⚡', `${player.name} 미니대전 기록`, `${matches.length}경기 · 개인 ${totalW}승${totalL}패 (${rate}%)`, 'linear-gradient(135deg,#7c3aed,#5b21b6)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  };
+  return _renderPaged(`mini_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 대학대전 기록 ──
 function formatPlayerUnivM(player) {
   if (typeof univM === 'undefined' || !univM.length) return _noRecordCard('🏟️','대학대전');
-  const matches = univM.filter(m =>
-    m.sets && m.sets.some(s => s.games && s.games.some(g =>
-      g.playerA === player.name || g.playerB === player.name
-    ))
-  );
+  const matches = univM.filter(m => m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name)));
   if (!matches.length) return _noRecordCard('🏟️', `${player.name} 대학대전`);
-
-  let totalW = 0, totalL = 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const { wins, losses } = _getMemberResult(m.sets, player.name);
-    totalW += wins; totalL += losses;
-    const teamWon = (m.a === player.univ && m.sa > m.sb) || (m.b === player.univ && m.sb > m.sa);
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('🏟️', `${player.name} 대학대전 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#0891b2,#0e7490)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const teamWon = (m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa);
     return _matchRow(m.d, `${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
-  }).join('');
-
-  const rate = totalW + totalL > 0 ? ((totalW/(totalW+totalL))*100).toFixed(1) : 0;
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('🏟️', `${player.name} 대학대전 기록`, `${matches.length}경기 · 개인 ${totalW}승${totalL}패 (${rate}%)`, 'linear-gradient(135deg,#0891b2,#0e7490)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  };
+  return _renderPaged(`univm_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 프로리그 기록 ──
 function formatPlayerProM(player) {
   if (typeof proM === 'undefined' || !proM.length) return _noRecordCard('🏅','프로리그');
-  const matches = proM.filter(m => {
-    const mA = m.teamAMembers || [], mB = m.teamBMembers || [];
-    return [...mA,...mB].some(mb => mb.name === player.name);
-  });
+  const matches = proM.filter(m=>[...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name));
   if (!matches.length) return _noRecordCard('🏅', `${player.name} 프로리그`);
-
-  let totalW = 0, totalL = 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const { wins, losses } = _getMemberResult(m.sets, player.name);
-    totalW += wins; totalL += losses;
-    const mA = m.teamAMembers || [];
-    const inA = mA.some(mb => mb.name === player.name);
-    const myScore = inA ? m.sa : m.sb;
-    const oppScore = inA ? m.sb : m.sa;
-    const teamWon = myScore > oppScore;
-    const myLabel = inA ? m.teamALabel : m.teamBLabel;
-    const oppLabel = inA ? m.teamBLabel : m.teamALabel;
-    return _matchRow(m.d, `${myLabel} vs ${oppLabel}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, teamWon);
-  }).join('');
-
-  const rate = totalW + totalL > 0 ? ((totalW/(totalW+totalL))*100).toFixed(1) : 0;
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('🏅', `${player.name} 프로리그 기록`, `${matches.length}경기 · 개인 ${totalW}승${totalL}패 (${rate}%)`, 'linear-gradient(135deg,#d97706,#b45309)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('🏅', `${player.name} 프로리그 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#d97706,#b45309)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const inA = (m.teamAMembers||[]).some(mb=>mb.name===player.name);
+    const myScore=inA?m.sa:m.sb, oppScore=inA?m.sb:m.sa;
+    const myLabel=inA?m.teamALabel:m.teamBLabel, oppLabel=inA?m.teamBLabel:m.teamALabel;
+    return _matchRow(m.d, `${myLabel} vs ${oppLabel}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, myScore>oppScore);
+  };
+  return _renderPaged(`pro_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── CK리그 기록 ──
 function formatPlayerCkM(player) {
   if (typeof ckM === 'undefined' || !ckM.length) return _noRecordCard('🔥','CK리그');
-  const matches = ckM.filter(m => {
-    const mA = m.teamAMembers || [], mB = m.teamBMembers || [];
-    return [...mA,...mB].some(mb => mb.name === player.name);
-  });
+  const matches = ckM.filter(m=>[...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name));
   if (!matches.length) return _noRecordCard('🔥', `${player.name} CK리그`);
-
-  let totalW = 0, totalL = 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const { wins, losses } = _getMemberResult(m.sets, player.name);
-    totalW += wins; totalL += losses;
-    const mA = m.teamAMembers || [];
-    const inA = mA.some(mb => mb.name === player.name);
-    const myScore = inA ? m.sa : m.sb;
-    const oppScore = inA ? m.sb : m.sa;
-    const teamWon = myScore > oppScore;
-    return _matchRow(m.d, `${m.teamALabel||'A조'} vs ${m.teamBLabel||'B조'}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, teamWon);
-  }).join('');
-
-  const rate = totalW + totalL > 0 ? ((totalW/(totalW+totalL))*100).toFixed(1) : 0;
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('🔥', `${player.name} CK리그 기록`, `${matches.length}경기 · 개인 ${totalW}승${totalL}패 (${rate}%)`, 'linear-gradient(135deg,#dc2626,#b91c1c)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('🔥', `${player.name} CK리그 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#dc2626,#b91c1c)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const inA = (m.teamAMembers||[]).some(mb=>mb.name===player.name);
+    const myScore=inA?m.sa:m.sb, oppScore=inA?m.sb:m.sa;
+    return _matchRow(m.d, `${m.teamALabel||'A조'} vs ${m.teamBLabel||'B조'}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, myScore>oppScore);
+  };
+  return _renderPaged(`ck_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 개인전 기록 ──
 function formatPlayerIndM(player) {
   if (typeof indM === 'undefined' || !indM.length) return _noRecordCard('⚔️','개인전');
-  const matches = indM.filter(m => m.wName === player.name || m.lName === player.name);
+  const matches = indM.filter(m=>m.wName===player.name||m.lName===player.name);
   if (!matches.length) return _noRecordCard('⚔️', `${player.name} 개인전`);
-
-  const wins = matches.filter(m => m.wName === player.name).length;
-  const losses = matches.length - wins;
-  const rate = matches.length > 0 ? ((wins/matches.length)*100).toFixed(1) : 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const won = m.wName === player.name;
-    const opp = won ? m.lName : m.wName;
-    return _matchRow(m.d, opp, won ? '✅승' : '❌패', m.map||'', won);
-  }).join('');
-
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('⚔️', `${player.name} 개인전 기록`, `${matches.length}경기 · ${wins}승${losses}패 (${rate}%)`, 'linear-gradient(135deg,#16a34a,#15803d)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  const totalWL = _calcWL_simple(matches, player.name);
+  const header = _matchCardHeader('⚔️', `${player.name} 개인전 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#16a34a,#15803d)');
+  const rowFn = m => {
+    const won = m.wName===player.name;
+    return _matchRow(m.d, won?m.lName:m.wName, won?'✅승':'❌패', m.map||'', won);
+  };
+  return _renderPaged(`ind_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 끝장전 기록 ──
 function formatPlayerGjM(player) {
   if (typeof gjM === 'undefined' || !gjM.length) return _noRecordCard('💥','끝장전');
-  const matches = gjM.filter(m => m.wName === player.name || m.lName === player.name);
+  const matches = gjM.filter(m=>m.wName===player.name||m.lName===player.name);
   if (!matches.length) return _noRecordCard('💥', `${player.name} 끝장전`);
-
-  const wins = matches.filter(m => m.wName === player.name).length;
-  const losses = matches.length - wins;
-  const rate = matches.length > 0 ? ((wins/matches.length)*100).toFixed(1) : 0;
-  const rows = matches.slice(0, 15).map(m => {
-    const won = m.wName === player.name;
-    const opp = won ? m.lName : m.wName;
-    return _matchRow(m.d, opp, won ? '✅승' : '❌패', m.map||'', won);
-  }).join('');
-
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('💥', `${player.name} 끝장전 기록`, `${matches.length}경기 · ${wins}승${losses}패 (${rate}%)`, 'linear-gradient(135deg,#ea580c,#c2410c)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  const totalWL = _calcWL_simple(matches, player.name);
+  const header = _matchCardHeader('💥', `${player.name} 끝장전 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#ea580c,#c2410c)');
+  const rowFn = m => {
+    const won = m.wName===player.name;
+    return _matchRow(m.d, won?m.lName:m.wName, won?'✅승':'❌패', m.map||'', won);
+  };
+  return _renderPaged(`gj_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
-// ── 대회 출전 기록 (comps + tourneys) ──
-function formatPlayerCompM(player) {
-  // comps에서 해당 선수 포함 경기 찾기
-  const compMatches = (typeof comps !== 'undefined' ? comps : []).filter(m =>
-    m.sets && m.sets.some(s => s.games && s.games.some(g =>
-      g.playerA === player.name || g.playerB === player.name
-    ))
+// ── 대회 기록 (comps만, 티어대회 제외) ──
+function formatPlayerCompOnly(player) {
+  const matches = (typeof comps !== 'undefined' ? comps : []).filter(m =>
+    m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name))
   );
-  // tourneys (티어토너먼트) - ttM에서 찾기
-  const ttMatches = (typeof ttM !== 'undefined' ? ttM : []).filter(m => {
-    const mA = m.teamAMembers || [], mB = m.teamBMembers || [];
-    return [...mA,...mB].some(mb => mb.name === player.name);
-  });
+  if (!matches.length) return _noRecordCard('🏆', `${player.name} 대회`);
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('🏆', `${player.name} 대회 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#1e3a8a,#1d4ed8)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const teamWon = (m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa);
+    return _matchRow(m.d, `[${m.n||'대회'}] ${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
+  };
+  return _renderPaged(`comp_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
+}
 
-  if (!compMatches.length && !ttMatches.length) return _noRecordCard('🏆', `${player.name} 대회`);
-
-  let html = '';
-  if (compMatches.length) {
-    let totalW = 0, totalL = 0;
-    const rows = compMatches.slice(0, 10).map(m => {
-      const { wins, losses } = _getMemberResult(m.sets, player.name);
-      totalW += wins; totalL += losses;
-      const teamWon = (m.a === player.univ && m.sa > m.sb) || (m.b === player.univ && m.sb > m.sa);
-      return _matchRow(m.d, `[${m.n||'대회'}] ${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
-    }).join('');
-    html += `<div style="font-size:11px;font-weight:700;color:#64748b;padding:0 2px 5px">🏆 대회 기록</div>${rows}`;
-  }
-  if (ttMatches.length) {
-    let totalW = 0, totalL = 0;
-    const rows = ttMatches.slice(0, 10).map(m => {
-      const { wins, losses } = _getMemberResult(m.sets, player.name);
-      totalW += wins; totalL += losses;
-      const mA = m.teamAMembers || [];
-      const inA = mA.some(mb => mb.name === player.name);
-      const myScore = inA ? m.sa : m.sb;
-      const oppScore = inA ? m.sb : m.sa;
-      const teamWon = myScore > oppScore;
-      const label = m.compName ? `[${m.compName}]` : `[${m.tierLabel||''}]`;
-      return _matchRow(m.d, `${label} ${m.teamALabel} vs ${m.teamBLabel}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, teamWon);
-    }).join('');
-    html += `<div style="font-size:11px;font-weight:700;color:#64748b;padding:6px 2px 5px">🎖️ 티어 토너먼트</div>${rows}`;
-  }
-
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('🏆', `${player.name} 대회 출전 기록`, `대회 ${compMatches.length}건 · 토너먼트 ${ttMatches.length}건`, 'linear-gradient(135deg,#1e3a8a,#1d4ed8)')}
-    <div style="background:#fff;padding:10px 10px 6px">${html}</div>
-  </div>`;
+// ── 티어대회 기록 (ttM만) ──
+function formatPlayerTtM(player) {
+  const matches = (typeof ttM !== 'undefined' ? ttM : []).filter(m =>
+    [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name)
+  );
+  if (!matches.length) return _noRecordCard('🎖️', `${player.name} 티어대회`);
+  const totalWL = _calcWL_sets(matches, player.name);
+  const header = _matchCardHeader('🎖️', `${player.name} 티어대회 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#059669,#047857)');
+  const rowFn = m => {
+    const {wins,losses} = _getMemberResult(m.sets, player.name);
+    const inA = (m.teamAMembers||[]).some(mb=>mb.name===player.name);
+    const myScore=inA?m.sa:m.sb, oppScore=inA?m.sb:m.sa;
+    const label = m.compName?`[${m.compName}]`:`[${m.tierLabel||''}]`;
+    return _matchRow(m.d, `${label} ${m.teamALabel} vs ${m.teamBLabel}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, myScore>oppScore);
+  };
+  return _renderPaged(`tt_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 전체 기록 요약 ──
 function formatPlayerAllRecords(player) {
-  function count(arr, fn) { return (arr||[]).filter(fn).length; }
-  function countSets(arr, fn) {
-    let w=0,l=0;
-    (arr||[]).forEach(m => { if(fn(m)){ const r=_getMemberResult(m.sets||[],player.name); w+=r.wins; l+=r.losses; } });
-    return {w,l};
-  }
-  function countSimple(arr, field) {
-    const ms = (arr||[]).filter(m => m.wName===player.name||m.lName===player.name);
-    return { w: ms.filter(m=>m.wName===player.name).length, l: ms.filter(m=>m.lName===player.name).length };
-  }
-
-  const hasMember = m => { const a=m.teamAMembers||[],b=m.teamBMembers||[]; return [...a,...b].some(mb=>mb.name===player.name); };
+  const hasMember = m => [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name);
   const hasInSets = m => m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name));
 
-  const mini  = countSets(miniM, hasInSets);
-  const univm = countSets(univM, hasInSets);
-  const pro   = countSets(proM,  hasMember);
-  const ck    = countSets(ckM,   hasMember);
-  const comp  = countSets(comps, hasInSets);
-  const tt    = countSets(ttM,   hasMember);
-  const ind   = countSimple(indM);
-  const gj    = countSimple(gjM);
+  function cs(arr,fn){ let w=0,l=0; (arr||[]).filter(fn).forEach(m=>{const r=_getMemberResult(m.sets||[],player.name);w+=r.wins;l+=r.losses;}); return {w,l}; }
+  function ss(arr){ const ms=(arr||[]).filter(m=>m.wName===player.name||m.lName===player.name); return {w:ms.filter(m=>m.wName===player.name).length,l:ms.filter(m=>m.lName===player.name).length}; }
 
-  const total = {
-    w: mini.w+univm.w+pro.w+ck.w+comp.w+tt.w+ind.w+gj.w,
-    l: mini.l+univm.l+pro.l+ck.l+comp.l+tt.l+ind.l+gj.l
-  };
-  const totalRate = total.w+total.l > 0 ? ((total.w/(total.w+total.l))*100).toFixed(1) : 0;
+  const mini=cs(miniM,hasInSets), univm=cs(univM,hasInSets), pro=cs(proM,hasMember);
+  const ck=cs(ckM,hasMember), comp=cs(comps,hasInSets), tt=cs(ttM,hasMember);
+  const ind=ss(indM), gj=ss(gjM);
+  const total={w:mini.w+univm.w+pro.w+ck.w+comp.w+tt.w+ind.w+gj.w, l:mini.l+univm.l+pro.l+ck.l+comp.l+tt.l+ind.l+gj.l};
+  const totalRate = total.w+total.l>0?((total.w/(total.w+total.l))*100).toFixed(1):0;
 
-  function row(emoji, label, data, key) {
-    if (!data.w && !data.l) return '';
-    const r = data.w+data.l>0?((data.w/(data.w+data.l))*100).toFixed(1):0;
-    const btn = key ? `<span onclick="sendQuickMessage('${escapeHtml(player.name)} ${key}')" style="color:#2563eb;cursor:pointer;font-size:11px;text-decoration:underline">조회▶</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e8edf2;margin-bottom:4px">
-      <span style="font-size:14px">${emoji}</span>
-      <span style="flex:1;font-size:12px;font-weight:700;color:#1a202c">${label}</span>
-      <span style="font-size:12px;color:#2563eb;font-weight:800">${data.w}승${data.l}패</span>
-      <span style="font-size:11px;color:#94a3b8">(${r}%)</span>
-      ${btn}
-    </div>`;
+  function row(emoji,label,data,key){
+    if(!data.w&&!data.l) return '';
+    const r=data.w+data.l>0?((data.w/(data.w+data.l))*100).toFixed(1):0;
+    const safeName=escapeHtml(player.name);
+    return `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e8edf2;margin-bottom:4px"><span style="font-size:14px">${emoji}</span><span style="flex:1;font-size:12px;font-weight:700;color:#1a202c">${label}</span><span style="font-size:12px;color:#2563eb;font-weight:800">${data.w}승${data.l}패</span><span style="font-size:11px;color:#94a3b8;margin-left:2px">(${r}%)</span><span onclick="sendQuickMessage('${safeName} ${key}')" style="color:#2563eb;cursor:pointer;font-size:11px;margin-left:4px;text-decoration:underline">조회▶</span></div>`;
   }
 
-  const rows = [
+  const rows=[
     row('⚡','미니대전',mini,'미니대전'),
     row('🏟️','대학대전',univm,'대학대전'),
     row('🏅','프로리그',pro,'프로리그'),
     row('🔥','CK리그',ck,'CK'),
     row('🏆','대회',comp,'대회기록'),
-    row('🎖️','티어토너먼트',tt,'대회기록'),
+    row('🎖️','티어대회',tt,'티어대회'),
     row('⚔️','개인전',ind,'개인전'),
     row('💥','끝장전',gj,'끝장전'),
   ].filter(Boolean).join('');
 
-  if (!rows) return _noRecordCard('📊', `${player.name}의 대전`);
-
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);margin-bottom:4px">
-    ${_matchCardHeader('📊', `${player.name} 전체 기록 요약`, `총 ${total.w}승 ${total.l}패 (${totalRate}%)`, 'linear-gradient(135deg,#1e293b,#334155)')}
-    <div style="background:#fff;padding:10px 10px 6px">${rows}</div>
-  </div>`;
+  if(!rows) return _noRecordCard('📊',`${player.name}의 대전`);
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${_matchCardHeader('📊',`${player.name} 전체 기록 요약`,`총 ${total.w}승 ${total.l}패 (${totalRate}%)`,'linear-gradient(135deg,#1e293b,#334155)')}<div style="background:#fff;padding:8px 8px 4px">${rows}</div></div>`;
 }
