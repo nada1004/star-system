@@ -641,30 +641,30 @@ function formatPlayerBasicInfo(player) {
   
   if (player.photo) {
     // 프로필 사진을 전체 배경으로, 정보를 카드 외부에 배치
-    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:200px">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.6) 100%);border-radius:12px"></div>
-      <div style="position:relative;height:200px;display:flex;align-items:center;justify-content:center;z-index:1">
+    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:8px;min-height:180px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.3) 100%);border-radius:12px"></div>
+      <div style="position:relative;height:180px;display:flex;align-items:center;justify-content:center;z-index:1">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:24px;font-weight:700;color:var(--text);margin-bottom:4px">${safePlayerName}</div>
-      <div style="font-size:16px;color:var(--text2);margin-bottom:6px">${safeUniv}</div>
-      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:6px;font-size:14px;color:var(--text2)">
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px">${safePlayerName}</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:3px">${safeUniv}</div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:3px;font-size:13px;color:var(--text2)">
         <span>🎖️${player.tier}</span>
         <span>🎮${player.race}</span>
         <span>⭐${player.elo}</span>
       </div>
-      <div style="font-size:20px;font-weight:700;color:var(--blue);margin-bottom:6px">
+      <div style="font-size:18px;font-weight:700;color:var(--blue);margin-bottom:3px">
         ${player.win}승 ${player.loss}패 (${rate}%)
       </div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">
         총 ${total}경기
       </div>
     </div>
-    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
-      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">이번달</button>
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
     </div>`;
   }
   
@@ -747,6 +747,10 @@ function formatPlayerStats(player) {
   stats += `패: ${player.loss}\n`;
   stats += `승률: ${rate}%\n`;
   stats += `총 경기 수: ${total}\n\n`;
+  
+  // 차트 추가
+  stats += createWinRateChart(player);
+  stats += createTrendChart(player);
   
   // 최근 10경기 승률
   if (player.history && player.history.length > 0) {
@@ -1033,6 +1037,132 @@ function levenshteinDistance(a, b) {
   }
   
   return matrix[b.length][a.length];
+}
+
+// 선수 승률 차트 생성
+function createWinRateChart(player) {
+  if (!player.history || player.history.length === 0) return '';
+  
+  const total = player.win + player.loss;
+  const winRate = total > 0 ? ((player.win / total) * 100).toFixed(1) : 0;
+  
+  const chartId = `chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  setTimeout(() => {
+    const ctx = document.getElementById(chartId);
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['승', '패'],
+        datasets: [{
+          data: [player.win, player.loss],
+          backgroundColor: ['#3b82f6', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { size: 12 },
+              padding: 10
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }, 100);
+  
+  return `<div style="margin:16px 0">
+    <canvas id="${chartId}" style="max-height:200px"></canvas>
+  </div>`;
+}
+
+// 선수 추세 차트 생성
+function createTrendChart(player) {
+  if (!player.history || player.history.length === 0) return '';
+  
+  const chartId = `trend-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  // 날짜별 승률 계산
+  const dateStats = {};
+  player.history.forEach(h => {
+    if (!dateStats[h.date]) {
+      dateStats[h.date] = { wins: 0, losses: 0 };
+    }
+    if (h.result === '승') {
+      dateStats[h.date].wins++;
+    } else {
+      dateStats[h.date].losses++;
+    }
+  });
+  
+  const sortedDates = Object.keys(dateStats).sort().slice(-10);
+  const winRates = sortedDates.map(date => {
+    const stats = dateStats[date];
+    const total = stats.wins + stats.losses;
+    return total > 0 ? ((stats.wins / total) * 100).toFixed(1) : 0;
+  });
+  
+  setTimeout(() => {
+    const ctx = document.getElementById(chartId);
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: sortedDates,
+        datasets: [{
+          label: '승률 (%)',
+          data: winRates,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          }
+        }
+      }
+    });
+  }, 100);
+  
+  return `<div style="margin:16px 0">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">📈 최근 승률 추세</div>
+    <canvas id="${chartId}" style="max-height:200px"></canvas>
+  </div>`;
 }
 
 // 선수 대 선수 전적 (head-to-head)
