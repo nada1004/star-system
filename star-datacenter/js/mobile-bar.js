@@ -952,7 +952,8 @@ function formatPlayerTournamentRecord(player, compM, ttM, proM){
     console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
   }
   
-  const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
+  // 토너먼트 필터링 - type/stage/format 필드가 없으면 전체 매치 사용
+  const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트'||(!m.type&&!m.stage&&!m.format));
   console.log('Chatbot Debug - tournament matches:', playerMatches.length);
   
   if(playerMatches.length===0){
@@ -1019,7 +1020,8 @@ function formatPlayerGroupRecord(player, compM, ttM, proM){
     console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
   }
   
-  const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
+  // 조별리그 필터링 - type/stage/format 필드가 없으면 전체 매치 사용
+  const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그'||(!m.type&&!m.stage&&!m.format));
   console.log('Chatbot Debug - group matches:', playerMatches.length);
   
   if(playerMatches.length===0){
