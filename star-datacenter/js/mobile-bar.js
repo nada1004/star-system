@@ -526,6 +526,13 @@ function formatPlayerInfo(player){
 function formatPlayerMiniRecord(player, miniM){
   console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0 });
   
+  // player.history의 실제 모드 라벨 디버깅
+  if(player.history && player.history.length > 0){
+    const modes=[...new Set(player.history.map(h=>h.mode).filter(Boolean))];
+    console.log('Chatbot Debug - Available modes in history:', modes);
+    console.log('Chatbot Debug - Sample history entries:', player.history.slice(0, 3).map(h=>({mode:h.mode,date:h.date,result:h.result})));
+  }
+  
   // player.history에서 미니대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
   const historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
   console.log('Chatbot Debug - history mini matches:', historyMatches.length);
