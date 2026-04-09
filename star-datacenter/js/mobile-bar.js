@@ -364,7 +364,7 @@ function generateChatbotResponse(query){
     }else if(q.includes('프로리그 대회 토탈')||q.includes('프로리그 대회')&&(q.includes('토탈')||q.includes('총'))){
       return formatPlayerCompRecord(player, compM, ttM, proM);
     }else if(q.includes('프로리그 대회 조별리그')){
-      return formatPlayerGroupRecord(player, compM, ttM, proM);
+      return formatPlayerGroupRecord(player, [], [], proM);
     }else if(q.includes('대회 끝장전')||q.includes('대회')&&q.includes('끝장전')){
       return formatPlayerGJRecord(player, gjM);
     }else if(mode==='팀전'||q.includes('팀전')){
@@ -1275,14 +1275,9 @@ function formatRecordMenu(playerName){
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 토너먼트 기록\')">토너먼트 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">티어대회 기록</button>\n';
   
-  menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">종합 기록</div>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 조별리그 기록\')">티어대회 조별리그 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 조별리그 기록\')">조별리그 기록</button>\n';
-  
   menu+='<div style="font-size:13px;font-weight:600;color:#64748b;margin:12px 0 4px 0">프로리그</div>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 일반 기록\')">프로리그 일반 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 끝장전 기록\')">프로리그 끝장전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 대회 토탈 기록\')">프로리그 대회 토탈 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 대회 조별리그 기록\')">프로리그 대회 조별리그 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 팀전 기록\')">팀전 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 끝장전 기록\')">대회 끝장전 기록</button>\n';
