@@ -24,6 +24,11 @@ function updateFabVisibility(){
   }else{
     fab.style.display=hidePC?'none':'flex';
   }
+  
+  // FAB가 꺼지면 채팅봇 팝업도 닫기
+  if(hideMobile||hidePC){
+    closeChatbot();
+  }
 }
 
 // 창 크기 변경 시 FAB 표시 여부 재계산
@@ -165,7 +170,14 @@ document.addEventListener('click',function(e){
 /* ══════════════════════════════════════
    🤖 챗봇 기능
 ══════════════════════════════════════ */
+// 채팅봇 활성화 상태 (기본값: true)
+var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
+
 function openChatbot(){
+  if(!_chatbotEnabled){
+    alert('채팅봇이 비활성화되어 있습니다. FAB 메뉴에서 활성화해주세요.');
+    return;
+  }
   const overlay=document.getElementById('chatbotOverlay');
   if(overlay){
     overlay.classList.add('open');
@@ -181,6 +193,33 @@ function closeChatbot(e){
     setTimeout(()=>{overlay.style.display='none';},300);
   }
 }
+function toggleChatbot(){
+  _chatbotEnabled=!_chatbotEnabled;
+  localStorage.setItem('su_chatbotEnabled',_chatbotEnabled?'1':'0');
+  
+  // UI 업데이트
+  const icon=document.getElementById('chatbotToggleIcon');
+  const status=document.getElementById('chatbotToggleStatus');
+  if(icon) icon.textContent=_chatbotEnabled?'🤖':'🤖';
+  if(status) status.textContent=_chatbotEnabled?'(ON)':'(OFF)';
+  if(status) status.style.color=_chatbotEnabled?'#94a3b8':'#ef4444';
+  
+  // 비활성화 시 팝업 닫기
+  if(!_chatbotEnabled){
+    closeChatbot();
+  }else{
+    // 활성화 시 팝업 열기
+    openChatbot();
+  }
+}
+// 초기화 시 채팅봇 상태 UI 업데이트
+(function(){
+  const icon=document.getElementById('chatbotToggleIcon');
+  const status=document.getElementById('chatbotToggleStatus');
+  if(icon) icon.textContent=_chatbotEnabled?'🤖':'🤖';
+  if(status) status.textContent=_chatbotEnabled?'(ON)':'(OFF)';
+  if(status) status.style.color=_chatbotEnabled?'#94a3b8':'#ef4444';
+})();
 function sendChatbotMessage(){
   const input=document.getElementById('chatbotInput');
   const message=input.value.trim();
@@ -214,7 +253,8 @@ function generateChatbotResponse(query){
     const playerName=playerMatch[1];
     const mode=playerMatch[2];
     
-    const player=window.data?.players?.find(p=>p.name===playerName);
+    // 전역 players 변수 사용
+    const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
     if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
     
     if(mode==='기록'||mode==='정보'||mode==='전적'){
@@ -230,22 +270,22 @@ function generateChatbotResponse(query){
   
   // 간단한 명령어
   if(q.includes('미니대전')||q.includes('미니')){
-    return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: 찌킹 미니대전 성적';
+    return '⚡ 미니대전 기록을 보려면 "선수명 미니대전 성적"이라고 입력하세요.\n예: <스트리머 이름> 미니대전 성적';
   }
   if(q.includes('대학대전')){
-    return '🏟️ 대학대전 기록을 보려면 "선수명 대학대전 기록"이라고 입력하세요.\n예: 찌킹 대학대전 기록';
+    return '🏟️ 대학대전 기록을 보려면 "선수명 대학대전 기록"이라고 입력하세요.\n예: <스트리머 이름> 대학대전 기록';
   }
   if(q.includes('개인전')){
-    return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: 찌킹 개인전 기록';
+    return '⚔️ 개인전 기록을 보려면 "선수명 개인전 기록"이라고 입력하세요.\n예: <스트리머 이름> 개인전 기록';
   }
   if(q.includes('랭킹')||q.includes('순위')){
     return '📊 랭킹은 상단 탭의 "티어 순위표"에서 확인할 수 있습니다.';
   }
   if(q.includes('도움')||q.includes('help')||q.includes('?')){
-    return '📖 사용법:\n• "선수명 기록" - 선수 전체 기록\n• "선수명 미니대전 성적" - 미니대전 기록\n• "선수명 대학대전 기록" - 대학대전 기록\n• "선수명 개인전 기록" - 개인전 기록';
+    return '📖 사용법:\n• "<스트리머 이름> 기록" - 선수 전체 기록\n• "<스트리머 이름> 미니대전 성적" - 미니대전 기록\n• "<스트리머 이름> 대학대전 기록" - 대학대전 기록\n• "<스트리머 이름> 개인전 기록" - 개인전 기록';
   }
   
-  return '🤔 질문을 이해하지 못했습니다.\n• "선수명 기록"\n• "선수명 미니대전 성적"\n• "도움" - 사용법 보기';
+  return '🤔 질문을 이해하지 못했습니다.\n• "<스트리머 이름> 기록"\n• "<스트리머 이름> 미니대전 성적"\n• "도움" - 사용법 보기';
 }
 function formatPlayerInfo(player){
   const total=player.win+player.loss;
