@@ -591,6 +591,13 @@ function rBoard(C,T){
       <span style="font-size:18px;line-height:1">📊</span>
       <span style="font-weight:900;font-size:15px;color:var(--text);letter-spacing:-.3px">현황판</span>
     </div>
+    ${boardSelUniv!=='전체' && typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[boardSelUniv] ? `
+    <div style="width:1px;height:22px;background:var(--border);opacity:.6"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <img src="${UNIV_ICONS[boardSelUniv]}" onclick="const input=document.getElementById('chatInput');if(input){input.value='${boardSelUniv}';sendMessage();}" style="width:28px;height:28px;object-fit:contain;border-radius:6px;cursor:pointer;border:2px solid var(--blue)" onerror="this.style.display='none'">
+      <span style="font-weight:900;font-size:14px;color:var(--text)">${boardSelUniv}</span>
+    </div>
+    ` : ''}
     <div style="width:1px;height:22px;background:var(--border);opacity:.6"></div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative">
@@ -623,9 +630,7 @@ function rBoard(C,T){
   h+=`</div>
 `;
   C.innerHTML=h;
-  injectUnivIcons(C);
   requestAnimationFrame(()=>{
-    injectUnivIcons(C);
     initBoardDrag();
   });
   // 팝업 닫기 이벤트 (한 번만 등록)
