@@ -417,7 +417,9 @@ function generateChatbotResponse(query){
     
     if(mode==='통계'||mode==='10'){
       return formatPlayerStats(player);
-    }else if(mode==='기록'||mode==='정보'||mode==='전적'){
+    }else if(mode==='기록'){
+      return formatRecordMenu(playerName);
+    }else if(mode==='정보'||mode==='전적'){
       return formatPlayerInfo(player);
     }else if(mode==='미니대전'||mode==='성적'){
       return formatPlayerMiniRecord(player, miniM);
