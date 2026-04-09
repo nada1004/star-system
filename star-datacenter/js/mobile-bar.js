@@ -1130,16 +1130,16 @@ function formatPlayerStats(player){
 
 function formatRecordMenu(playerName){
   let menu='👤 '+playerName+' - 어떤 기록을 보시겠습니까?\n\n';
-  menu+='<div class="chatbot-menu">\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">5. 대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">6. 티어대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">7. 프로리그 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">8. 대학CK 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">9. 끝장전 기록</button>\n';
+  menu+='<div class="chatbot-menu" style="display:flex;flex-direction:column;gap:8px;margin-top:8px">\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">5. 대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">6. 티어대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">7. 프로리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">8. 대학CK 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" style="display:block;padding:10px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:500;color:#1e293b;cursor:pointer;text-align:left;transition:all 0.2s" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">9. 끝장전 기록</button>\n';
   menu+='</div>';
   menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">번호나 버튼을 클릭하세요</div>';
   return menu;
