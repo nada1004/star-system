@@ -317,7 +317,8 @@ function generateChatbotResponse(query){
     }else if(mode==='ck'||q.includes('ck')){
       return formatPlayerCKRecord(player, ckM);
     }else if(mode==='대회'||q.includes('대회')&&!q.includes('티어대회')&&!q.includes('프로리그')){
-      return formatPlayerCompRecord(player, compM);
+      // 대회 기록 검색 시 compM, ttM, proM 모두 포함
+      return formatPlayerCompRecord(player, compM, ttM, proM);
     }else if(mode==='티어대회'||q.includes('티어대회')){
       return formatPlayerTTRecord(player, ttM);
     }else if(mode==='프로리'||q.includes('프로리그')){
@@ -483,8 +484,12 @@ function formatPlayerIndRecord(player){
   
   return info;
 }
-function formatPlayerCompRecord(player, compM){
-  const playerMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
+function formatPlayerCompRecord(player, compM, ttM, proM){
+  const allMatches=[];
+  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  const playerMatches=allMatches;
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 대회 기록이 없습니다.';
