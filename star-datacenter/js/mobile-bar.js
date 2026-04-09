@@ -29,10 +29,19 @@ function updateFabVisibility(){
   if(hideMobile||hidePC){
     closeChatbot();
   }
+  
+  // 로그인 상태에 따라 설정 옵션 표시/숨김
+  const settingsItem=document.querySelector('.fab-sub-item[onclick*="_fabGo(\'cfg\')"]');
+  if(settingsItem){
+    settingsItem.style.display=typeof isLoggedIn!=='undefined'&&isLoggedIn?'flex':'none';
+  }
 }
 
 // 창 크기 변경 시 FAB 표시 여부 재계산
 window.addEventListener('resize',updateFabVisibility);
+
+// 페이지 로드 시 FAB 설정 옵션 표시 상태 초기화
+window.addEventListener('DOMContentLoaded',updateFabVisibility);
 
 /* ══════════════════════════════════════
    💻 PC 탭 스크롤 화살표
