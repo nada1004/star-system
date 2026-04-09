@@ -377,21 +377,27 @@ function _buildGalleryView(rankMap){
       })();
       html+=`<div data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         onclick="openPlayerModal('${_pSafe}')"
-        style="background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:12px 8px 10px;cursor:pointer;text-align:center;position:relative;transition:transform .15s,box-shadow .15s"
-        onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.12)'"
+        style="position:relative;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;background:${clr}22;border:2px solid ${clr}44;transition:transform .15s,box-shadow .15s"
+        onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)'"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
-        <div style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot}" title="${actDot==='#16a34a'?'최근 활동 7일 이내':actDot==='#f59e0b'?'활동 중 30일 이내':'비활성'}"></div>
-        <div style="width:72px;height:72px;border-radius:50%;margin:0 auto 8px;position:relative;overflow:hidden;border:3px solid ${clr};background:${clr}22;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${clr};flex-shrink:0">
-          ${p.race||'?'}${p.photo?`<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`:''}
+        ${p.photo
+          ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          : ''}
+        <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
+        <div style="position:absolute;top:7px;left:8px;font-size:9px;font-weight:800;color:rgba(255,255,255,.7)">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
+        <div style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot};box-shadow:0 0 4px ${actDot}" title="${actDot==='#16a34a'?'최근 활동 7일 이내':actDot==='#f59e0b'?'활동 중 30일 이내':'비활성'}"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;text-align:left">
+          <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+          ${p.role?`<div style="font-size:9px;color:rgba(255,255,255,.7);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>`:''}
+          <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px">
+            ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
+          </div>
+          <div style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:4px">
+            <span style="font-size:10px;font-weight:700;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#93c5fd':'#fca5a5'}">${p.elo||ELO_DEFAULT} ELO</span>
+            <span style="font-size:10px;color:${wr===null?'rgba(255,255,255,.5)':wr>=50?'#86efac':'#fca5a5'};font-weight:600">${wr===null?'-':`${wr}%`}</span>
+          </div>
         </div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
-        ${p.role?`<div style="font-size:10px;color:var(--gray-l);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>`:''}
-        <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px;flex-wrap:wrap">
-          ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
-        </div>
-        <div style="margin-top:5px;font-size:11px;font-weight:700;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT} ELO</div>
-        <div style="font-size:10px;color:${wr===null?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};font-weight:600;margin-top:2px">${wr===null?'전적없음':`${p.win}승 ${p.loss}패 ${wr}%`}</div>
-        ${rankMap[p.name]?`<div style="position:absolute;top:6px;left:8px;font-size:9px;font-weight:800;color:var(--gray-l)">#${rankMap[p.name]}</div>`:''}
       </div>`;
     });
   });
