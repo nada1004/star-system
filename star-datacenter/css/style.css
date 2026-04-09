@@ -1178,8 +1178,8 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   white-space: pre-wrap;
 }
 .chat-message.user-message .chat-content {
-  background: var(--blue, #3b82f6);
-  color: white;
+  background: #f1f5f9;
+  color: var(--text);
 }
 .chatbot-input-area {
   display: flex;
