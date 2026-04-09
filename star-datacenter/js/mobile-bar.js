@@ -525,26 +525,44 @@ function formatPlayerIndRecord(player){
   return info;
 }
 function formatPlayerCompRecord(player, compM, ttM, proM){
+  console.log('Chatbot Debug - formatPlayerCompRecord:', { playerName: player.name, compM: compM.length, ttM: ttM.length, proM: proM.length });
+  
   const allMatches=[];
   
   // compM (개인전 구조일 수 있음)
-  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  const compMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
+  console.log('Chatbot Debug - compMatches:', compMatches.length);
   
   // ttM (팀전 구조)
-  allMatches.push(...ttM.filter(m=>{
+  const ttMatches=ttM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
-  }));
+    const found=teamA.includes(player.name)||teamB.includes(player.name);
+    if(found && ttMatches.length < 3){
+      console.log('Chatbot Debug - ttM match found:', { teamA, teamB, playerName: player.name });
+    }
+    return found;
+  });
+  console.log('Chatbot Debug - ttMatches:', ttMatches.length);
   
   // proM (팀전 구조)
-  allMatches.push(...proM.filter(m=>{
+  const proMatches=proM.filter(m=>{
     const teamA=m.teamAMembers||[];
     const teamB=m.teamBMembers||[];
-    return teamA.includes(player.name)||teamB.includes(player.name);
-  }));
+    const found=teamA.includes(player.name)||teamB.includes(player.name);
+    if(found && proMatches.length < 3){
+      console.log('Chatbot Debug - proM match found:', { teamA, teamB, playerName: player.name });
+    }
+    return found;
+  });
+  console.log('Chatbot Debug - proMatches:', proMatches.length);
+  
+  allMatches.push(...compMatches);
+  allMatches.push(...ttMatches);
+  allMatches.push(...proMatches);
   
   const playerMatches=allMatches;
+  console.log('Chatbot Debug - total playerMatches:', playerMatches.length);
   
   if(playerMatches.length===0){
     return '📭 '+player.name+'의 대회 기록이 없습니다.';
