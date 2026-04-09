@@ -831,7 +831,7 @@ function formatPlayerSevilRecord(player, univM){
     console.log('Chatbot Debug - univM[0]:', univM[0]);
   }
   
-  const playerMatches=univM.filter(m=>(m.p1===player.name||m.p2===player.name)&&(m.type==='시빌원'||m.stage==='시빌원'));
+  const playerMatches=univM.filter(m=>m.a===player.name||m.b===player.name);
   
   console.log('Chatbot Debug - sevilMatches:', playerMatches.length);
   
@@ -839,7 +839,7 @@ function formatPlayerSevilRecord(player, univM){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)).length;
+  const wins=playerMatches.filter(m=>(m.a===player.name&&m.sa>m.sb)||(m.b===player.name&&m.sb>m.sa)).length;
   const losses=playerMatches.length-wins;
   const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
   
@@ -848,9 +848,9 @@ function formatPlayerSevilRecord(player, univM){
   info+='━━━━━━━━━━━━━━━━━━\n';
   
   playerMatches.slice(-10).reverse().forEach(m=>{
-    const opp=m.p1===player.name?m.p2:m.p1;
-    const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
+    const opp=m.a===player.name?m.b:m.a;
+    const result=(m.a===player.name&&m.sa>m.sb)||(m.b===player.name&&m.sb>m.sa)?'승':'패';
+    info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
   });
   
   if(playerMatches.length>10){
