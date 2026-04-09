@@ -296,15 +296,15 @@ function generateChatbotResponse(query){
     miniM: miniM.length
   });
   
-  // 선수 이름만 입력된 경우 - 기록 유형 선택 메뉴 표시
+  // 선수 이름만 입력된 경우 - 통계 표시
   const playerOnlyMatch=query.match(/^([^\s]+)$/);
   if(playerOnlyMatch){
     const playerName=playerOnlyMatch[1];
     const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
     if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
     
-    // 기록 유형 선택 메뉴 반환
-    return formatRecordMenu(playerName);
+    // 통계 표시
+    return formatPlayerStats(player);
   }
   
   // 선수 이름 + 기록 유형 입력된 경우
@@ -1010,6 +1010,118 @@ function formatPlayerNormalRecord(player, proM){
   
   return info;
 }
+function formatPlayerStats(player){
+  const total=player.win+player.loss;
+  const rate=total>0?((player.win/total)*100).toFixed(1):0;
+  
+  let stats='📊 '+player.name+' 통계\n\n';
+  
+  // 기본 정보
+  stats+='━━━━━━━━━━━━━━━━━━\n';
+  stats+='👤 기본 정보\n';
+  stats+='🏫 '+player.univ+' | '+player.tier+' | '+player.race+'종족\n';
+  stats+='📊 전적: '+player.win+'승 '+player.loss+'패 ('+rate+'%)\n';
+  stats+='⭐ ELO: '+player.elo+'\n';
+  stats+='📝 총 전적 수: '+total+'경기\n\n';
+  
+  // 종족별 승률 (player.history에서 계산)
+  if(player.history&&player.history.length>0){
+    const raceStats={};
+    player.history.forEach(h=>{
+      if(h.oppRace){
+        if(!raceStats[h.oppRace]) raceStats[h.oppRace]={win:0,loss:0,total:0};
+        if(h.result==='승') raceStats[h.oppRace].win++;
+        else raceStats[h.oppRace].loss++;
+        raceStats[h.oppRace].total++;
+      }
+    });
+    
+    stats+='━━━━━━━━━━━━━━━━━━\n';
+    stats+='🎯 종족별 승률\n';
+    Object.keys(raceStats).forEach(race=>{
+      const r=raceStats[race];
+      const rRate=r.total>0?((r.win/r.total)*100).toFixed(1):0;
+      stats+=race+'종족: '+r.win+'승 '+r.loss+'패 ('+rRate+'%)\n';
+    });
+    stats+='\n';
+  }
+  
+  // 맵별 승률 (최근 20경기)
+  if(player.history&&player.history.length>0){
+    const mapStats={};
+    player.history.slice(-20).forEach(h=>{
+      if(h.map){
+        if(!mapStats[h.map]) mapStats[h.map]={win:0,loss:0,total:0};
+        if(h.result==='승') mapStats[h.map].win++;
+        else mapStats[h.map].loss++;
+        mapStats[h.map].total++;
+      }
+    });
+    
+    stats+='━━━━━━━━━━━━━━━━━━\n';
+    stats+='🗺️ 맵별 승률 (최근 20경기)\n';
+    const sortedMaps=Object.keys(mapStats).sort((a,b)=>mapStats[b].total-mapStats[a].total);
+    sortedMaps.slice(0,5).forEach(map=>{
+      const m=mapStats[map];
+      const mRate=m.total>0?((m.win/m.total)*100).toFixed(1):0;
+      stats+=map+': '+m.win+'승 '+m.loss+'패 ('+mRate+'%)\n';
+    });
+    stats+='\n';
+  }
+  
+  // 선호 맵 TOP 5
+  if(player.history&&player.history.length>0){
+    const mapCounts={};
+    player.history.forEach(h=>{
+      if(h.map){
+        mapCounts[h.map]=(mapCounts[h.map]||0)+1;
+      }
+    });
+    
+    const topMaps=Object.keys(mapCounts).sort((a,b)=>mapCounts[b]-mapCounts[a]).slice(0,5);
+    stats+='━━━━━━━━━━━━━━━━━━\n';
+    stats+='🏆 선호 맵 TOP 5\n';
+    topMaps.forEach((map,i)=>{
+      stats+=(i+1)+'. '+map+' ('+mapCounts[map]+'경기)\n';
+    });
+    stats+='\n';
+  }
+  
+  // 약점 맵 TOP 3 (승률이 낮은 맵)
+  if(player.history&&player.history.length>0){
+    const mapWinRates={};
+    player.history.forEach(h=>{
+      if(h.map){
+        if(!mapWinRates[h.map]) mapWinRates[h.map]={win:0,total:0};
+        if(h.result==='승') mapWinRates[h.map].win++;
+        mapWinRates[h.map].total++;
+      }
+    });
+    
+    const weakMaps=Object.keys(mapWinRates)
+      .filter(map=>mapWinRates[map].total>=3)
+      .sort((a,b)=>(mapWinRates[a].win/mapWinRates[a].total)-(mapWinRates[b].win/mapWinRates[b].total))
+      .slice(0,3);
+    
+    if(weakMaps.length>0){
+      stats+='━━━━━━━━━━━━━━━━━━\n';
+      stats+='⚠️ 약점 맵 TOP 3\n';
+      weakMaps.forEach((map,i)=>{
+        const m=mapWinRates[map];
+        const mRate=m.total>0?((m.win/m.total)*100).toFixed(1):0;
+        stats+=(i+1)+'. '+map+' ('+mRate+'%)\n';
+      });
+      stats+='\n';
+    }
+  }
+  
+  stats+='<div class="chatbot-menu">\n';
+  stats+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+player.name+' 기록\')">상세 기록 보기</button>\n';
+  stats+='</div>';
+  
+  return stats;
+}
+
 function formatRecordMenu(playerName){
   let menu='👤 '+playerName+' - 어떤 기록을 보시겠습니까?\n\n';
   menu+='<div class="chatbot-menu">\n';
@@ -1017,12 +1129,12 @@ function formatRecordMenu(playerName){
   menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
   menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
   menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">5. 끝장전 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">6. 대학CK 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">7. 대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">8. 티어대회 기록</button>\n';
-  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">9. 프로리그 기록</button>\n';
-  menu+='</div>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 대회 기록\')">5. 대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 티어대회 기록\')">6. 티어대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 프로리그 기록\')">7. 프로리그 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' ck 기록\')">8. 대학CK 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="window.sendChatbotMessage(\''+playerName+' 끝장전 기록\')">9. 끝장전 기록</button>\n';
+  menu+='</div>';
   menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">번호나 버튼을 클릭하세요</div>';
   return menu;
 }
