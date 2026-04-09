@@ -217,9 +217,8 @@ function clearPaginationState(){
 function getPaginatedMatches(matches, page, pageSize){
   const startIndex=(page-1)*pageSize;
   const endIndex=startIndex+pageSize;
-  // 최근 날짜가 1번이 되도록 역순 정렬
-  const reversed=[...matches].reverse();
-  return reversed.slice(startIndex, endIndex);
+  // 이미 정렬된 데이터 사용 (최신순)
+  return matches.slice(startIndex, endIndex);
 }
 
 function formatPaginationControls(totalMatches, currentPage, pageSize){
