@@ -292,7 +292,18 @@ function generateChatbotResponse(query){
     miniM: miniM.length
   });
   
-  // 선수 이름 추출 시도 - CK 등 키워드를 제외하고 선수 이름 추출
+  // 선수 이름만 입력된 경우 - 기록 유형 선택 메뉴 표시
+  const playerOnlyMatch=query.match(/^([^\s]+)$/);
+  if(playerOnlyMatch){
+    const playerName=playerOnlyMatch[1];
+    const player=typeof players!=='undefined'?players.find(p=>p.name===playerName):null;
+    if(!player)return '❌ "'+playerName+'" 선수를 찾을 수 없습니다.';
+    
+    // 기록 유형 선택 메뉴 반환
+    return formatRecordMenu(playerName);
+  }
+  
+  // 선수 이름 + 기록 유형 입력된 경우
   const playerMatch=query.match(/([^\s]+)\s+(대학\s+)?(기록|정보|미니대전|대학대전|개인전|전적|성적|대회|티어대회|프로리그|끝장전|시빌원|ck|토너먼트|조별리그|팀전|일반)/);
   if(playerMatch){
     const playerName=playerMatch[1];
@@ -765,4 +776,20 @@ function formatPlayerNormalRecord(player, proM){
   }
   
   return info;
+}
+function formatRecordMenu(playerName){
+  let menu='👤 '+playerName+' - 어떤 기록을 보시겠습니까?\n\n';
+  menu+='<div class="chatbot-menu">\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 기록\')">1. 전체 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 미니대전 성적\')">2. 미니대전 성적</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 대학대전 기록\')">3. 대학대전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 개인전 기록\')">4. 개인전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 끝장전 기록\')">5. 끝장전 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' ck 기록\')">6. 대학CK 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 대회 기록\')">7. 대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 티어대회 기록\')">8. 티어대회 기록</button>\n';
+  menu+='<button class="chatbot-menu-btn" onclick="sendChatbotMessage(\''+playerName+' 프로리그 기록\')">9. 프로리그 기록</button>\n';
+  menu+='</div>\n';
+  menu+='<div style="font-size:12px;color:#94a3b8;margin-top:8px">번호나 버튼을 클릭하세요</div>';
+  return menu;
 }
