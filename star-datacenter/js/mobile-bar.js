@@ -522,186 +522,62 @@ function formatPlayerInfo(player){
   return info;
 }
 function formatPlayerMiniRecord(player, miniM){
-  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, miniM: miniM.length, playerUniv: player.univ });
-  if(miniM.length > 0){
-    console.log('Chatbot Debug - miniM[0]:', miniM[0]);
-  }
+  console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0 });
   
-  // miniM 데이터에서 선수의 기록 직접 추출 (스트리머 상세와 일치시키기 위해)
-  const playerMatches=miniM.filter(m=>{
-    if(m.p1){
-      return m.p1===player.name||m.p2===player.name;
-    }else if(m.teamAMembers&&m.teamBMembers){
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-    }else if(m.a&&m.b){
-      return m.a===player.univ||m.b===player.univ;
-    }
-    return false;
-  });
+  // player.history에서 미니대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
+  console.log('Chatbot Debug - history mini matches:', historyMatches.length);
   
-  console.log('Chatbot Debug - miniM playerMatches:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    if(m.p1){
-      return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
-    }else if(m.teamAMembers&&m.teamBMembers){
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-    }else if(m.a&&m.b){
-      const inTeamA=m.a===player.univ;
-      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-    }
-    return false;
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 미니대전 기록', playerMatches, formatPlayerMiniRecord, [player, miniM]);
+  setPaginationState(player.name+' 미니대전 기록', historyMatches, formatPlayerMiniRecord, [player, miniM]);
   
   let info='⚡ '+player.name+' 미니대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    if(m.p1){
-      const opp=m.p1===player.name?m.p2:m.p1;
-      const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
-    }else if(m.teamAMembers&&m.teamBMembers){
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      
-      // sets/games에서 개별 상대방 이름 추출 시도
-      let oppName=oppTeam;
-      const sets=m.sets||[];
-      for(const s of sets){
-        const games=s.games||[];
-        for(const g of games){
-          if(g.playerA===player.name&&g.playerB){
-            oppName=g.playerB;
-            break;
-          }else if(g.playerB===player.name&&g.playerA){
-            oppName=g.playerA;
-            break;
-          }
-        }
-        if(oppName!==oppTeam) break;
-      }
-      
-      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
-    }else if(m.a&&m.b){
-      const inTeamA=m.a===player.univ;
-      const oppTeam=inTeamA?m.b:m.a;
-      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      
-      // sets/games에서 개별 상대방 이름 추출 시도
-      let oppName=oppTeam;
-      const sets=m.sets||[];
-      for(const s of sets){
-        const games=s.games||[];
-        for(const g of games){
-          if(g.playerA===player.name&&g.playerB){
-            oppName=g.playerB;
-            break;
-          }else if(g.playerB===player.name&&g.playerA){
-            oppName=g.playerA;
-            break;
-          }
-        }
-        if(oppName!==oppTeam) break;
-      }
-      
-      info+='📅 '+m.d+' | 미니대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
-    }
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerUnivMatchRecord(player, univM){
-  const playerMatches=univM.filter(m=>{
-    if(m.p1){
-      return m.p1===player.name||m.p2===player.name;
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-    }
-  });
+  // player.history에서 대학대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='대학대전'||h.mode==='대학');
+  console.log('Chatbot Debug - history univ matches:', historyMatches.length);
   
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 대학대전 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    if(m.p1){
-      return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-    }
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 대학대전 기록', playerMatches, formatPlayerUnivMatchRecord, [player, univM]);
+  setPaginationState(player.name+' 대학대전 기록', historyMatches, formatPlayerUnivMatchRecord, [player, univM]);
   
   let info='🏟️ '+player.name+' 대학대전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    if(m.p1){
-      const opp=m.p1===player.name?m.p2:m.p1;
-      const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      
-      // sets/games에서 개별 상대방 이름 추출 시도
-      let oppName=oppTeam;
-      const sets=m.sets||[];
-      for(const s of sets){
-        const games=s.games||[];
-        for(const g of games){
-          if(g.playerA===player.name&&g.playerB){
-            oppName=g.playerB;
-            break;
-          }else if(g.playerB===player.name&&g.playerA){
-            oppName=g.playerA;
-            break;
-          }
-        }
-        if(oppName!==oppTeam) break;
-      }
-      
-      info+='📅 '+m.d+' | 대학대전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
-    }
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
@@ -839,578 +715,280 @@ function formatPlayerCompRecord(player, compM, ttM, proM){
   return info;
 }
 function formatPlayerTTRecord(player, ttM){
-  const playerMatches=ttM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  });
+  // player.history에서 티어대회 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='티어대회'||h.mode==='tier'||h.mode==='tt');
+  console.log('Chatbot Debug - history tt matches:', historyMatches.length);
   
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 티어대회 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 티어대회 기록', playerMatches, formatPlayerTTRecord, [player, ttM]);
+  setPaginationState(player.name+' 티어대회 기록', historyMatches, formatPlayerTTRecord, [player, ttM]);
   
   let info='🎖️ '+player.name+' 티어대회 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-    const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    
-    // sets/games에서 개별 상대방 이름 추출 시도
-    let oppName=oppTeam;
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name&&g.playerB){
-          oppName=g.playerB;
-          break;
-        }else if(g.playerB===player.name&&g.playerA){
-          oppName=g.playerA;
-          break;
-        }
-      }
-      if(oppName!==oppTeam) break;
-    }
-    
-    info+='📅 '+m.d+' | '+m.n+' | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
-  
-  return info;
-}
 function formatPlayerProRecord(player, proM){
-  console.log('Chatbot Debug - formatPlayerProRecord:', { playerName: player.name, proM: proM.length });
-  if(proM.length > 0){
-    console.log('Chatbot Debug - proM[0]:', proM[0]);
-  }
+  // player.history에서 프로리그 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='프로리그'||h.mode==='pro'||h.mode==='프로');
+  console.log('Chatbot Debug - history pro matches:', historyMatches.length);
   
-  const playerMatches=proM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  });
-  
-  console.log('Chatbot Debug - proMatches:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 프로리그 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 프로리그 기록', playerMatches, formatPlayerProRecord, [player, proM]);
+  setPaginationState(player.name+' 프로리그 기록', historyMatches, formatPlayerProRecord, [player, proM]);
   
   let info='🏅 '+player.name+' 프로리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-    const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    
-    // sets/games에서 개별 상대방 이름 추출 시도
-    let oppName=oppTeam;
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name&&g.playerB){
-          oppName=g.playerB;
-          break;
-        }else if(g.playerB===player.name&&g.playerA){
-          oppName=g.playerA;
-          break;
-        }
-      }
-      if(oppName!==oppTeam) break;
-    }
-    
-    info+='📅 '+m.d+' | 프로리그 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
-  
-  return info;
-}
 function formatPlayerGJRecord(player, gjM){
-  console.log('Chatbot Debug - formatPlayerGJRecord:', { playerName: player.name, gjM: gjM.length });
-  if(gjM.length > 0){
-    console.log('Chatbot Debug - gjM[0]:', gjM[0]);
-  }
+  // player.history에서 끝장전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='끝장전'||h.mode==='gj'||h.mode==='결승');
+  console.log('Chatbot Debug - history gj matches:', historyMatches.length);
   
-  const playerMatches=gjM.filter(m=>m.wName===player.name||m.lName===player.name);
-  
-  console.log('Chatbot Debug - gjMatches:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 끝장전 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>m.wName===player.name).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 끝장전 기록', playerMatches, formatPlayerGJRecord, [player, gjM]);
+  setPaginationState(player.name+' 끝장전 기록', historyMatches, formatPlayerGJRecord, [player, gjM]);
   
   let info='🔥 '+player.name+' 끝장전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const opp=m.wName===player.name?m.lName:m.wName;
-    const result=m.wName===player.name?'승':'패';
-    info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+'\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerCKRecord(player, ckM){
-  console.log('Chatbot Debug - formatPlayerCKRecord:', { playerName: player.name, ckM: ckM.length });
-  if(ckM.length > 0){
-    console.log('Chatbot Debug - ckM[0]:', ckM[0]);
-  }
+  // player.history에서 대학CK 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='대학CK'||h.mode==='ck'||h.mode==='CK');
+  console.log('Chatbot Debug - history ck matches:', historyMatches.length);
   
-  const playerMatches=ckM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  });
-  
-  console.log('Chatbot Debug - ckMatches:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 대학CK 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 대학CK 기록', playerMatches, formatPlayerCKRecord, [player, ckM]);
+  setPaginationState(player.name+' 대학CK 기록', historyMatches, formatPlayerCKRecord, [player, ckM]);
   
   let info='🤝 '+player.name+' 대학CK 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-    const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    
-    // sets/games에서 개별 상대방 이름 추출 시도
-    let oppName=oppTeam;
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name&&g.playerB){
-          oppName=g.playerB;
-          break;
-        }else if(g.playerB===player.name&&g.playerA){
-          oppName=g.playerA;
-          break;
-        }
-      }
-      if(oppName!==oppTeam) break;
-    }
-    
-    info+='📅 '+m.d+' | 대학CK | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerSevilRecord(player, univM){
-  console.log('Chatbot Debug - formatPlayerSevilRecord:', { playerName: player.name, playerUniv: player.univ, univM: univM.length });
+  // player.history에서 시빌워 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='시빌워'||h.mode==='시빌원'||h.mode==='civil');
+  console.log('Chatbot Debug - history civil matches:', historyMatches.length);
   
-  // miniM에서 시빌워(type:'civil') 기록 추출
-  const civilMatches=(typeof miniM!=='undefined'?miniM:[]).filter(m=>m.type==='civil');
-  console.log('Chatbot Debug - civil matches in miniM:', civilMatches.length);
-  if(civilMatches.length > 0){
-    console.log('Chatbot Debug - civilMatches[0]:', civilMatches[0]);
-  }
-  
-  // 세트/게임 데이터에서 선수 이름 매칭
-  const playerMatches=civilMatches.filter(m=>{
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name||g.playerB===player.name){
-          return true;
-        }
-      }
-    }
-    return false;
-  });
-  
-  console.log('Chatbot Debug - civil matches with player:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 시빌원 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const inTeamA=m.a===player.univ;
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 시빌원 기록', playerMatches, formatPlayerSevilRecord, [player, univM]);
+  setPaginationState(player.name+' 시빌원 기록', historyMatches, formatPlayerSevilRecord, [player, univM]);
   
   let info='🏛️ '+player.name+' 시빌원 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const oppTeam=m.a===player.univ?m.b:m.a;
-    const result=(m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa)?'승':'패';
-    info+='📅 '+m.d+' | 시빌원 | '+result+' vs '+oppTeam+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerTournamentRecord(player, compM, ttM, proM){
-  console.log('Chatbot Debug - formatPlayerTournamentRecord:', { playerName: player.name, compM: compM.length, ttM: ttM.length, proM: proM.length });
+  // player.history에서 토너먼트 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='토너먼트'||h.mode==='tournament'||h.mode==='토너');
+  console.log('Chatbot Debug - history tournament matches:', historyMatches.length);
   
-  const allMatches=[];
-  
-  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  allMatches.push(...ttM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }));
-  allMatches.push(...proM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }));
-  
-  console.log('Chatbot Debug - allMatches count:', allMatches.length);
-  if(allMatches.length > 0){
-    console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
-  }
-  
-  // 토너먼트 필터링 - type/stage/format 필드가 없으면 전체 매치 사용
-  const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트'||(!m.type&&!m.stage&&!m.format));
-  console.log('Chatbot Debug - tournament matches:', playerMatches.length);
-  
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 토너먼트 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    if(m.p1){
-      return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-    }
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 토너먼트 기록', playerMatches, formatPlayerTournamentRecord, [player, compM, ttM, proM]);
+  setPaginationState(player.name+' 토너먼트 기록', historyMatches, formatPlayerTournamentRecord, [player, compM, ttM, proM]);
   
   let info='🏆 '+player.name+' 토너먼트 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    if(m.p1){
-      const opp=m.p1===player.name?m.p2:m.p1;
-      const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      
-      // sets/games에서 개별 상대방 이름 추출 시도
-      let oppName=oppTeam;
-      const sets=m.sets||[];
-      for(const s of sets){
-        const games=s.games||[];
-        for(const g of games){
-          if(g.playerA===player.name&&g.playerB){
-            oppName=g.playerB;
-            break;
-          }else if(g.playerB===player.name&&g.playerA){
-            oppName=g.playerA;
-            break;
-          }
-        }
-        if(oppName!==oppTeam) break;
-      }
-      
-      info+='📅 '+m.d+' | 토너먼트 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
-    }
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
-function formatPlayerGroupRecord(player, compM, ttM, proM){
-  console.log('Chatbot Debug - formatPlayerGroupRecord:', { playerName: player.name, compM: compM.length, ttM: ttM.length, proM: proM.length });
+function formatPlayerCompRecord(player, compM, ttM, proM){
+  // player.history에서 대회 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='대회'||h.mode==='대회전'||h.mode==='comp');
+  console.log('Chatbot Debug - history comp matches:', historyMatches.length);
   
-  const allMatches=[];
-  
-  allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  allMatches.push(...ttM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }));
-  allMatches.push(...proM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }));
-  
-  console.log('Chatbot Debug - allMatches count:', allMatches.length);
-  if(allMatches.length > 0){
-    console.log('Chatbot Debug - allMatches[0]:', allMatches[0]);
+  if(historyMatches.length===0){
+    return '📭 '+player.name+'의 대회 기록이 없습니다.';
   }
   
-  // 조별리그 필터링 - type/stage/format 필드가 없으면 전체 매치 사용
-  const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그'||(!m.type&&!m.stage&&!m.format));
-  console.log('Chatbot Debug - group matches:', playerMatches.length);
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
-  if(playerMatches.length===0){
+  // 페이지네이션 상태 설정
+  setPaginationState(player.name+' 대회 기록', historyMatches, formatPlayerCompRecord, [player, compM, ttM, proM]);
+  
+  let info='🏆 '+player.name+' 대회 기록\n';
+  info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
+  info+='━━━━━━━━━━━━━━━━━━\n';
+  
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
+  });
+  
+function formatPlayerGroupRecord(player, compM, ttM, proM){
+  // player.history에서 조별리그 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='조별리그'||h.mode==='group'||h.mode==='조별');
+  console.log('Chatbot Debug - history group matches:', historyMatches.length);
+  
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 조별리그 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    if(m.p1){
-      return (m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa);
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-    }
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 조별리그 기록', playerMatches, formatPlayerGroupRecord, [player, compM, ttM, proM]);
+  setPaginationState(player.name+' 조별리그 기록', historyMatches, formatPlayerGroupRecord, [player, compM, ttM, proM]);
   
   let info='🏆 '+player.name+' 조별리그 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    if(m.p1){
-      const opp=m.p1===player.name?m.p2:m.p1;
-      const result=(m.p1===player.name&&m.sa>m.sb)||(m.p2===player.name&&m.sb>m.sa)?'승':'패';
-      info+='📅 '+m.date+' | '+m.map+' | '+result+' vs '+opp+' ('+m.sa+':'+m.sb+')\n';
-    }else{
-      const teamA=m.teamAMembers||[];
-      const teamB=m.teamBMembers||[];
-      const inTeamA=teamA.some(mem=>mem.name===player.name);
-      const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-      const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-      
-      // sets/games에서 개별 상대방 이름 추출 시도
-      let oppName=oppTeam;
-      const sets=m.sets||[];
-      for(const s of sets){
-        const games=s.games||[];
-        for(const g of games){
-          if(g.playerA===player.name&&g.playerB){
-            oppName=g.playerB;
-            break;
-          }else if(g.playerB===player.name&&g.playerA){
-            oppName=g.playerA;
-            break;
-          }
-        }
-        if(oppName!==oppTeam) break;
-      }
-      
-      info+='📅 '+m.d+' | 조별리그 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
-    }
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerTeamRecord(player, proM){
-  const playerMatches=proM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }).filter(m=>m.type==='팀전'||m.format==='팀전');
+  // player.history에서 팀전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='팀전'||h.mode==='team'||h.mode==='팀');
+  console.log('Chatbot Debug - history team matches:', historyMatches.length);
   
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 팀전 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 팀전 기록', playerMatches, formatPlayerTeamRecord, [player, proM]);
+  setPaginationState(player.name+' 팀전 기록', historyMatches, formatPlayerTeamRecord, [player, proM]);
   
   let info='👥 '+player.name+' 팀전 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-    const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    
-    // sets/games에서 개별 상대방 이름 추출 시도
-    let oppName=oppTeam;
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name&&g.playerB){
-          oppName=g.playerB;
-          break;
-        }else if(g.playerB===player.name&&g.playerA){
-          oppName=g.playerA;
-          break;
-        }
-      }
-      if(oppName!==oppTeam) break;
-    }
-    
-    info+='📅 '+m.d+' | 팀전 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
 function formatPlayerNormalRecord(player, proM){
-  const playerMatches=proM.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    return teamA.some(mem=>mem.name===player.name)||teamB.some(mem=>mem.name===player.name);
-  }).filter(m=>m.type==='일반'||m.format==='일반'||!m.type&&!m.format);
+  // player.history에서 일반 기록 추출 (스트리머 상세와 동일한 데이터 소스)
+  const historyMatches=(player.history||[]).filter(h=>h.mode==='일반'||h.mode==='normal'||h.mode==='일반전');
+  console.log('Chatbot Debug - history normal matches:', historyMatches.length);
   
-  if(playerMatches.length===0){
+  if(historyMatches.length===0){
     return '📭 '+player.name+'의 일반 기록이 없습니다.';
   }
   
-  const wins=playerMatches.filter(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    return (inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa);
-  }).length;
-  const losses=playerMatches.length-wins;
-  const rate=playerMatches.length>0?((wins/playerMatches.length)*100).toFixed(1):0;
+  const wins=historyMatches.filter(h=>h.result==='승').length;
+  const losses=historyMatches.filter(h=>h.result==='패').length;
+  const rate=historyMatches.length>0?((wins/historyMatches.length)*100).toFixed(1):0;
   
   // 페이지네이션 상태 설정
-  setPaginationState(player.name+' 일반 기록', playerMatches, formatPlayerNormalRecord, [player, proM]);
+  setPaginationState(player.name+' 일반 기록', historyMatches, formatPlayerNormalRecord, [player, proM]);
   
   let info='📝 '+player.name+' 일반 기록\n';
   info+='📊 '+wins+'승 '+losses+'패 ('+rate+'%)\n';
   info+='━━━━━━━━━━━━━━━━━━\n';
   
-  const paginatedMatches=getPaginatedMatches(playerMatches, _paginationState.currentPage, _paginationState.pageSize);
-  paginatedMatches.forEach(m=>{
-    const teamA=m.teamAMembers||[];
-    const teamB=m.teamBMembers||[];
-    const inTeamA=teamA.some(mem=>mem.name===player.name);
-    const oppTeam=inTeamA?m.teamBLabel:m.teamALabel;
-    const result=(inTeamA&&m.sa>m.sb)||(!inTeamA&&m.sb>m.sa)?'승':'패';
-    
-    // sets/games에서 개별 상대방 이름 추출 시도
-    let oppName=oppTeam;
-    const sets=m.sets||[];
-    for(const s of sets){
-      const games=s.games||[];
-      for(const g of games){
-        if(g.playerA===player.name&&g.playerB){
-          oppName=g.playerB;
-          break;
-        }else if(g.playerB===player.name&&g.playerA){
-          oppName=g.playerA;
-          break;
-        }
-      }
-      if(oppName!==oppTeam) break;
-    }
-    
-    info+='📅 '+m.d+' | 일반 | '+result+' vs '+oppName+' ('+m.sa+':'+m.sb+')\n';
+  const paginatedMatches=getPaginatedMatches(historyMatches, _paginationState.currentPage, _paginationState.pageSize);
+  paginatedMatches.forEach(h=>{
+    info+='📅 '+h.date+' | '+h.map+' | '+h.result+' vs '+h.opp+'\n';
   });
   
-  info+=formatPaginationControls(playerMatches.length, _paginationState.currentPage, _paginationState.pageSize);
+  info+=formatPaginationControls(historyMatches.length, _paginationState.currentPage, _paginationState.pageSize);
   
   return info;
 }
