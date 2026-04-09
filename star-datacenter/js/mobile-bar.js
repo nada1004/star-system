@@ -525,25 +525,29 @@ function formatPlayerInfo(player){
 function formatPlayerMiniRecord(player, miniM){
   console.log('Chatbot Debug - formatPlayerMiniRecord:', { playerName: player.name, history: player.history ? player.history.length : 0, miniM: miniM ? miniM.length : 0 });
   
-  // player.history의 실제 모드 라벨 디버깅
-  if(player.history && player.history.length > 0){
-    const modes=[...new Set(player.history.map(h=>h.mode).filter(Boolean))];
-    console.log('Chatbot Debug - Available modes in history:', modes);
-    const allDates=player.history.map(h=>h.date).filter(Boolean).sort((a,b)=>b.localeCompare(a));
-    console.log('Chatbot Debug - All dates in history (sorted):', allDates.slice(0, 5), '...', allDates.slice(-5));
-    console.log('Chatbot Debug - Sample history entries:', player.history.slice(0, 3).map(h=>({mode:h.mode,date:h.date,result:h.result})));
+  // 스트리머 상세와 동일한 데이터 소스 사용 - miniM에서 해당 선수의 기록 추출
+  const miniMatches=(miniM||[]).filter(m=>(m.a===player.name||m.b===player.name));
+  console.log('Chatbot Debug - miniM matches for player:', miniMatches.length);
+  
+  if(miniMatches.length===0){
+    return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
   }
   
-  // miniM 데이터 확인
-  if(miniM && miniM.length > 0){
-    const miniDates=miniM.map(m=>m.d).filter(Boolean).sort((a,b)=>b.localeCompare(a));
-    console.log('Chatbot Debug - miniM dates (sorted):', miniDates.slice(0, 5), '...', miniDates.slice(-5));
-    console.log('Chatbot Debug - Sample miniM entries:', miniM.slice(0, 3).map(m=>({d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb})));
-  }
+  // miniM 데이터를 player.history 형식으로 변환
+  let historyMatches=miniMatches.map(m=>({
+    date:m.d||'',
+    map:m.map||'-',
+    result:m.a===player.name?(m.sa>m.sb?'승':'패'):(m.sb>m.sa?'승':'패'),
+    opp:m.a===player.name?m.b:m.a,
+    oppRace:(players.find(x=>x.name===(m.a===player.name?m.b:m.a))||{}).race||'',
+    matchId:m._id||'',
+    mode:'미니대전',
+    time:0
+  }));
   
-  // player.history에서 미니대전 기록 추출 (스트리머 상세와 동일한 데이터 소스)
-  let historyMatches=(player.history||[]).filter(h=>h.mode==='미니대전'||h.mode==='미니'||h.matchId&&h.matchId.startsWith('mm'));
-  console.log('Chatbot Debug - history mini matches:', historyMatches.length);
+  console.log('Chatbot Debug - Converted history matches:', historyMatches.length);
+  const allDates=historyMatches.map(h=>h.date).filter(Boolean).sort((a,b)=>b.localeCompare(a));
+  console.log('Chatbot Debug - All dates in converted history (sorted):', allDates.slice(0, 5), '...', allDates.slice(-5));
   
   if(historyMatches.length===0){
     return '📭 '+player.name+'의 미니대전 기록이 없습니다.';
