@@ -227,6 +227,7 @@ function toggleChatbot(){
   if(status) status.style.color=_chatbotEnabled?'#94a3b8':'#ef4444';
 })();
 function sendChatbotMessage(query){
+  console.log('Chatbot Debug - sendChatbotMessage called with:', query);
   if(!query){
     const input=document.getElementById('chatbotInput');
     query=input.value.trim();
