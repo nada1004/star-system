@@ -445,7 +445,7 @@ function formatPlayerIndRecord(player){
   return info;
 }
 function formatPlayerCompRecord(player){
-  const compM=typeof compM!=='undefined'?compM:[];
+  const compM=typeof window.compM!=='undefined'?window.compM:[];
   const playerMatches=compM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -473,7 +473,7 @@ function formatPlayerCompRecord(player){
   return info;
 }
 function formatPlayerTTRecord(player){
-  const ttM=typeof ttM!=='undefined'?ttM:[];
+  const ttM=typeof window.ttM!=='undefined'?window.ttM:[];
   const playerMatches=ttM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -501,7 +501,7 @@ function formatPlayerTTRecord(player){
   return info;
 }
 function formatPlayerProRecord(player){
-  const proM=typeof proM!=='undefined'?proM:[];
+  const proM=typeof window.proM!=='undefined'?window.proM:[];
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -529,7 +529,7 @@ function formatPlayerProRecord(player){
   return info;
 }
 function formatPlayerGJRecord(player){
-  const gjM=typeof gjM!=='undefined'?gjM:[];
+  const gjM=typeof window.gjM!=='undefined'?window.gjM:[];
   const playerMatches=gjM.filter(m=>m.wName===player.name||m.lName===player.name);
   
   if(playerMatches.length===0){
@@ -557,7 +557,7 @@ function formatPlayerGJRecord(player){
   return info;
 }
 function formatPlayerCKRecord(player){
-  const ckM=typeof ckM!=='undefined'?ckM:[];
+  const ckM=typeof window.ckM!=='undefined'?window.ckM:[];
   const playerMatches=ckM.filter(m=>m.p1===player.name||m.p2===player.name);
   
   if(playerMatches.length===0){
@@ -585,7 +585,7 @@ function formatPlayerCKRecord(player){
   return info;
 }
 function formatPlayerSevilRecord(player){
-  const univM=typeof univM!=='undefined'?univM:[];
+  const univM=typeof window.univM!=='undefined'?window.univM:[];
   const playerMatches=univM.filter(m=>(m.p1===player.name||m.p2===player.name)&&(m.type==='시빌원'||m.stage==='시빌원'));
   
   if(playerMatches.length===0){
@@ -614,9 +614,9 @@ function formatPlayerSevilRecord(player){
 }
 function formatPlayerTournamentRecord(player){
   const allMatches=[];
-  if(typeof compM!=='undefined') allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof ttM!=='undefined') allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof proM!=='undefined') allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.compM!=='undefined') allMatches.push(...window.compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.ttM!=='undefined') allMatches.push(...window.ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.proM!=='undefined') allMatches.push(...window.proM.filter(m=>m.p1===player.name||m.p2===player.name));
   const playerMatches=allMatches.filter(m=>m.type==='토너먼트'||m.stage==='토너먼트'||m.format==='토너먼트');
   
   if(playerMatches.length===0){
@@ -645,9 +645,9 @@ function formatPlayerTournamentRecord(player){
 }
 function formatPlayerGroupRecord(player){
   const allMatches=[];
-  if(typeof compM!=='undefined') allMatches.push(...compM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof ttM!=='undefined') allMatches.push(...ttM.filter(m=>m.p1===player.name||m.p2===player.name));
-  if(typeof proM!=='undefined') allMatches.push(...proM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.compM!=='undefined') allMatches.push(...window.compM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.ttM!=='undefined') allMatches.push(...window.ttM.filter(m=>m.p1===player.name||m.p2===player.name));
+  if(typeof window.proM!=='undefined') allMatches.push(...window.proM.filter(m=>m.p1===player.name||m.p2===player.name));
   const playerMatches=allMatches.filter(m=>m.type==='조별리그'||m.stage==='조별리그'||m.format==='조별리그');
   
   if(playerMatches.length===0){
@@ -675,7 +675,7 @@ function formatPlayerGroupRecord(player){
   return info;
 }
 function formatPlayerTeamRecord(player){
-  const proM=typeof proM!=='undefined'?proM:[];
+  const proM=typeof window.proM!=='undefined'?window.proM:[];
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='팀전'||m.format==='팀전');
   
   if(playerMatches.length===0){
@@ -703,7 +703,7 @@ function formatPlayerTeamRecord(player){
   return info;
 }
 function formatPlayerNormalRecord(player){
-  const proM=typeof proM!=='undefined'?proM:[];
+  const proM=typeof window.proM!=='undefined'?window.proM:[];
   const playerMatches=proM.filter(m=>m.p1===player.name||m.p2===player.name).filter(m=>m.type==='일반'||m.format==='일반'||!m.type&&!m.format);
   
   if(playerMatches.length===0){
