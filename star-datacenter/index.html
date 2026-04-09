@@ -534,6 +534,7 @@
 <!-- 📱 FAB -->
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
+    <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span>🤖</span> 스타봇</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cfg')"><span>⚙️</span> 설정</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('mini')"><span>⚡</span> 미니 경기</div>
@@ -555,6 +556,27 @@
 
 <script>document.write('<sc'+'ript src="js/mobile-bar.js'+_cbv+'"><\/sc'+'ript>')</script>
 <script>document.write('<sc'+'ript src="js/search.js'+_cbv+'"><\/sc'+'ript>')</script>
+
+<!-- 🤖 챗봇 팝업 -->
+<div class="chatbot-overlay" id="chatbotOverlay" onclick="closeChatbot(event)">
+  <div class="chatbot-sheet" id="chatbotSheet" onclick="event.stopPropagation()">
+    <div class="chatbot-sheet-handle"></div>
+    <div class="chatbot-sheet-hdr">
+      <div class="chatbot-sheet-title">🤖 스타봇</div>
+      <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+      <div class="chatbot-message bot">
+        <div class="chatbot-bubble">안녕하세요! 스타봇입니다. 선수 정보, 미니대전 성적 등을 물어보세요.</div>
+      </div>
+    </div>
+    <div class="chatbot-input-area">
+      <input type="text" id="chatbotInput" placeholder="선수명 기록, 미니대전 성적 등을 입력하세요..." 
+        onkeydown="if(event.key==='Enter')sendChatbotMessage()">
+      <button class="chatbot-send-btn" onclick="sendChatbotMessage()">전송</button>
+    </div>
+  </div>
+</div>
 
 <!-- 모바일 경기 상세 오버레이 -->
 <div class="mobile-match-overlay" id="mobileMatchOverlay" onclick="closeMobileMatchSheet(event)">
