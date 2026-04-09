@@ -644,7 +644,7 @@ function formatPlayerBasicInfo(player) {
     return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:8px;margin-bottom:0;min-height:120px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
       <div style="position:relative;height:120px;display:flex;align-items:center;justify-content:center">
       </div>
-    </div><div style="text-align:center;margin-bottom:0;line-height:1.2">
+    </div><div style="text-align:center;margin-bottom:0;line-height:1">
       <span style="font-size:18px;font-weight:800;color:var(--text)">${safePlayerName}</span> <span style="font-size:13px;color:var(--text2);font-weight:400">${safeUniv}</span> <span style="font-size:12px;color:var(--text2)">🎖️${player.tier} 🎮${player.race} ⭐${player.elo}</span> <span style="font-size:15px;font-weight:800;color:#2563eb">${player.win}승 ${player.loss}패 (${rate}%)</span> <span style="font-size:12px;color:var(--text3)">총 ${total}경기</span>
     </div><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:0">
       <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;box-shadow:0 1px 3px rgba(37,99,235,0.2)">최근전적</button>
@@ -935,20 +935,18 @@ function formatUniversityInfo(univName) {
     if (similarUniv) {
       return `🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.\n\n` + formatUniversityInfo(similarUniv);
     }
-    return `❌ '${univName}' 대학을 찾을 수 없습니다.`;
+    return `❌ '${univName}' 대학을 찾을 수 없습니다. 다시 입력해주세요.`;
   }
   
   let result = '';
   
   // 대학 로고를 전체 배경으로, 정보를 카드 외부에 배치
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:8px;margin-bottom:1px;min-height:100px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:8px;margin-bottom:0;min-height:100px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
       <div style="position:relative;height:100px;display:flex;align-items:center;justify-content:center">
       </div>
-    </div>
-    <div style="text-align:center;margin-bottom:1px">
-      <div style="font-size:16px;font-weight:800;color:var(--text)">${univName}</div>
-      <div style="font-size:11px;color:#2563eb;font-weight:700;background:rgba(37,99,235,0.1);padding:2px 8px;border-radius:8px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
+    </div><div style="text-align:center;margin-bottom:0;line-height:1">
+      <span style="font-size:16px;font-weight:800;color:var(--text)">${univName}</span> <span style="font-size:11px;color:#2563eb;font-weight:700;background:rgba(37,99,235,0.1);padding:2px 8px;border-radius:8px;display:inline-block">소속 선수: ${univPlayers.length}명</span>
     </div>\n\n`;
   } else {
     result += `🏫 ${univName} 대학 정보\n\n`;
