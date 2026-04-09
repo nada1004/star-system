@@ -692,24 +692,24 @@ function buildUnivBoardCard(u, forExport){
         const cardTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
         const rTxtCard = rc.txt||p.race||'?';
         const imgInner = photoSrcChip
-          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0"${forExport?'':' onerror="this.style.display=\'none\'"'}>`
-          + (forExport?'':`<div style="position:absolute;inset:0;background:${rcBg};display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`)
-          : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:10px 10px 0 0">${rTxtCard}</div>`;
+          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
+          + (forExport?'':`<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff">${rTxtCard}</div>`)
+          : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff">${rTxtCard}</div>`;
         // 종족/티어 배지 (좌상단)
-        const topBadges = `<div style="position:absolute;top:5px;left:5px;display:flex;gap:3px;flex-wrap:wrap">`
+        const topBadges = `<div style="position:absolute;top:6px;left:6px;display:flex;gap:3px;flex-wrap:wrap">`
           + `<span style="font-size:9px;font-weight:900;background:${rc.col||'#64748b'};color:#fff;border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.4)">${rTxtCard}</span>`
           + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
           + `</div>`;
-        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));border-radius:0 0 10px 10px;padding:20px 6px 5px;text-align:center">`
+        const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.82));border-radius:0 0 10px 10px;padding:22px 6px 7px;text-align:center">`
           + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
           + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
-          + `</div>`;
-        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:90px;padding-top:0':'aspect-ratio:1/1'};overflow:hidden;border-radius:10px 10px 0 0">${imgInner}${topBadges}${overlay}</div>`
           + (p.channelUrl
             ? (forExport
-                ? `<div style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;border-radius:0 0 8px 8px">▶ 방송</div>`
-                : `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="display:block;text-align:center;padding:3px;background:${col};color:#fff;font-size:10px;font-weight:700;text-decoration:none;border-radius:0 0 8px 8px">▶ 방송</a>`)
-            : `<div style="height:4px;background:${col};border-radius:0 0 8px 8px"></div>`);
+                ? `<div style="margin-top:4px;font-size:9px;font-weight:700;color:${col};background:rgba(255,255,255,.9);border-radius:4px;padding:1px 6px;display:inline-block">▶ 방송</div>`
+                : `<a href="${p.channelUrl}" target="_blank" onclick="event.stopPropagation()" style="margin-top:4px;display:inline-block;font-size:9px;font-weight:700;color:${col};background:rgba(255,255,255,.9);border-radius:4px;padding:1px 6px;text-decoration:none">▶ 방송</a>`)
+            : '')
+          + `</div>`;
+        const cardInner = `<div style="position:relative;width:100%;${forExport?'height:110px;padding-top:0':'aspect-ratio:3/4'};overflow:hidden;border-radius:10px">${imgInner}${topBadges}${overlay}</div>`;
         if (forExport) {
           return `<div style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)}">${cardInner}</div>`;
         }
@@ -719,9 +719,9 @@ function buildUnivBoardCard(u, forExport){
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
           : `openPlayerModal('${pNameSafeCard}')`;
         return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
-          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};background:#fff;cursor:pointer;transition:box-shadow .15s"`
-          + ` onmouseover="this.style.boxShadow='0 4px 16px ${hexToRgba(col,.5)}'"`
-          + ` onmouseout="this.style.boxShadow=''"`
+          + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
+          + ` onmouseover="this.style.boxShadow='0 6px 20px ${hexToRgba(col,.5)}';this.style.transform='translateY(-3px)'"`
+          + ` onmouseout="this.style.boxShadow='';this.style.transform=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
           + ` ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">`
           + cardInner + `</div>`;
