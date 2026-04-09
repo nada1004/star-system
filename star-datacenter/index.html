@@ -532,7 +532,6 @@
 </div>
 
 <!-- 📱 FAB -->
-<script>document.write('<sc'+'ript src="js/mobile-bar.js'+_cbv+'"><\/sc'+'ript>')</script>
 <script>
 var _fabOpen=false;
 var _chatbotEnabled=localStorage.getItem('su_chatbotEnabled')!=='0';
@@ -656,6 +655,19 @@ function processChatbotQuery(query){
 window.sendChatbotMessage=sendChatbotMessage;
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
+
+// mobile-bar.js 로드 확인
+console.log('Chatbot Debug - Loading mobile-bar.js...');
+var script=document.createElement('script');
+script.src='js/mobile-bar.js'+(typeof _cbv!=='undefined'?_cbv:'');
+script.onload=function(){
+  console.log('Chatbot Debug - mobile-bar.js loaded successfully');
+  console.log('Chatbot Debug - generateChatbotResponse exists after load:', typeof generateChatbotResponse==='function');
+};
+script.onerror=function(){
+  console.error('Chatbot Debug - Failed to load mobile-bar.js');
+};
+document.head.appendChild(script);
 </script>
 
 <div id="mobileFab">
