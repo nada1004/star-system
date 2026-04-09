@@ -223,7 +223,9 @@ function generateResponse(userMessage) {
            `• '스트리머명 통계' : 통계\n` +
            `• '스트리머명 5월 전적' : 특정 월 전적\n` +
            `• '스트리머명 저그전' : 특정 종족전 승률\n` +
-           `• '스트리머명 맵명' : 특정 맵 전적`;
+           `• '스트리머명 맵명' : 특정 맵 전적\n\n` +
+           `2️⃣ 대학 정보\n` +
+           `• '대학명' : 소속 선수 및 대학 로고`;
   }
   
   // 선수 이름 + 최근전적 (선수 관련 패턴 먼저 체크)
@@ -362,20 +364,34 @@ function formatPlayerBasicInfo(player) {
   const total = player.win + player.loss;
   const rate = total > 0 ? ((player.win / total) * 100).toFixed(1) : 0;
   
-  let result = '';
   if (player.photo) {
-    result = `<img src="${player.photo}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 10px auto">\n\n`;
+    // 프로필 사진 카드로 전체 표시
+    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;margin-bottom:12px">
+      <img src="${player.photo}" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid rgba(255,255,255,0.3);box-shadow:0 4px 15px rgba(0,0,0,0.2)">
+      <div style="color:white;text-align:center;margin-top:12px">
+        <div style="font-size:18px;font-weight:700;margin-bottom:4px">${player.name}</div>
+        <div style="font-size:14px;opacity:0.9">${player.univ}</div>
+        <div style="font-size:12px;margin-top:8px;opacity:0.8">
+          🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
+        </div>
+        <div style="font-size:14px;margin-top:8px;font-weight:600">
+          ${player.win}승 ${player.loss}패 (${rate}%)
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:14px;color:var(--text3)">📝 총 ${total}경기</div>
+    </div>`;
   }
   
-  result += `👤 ${player.name} 선수 정보\n\n` +
+  // 사진이 없는 경우 기본 텍스트 표시
+  return `👤 ${player.name} 선수 정보\n\n` +
          `🏫 소속: ${player.univ}\n` +
          `🎖️ 티어: ${player.tier}\n` +
          `🎮 종족: ${player.race}\n` +
          `⭐ ELO: ${player.elo}\n` +
          `📊 전체 전적: ${player.win}승 ${player.loss}패 (${rate}%)\n` +
          `📝 총 경기 수: ${total}경기`;
-  
-  return result;
 }
 
 // 선수 최근 전적
@@ -542,7 +558,14 @@ function formatUniversityInfo(univName) {
   const univPlayers = players.filter(p => p.univ === univName);
   if (univPlayers.length === 0) return `❌ '${univName}' 대학을 찾을 수 없습니다.`;
   
-  let result = `🏫 ${univName} 대학 정보\n\n`;
+  let result = '';
+  
+  // 대학 로고 추가 (UNIV_ICONS가 있는 경우)
+  if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
+    result += `<img src="${UNIV_ICONS[univName]}" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 10px auto">\n\n`;
+  }
+  
+  result += `🏫 ${univName} 대학 정보\n\n`;
   result += `━━━━━━━━━━━━━━━━━━\n`;
   result += `소속 선수: ${univPlayers.length}명\n\n`;
   result += `👤 선수 목록:\n`;
