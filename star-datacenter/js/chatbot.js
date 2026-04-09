@@ -641,30 +641,23 @@ function formatPlayerBasicInfo(player) {
   
   if (player.photo) {
     // 프로필 사진을 전체 배경으로, 정보를 카드 외부에 배치
-    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:8px;min-height:180px">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.3) 100%);border-radius:12px"></div>
-      <div style="position:relative;height:180px;display:flex;align-items:center;justify-content:center;z-index:1">
+    return `<div style="position:relative;padding:0;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:2px;min-height:180px">
+      <div style="position:relative;height:180px;display:flex;align-items:center;justify-content:center">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:8px">
-      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px">${safePlayerName}</div>
-      <div style="font-size:14px;color:var(--text2);margin-bottom:3px">${safeUniv}</div>
-      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:3px;font-size:13px;color:var(--text2)">
-        <span>🎖️${player.tier}</span>
-        <span>🎮${player.race}</span>
-        <span>⭐${player.elo}</span>
+    <div style="text-align:center;margin-bottom:2px;line-height:1.2">
+      <div style="font-size:18px;font-weight:700;color:var(--text)">${safePlayerName} <span style="font-size:12px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
+      <div style="font-size:11px;color:var(--text2)">
+        🎖️${player.tier} 🎮${player.race} ⭐${player.elo}
       </div>
-      <div style="font-size:18px;font-weight:700;color:var(--blue);margin-bottom:3px">
-        ${player.win}승 ${player.loss}패 (${rate}%)
-      </div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">
-        총 ${total}경기
+      <div style="font-size:14px;font-weight:700;color:var(--blue)">
+        ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:11px;color:var(--text3);font-weight:400">총 ${total}경기</span>
       </div>
     </div>
-    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
-      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
+    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:2px">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">이번달</button>
     </div>`;
   }
   
@@ -957,14 +950,13 @@ function formatUniversityInfo(univName) {
   
   // 대학 로고를 전체 배경으로, 정보를 카드 외부에 배치
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:12px;margin-bottom:8px;min-height:150px">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.3) 100%);border-radius:12px"></div>
-      <div style="position:relative;height:150px;display:flex;align-items:center;justify-content:center;z-index:1">
+    result += `<div style="position:relative;padding:0;background-image:url('${UNIV_ICONS[univName]}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:12px;margin-bottom:2px;min-height:150px">
+      <div style="position:relative;height:150px;display:flex;align-items:center;justify-content:center">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:8px">
-      <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px">${univName}</div>
-      <div style="font-size:14px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:4px 12px;border-radius:16px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
+    <div style="text-align:center;margin-bottom:2px">
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px">${univName}</div>
+      <div style="font-size:12px;color:var(--blue);font-weight:600;background:rgba(59,130,246,0.1);padding:2px 10px;border-radius:12px;display:inline-block">소속 선수: ${univPlayers.length}명</div>
     </div>\n\n`;
   } else {
     result += `🏫 ${univName} 대학 정보\n\n`;
