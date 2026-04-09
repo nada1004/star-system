@@ -529,6 +529,8 @@ function formatPlayerMiniRecord(player, miniM){
   if(player.history && player.history.length > 0){
     const modes=[...new Set(player.history.map(h=>h.mode).filter(Boolean))];
     console.log('Chatbot Debug - Available modes in history:', modes);
+    const allDates=player.history.map(h=>h.date).filter(Boolean).sort((a,b)=>b.localeCompare(a));
+    console.log('Chatbot Debug - All dates in history (sorted):', allDates.slice(0, 5), '...', allDates.slice(-5));
     console.log('Chatbot Debug - Sample history entries:', player.history.slice(0, 3).map(h=>({mode:h.mode,date:h.date,result:h.result})));
   }
   
