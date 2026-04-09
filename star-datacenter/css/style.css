@@ -1181,6 +1181,37 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   background: #f1f5f9;
   color: var(--text);
 }
+
+/* 모바일 챗봇 최적화 */
+@media(max-width:768px) {
+  .chat-message {
+    gap: 6px;
+  }
+  .chat-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .chat-content {
+    font-size: 13px;
+    padding: 8px 12px;
+    max-width: 85%;
+  }
+  #chatMessages {
+    padding: 12px;
+  }
+  .chatbot-input-area {
+    padding: 10px 12px;
+  }
+  #chatInput {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  #sendBtn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
 .chatbot-input-area {
   display: flex;
   gap: 8px;
