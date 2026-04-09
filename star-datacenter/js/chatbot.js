@@ -90,16 +90,12 @@ function openPlayerDetail(playerName) {
   }
 }
 
-// 대학 상세 모달 열기
+// 대학 상세 모달 열기 (챗봇에서 쿼리)
 function openUnivDetail(univName) {
-  if (typeof players === 'undefined') return;
-  
-  const univPlayers = players.filter(p => p.univ === univName);
-  if (univPlayers.length === 0) return;
-  
-  // 대학 탭으로 이동
-  if (typeof sw !== 'undefined') {
-    sw('univm', null);
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.value = univName;
+    sendMessage();
   }
 }
 
@@ -399,6 +395,13 @@ function generateResponse(userMessage) {
     return formatPlayerRaceRecord(player, race);
   }
   
+  // 종족전만 입력한 경우 (예: "저그전")
+  const raceOnlyMatch = userMessage.match(/^(저그전|테란전|프로토스전)$/);
+  if (raceOnlyMatch) {
+    const race = raceOnlyMatch[1];
+    return formatRacePlayersSearch(race === '저그전' ? '저그' : race === '테란전' ? '테란' : '프로토스');
+  }
+  
   // 선수 이름 + 맵명 (맵별 전적)
   const mapMatch = userMessage.match(/([^\s]+)\s+(.+)$/);
   if (mapMatch && !msg.includes('전적') && !msg.includes('최근') && !msg.includes('통계') && !msg.includes('vs')) {
@@ -555,34 +558,32 @@ function formatPlayerBasicInfo(player) {
   
   // 선수명 이스케이프
   const safePlayerName = escapeHtml(player.name);
+  const safeUniv = escapeHtml(player.univ);
   
   if (player.photo) {
-    // 프로필 사진과 정보 분리된 레이아웃
-    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
-      <img src="${player.photo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid var(--blue);margin-bottom:12px">
-      <div style="display:none;width:120px;height:120px;background:var(--blue);border-radius:50%;align-items:center;justify-content:center;font-size:48px;color:white;margin-bottom:12px">👤</div>
-      <div style="text-align:center">
-        <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px">${safePlayerName}</div>
-        <div style="font-size:14px;color:var(--text2);margin-bottom:8px">${player.univ}</div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:13px;color:var(--text2)">
-          <span>🎖️ ${player.tier}</span>
-          <span>🎮 ${player.race}</span>
-          <span>⭐ ${player.elo}</span>
+    // 프로필 사진을 전체 배경으로 표시 (가독성 개선)
+    return `<div style="position:relative;padding:24px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:200px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.85) 100%);border-radius:12px"></div>
+      <div style="position:relative;color:white;text-align:center;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.8)">
+        <div style="font-size:28px;font-weight:700;margin-bottom:12px">${safePlayerName}</div>
+        <div style="font-size:18px;opacity:1;background:rgba(0,0,0,0.5);padding:6px 16px;border-radius:20px;display:inline-block;margin-bottom:12px">${safeUniv}</div>
+        <div style="font-size:15px;margin-top:12px;opacity:1;letter-spacing:1px">
+          🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
         </div>
-        <div style="font-size:16px;font-weight:600;color:var(--blue);margin-bottom:12px">
+        <div style="font-size:20px;margin-top:16px;font-weight:700;background:rgba(255,255,255,0.25);padding:8px 20px;border-radius:10px;display:inline-block">
           ${player.win}승 ${player.loss}패 (${rate}%)
         </div>
       </div>
-      <div style="width:100%;border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
-        <div style="font-size:13px;color:var(--text3);text-align:center;margin-bottom:8px">📝 총 ${total}경기</div>
-        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-          <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
-          <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
-        </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:13px;color:var(--text3);text-align:center;margin-bottom:8px">📝 총 ${total}경기</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+        <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">최근전적</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">통계</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">이번달</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 저그전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">저그전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 테란전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">테란전</button>
+        <button onclick="sendQuickMessage('${safePlayerName} 프로토스전')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer">프로토스전</button>
       </div>
     </div>`;
   }
@@ -636,7 +637,12 @@ function formatPlayerRecentRecord(player) {
   result += `━━━━━━━━━━━━━━━━━━\n`;
   
   recentGames.forEach(h => {
-    result += `📅 ${h.date} | ${h.map} | ${h.result} vs ${h.opp}\n`;
+    const safeOpp = escapeHtml(h.opp);
+    const safeOppForClick = safeOpp.replace(/'/g, "\\'");
+    // 상대명 클릭 가능하게
+    const oppPlayer = typeof players !== 'undefined' ? players.find(p => p.name === h.opp) : null;
+    const oppDisplay = oppPlayer ? `<span onclick="sendQuickMessage('${safeOppForClick}')" style="color:var(--blue);cursor:pointer;text-decoration:underline">${safeOpp}</span>` : safeOpp;
+    result += `📅 ${h.date} | ${h.map} | ${h.result} vs ${oppDisplay}\n`;
   });
   
   return result;
@@ -853,7 +859,15 @@ function formatUniversityInfo(univName) {
   if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
   
   const univPlayers = players.filter(p => p.univ === univName);
-  if (univPlayers.length === 0) return `❌ '${univName}' 대학을 찾을 수 없습니다.`;
+  if (univPlayers.length === 0) {
+    // 대학명 퍼지 매칭 시도
+    const universities = [...new Set(players.map(p => p.univ))];
+    const similarUniv = universities.find(u => u.toLowerCase().includes(univName.toLowerCase()) || univName.toLowerCase().includes(u.toLowerCase()));
+    if (similarUniv) {
+      return `🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.\n\n` + formatUniversityInfo(similarUniv);
+    }
+    return `❌ '${univName}' 대학을 찾을 수 없습니다.`;
+  }
   
   let result = '';
   
