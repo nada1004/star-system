@@ -645,7 +645,7 @@ function formatPlayerBasicInfo(player) {
       <div style="position:relative;height:180px;display:flex;align-items:center;justify-content:center">
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:2px;line-height:1.2">
+    <div style="text-align:center;margin-bottom:2px;line-height:1">
       <div style="font-size:18px;font-weight:700;color:var(--text)">${safePlayerName} <span style="font-size:12px;color:var(--text2);font-weight:400">${safeUniv}</span></div>
       <div style="font-size:11px;color:var(--text2)">
         🎖️${player.tier} 🎮${player.race} ⭐${player.elo}
@@ -654,10 +654,10 @@ function formatPlayerBasicInfo(player) {
         ${player.win}승 ${player.loss}패 (${rate}%) <span style="font-size:11px;color:var(--text3);font-weight:400">총 ${total}경기</span>
       </div>
     </div>
-    <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:2px">
-      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">최근전적</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">통계</button>
-      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:3px 6px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer">이번달</button>
+    <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:2px">
+      <button onclick="sendQuickMessage('${safePlayerName} 최근전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">최근전적</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 통계')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">통계</button>
+      <button onclick="sendQuickMessage('${safePlayerName} 이번달 전적')" style="padding:5px 10px;background:var(--blue);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer">이번달</button>
     </div>`;
   }
   
