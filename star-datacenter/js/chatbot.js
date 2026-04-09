@@ -29,6 +29,34 @@ function saveChatHistory() {
   localStorage.setItem('su_chat_history', JSON.stringify(chatHistory));
 }
 
+// 마크다운 렌더링
+function renderMarkdown(text) {
+  if (!text) return '';
+  
+  // HTML 태그가 포함된 경우 그대로 반환
+  if (text.includes('<')) return text;
+  
+  // 간단한 마크다운 파싱
+  let html = text;
+  
+  // **bold** -> <b>bold</b>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  
+  // *italic* -> <i>italic</i>
+  html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+  
+  // `code` -> <code>code</code>
+  html = html.replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace">$1</code>');
+  
+  // ```code block``` -> <pre><code>code block</code></pre>
+  html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:#f1f5f9;padding:12px;border-radius:8px;overflow-x:auto"><code>$1</code></pre>');
+  
+  // 줄바꿈 -> <br>
+  html = html.replace(/\n/g, '<br>');
+  
+  return html;
+}
+
 // 채팅 기록 렌더링
 function renderChatHistory() {
   const container = document.getElementById('chatMessages');
@@ -39,16 +67,22 @@ function renderChatHistory() {
   
   container.innerHTML = '';
   
-  chatHistory.forEach(msg => {
+  chatHistory.forEach((msg, index) => {
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'bot-message'}`;
     
     const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain">';
     const content = msg.content;
     
+    // 봇 메시지에 복사 버튼 추가
+    const copyBtn = msg.role === 'bot' ? `<button onclick="copyChatMessage(${index})" style="background:none;border:none;font-size:12px;color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
+    
     msgDiv.innerHTML = `
       <div class="chat-avatar">${avatar}</div>
-      <div class="chat-content">${content}</div>
+      <div style="flex:1;display:flex;flex-direction:column">
+        <div class="chat-content" style="white-space:pre-wrap">${renderMarkdown(content)}</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px">${copyBtn}</div>
+      </div>
     `;
     
     container.appendChild(msgDiv);
@@ -56,6 +90,19 @@ function renderChatHistory() {
   
   // 스크롤을 하단으로
   container.scrollTop = container.scrollHeight;
+}
+
+// 채팅 메시지 복사
+function copyChatMessage(index) {
+  const msg = chatHistory[index];
+  if (msg) {
+    const textContent = msg.content.replace(/<[^>]*>/g, '');
+    navigator.clipboard.writeText(textContent).then(() => {
+      alert('메시지가 복사되었습니다.');
+    }).catch(err => {
+      console.error('복사 실패:', err);
+    });
+  }
 }
 
 // 메시지 추가
@@ -132,6 +179,81 @@ function handleChatInputKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
+  }
+}
+
+// 채팅 입력 이벤트 (자동완성)
+function handleChatInputInput(e) {
+  const input = e.target;
+  const value = input.value.trim();
+  
+  if (value.length < 1) {
+    hideSuggestions();
+    return;
+  }
+  
+  showSuggestions(value);
+}
+
+// 검색 제안 표시
+function showSuggestions(query) {
+  if (typeof players === 'undefined') return;
+  
+  const container = document.getElementById('chatSuggestions');
+  if (!container) {
+    const suggestionsDiv = document.createElement('div');
+    suggestionsDiv.id = 'chatSuggestions';
+    suggestionsDiv.style.cssText = 'position:absolute;bottom:100%;left:0;right:0;background:white;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;max-height:200px;overflow-y:auto;z-index:10000;display:none;box-shadow:0 4px 15px rgba(0,0,0,0.1)';
+    document.getElementById('chatInput').parentNode.parentNode.appendChild(suggestionsDiv);
+  }
+  
+  const suggestionsDiv = document.getElementById('chatSuggestions');
+  
+  // 선수명 검색
+  const playerMatches = players.filter(p => p.name.toLowerCase().includes(query.toLowerCase())).slice(0, 5);
+  
+  // 대학명 검색
+  const universities = [...new Set(players.map(p => p.univ))];
+  const univMatches = universities.filter(u => u.toLowerCase().includes(query.toLowerCase())).slice(0, 3);
+  
+  if (playerMatches.length === 0 && univMatches.length === 0) {
+    hideSuggestions();
+    return;
+  }
+  
+  let html = '';
+  
+  if (playerMatches.length > 0) {
+    html += '<div style="padding:8px 12px;font-size:12px;color:#64748b;font-weight:600">선수</div>';
+    playerMatches.forEach(p => {
+      html += `<div onclick="selectSuggestion('${p.name}')" style="padding:8px 12px;cursor:pointer:hover:bg-gray-100;font-size:14px">👤 ${p.name} (${p.univ})</div>`;
+    });
+  }
+  
+  if (univMatches.length > 0) {
+    html += '<div style="padding:8px 12px;font-size:12px;color:#64748b;font-weight:600;border-top:1px solid #e2e8f0;margin-top:4px">대학</div>';
+    univMatches.forEach(u => {
+      html += `<div onclick="selectSuggestion('${u}')" style="padding:8px 12px;cursor:pointer:hover:bg-gray-100;font-size:14px">🏫 ${u}</div>`;
+    });
+  }
+  
+  suggestionsDiv.innerHTML = html;
+  suggestionsDiv.style.display = 'block';
+}
+
+// 검색 제안 숨기기
+function hideSuggestions() {
+  const container = document.getElementById('chatSuggestions');
+  if (container) container.style.display = 'none';
+}
+
+// 검색 제안 선택
+function selectSuggestion(value) {
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.value = value;
+    hideSuggestions();
+    input.focus();
   }
 }
 
@@ -359,28 +481,44 @@ function generateResponse(userMessage) {
          `도움말을 보려면 "도움" 또는 "?"를 입력해주세요!`;
 }
 
+// 대학별 팀 색상 매핑
+const TEAM_COLORS = {
+  '츠캄몬스타즈': { light: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', dark: 'linear-gradient(135deg,#78350f 0%,#92400e 100%)' },
+  '기본': { light: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)', dark: 'linear-gradient(135deg,#1e293b 0%,#334155 100%)' }
+};
+
+// 대학 색상 가져오기
+function getTeamColor(univ, isDark) {
+  const colors = TEAM_COLORS[univ] || TEAM_COLORS['기본'];
+  return isDark ? colors.dark : colors.light;
+}
+
 // 선수 기본 정보
 function formatPlayerBasicInfo(player) {
   const total = player.win + player.loss;
   const rate = total > 0 ? ((player.win / total) * 100).toFixed(1) : 0;
   
   if (player.photo) {
-    // 프로필 사진 카드로 전체 표시
-    return `<div style="display:flex;flex-direction:column;align-items:center;padding:16px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:12px;margin-bottom:12px">
-      <img src="${player.photo}" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:4px solid rgba(255,255,255,0.3);box-shadow:0 4px 15px rgba(0,0,0,0.2)">
-      <div style="color:white;text-align:center;margin-top:12px">
-        <div style="font-size:18px;font-weight:700;margin-bottom:4px">${player.name}</div>
-        <div style="font-size:14px;opacity:0.9">${player.univ}</div>
-        <div style="font-size:12px;margin-top:8px;opacity:0.8">
+    // 프로필 사진을 전체 배경으로 표시
+    return `<div style="position:relative;padding:20px;background-image:url('${player.photo}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:12px;min-height:150px">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.7) 100%);border-radius:12px"></div>
+      <div style="position:relative;color:white;text-align:center;z-index:1">
+        <div style="font-size:20px;font-weight:700;margin-bottom:6px">${player.name}</div>
+        <div style="font-size:14px;opacity:0.95">${player.univ}</div>
+        <div style="font-size:12px;margin-top:8px;opacity:0.9">
           🎖️ ${player.tier} | 🎮 ${player.race} | ⭐ ${player.elo}
         </div>
-        <div style="font-size:14px;margin-top:8px;font-weight:600">
+        <div style="font-size:15px;margin-top:8px;font-weight:600">
           ${player.win}승 ${player.loss}패 (${rate}%)
         </div>
       </div>
     </div>
-    <div style="margin-top:12px">
-      <div style="font-size:14px;color:var(--text3)">📝 총 ${total}경기</div>
+    <div style="margin-top:10px">
+      <div style="font-size:13px;color:var(--text3)">📝 총 ${total}경기</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="sendQuickMessage('${player.name} 최근전적')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">최근전적</button>
+        <button onclick="sendQuickMessage('${player.name} 통계')" style="padding:6px 12px;background:var(--blue);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">통계</button>
+      </div>
     </div>`;
   }
   
@@ -392,6 +530,15 @@ function formatPlayerBasicInfo(player) {
          `⭐ ELO: ${player.elo}\n` +
          `📊 전체 전적: ${player.win}승 ${player.loss}패 (${rate}%)\n` +
          `📝 총 경기 수: ${total}경기`;
+}
+
+// 빠른 메시지 전송 (퀵 액션 버튼용)
+function sendQuickMessage(message) {
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.value = message;
+    sendMessage();
+  }
 }
 
 // 선수 최근 전적
@@ -562,7 +709,8 @@ function formatUniversityInfo(univName) {
   
   // 대학 로고 추가 (UNIV_ICONS가 있는 경우)
   if (typeof UNIV_ICONS !== 'undefined' && UNIV_ICONS[univName]) {
-    result += `<img src="${UNIV_ICONS[univName]}" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 10px auto">\n\n`;
+    result += `<img src="${UNIV_ICONS[univName]}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 10px auto">
+    <div style="display:none;width:80px;height:80px;background:rgba(0,0,0,0.1);border-radius:8px;align-items:center;justify-content:center;font-size:32px;margin:0 auto 10px auto">🏫</div>\n\n`;
   }
   
   result += `🏫 ${univName} 대학 정보\n\n`;
