@@ -534,7 +534,7 @@ async function generateResponse(msg) {
     return formatUniversityVsRecord(univ1, univ2);
   }
   
-  // 대학 관련 검색 (정확/퍼지 매칭)
+  // 대학 관련 검색 (정확 일치만 - 퍼지 매칭은 선수 검색 후 fallback에서 처리)
   const universityMatch = userMessage.match(/([^\s]+)/);
   if (universityMatch) {
     const univName = universityMatch[1];
@@ -543,11 +543,6 @@ async function generateResponse(msg) {
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
     if (universities.includes(univName)) {
       return formatUniversityInfo(univName);
-    }
-    // 퍼지 매칭 (부분 일치 포함)
-    const similarUniv = findSimilarUniversity(univName, universities);
-    if (similarUniv) {
-      return formatUniversityInfo(similarUniv);
     }
   }
   
