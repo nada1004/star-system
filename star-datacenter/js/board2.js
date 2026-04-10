@@ -1504,6 +1504,7 @@ function _b2PlayersView() {
         object-fit: cover;
         object-position: center;
         transition: opacity 0.3s ease;
+        z-index: 1;
       }
       .b2-players-info {
         position: absolute;
@@ -1511,23 +1512,24 @@ function _b2PlayersView() {
         left: 0;
         right: 0;
         padding: 30px;
-        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-        z-index: 2;
+        background: rgba(0,0,0,0.85);
+        z-index: 10;
       }
       .b2-players-name {
-        font-size: 36px;
-        font-weight: 800;
-        margin-bottom: 8px;
+        font-size: 32px;
+        font-weight: 900;
+        margin-bottom: 12px;
         color: #fff;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        line-height: 1.2;
       }
       .b2-players-details {
-        font-size: 14px;
-        color: rgba(255,255,255,0.8);
+        font-size: 15px;
+        color: #fff;
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
+        line-height: 1.5;
       }
       .b2-players-tier {
         background: ${theme.border};
@@ -1617,12 +1619,12 @@ function _b2PlayersView() {
       .b2-players-label {
         margin-top: 8px;
         font-size: 13px;
-        color: var(--text1);
+        color: #1e293b;
         font-weight: 700;
         text-align: center;
       }
       .b2-players-card.active .b2-players-label {
-        color: var(--text1);
+        color: #000;
         font-weight: 800;
       }
       .b2-players-filter-btn {
