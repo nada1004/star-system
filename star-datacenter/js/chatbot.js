@@ -542,8 +542,8 @@ async function generateResponse(msg) {
     const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
 
-    // 1) 대학 정확 일치
-    if (universities.includes(query)) return formatUniversityInfo(query);
+    // 1) 대학 정확 일치 (단, 3글자 이하는 건너뛰고 랜덤 스트리머)
+    if (universities.includes(query) && query.length >= 4) return formatUniversityInfo(query);
 
     // 2) 선수 정확 일치
     let player = typeof players !== 'undefined' ? players.find(p => p.name === query) : null;
@@ -662,7 +662,7 @@ async function generateResponse(msg) {
     return '감사합니다 😊 더 궁금한 게 있으면 언제든지 물어보세요!';
   }
 
-  // 기본 응답 - 랜덤 스트리머 소개
+  // 기본 응답 - 랜덤 스트리머 소개 (모든 입력에 대해)
   if (typeof players !== 'undefined' && players.length > 0) {
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     return `🎲 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
