@@ -714,7 +714,7 @@ function formatPlayerBasicInfo(player) {
 <div style="font-size:14px;font-weight:800;color:${winColor};margin-top:4px">${player.win}승 ${player.loss}패 <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9;display:flex;align-items:center;justify-content:center"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
   // 사진 없는 경우
@@ -1900,18 +1900,84 @@ function formatPlayerGjM(player) {
 
 // ── 대회 기록 (comps만, 티어대회 제외) ──
 function formatPlayerCompOnly(player) {
-  const matches = (typeof comps !== 'undefined' ? comps : []).filter(m =>
+  // comps (일반 대회)
+  const compMatches = (typeof comps !== 'undefined' ? comps : []).filter(m =>
     m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name))
   );
-  if (!matches.length) return _noRecordCard('🏆', `${player.name} 대회`);
-  const totalWL = _calcWL_sets(matches, player.name);
-  const header = _matchCardHeader('🏆', `${player.name} 대회 기록`, `${matches.length}건__STATS__`, 'linear-gradient(135deg,#1e3a8a,#1d4ed8)');
+
+  // tourneys 조별리그 기록
+  const tourGroupRows = [];
+  (typeof tourneys !== 'undefined' ? tourneys : []).forEach(tn => {
+    (tn.groups||[]).forEach(grp => {
+      (grp.matches||[]).forEach(m => {
+        if(m.sets&&m.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name))) {
+          tourGroupRows.push({_tnName:tn.name, _grpName:grp.name, _isTour:true, sets:m.sets, d:m.d||'', a:grp.name, b:'', sa:0, sb:0, n:tn.name});
+        }
+      });
+    });
+  });
+
+  // tourneys 브라켓 기록
+  const tourBracketRows = [];
+  (typeof tourneys !== 'undefined' ? tourneys : []).forEach(tn => {
+    const bracket = tn.bracket || {};
+    (bracket.matchDetails||[]).forEach(md => {
+      if(md.sets&&md.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name))) {
+        tourBracketRows.push({_tnName:tn.name, _isBracket:true, sets:md.sets, d:md.d||'', a:md.a||'', b:md.b||'', sa:md.sa||0, sb:md.sb||0, n:tn.name});
+      }
+    });
+  });
+
+  // proTourneys 개인 토너먼트 조별리그
+  const proTourRows = [];
+  (typeof proTourneys !== 'undefined' ? proTourneys : []).forEach(tn => {
+    (tn.groups||[]).forEach(grp => {
+      (grp.matches||[]).forEach(m => {
+        if(m.a===player.name||m.b===player.name) {
+          proTourRows.push({_tnName:tn.name, _isProTour:true, d:m.d||'', a:m.a||'', b:m.b||'', winner:m.winner, map:m.map, n:tn.name});
+        }
+      });
+    });
+  });
+
+  const allRows = [
+    ...compMatches.map(m=>({...m,_type:'comp'})),
+    ...tourGroupRows.map(m=>({...m,_type:'tourGroup'})),
+    ...tourBracketRows.map(m=>({...m,_type:'tourBracket'})),
+    ...proTourRows.map(m=>({...m,_type:'proTour'})),
+  ];
+
+  if (!allRows.length) return _noRecordCard('🏆', `${player.name} 대회`);
+
+  // 전체 승패 계산
+  let tw=0,tl=0;
+  compMatches.forEach(m=>{const r=_getMemberResult(m.sets,player.name);tw+=r.wins;tl+=r.losses;});
+  tourGroupRows.forEach(m=>{const r=_getMemberResult(m.sets,player.name);tw+=r.wins;tl+=r.losses;});
+  tourBracketRows.forEach(m=>{const r=_getMemberResult(m.sets,player.name);tw+=r.wins;tl+=r.losses;});
+  proTourRows.forEach(m=>{if(m.winner===player.name)tw++;else tl++;});
+  const totalWL = {wins:tw,losses:tl};
+
+  const header = _matchCardHeader('🏆', `${player.name} 대회 기록`, `${allRows.length}건__STATS__`, 'linear-gradient(135deg,#1e3a8a,#1d4ed8)');
   const rowFn = m => {
-    const {wins,losses} = _getMemberResult(m.sets, player.name);
-    const teamWon = (m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa);
-    return _matchRow(m.d, `[${m.n||'대회'}] ${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
+    if(m._type==='comp') {
+      const {wins,losses} = _getMemberResult(m.sets, player.name);
+      const teamWon = (m.a===player.univ&&m.sa>m.sb)||(m.b===player.univ&&m.sb>m.sa);
+      return _matchRow(m.d, `[${m.n||'대회'}] ${m.a} vs ${m.b}`, `${m.sa}:${m.sb}`, `개인 ${wins}승${losses}패`, teamWon);
+    } else if(m._type==='tourGroup') {
+      const {wins,losses} = _getMemberResult(m.sets, player.name);
+      return _matchRow(m.d, `[${m._tnName} ${m._grpName||'조별리그'}]`, `개인전`, `${wins}승${losses}패`, wins>losses);
+    } else if(m._type==='tourBracket') {
+      const {wins,losses} = _getMemberResult(m.sets, player.name);
+      const myA = m.a===player.univ||m.a===player.name;
+      const myScore=myA?m.sa:m.sb, oppScore=myA?m.sb:m.sa;
+      return _matchRow(m.d, `[${m._tnName} 토너먼트] ${m.a} vs ${m.b}`, `${myScore}:${oppScore}`, `개인 ${wins}승${losses}패`, wins>losses);
+    } else {
+      const won = m.winner===player.name;
+      const opp = m.a===player.name?m.b:m.a;
+      return _matchRow(m.d, `[${m._tnName}] vs ${opp}`, m.map||'', won?'승':'패', won);
+    }
   };
-  return _renderPaged(`comp_${player.name}`, matches, 0, 20, header, rowFn, totalWL);
+  return _renderPaged(`comp_${player.name}`, allRows, 0, 20, header, rowFn, totalWL);
 }
 
 // ── 티어대회 기록 (ttM만) ──
@@ -1941,8 +2007,20 @@ function formatPlayerAllRecords(player) {
   function ss(arr){ const ms=(arr||[]).filter(m=>m.wName===player.name||m.lName===player.name); return {w:ms.filter(m=>m.wName===player.name).length,l:ms.filter(m=>m.lName===player.name).length}; }
 
   const mini=cs(miniM,hasInSets), univm=cs(univM,hasInSets), pro=cs(proM,hasMember);
-  const ck=cs(ckM,hasMember), comp=cs(comps,hasInSets), tt=cs(ttM,hasMember);
+  const ck=cs(ckM,hasMember), tt=cs(ttM,hasMember);
   const ind=ss(indM), gj=ss(gjM);
+  // 대회: comps + tourneys 조별리그 + tourneys 브라켓
+  let compW=0,compL=0;
+  (typeof comps!=='undefined'?comps:[]).filter(hasInSets).forEach(m=>{const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;});
+  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(hasInSets(m)){const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;}});});
+    const br=tn.bracket||{};
+    (br.matchDetails||[]).forEach(m=>{if(hasInSets(m)){const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;}});
+  });
+  (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===player.name||m.b===player.name){if(m.winner===player.name)compW++;else compL++;}});});
+  });
+  const comp={w:compW,l:compL};
   const total={w:mini.w+univm.w+pro.w+ck.w+comp.w+tt.w+ind.w+gj.w, l:mini.l+univm.l+pro.l+ck.l+comp.l+tt.l+ind.l+gj.l};
   const totalRate = total.w+total.l>0?((total.w/(total.w+total.l))*100).toFixed(1):0;
 
