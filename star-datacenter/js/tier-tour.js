@@ -3933,9 +3933,9 @@ window.openEP=function(name){
       </span>
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
-    <label>🎬 두번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 프로필 탭에서만 1초 후 자동 전환 · GIF/비디오)</span></label>
-    <input type="text" id="ed-video" value="${p.videoFile||''}" placeholder="https://... GIF 또는 비디오 URL 입력" style="width:100%">
-    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 프로필 탭에서만 1초 후 두번째 프로필(GIF/비디오)로 자동 전환됩니다.</div>
+    <label>🎬 두번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 프로필 탭에서만 1초 후 자동 전환 · GIF/비디오 · 음성 포함)</span></label>
+    <input type="text" id="ed-second-profile" value="${p.secondProfileFile||''}" placeholder="https://... GIF 또는 비디오 URL 입력" style="width:100%">
+    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 프로필 탭에서만 1초 후 두번째 프로필(GIF/비디오)로 자동 전환됩니다. 음성이 포함됩니다.</div>
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
@@ -4125,8 +4125,8 @@ function savePlayer(){
     }
   }
   p.photo=_photo||undefined;
-  const _video=(document.getElementById('ed-video')?.value||'').trim();
-  p.videoFile=_video||undefined;
+  const _secondProfile=(document.getElementById('ed-second-profile')?.value||'').trim();
+  p.secondProfileFile=_secondProfile||undefined;
   const _win=document.getElementById('ed-win');
   const _loss=document.getElementById('ed-loss');
   const _pts=document.getElementById('ed-pts');
