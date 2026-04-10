@@ -1379,7 +1379,7 @@ let _b2PlayersUnivFilter = '전체';
 let _b2SelectedPlayer = null;
 
 function _b2PlayersView() {
-  const dissolvedUnivs = new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name));
+  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
   const visPlayers = players.filter(p => !p.hidden && !p.retired && !dissolvedUnivs.has(p.univ));
   
   // 대학 필터링
@@ -1659,13 +1659,17 @@ function _b2PlayersView() {
 
   filteredPlayers.forEach(p => {
     const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
-    const raceTheme = themeColors[p.race] || themeColors['N'];
+    const playerColor = gc(p.univ) || '#6366f1';
+    const playerTheme = {
+      bg: hexToRgba(playerColor, 0.1),
+      border: playerColor
+    };
     
     h += `
       <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')">
         ${p.photo 
           ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="this.style.display='none'">`
-          : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${raceTheme.bg};font-size:32px;font-weight:900;color:${raceTheme.border}">${(p.name||'?')[0]}</div>`
+          : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:32px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
         <div class="b2-players-label">${p.name || '이름 없음'}</div>
       </div>
