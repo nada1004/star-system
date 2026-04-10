@@ -1519,6 +1519,7 @@ function _b2PlayersView() {
         font-weight: 800;
         margin-bottom: 8px;
         color: #fff;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
       }
       .b2-players-details {
         font-size: 14px;
@@ -1616,13 +1617,12 @@ function _b2PlayersView() {
       .b2-players-label {
         margin-top: 8px;
         font-size: 13px;
-        color: #fff;
+        color: var(--text1);
         font-weight: 700;
         text-align: center;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
       }
       .b2-players-card.active .b2-players-label {
-        color: #fff;
+        color: var(--text1);
         font-weight: 800;
       }
       .b2-players-filter-btn {
