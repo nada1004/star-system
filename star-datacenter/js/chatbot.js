@@ -560,9 +560,11 @@ async function generateResponse(msg) {
       return formatPlayerBasicInfo(player);
     }
 
-    // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈)
-    const similarUniv = findSimilarUniversity(query, universities);
-    if (similarUniv) return formatUniversityInfo(similarUniv);
+    // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈, 단 3글자 이하는 건너뜀)
+    if (query.length >= 4) {
+      const similarUniv = findSimilarUniversity(query, universities);
+      if (similarUniv) return formatUniversityInfo(similarUniv);
+    }
 
     // 5) 못 찾으면 랜덤 스트리머
     if (typeof players !== 'undefined' && players.length > 0) {
