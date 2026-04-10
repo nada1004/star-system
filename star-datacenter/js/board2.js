@@ -1644,14 +1644,9 @@ function _b2PlayersView() {
         color: var(--text1);
       }
       .b2-players-filter-btn.active {
-        background: ${theme.border};
-        border-color: ${theme.border};
+        background: #3b82f6;
+        border-color: #3b82f6;
         color: #fff;
-        box-shadow: 0 4px 15px ${theme.glow};
-      }
-      .b2-players-filter-btn[data-race="all"].active {
-        background: var(--blue);
-        border-color: var(--blue);
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
       }
       @media (max-width: 768px) {
