@@ -164,7 +164,7 @@ function rTotal(C,T){
   
   // Add crew section for general/boracrew streamers
   if(typeof crewCfg !== 'undefined' && crewCfg.length > 0) {
-    const crewMembers = players.filter(p => (p.gameType === 'general' || p.gameType === '보라크루') && !p.retired);
+    let crewMembers = players.filter(p => (p.gameType === 'general' || p.gameType === '보라크루') && !p.retired);
     if(totalRaceFilter!=='전체') crewMembers = crewMembers.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) crewMembers = crewMembers.filter(p=>((p.win||0)+(p.loss||0))>0);
     
