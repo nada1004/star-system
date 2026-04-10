@@ -1438,7 +1438,7 @@ function _b2PlayersView() {
   const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
   
   filteredPlayers.sort((a, b) => {
-    // 기본 정렬: 직급 우선, 티어 순서
+    // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
     const aHasRole = aRoleIdx >= 0;
@@ -1448,7 +1448,7 @@ function _b2PlayersView() {
     if (!aHasRole && bHasRole) return 1;
     if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
 
-    // 티어 순서
+    // 직급이 같거나 없는 경우 티어 순서 정렬
     const aTier = a.tier || '?';
     const bTier = b.tier || '?';
     const aTierIdx = tierOrder.indexOf(aTier);
@@ -1458,7 +1458,7 @@ function _b2PlayersView() {
     if (aTierIdx >= 0 && bTierIdx < 0) return -1;
     if (aTierIdx < 0 && bTierIdx >= 0) return 1;
 
-    // 이름 순 (동률 시)
+    // 티어도 같은 경우 이름 순
     return (a.name || '').localeCompare(b.name || '');
   });
 
@@ -1616,15 +1616,16 @@ function _b2PlayersView() {
         box-shadow: 0 8px 25px ${theme.glow};
       }
       .b2-players-label {
-        margin-top: 6px;
-        font-size: 12px;
-        color: var(--text1);
-        font-weight: 600;
+        margin-top: 8px;
+        font-size: 13px;
+        color: #fff;
+        font-weight: 700;
         text-align: center;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
       }
       .b2-players-card.active .b2-players-label {
-        color: var(--text1);
-        font-weight: 700;
+        color: #fff;
+        font-weight: 800;
       }
       .b2-players-filter-btn {
         background: rgba(255,255,255,0.1);
