@@ -1414,14 +1414,9 @@ function _b2PlayersView() {
     : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
   
   // 종족 필터링
-  const raceFilteredPlayers = _b2PlayersFilter === 'all' 
+  const filteredPlayers = _b2PlayersFilter === 'all' 
     ? univFilteredPlayers 
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
-  
-  // 티어 필터링
-  const filteredPlayers = _b2PlayersTierFilter === '전체'
-    ? raceFilteredPlayers
-    : raceFilteredPlayers.filter(p => p.tier === _b2PlayersTierFilter);
 
   if (!filteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
@@ -1438,9 +1433,9 @@ function _b2PlayersView() {
   // 대학 목록 (필터용) - dissolved 대학 제외
   const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
   
-  // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,유스 마지막)
+  // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,5,유스 마지막)
   const roleOrder = ['이사장', '총장', '부총장', '교수', '코치', '선장', '동아리장', '반장', '총괄', '동아리 회장'];
-  const tierOrder = ['0', '1', '2', '3', '4', '유스'];
+  const tierOrder = ['0', '1', '2', '3', '4', '5', '유스'];
   
   filteredPlayers.sort((a, b) => {
     // 기본 정렬: 직급 우선, 티어 순서
@@ -1689,9 +1684,6 @@ function _b2PlayersView() {
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'P' ? 'active' : ''}" data-race="P" onclick="_b2PlayersFilter='P';document.getElementById('b2-content').innerHTML=_b2PlayersView()">PROTOSS</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'T' ? 'active' : ''}" data-race="T" onclick="_b2PlayersFilter='T';document.getElementById('b2-content').innerHTML=_b2PlayersView()">TERRAN</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'Z' ? 'active' : ''}" data-race="Z" onclick="_b2PlayersFilter='Z';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ZERG</button>
-      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
-      <button class="b2-players-filter-btn ${_b2PlayersTierFilter === '전체' ? 'active' : ''}" data-tier="전체" onclick="_b2PlayersTierFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView()">전체 티어</button>
-      ${['0','1','2','3','4','유스'].map(t => `<button class="b2-players-filter-btn ${_b2PlayersTierFilter === t ? 'active' : ''}" data-tier="${t}" onclick="_b2PlayersTierFilter='${t}';document.getElementById('b2-content').innerHTML=_b2PlayersView()">${t}티어</button>`).join('')}
     </div>
   `;
 
