@@ -2814,6 +2814,8 @@ function rCfg(C,T){
 
     </div>
   </div>
+  </div>
+  </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">📱 FAB 버튼 설정</h4>
@@ -2998,6 +3000,23 @@ function rCfg(C,T){
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
+  // FAB 탭 설정 초기화
+  window.saveFabTabSetting = function(btnKey, tabId){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    settings[btnKey]=tabId;
+    localStorage.setItem('su_fabTabs',JSON.stringify(settings));
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  window.initFabTabSettings = function(){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+    Object.keys(defaults).forEach(key=>{
+      const el=document.getElementById('cfg-fab-'+key);
+      if(el) el.value=settings[key]||defaults[key];
+    });
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  setTimeout(function(){window.initFabTabSettings();}, 50);
 }
 function renderBulkEditTable(){
   const container=document.getElementById('bulk-edit-table-container');

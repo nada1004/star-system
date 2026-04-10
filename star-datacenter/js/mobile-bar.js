@@ -108,14 +108,22 @@ function _fabGo(tabId){
 function updateFabButtonOnclick(){
   const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
   const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+  const tabLabels={cal:'캘린더',total:'스트리머',board2:'현황판',tier:'티어 순위표',hist:'대전 기록',ind:'개인전',univm:'대학대전',comp:'대회',pro:'프로리그',stats:'통계',roulette:'룰렛'};
   const fabItems=document.querySelectorAll('.fab-sub-item');
   const fabMap={'🗓️':'cal','⚡':'comp','🏟️':'univm','⚔️':'ind','🏅':'pro'};
   fabItems.forEach(item=>{
-    const icon=item.querySelector('span')?.textContent;
+    const iconSpan=item.querySelector('span');
+    const icon=iconSpan?.textContent;
     if(icon && fabMap[icon]){
       const key=fabMap[icon];
       const tabId=settings[key]||defaults[key];
       item.setAttribute('onclick',"closeFab();_fabGo('"+tabId+"')");
+      // 레이블 텍스트 업데이트
+      const label=tabLabels[tabId]||(settings[key]||defaults[key]);
+      // span 이후 텍스트 노드 교체
+      Array.from(item.childNodes).forEach(n=>{
+        if(n.nodeType===3) n.textContent=' '+label;
+      });
     }
   });
 }
