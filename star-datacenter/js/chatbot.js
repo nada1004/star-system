@@ -542,8 +542,8 @@ async function generateResponse(msg) {
     const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
 
-    // 1) 대학 정확 일치 (단, 3글자 이하는 건너뛰고 랜덤 스트리머)
-    if (universities.includes(query) && query.length >= 4) return formatUniversityInfo(query);
+    // 1) 대학 정확 일치
+    if (universities.includes(query)) return formatUniversityInfo(query);
 
     // 2) 선수 정확 일치
     let player = typeof players !== 'undefined' ? players.find(p => p.name === query) : null;
@@ -560,8 +560,10 @@ async function generateResponse(msg) {
       return formatPlayerBasicInfo(player);
     }
 
-    // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈, 단 3글자 이하는 건너뜀)
-    if (query.length >= 4) {
+    // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈)
+    // 단, 한글 자음만 있는 경우는 건너뜀 (ㅇㄴㅇ 같은 무의미한 입력 방지)
+    const koreanConsonantsOnly = /^[ㄱ-ㅎ]+$/;
+    if (!koreanConsonantsOnly.test(query)) {
       const similarUniv = findSimilarUniversity(query, universities);
       if (similarUniv) return formatUniversityInfo(similarUniv);
     }
