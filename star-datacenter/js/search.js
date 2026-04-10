@@ -2168,7 +2168,8 @@ function pasteApply() {
 
   // 개인 전적 반영 (경기 시점 대학도 저장)
   // ind/gj는 dup 체크 후 반영해야 하므로 아래 모드별 섹션에서 처리
-  const _pasteModeLabel=mode==='mini'?(window._miniPasteType==='civil'?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',gj:'끝장전',comp:'조별리그',individual:'개인전',ind:'개인전'}[mode]||'';
+  const _gjProFlag = !!window._gjProPaste;
+  const _pasteModeLabel=mode==='mini'?(window._miniPasteType==='civil'?'시빌워':'미니대전'):mode==='gj'?(_gjProFlag?'프로리그끝장전':'끝장전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',individual:'개인전',ind:'개인전'}[mode]||'';
 
   // ── 혼합 타입 모드: _lineType이 하나라도 있으면 타입별 분리 저장 ──
   const _hasMixedTypes = savable.some(r => r._lineType);
