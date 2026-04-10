@@ -1391,13 +1391,9 @@ async function saveGameImg(btn) {
   }
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════
    👤 프로필 뷰 — 좌측 메인 디스플레이 + 우측 그리드
 ════════════════════════════════════════ */
-
-let _b2PlayersFilter = 'all';
-let _b2PlayersUnivFilter = '전체';
-let _b2SelectedPlayer = null;
 
 // 프로필 탭에서 선택한 선수 이름 저장/로드
 const savedSelectedPlayerName = localStorage.getItem('su_b2SelectedPlayer');
