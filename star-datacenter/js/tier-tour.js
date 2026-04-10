@@ -1088,9 +1088,15 @@ function rCfg(C,T){
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </details>
-  <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
-    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
-    <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">💾 로컬 저장소 사용량</h4>
+      <button id="cfg-storage-toggle2" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-storage-wrap2');const btn=document.getElementById('cfg-storage-toggle2');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';renderStorageInfo();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-storage-wrap2" style="display:none">
+      <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
+      <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+    </div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -2600,23 +2606,39 @@ function rCfg(C,T){
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </details>
   <div class="ssec">
-    <h4>🔄 경기 기록 동기화</h4>
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">경기 결과를 선수의 최근 기록(개인 전적)에 소급 반영합니다. 데이터 불일치 시 사용하세요.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 개인전 동기화</button>
-      <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncTourneyHistoryBtn==='function')syncTourneyHistoryBtn()">🔄 대회 동기화</button>
-      <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()">⚡ 전체 동기화</button>
-      <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🔄 경기 기록 동기화</h4>
+      <button id="cfg-sync-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-sync-body');const btn=document.getElementById('cfg-sync-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-sync-body" style="display:none">
+      <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">경기 결과를 선수의 최근 기록(개인 전적)에 소급 반영합니다. 데이터 불일치 시 사용하세요.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="syncIndHistoryBtn()">🔄 개인전 동기화</button>
+        <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncTourneyHistoryBtn==='function')syncTourneyHistoryBtn()">🔄 대회 동기화</button>
+        <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()">⚡ 전체 동기화</button>
+        <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
+      </div>
     </div>
   </div>
   <div class="ssec">
-    <h4>🗑️ 구 기록 삭제</h4>
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">2025년 12월 31일 이전 모든 경기 기록을 삭제합니다. 승패·포인트·ELO가 2026년 기록 기준으로 재계산됩니다.<br><span style="color:#dc2626;font-weight:700">⚠️ 되돌릴 수 없으므로 JSON 백업 후 실행하세요.</span></p>
-    <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof purgeOldRecords==='function')purgeOldRecords()">🗑️ 2025년 이전 기록 삭제</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🗑️ 구 기록 삭제</h4>
+      <button id="cfg-purge-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-purge-body');const btn=document.getElementById('cfg-purge-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-purge-body" style="display:none">
+      <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">2025년 12월 31일 이전 모든 경기 기록을 삭제합니다. 승패·포인트·ELO가 2026년 기록 기준으로 재계산됩니다.<br><span style="color:#dc2626;font-weight:700">⚠️ 되돌릴 수 없으므로 JSON 백업 후 실행하세요.</span></p>
+      <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof purgeOldRecords==='function')purgeOldRecords()">🗑️ 2025년 이전 기록 삭제</button>
+    </div>
   </div>
-  <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
-    <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
-    <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">💾 로컬 저장소 사용량</h4>
+      <button id="cfg-storage-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-storage-body');const btn=document.getElementById('cfg-storage-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';renderStorageInfo();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-storage-body" style="display:none">
+      <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
+      <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+    </div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
