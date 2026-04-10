@@ -1727,8 +1727,8 @@ function _b2UpdateMainDisplay(playerName) {
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
         ${hasSecondProfile ? (isGif || isImage
-          ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease">`
-          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
+          ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;opacity:0;transition:opacity 0.5s ease">`
+          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
         ) : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${player.name || '이름 없음'}</div>
