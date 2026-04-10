@@ -1415,11 +1415,14 @@ function _b2PlayersView() {
     : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
   
   // 종족 필터링
-  const filteredPlayers = _b2PlayersFilter === 'all' 
-    ? univFilteredPlayers 
+  const filteredPlayers = _b2PlayersFilter === 'all'
+    ? univFilteredPlayers
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
 
-  if (!filteredPlayers.length) {
+  // 티어 미정(미확인) 필터링
+  const tierFilteredPlayers = filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인');
+
+  if (!tierFilteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
       <div style="font-size:48px;margin-bottom:12px">👤</div>
       <div style="font-weight:700">표시할 선수가 없습니다</div>
@@ -1427,8 +1430,8 @@ function _b2PlayersView() {
   }
 
   // 기본 선택 선수 (랜덤 선택 제거, 항상 첫 번째 선수 선택)
-  if (!_b2SelectedPlayer || !filteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
-    _b2SelectedPlayer = filteredPlayers[0];
+  if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+    _b2SelectedPlayer = tierFilteredPlayers[0];
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
@@ -1437,8 +1440,8 @@ function _b2PlayersView() {
   // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
   const roleOrder = ['이사장', '총장', '교수', '코치'];
   const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
-  
-  filteredPlayers.sort((a, b) => {
+
+  tierFilteredPlayers.sort((a, b) => {
     // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
@@ -1720,7 +1723,7 @@ function _b2PlayersView() {
       <div class="b2-players-grid">
   `;
 
-  filteredPlayers.forEach(p => {
+  tierFilteredPlayers.forEach(p => {
     const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
     const playerColor = gc(p.univ) || '#6366f1';
     const playerTheme = {
