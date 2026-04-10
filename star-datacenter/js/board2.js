@@ -13,6 +13,12 @@ let _b2CrewListMode = 'grid'; // 'grid' | 'list'
 // 종합게임 뷰 전역 변수
 window._b2GameListMode = 'grid'; // 'grid' | 'list'
 window._b2GameCardSize = 'm'; // 's' | 'm' | 'l'
+// 프로필 탭 필터 변수
+let _b2PlayersUnivFilter = '전체';
+let _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
+let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
+let _b2SelectedPlayer = null;
+let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
@@ -116,7 +122,7 @@ function rBoard2(C, T) {
 
 /* ── 대학별 뷰 ── */
 function _b2UnivView() {
-  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
   const _allVis = players.filter(p => univList.some(u=>u.name===p.univ) && !p.hidden && !p.retired && !p.hideFromBoard);
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
@@ -127,11 +133,13 @@ function _b2UnivView() {
     ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
-    // Skip universities with undefined names
-    if (!u.name) return;
+    if (!u.name) {
+      console.warn('[현황판] 대학 이름이 없는 데이터가 발견되었습니다:', u);
+      return;
+    }
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
@@ -375,7 +383,7 @@ function _b2Avatar(p, col, size) {
   const _bRight = Math.round(r * 0.5   - br); // ≈  4px
   const _isImgIcon = _rawIcon && _siIsImg(_rawIcon);
   const _badgeInner = _isImgIcon
-    ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none'">`
+    ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none';console.warn('[현황판] 상태 아이콘 로드 실패:', this.src)">`
     : statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'');
   const _badgeBg = _isImgIcon ? 'rgba(255,255,255,.72)' : 'transparent';
   const badge = statusHtml
@@ -383,7 +391,7 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
       ${badge}
     </span>`;
   }
@@ -467,7 +475,10 @@ async function saveB2Img() {
   try {
     if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await _captureAndSave(tmpDiv, w, h, fname);
-  } catch(e) { alert('저장 실패: ' + e.message); }
+  } catch(e) {
+    console.error('[현황판 이미지 저장 실패]', e);
+    alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
+  }
   finally {
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
@@ -498,7 +509,10 @@ async function saveB2FreeImg() {
   try {
     if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
     await _captureAndSave(tmpDiv, w, h, fname);
-  } catch(e) { alert('저장 실패: ' + e.message); }
+  } catch(e) {
+    console.error('[무소속 현황판 이미지 저장 실패]', e);
+    alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
+  }
   finally {
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
@@ -1404,9 +1418,14 @@ function _b2PlayersView() {
     : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
   
   // 종족 필터링
-  const filteredPlayers = _b2PlayersFilter === 'all' 
+  const raceFilteredPlayers = _b2PlayersFilter === 'all' 
     ? univFilteredPlayers 
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
+  
+  // 티어 필터링
+  const filteredPlayers = _b2PlayersTierFilter === '전체'
+    ? raceFilteredPlayers
+    : raceFilteredPlayers.filter(p => p.tier === _b2PlayersTierFilter);
 
   if (!filteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
@@ -1415,15 +1434,9 @@ function _b2PlayersView() {
     </div>`;
   }
 
-  // 기본 선택 선수
+  // 기본 선택 선수 (랜덤 선택 제거, 항상 첫 번째 선수 선택)
   if (!_b2SelectedPlayer || !filteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
-    if (_b2PlayersUnivFilter === '전체') {
-      // 전체대학 필터시 랜덤 선택
-      const randomIndex = Math.floor(Math.random() * filteredPlayers.length);
-      _b2SelectedPlayer = filteredPlayers[randomIndex];
-    } else {
-      _b2SelectedPlayer = filteredPlayers[0];
-    }
+    _b2SelectedPlayer = filteredPlayers[0];
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
@@ -1434,7 +1447,27 @@ function _b2PlayersView() {
   const tierOrder = ['0', '1', '2', '3', '4', '유스'];
   
   filteredPlayers.sort((a, b) => {
-    // 직급 우선
+    // 이름순 정렬
+    if (_b2PlayersSort === 'name') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    
+    // 티어순 정렬
+    if (_b2PlayersSort === 'tier') {
+      const aTier = a.tier || '?';
+      const bTier = b.tier || '?';
+      const aTierIdx = tierOrder.indexOf(aTier);
+      const bTierIdx = tierOrder.indexOf(bTier);
+      
+      if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
+      if (aTierIdx >= 0 && bTierIdx < 0) return -1;
+      if (aTierIdx < 0 && bTierIdx >= 0) return 1;
+      
+      // 동일 티어 시 이름순
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    
+    // 기본 정렬: 직급 우선, 티어 순서
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
     const aHasRole = aRoleIdx >= 0;
@@ -1680,6 +1713,18 @@ function _b2PlayersView() {
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'P' ? 'active' : ''}" data-race="P" onclick="_b2PlayersFilter='P';document.getElementById('b2-content').innerHTML=_b2PlayersView()">PROTOSS</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'T' ? 'active' : ''}" data-race="T" onclick="_b2PlayersFilter='T';document.getElementById('b2-content').innerHTML=_b2PlayersView()">TERRAN</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'Z' ? 'active' : ''}" data-race="Z" onclick="_b2PlayersFilter='Z';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ZERG</button>
+      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+      <button class="b2-players-filter-btn ${_b2PlayersTierFilter === '전체' ? 'active' : ''}" data-tier="전체" onclick="_b2PlayersTierFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView()">전체 티어</button>
+      ${['0','1','2','3','4','유스'].map(t => `<button class="b2-players-filter-btn ${_b2PlayersTierFilter === t ? 'active' : ''}" data-tier="${t}" onclick="_b2PlayersTierFilter='${t}';document.getElementById('b2-content').innerHTML=_b2PlayersView()">${t}티어</button>`).join('')}
+      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+      <div style="position:relative">
+        <select onchange="_b2PlayersSort=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="default" ${_b2PlayersSort === 'default' ? 'selected' : ''}>📊 기본 정렬</option>
+          <option value="name" ${_b2PlayersSort === 'name' ? 'selected' : ''}>🔤 이름순</option>
+          <option value="tier" ${_b2PlayersSort === 'tier' ? 'selected' : ''}>🏆 티어순</option>
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
     </div>
   `;
 
@@ -1725,7 +1770,8 @@ function _b2PlayersView() {
     h += `
       <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')">
         ${p.photo 
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="this.style.display='none'">`
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="b2-players-thumbnail" style="display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:32px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
           : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:32px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
         <div class="b2-players-label">${p.name || '이름 없음'}</div>
@@ -1779,12 +1825,13 @@ function _b2UpdateMainDisplay(playerName) {
     mainBox.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:rgba(0,0,0,0.1)">
         ${player.photo 
-          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease">`
+          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
         ${hasSecondProfile ? (isGif || isImage
-          ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease">`
-          : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
+          ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
+          : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
         ) : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${player.name || '이름 없음'}</div>
