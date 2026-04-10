@@ -1690,6 +1690,7 @@ function _b2PlayersView() {
             ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
             ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
           </div>
+          <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s ease" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✏️ 프로필 수정</button>
         </div>
       </div>
     </div>
@@ -1827,4 +1828,107 @@ function _b2UpdateMainDisplay(playerName) {
       }
     }
   });
+}
+
+function openB2ProfileEditModal(playerName) {
+  const player = players.find(p => p.name === playerName);
+  if (!player) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'b2-profile-edit-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000';
+  
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--text1)">✏️ 프로필 수정</h3>
+        <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-l)">✕</button>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">선수 이름</label>
+        <div style="font-size:14px;color:var(--text3);padding:8px 12px;background:var(--surface);border-radius:8px">${player.name}</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🖼 첫 번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo" value="${player.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
+            <img id="b2-ed-photo-preview" src="${player.photo&&!player.photo.startsWith('data:')?player.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          </span>
+        </div>
+        <div id="b2-ed-photo-warn" style="font-size:10px;color:${player.photo&&player.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${player.photo&&player.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎬 두 번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(프로필 탭에서 1초 후 자동 전환 · GIF/비디오)</span></label>
+        <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... GIF 또는 비디오 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">프로필 탭에서만 1초 후 두번째 프로필(GIF/비디오)로 자동 전환됩니다.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
+        <button onclick="saveB2Profile('${player.name.replace(/'/g, "\\'")}')" style="flex:1;padding:10px 16px;background:var(--blue);border:1px solid var(--blue);border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">저장</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // 첫 번째 프로필 URL 입력 시 미리보기
+  const photoInput = document.getElementById('b2-ed-photo');
+  if (photoInput) {
+    photoInput.addEventListener('input', function() {
+      const v = this.value.trim();
+      const img = document.getElementById('b2-ed-photo-preview');
+      const warn = document.getElementById('b2-ed-photo-warn');
+      const wrap = document.getElementById('b2-ed-photo-preview-wrap');
+      
+      if (v && v.startsWith('data:')) {
+        this.style.borderColor = '#dc2626';
+        if (warn) {
+          warn.style.color = '#dc2626';
+          warn.textContent = '❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용';
+        }
+      } else {
+        this.style.borderColor = '';
+        if (warn) {
+          warn.textContent = '이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.';
+          warn.style.color = 'var(--gray-l)';
+        }
+      }
+      
+      if (v && !v.startsWith('data:')) {
+        img.src = v;
+        img.style.display = 'block';
+        if (wrap) wrap.style.display = 'inline-block';
+      } else {
+        if (wrap) wrap.style.display = 'none';
+      }
+    });
+  }
+}
+
+function saveB2Profile(playerName) {
+  const player = players.find(p => p.name === playerName);
+  if (!player) return;
+  
+  const photoUrl = (document.getElementById('b2-ed-photo')?.value || '').trim();
+  const secondProfileUrl = (document.getElementById('b2-ed-second-profile')?.value || '').trim();
+  
+  // base64 체크
+  if (photoUrl && photoUrl.startsWith('data:')) {
+    alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+    return;
+  }
+  
+  player.photo = photoUrl || undefined;
+  player.secondProfileFile = secondProfileUrl || undefined;
+  
+  save();
+  render();
+  
+  document.getElementById('b2-profile-edit-modal').remove();
+  
+  // 프로필 탭 업데이트
+  if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
+    _b2UpdateMainDisplay(playerName);
+  }
 }
