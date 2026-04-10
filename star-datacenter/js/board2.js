@@ -1375,15 +1375,21 @@ async function saveGameImg(btn) {
 ════════════════════════════════════════ */
 
 let _b2PlayersFilter = 'all';
+let _b2PlayersUnivFilter = '전체';
 let _b2SelectedPlayer = null;
 
 function _b2PlayersView() {
   const visPlayers = players.filter(p => !p.hidden && !p.retired);
   
+  // 대학 필터링
+  const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
+    ? visPlayers 
+    : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
+  
   // 종족 필터링
   const filteredPlayers = _b2PlayersFilter === 'all' 
-    ? visPlayers 
-    : visPlayers.filter(p => p.race === _b2PlayersFilter);
+    ? univFilteredPlayers 
+    : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
 
   if (!filteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
@@ -1396,6 +1402,9 @@ function _b2PlayersView() {
   if (!_b2SelectedPlayer || !filteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = filteredPlayers[0];
   }
+
+  // 대학 목록 (필터용)
+  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
 
   const themeColors = {
     'P': { glow: 'rgba(241, 196, 15, 0.3)', bg: 'rgba(241, 196, 15, 0.1)', border: '#f1c40f' },
@@ -1571,7 +1580,15 @@ function _b2PlayersView() {
 
   // 필터 바
   h += `
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div style="position:relative">
+        <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
+          ${univList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'all' ? 'active' : ''}" data-race="all" onclick="_b2PlayersFilter='all';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ALL</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'P' ? 'active' : ''}" data-race="P" onclick="_b2PlayersFilter='P';document.getElementById('b2-content').innerHTML=_b2PlayersView()">PROTOSS</button>
       <button class="b2-players-filter-btn ${_b2PlayersFilter === 'T' ? 'active' : ''}" data-race="T" onclick="_b2PlayersFilter='T';document.getElementById('b2-content').innerHTML=_b2PlayersView()">TERRAN</button>
@@ -1614,7 +1631,7 @@ function _b2PlayersView() {
     const raceTheme = themeColors[p.race] || themeColors['N'];
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2SelectedPlayer=players.find(pl=>pl.name==='${p.name}');document.getElementById('b2-content').innerHTML=_b2PlayersView()">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')">
         ${p.photo 
           ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="this.style.display='none'">`
           : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${raceTheme.bg};font-size:32px;font-weight:900;color:${raceTheme.border}">${(p.name||'?')[0]}</div>`
@@ -1632,4 +1649,61 @@ function _b2PlayersView() {
   h += `</div>`;
 
   return h;
+}
+
+function _b2UpdateMainDisplay(playerName) {
+  const player = players.find(p => p.name === playerName);
+  if (!player) return;
+  
+  _b2SelectedPlayer = player;
+  
+  const themeColors = {
+    'P': { glow: 'rgba(241, 196, 15, 0.3)', bg: 'rgba(241, 196, 15, 0.1)', border: '#f1c40f' },
+    'T': { glow: 'rgba(52, 152, 219, 0.3)', bg: 'rgba(52, 152, 219, 0.1)', border: '#3498db' },
+    'Z': { glow: 'rgba(231, 76, 60, 0.3)', bg: 'rgba(231, 76, 60, 0.1)', border: '#e74c3c' },
+    'N': { glow: 'rgba(149, 165, 166, 0.3)', bg: 'rgba(149, 165, 166, 0.1)', border: '#95a5a6' }
+  };
+  const theme = themeColors[player.race] || themeColors['N'];
+  
+  // 메인 디스플레이 업데이트
+  const mainBox = document.getElementById('b2-players-main-box');
+  if (mainBox) {
+    mainBox.style.setProperty('--theme-glow', theme.glow);
+    mainBox.style.setProperty('--theme-bg', theme.bg);
+    mainBox.innerHTML = `
+      ${player.photo 
+        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
+      }
+      <div class="b2-players-info">
+        <div class="b2-players-name">${player.name || '이름 없음'}</div>
+        <div class="b2-players-details">
+          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
+          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
+          ${player.univ ? `<span>🏫 ${player.univ}</span>` : ''}
+          ${player.role ? `<span>👔 ${player.role}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  
+  // 활성 카드 스타일 업데이트
+  document.querySelectorAll('.b2-players-card').forEach(card => {
+    card.classList.remove('active');
+    const cardName = card.querySelector('.b2-players-label')?.textContent;
+    if (cardName === playerName) {
+      card.classList.add('active');
+      const thumbnail = card.querySelector('.b2-players-thumbnail');
+      if (thumbnail) {
+        thumbnail.style.borderColor = theme.border;
+        thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
+      }
+    } else {
+      const thumbnail = card.querySelector('.b2-players-thumbnail');
+      if (thumbnail) {
+        thumbnail.style.borderColor = 'transparent';
+        thumbnail.style.boxShadow = 'none';
+      }
+    }
+  });
 }
