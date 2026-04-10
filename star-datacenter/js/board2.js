@@ -93,11 +93,12 @@ function rBoard2(C, T) {
     </div>`;
   }
 
+  const profileTabLabel = _b2View === 'players' && _b2SelectedPlayer ? `👤 ${_b2SelectedPlayer.name}` : '👤 프로필';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
-      ${_b2TabBtn('players','var(--purple)','👤 프로필')}
+      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -1759,6 +1760,18 @@ function _b2UpdateMainDisplay(playerName) {
   
   _b2SelectedPlayer = player;
   localStorage.setItem('su_b2SelectedPlayer', playerName);
+  
+  // 탭 버튼 텍스트 업데이트 (프로필 탭만)
+  const nav = document.getElementById('b2-nav');
+  if (nav) {
+    const tabButtons = nav.querySelectorAll('button');
+    tabButtons.forEach(btn => {
+      const onclick = btn.getAttribute('onclick');
+      if (onclick && onclick.includes("_b2View='players'")) {
+        btn.textContent = `👤 ${player.name}`;
+      }
+    });
+  }
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(player.univ) || '#6366f1';
