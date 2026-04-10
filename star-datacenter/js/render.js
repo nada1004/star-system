@@ -827,18 +827,6 @@ function buildPlayerDetailHTML(p){
               style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
-            ${(()=>{
-              const _cn=p.crewName||(p.isCrew?'보라크루':'');
-              if(!_cn)return '';
-              const _cfg=(typeof crewCfg!=='undefined'?crewCfg:[]).find(c=>c.name===_cn)||{};
-              const _cc=_cfg.color||'#7c3aed';
-              const _logo=_cfg.logo?`<img src="${_cfg.logo}" style="width:13px;height:13px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'"> `:'';
-              // Special styling for representatives
-              const isRepresentative = p.role === 'representative' || p.crewRole === 'representative';
-              const repBadge = isRepresentative ? `<span style="margin-left:3px;background:#fbbf24;color:#78350f;border:1px solid #f59e0b;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:800">대표</span>` : '';
-              const bgStyle = isRepresentative ? `background:linear-gradient(135deg,${_cc}44,${_cc}22);border:2px solid ${_cc}aa;box-shadow:0 2px 8px ${_cc}40` : `background:${_cc}33;border:1.5px solid ${_cc}88`;
-              return `<span style="${bgStyle};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:3px;position:relative">${_logo}${_cn}${repBadge}</span>`;
-            })()}
             ${_channelHTML}
           </div>
         </div>
