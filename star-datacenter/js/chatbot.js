@@ -352,12 +352,11 @@ async function generateResponse(msg) {
   // 도움말
   if (msg.includes('도움') || msg.includes('help') || msg.includes('?') || msg.includes('명령')) {
     return `🤖 알등이 명령어 모음\n\n` +
-           `1️⃣ 선수 기본 정보\n` +
+           `1️⃣ 스트리머 조회\n` +
            `• 스트리머명 → 프로필 카드\n` +
            `• 스트리머명 최근전적 → 최근 30경기\n` +
            `• 스트리머명 통계 → 종족별·맵별 통계\n` +
-           `• 스트리머명 5월전적 → 특정 월 전적\n` +
-           `• 스트리머명 저그전 → 종족전 승률\n\n` +
+           `• 스트리머명 전체기록 → 모든 대전 요약\n\n` +
            `2️⃣ 대전 기록 조회\n` +
            `• 스트리머명 미니대전 → 미니대전 기록\n` +
            `• 스트리머명 대학대전 → 대학대전 기록\n` +
@@ -365,12 +364,11 @@ async function generateResponse(msg) {
            `• 스트리머명 CK → CK리그 기록\n` +
            `• 스트리머명 개인전 → 개인전 기록\n` +
            `• 스트리머명 끝장전 → 끝장전 기록\n` +
-           `• 스트리머명 대회 → 대회 출전 기록\n` +
-           `• 스트리머명 전체기록 → 모든 대전 요약\n\n` +
+           `• 스트리머명 대회기록 → 대회·조별리그·토너먼트 기록\n` +
+           `• 스트리머명 티어대회 → 티어대회 기록\n\n` +
            `3️⃣ 대학·랭킹\n` +
-           `• 대학명 → 소속 선수 목록\n` +
-           `• 랭킹 → ELO 전체 랭킹\n` +
-           `• A 티어 이상, 저그 선수, 승률 50% 이상`;
+           `• 대학명 → 소속 선수 목록 (직책순·티어순)\n` +
+           `• 랭킹 → ELO 전체 랭킹`;
   }
   
   // 선수 이름 + 최근전적 (선수 관련 패턴 먼저 체크)
@@ -649,13 +647,22 @@ async function generateResponse(msg) {
   }
   
   // 인사
-  if (msg.includes('안녕') || msg.includes('hello') || msg.includes('hi')) {
-    return '안녕하세요! 알등이입니다. 스타대학 데이터에 대해 궁금한 점이 있으신가요? 😊';
+  if (/^(안녕|ㅎㅇ|하이|hi|hello|hey|ㅋㅋ|반가|잘있었|오랜만)/i.test(msg)) {
+    const greetings = [
+      '안녕하세요! 저는 알등이입니다 😊 스트리머 전적, 대학 정보, 랭킹 뭐든지 물어보세요!',
+      '안녕하세요! 알등이 챗봇입니다 🤖 "도움"을 입력하면 명령어를 알려드릴게요!',
+      '반갑습니다! 스타대학 데이터 분석 AI 알등이입니다 ✨ 궁금한 스트리머 이름을 입력해보세요!',
+    ];
+    return greetings[Math.floor(Math.random()*greetings.length)];
   }
-  
+
+  // 감사/칭찬
+  if (/고마워|감사|최고|굿|잘했|대단/.test(msg)) {
+    return '감사합니다 😊 더 궁금한 게 있으면 언제든지 물어보세요!';
+  }
+
   // 기본 응답
-  return `죄송합니다, 질문을 잘 이해하지 못했어요. 😅\n` +
-         `도움말을 보려면 "도움" 또는 "?"를 입력해주세요!`;
+  return `질문을 이해하지 못했어요 😅\n"도움"을 입력하면 사용법을 알려드릴게요!`;
 }
 
 // 대학별 팀 색상 매핑
@@ -744,12 +751,39 @@ function escapeHtml(text) {
 
 // 선수 최근 전적
 function formatPlayerRecentRecord(player) {
-  if (!player.history || player.history.length === 0) {
-    return `📭 ${player.name}의 경기 기록이 없습니다.`;
-  }
-  
+  // p.history + tourneys 누락분 합산
+  const _existIds = new Set((player.history||[]).map(h=>h.matchId).filter(Boolean));
+  const _tourExtra = [];
+  (typeof tourneys !== 'undefined' ? tourneys : []).forEach(tn => {
+    (tn.groups||[]).forEach(grp => {
+      (grp.matches||[]).forEach(m => {
+        if(!m._id||_existIds.has(m._id)) return;
+        (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+          if(!g.playerA||!g.playerB||!g.winner) return;
+          const wn=g.winner==='A'?g.playerA:g.playerB;
+          const ln=g.winner==='A'?g.playerB:g.playerA;
+          if(wn!==player.name&&ln!==player.name) return;
+          _tourExtra.push({date:m.d||'',result:wn===player.name?'승':'패',opp:wn===player.name?ln:wn,map:g.map||'-',mode:tn.type==='tier'?'티어대회':'조별리그'});
+        });});
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id||_existIds.has(m._id)) return;
+      (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner) return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(wn!==player.name&&ln!==player.name) return;
+        _tourExtra.push({date:m.d||'',result:wn===player.name?'승':'패',opp:wn===player.name?ln:wn,map:g.map||'-',mode:'대회'});
+      });});
+    });
+  });
+
+  const allHistory = [...(player.history||[]), ..._tourExtra];
+  if (!allHistory.length) return `📭 ${player.name}의 경기 기록이 없습니다.`;
+
   // 날짜 기준으로 정렬 (최신순)
-  const sortedHistory = [...player.history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedHistory = [...allHistory].sort((a, b) => (b.date||'').localeCompare(a.date||''));
   const recentGames = sortedHistory.slice(0, 30);
   const wins = recentGames.filter(h => h.result === '승').length;
   const losses = recentGames.length - wins;
@@ -1011,13 +1045,14 @@ function formatUniversityInfo(univName) {
   const textOnColor = luminance > 140 ? '#1a202c' : '#ffffff';
   const textSubOnColor = luminance > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)';
 
-  // 직책순(이사장→총장→교수→코치→일반) → 티어순(S→A→B→C→D) → ELO 내림차순
+  // 직책순(이사장→총장→교수→코치→일반) → 티어순(TIERS 배열 인덱스, 유스 맨끝) → ELO 내림차순
   const ROLE_ORDER = {'이사장':0,'총장':1,'교수':2,'코치':3};
-  const TIER_ORDER = {S:0,A:1,B:2,C:3,D:4};
+  const _tiersArr = (typeof TIERS !== 'undefined') ? TIERS : ['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스','미정'];
+  const _tierIdx = t => { const i = _tiersArr.indexOf(t); return i < 0 ? 999 : i; };
   const sortedPlayers = [...univPlayers].sort((a,b) => {
     const ro = (ROLE_ORDER[a.role]??9) - (ROLE_ORDER[b.role]??9);
     if(ro !== 0) return ro;
-    const to = (TIER_ORDER[a.tier]??9) - (TIER_ORDER[b.tier]??9);
+    const to = _tierIdx(a.tier) - _tierIdx(b.tier);
     return to !== 0 ? to : (b.elo||0) - (a.elo||0);
   });
 
