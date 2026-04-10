@@ -332,12 +332,11 @@ function _b2NameTag(p, accentCol, showTier) {
       ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       </div>
-      <button onclick="event.stopPropagation();openB2ProfileEditModal('${safeName}')" style="padding:2px 6px;border-radius:6px;border:1px solid ${accentCol}44;background:${accentCol}10;color:${accentCol};font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" title="프로필 수정">✏️</button>
     </div>`;
 }
 
 /* ── 직책 1행 표시 ── */
-function _b2PlayerRow(p, accentCol) {
+function _b2PlayerRowCompact(p, accentCol) {
   const tierCol = getTierBtnColor(p.tier||'');
   const tierTextCol = getTierBtnTextColor(p.tier||'') || '#fff';
   const safeName = (p.name||'').replace(/'/g,"\\'");
@@ -352,7 +351,6 @@ function _b2PlayerRow(p, accentCol) {
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
       </div>
-      <button onclick="event.stopPropagation();openB2ProfileEditModal('${safeName}')" style="padding:2px 6px;border-radius:6px;border:1px solid ${accentCol}44;background:${accentCol}10;color:${accentCol};font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" title="프로필 수정">✏️</button>
     </div>`;
 }
 
