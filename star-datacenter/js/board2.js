@@ -1693,19 +1693,21 @@ function _b2PlayersView() {
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box">
-        ${_b2SelectedPlayer.photo 
-          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center">`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
-        }
-        <div class="b2-players-info">
-          <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
-          <div class="b2-players-details">
-            <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
-            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
-            ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
-            ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
+        <div style="position:relative;width:100%;height:100%;background:${theme.bg}">
+          ${_b2SelectedPlayer.photo 
+            ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
+          }
+          <div class="b2-players-info">
+            <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
+            <div class="b2-players-details">
+              <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
+              <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
+              ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
+              ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
+            </div>
+            <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>
           </div>
-          <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>
         </div>
       </div>
     </div>
@@ -1759,7 +1761,7 @@ function _b2UpdateMainDisplay(playerName) {
   const bgAlpha = (b2ProfileBgAlpha || 10) / 100;
   const theme = {
     glow: hexToRgba(univColor, 0.3),
-    bg: hexToRgba(univColor, bgAlpha),
+    bg: hexToRgba(univColor, Math.max(bgAlpha, 0.15)),
     border: univColor
   };
   
@@ -1782,7 +1784,7 @@ function _b2UpdateMainDisplay(playerName) {
     const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
     
     mainBox.innerHTML = `
-      <div style="position:relative;width:100%;height:100%;background:rgba(0,0,0,0.1)">
+      <div style="position:relative;width:100%;height:100%;background:${theme.bg}">
         ${player.photo 
           ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
