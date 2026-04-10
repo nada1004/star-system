@@ -1558,6 +1558,33 @@ function _b2PlayersView() {
       .b2-players-card.active {
         transform: translateY(-4px);
       }
+      @media (max-width: 768px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+          min-height: auto;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          height: 400px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          width: 100%;
+          height: auto;
+          max-height: 400px;
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+        .b2-players-name {
+          font-size: 24px;
+        }
+        .b2-players-info {
+          padding: 20px;
+        }
+      }
       .b2-players-thumbnail {
         width: 100%;
         aspect-ratio: 1;
