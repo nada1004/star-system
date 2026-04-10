@@ -1921,7 +1921,7 @@ function formatPlayerCompOnly(player) {
   const tourBracketRows = [];
   (typeof tourneys !== 'undefined' ? tourneys : []).forEach(tn => {
     const bracket = tn.bracket || {};
-    (bracket.matchDetails||[]).forEach(md => {
+    Object.values(bracket.matchDetails||{}).forEach(md => {
       if(md.sets&&md.sets.some(s=>s.games&&s.games.some(g=>g.playerA===player.name||g.playerB===player.name))) {
         tourBracketRows.push({_tnName:tn.name, _isBracket:true, sets:md.sets, d:md.d||'', a:md.a||'', b:md.b||'', sa:md.sa||0, sb:md.sb||0, n:tn.name});
       }
@@ -2015,7 +2015,7 @@ function formatPlayerAllRecords(player) {
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(hasInSets(m)){const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;}});});
     const br=tn.bracket||{};
-    (br.matchDetails||[]).forEach(m=>{if(hasInSets(m)){const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;}});
+    Object.values(br.matchDetails||{}).forEach(m=>{if(hasInSets(m)){const r=_getMemberResult(m.sets||[],player.name);compW+=r.wins;compL+=r.losses;}});
   });
   (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===player.name||m.b===player.name){if(m.winner===player.name)compW++;else compL++;}});});
