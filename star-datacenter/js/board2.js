@@ -312,16 +312,19 @@ function _b2FreeView() {
 /* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
 function _b2NameTag(p, accentCol, showTier) {
   const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
+  const safeName = (p.name||'').replace(/'/g,"\\'");
   return `
-    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
+    <div style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
+      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:6px;flex:1">
       ${_b2Avatar(p, crewCol||accentCol, 58)}
       <span style="font-weight:700;font-size:18px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}
       ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
+      </div>
+      <button onclick="event.stopPropagation();openB2ProfileEditModal('${safeName}')" style="padding:2px 6px;border-radius:6px;border:1px solid ${accentCol}44;background:${accentCol}10;color:${accentCol};font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" title="프로필 수정">✏️</button>
     </div>`;
 }
 
@@ -329,16 +332,19 @@ function _b2NameTag(p, accentCol, showTier) {
 function _b2PlayerRow(p, accentCol) {
   const tierCol = getTierBtnColor(p.tier||'');
   const tierTextCol = getTierBtnTextColor(p.tier||'') || '#fff';
+  const safeName = (p.name||'').replace(/'/g,"\\'");
   return `
-    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
       onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
       onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
+      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1">
       ${_b2Avatar(p, accentCol, 58)}
       <span class="b2name" style="font-weight:700;font-size:18px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
+      </div>
+      <button onclick="event.stopPropagation();openB2ProfileEditModal('${safeName}')" style="padding:2px 6px;border-radius:6px;border:1px solid ${accentCol}44;background:${accentCol}10;color:${accentCol};font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" title="프로필 수정">✏️</button>
     </div>`;
 }
 
