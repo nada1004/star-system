@@ -97,7 +97,7 @@ function applyLoginState(){
   });
   // 관리자 전용 탭 (설정) - 부관리자는 접근 불가
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=(isLoggedIn&&!isSubAdmin)?'':'none';
+  if(_cfgTab) _cfgTab.style.display=(!isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';

@@ -290,6 +290,97 @@ function syncAllHistory(){
   return added;
 }
 
+/* ══════════════════════════════════════
+   누락 기록 복구 — 승패/ELO 건드리지 않고 history 표시 항목만 추가
+   (history가 잘려서 최근 기록이 안 보일 때 사용)
+══════════════════════════════════════ */
+function repairMissingHistory(){
+  if(!confirm('승패/ELO는 변경하지 않고, 스트리머 최근 기록에서 누락된 표시 항목만 복구합니다.\n계속하시겠습니까?')) return;
+
+  // 선수별 기존 matchId 수집
+  const existingIds = {};
+  players.forEach(p => {
+    existingIds[p.name] = new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
+  });
+
+  let added = 0;
+
+  function addEntry(wn, ln, date, map, matchId, univW, univL, mode) {
+    const w = players.find(p=>p.name===wn);
+    const l = players.find(p=>p.name===ln);
+    if(!w||!l) return;
+    if(!existingIds[wn]) existingIds[wn]=new Set();
+    if(!existingIds[ln]) existingIds[ln]=new Set();
+    if(!existingIds[wn].has(matchId)) {
+      if(!w.history) w.history=[];
+      w.history.push({date:date||'',result:'승',opp:ln,map:map||'-',matchId,univ:univW||w.univ||'',mode:mode||''});
+      existingIds[wn].add(matchId);
+      added++;
+    }
+    if(!existingIds[ln].has(matchId)) {
+      if(!l.history) l.history=[];
+      l.history.push({date:date||'',result:'패',opp:wn,map:map||'-',matchId,univ:univL||l.univ||'',mode:mode||''});
+      existingIds[ln].add(matchId);
+      added++;
+    }
+  }
+
+  function processSets(m, mode) {
+    if(!m||!m._id) return;
+    (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner) return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;
+      const ln=g.winner==='A'?g.playerB:g.playerA;
+      const uW=g.winner==='A'?(m.a||''):(m.b||'');
+      const uL=g.winner==='A'?(m.b||''):(m.a||'');
+      addEntry(wn,ln,m.d,g.map,m._id,uW,uL,mode);
+    }));
+  }
+
+  (typeof miniM!=='undefined'?miniM:[]).forEach(m=>processSets(m,m.type==='civil'?'시빌워':'미니대전'));
+  (typeof univM!=='undefined'?univM:[]).forEach(m=>processSets(m,'대학대전'));
+  (typeof ckM!=='undefined'?ckM:[]).forEach(m=>{
+    if(!m||!m._id) return;
+    (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner) return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;
+      const ln=g.winner==='A'?g.playerB:g.playerA;
+      const mA=m.teamAMembers||[],mB=m.teamBMembers||[];
+      const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+      const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+      addEntry(wn,ln,m.d,g.map,m._id,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
+    }));
+  });
+  (typeof proM!=='undefined'?proM:[]).forEach(m=>{
+    if(!m||!m._id) return;
+    (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+      if(!g.playerA||!g.playerB||!g.winner) return;
+      const wn=g.winner==='A'?g.playerA:g.playerB;
+      const ln=g.winner==='A'?g.playerB:g.playerA;
+      const mA=m.teamAMembers||[],mB=m.teamBMembers||[];
+      const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+      const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+      addEntry(wn,ln,m.d,g.map,m._id,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
+    }));
+  });
+  (typeof indM!=='undefined'?indM:[]).forEach(m=>{
+    if(!m||!m._id||!m.wName||!m.lName) return;
+    addEntry(m.wName,m.lName,m.d,m.map,m._id,'','',m._proLabel?'프로리그':'개인전');
+  });
+  (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
+    if(!m||!m._id||!m.wName||!m.lName) return;
+    addEntry(m.wName,m.lName,m.d,m.map,m._id,'','',m._proLabel?'프로리그끝장전':'끝장전');
+  });
+
+  // 날짜순 정렬 (최신이 앞)
+  players.forEach(p=>{
+    if(p.history) p.history.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  });
+
+  if(added>0){ save(); alert('✅ 누락 기록 복구 완료: '+added+'건 추가\n승패/ELO는 변경되지 않았습니다.'); render(); }
+  else{ alert('✅ 누락된 기록이 없습니다.'); }
+}
+
 function syncAllHistoryBtn(){
   if(!confirm('모든 대전 기록(미니/대학/CK/프로/티어/개인전/대회 등)을 스트리머 최근 경기에 소급 반영합니다.\n이미 반영된 경기는 중복 추가되지 않습니다.\n계속하시겠습니까?'))return;
   const n=syncAllHistory();
