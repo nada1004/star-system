@@ -35,7 +35,10 @@ function updateFabVisibility(){
 window.addEventListener('resize',updateFabVisibility);
 
 // 페이지 로드 시 FAB 설정 옵션 표시 상태 초기화
-window.addEventListener('DOMContentLoaded',updateFabVisibility);
+window.addEventListener('DOMContentLoaded',function(){
+  updateFabVisibility();
+  updateFabButtonOnclick();
+});
 
 /* ══════════════════════════════════════
    💻 PC 탭 스크롤 화살표
@@ -101,6 +104,20 @@ function _fabGo(tabId){
     // 직접 호출 fallback
     sw(tabId, {classList:{add:function(){},remove:function(){}}});
   }
+}
+function updateFabButtonOnclick(){
+  const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+  const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+  const fabItems=document.querySelectorAll('.fab-sub-item');
+  const fabMap={'🗓️':'cal','⚡':'comp','🏟️':'univm','⚔️':'ind','🏅':'pro'};
+  fabItems.forEach(item=>{
+    const icon=item.querySelector('span')?.textContent;
+    if(icon && fabMap[icon]){
+      const key=fabMap[icon];
+      const tabId=settings[key]||defaults[key];
+      item.setAttribute('onclick',"closeFab();_fabGo('"+tabId+"')");
+    }
+  });
 }
 // FAB 외부 클릭 시 닫기
 document.addEventListener('click',function(e){

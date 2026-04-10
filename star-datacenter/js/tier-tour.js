@@ -1281,6 +1281,25 @@ function rCfg(C,T){
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
+  // FAB 탭 설정 초기화
+  initFabTabSettings();
+}
+function saveFabTabSetting(btnKey, tabId){
+  const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+  settings[btnKey]=tabId;
+  localStorage.setItem('su_fabTabs',JSON.stringify(settings));
+  updateFabButtonOnclick();
+}
+function initFabTabSettings(){
+  const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+  const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+  Object.keys(defaults).forEach(key=>{
+    const el=document.getElementById('cfg-fab-'+key);
+    if(el){
+      el.value=settings[key]||defaults[key];
+    }
+  });
+  updateFabButtonOnclick();
 }
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -2786,6 +2805,91 @@ function rCfg(C,T){
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">PC 화면 우측 하단 플로팅 버튼</div>
         </div>
       </label>
+      <div style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🎯 FAB 버튼 탭 설정</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2);width:70px">🗓️ 캘린더</span>
+            <select id="cfg-fab-cal" onchange="saveFabTabSetting('cal',this.value)" style="flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+              <option value="cal">📅 캘린더</option>
+              <option value="total">📋 스트리머</option>
+              <option value="board2">📊 현황판</option>
+              <option value="tier">📊 티어 순위표</option>
+              <option value="hist">📅 대전 기록</option>
+              <option value="ind">⚔️ 개인전</option>
+              <option value="univm">🏟️ 대학대전</option>
+              <option value="comp">🏆 대회</option>
+              <option value="pro">🏅 프로리그</option>
+              <option value="stats">📊 통계</option>
+              <option value="roulette">🎰 룰렛</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2);width:70px">⚡ 미니대전</span>
+            <select id="cfg-fab-comp" onchange="saveFabTabSetting('comp',this.value)" style="flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+              <option value="cal">📅 캘린더</option>
+              <option value="total">📋 스트리머</option>
+              <option value="board2">📊 현황판</option>
+              <option value="tier">📊 티어 순위표</option>
+              <option value="hist">📅 대전 기록</option>
+              <option value="ind">⚔️ 개인전</option>
+              <option value="univm">🏟️ 대학대전</option>
+              <option value="comp">🏆 대회</option>
+              <option value="pro">🏅 프로리그</option>
+              <option value="stats">📊 통계</option>
+              <option value="roulette">🎰 룰렛</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2);width:70px">🏟️ 대학대전</span>
+            <select id="cfg-fab-univm" onchange="saveFabTabSetting('univm',this.value)" style="flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+              <option value="cal">📅 캘린더</option>
+              <option value="total">📋 스트리머</option>
+              <option value="board2">📊 현황판</option>
+              <option value="tier">📊 티어 순위표</option>
+              <option value="hist">📅 대전 기록</option>
+              <option value="ind">⚔️ 개인전</option>
+              <option value="univm">🏟️ 대학대전</option>
+              <option value="comp">🏆 대회</option>
+              <option value="pro">🏅 프로리그</option>
+              <option value="stats">📊 통계</option>
+              <option value="roulette">🎰 룰렛</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2);width:70px">⚔️ 개인전</span>
+            <select id="cfg-fab-ind" onchange="saveFabTabSetting('ind',this.value)" style="flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+              <option value="cal">📅 캘린더</option>
+              <option value="total">📋 스트리머</option>
+              <option value="board2">📊 현황판</option>
+              <option value="tier">📊 티어 순위표</option>
+              <option value="hist">📅 대전 기록</option>
+              <option value="ind">⚔️ 개인전</option>
+              <option value="univm">🏟️ 대학대전</option>
+              <option value="comp">🏆 대회</option>
+              <option value="pro">🏅 프로리그</option>
+              <option value="stats">📊 통계</option>
+              <option value="roulette">🎰 룰렛</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text2);width:70px">🏅 프로리그</span>
+            <select id="cfg-fab-pro" onchange="saveFabTabSetting('pro',this.value)" style="flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+              <option value="cal">📅 캘린더</option>
+              <option value="total">📋 스트리머</option>
+              <option value="board2">📊 현황판</option>
+              <option value="tier">📊 티어 순위표</option>
+              <option value="hist">📅 대전 기록</option>
+              <option value="ind">⚔️ 개인전</option>
+              <option value="univm">🏟️ 대학대전</option>
+              <option value="comp">🏆 대회</option>
+              <option value="pro">🏅 프로리그</option>
+              <option value="stats">📊 통계</option>
+              <option value="roulette">🎰 룰렛</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="ssec"><h4>🎨 현황판 설정</h4>
