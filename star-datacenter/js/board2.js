@@ -1629,7 +1629,7 @@ function _b2PlayersView() {
       .b2-players-filter-btn {
         background: rgba(255,255,255,0.1);
         border: 1px solid rgba(255,255,255,0.2);
-        color: var(--text3);
+        color: rgba(255,255,255,0.9);
         padding: 6px 16px;
         border-radius: 20px;
         cursor: pointer;
@@ -1639,7 +1639,7 @@ function _b2PlayersView() {
       }
       .b2-players-filter-btn:hover {
         background: rgba(255,255,255,0.2);
-        color: var(--text1);
+        color: #fff;
       }
       .b2-players-filter-btn.active {
         background: ${theme.border};
