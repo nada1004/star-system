@@ -1504,7 +1504,6 @@ function _b2PlayersView() {
         object-fit: cover;
         object-position: center;
         transition: opacity 0.3s ease;
-        z-index: 1;
       }
       .b2-players-info {
         position: absolute;
@@ -1512,24 +1511,22 @@ function _b2PlayersView() {
         left: 0;
         right: 0;
         padding: 30px;
-        background: rgba(0,0,0,0.85);
-        z-index: 10;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        z-index: 2;
       }
       .b2-players-name {
-        font-size: 32px;
-        font-weight: 900;
-        margin-bottom: 12px;
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 8px;
         color: #fff;
-        line-height: 1.2;
       }
       .b2-players-details {
-        font-size: 15px;
-        color: #fff;
+        font-size: 14px;
+        color: rgba(255,255,255,0.8);
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
-        line-height: 1.5;
       }
       .b2-players-tier {
         background: ${theme.border};
@@ -1619,12 +1616,12 @@ function _b2PlayersView() {
       .b2-players-label {
         margin-top: 8px;
         font-size: 13px;
-        color: #1e293b;
+        color: var(--text1);
         font-weight: 700;
         text-align: center;
       }
       .b2-players-card.active .b2-players-label {
-        color: #000;
+        color: var(--text1);
         font-weight: 800;
       }
       .b2-players-filter-btn {
@@ -1695,21 +1692,19 @@ function _b2PlayersView() {
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box">
-        <div style="position:relative;width:100%;height:100%;background:${theme.bg}">
-          ${_b2SelectedPlayer.photo 
-            ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center">`
-            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
-          }
-          <div class="b2-players-info">
-            <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
-            <div class="b2-players-details">
-              <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
-              <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
-              ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
-              ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
-            </div>
-            <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>
+        ${_b2SelectedPlayer.photo 
+          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
+        }
+        <div class="b2-players-info">
+          <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
+          <div class="b2-players-details">
+            <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
+            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
+            ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
+            ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
           </div>
+          ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
       </div>
     </div>
@@ -1763,7 +1758,7 @@ function _b2UpdateMainDisplay(playerName) {
   const bgAlpha = (b2ProfileBgAlpha || 10) / 100;
   const theme = {
     glow: hexToRgba(univColor, 0.3),
-    bg: hexToRgba(univColor, Math.max(bgAlpha, 0.15)),
+    bg: hexToRgba(univColor, bgAlpha),
     border: univColor
   };
   
@@ -1786,26 +1781,24 @@ function _b2UpdateMainDisplay(playerName) {
     const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
     
     mainBox.innerHTML = `
-      <div style="position:relative;width:100%;height:100%;background:${theme.bg}">
-        ${player.photo 
-          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-        }
-        ${hasSecondProfile ? (isGif || isImage
-          ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
-          : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
-        ) : ''}
-        <div class="b2-players-info">
-          <div class="b2-players-name">${player.name || '이름 없음'}</div>
-          <div class="b2-players-details">
-            <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-            <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
-            ${player.univ ? `<span>🏫 ${player.univ}</span>` : ''}
-            ${player.role ? `<span>👔 ${player.role}</span>` : ''}
-          </div>
-          <button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>
+      ${player.photo 
+        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
+      }
+      ${hasSecondProfile ? (isGif || isImage
+        ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
+        : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
+      ) : ''}
+      <div class="b2-players-info">
+        <div class="b2-players-name">${player.name || '이름 없음'}</div>
+        <div class="b2-players-details">
+          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
+          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
+          ${player.univ ? `<span>🏫 ${player.univ}</span>` : ''}
+          ${player.role ? `<span>👔 ${player.role}</span>` : ''}
         </div>
+        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
       </div>
     `;
     
