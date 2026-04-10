@@ -1411,7 +1411,13 @@ function _b2PlayersView() {
 
   // 기본 선택 선수
   if (!_b2SelectedPlayer || !filteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
-    _b2SelectedPlayer = filteredPlayers[0];
+    if (_b2PlayersUnivFilter === '전체') {
+      // 전체대학 필터시 랜덤 선택
+      const randomIndex = Math.floor(Math.random() * filteredPlayers.length);
+      _b2SelectedPlayer = filteredPlayers[randomIndex];
+    } else {
+      _b2SelectedPlayer = filteredPlayers[0];
+    }
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
@@ -1460,11 +1466,11 @@ function _b2PlayersView() {
       .b2-players-wrapper {
         display: flex;
         gap: 24px;
-        height: calc(100vh - 180px);
-        min-height: 500px;
+        height: calc(100vh - 140px);
+        min-height: 600px;
       }
       .b2-players-main {
-        flex: 0 0 50%;
+        flex: 0 0 60%;
         position: relative;
       }
       .b2-players-main-content {
@@ -1538,7 +1544,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 12px;
       }
       .b2-players-card {
