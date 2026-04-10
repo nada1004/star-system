@@ -1771,7 +1771,7 @@ function _b2UpdateMainDisplay(playerName) {
         }
         ${hasSecondProfile ? (isGif || isImage
           ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease">`
-          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
+          : `<video class="b2-players-video" src="${player.videoFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
         ) : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${player.name || '이름 없음'}</div>
@@ -1797,8 +1797,6 @@ function _b2UpdateMainDisplay(playerName) {
         } else if (isVideo) {
           const video = mainBox.querySelector('.b2-players-video');
           if (video) {
-            video.src = player.videoFile;
-            video.load();
             video.play().then(() => {
               video.style.opacity = '1';
             }).catch(err => {
