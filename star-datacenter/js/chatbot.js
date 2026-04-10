@@ -563,12 +563,18 @@ async function generateResponse(msg) {
       return formatPlayerBasicInfo(player);
     }
     
-    // 선수가 없으면 대학 정보 확인
-    const univResult = formatUniversityInfo(playerName);
-    if (univResult.includes('찾을 수 없습니다')) {
-      return '검색 자료가 없습니다.';
+    // 선수가 없으면 대학 정확 일치만 확인 (퍼지 매칭 없이)
+    const universities = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
+    if (universities.includes(playerName)) {
+      return formatUniversityInfo(playerName);
     }
-    return univResult;
+
+    // 아무것도 못 찾으면 랜덤 스트리머 정보 반환
+    if (typeof players !== 'undefined' && players.length > 0) {
+      const randomPlayer = players[Math.floor(Math.random() * players.length)];
+      return `🔍 '${playerName}'을(를) 찾을 수 없어 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
+    }
+    return '검색 자료가 없습니다.';
   }
   
   // 티어 범위 검색 (예: "티어 A~B" 또는 "A 티어 이상")
@@ -661,7 +667,11 @@ async function generateResponse(msg) {
     return '감사합니다 😊 더 궁금한 게 있으면 언제든지 물어보세요!';
   }
 
-  // 기본 응답
+  // 기본 응답 - 랜덤 스트리머 소개
+  if (typeof players !== 'undefined' && players.length > 0) {
+    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    return `🎲 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
+  }
   return `질문을 이해하지 못했어요 😅\n"도움"을 입력하면 사용법을 알려드릴게요!`;
 }
 
