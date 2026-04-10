@@ -387,3 +387,49 @@ function syncAllHistoryBtn(){
   if(n>0){alert('✅ '+n+'건의 경기가 스트리머 최근 경기에 소급 반영되었습니다.\n스트리머 상세 페이지에서 확인하세요.');render();}
   else{alert('✅ 이미 모든 기록이 반영되어 있습니다.');}
 }
+
+/* ══════════════════════════════════════
+   2025년 이전 경기 기록 일괄 삭제
+   - miniM/univM/ckM/proM/indM/gjM/ttM 필터
+   - player.history 필터 후 win/loss/points/ELO 재계산
+══════════════════════════════════════ */
+function purgeOldRecords(){
+  const cutoff = '2026-01-01';
+  const cutoffLabel = '2025년 12월 31일';
+  if(!confirm(`⚠️ ${cutoffLabel} 이전 모든 경기 기록을 삭제합니다.\n\n삭제 대상:\n• 미니/대학/CK/프로/개인전/끝장전/티어 대전 기록\n• 스트리머 개인 기록(history)\n• 승패·포인트·ELO 재계산\n\n⚠️ 되돌릴 수 없습니다. 먼저 JSON 백업을 권장합니다.\n\n계속하시겠습니까?`)) return;
+
+  const isNew = d => d && d >= cutoff;
+
+  // 1) 경기 배열 필터
+  const _filter = arr => { const keep = arr.filter(m => isNew(m.d)); arr.length=0; arr.push(...keep); };
+  _filter(miniM);
+  _filter(univM);
+  _filter(ckM);
+  _filter(proM);
+  if(typeof indM!=='undefined') _filter(indM);
+  if(typeof gjM!=='undefined')  _filter(gjM);
+  if(typeof ttM!=='undefined')  _filter(ttM);
+
+  // 2) 선수 history 필터 + 스탯 재계산
+  let playerCount = 0;
+  players.forEach(p => {
+    if(!p.history || !p.history.length) return;
+    const before = p.history.length;
+    p.history = p.history.filter(h => h.date && h.date >= cutoff);
+    if(p.history.length === before) return; // 변경 없음
+    playerCount++;
+
+    // 승/패/포인트 재계산
+    p.win    = p.history.filter(h => h.result === '승').length;
+    p.loss   = p.history.filter(h => h.result === '패').length;
+    p.points = p.win * 3 - p.loss * 3;
+
+    // ELO: history는 최신이 앞(unshift). [0]이 가장 최근 기록
+    const lastH = p.history.find(h => h.eloAfter != null);
+    p.elo = lastH ? lastH.eloAfter : (typeof ELO_DEFAULT!=='undefined' ? ELO_DEFAULT : 1500);
+  });
+
+  save();
+  render();
+  alert(`✅ ${cutoffLabel} 이전 기록 삭제 완료\n\n스트리머 ${playerCount}명 스탯 재계산 완료`);
+}

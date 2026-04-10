@@ -261,7 +261,7 @@ function findPlayerByPartialName(namePart) {
     if (!p.memo) return false;
     const memoNorm = _nfc(p.memo);
     if (memoNorm.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
-    const memos = memoNorm.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean);
+    const memos = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.trim()).filter(Boolean);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
   if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
@@ -279,7 +279,7 @@ function findPlayerByPartialName(namePart) {
     const memoNS = players.filter(p => {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
-      const tokens = memoNorm.split(/[\s,，\n]+/).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
+      const tokens = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
       return tokens.some(t => t === _noSpaceLow);
     });
     if (memoNS.length === 1) return { player: memoNS[0], candidates: memoNS, similar: [] };
@@ -289,7 +289,11 @@ function findPlayerByPartialName(namePart) {
   // 2.7) 메모 포함 일치 (별명 우선 — 이름 부분일치보다 먼저 확인)
   // 이름 부분일치(step3)보다 앞에 두어야 짧은 선수명이 입력된 별명을 가로채는 것을 방지
   if (trimmed.length >= 2) {
-    const memoPartial = players.filter(p => p.memo && p.memo.includes(trimmed));
+    const memoPartial = players.filter(p => {
+      if (!p.memo) return false;
+      const memoNorm = _nfc(p.memo);
+      return memoNorm.includes(_trimmedLow) || memoNorm.toLowerCase().includes(_trimmedLow);
+    });
     if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
     if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
   }

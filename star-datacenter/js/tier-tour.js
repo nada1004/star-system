@@ -2609,6 +2609,11 @@ function rCfg(C,T){
       <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
     </div>
   </div>
+  <div class="ssec">
+    <h4>🗑️ 구 기록 삭제</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">2025년 12월 31일 이전 모든 경기 기록을 삭제합니다. 승패·포인트·ELO가 2026년 기록 기준으로 재계산됩니다.<br><span style="color:#dc2626;font-weight:700">⚠️ 되돌릴 수 없으므로 JSON 백업 후 실행하세요.</span></p>
+    <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof purgeOldRecords==='function')purgeOldRecords()">🗑️ 2025년 이전 기록 삭제</button>
+  </div>
   <div class="ssec"><h4>💾 로컬 저장소 사용량</h4>
     <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
     <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
