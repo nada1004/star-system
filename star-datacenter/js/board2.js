@@ -1670,21 +1670,61 @@ function _b2UpdateMainDisplay(playerName) {
   if (mainBox) {
     mainBox.style.setProperty('--theme-glow', theme.glow);
     mainBox.style.setProperty('--theme-bg', theme.bg);
+    
+    // 기존 타이머 정리
+    if (mainBox._videoTimeout) {
+      clearTimeout(mainBox._videoTimeout);
+      mainBox._videoTimeout = null;
+    }
+    
+    const hasVideo = player.videoFile && player.videoFile.length > 0;
+    const isGif = hasVideo && player.videoFile.toLowerCase().endsWith('.gif');
+    
     mainBox.innerHTML = `
-      ${player.photo 
-        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}">`
-        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-      }
-      <div class="b2-players-info">
-        <div class="b2-players-name">${player.name || '이름 없음'}</div>
-        <div class="b2-players-details">
-          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
-          ${player.univ ? `<span>🏫 ${player.univ}</span>` : ''}
-          ${player.role ? `<span>👔 ${player.role}</span>` : ''}
+      <div style="position:relative;width:100%;height:100%">
+        ${player.photo 
+          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="opacity:1;transition:opacity 0.5s ease">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
+        }
+        ${hasVideo ? (isGif 
+          ? `<img src="${player.videoFile}" class="b2-players-gif" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity 0.5s ease">`
+          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline></video>`
+        ) : ''}
+        <div class="b2-players-info">
+          <div class="b2-players-name">${player.name || '이름 없음'}</div>
+          <div class="b2-players-details">
+            <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
+            <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
+            ${player.univ ? `<span>🏫 ${player.univ}</span>` : ''}
+            ${player.role ? `<span>👔 ${player.role}</span>` : ''}
+          </div>
         </div>
       </div>
     `;
+    
+    // 1초 후 비디오/GIF 재생
+    if (hasVideo) {
+      mainBox._videoTimeout = setTimeout(() => {
+        const mainImage = mainBox.querySelector('.b2-players-main-image');
+        if (mainImage) mainImage.style.opacity = '0';
+        
+        if (isGif) {
+          const gif = mainBox.querySelector('.b2-players-gif');
+          if (gif) gif.style.opacity = '1';
+        } else {
+          const video = mainBox.querySelector('.b2-players-video');
+          if (video) {
+            video.src = player.videoFile;
+            video.load();
+            video.play().then(() => {
+              video.style.opacity = '1';
+            }).catch(err => {
+              console.log('Video autoplay failed:', err);
+            });
+          }
+        }
+      }, 1000);
+    }
   }
   
   // 활성 카드 스타일 업데이트
