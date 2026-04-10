@@ -1433,9 +1433,9 @@ function _b2PlayersView() {
   // 대학 목록 (필터용) - dissolved 대학 제외
   const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
   
-  // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,5,유스 마지막)
-  const roleOrder = ['이사장', '총장', '부총장', '교수', '코치', '선장', '동아리장', '반장', '총괄', '동아리 회장'];
-  const tierOrder = ['0', '1', '2', '3', '4', '5', '유스'];
+  // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
+  const roleOrder = ['이사장', '총장', '교수', '코치'];
+  const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
   
   filteredPlayers.sort((a, b) => {
     // 기본 정렬: 직급 우선, 티어 순서
@@ -1755,13 +1755,14 @@ function _b2UpdateMainDisplay(playerName) {
   _b2SelectedPlayer = player;
   localStorage.setItem('su_b2SelectedPlayer', playerName);
   
-  const themeColors = {
-    'P': { glow: 'rgba(241, 196, 15, 0.3)', bg: 'rgba(241, 196, 15, 0.1)', border: '#f1c40f' },
-    'T': { glow: 'rgba(52, 152, 219, 0.3)', bg: 'rgba(52, 152, 219, 0.1)', border: '#3498db' },
-    'Z': { glow: 'rgba(231, 76, 60, 0.3)', bg: 'rgba(231, 76, 60, 0.1)', border: '#e74c3c' },
-    'N': { glow: 'rgba(149, 165, 166, 0.3)', bg: 'rgba(149, 165, 166, 0.1)', border: '#95a5a6' }
+  const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
+  const univColor = gc(player.univ) || '#6366f1';
+  const bgAlpha = (b2ProfileBgAlpha || 10) / 100;
+  const theme = {
+    glow: hexToRgba(univColor, 0.3),
+    bg: hexToRgba(univColor, bgAlpha),
+    border: univColor
   };
-  const theme = themeColors[player.race] || themeColors['N'];
   
   // 메인 디스플레이 업데이트
   const mainBox = document.getElementById('b2-players-main-box');
