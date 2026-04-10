@@ -88,11 +88,16 @@ function closeFab(){
   if(list) list.classList.remove('open');
 }
 function _fabGo(tabId){
-  const el=document.querySelector('.tab[onclick*="\''+tabId+'\'"]')
-         ||document.querySelector('.tab[onclick*=\'"'+tabId+'"\']');
-  if(el&&typeof sw==='function'){
+  if(typeof sw!=='function') return;
+  // 탭 버튼 직접 찾기 (onclick 속성 순회)
+  let el=null;
+  document.querySelectorAll('.tab').forEach(function(b){
+    const oc=b.getAttribute('onclick')||'';
+    if(oc.indexOf("'"+tabId+"'")!==-1||oc.indexOf('"'+tabId+'"')!==-1) el=b;
+  });
+  if(el){
     sw(tabId,el);
-    setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),80);
+    setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'});},80);
   }
 }
 // FAB 외부 클릭 시 닫기

@@ -693,8 +693,38 @@ function buildPlayerDetailHTML(p){
   }));
   // p.history의 matchId Set (중복 제거용)
   const _existingMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
-  // 중복되지 않는 indM/gjM 매치만 추가
-  const _extraMatches=[..._indMatches,..._gjMatches].filter(m=>!_existingMatchIds.has(m.matchId));
+  // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
+  const _tourMatches=[];
+  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id||_existingMatchIds.has(m._id))return;
+        (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+          if(!g.playerA||!g.playerB||!g.winner)return;
+          const wn=g.winner==='A'?g.playerA:g.playerB;
+          const ln=g.winner==='A'?g.playerB:g.playerA;
+          if(wn!==p.name&&ln!==p.name)return;
+          const opp=wn===p.name?ln:wn;
+          const oppP=players.find(x=>x.name===opp);
+          _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:tn.type==='tier'?'티어대회':'조별리그',_readOnly:true});
+        });});
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id||_existingMatchIds.has(m._id))return;
+      (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(wn!==p.name&&ln!==p.name)return;
+        const opp=wn===p.name?ln:wn;
+        const oppP=players.find(x=>x.name===opp);
+        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:'대회',_readOnly:true});
+      });});
+    });
+  });
+  // 중복되지 않는 indM/gjM + tourMatches 추가
+  const _extraMatches=[..._indMatches,..._gjMatches,..._tourMatches].filter(m=>!_existingMatchIds.has(m.matchId));
   const _histAll=[...(p.history||[]),..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
@@ -1050,10 +1080,10 @@ function buildPlayerDetailHTML(p){
       const isWin=hh.result==='승';
       const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
-      const editBtnHTML=isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap">
+      const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
-      </td>`:'';
+      </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
       const modeLbl=hh.mode||'';
       const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
       const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
