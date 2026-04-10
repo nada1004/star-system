@@ -714,7 +714,7 @@ function formatPlayerBasicInfo(player) {
 <div style="font-size:14px;font-weight:800;color:${winColor};margin-top:4px">${player.win}승 ${player.loss}패 <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
   // 사진 없는 경우
