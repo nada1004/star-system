@@ -20,6 +20,7 @@ let b2BgAlpha     = J('su_b2ba')  ?? 9;
 let b2BgImgAlpha      = J('su_b2bia')  ?? 12; // 배경 이미지 진하기 기본값 (0~100, %)
 let b2FreeBgAlpha     = J('su_b2fba')  ?? 25; // 무소속 배경 진하기 (기본 25%)
 let b2FreeTierBgAlpha = J('su_b2ftba') ?? 15; // 무소속 티어 우측 배경 진하기 (기본 15%)
+let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 
 function _b2ToggleCard(btn, univName) {
@@ -1438,9 +1439,10 @@ function _b2PlayersView() {
 
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(_b2SelectedPlayer.univ) || '#6366f1';
+  const bgAlpha = (b2ProfileBgAlpha || 10) / 100;
   const theme = {
     glow: hexToRgba(univColor, 0.3),
-    bg: hexToRgba(univColor, 0.1),
+    bg: hexToRgba(univColor, bgAlpha),
     border: univColor
   };
 
@@ -1725,8 +1727,8 @@ function _b2UpdateMainDisplay(playerName) {
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
         ${hasSecondProfile ? (isGif || isImage
-          ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease">`
-          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline></video>`
+          ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease">`
+          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline></video>`
         ) : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${player.name || '이름 없음'}</div>

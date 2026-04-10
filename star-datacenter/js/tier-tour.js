@@ -2940,6 +2940,13 @@ function rCfg(C,T){
         <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">👤 프로필 배경</span>
+        <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;render()">
+        <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
+      </div>
+    </div>
   </div>
   <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
