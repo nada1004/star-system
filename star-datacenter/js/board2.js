@@ -1403,8 +1403,8 @@ function _b2PlayersView() {
     _b2SelectedPlayer = filteredPlayers[0];
   }
 
-  // 대학 목록 (필터용)
-  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
+  // 대학 목록 (필터용) - dissolved 대학 제외
+  const univList = getAllUnivs().filter(u => !u.dissolved && u.name !== '무소속').map(u => u.name).sort();
   
   // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,유스 마지막)
   const roleOrder = ['이사장', '총장', '부총장', '교수', '코치', '선장', '동아리장', '반장', '총괄', '동아리 회장'];
