@@ -1519,6 +1519,7 @@ function _b2PlayersView() {
         font-weight: 800;
         margin-bottom: 8px;
         color: #fff;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.8);
       }
       .b2-players-details {
         font-size: 14px;
