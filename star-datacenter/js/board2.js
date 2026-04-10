@@ -67,7 +67,8 @@ function rBoard2(C, T) {
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
     const c = color || 'var(--blue)';
-    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+    const id = view === 'players' ? 'id="b2-profile-tab"' : '';
+    return `<button ${id} onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
@@ -1707,10 +1708,9 @@ function _b2PlayersView() {
               const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
               const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
               return iconUrl 
-                ? `<span style="display:flex;align-items:center;gap:6px"><img src="${iconUrl}" style="width:20px;height:20px;object-fit:contain;border-radius:4px" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="display:none">🏫 ${_b2SelectedPlayer.univ}</span></span>`
+                ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
                 : `<span>🏫 ${_b2SelectedPlayer.univ}</span>`;
             })() : ''}
-            ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
           </div>
           ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
@@ -1762,15 +1762,9 @@ function _b2UpdateMainDisplay(playerName) {
   localStorage.setItem('su_b2SelectedPlayer', playerName);
   
   // 탭 버튼 텍스트 업데이트 (프로필 탭만)
-  const nav = document.getElementById('b2-nav');
-  if (nav) {
-    const tabButtons = nav.querySelectorAll('button');
-    tabButtons.forEach(btn => {
-      const onclick = btn.getAttribute('onclick');
-      if (onclick && onclick.includes("_b2View='players'")) {
-        btn.textContent = `👤 ${player.name}`;
-      }
-    });
+  const profileTabBtn = document.getElementById('b2-profile-tab');
+  if (profileTabBtn) {
+    profileTabBtn.textContent = `👤 ${player.name}`;
   }
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
@@ -1819,10 +1813,9 @@ function _b2UpdateMainDisplay(playerName) {
             const uCfg = univCfg.find(x => x.name === player.univ) || {};
             const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
             return iconUrl 
-              ? `<span style="display:flex;align-items:center;gap:6px"><img src="${iconUrl}" style="width:20px;height:20px;object-fit:contain;border-radius:4px" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="display:none">🏫 ${player.univ}</span></span>`
+              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
               : `<span>🏫 ${player.univ}</span>`;
           })() : ''}
-          ${player.role ? `<span>👔 ${player.role}</span>` : ''}
         </div>
         ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
       </div>
