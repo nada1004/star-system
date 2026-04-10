@@ -534,52 +534,40 @@ async function generateResponse(msg) {
     return formatUniversityVsRecord(univ1, univ2);
   }
   
-  // 대학 관련 검색 (정확 일치만 - 퍼지 매칭은 선수 검색 후 fallback에서 처리)
-  const universityMatch = userMessage.match(/([^\s]+)/);
-  if (universityMatch) {
-    const univName = universityMatch[1];
+  // 단어 하나 검색: 대학(정확) → 선수(정확) → 선수(퍼지) → 대학(퍼지) → 랜덤
+  const singleWordMatch = userMessage.match(/^([^\s]+)$/);
+  if (singleWordMatch) {
+    const query = singleWordMatch[1];
     const playerUnivs = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
     const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
-    if (universities.includes(univName)) {
-      return formatUniversityInfo(univName);
-    }
-  }
-  
-  // 선수 이름 검색 (단순 이름)
-  const playerOnlyMatch = userMessage.match(/^([^\s]+)$/);
-  if (playerOnlyMatch) {
-    const playerName = playerOnlyMatch[1];
-    // 선수 먼저 확인
-    let player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
-    // 퍼지 매칭 시도 (더 엄격한 조건)
+
+    // 1) 대학 정확 일치
+    if (universities.includes(query)) return formatUniversityInfo(query);
+
+    // 2) 선수 정확 일치
+    let player = typeof players !== 'undefined' ? players.find(p => p.name === query) : null;
+
+    // 3) 선수 퍼지 매칭 (levenshtein ≤ 2)
     if (!player) {
-      const similarPlayer = findSimilarPlayer(playerName);
-      if (similarPlayer && levenshteinDistance(playerName, similarPlayer.name) <= 2) {
+      const similarPlayer = findSimilarPlayer(query);
+      if (similarPlayer && levenshteinDistance(query, similarPlayer.name) <= 2) {
         player = similarPlayer;
       }
     }
     if (player) {
-      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
+      if (player.name !== query) return `🤔 '${query}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
       return formatPlayerBasicInfo(player);
     }
-    
-    // 선수가 없으면 대학 검색 (정확/퍼지 매칭)
-    const playerUnivs2 = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
-    const cfgUnivs2 = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
-    const universities = [...new Set([...playerUnivs2, ...cfgUnivs2])];
-    if (universities.includes(playerName)) {
-      return formatUniversityInfo(playerName);
-    }
-    const similarUniv2 = findSimilarUniversity(playerName, universities);
-    if (similarUniv2) {
-      return formatUniversityInfo(similarUniv2);
-    }
 
-    // 아무것도 못 찾으면 랜덤 스트리머 정보 반환
+    // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈)
+    const similarUniv = findSimilarUniversity(query, universities);
+    if (similarUniv) return formatUniversityInfo(similarUniv);
+
+    // 5) 못 찾으면 랜덤 스트리머
     if (typeof players !== 'undefined' && players.length > 0) {
       const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      return `🔍 '${playerName}'을(를) 찾을 수 없어 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
+      return `🔍 '${query}'을(를) 찾을 수 없어 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
     }
     return '검색 자료가 없습니다.';
   }
