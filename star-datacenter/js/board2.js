@@ -1379,7 +1379,8 @@ let _b2PlayersUnivFilter = '전체';
 let _b2SelectedPlayer = null;
 
 function _b2PlayersView() {
-  const visPlayers = players.filter(p => !p.hidden && !p.retired);
+  const dissolvedUnivs = new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name));
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !dissolvedUnivs.has(p.univ));
   
   // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
@@ -1404,7 +1405,7 @@ function _b2PlayersView() {
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
-  const univList = getAllUnivs().filter(u => !u.dissolved && u.name !== '무소속').map(u => u.name).sort();
+  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
   
   // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,유스 마지막)
   const roleOrder = ['이사장', '총장', '부총장', '교수', '코치', '선장', '동아리장', '반장', '총괄', '동아리 회장'];
