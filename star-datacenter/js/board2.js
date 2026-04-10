@@ -1707,8 +1707,11 @@ function _b2UpdateMainDisplay(playerName) {
       mainBox._videoTimeout = null;
     }
     
-    const hasVideo = player.videoFile && player.videoFile.length > 0;
-    const isGif = hasVideo && player.videoFile.toLowerCase().endsWith('.gif');
+    const hasSecondProfile = player.videoFile && player.videoFile.length > 0;
+    const ext = hasSecondProfile ? player.videoFile.toLowerCase().split('.').pop() : '';
+    const isGif = ext === 'gif';
+    const isVideo = ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
+    const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
     
     mainBox.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:rgba(0,0,0,0.1)">
@@ -1716,8 +1719,8 @@ function _b2UpdateMainDisplay(playerName) {
           ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="opacity:1;transition:opacity 0.5s ease;object-fit:contain;object-position:center">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
-        ${hasVideo ? (isGif 
-          ? `<img src="${player.videoFile}" class="b2-players-gif" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease">`
+        ${hasSecondProfile ? (isGif || isImage
+          ? `<img src="${player.videoFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease">`
           : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline></video>`
         ) : ''}
         <div class="b2-players-info">
@@ -1732,16 +1735,16 @@ function _b2UpdateMainDisplay(playerName) {
       </div>
     `;
     
-    // 1초 후 비디오/GIF 재생
-    if (hasVideo) {
+    // 1초 후 두번째 프로필 표시
+    if (hasSecondProfile) {
       mainBox._videoTimeout = setTimeout(() => {
         const mainImage = mainBox.querySelector('.b2-players-main-image');
         if (mainImage) mainImage.style.opacity = '0';
         
-        if (isGif) {
-          const gif = mainBox.querySelector('.b2-players-gif');
-          if (gif) gif.style.opacity = '1';
-        } else {
+        if (isGif || isImage) {
+          const secondImg = mainBox.querySelector('.b2-players-second');
+          if (secondImg) secondImg.style.opacity = '1';
+        } else if (isVideo) {
           const video = mainBox.querySelector('.b2-players-video');
           if (video) {
             video.src = player.videoFile;

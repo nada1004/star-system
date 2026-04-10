@@ -163,17 +163,21 @@ function openPlayerModal(name){
   om('playerModal');
   setTimeout(()=>initPEloChart(name),60);
   
-  // 1초 후 비디오/GIF 전환
+  // 1초 후 두번째 프로필 전환
   if (p.videoFile && p.videoFile.length > 0) {
     setTimeout(() => {
       const mainImg = _mbody.querySelector('.player-modal-main-img');
       if (mainImg) mainImg.style.opacity = '0';
       
-      const isGif = p.videoFile.toLowerCase().endsWith('.gif');
-      if (isGif) {
-        const gif = _mbody.querySelector('.player-modal-gif');
-        if (gif) gif.style.opacity = '1';
-      } else {
+      const ext = p.videoFile.toLowerCase().split('.').pop();
+      const isGif = ext === 'gif';
+      const isVideo = ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
+      const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
+      
+      if (isGif || isImage) {
+        const secondImg = _mbody.querySelector('.player-modal-second');
+        if (secondImg) secondImg.style.opacity = '1';
+      } else if (isVideo) {
         const video = _mbody.querySelector('.player-modal-video');
         if (video) {
           video.src = p.videoFile;
@@ -765,18 +769,21 @@ function buildPlayerDetailHTML(p){
 
   // ── 상단 프로필 카드 (이름영역=대학색, 통계영역=연한 대학색) ──
   const _photoHTML=(()=>{
-    const hasVideo = p.videoFile && p.videoFile.length > 0;
-    const isGif = hasVideo && p.videoFile.toLowerCase().endsWith('.gif');
+    const hasSecondProfile = p.videoFile && p.videoFile.length > 0;
+    const ext = hasSecondProfile ? p.videoFile.toLowerCase().split('.').pop() : '';
+    const isGif = ext === 'gif';
+    const isVideo = ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
+    const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
     
     if(p.photo){
       const raceL=p.race||'?';
       let html = `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span>`;
-      html += `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 0.5s ease" onerror="this.style.display='none'" class="player-modal-main-img">`;
-      if (hasVideo) {
-        if (isGif) {
-          html += `<img src="${p.videoFile}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.5s ease" class="player-modal-gif">`;
-        } else {
-          html += `<video style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline class="player-modal-video"></video>`;
+      html += `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="this.style.display='none'" class="player-modal-main-img">`;
+      if (hasSecondProfile) {
+        if (isGif || isImage) {
+          html += `<img src="${p.videoFile}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" class="player-modal-second">`;
+        } else if (isVideo) {
+          html += `<video style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline class="player-modal-video"></video>`;
         }
       }
       return html;
