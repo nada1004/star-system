@@ -1405,6 +1405,35 @@ function _b2PlayersView() {
 
   // 대학 목록 (필터용)
   const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
+  
+  // 정렬: 직급 우선, 티어 순서 (0,1,2,3,4,유스 마지막)
+  const roleOrder = ['이사장', '동아리 회장', '총장', '부총장', '교수', '코치', '선장', '동아리장', '반장', '총괄'];
+  const tierOrder = ['0', '1', '2', '3', '4', '유스'];
+  
+  filteredPlayers.sort((a, b) => {
+    // 직급 우선
+    const aRoleIdx = roleOrder.indexOf(a.role || '');
+    const bRoleIdx = roleOrder.indexOf(b.role || '');
+    const aHasRole = aRoleIdx >= 0;
+    const bHasRole = bRoleIdx >= 0;
+    
+    if (aHasRole && !bHasRole) return -1;
+    if (!aHasRole && bHasRole) return 1;
+    if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
+    
+    // 티어 순서
+    const aTier = a.tier || '?';
+    const bTier = b.tier || '?';
+    const aTierIdx = tierOrder.indexOf(aTier);
+    const bTierIdx = tierOrder.indexOf(bTier);
+    
+    if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
+    if (aTierIdx >= 0 && bTierIdx < 0) return -1;
+    if (aTierIdx < 0 && bTierIdx >= 0) return 1;
+    
+    // 이름 순 (동률 시)
+    return (a.name || '').localeCompare(b.name || '');
+  });
 
   const themeColors = {
     'P': { glow: 'rgba(241, 196, 15, 0.3)', bg: 'rgba(241, 196, 15, 0.1)', border: '#f1c40f' },
@@ -1514,7 +1543,8 @@ function _b2PlayersView() {
       .b2-players-thumbnail {
         width: 100%;
         aspect-ratio: 1;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center;
         border-radius: 16px;
         border: 2px solid transparent;
         background: rgba(255,255,255,0.1);
@@ -1681,14 +1711,14 @@ function _b2UpdateMainDisplay(playerName) {
     const isGif = hasVideo && player.videoFile.toLowerCase().endsWith('.gif');
     
     mainBox.innerHTML = `
-      <div style="position:relative;width:100%;height:100%">
+      <div style="position:relative;width:100%;height:100%;background:rgba(0,0,0,0.1)">
         ${player.photo 
-          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="opacity:1;transition:opacity 0.5s ease">`
+          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="opacity:1;transition:opacity 0.5s ease;object-fit:contain;object-position:center">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
         ${hasVideo ? (isGif 
-          ? `<img src="${player.videoFile}" class="b2-players-gif" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity 0.5s ease">`
-          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline></video>`
+          ? `<img src="${player.videoFile}" class="b2-players-gif" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease">`
+          : `<video class="b2-players-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop muted playsinline></video>`
         ) : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${player.name || '이름 없음'}</div>
