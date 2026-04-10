@@ -90,6 +90,7 @@ function rBoard2(C, T) {
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
+      ${_b2TabBtn('players','var(--purple)','👤 프로필')}
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -104,6 +105,8 @@ function rBoard2(C, T) {
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
+  } else if (_b2View === 'players') {
+    sub.innerHTML = _b2PlayersView();
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -1365,4 +1368,268 @@ async function saveGameImg(btn) {
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '📷 전체저장'; }
   }
+}
+
+/* ════════════════════════════════════════
+   👤 프로필 뷰 — 좌측 메인 디스플레이 + 우측 그리드
+════════════════════════════════════════ */
+
+let _b2PlayersFilter = 'all';
+let _b2SelectedPlayer = null;
+
+function _b2PlayersView() {
+  const visPlayers = players.filter(p => !p.hidden && !p.retired);
+  
+  // 종족 필터링
+  const filteredPlayers = _b2PlayersFilter === 'all' 
+    ? visPlayers 
+    : visPlayers.filter(p => p.race === _b2PlayersFilter);
+
+  if (!filteredPlayers.length) {
+    return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
+      <div style="font-size:48px;margin-bottom:12px">👤</div>
+      <div style="font-weight:700">표시할 선수가 없습니다</div>
+    </div>`;
+  }
+
+  // 기본 선택 선수
+  if (!_b2SelectedPlayer || !filteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+    _b2SelectedPlayer = filteredPlayers[0];
+  }
+
+  const themeColors = {
+    'P': { glow: 'rgba(241, 196, 15, 0.3)', bg: 'rgba(241, 196, 15, 0.1)', border: '#f1c40f' },
+    'T': { glow: 'rgba(52, 152, 219, 0.3)', bg: 'rgba(52, 152, 219, 0.1)', border: '#3498db' },
+    'Z': { glow: 'rgba(231, 76, 60, 0.3)', bg: 'rgba(231, 76, 60, 0.1)', border: '#e74c3c' },
+    'N': { glow: 'rgba(149, 165, 166, 0.3)', bg: 'rgba(149, 165, 166, 0.1)', border: '#95a5a6' }
+  };
+  const theme = themeColors[_b2SelectedPlayer.race] || themeColors['N'];
+
+  let h = `
+    <style>
+      .b2-players-wrapper {
+        display: flex;
+        gap: 24px;
+        height: calc(100vh - 180px);
+        min-height: 500px;
+      }
+      .b2-players-main {
+        flex: 0 0 40%;
+        position: relative;
+      }
+      .b2-players-main-content {
+        width: 100%;
+        height: 100%;
+        background: ${theme.bg};
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 0 30px ${theme.glow};
+        transition: all 0.5s ease;
+      }
+      .b2-players-main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        transition: opacity 0.3s ease;
+      }
+      .b2-players-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 30px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        z-index: 2;
+      }
+      .b2-players-name {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: #fff;
+      }
+      .b2-players-details {
+        font-size: 14px;
+        color: rgba(255,255,255,0.8);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .b2-players-tier {
+        background: ${theme.border};
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .b2-players-race {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .b2-players-grid-wrapper {
+        flex: 1;
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        padding: 20px;
+        overflow-y: auto;
+      }
+      .b2-players-grid-wrapper::-webkit-scrollbar {
+        width: 6px;
+      }
+      .b2-players-grid-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+      }
+      .b2-players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+      }
+      .b2-players-card {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+      }
+      .b2-players-card:hover {
+        transform: translateY(-8px);
+      }
+      .b2-players-card.active {
+        transform: translateY(-4px);
+      }
+      .b2-players-thumbnail {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 16px;
+        border: 2px solid transparent;
+        background: rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+      }
+      .b2-players-card.active .b2-players-thumbnail {
+        border-color: ${theme.border};
+        box-shadow: 0 8px 25px ${theme.glow};
+      }
+      .b2-players-label {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--text3);
+        font-weight: 600;
+        text-align: center;
+      }
+      .b2-players-card.active .b2-players-label {
+        color: var(--text1);
+        font-weight: 700;
+      }
+      .b2-players-filter-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: var(--text3);
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      .b2-players-filter-btn:hover {
+        background: rgba(255,255,255,0.2);
+        color: var(--text1);
+      }
+      .b2-players-filter-btn.active {
+        background: ${theme.border};
+        border-color: ${theme.border};
+        color: #fff;
+        box-shadow: 0 4px 15px ${theme.glow};
+      }
+      .b2-players-filter-btn[data-race="all"].active {
+        background: var(--blue);
+        border-color: var(--blue);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+      @media (max-width: 768px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+        }
+        .b2-players-main {
+          flex: none;
+          height: 400px;
+        }
+        .b2-players-grid-wrapper {
+          height: auto;
+          min-height: 400px;
+        }
+      }
+    </style>
+  `;
+
+  // 필터 바
+  h += `
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'all' ? 'active' : ''}" data-race="all" onclick="_b2PlayersFilter='all';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ALL</button>
+      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'P' ? 'active' : ''}" data-race="P" onclick="_b2PlayersFilter='P';document.getElementById('b2-content').innerHTML=_b2PlayersView()">PROTOSS</button>
+      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'T' ? 'active' : ''}" data-race="T" onclick="_b2PlayersFilter='T';document.getElementById('b2-content').innerHTML=_b2PlayersView()">TERRAN</button>
+      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'Z' ? 'active' : ''}" data-race="Z" onclick="_b2PlayersFilter='Z';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ZERG</button>
+    </div>
+  `;
+
+  // 메인 래퍼
+  h += `<div class="b2-players-wrapper">`;
+  
+  // 좌측 메인 디스플레이
+  h += `
+    <div class="b2-players-main">
+      <div class="b2-players-main-content" id="b2-players-main-box">
+        ${_b2SelectedPlayer.photo 
+          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
+        }
+        <div class="b2-players-info">
+          <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
+          <div class="b2-players-details">
+            <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
+            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
+            ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
+            ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 우측 그리드
+  h += `
+    <div class="b2-players-grid-wrapper">
+      <div class="b2-players-grid">
+  `;
+
+  filteredPlayers.forEach(p => {
+    const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
+    const raceTheme = themeColors[p.race] || themeColors['N'];
+    
+    h += `
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2SelectedPlayer=players.find(pl=>pl.name==='${p.name}');document.getElementById('b2-content').innerHTML=_b2PlayersView()">
+        ${p.photo 
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="this.style.display='none'">`
+          : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${raceTheme.bg};font-size:32px;font-weight:900;color:${raceTheme.border}">${(p.name||'?')[0]}</div>`
+        }
+        <div class="b2-players-label">${p.name || '이름 없음'}</div>
+      </div>
+    `;
+  });
+
+  h += `
+      </div>
+    </div>
+  `;
+
+  h += `</div>`;
+
+  return h;
 }
