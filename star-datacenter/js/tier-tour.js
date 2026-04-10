@@ -2947,6 +2947,16 @@ function rCfg(C,T){
         <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:100px">🖼️ 이미지 가득 차기</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="cfg-b2-image-fill" ${localStorage.getItem('su_b2ImageFill')!=='0'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
+            onchange="localStorage.setItem('su_b2ImageFill',this.checked?'1':'0');render()">
+          <span style="font-size:12px;color:var(--text2)">이미지를 카드에 가득 차게 표시</span>
+        </label>
+      </div>
+    </div>
   </div>
   <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
