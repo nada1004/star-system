@@ -1452,15 +1452,18 @@ function _b2PlayersView() {
     if (!aHasRole && bHasRole) return 1;
     if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
 
-    // 직급이 같거나 없는 경우 티어 순서 정렬
+    // 직급이 같거나 없는 경우 티어 순서 정렬 (숫자 추출)
     const aTier = a.tier || '?';
     const bTier = b.tier || '?';
     const aTierIdx = tierOrder.indexOf(aTier);
     const bTierIdx = tierOrder.indexOf(bTier);
 
     if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
-    if (aTierIdx >= 0 && bTierIdx < 0) return -1;
-    if (aTierIdx < 0 && bTierIdx >= 0) return 1;
+
+    // tierOrder에 없는 경우 숫자로 비교
+    const aTierNum = parseInt(aTier) || 999;
+    const bTierNum = parseInt(bTier) || 999;
+    if (aTierNum !== bTierNum) return aTierNum - bTierNum;
 
     // 티어도 같은 경우 이름 순
     return (a.name || '').localeCompare(b.name || '');
