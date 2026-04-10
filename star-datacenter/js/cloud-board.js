@@ -24,7 +24,18 @@ function _fbArr(val, fallback) {
   return fallback||[];
 }
 
+function _decompressCloudData(d) {
+  if (d && typeof d._lz === 'string') {
+    try {
+      const json = LZString.decompressFromBase64(d._lz);
+      return JSON.parse(json);
+    } catch(e) { console.warn('[_decompressCloudData] 압축 해제 실패:', e); }
+  }
+  return d;
+}
+
 function _applyCloudData(d) {
+  d = _decompressCloudData(d);
   // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
   // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
   const _has = (key) => d[key] !== undefined && d[key] !== null;
@@ -238,26 +249,14 @@ async function fbCloudSave() {
     return obj;
   }
 
-  // 🔧 전송 전 크기 체크 — 초과 시 history 압축 후 재시도
+  // 🔧 LZString 압축 후 전송
   const _tryFbSet = async (obj) => {
-    // undefined 제거 먼저
     const clean = _removeUndefined(obj);
-    const sz = JSON.stringify(clean).length;
-    console.log('[fbCloudSave] 전송 크기:', (sz/1024).toFixed(0)+'KB');
-    if (sz > 4 * 1024 * 1024) { // 4MB 초과 시 history 축소
-      console.warn('[fbCloudSave] 페이로드 크기 초과:', (sz/1024/1024).toFixed(2)+'MB — history 압축 후 재시도');
-      const statusEl = document.getElementById('cloudStatus');
-      if(statusEl){ statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 데이터 크기 초과 — 압축 후 재시도 중...'; }
-      clean.players = (clean.players||[]).map(p => {
-        const cp = {...p};
-        if(cp.history && cp.history.length > 100) cp.history = cp.history.slice(-100);
-        return cp;
-      });
-      const slimSz = JSON.stringify(clean).length;
-      console.log('[fbCloudSave] 압축 후 크기:', (slimSz/1024).toFixed(0)+'KB');
-      return window.fbSet(clean, pw);
-    }
-    return window.fbSet(clean, pw);
+    const jsonStr = JSON.stringify(clean);
+    const compressed = LZString.compressToBase64(jsonStr);
+    const payload = { _lz: compressed };
+    console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
+    return window.fbSet(payload, pw);
   };
   try {
     await _tryFbSet(dataObj);
@@ -313,8 +312,10 @@ async function githubDataSave(dataObj) {
   });
   if (!getRes.ok) throw new Error('GitHub 파일 조회 실패: ' + getRes.status);
   const fileInfo = await getRes.json();
-  // 내용 base64 인코딩
-  const jsonStr = JSON.stringify(dataObj, null, 2);
+  // LZString 압축 후 base64 인코딩
+  const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
+  const payload = { _lz: compressed };
+  const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
   // 파일 업데이트
   const putRes = await fetch(apiUrl, {

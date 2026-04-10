@@ -117,6 +117,11 @@ initDark();
     }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
   }
   if(d){
+    // LZString 압축 데이터 자동 해제
+    if(d && typeof d._lz === 'string'){
+      try{ d = JSON.parse(LZString.decompressFromBase64(d._lz)); }
+      catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
+    }
     try{
       players  = d.players  || d.player  || [];
       univCfg  = d.univCfg  || d.univConfig || d.universities || univCfg;
