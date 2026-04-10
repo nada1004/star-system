@@ -1443,46 +1443,26 @@ function _b2PlayersView() {
   const tierOrder = ['0', '1', '2', '3', '4', '유스'];
   
   filteredPlayers.sort((a, b) => {
-    // 이름순 정렬
-    if (_b2PlayersSort === 'name') {
-      return (a.name || '').localeCompare(b.name || '');
-    }
-    
-    // 티어순 정렬
-    if (_b2PlayersSort === 'tier') {
-      const aTier = a.tier || '?';
-      const bTier = b.tier || '?';
-      const aTierIdx = tierOrder.indexOf(aTier);
-      const bTierIdx = tierOrder.indexOf(bTier);
-      
-      if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
-      if (aTierIdx >= 0 && bTierIdx < 0) return -1;
-      if (aTierIdx < 0 && bTierIdx >= 0) return 1;
-      
-      // 동일 티어 시 이름순
-      return (a.name || '').localeCompare(b.name || '');
-    }
-    
     // 기본 정렬: 직급 우선, 티어 순서
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
     const aHasRole = aRoleIdx >= 0;
     const bHasRole = bRoleIdx >= 0;
-    
+
     if (aHasRole && !bHasRole) return -1;
     if (!aHasRole && bHasRole) return 1;
     if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
-    
+
     // 티어 순서
     const aTier = a.tier || '?';
     const bTier = b.tier || '?';
     const aTierIdx = tierOrder.indexOf(aTier);
     const bTierIdx = tierOrder.indexOf(bTier);
-    
+
     if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
     if (aTierIdx >= 0 && bTierIdx < 0) return -1;
     if (aTierIdx < 0 && bTierIdx >= 0) return 1;
-    
+
     // 이름 순 (동률 시)
     return (a.name || '').localeCompare(b.name || '');
   });
@@ -1643,7 +1623,7 @@ function _b2PlayersView() {
       .b2-players-label {
         margin-top: 6px;
         font-size: 12px;
-        color: var(--text3);
+        color: var(--text1);
         font-weight: 600;
         text-align: center;
       }
@@ -1712,15 +1692,6 @@ function _b2PlayersView() {
       <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
       <button class="b2-players-filter-btn ${_b2PlayersTierFilter === '전체' ? 'active' : ''}" data-tier="전체" onclick="_b2PlayersTierFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView()">전체 티어</button>
       ${['0','1','2','3','4','유스'].map(t => `<button class="b2-players-filter-btn ${_b2PlayersTierFilter === t ? 'active' : ''}" data-tier="${t}" onclick="_b2PlayersTierFilter='${t}';document.getElementById('b2-content').innerHTML=_b2PlayersView()">${t}티어</button>`).join('')}
-      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
-      <div style="position:relative">
-        <select onchange="_b2PlayersSort=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-          <option value="default" ${_b2PlayersSort === 'default' ? 'selected' : ''}>📊 기본 정렬</option>
-          <option value="name" ${_b2PlayersSort === 'name' ? 'selected' : ''}>🔤 이름순</option>
-          <option value="tier" ${_b2PlayersSort === 'tier' ? 'selected' : ''}>🏆 티어순</option>
-        </select>
-        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-      </div>
     </div>
   `;
 
