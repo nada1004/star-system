@@ -67,8 +67,7 @@ function rBoard2(C, T) {
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
     const c = color || 'var(--blue)';
-    const id = view === 'players' ? 'id="b2-profile-tab"' : '';
-    return `<button ${id} onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
@@ -94,7 +93,7 @@ function rBoard2(C, T) {
     </div>`;
   }
 
-  const profileTabLabel = _b2View === 'players' && _b2SelectedPlayer ? `👤 ${_b2SelectedPlayer.name}` : '👤 프로필';
+  const profileTabLabel = '👤 이미지별';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
@@ -1760,12 +1759,6 @@ function _b2UpdateMainDisplay(playerName) {
   
   _b2SelectedPlayer = player;
   localStorage.setItem('su_b2SelectedPlayer', playerName);
-  
-  // 탭 버튼 텍스트 업데이트 (프로필 탭만)
-  const profileTabBtn = document.getElementById('b2-profile-tab');
-  if (profileTabBtn) {
-    profileTabBtn.textContent = `👤 ${player.name}`;
-  }
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(player.univ) || '#6366f1';
