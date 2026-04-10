@@ -1510,7 +1510,7 @@ function _b2PlayersView() {
         height: 100%;
         min-width: 100%;
         min-height: 100%;
-        object-fit: cover;
+        object-fit: fill;
         object-position: center;
         transition: opacity 0.3s ease;
       }
@@ -1791,14 +1791,14 @@ function _b2UpdateMainDisplay(playerName) {
     const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
     
     mainBox.innerHTML = `
-      ${player.photo 
-        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+      ${player.photo
+        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:fill;object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? (isGif || isImage
-        ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
-        : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
+        ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
+        : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
       ) : ''}
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
