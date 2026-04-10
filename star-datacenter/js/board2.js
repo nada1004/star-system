@@ -67,7 +67,9 @@ function rBoard2(C, T) {
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
     const c = color || 'var(--blue)';
-    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?c:'var(--border2)'};background:${on?c:'var(--white)'};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+    // 활성 상태일 때 배경색을 직접 색상으로 설정
+    const bgColor = on ? (view === 'players' ? '#a855f7' : '#3b82f6') : '#fff';
+    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?bgColor:'var(--border2)'};background:${bgColor};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
