@@ -37,6 +37,8 @@ function init(){
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
   }
+  // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
+  if(typeof syncTourneyHistory==='function') syncTourneyHistory();
   // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');

@@ -1011,9 +1011,12 @@ function formatUniversityInfo(univName) {
   const textOnColor = luminance > 140 ? '#1a202c' : '#ffffff';
   const textSubOnColor = luminance > 140 ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.75)';
 
-  // 티어 순서대로 정렬 (S→A→B→C→D), 같은 티어는 ELO 내림차순
+  // 직책순(이사장→총장→교수→코치→일반) → 티어순(S→A→B→C→D) → ELO 내림차순
+  const ROLE_ORDER = {'이사장':0,'총장':1,'교수':2,'코치':3};
   const TIER_ORDER = {S:0,A:1,B:2,C:3,D:4};
   const sortedPlayers = [...univPlayers].sort((a,b) => {
+    const ro = (ROLE_ORDER[a.role]??9) - (ROLE_ORDER[b.role]??9);
+    if(ro !== 0) return ro;
     const to = (TIER_ORDER[a.tier]??9) - (TIER_ORDER[b.tier]??9);
     return to !== 0 ? to : (b.elo||0) - (a.elo||0);
   });
