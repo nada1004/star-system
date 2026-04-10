@@ -1696,7 +1696,7 @@ function _b2PlayersView() {
             ${_b2SelectedPlayer.univ ? `<span>🏫 ${_b2SelectedPlayer.univ}</span>` : ''}
             ${_b2SelectedPlayer.role ? `<span>👔 ${_b2SelectedPlayer.role}</span>` : ''}
           </div>
-          <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s ease" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✏️ 프로필 수정</button>
+          <button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>
         </div>
       </div>
     </div>
