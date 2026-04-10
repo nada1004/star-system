@@ -1282,30 +1282,50 @@ function rCfg(C,T){
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
   // FAB 탭 설정 초기화
-  initFabTabSettings();
-}
-function saveFabTabSetting(btnKey, tabId){
-  const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-  settings[btnKey]=tabId;
-  localStorage.setItem('su_fabTabs',JSON.stringify(settings));
-  updateFabButtonOnclick();
-}
-function initFabTabSettings(){
-  const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-  const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
-  Object.keys(defaults).forEach(key=>{
-    const el=document.getElementById('cfg-fab-'+key);
-    if(el){
-      el.value=settings[key]||defaults[key];
-    }
-  });
-  updateFabButtonOnclick();
-}
-function renderStorageInfo(){
-  const el=document.getElementById('cfg-storage-info');
-  if(!el)return;
-  try{
-    let total=0;const rows=[];
+  window.saveFabTabSetting = function(btnKey, tabId){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    settings[btnKey]=tabId;
+    localStorage.setItem('su_fabTabs',JSON.stringify(settings));
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  window.initFabTabSettings = function(){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+    Object.keys(defaults).forEach(key=>{
+      const el=document.getElementById('cfg-fab-'+key);
+      if(el){
+        el.value=settings[key]||defaults[key];
+      }
+    });
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  setTimeout(function(){window.initFabTabSettings();}, 50);
+  function renderStorageInfo(){
+    const el=document.getElementById('cfg-storage-info');
+    if(!el)return;
+    try{
+      let total=0;const rows=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
+        const bytes=(k.length+v.length)*2;total+=bytes;
+        if(k.startsWith('su_'))rows.push({k,bytes});
+      }
+      rows.sort((a,b)=>b.bytes-a.bytes);
+      const limit=5*1024*1024;
+      const pct=Math.min(100,Math.round(total/limit*100));
+      const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
+      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
+      const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
+      el.innerHTML=`
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+            <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
+            <span style="font-weight:700;color:${barCol}">${pct}%</span>
+          </div>
+          <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:width .3s"></div>
+          </div>
+          ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
     for(let i=0;i<localStorage.length;i++){
       const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
       const bytes=(k.length+v.length)*2;total+=bytes;
@@ -2772,7 +2792,6 @@ function rCfg(C,T){
             <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
             ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
           </label>`).join('')}
-        </div>
         <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
         <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
       </div>
@@ -2787,7 +2806,12 @@ function rCfg(C,T){
 
     </div>
   </div>
-  <div class="ssec"><h4>📱 FAB 버튼 설정</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">📱 FAB 버튼 설정</h4>
+      <button id="cfg-fab-btn-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fab-btn-body');const btn=document.getElementById('cfg-fab-btn-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-fab-btn-body" style="display:none">
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-mobile" ${localStorage.getItem('su_fabHideMobile')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
