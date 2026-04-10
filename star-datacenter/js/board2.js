@@ -1685,7 +1685,7 @@ function _b2PlayersView() {
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}">`
+          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
         <div class="b2-players-info">
@@ -1773,7 +1773,7 @@ function _b2UpdateMainDisplay(playerName) {
     mainBox.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:rgba(0,0,0,0.1)">
         ${player.photo 
-          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="opacity:1;transition:opacity 0.5s ease;object-fit:cover;object-position:center">`
+          ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:1;transition:opacity 0.5s ease">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         }
         ${hasSecondProfile ? (isGif || isImage
