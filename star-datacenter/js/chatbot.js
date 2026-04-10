@@ -534,14 +534,20 @@ async function generateResponse(msg) {
     return formatUniversityVsRecord(univ1, univ2);
   }
   
-  // 대학 관련 검색 (정확히 일치하는 대학명만 체크)
+  // 대학 관련 검색 (정확/퍼지 매칭)
   const universityMatch = userMessage.match(/([^\s]+)/);
   if (universityMatch) {
     const univName = universityMatch[1];
-    const universities = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
-    // 정확히 일치하는 경우만 대학 정보 반환
+    const playerUnivs = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
+    const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+    const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
     if (universities.includes(univName)) {
       return formatUniversityInfo(univName);
+    }
+    // 퍼지 매칭 (부분 일치 포함)
+    const similarUniv = findSimilarUniversity(univName, universities);
+    if (similarUniv) {
+      return formatUniversityInfo(similarUniv);
     }
   }
   
@@ -563,10 +569,16 @@ async function generateResponse(msg) {
       return formatPlayerBasicInfo(player);
     }
     
-    // 선수가 없으면 대학 정확 일치만 확인 (퍼지 매칭 없이)
-    const universities = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
+    // 선수가 없으면 대학 검색 (정확/퍼지 매칭)
+    const playerUnivs2 = typeof players !== 'undefined' ? [...new Set(players.map(p => p.univ))] : [];
+    const cfgUnivs2 = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+    const universities = [...new Set([...playerUnivs2, ...cfgUnivs2])];
     if (universities.includes(playerName)) {
       return formatUniversityInfo(playerName);
+    }
+    const similarUniv2 = findSimilarUniversity(playerName, universities);
+    if (similarUniv2) {
+      return formatUniversityInfo(similarUniv2);
     }
 
     // 아무것도 못 찾으면 랜덤 스트리머 정보 반환
@@ -1030,8 +1042,12 @@ function formatUniversityInfo(univName) {
   if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
 
   const univPlayers = players.filter(p => p.univ === univName);
-  if (univPlayers.length === 0) {
-    const universities = [...new Set(players.map(p => p.univ))];
+  // univCfg에 있는 대학인지 확인
+  const inCfg = typeof univCfg !== 'undefined' && univCfg.some(u => u.name === univName);
+  if (univPlayers.length === 0 && !inCfg) {
+    const playerUnivs = [...new Set(players.map(p => p.univ))];
+    const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
+    const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
     const similarUniv = findSimilarUniversity(univName, universities);
     if (similarUniv) {
       return `🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.\n\n` + formatUniversityInfo(similarUniv);
