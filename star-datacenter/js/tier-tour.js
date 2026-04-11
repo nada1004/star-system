@@ -463,15 +463,15 @@ function rTierTourTab(C, T){
     ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
     {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
-    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='league';render()`}},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='records';openDetails={};render()`}},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='tourschedule';render()`}},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='records';openDetails={};render()`}},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>{
     const btnHtml=`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
     if(o.rightBtn){
-      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-b btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
+      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-w btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
     }
     return btnHtml;
   }).join('')}</div>`;
@@ -2000,15 +2000,15 @@ function rTierTourTab(C, T){
     ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
     {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
-    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='league';render()`}},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='records';openDetails={};render()`}},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='tourschedule';render()`}},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='records';openDetails={};render()`}},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>{
     const btnHtml=`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
     if(o.rightBtn){
-      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-b btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
+      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-w btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
     }
     return btnHtml;
   }).join('')}</div>`;
