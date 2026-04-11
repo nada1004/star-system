@@ -190,11 +190,12 @@ function histAllHTML(){
   // 검색어 필터
   const _sq=((window._recQ&&window._recQ['all'])||'').toLowerCase().trim();
   const filtered=_sq?allItems.filter(({m})=>{
-    return [
+    const searchableText=[
       m.a||'',m.b||'',m.d||'',m.wName||'',m.lName||'',m.compName||'',m.memo||'',
       (m.teamAMembers||[]).map(x=>x.name||'').join(' '),(m.teamBMembers||[]).map(x=>x.name||'').join(' '),
-      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.wName||'',g.lName||''])).join(' ')
-    ].join(' ').toLowerCase().includes(_sq);
+      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.winner||'',g.wName||'',g.lName||''])).join(' ')
+    ].join(' ').toLowerCase();
+    return searchableText.includes(_sq);
   }):allItems;
 
   const initQ=(window._recQ&&window._recQ['all'])||'';
