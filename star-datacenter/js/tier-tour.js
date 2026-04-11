@@ -4324,6 +4324,8 @@ function openRE(mode,idx){
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
+      <label>A팀 선수</label><input type="text" id="re-a" value="${m.a||''}" placeholder="선수 이름 입력">
+      <label>B팀 선수</label><input type="text" id="re-b" value="${m.b||''}" placeholder="선수 이름 입력">
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4382,6 +4384,10 @@ function saveRow(){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
+    const aVal=document.getElementById('re-a')?.value?.trim();
+    const bVal=document.getElementById('re-b')?.value?.trim();
+    if(aVal!==undefined)m.a=aVal;
+    if(bVal!==undefined)m.b=bVal;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='ck'){
