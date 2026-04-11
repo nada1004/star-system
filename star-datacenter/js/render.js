@@ -840,6 +840,7 @@ function buildPlayerDetailHTML(p){
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)
+  if(window._playerHistFilter===undefined)window._playerHistFilter=null;
   const _modeHist=window._playerHistFilter?_hist.filter(hh=>hh.mode===window._playerHistFilter):_hist;
   const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};

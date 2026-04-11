@@ -190,15 +190,17 @@ function syncMiniM(){
   (typeof miniM!=='undefined'?miniM:[]).forEach(m=>{
     if(!m._id)return;
     if(existingIds.has(m._id))return;
+    const label=m.type==='civil'?'시빌워':'미니대전';
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const mode=m.type==='civil'?'시빌워':'미니대전';
-        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','',mode);
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'',label);
+        added++;
       });
     });
     existingIds.add(m._id);
-    added++;
   });
   if(added>0)save();
   return added;
@@ -213,11 +215,13 @@ function syncUnivM(){
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대학대전');
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','대학대전');
+        added++;
       });
     });
     existingIds.add(m._id);
-    added++;
   });
   if(added>0)save();
   return added;
@@ -232,11 +236,16 @@ function syncCkM(){
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대학CK');
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
+        added++;
       });
     });
     existingIds.add(m._id);
-    added++;
   });
   if(added>0)save();
   return added;
@@ -251,11 +260,16 @@ function syncProM(){
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','프로리그');
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
+        added++;
       });
     });
     existingIds.add(m._id);
-    added++;
   });
   if(added>0)save();
   return added;
@@ -270,11 +284,13 @@ function syncTtM(){
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','티어대회');
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','티어대회');
+        added++;
       });
     });
     existingIds.add(m._id);
-    added++;
   });
   if(added>0)save();
   return added;
@@ -290,12 +306,14 @@ function syncTourneys(){
         (m.sets||[]).forEach(s=>{
           (s.games||[]).forEach(g=>{
             if(!g.playerA||!g.playerB||!g.winner)return;
+            const wn=g.winner==='A'?g.playerA:g.playerB;
+            const ln=g.winner==='A'?g.playerB:g.playerA;
             const mode=tn.type==='tier'?'티어대회':'조별리그';
-            applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','',mode);
+            applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'',mode);
+            added++;
           });
         });
         existingIds.add(m._id);
-        added++;
       });
     });
     Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
@@ -303,11 +321,13 @@ function syncTourneys(){
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
           if(!g.playerA||!g.playerB||!g.winner)return;
-          applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대회');
+          const wn=g.winner==='A'?g.playerA:g.playerB;
+          const ln=g.winner==='A'?g.playerB:g.playerA;
+          applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','대회');
+          added++;
         });
       });
       existingIds.add(m._id);
-      added++;
     });
   });
   if(added>0)save();
