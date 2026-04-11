@@ -1591,13 +1591,13 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          height: 400px;
+          height: 500px;
         }
         .b2-players-grid-wrapper {
           flex: none;
           width: 100%;
           height: auto;
-          max-height: 400px;
+          max-height: 500px;
         }
         .b2-players-grid {
           grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -1655,6 +1655,26 @@ function _b2PlayersView() {
         color: #fff;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
       }
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .b2-players-wrapper {
+          flex-direction: row;
+          height: 600px;
+        }
+        .b2-players-main {
+          flex: 0 0 45%;
+          height: 100%;
+        }
+        .b2-players-grid-wrapper {
+          flex: 1;
+          height: 100%;
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        }
+        .b2-players-name {
+          font-size: 28px;
+        }
+      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
@@ -1662,11 +1682,11 @@ function _b2PlayersView() {
         }
         .b2-players-main {
           flex: none;
-          height: 400px;
+          height: 500px;
         }
         .b2-players-grid-wrapper {
           height: auto;
-          min-height: 400px;
+          min-height: 500px;
         }
       }
     </style>
@@ -1683,10 +1703,15 @@ function _b2PlayersView() {
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
-      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'all' ? 'active' : ''}" data-race="all" onclick="_b2PlayersFilter='all';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ALL</button>
-      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'P' ? 'active' : ''}" data-race="P" onclick="_b2PlayersFilter='P';document.getElementById('b2-content').innerHTML=_b2PlayersView()">PROTOSS</button>
-      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'T' ? 'active' : ''}" data-race="T" onclick="_b2PlayersFilter='T';document.getElementById('b2-content').innerHTML=_b2PlayersView()">TERRAN</button>
-      <button class="b2-players-filter-btn ${_b2PlayersFilter === 'Z' ? 'active' : ''}" data-race="Z" onclick="_b2PlayersFilter='Z';document.getElementById('b2-content').innerHTML=_b2PlayersView()">ZERG</button>
+      <div style="position:relative">
+        <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
+          <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
+          <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
+          <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
     </div>
   `;
 
