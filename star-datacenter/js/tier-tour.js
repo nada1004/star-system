@@ -1346,8 +1346,229 @@ function rCfg(C,T){
         }).join('')}
       </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
-}
+
+  // 이미지 설정 섹션
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  h+=`${_cfgD('img','🖼️ 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">카드 이미지 관련 설정을 관리합니다.</div>
+    
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🔗 이미지 링크 설정</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">첫 번째 이미지 링크</label>
+          <input type="text" id="cfg-img-link1" value="${imgSettings.link1||''}" placeholder="https://..." style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">두 번째 이미지 링크</label>
+          <input type="text" id="cfg-img-link2" value="${imgSettings.link2||''}" placeholder="https://..." style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px">
+        </div>
+        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 이미지 링크 저장</button>
+      </div>
+    </div>
+
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🎨 카드 이미지 스타일</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">카드 가득 채우기</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
+            <input type="checkbox" id="cfg-img-fill" ${imgSettings.fill?'checked':''}> 이미지를 카드 전체에 채우기
+          </label>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">확대/축소 <span id="cfg-img-scale-val">${(imgSettings.scale||1).toFixed(2)}x</span></label>
+          <input type="range" id="cfg-img-scale" min="0.5" max="3" step="0.1" value="${imgSettings.scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-val').textContent=this.value+'x'">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">밝기 <span id="cfg-img-brightness-val">${(imgSettings.brightness||1).toFixed(2)}x</span></label>
+          <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${imgSettings.brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
+        </div>
+        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 스타일 저장</button>
+      </div>
+    </div>
+
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🔄 랜덤 이미지 회전</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">전체대학 보기에서 랜덤 회전</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
+            <input type="checkbox" id="cfg-img-random" ${imgSettings.randomRotation?'checked':''}> 5초마다 랜덤으로 스트리머 이미지 변경
+          </label>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">회전 간격 (초)</label>
+          <input type="number" id="cfg-img-interval" value="${imgSettings.interval||5}" min="2" max="30" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        </div>
+        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 회전 설정 저장</button>
+      </div>
+    </div>
+
+    <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
+      <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:8px">💡 사용법</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        • 이미지 링크를 설정하면 카드에 표시됩니다.<br>
+        • 우클릭 메뉴에서 개별 카드의 크기/밝기를 조절할 수 있습니다.<br>
+        • 전체대학 보기에서 랜덤 회전을 활성화하면 5초마다 다른 스트리머 이미지로 변경됩니다.<br>
+        • 특정 대학을 보면 랜덤 회전이 비활성화되고 고정 이미지가 표시됩니다.
+      </div>
+    </div>
+  </details>`;
+  C.innerHTML=h;
 } // end first rCfg
+
+// ── 이미지 설정 저장 함수 ──
+function saveImageSettings(){
+  const settings = {
+    link1: document.getElementById('cfg-img-link1')?.value?.trim() || '',
+    link2: document.getElementById('cfg-img-link2')?.value?.trim() || '',
+    fill: document.getElementById('cfg-img-fill')?.checked || false,
+    scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
+    brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
+    randomRotation: document.getElementById('cfg-img-random')?.checked || false,
+    interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
+  };
+  localStorage.setItem('su_img_settings', JSON.stringify(settings));
+  alert('이미지 설정이 저장되었습니다.');
+  if(typeof render === 'function') render();
+}
+
+// ── 우클릭 이미지 조절 메뉴 ──
+let _imgContextMenuEl = null;
+let _currentImageTarget = null;
+
+function showImageContextMenu(e, imgElement){
+  e.preventDefault();
+  _currentImageTarget = imgElement;
+  
+  // 기존 메뉴 제거
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
+  }
+  
+  const menu = document.createElement('div');
+  menu.style.cssText = `
+    position: fixed;
+    left: ${e.clientX}px;
+    top: ${e.clientY}px;
+    background: var(--white);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 180px;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  `;
+  
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const currentScale = imgElement.dataset.scale || imgSettings.scale || 1;
+  const currentBrightness = imgElement.dataset.brightness || imgSettings.brightness || 1;
+  
+  menu.innerHTML = `
+    <div style="padding: 8px 16px; font-size: 12px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border);">
+      🖼️ 이미지 조절
+    </div>
+    <div style="padding: 8px 16px;">
+      <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">크기: <span id="ctx-scale-val">${currentScale}x</span></label>
+      <input type="range" id="ctx-scale" min="0.5" max="3" step="0.1" value="${currentScale}" style="width: 100%;" oninput="document.getElementById('ctx-scale-val').textContent=this.value+'x'">
+    </div>
+    <div style="padding: 8px 16px;">
+      <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">밝기: <span id="ctx-bright-val">${currentBrightness}x</span></label>
+      <input type="range" id="ctx-bright" min="0.3" max="2" step="0.1" value="${currentBrightness}" style="width: 100%;" oninput="document.getElementById('ctx-bright-val').textContent=this.value+'x'">
+    </div>
+    <div style="padding: 8px 16px; border-top: 1px solid var(--border);">
+      <button onclick="applyImageContextStyle()" style="width: 100%; padding: 6px 12px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor:pointer;">✅ 적용</button>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  _imgContextMenuEl = menu;
+  
+  // 메뉴 외부 클릭 시 닫기
+  setTimeout(()=>{
+    const closeMenu = (ev)=>{
+      if(!menu.contains(ev.target)){
+        menu.remove();
+        _imgContextMenuEl = null;
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    document.addEventListener('click', closeMenu);
+  }, 0);
+}
+
+function applyImageContextStyle(){
+  if(!_currentImageTarget) return;
+  
+  const scale = document.getElementById('ctx-scale')?.value || 1;
+  const brightness = document.getElementById('ctx-bright')?.value || 1;
+  
+  _currentImageTarget.style.transform = `scale(${scale})`;
+  _currentImageTarget.style.filter = `brightness(${brightness})`;
+  _currentImageTarget.dataset.scale = scale;
+  _currentImageTarget.dataset.brightness = brightness;
+  
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
+    _imgContextMenuEl = null;
+  }
+}
+
+// ── 랜덤 이미지 회전 ──
+let _randomRotationTimer = null;
+
+function startRandomRotation(){
+  stopRandomRotation();
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  if(!imgSettings.randomRotation) return;
+  
+  const interval = (imgSettings.interval || 5) * 1000;
+  
+  _randomRotationTimer = setInterval(()=>{
+    rotateRandomImage();
+  }, interval);
+}
+
+function stopRandomRotation(){
+  if(_randomRotationTimer){
+    clearInterval(_randomRotationTimer);
+    _randomRotationTimer = null;
+  }
+}
+
+function rotateRandomImage(){
+  // 전체대학 보기에서만 작동
+  if(currentTab !== 'total') return;
+  
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  if(!imgSettings.randomRotation) return;
+  
+  // 랜덤 스트리머 선택
+  if(players && players.length > 0){
+    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    const imgContainer = document.querySelector('.random-image-container');
+    if(imgContainer && randomPlayer.photo){
+      imgContainer.src = randomPlayer.photo;
+    }
+  }
+}
+
+// 현재 탭 추적
+let currentTab = 'total';
+
+// 탭 변경 시 회전 제어
+const originalSw = window.sw;
+window.sw = function(tab, el){
+  currentTab = tab;
+  if(originalSw) originalSw(tab, el);
+  
+  if(tab === 'total'){
+    startRandomRotation();
+  } else {
+    stopRandomRotation();
+  }
+};
 
 // ── 크루 관리 함수들 ──
 function _refreshCrewList(){
