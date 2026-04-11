@@ -1064,6 +1064,8 @@ function buildPlayerDetailHTML(p){
       const isWin=hh.result==='승';
       const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
+      // Backfill missing oppRace from players array
+      const oppRace=hh.oppRace||oppP?.race||'';
       const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
@@ -1082,7 +1084,7 @@ function buildPlayerDetailHTML(p){
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
-        <td><span class="rbadge r${hh.oppRace||''}" style="font-size:10px">${hh.oppRace||''}</span></td>
+        <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
         <td>${eloStr}</td>
         ${editBtnHTML}
