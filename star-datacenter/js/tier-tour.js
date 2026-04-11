@@ -1268,74 +1268,10 @@ function rCfg(C,T){
   `;
 
   // 이미지 설정 섹션
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  h+=`<div class="ssec" style="margin-top:20px">
-    <h4 style="margin:0 0 10px 0">🖼️ 이미지 설정</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">카드 이미지 관련 설정을 관리합니다.</div>
-    
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🔗 이미지 링크 설정</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">첫 번째 이미지 링크</label>
-          <input type="text" id="cfg-img-link1" value="${imgSettings.link1||''}" placeholder="https://..." style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">두 번째 이미지 링크</label>
-          <input type="text" id="cfg-img-link2" value="${imgSettings.link2||''}" placeholder="https://..." style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px">
-        </div>
-        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 이미지 링크 저장</button>
-      </div>
-    </div>
-
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🎨 카드 이미지 스타일</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">카드 가득 채우기</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="cfg-img-fill" ${imgSettings.fill?'checked':''}> 이미지를 카드 전체에 채우기
-          </label>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">확대/축소 <span id="cfg-img-scale-val">${(imgSettings.scale||1).toFixed(2)}x</span></label>
-          <input type="range" id="cfg-img-scale" min="0.5" max="3" step="0.1" value="${imgSettings.scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-val').textContent=this.value+'x'">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">밝기 <span id="cfg-img-brightness-val">${(imgSettings.brightness||1).toFixed(2)}x</span></label>
-          <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${imgSettings.brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
-        </div>
-        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 스타일 저장</button>
-      </div>
-    </div>
-
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🔄 랜덤 이미지 회전</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">전체대학 보기에서 랜덤 회전</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="cfg-img-random" ${imgSettings.randomRotation?'checked':''}> 5초마다 랜덤으로 스트리머 이미지 변경
-          </label>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">회전 간격 (초)</label>
-          <input type="number" id="cfg-img-interval" value="${imgSettings.interval||5}" min="2" max="30" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        </div>
-        <button class="btn btn-b btn-sm" onclick="saveImageSettings()">💾 회전 설정 저장</button>
-      </div>
-    </div>
-
-    <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
-      <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:8px">💡 사용법</div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.8">
-        • 이미지 링크를 설정하면 카드에 표시됩니다.<br>
-        • 우클릭 메뉴에서 개별 카드의 크기/밝기를 조절할 수 있습니다.<br>
-        • 전체대학 보기에서 랜덤 회전을 활성화하면 5초마다 다른 스트리머 이미지로 변경됩니다.<br>
-        • 특정 대학을 보면 랜덤 회전이 비활성화되고 고정 이미지가 표시됩니다.
-      </div>
-    </div>
-  </div>`;
+  h+='<div class="ssec" style="margin-top:20px">';
+  h+='<h4 style="margin:0 0 10px 0">🖼️ 이미지 설정</h4>';
+  h+='<div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">카드 이미지 관련 설정을 관리합니다.</div>';
+  h+='</div>';
 
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
