@@ -2921,52 +2921,60 @@ function rCfg(C,T){
               <option value="stats">📊 통계</option>
               <option value="roulette">🎰 룰렛</option>
             </select>
-          </div>
+<!-- ... -->
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🎨 현황판 설정</h4>
+      <button id="cfg-board-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-body');const btn=document.getElementById('cfg-board-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-board-body" style="display:none">
+      <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
+          <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
+          <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
+          <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
+          <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">👤 현황판 프로필 배경</span>
+          <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;render()">
+          <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">🖼️ 스트리머 상세 프로필</span>
+          <select onchange="localStorage.setItem('su_b2ImageFill',this.value);const pb=document.getElementById('playerModalBody');if(pb){const p=players.find(x=>x.name===window._playerModalCurrentName);if(p){pb.innerHTML=buildPlayerDetailHTML(p);injectUnivIcons(pb);}}}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer">
+            <option value="0" ${localStorage.getItem('su_b2ImageFill')==='0'?'selected':''}>꽉 차게 (cover)</option>
+            <option value="1" ${localStorage.getItem('su_b2ImageFill')==='1'?'selected':''}>늘리기 (contain)</option>
+          </select>
         </div>
       </div>
     </div>
   </div>
-  <div class="ssec"><h4>🎨 현황판 설정</h4>
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
-    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
-        <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
-        <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
-        <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
-        <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
-      </div>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">👥 스트리머 일괄 등록</h4>
+      <button id="cfg-bulk-add-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-add-body');const btn=document.getElementById('cfg-bulk-add-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
-    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">👤 현황판 프로필 배경</span>
-        <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;render()">
-        <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
+    <div id="cfg-bulk-add-body" style="display:none">
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+        한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
+  <!-- ... -->
+        종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
+        기본값: 티어=미정, 현황판 제외. show 입력 시 현황판에 표시.<br>
+        <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K show &nbsp;&nbsp; 김선수 T</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">🖼️ 스트리머 상세 프로필</span>
-        <select onchange="localStorage.setItem('su_b2ImageFill',this.value);const pb=document.getElementById('playerModalBody');if(pb){const p=players.find(x=>x.name===window._playerModalCurrentName);if(p){pb.innerHTML=buildPlayerDetailHTML(p);injectUnivIcons(pb);}}}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer">
-          <option value="0" ${localStorage.getItem('su_b2ImageFill')==='0'?'selected':''}>꽉 차게 (cover)</option>
-          <option value="1" ${localStorage.getItem('su_b2ImageFill')==='1'?'selected':''}>늘리기 (contain)</option>
-        </select>
+      <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
+        <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
       </div>
-    </div>
-  </div>
-  <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
-      한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
-<!-- ... -->
-      종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
-      기본값: 티어=미정, 현황판 제외. show 입력 시 현황판에 표시.<br>
-      <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K show &nbsp;&nbsp; 김선수 T</span>
-    </div>
-    <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
-      <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
-      <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
     </div>
   </div>
   <div class="ssec">
