@@ -20,10 +20,10 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
-// 프로필 탭 이미지 조절 설정 (player별)
-let _b2ImgSettings = JSON.parse(localStorage.getItem('su_b2_img_settings') || '{}');
+// 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
+let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
-  localStorage.setItem('su_b2_img_settings', JSON.stringify(_b2ImgSettings));
+  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
 }
 function _b2DefaultSingleImgSettings() {
   return {
@@ -38,64 +38,31 @@ function _b2DefaultSingleImgSettings() {
     posY: 0
   };
 }
-function _b2NormalizeImgSettings(playerName) {
-  const raw = _b2ImgSettings[playerName];
-  if (!raw) {
-    _b2ImgSettings[playerName] = {
-      primary: _b2DefaultSingleImgSettings(),
-      secondary: _b2DefaultSingleImgSettings()
-    };
-    return _b2ImgSettings[playerName];
-  }
-  if (!raw.primary || !raw.secondary) {
-    _b2ImgSettings[playerName] = {
-      primary: {
-        scale: raw.zoom ?? 100,
-        brightness: raw.brightness ?? 100,
-        fit: raw.fill || 'contain',
-        offsetX: raw.posX ?? 0,
-        offsetY: raw.posY ?? 0,
-        zoom: raw.zoom ?? 100,
-        fill: raw.fill || 'contain',
-        posX: raw.posX ?? 0,
-        posY: raw.posY ?? 0
-      },
-      secondary: _b2DefaultSingleImgSettings()
-    };
-    return _b2ImgSettings[playerName];
-  }
-  raw.primary = Object.assign(_b2DefaultSingleImgSettings(), raw.primary || {});
-  raw.secondary = Object.assign(_b2DefaultSingleImgSettings(), raw.secondary || {});
-  raw.primary.zoom = raw.primary.scale;
-  raw.primary.fill = raw.primary.fit;
-  raw.primary.posX = raw.primary.offsetX;
-  raw.primary.posY = raw.primary.offsetY;
-  raw.secondary.zoom = raw.secondary.scale;
-  raw.secondary.fill = raw.secondary.fit;
-  raw.secondary.posX = raw.secondary.offsetX;
-  raw.secondary.posY = raw.secondary.offsetY;
-  return raw;
-}
 function _b2GetImgSettings(playerName, slot) {
+  // 전역 설정 사용 (모든 선수 동일)
   const key = slot === 'secondary' ? 'secondary' : 'primary';
-  return _b2NormalizeImgSettings(playerName)[key];
+  if (!_b2GlobalImgSettings[key]) {
+    _b2GlobalImgSettings[key] = _b2DefaultSingleImgSettings();
+  }
+  // 동기화
+  _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
+  _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
+  _b2GlobalImgSettings[key].posX = _b2GlobalImgSettings[key].offsetX;
+  _b2GlobalImgSettings[key].posY = _b2GlobalImgSettings[key].offsetY;
+  return _b2GlobalImgSettings[key];
 }
 function _b2SetImgSetting(playerName, key, val) {
+  // 전역 설정 사용
   const s = _b2GetImgSettings(playerName, 'primary');
   s[key] = val;
   _b2SaveImgSettings();
 }
 function _b2ResetImgSettings(playerName, slot) {
+  // 전역 설정 초기화 (모든 선수 동일하게 적용)
   if (slot === 'primary' || slot === 'secondary') {
-    const normalized = _b2NormalizeImgSettings(playerName);
-    normalized[slot] = _b2DefaultSingleImgSettings();
-  } else {
-    _b2ImgSettings[playerName] = {
-      primary: _b2DefaultSingleImgSettings(),
-      secondary: _b2DefaultSingleImgSettings()
-    };
+    _b2GlobalImgSettings[slot] = _b2DefaultSingleImgSettings();
+    _b2SaveImgSettings();
   }
-  _b2SaveImgSettings();
 }
 function _b2GetImgDomId(slot) {
   return slot === 'secondary' ? 'b2-main-img-2' : 'b2-main-img-1';
@@ -119,6 +86,7 @@ function _b2ApplyImgSettingsToDom(playerName, slot) {
 
 // 설정 탭용 이미지 설정 함수
 function _b2CenterImageCfg(playerName, slot) {
+  // 전역 설정 사용
   const s = _b2GetImgSettings(playerName, slot);
   s.offsetX = 0;
   s.offsetY = 0;
@@ -128,26 +96,13 @@ function _b2CenterImageCfg(playerName, slot) {
   if (typeof _renderCfgImgSettings === 'function') _renderCfgImgSettings(playerName);
 }
 
-// 현재 설정을 모든 선수에게 적용
+// 현재 설정을 모든 선수에게 적용 (전역 설정이므로 이미 적용됨)
 function _b2ApplySettingsToAll(refPlayerName, slot) {
-  const refSettings = _b2GetImgSettings(refPlayerName, slot);
-  const targetPlayers = players.filter(p => p.name !== refPlayerName && (slot === 'primary' ? p.photo : p.secondProfileFile));
-  
-  targetPlayers.forEach(p => {
-    const s = _b2GetImgSettings(p.name, slot);
-    s.scale = refSettings.scale;
-    s.brightness = refSettings.brightness;
-    s.fit = refSettings.fit;
-    s.offsetX = refSettings.offsetX;
-    s.offsetY = refSettings.offsetY;
-    s.zoom = refSettings.zoom;
-    s.fill = refSettings.fill;
-    s.posX = refSettings.posX;
-    s.posY = refSettings.posY;
-  });
+  // 전역 설정은 이미 모든 선수에 적용됨
+  const settings = _b2GetImgSettings(refPlayerName, slot);
   _b2SaveImgSettings();
-  alert(`${targetPlayers.length}명의 선수에게 ${slot === 'primary' ? '이미지 1' : '이미지 2'} 설정이 적용되었습니다.`);
-  _renderCfgImgSettings(refPlayerName);
+  alert(`이미지 ${slot === 'primary' ? '1' : '2'} 설정이 모든 선수에게 적용되었습니다. (크기: ${settings.scale}%, 밝기: ${settings.brightness}%, 배치: ${settings.fit})`);
+  if (typeof _renderCfgImgSettings === 'function') _renderCfgImgSettings(refPlayerName);
 }
 
 // 설정 탭용 이미지 설정 UI 렌더링 함수
@@ -2313,11 +2268,6 @@ function _b2UpdateMainDisplay(playerName) {
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
-      <div class="b2-players-img-controls">
-        <div class="b2-players-controls-title">이미지 설정</div>
-        ${_b2BuildImageControlGroup(player.name, 'primary', '프로필 이미지 1', !!player.photo)}
-        ${_b2BuildImageControlGroup(player.name, 'secondary', '프로필 이미지 2', hasSecondProfile)}
-      </div>
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
