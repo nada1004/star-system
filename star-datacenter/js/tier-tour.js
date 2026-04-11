@@ -11,6 +11,13 @@ function _migrateTierTourneys(){
     if(!tn.groups){tn.groups=[];changed=true;}
     if(!tn.bracket){tn.bracket={slots:{},winners:{},champ:''};changed=true;}
   });
+  // 기존 브라켓 기록(_proKey가 ptn_으로 시작)에 stage:'bkt' 추가 및 _proKey 제거
+  (ttM||[]).forEach(r=>{
+    if(r._proKey && r._proKey.startsWith('ptn_')){
+      if(!r.stage){ r.stage='bkt'; changed=true; }
+      delete r._proKey; changed=true;
+    }
+  });
   if(changed) save();
 }
 
@@ -309,6 +316,13 @@ function _grpPasteApplyLogic(savable){
       applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
     });
   });
+  // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
+  if(tn.type==='tier'){
+    const _ei=ttM.findIndex(x=>x._id===matchId);
+    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'};
+    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
+  }
+
   save();
   // 이중저장 방지: 편집 모달 + 붙여넣기 모달 모두 닫기
   window._grpPasteMode = false;
@@ -460,21 +474,15 @@ function rTierTourTab(C, T){
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
   const subOpts=[
-    ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
+    ...(isLoggedIn?[{id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`}]:[]),
+    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`},
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
-    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='records';openDetails={};render()`}},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='records';openDetails={};render()`}},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>{
-    const btnHtml=`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
-    if(o.rightBtn){
-      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-w btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
-    }
-    return btnHtml;
-  }).join('')}</div>`;
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -494,29 +502,11 @@ function rTierTourTab(C, T){
     grpEditId=_curTierTn.id;
     h+=rGrpEditInner();
   } else {
-    // records 탭 - tourneys에서 티어대회(type='tier')만 추출
-    const tierTourneys=(tourneys||[]).filter(t=>t.type==='tier');
-    const _ttFiltered=_ttCurComp ? tierTourneys.filter(t=>t.name===_ttCurComp) : tierTourneys;
+    // records 탭
+    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
     
-    // tourneys에서 기록 추출
-    const records=[];
-    _ttFiltered.forEach(tn=>{
-      (tn.groups||[]).forEach(grp=>{
-        (grp.matches||[]).forEach(m=>{
-          if(m._id&&m.sa!=null){
-            records.push({_id:m._id,d:m.d||'',a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'});
-          }
-        });
-      });
-      Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-        if(m._id&&m.sa!=null){
-          records.push({_id:m._id,d:m.d||'',a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bracket'});
-        }
-      });
-    });
-    
-    h+=records.length?recSummaryListHTML(records,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
+    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }
@@ -603,8 +593,8 @@ function ttPlayerRankHTML(compName){
 function rTierTour(){
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
-    {id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`},
-    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`}
+    {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
+    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
   let h=stabs(_ttSub,subOpts);
   if(_ttSub==='input' && isLoggedIn){
@@ -1997,21 +1987,15 @@ function rTierTourTab(C, T){
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
   const subOpts=[
-    ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
+    ...(isLoggedIn?[{id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`}]:[]),
+    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`},
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
-    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`,rightBtn:{lbl:'조별리그 기록',fn:`_ttSub='records';openDetails={};render()`}},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,rightBtn:{lbl:'토너먼트 기록',fn:`_ttSub='records';openDetails={};render()`}},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>{
-    const btnHtml=`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
-    if(o.rightBtn){
-      return `<div style="display:inline-flex;align-items:center;gap:4px">${btnHtml}<button class="btn btn-w btn-xs" onclick="${o.rightBtn.fn}">${o.rightBtn.lbl}</button></div>`;
-    }
-    return btnHtml;
-  }).join('')}</div>`;
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -2133,8 +2117,8 @@ function ttPlayerRankHTML(compName){
 function rTierTour(){
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
-    {id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`},
-    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`}
+    {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
+    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`}
   ];
   let h=stabs(_ttSub,subOpts);
   if(_ttSub==='input' && isLoggedIn){
@@ -2377,6 +2361,8 @@ function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
+/* ══════════════════════════════════════
+
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
@@ -2631,18 +2617,6 @@ function rCfg(C,T){
         <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncTourneyHistoryBtn==='function')syncTourneyHistoryBtn()">🔄 대회 동기화</button>
         <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()">⚡ 전체 동기화</button>
         <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
-        <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof cleanupPlayerHistoryDuplicates==='function')cleanupPlayerHistoryDuplicates()">🧹 중복 기록 정리</button>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-        <span style="font-size:11px;color:var(--gray-l);font-weight:700;align-self:center">개별 동기화:</span>
-        <button class="btn btn-xs" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncIndMBtn==='function')syncIndMBtn()">개인전</button>
-        <button class="btn btn-xs" style="background:#8b5cf6;color:#fff;border-color:#8b5cf6" onclick="if(typeof syncGjMBtn==='function')syncGjMBtn()">끝장전</button>
-        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="if(typeof syncMiniMBtn==='function')syncMiniMBtn()">미니대전</button>
-        <button class="btn btn-xs" style="background:#2563eb;color:#fff;border-color:#2563eb" onclick="if(typeof syncUnivMBtn==='function')syncUnivMBtn()">대학대전</button>
-        <button class="btn btn-xs" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof syncCkMBtn==='function')syncCkMBtn()">대학CK</button>
-        <button class="btn btn-xs" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="if(typeof syncProMBtn==='function')syncProMBtn()">프로리그</button>
-        <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border-color:#f59e0b" onclick="if(typeof syncTtMBtn==='function')syncTtMBtn()">티어대회</button>
-        <button class="btn btn-xs" style="background:#d97706;color:#fff;border-color:#d97706" onclick="if(typeof syncTourneysBtn==='function')syncTourneysBtn()">대회</button>
       </div>
     </div>
   </div>
@@ -2845,7 +2819,7 @@ function rCfg(C,T){
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">📱 FAB 버튼 설정</h4>
-      <button id="cfg-fab-btn-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fab-btn-body');const btn=document.getElementById('cfg-fab-btn-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+      <button id="cfg-fab-btn-toggle" class="btn btn-w btn-xs" onclick="toggleSection('cfg-fab-btn-body','cfg-fab-btn-toggle')">▼ 펼치기</button>
     </div>
     <div id="cfg-fab-btn-body" style="display:none">
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -2952,81 +2926,49 @@ function rCfg(C,T){
       </div>
     </div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-board-body');const btn=document.getElementById('cfg-board-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">🎨 현황판 설정</h4>
-      <button id="cfg-board-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-body');const btn=document.getElementById('cfg-board-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+  <div class="ssec"><h4>🎨 현황판 설정</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
+        <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
+        <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
+        <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
+        <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
+      </div>
     </div>
-    <div id="cfg-board-body" style="display:none">
-      <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
-          <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
-          <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
-          <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
-          <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">👤 현황판 프로필 배경</span>
-          <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;if(typeof _b2Render==='function')_b2Render()">
-          <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">🖼️ 스트리머 상세 프로필</span>
-          <select onchange="localStorage.setItem('su_b2ImageFill',this.value);const pb=document.getElementById('playerModalBody');if(pb){const p=players.find(x=>x.name===window._playerModalCurrentName);if(p){pb.innerHTML=buildPlayerDetailHTML(p);injectUnivIcons(pb);}}else if(typeof _b2Render==='function'){_b2Render();}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer">
-            <option value="0" ${localStorage.getItem('su_b2ImageFill')==='0'?'selected':''}>꽉 차게 (cover)</option>
-            <option value="1" ${localStorage.getItem('su_b2ImageFill')==='1'?'selected':''}>늘리기 (contain)</option>
-          </select>
-        </div>
-      </div>
+  </div>
+  <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+      한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
+      종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
+      기본값: 티어=미정, 현황판 제외. show 입력 시 현황판에 표시.<br>
+      <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K show &nbsp;&nbsp; 김선수 T</span>
+    </div>
+    <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
+      <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
     </div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-bulk-add-body');const btn=document.getElementById('cfg-bulk-add-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">👥 스트리머 일괄 등록</h4>
-      <button id="cfg-bulk-add-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-add-body');const btn=document.getElementById('cfg-bulk-add-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-add-body" style="display:none">
-      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
-        한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
-  <!-- ... -->
-        종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
-        기본값: 티어=미정, 현황판 제외. show 입력 시 현황판에 표시.<br>
-        <span style="font-size:11px">예) 진자림P Z 공주대 S &nbsp;&nbsp; 리하Z Z 부산대 K show &nbsp;&nbsp; 김선수 T</span>
-      </div>
-      <textarea id="bulk-player-input" placeholder="진자림P Z 공주대 S&#10;리하Z Z 부산대 K&#10;김선수 T 무소속 hide" style="width:100%;height:120px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box;font-family:'Noto Sans KR',monospace"></textarea>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
-        <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
-      </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('bulk-edit-table-container');const btn=document.getElementById('bulk-edit-toggle');if(c.style.display==='none'){c.style.display='';if(!c.dataset.loaded){renderBulkEditTable();c.dataset.loaded='1';}btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">✏️ 스트리머 일괄 수정</h4>
-      <button id="bulk-edit-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('bulk-edit-table-container');const btn=document.getElementById('bulk-edit-toggle');if(c.style.display==='none'){c.style.display='';if(!c.dataset.loaded){renderBulkEditTable();c.dataset.loaded='1';}btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+      <h4 style="margin:0">✏️ 스트리머 일괄 수정</h4>
+      <button id="bulk-edit-toggle" class="btn btn-w btn-xs" onclick="toggleSectionWithRender('bulk-edit-table-container','bulk-edit-toggle',renderBulkEditTable)">▼ 펼치기</button>
     </div>
     <div id="bulk-edit-table-container" style="display:none"></div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">🎨 스트리머 상세 스타일</h4>
-      <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+      <h4 style="margin:0">🎨 스트리머 상세 스타일</h4>
+      <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="toggleSectionWithRender('cfg-pd-body','cfg-pd-toggle',_renderCfgPdSection)">▼ 펼치기</button>
     </div>
     <div id="cfg-pd-body" style="display:none"></div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-backup-body');const btn=document.getElementById('cfg-backup-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">📦 데이터 백업 / 복원</h4>
-      <button id="cfg-backup-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-backup-body');const btn=document.getElementById('cfg-backup-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-backup-body" style="display:none">
+  <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b" onclick="exportDataJSON()">📥 JSON 내보내기</button>
@@ -3075,6 +3017,34 @@ function rCfg(C,T){
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
   };
   setTimeout(function(){window.initFabTabSettings();}, 50);
+}
+function toggleSection(bodyId, btnId){
+  const c=document.getElementById(bodyId);
+  const btn=document.getElementById(btnId);
+  if(!c||!btn)return;
+  if(c.style.display==='none'){
+    c.style.display='';
+    btn.textContent='▲ 접기';
+  }else{
+    c.style.display='none';
+    btn.textContent='▼ 펼치기';
+  }
+}
+function toggleSectionWithRender(bodyId, btnId, renderFn){
+  const c=document.getElementById(bodyId);
+  const btn=document.getElementById(btnId);
+  if(!c||!btn)return;
+  if(c.style.display==='none'){
+    c.style.display='';
+    if(!c.dataset.loaded && typeof renderFn==='function'){
+      renderFn();
+      c.dataset.loaded='1';
+    }
+    btn.textContent='▲ 접기';
+  }else{
+    c.style.display='none';
+    btn.textContent='▼ 펼치기';
+  }
 }
 function renderBulkEditTable(){
   const container=document.getElementById('bulk-edit-table-container');
@@ -3984,9 +3954,6 @@ window.openEP=function(name){
       </span>
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
-    <label>🎬 두번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 프로필 탭에서만 1초 후 자동 전환 · GIF/비디오 · 음성 포함)</span></label>
-    <input type="text" id="ed-second-profile" value="${p.secondProfileFile||''}" placeholder="https://... GIF 또는 비디오 URL 입력" style="width:100%">
-    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 프로필 탭에서만 1초 후 두번째 프로필(GIF/비디오)로 자동 전환됩니다. 음성이 포함됩니다.</div>
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
@@ -4062,11 +4029,18 @@ window.openEP=function(name){
         👁️ 현황판에서 숨기기 (스탯·기록은 유지, 구현황판·신현황판 모두 적용)
       </label>
     </div>
+    <div style="margin-top:10px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px">
+      <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
+      <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
+        <option value="">— 소속 없음 —</option>
+        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
+    </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
-    </div>
-  `;
+    </div>`;
   om('emModal');
 }
 // 스트리머 상세 모달 → 수정창 열기
@@ -4176,8 +4150,6 @@ function savePlayer(){
     }
   }
   p.photo=_photo||undefined;
-  const _secondProfile=(document.getElementById('ed-second-profile')?.value||'').trim();
-  p.secondProfileFile=_secondProfile||undefined;
   const _win=document.getElementById('ed-win');
   const _loss=document.getElementById('ed-loss');
   const _pts=document.getElementById('ed-pts');
@@ -4190,12 +4162,24 @@ function savePlayer(){
   if(!p.inactive)p.inactive=undefined;
   p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
   if(!p.hideFromBoard)p.hideFromBoard=undefined;
+  const _crewName=(document.getElementById('ed-crew-name')?.value||'').trim();
+  p.crewName=_crewName||undefined;
+  p.isCrew=_crewName?true:undefined; // 하위 호환
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
   p.channelUrl=_channel||undefined;
   save();
   cm('emModal');
+  
+  // Auto-switch to 보라크루 view if player was assigned to crew or has position
+  if(_crewName || (_rv && _rv.trim())){
+    // Check if current tab is board2 and switch to crew view
+    const currentTab = document.querySelector('.tab.on');
+    if(currentTab && currentTab.onclick && currentTab.onclick.toString().includes('board2')){
+      _b2View = 'crew';
+    }
+  }
   
   render();
   if(typeof openPlayerModal==='function'){
@@ -4333,8 +4317,6 @@ function openRE(mode,idx){
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
-      <label>A팀 선수</label><input type="text" id="re-a" value="${m.a||''}" placeholder="선수 이름 입력">
-      <label>B팀 선수</label><input type="text" id="re-b" value="${m.b||''}" placeholder="선수 이름 입력">
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4393,10 +4375,6 @@ function saveRow(){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
-    const aVal=document.getElementById('re-a')?.value?.trim();
-    const bVal=document.getElementById('re-b')?.value?.trim();
-    if(aVal!==undefined)m.a=aVal;
-    if(bVal!==undefined)m.b=bVal;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
   } else if(reMode==='ck'){
