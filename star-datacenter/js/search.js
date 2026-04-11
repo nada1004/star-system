@@ -2408,6 +2408,78 @@ function pasteApply() {
   setTimeout(() => toast.remove(), 2800);
 }
 
+function cleanupIndGjDuplicates(){
+  if(!confirm('4월 1일부터 현재까지의 개인전/끝장전/프로리그 끝장전 중복 데이터를 제거하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) return;
+  
+  const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
+  const startDate = '2024-04-01';
+  const today = new Date().toISOString().slice(0, 10);
+  
+  let indRemoved = 0;
+  let gjRemoved = 0;
+  
+  // indM 중복 제거 (맵+날짜+선수쌍 비교, 4월1일부터만)
+  if(typeof indM!=='undefined' && indM.length){
+    const seen = new Set();
+    const uniqueInd = [];
+    indM.forEach(m => {
+      if(!m.wName || !m.lName) return;
+      if(m.d < startDate || m.d > today) return; // 날짜 범위 필터
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seen.has(key)){
+        indRemoved++;
+      } else {
+        seen.add(key);
+        uniqueInd.push(m);
+      }
+    });
+    // 전체 배열에서 중복 제거
+    const seenAll = new Set();
+    const finalInd = [];
+    indM.forEach(m => {
+      if(!m.wName || !m.lName) {
+        finalInd.push(m);
+        return;
+      }
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seenAll.has(key)){
+        indRemoved++;
+      } else {
+        seenAll.add(key);
+        finalInd.push(m);
+      }
+    });
+    indM.length = 0;
+    indM.push(...finalInd);
+  }
+  
+  // gjM 중복 제거 (맵+날짜+선수쌍 비교, 4월1일부터만, 프로리그 끝장전 포함)
+  if(typeof gjM!=='undefined' && gjM.length){
+    const seenAll = new Set();
+    const finalGj = [];
+    gjM.forEach(m => {
+      if(!m.wName || !m.lName) {
+        finalGj.push(m);
+        return;
+      }
+      if(m.d < startDate || m.d > today) return; // 날짜 범위 필터
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seenAll.has(key)){
+        gjRemoved++;
+      } else {
+        seenAll.add(key);
+        finalGj.push(m);
+      }
+    });
+    gjM.length = 0;
+    gjM.push(...finalGj);
+  }
+  
+  save();
+  render();
+  alert(`✅ 중복 제거 완료 (4월 1일 ~ ${today})\n개인전: ${indRemoved}건 제거\n끝장전: ${gjRemoved}건 제거`);
+}
+
 function onPasteModeChange(val) {
   const compWrap = document.getElementById('paste-comp-wrap');
   const hint     = document.getElementById('paste-mode-hint');
