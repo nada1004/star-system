@@ -359,12 +359,12 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     flex-shrink: 0;
   }
 
-  /* ── 메인 콘텐츠 ── */
-  .main { overflow-x: hidden; padding: 10px 8px 100px; }
-  #actionBar { display: none !important; }
-  #exportHint { display: none; }
+  /* ── FAB 서브 리스트 세로 배치 ── */
+  .fab-sub-list {
+    flex-direction: column !important;
+  }
 
-  /* ── 스트리머 테이블: 가로 스크롤 완전 방지 ── */
+  /* ── 폼 영역 ── */
   table { font-size: 11px; min-width: 0; width: 100%; table-layout: fixed; }
   th, td { padding: 8px 4px; word-break: break-word; }
   .td-name { max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
