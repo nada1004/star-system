@@ -2195,7 +2195,7 @@ function pasteApply() {
         const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(indM.some(m=>m.d===d&&_normMap2(m.map)===_normMap2(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_idDup++;return false;}return true;});
         passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
         const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
-        if(games.length) indM.unshift(...games);
+        // indM unshift removed - applyGameResult already handles player history
       });
       if(_idDup>0) alert(`⚠️ 개인전 중복 ${_idDup}건 제외`);
     }
@@ -2209,7 +2209,7 @@ function pasteApply() {
         const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(gjM.some(m=>m.d===d&&(m.map||'')===(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_gjDup++;return false;}return true;});
         passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
         const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
-        if(games.length) gjM.unshift(...games);
+        // gjM unshift removed - applyGameResult already handles player history
       });
       if(_gjDup>0) alert(`⚠️ 끝장전 중복 ${_gjDup}건 제외`);
     }
@@ -2324,7 +2324,7 @@ function pasteApply() {
         applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
       const games = passed.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
-      if (games.length) indM.unshift(...games);
+      // indM unshift removed - applyGameResult already handles player history
     });
     if (_indDupCount > 0) alert(`⚠️ 중복 ${_indDupCount}건 제외하고 저장했습니다.`);
   } else if (mode === 'gj') {
@@ -2358,7 +2358,7 @@ function pasteApply() {
         applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
       const games = passed.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
-      if (games.length) gjM.unshift(...games);
+      // gjM unshift removed - applyGameResult already handles player history
     });
     if (_gjDupCount > 0) alert(`⚠️ 중복 ${_gjDupCount}건 제외하고 저장했습니다.`);
   } else if (mode === 'tt') {
