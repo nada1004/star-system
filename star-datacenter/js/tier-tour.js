@@ -1267,12 +1267,6 @@ function rCfg(C,T){
   </div>
   `;
 
-  // 이미지 설정 섹션
-  h+='<div class="ssec" style="margin-top:20px">';
-  h+='<h4 style="margin:0 0 10px 0">🖼️ 이미지 설정</h4>';
-  h+='<div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">카드 이미지 관련 설정을 관리합니다.</div>';
-  h+='</div>';
-
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
     renderStorageInfo();
@@ -3098,6 +3092,55 @@ function rCfg(C,T){
         <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
         <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
         <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
+      </div>
+    </div>
+    
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <h5 style="margin:0 0 10px 0;font-size:13px;color:var(--blue)">🖼️ 이미지 설정</h5>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">카드 이미지 관련 설정을 관리합니다.</div>
+      
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🔗 이미지 링크</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">첫 번째 이미지</label>
+            <input type="text" id="cfg-img-link1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">두 번째 이미지</label>
+            <input type="text" id="cfg-img-link2" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+          </div>
+          <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🎨 스타일</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">확대/축소 <span id="cfg-img-scale-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-val').textContent=this.value+'x'">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">밝기 <span id="cfg-img-brightness-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
+          </div>
+          <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🔄 랜덤 회전</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px">
+            <input type="checkbox" id="cfg-img-random" ${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).randomRotation?'checked':''}> 전체대학 보기에서 랜덤 회전
+          </label>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">회전 간격 (초)</label>
+            <input type="number" id="cfg-img-interval" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).interval||5}" min="2" max="30" style="width:60px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+          </div>
+          <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
+        </div>
       </div>
     </div>
   </div>
