@@ -335,7 +335,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
   /* ── 탭 메뉴 ── */
   .tabs { padding: 4px 6px; gap: 2px; scroll-padding: 6px; }
-  .tab { padding: 8px 12px; font-size: 11px; border-radius: 8px; white-space: nowrap; min-height: 38px; display: flex; align-items: center; touch-action: manipulation; }
+  .tab { padding: 7px 10px; font-size: 10px; border-radius: 8px; white-space: nowrap; min-height: 36px; display: flex; align-items: center; touch-action: manipulation; }
   
   /* ── 현황판 탭 하위 메뉴 ── */
   #b2-nav {
@@ -352,6 +352,11 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   #b2-nav > div[style*="margin-left:auto"] {
     margin-left: 0 !important;
     margin-right: auto !important;
+  }
+  
+  /* ── 현황판 버튼 기본 스타일 복구 ── */
+  #b2-nav button {
+    flex-shrink: 0;
   }
   
   /* ── FAB 버튼 설정 메뉴 세로 배치 ── */
