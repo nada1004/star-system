@@ -319,6 +319,16 @@ function findPlayerByPartialName(namePart) {
     });
     if (rsMemo.length === 1) return { player: rsMemo[0], candidates: rsMemo, similar: [] };
     if (rsMemo.length > 1)   return { player: null, candidates: rsMemo, similar: [] };
+    // 메모 포함 일치 (별명 우선)
+    if (_raceStripped.length >= 2) {
+      const rsMemoPartial = players.filter(p => {
+        if (!p.memo) return false;
+        const memoNorm = _nfc(p.memo);
+        return memoNorm.includes(_rsLow) || memoNorm.toLowerCase().includes(_rsLow);
+      });
+      if (rsMemoPartial.length === 1) return { player: rsMemoPartial[0], candidates: rsMemoPartial, similar: [] };
+      if (rsMemoPartial.length > 1) return { player: null, candidates: rsMemoPartial, similar: [] };
+    }
     // 이름 부분 일치
     if (_raceStripped.length >= 2) {
       const rsPartial = players.filter(p =>
