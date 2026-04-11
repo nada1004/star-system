@@ -1510,7 +1510,7 @@ function _b2PlayersView() {
         height: 100%;
         min-width: 100%;
         min-height: 100%;
-        object-fit: ${localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'fill'};
+        object-fit: fill;
         object-position: center;
         transition: opacity 0.3s ease;
       }
