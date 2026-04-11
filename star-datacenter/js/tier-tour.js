@@ -2619,6 +2619,17 @@ function rCfg(C,T){
         <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
         <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof cleanupPlayerHistoryDuplicates==='function')cleanupPlayerHistoryDuplicates()">🧹 중복 기록 정리</button>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <span style="font-size:11px;color:var(--gray-l);font-weight:700;align-self:center">개별 동기화:</span>
+        <button class="btn btn-xs" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncIndMBtn==='function')syncIndMBtn()">개인전</button>
+        <button class="btn btn-xs" style="background:#8b5cf6;color:#fff;border-color:#8b5cf6" onclick="if(typeof syncGjMBtn==='function')syncGjMBtn()">끝장전</button>
+        <button class="btn btn-xs" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="if(typeof syncMiniMBtn==='function')syncMiniMBtn()">미니대전</button>
+        <button class="btn btn-xs" style="background:#2563eb;color:#fff;border-color:#2563eb" onclick="if(typeof syncUnivMBtn==='function')syncUnivMBtn()">대학대전</button>
+        <button class="btn btn-xs" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof syncCkMBtn==='function')syncCkMBtn()">대학CK</button>
+        <button class="btn btn-xs" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="if(typeof syncProMBtn==='function')syncProMBtn()">프로리그</button>
+        <button class="btn btn-xs" style="background:#f59e0b;color:#fff;border-color:#f59e0b" onclick="if(typeof syncTtMBtn==='function')syncTtMBtn()">티어대회</button>
+        <button class="btn btn-xs" style="background:#d97706;color:#fff;border-color:#d97706" onclick="if(typeof syncTourneysBtn==='function')syncTourneysBtn()">대회</button>
+      </div>
     </div>
   </div>
   <div class="ssec">

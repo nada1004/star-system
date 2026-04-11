@@ -152,6 +152,210 @@ function syncIndHistoryBtn(){
   else{alert('✅ 이미 모든 개인전/끝장전 기록이 반영되어 있습니다.');}
 }
 
+// 개별 소스별 동기화 함수들
+function syncIndM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof indM!=='undefined'?indM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
+    const mode=m._proLabel?'프로리그':'개인전';
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncGjM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
+    if(!m._id||!m.wName||!m.lName)return;
+    if(existingIds.has(m._id))return;
+    const mode=m._proLabel?'프로리그끝장전':'끝장전';
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncMiniM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof miniM!=='undefined'?miniM:[]).forEach(m=>{
+    if(!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const mode=m.type==='civil'?'시빌워':'미니대전';
+        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','',mode);
+      });
+    });
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncUnivM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof univM!=='undefined'?univM:[]).forEach(m=>{
+    if(!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대학대전');
+      });
+    });
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncCkM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof ckM!=='undefined'?ckM:[]).forEach(m=>{
+    if(!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대학CK');
+      });
+    });
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncProM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof proM!=='undefined'?proM:[]).forEach(m=>{
+    if(!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','프로리그');
+      });
+    });
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncTtM(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof ttM!=='undefined'?ttM:[]).forEach(m=>{
+    if(!m._id)return;
+    if(existingIds.has(m._id))return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','티어대회');
+      });
+    });
+    existingIds.add(m._id);
+    added++;
+  });
+  if(added>0)save();
+  return added;
+}
+function syncTourneys(){
+  const existingIds=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  let added=0;
+  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id||existingIds.has(m._id))return;
+        (m.sets||[]).forEach(s=>{
+          (s.games||[]).forEach(g=>{
+            if(!g.playerA||!g.playerB||!g.winner)return;
+            const mode=tn.type==='tier'?'티어대회':'조별리그';
+            applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','',mode);
+          });
+        });
+        existingIds.add(m._id);
+        added++;
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id||existingIds.has(m._id))return;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
+          if(!g.playerA||!g.playerB||!g.winner)return;
+          applyGameResult(g.playerA,g.playerB,m.d||'',g.map||'',m._id,'','','대회');
+        });
+      });
+      existingIds.add(m._id);
+      added++;
+    });
+  });
+  if(added>0)save();
+  return added;
+}
+
+// 개별 동기화 버튼 함수들
+function syncIndMBtn(){
+  const n=syncIndM();
+  if(n>0){alert('✅ '+n+'건의 개인전 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 개인전 기록이 반영되어 있습니다.');}
+}
+function syncGjMBtn(){
+  const n=syncGjM();
+  if(n>0){alert('✅ '+n+'건의 끝장전 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 끝장전 기록이 반영되어 있습니다.');}
+}
+function syncMiniMBtn(){
+  const n=syncMiniM();
+  if(n>0){alert('✅ '+n+'건의 미니대전/시빌워 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 미니대전/시빌워 기록이 반영되어 있습니다.');}
+}
+function syncUnivMBtn(){
+  const n=syncUnivM();
+  if(n>0){alert('✅ '+n+'건의 대학대전 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 대학대전 기록이 반영되어 있습니다.');}
+}
+function syncCkMBtn(){
+  const n=syncCkM();
+  if(n>0){alert('✅ '+n+'건의 대학CK 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 대학CK 기록이 반영되어 있습니다.');}
+}
+function syncProMBtn(){
+  const n=syncProM();
+  if(n>0){alert('✅ '+n+'건의 프로리그 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 프로리그 기록이 반영되어 있습니다.');}
+}
+function syncTtMBtn(){
+  const n=syncTtM();
+  if(n>0){alert('✅ '+n+'건의 티어대회 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 티어대회 기록이 반영되어 있습니다.');}
+}
+function syncTourneysBtn(){
+  const n=syncTourneys();
+  if(n>0){alert('✅ '+n+'건의 대회 기록이 반영되었습니다.');render();}
+  else{alert('✅ 이미 모든 대회 기록이 반영되어 있습니다.');}
+}
+
 /* ══════════════════════════════════════
    전체 대전 기록 → 선수 최근 기록 소급 동기화
    miniM, univM, ckM, proM, ttM, comps, indM, gjM, tourneys 모두 처리
