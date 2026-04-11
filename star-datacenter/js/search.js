@@ -2072,7 +2072,6 @@ function pasteApply() {
 
   const mode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || 'individual';
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
-  try { if(dateVal) localStorage.setItem('su_paste_last_date', dateVal); } catch(e) {}
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
   if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
@@ -2624,8 +2623,10 @@ function openPasteModal() {
 
   const dateInput = document.getElementById('paste-date');
   if (dateInput) {
-    const _saved = localStorage.getItem('su_paste_last_date');
-    dateInput.value = _saved || new Date().toISOString().slice(0, 10);
+    // Don't load from localStorage, but keep existing value if set
+    if (!dateInput.value) {
+      dateInput.value = new Date().toISOString().slice(0, 10);
+    }
   }
 
   // 모드 선택기 원상 복구
