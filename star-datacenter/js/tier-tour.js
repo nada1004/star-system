@@ -4809,21 +4809,6 @@ function _setPdUnivDarken(univ,val,idx){
 
 
 
-/* ==========================================
-   SETTINGS TAB
-========================================== */
-function rCfg(C,T){
-  try{
-    T.innerText='Settings';
-    let h='<div style=`"padding:20px;max-width:900px`">';
-    h+='<h3 style=`"margin-bottom:20px`">Settings</h3>';
-    h+='<p>Settings menu is being restored. Please wait.</p>';
-    h+='</div>';
-    C.innerHTML=h;
-  }catch(e){
-    C.innerHTML='<div style=`"padding:20px;color:red`">Error: '+e.message+'</div>';
-  }
-}
 
 /* ==========================================
    STATISTICS TAB
