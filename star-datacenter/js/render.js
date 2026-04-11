@@ -225,6 +225,14 @@ function deletePlayerHist(playerName, histIdx){
       if(idx>=0){ arr.splice(idx,1); break; }
     }
   }
+  // indM/gjM 경기도 삭제 (개인전/끝장전은 matchId 대신 _id 사용)
+  if(hh.mode==='개인전'||hh.mode==='프로리그'||hh.mode==='끝장전'||hh.mode==='프로리그끝장전'){
+    const targetArr=(hh.mode==='개인전'||hh.mode==='프로리그')?indM:gjM;
+    if(targetArr){
+      const idx=targetArr.findIndex(m=>m._id===hh.matchId||(m.d===hh.date&&m.map===hh.map&&((m.wName===playerName&&m.lName===hh.opp)||(m.lName===playerName&&m.wName===hh.opp))));
+      if(idx>=0){ targetArr.splice(idx,1); }
+    }
+  }
   if(typeof fixPoints==='function')fixPoints();
   save();
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
@@ -681,6 +689,8 @@ function buildPlayerDetailHTML(p){
   // p.history의 matchId Set (tourneys 중복 제거용)
   const _existingMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
   // p.history의 중복 키 Set (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
+  // 중복 키를 항상 정렬된 선수쌍로 생성하여 indM/gjM의 _dupKey와 일치시킴
+  // p.history에서는 h.opp만 있으므로 [p.name, h.opp]를 정렬하여 키 생성
   const _existingKeys=new Set((p.history||[]).map(h=>`${h.date||''}|${h.map||'-'}|${[p.name,h.opp].sort().join('|')}`));
 
   // indM/gjM에서 추출 (p.history 미반영분)

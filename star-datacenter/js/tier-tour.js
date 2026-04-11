@@ -2617,6 +2617,7 @@ function rCfg(C,T){
         <button class="btn btn-sm" style="background:#0891b2;color:#fff;border-color:#0891b2" onclick="if(typeof syncTourneyHistoryBtn==='function')syncTourneyHistoryBtn()">🔄 대회 동기화</button>
         <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="syncAllHistoryBtn()">⚡ 전체 동기화</button>
         <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="repairMissingHistory()">🩹 누락 기록 복구</button>
+        <button class="btn btn-sm" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="if(typeof cleanupPlayerHistoryDuplicates==='function')cleanupPlayerHistoryDuplicates()">🧹 중복 기록 정리</button>
       </div>
     </div>
   </div>

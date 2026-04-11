@@ -393,6 +393,48 @@ function syncAllHistoryBtn(){
    - miniM/univM/ckM/proM/indM/gjM/ttM 필터
    - player.history 필터 후 win/loss/points/ELO 재계산
 ══════════════════════════════════════ */
+function cleanupPlayerHistoryDuplicates(){
+  if(!confirm('모든 선수의 최근 경기 기록에서 중복을 제거하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\nmatchId가 있으면 matchId로, 없으면 날짜+맵+상대로 중복을 판단합니다.')) return;
+  
+  let totalRemoved = 0;
+  
+  players.forEach(p => {
+    if(!p.history || !p.history.length) return;
+    
+    const seen = new Set();
+    const deduped = [];
+    
+    p.history.forEach(h => {
+      // matchId가 있으면 matchId로, 없으면 날짜+맵+상대로 키 생성
+      const key = h.matchId ? `mid:${h.matchId}` : `${h.date||''}|${h.map||'-'}|${h.opp||''}`;
+      
+      if(seen.has(key)){
+        totalRemoved++;
+        // 중복 기록이면 승/패/포인트/ELO 차감
+        if(h.result === '승'){
+          p.win = Math.max(0, (p.win||0) - 1);
+          p.points = (p.points||0) - 3;
+        } else if(h.result === '패'){
+          p.loss = Math.max(0, (p.loss||0) - 1);
+          p.points = (p.points||0) + 3;
+        }
+        if(h.eloDelta != null){
+          p.elo = (p.elo||ELO_DEFAULT) - h.eloDelta;
+        }
+      } else {
+        seen.add(key);
+        deduped.push(h);
+      }
+    });
+    
+    p.history = deduped;
+  });
+  
+  save();
+  render();
+  alert(`✅ 중복 제거 완료\n총 ${totalRemoved}건의 중복 기록이 제거되었습니다.`);
+}
+
 function purgeOldRecords(){
   const cutoff = '2026-01-01';
   const cutoffLabel = '2025년 12월 31일';

@@ -618,6 +618,12 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
+  // 중복 체크: matchId가 있으면 matchId로, 없으면 날짜+맵+상대로 체크
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  const wDup=(w.history||[]).find(h=>(matchId&&h.matchId===matchId)||(!matchId&&h.date===d&&h.map===m&&h.opp===l.name));
+  const lDup=(l.history||[]).find(h=>(matchId&&h.matchId===matchId)||(!matchId&&h.date===d&&h.map===m&&h.opp===w.name));
+  if(wDup||lDup)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -626,8 +632,6 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   w.elo=wElo+delta;
   l.elo=lElo-delta;
   const t=Date.now();
-  const d=date||new Date().toISOString().slice(0,10);
-  const m=map||'-';
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
