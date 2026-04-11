@@ -1376,47 +1376,49 @@ function rCfg(C,T){
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
   };
   setTimeout(function(){window.initFabTabSettings();}, 50);
-  function renderStorageInfo(){
-    const el=document.getElementById('cfg-storage-info');
-    if(!el)return;
-    try{
-      let total=0;const rows=[];
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
-        const bytes=(k.length+v.length)*2;total+=bytes;
-        if(k.startsWith('su_'))rows.push({k,bytes});
-      }
-      rows.sort((a,b)=>b.bytes-a.bytes);
-      const limit=5*1024*1024;
-      const pct=Math.min(100,Math.round(total/limit*100));
-      const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
-      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-      const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
-      el.innerHTML=`
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-          <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
-          <span style="font-weight:700;color:${barCol}">${pct}%</span>
-        </div>
-        <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:.3s"></div>
-        </div>
-        ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
-      <div style="font-size:11px;line-height:1.8">
-        ${rows.slice(0,10).map(({k,bytes})=>{
-          const label=LABELS[k]||k;
-          const bpct=Math.min(100,Math.round(bytes/limit*100));
-          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-            <span style="min-width:100px;color:var(--text2)">${label}</span>
-            <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
-            <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 } // end first rCfg
+
+function renderStorageInfo(){
+  const el=document.getElementById('cfg-storage-info');
+  if(!el)return;
+  try{
+    let total=0;const rows=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
+      const bytes=(k.length+v.length)*2;total+=bytes;
+      if(k.startsWith('su_'))rows.push({k,bytes});
+    }
+    rows.sort((a,b)=>b.bytes-a.bytes);
+    const limit=5*1024*1024;
+    const pct=Math.min(100,Math.round(total/limit*100));
+    const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
+    const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
+    const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
+    el.innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+        <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
+        <span style="font-weight:700;color:${barCol}">${pct}%</span>
+      </div>
+      <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:.3s"></div>
+      </div>
+      ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
+    <div style="font-size:11px;line-height:1.8">
+      ${rows.slice(0,10).map(({k,bytes})=>{
+        const label=LABELS[k]||k;
+        const bpct=Math.min(100,Math.round(bytes/limit*100));
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="min-width:100px;color:var(--text2)">${label}</span>
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
+          <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
+}
 
 // ── 이미지 설정 저장 함수 ──
 function saveImageSettings(){
