@@ -1266,86 +1266,6 @@ function rCfg(C,T){
     </div>
   </div>
   `;
-  // 관리자 목록 + 맵 약자 목록 렌더링
-  setTimeout(()=>{
-    renderStorageInfo();
-    renderSeasonList();
-    _refreshCrewList();
-    const el=document.getElementById('adm-count');
-    const listEl=document.getElementById('adm-list');
-    const accounts=getAdminAccounts();
-    if(el)el.textContent=accounts.length;
-    if(listEl){
-      if(!accounts.length){listEl.innerHTML='<div style="font-size:12px;color:var(--gray-l)">등록된 계정 없음</div>';return;}
-      listEl.innerHTML=accounts.map((a,i)=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-          <span style="flex:1;font-size:13px;font-weight:600">${a.label||'(이름없음)'}</span>
-          <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'🔰 부관리자':'👑 관리자'}</span>
-          <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">🗑️ 삭제</button>
-        </div>`).join('');
-    }
-  },50);
-  C.innerHTML=h;
-  setTimeout(_refreshAliasList, 10);
-  // FAB 탭 설정 초기화
-  window.saveFabTabSetting = function(btnKey, tabId){
-    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-    settings[btnKey]=tabId;
-    localStorage.setItem('su_fabTabs',JSON.stringify(settings));
-    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
-  };
-  window.initFabTabSettings = function(){
-    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-    const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
-    Object.keys(defaults).forEach(key=>{
-      const el=document.getElementById('cfg-fab-'+key);
-      if(el){
-        el.value=settings[key]||defaults[key];
-      }
-    });
-    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
-  };
-  setTimeout(function(){window.initFabTabSettings();}, 50);
-  function renderStorageInfo(){
-    const el=document.getElementById('cfg-storage-info');
-    if(!el)return;
-    try{
-      let total=0;const rows=[];
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
-        const bytes=(k.length+v.length)*2;total+=bytes;
-        if(k.startsWith('su_'))rows.push({k,bytes});
-      }
-      rows.sort((a,b)=>b.bytes-a.bytes);
-      const limit=5*1024*1024;
-      const pct=Math.min(100,Math.round(total/limit*100));
-      const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
-      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-      const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
-      el.innerHTML=`
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-          <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
-          <span style="font-weight:700;color:${barCol}">${pct}%</span>
-        </div>
-        <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:width .3s"></div>
-        </div>
-        ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
-      <div style="font-size:11px;line-height:1.8">
-        ${rows.slice(0,10).map(({k,bytes})=>{
-          const label=LABELS[k]||k;
-          const bpct=Math.min(100,Math.round(bytes/limit*100));
-          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-            <span style="min-width:100px;color:var(--text2)">${label}</span>
-            <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
-            <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 
   // 이미지 설정 섹션
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
@@ -1415,7 +1335,87 @@ function rCfg(C,T){
       </div>
     </div>
   </details>`;
+
+  // 관리자 목록 + 맵 약자 목록 렌더링
+  setTimeout(()=>{
+    renderStorageInfo();
+    renderSeasonList();
+    _refreshCrewList();
+    const el=document.getElementById('adm-count');
+    const listEl=document.getElementById('adm-list');
+    const accounts=getAdminAccounts();
+    if(el)el.textContent=accounts.length;
+    if(listEl){
+      if(!accounts.length){listEl.innerHTML='<div style="font-size:12px;color:var(--gray-l)">등록된 계정 없음</div>';return;}
+      listEl.innerHTML=accounts.map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="flex:1;font-size:13px;font-weight:600">${a.label||'(이름없음)'}</span>
+          <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'🔰 부관리자':'👑 관리자'}</span>
+          <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">🗑️ 삭제</button>
+        </div>`).join('');
+    }
+  },50);
   C.innerHTML=h;
+  setTimeout(_refreshAliasList, 10);
+  // FAB 탭 설정 초기화
+  window.saveFabTabSetting = function(btnKey, tabId){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    settings[btnKey]=tabId;
+    localStorage.setItem('su_fabTabs',JSON.stringify(settings));
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  window.initFabTabSettings = function(){
+    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
+    const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
+    Object.keys(defaults).forEach(key=>{
+      const el=document.getElementById('cfg-fab-'+key);
+      if(el){
+        el.value=settings[key]||defaults[key];
+      }
+    });
+    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+  };
+  setTimeout(function(){window.initFabTabSettings();}, 50);
+  function renderStorageInfo(){
+    const el=document.getElementById('cfg-storage-info');
+    if(!el)return;
+    try{
+      let total=0;const rows=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
+        const bytes=(k.length+v.length)*2;total+=bytes;
+        if(k.startsWith('su_'))rows.push({k,bytes});
+      }
+      rows.sort((a,b)=>b.bytes-a.bytes);
+      const limit=5*1024*1024;
+      const pct=Math.min(100,Math.round(total/limit*100));
+      const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
+      const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
+      const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
+      el.innerHTML=`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
+          <span style="font-weight:700;color:${barCol}">${pct}%</span>
+        </div>
+        <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:.3s"></div>
+        </div>
+        ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
+      <div style="font-size:11px;line-height:1.8">
+        ${rows.slice(0,10).map(({k,bytes})=>{
+          const label=LABELS[k]||k;
+          const bpct=Math.min(100,Math.round(bytes/limit*100));
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span style="min-width:100px;color:var(--text2)">${label}</span>
+            <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
+            <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 } // end first rCfg
 
 // ── 이미지 설정 저장 함수 ──
