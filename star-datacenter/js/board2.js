@@ -2131,13 +2131,13 @@ function _b2PlayersView() {
     };
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:70px;padding:6px;border-radius:8px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--white);border:2px solid ${isActive?playerTheme.border:'transparent'};box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
         ${p.photo 
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="b2-players-thumbnail" style="display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:32px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
-          : `<div class="b2-players-thumbnail" style="display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:32px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:58px;height:58px;border-radius:6px;object-fit:cover;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="b2-players-thumbnail" style="width:58px;height:58px;border-radius:6px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:24px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+          : `<div class="b2-players-thumbnail" style="width:58px;height:58px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:24px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
-        <div class="b2-players-label">${p.name || '이름 없음'}</div>
+        <div class="b2-players-label" style="font-size:11px;font-weight:600;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
       </div>
     `;
   });
@@ -2170,37 +2170,9 @@ function _b2UpdateImgSetting(playerName, slot, key, val) {
   s.posY = s.offsetY;
   _b2SaveImgSettings();
   _b2RefreshImageControls(playerName, slot);
-  return;
   
-  const mainBox = document.getElementById('b2-players-main-box');
-  if (!mainBox) return;
-  
-  // CSS 변수 업데이트
-  if (key === 'zoom') {
-    mainBox.style.setProperty('--img-zoom', s.zoom / 100);
-    const zoomVal = document.getElementById('b2-zoom-val');
-    if (zoomVal) zoomVal.textContent = s.zoom + '%';
-  } else if (key === 'brightness') {
-    mainBox.style.setProperty('--img-brightness', s.brightness / 100);
-    const brightnessVal = document.getElementById('b2-brightness-val');
-    if (brightnessVal) brightnessVal.textContent = s.brightness + '%';
-  } else if (key === 'posX') {
-    mainBox.style.setProperty('--img-pos-x', s.posX + 'px');
-  } else if (key === 'posY') {
-    mainBox.style.setProperty('--img-pos-y', s.posY + 'px');
-  } else if (key === 'fill') {
-    const img1 = document.getElementById('b2-main-img-1');
-    const img2 = document.getElementById('b2-main-img-2');
-    if (img1) img1.style.objectFit = val;
-    if (img2) img2.style.objectFit = val;
-    // 버튼 활성화 상태 업데이트
-    const btns = mainBox.querySelectorAll('.b2-players-img-btn');
-    btns.forEach(btn => {
-      if (btn.textContent === '맞추기') btn.classList.toggle('active', val === 'contain');
-      if (btn.textContent === '채우기') btn.classList.toggle('active', val === 'cover');
-      if (btn.textContent === '늘리기') btn.classList.toggle('active', val === 'fill');
-    });
-  }
+  // 이미지에 즉시 적용
+  _b2ApplyImgSettingsToDom(playerName, slot);
 }
 
 // 이미지 위치 이동 함수
@@ -2217,6 +2189,9 @@ function _b2MoveImg(playerName, slot, dx, dy) {
   s.posY = s.offsetY;
   _b2SaveImgSettings();
   _b2RefreshImageControls(playerName, slot);
+  
+  // 이미지에 즉시 적용
+  _b2ApplyImgSettingsToDom(playerName, slot);
 }
 
 function _b2UpdateMainDisplay(playerName) {

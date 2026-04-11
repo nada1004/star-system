@@ -2941,6 +2941,124 @@ function rCfg(C,T){
       </div>
     </div>
   </div>
+  <div class="ssec">
+    <h4>🖼️ 프로필 이미지 설정</h4>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">선수별 프로필 이미지 크기, 밝기, 위치를 조절합니다. (프로필 탭에서도 조절 가능)</p>
+    <div style="margin-bottom:12px">
+      <select id="cfg-img-player-sel" onchange="_renderCfgImgSettings(this.value)" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;min-width:200px">
+        <option value="">선수 선택...</option>
+        ${players.filter(p => !p.hidden).sort((a,b) => a.name.localeCompare(b.name)).map(p => `<option value="${p.name}">${p.name} ${p.univ ? '('+p.univ+')' : ''}</option>`).join('')}
+      </select>
+    </div>
+    <div id="cfg-img-settings-area" style="display:none">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="flex:1;min-width:280px;border:1px solid var(--border2);border-radius:10px;padding:12px;background:var(--surface)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--text2)">📷 프로필 이미지 1 (기본)</div>
+          <div id="cfg-img-primary-controls"></div>
+        </div>
+        <div style="flex:1;min-width:280px;border:1px solid var(--border2);border-radius:10px;padding:12px;background:var(--surface)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--text2)">📷 프로필 이미지 2 (교체용)</div>
+          <div id="cfg-img-secondary-controls"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function _renderCfgImgSettings(playerName) {
+        const area = document.getElementById('cfg-img-settings-area');
+        if (!playerName) {
+          area.style.display = 'none';
+          return;
+        }
+        area.style.display = 'block';
+        
+        const player = players.find(p => p.name === playerName);
+        const hasPrimary = !!(player && player.photo);
+        const hasSecondary = !!(player && player.secondProfileFile);
+        
+        // 기본 설정 가져오기
+        const primarySettings = _b2GetImgSettings(playerName, 'primary');
+        const secondarySettings = _b2GetImgSettings(playerName, 'secondary');
+        
+        const safeName = playerName.replace(/'/g, "\\'");
+        
+        // Primary controls
+        document.getElementById('cfg-img-primary-controls').innerHTML = hasPrimary ? `
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
+            <input type="range" min="50" max="220" value="${primarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','scale',this.value);document.getElementById('cfg-p-scale').textContent=this.value+'%'">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
+            <input type="range" min="20" max="180" value="${primarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','brightness',this.value);document.getElementById('cfg-p-bright').textContent=this.value+'%'">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">배치</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-xs ${primarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','cover')">채우기</button>
+              <button class="btn btn-xs ${primarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','contain')">맞춤</button>
+              <button class="btn btn-xs ${primarySettings.fit==='fill'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','fill')">늘리기</button>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,-12)">↑</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,12)">↓</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',-12,0)">←</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',12,0)">→</button>
+              <button class="btn btn-xs btn-w" onclick="_b2CenterImageCfg('${safeName}','primary')">중앙</button>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','primary');_renderCfgImgSettings('${safeName}')">초기화</button>
+          </div>
+        ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+        
+        // Secondary controls
+        document.getElementById('cfg-img-secondary-controls').innerHTML = hasSecondary ? `
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
+            <input type="range" min="50" max="220" value="${secondarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','scale',this.value);document.getElementById('cfg-s-scale').textContent=this.value+'%'">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
+            <input type="range" min="20" max="180" value="${secondarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','brightness',this.value);document.getElementById('cfg-s-bright').textContent=this.value+'%'">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">배치</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-xs ${secondarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','cover')">채우기</button>
+              <button class="btn btn-xs ${secondarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','contain')">맞춤</button>
+              <button class="btn btn-xs ${secondarySettings.fit==='fill'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','fill')">늘리기</button>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,-12)">↑</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,12)">↓</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',-12,0)">←</button>
+              <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',12,0)">→</button>
+              <button class="btn btn-xs btn-w" onclick="_b2CenterImageCfg('${safeName}','secondary')">중앙</button>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','secondary');_renderCfgImgSettings('${safeName}')">초기화</button>
+          </div>
+        ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+      }
+      
+      function _b2CenterImageCfg(playerName, slot) {
+        const s = _b2GetImgSettings(playerName, slot);
+        s.offsetX = 0;
+        s.offsetY = 0;
+        s.posX = 0;
+        s.posY = 0;
+        _b2SaveImgSettings();
+        _renderCfgImgSettings(playerName);
+      }
+    </script>
+  </div>
   <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
