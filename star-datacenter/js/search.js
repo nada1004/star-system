@@ -2491,15 +2491,15 @@ function cleanupIndGjDuplicates(){
 
 function clearAllIndRecords(){
   if(!confirm('개인전 기록 전체를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n관련 선수들의 개인 전적 히스토리도 함께 정리됩니다.')) return;
-  
+
   let indRemoved = 0;
-  
+
   // indM 전체 삭제
   if(typeof indM!=='undefined' && indM.length){
     indRemoved = indM.length;
     indM.length = 0;
   }
-  
+
   // 선수들의 개인전 관련 히스토리 정리
   if(typeof players!=='undefined' && players.length){
     players.forEach(p => {
@@ -2508,10 +2508,153 @@ function clearAllIndRecords(){
       }
     });
   }
-  
+
   save();
   render();
   alert(`✅ 개인전 기록 ${indRemoved}건 삭제 완료`);
+}
+
+function recalculateAllELO(){
+  if(!confirm('모든 선수의 ELO를 처음부터 다시 계산하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n- 모든 ELO가 기본값으로 초기화됩니다\n- 승/패/포인트가 재계산됩니다\n- 모든 기록이 날짜순으로 다시 적용됩니다')) return;
+
+  // 모든 선수 초기화
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      p.elo = ELO_DEFAULT;
+      p.win = 0;
+      p.loss = 0;
+      p.points = 0;
+      p.history = [];
+    });
+  }
+
+  // 모든 경기 기록 수집
+  const allGames = [];
+
+  // miniM (미니대전)
+  if(typeof miniM!=='undefined' && miniM.length){
+    miniM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: m.type === 'civil' ? '시빌워' : '미니대전'});
+      }
+    });
+  }
+
+  // univM (대학대전)
+  if(typeof univM!=='undefined' && univM.length){
+    univM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: '대학대전'});
+      }
+    });
+  }
+
+  // ckM (대학CK)
+  if(typeof ckM!=='undefined' && ckM.length){
+    ckM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: '대학CK'});
+      }
+    });
+  }
+
+  // proM (프로리그)
+  if(typeof proM!=='undefined' && proM.length){
+    proM.forEach(m => {
+      (m.sets||[]).forEach(s => {
+        (s.games||[]).forEach(g => {
+          if(g.playerA && g.playerB && g.winner){
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '프로리그'});
+          }
+        });
+      });
+    });
+  }
+
+  // indM (개인전)
+  if(typeof indM!=='undefined' && indM.length){
+    indM.forEach(m => {
+      if(m.wName && m.lName){
+        allGames.push({wName: m.wName, lName: m.lName, date: m.d || '', map: m.map || '-', mode: m._proLabel ? '프로리그' : '개인전'});
+      }
+    });
+  }
+
+  // gjM (끝장전)
+  if(typeof gjM!=='undefined' && gjM.length){
+    gjM.forEach(m => {
+      if(m.wName && m.lName){
+        allGames.push({wName: m.wName, lName: m.lName, date: m.d || '', map: m.map || '-', mode: m._proLabel ? '프로리그끝장전' : '끝장전'});
+      }
+    });
+  }
+
+  // ttM (티어대회)
+  if(typeof ttM!=='undefined' && ttM.length){
+    ttM.forEach(m => {
+      (m.sets||[]).forEach(s => {
+        (s.games||[]).forEach(g => {
+          if(g.playerA && g.playerB && g.winner){
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '티어대회'});
+          }
+        });
+      });
+    });
+  }
+
+  // tourneys (대회)
+  if(typeof tourneys!=='undefined' && tourneys.length){
+    tourneys.forEach(tn => {
+      (tn.groups||[]).forEach(grp => {
+        (grp.matches||[]).forEach(m => {
+          (m.sets||[]).forEach(s => {
+            (s.games||[]).forEach(g => {
+              if(g.playerA && g.playerB && g.winner){
+                const wName = g.winner === 'A' ? g.playerA : g.playerB;
+                const lName = g.winner === 'A' ? g.playerB : g.playerA;
+                allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그'});
+              }
+            });
+          });
+        });
+      });
+      Object.values((tn.bracket||{}).matchDetails||{}).forEach(m => {
+        (m.sets||[]).forEach(s => {
+          (s.games||[]).forEach(g => {
+            if(g.playerA && g.playerB && g.winner){
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '토너먼트'});
+            }
+          });
+        });
+      });
+    });
+  }
+
+  // 날짜순 정렬 (오래된 순서)
+  allGames.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  // applyGameResult로 다시 적용
+  let appliedCount = 0;
+  allGames.forEach(g => {
+    applyGameResult(g.wName, g.lName, g.date, g.map, '', '', '', g.mode);
+    appliedCount++;
+  });
+
+  save();
+  render();
+  alert(`✅ ELO 재계산 완료\n총 ${appliedCount}경기가 재계산되었습니다`);
 }
 
 function onPasteModeChange(val) {
