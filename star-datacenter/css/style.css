@@ -741,9 +741,9 @@ body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
 #mobileFab {
   display: none;
   position: fixed;
-  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(98px + env(safe-area-inset-bottom, 0px));
   right: 14px;
-  z-index: 990;
+  z-index: 920;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
