@@ -1294,6 +1294,8 @@ function rCfg(C,T){
     settings[btnKey]=tabId;
     localStorage.setItem('su_fabTabs',JSON.stringify(settings));
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+    // Firebase에 설정 동기화
+    if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
   };
   window.initFabTabSettings = function(){
     const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
@@ -3209,6 +3211,8 @@ function rCfg(C,T){
     settings[btnKey]=tabId;
     localStorage.setItem('su_fabTabs',JSON.stringify(settings));
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
+    // Firebase에 설정 동기화
+    if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
   };
   window.initFabTabSettings = function(){
     const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');

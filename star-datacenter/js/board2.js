@@ -24,6 +24,8 @@ let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
+  // Firebase에 설정 동기화
+  if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
 }
 function _b2DefaultSingleImgSettings() {
   return {
@@ -408,7 +410,7 @@ function _b2UnivView() {
     ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:repeat(2,1fr)!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -2016,7 +2018,7 @@ function _b2PlayersView() {
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(2, 1fr);
           max-height: none;
           overflow-y: visible;
         }
@@ -2034,14 +2036,20 @@ function _b2PlayersView() {
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
           flex-direction: row;
-          height: 600px;
+          height: 700px;
         }
         .b2-players-main {
-          flex: 0 0 45%;
+          flex: 0 0 50%;
           height: 100%;
         }
         .b2-players-grid-wrapper {
-          flex: 0 0 55%;
+          flex: 0 0 50%;
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+        .b2-players-name {
+          font-size: 28px;
         }
       }
       .b2-players-filter-btn {

@@ -102,9 +102,6 @@ function _applyCloudData(d) {
     }
   }
   {
-    const v = d.ttM||d.tt;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
-    if(arr !== null) ttM=arr;
   }
   {
     const v = d.indM||d.ind;
@@ -157,6 +154,22 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
+  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등)
+  if(d.appSettings!==undefined){
+    const s=d.appSettings;
+    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    // UI 즉시 반영
+    if(typeof updateFabVisibility==='function') updateFabVisibility();
+    if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    if(s.darkMode!==undefined){
+      document.body.classList.toggle('dark', s.darkMode);
+      if(window._fixHdrBtns) window._fixHdrBtns();
+    }
+  }
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -210,11 +223,19 @@ async function fbCloudSave() {
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
+    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
     curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
+    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
+    appSettings: {
+      fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
+      globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
+      fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
+      fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
+      darkMode: localStorage.getItem('su_dark')==='1'
+    },
     savedAt
   };
   // 페이로드 크기 검사
