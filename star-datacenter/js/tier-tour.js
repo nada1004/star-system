@@ -4172,12 +4172,12 @@ function savePlayer(){
   save();
   cm('emModal');
   
-  // Auto-switch to 보라크루 view if player was assigned to crew or has position
+  // Auto-switch to 대학별 view if player was assigned to crew or has position
   if(_crewName || (_rv && _rv.trim())){
-    // Check if current tab is board2 and switch to crew view
+    // Check if current tab is board2 and stay on board2
     const currentTab = document.querySelector('.tab.on');
     if(currentTab && currentTab.onclick && currentTab.onclick.toString().includes('board2')){
-      _b2View = 'crew';
+      _b2View = 'univ';
     }
   }
   
