@@ -693,7 +693,9 @@ function buildPlayerDetailHTML(p){
     map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전',
     _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
   }));
-  // p.history의 중복 키 Set (중복 제거용) - 날짜+맵+선수쌍으로 판단
+  // p.history의 matchId Set (tourneys 중복 제거용)
+  const _existingMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
+  // p.history의 중복 키 Set (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
   const _existingKeys=new Set((p.history||[]).map(h=>`${h.date||''}|${h.map||'-'}|${[p.name,h.opp].sort().join('|')}`));
   // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
   const _tourMatches=[];
