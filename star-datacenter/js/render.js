@@ -729,7 +729,15 @@ function buildPlayerDetailHTML(p){
   });
   // 중복되지 않는 indM/gjM + tourMatches 추가 - 중복 키로 판단
   const _extraMatches=[..._indMatches,..._gjMatches,..._tourMatches].filter(m=>!_existingKeys.has(m._dupKey||`${m.date||''}|${m.map||'-'}|${[p.name,m.opp].sort().join('|')}`));
-  const _histAll=[...(p.history||[]),..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
+  // p.history 자체도 중복 제거 (날짜+맵+상대로 판단)
+  const _historySet=new Set();
+  const _dedupedHistory=(p.history||[]).filter(h=>{
+    const key=`${h.date||''}|${h.map||'-'}|${h.opp||''}`;
+    if(_historySet.has(key))return false;
+    _historySet.add(key);
+    return true;
+  });
+  const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
