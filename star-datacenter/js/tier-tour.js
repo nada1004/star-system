@@ -2947,10 +2947,14 @@ function rCfg(C,T){
               <option value="stats">📊 통계</option>
               <option value="roulette">🎰 룰렛</option>
             </select>
-<!-- ... -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎨 현황판 설정</h4>
+      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-board-body');const btn=document.getElementById('cfg-board-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">🎨 현황판 설정</h4>
       <button id="cfg-board-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-body');const btn=document.getElementById('cfg-board-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
     <div id="cfg-board-body" style="display:none">
@@ -2985,7 +2989,7 @@ function rCfg(C,T){
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">👥 스트리머 일괄 등록</h4>
+      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-bulk-add-body');const btn=document.getElementById('cfg-bulk-add-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">👥 스트리머 일괄 등록</h4>
       <button id="cfg-bulk-add-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-add-body');const btn=document.getElementById('cfg-bulk-add-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
     <div id="cfg-bulk-add-body" style="display:none">
@@ -3005,19 +3009,24 @@ function rCfg(C,T){
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">✏️ 스트리머 일괄 수정</h4>
+      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('bulk-edit-table-container');const btn=document.getElementById('bulk-edit-toggle');if(c.style.display==='none'){c.style.display='';if(!c.dataset.loaded){renderBulkEditTable();c.dataset.loaded='1';}btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">✏️ 스트리머 일괄 수정</h4>
       <button id="bulk-edit-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('bulk-edit-table-container');const btn=document.getElementById('bulk-edit-toggle');if(c.style.display==='none'){c.style.display='';if(!c.dataset.loaded){renderBulkEditTable();c.dataset.loaded='1';}btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
     <div id="bulk-edit-table-container" style="display:none"></div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎨 스트리머 상세 스타일</h4>
+      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">🎨 스트리머 상세 스타일</h4>
       <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgPdSection();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
     <div id="cfg-pd-body" style="display:none"></div>
   </div>
-  <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0;cursor:pointer" onclick="(function(){const c=document.getElementById('cfg-backup-body');const btn=document.getElementById('cfg-backup-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">📦 데이터 백업 / 복원</h4>
+      <button id="cfg-backup-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-backup-body');const btn=document.getElementById('cfg-backup-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-backup-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b" onclick="exportDataJSON()">📥 JSON 내보내기</button>
