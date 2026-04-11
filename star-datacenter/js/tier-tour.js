@@ -2974,12 +2974,12 @@ function rCfg(C,T){
       <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border2)">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">👤 현황판 프로필 배경</span>
-          <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;render()">
+          <input type="range" min="0" max="100" value="${b2ProfileBgAlpha||10}" style="width:120px;height:6px;cursor:pointer" oninput="b2ProfileBgAlpha=+this.value;localStorage.setItem('su_b2pba',b2ProfileBgAlpha);this.nextElementSibling.textContent=b2ProfileBgAlpha;if(typeof _b2Render==='function')_b2Render()">
           <span id="cfg-b2pba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2ProfileBgAlpha||10}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:80px">🖼️ 스트리머 상세 프로필</span>
-          <select onchange="localStorage.setItem('su_b2ImageFill',this.value);const pb=document.getElementById('playerModalBody');if(pb){const p=players.find(x=>x.name===window._playerModalCurrentName);if(p){pb.innerHTML=buildPlayerDetailHTML(p);injectUnivIcons(pb);}}}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer">
+          <select onchange="localStorage.setItem('su_b2ImageFill',this.value);const pb=document.getElementById('playerModalBody');if(pb){const p=players.find(x=>x.name===window._playerModalCurrentName);if(p){pb.innerHTML=buildPlayerDetailHTML(p);injectUnivIcons(pb);}}else if(typeof _b2Render==='function'){_b2Render();}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;cursor:pointer">
             <option value="0" ${localStorage.getItem('su_b2ImageFill')==='0'?'selected':''}>꽉 차게 (cover)</option>
             <option value="1" ${localStorage.getItem('su_b2ImageFill')==='1'?'selected':''}>늘리기 (contain)</option>
           </select>

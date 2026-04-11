@@ -1591,7 +1591,7 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          height: auto;
+          height: 50vh;
           min-height: 400px;
           max-height: 80vh;
         }
