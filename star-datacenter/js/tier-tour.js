@@ -1269,7 +1269,8 @@ function rCfg(C,T){
 
   // 이미지 설정 섹션
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  h+=`${_cfgD('img','🖼️ 이미지 설정')}
+  h+=`<div class="ssec" style="margin-top:20px">
+    <h4 style="margin:0 0 10px 0">🖼️ 이미지 설정</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">카드 이미지 관련 설정을 관리합니다.</div>
     
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
@@ -1334,7 +1335,7 @@ function rCfg(C,T){
         • 특정 대학을 보면 랜덤 회전이 비활성화되고 고정 이미지가 표시됩니다.
       </div>
     </div>
-  </details>`;
+  </div>`;
 
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
