@@ -20,6 +20,191 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
+// 프로필 탭 이미지 조절 설정 (player별)
+let _b2ImgSettings = JSON.parse(localStorage.getItem('su_b2_img_settings') || '{}');
+function _b2SaveImgSettings() {
+  localStorage.setItem('su_b2_img_settings', JSON.stringify(_b2ImgSettings));
+}
+function _b2DefaultSingleImgSettings() {
+  return {
+    scale: 100,
+    brightness: 100,
+    fit: 'contain',
+    offsetX: 0,
+    offsetY: 0,
+    zoom: 100,
+    fill: 'contain',
+    posX: 0,
+    posY: 0
+  };
+}
+function _b2NormalizeImgSettings(playerName) {
+  const raw = _b2ImgSettings[playerName];
+  if (!raw) {
+    _b2ImgSettings[playerName] = {
+      primary: _b2DefaultSingleImgSettings(),
+      secondary: _b2DefaultSingleImgSettings()
+    };
+    return _b2ImgSettings[playerName];
+  }
+  if (!raw.primary || !raw.secondary) {
+    _b2ImgSettings[playerName] = {
+      primary: {
+        scale: raw.zoom ?? 100,
+        brightness: raw.brightness ?? 100,
+        fit: raw.fill || 'contain',
+        offsetX: raw.posX ?? 0,
+        offsetY: raw.posY ?? 0,
+        zoom: raw.zoom ?? 100,
+        fill: raw.fill || 'contain',
+        posX: raw.posX ?? 0,
+        posY: raw.posY ?? 0
+      },
+      secondary: _b2DefaultSingleImgSettings()
+    };
+    return _b2ImgSettings[playerName];
+  }
+  raw.primary = Object.assign(_b2DefaultSingleImgSettings(), raw.primary || {});
+  raw.secondary = Object.assign(_b2DefaultSingleImgSettings(), raw.secondary || {});
+  raw.primary.zoom = raw.primary.scale;
+  raw.primary.fill = raw.primary.fit;
+  raw.primary.posX = raw.primary.offsetX;
+  raw.primary.posY = raw.primary.offsetY;
+  raw.secondary.zoom = raw.secondary.scale;
+  raw.secondary.fill = raw.secondary.fit;
+  raw.secondary.posX = raw.secondary.offsetX;
+  raw.secondary.posY = raw.secondary.offsetY;
+  return raw;
+}
+function _b2GetImgSettings(playerName, slot) {
+  const key = slot === 'secondary' ? 'secondary' : 'primary';
+  return _b2NormalizeImgSettings(playerName)[key];
+}
+function _b2SetImgSetting(playerName, key, val) {
+  const s = _b2GetImgSettings(playerName, 'primary');
+  s[key] = val;
+  _b2SaveImgSettings();
+}
+function _b2ResetImgSettings(playerName, slot) {
+  if (slot === 'primary' || slot === 'secondary') {
+    const normalized = _b2NormalizeImgSettings(playerName);
+    normalized[slot] = _b2DefaultSingleImgSettings();
+  } else {
+    _b2ImgSettings[playerName] = {
+      primary: _b2DefaultSingleImgSettings(),
+      secondary: _b2DefaultSingleImgSettings()
+    };
+  }
+  _b2SaveImgSettings();
+}
+function _b2GetImgDomId(slot) {
+  return slot === 'secondary' ? 'b2-main-img-2' : 'b2-main-img-1';
+}
+function _b2GetImgControlPrefix(slot) {
+  return slot === 'secondary' ? 'b2-secondary' : 'b2-primary';
+}
+function _b2GetImgTransform(settings) {
+  return `translate(${settings.offsetX || 0}px, ${settings.offsetY || 0}px) scale(${(settings.scale || 100) / 100})`;
+}
+function _b2ApplyImgSettingsToElement(el, settings) {
+  if (!el || !settings) return;
+  el.style.objectFit = settings.fit || 'contain';
+  el.style.objectPosition = 'center';
+  el.style.filter = `brightness(${(settings.brightness || 100) / 100})`;
+  el.style.transform = _b2GetImgTransform(settings);
+}
+function _b2ApplyImgSettingsToDom(playerName, slot) {
+  _b2ApplyImgSettingsToElement(document.getElementById(_b2GetImgDomId(slot)), _b2GetImgSettings(playerName, slot));
+}
+function _b2ClearSwapTimer(mainBox) {
+  if (mainBox && mainBox._swapTimer) {
+    clearTimeout(mainBox._swapTimer);
+    mainBox._swapTimer = null;
+  }
+}
+function _b2ScheduleImageSwap(playerName) {
+  const mainBox = document.getElementById('b2-players-main-box');
+  if (!mainBox) return;
+  _b2ClearSwapTimer(mainBox);
+  const img1 = document.getElementById('b2-main-img-1');
+  const img2 = document.getElementById('b2-main-img-2');
+  if (img1) img1.style.opacity = '1';
+  if (img2) img2.style.opacity = '0';
+  if (!img2) return;
+  mainBox._swapTimer = setTimeout(() => {
+    const curImg1 = document.getElementById('b2-main-img-1');
+    const curImg2 = document.getElementById('b2-main-img-2');
+    if (curImg1) curImg1.style.opacity = '0';
+    if (curImg2) curImg2.style.opacity = '1';
+  }, 1000);
+}
+function _b2RefreshImageControls(playerName, slot) {
+  const settings = _b2GetImgSettings(playerName, slot);
+  settings.zoom = settings.scale;
+  settings.fill = settings.fit;
+  settings.posX = settings.offsetX;
+  settings.posY = settings.offsetY;
+  const prefix = _b2GetImgControlPrefix(slot);
+  const scaleEl = document.getElementById(`${prefix}-scale-val`);
+  const brightnessEl = document.getElementById(`${prefix}-brightness-val`);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (scaleEl) scaleEl.textContent = `${settings.scale}%`;
+  if (brightnessEl) brightnessEl.textContent = `${settings.brightness}%`;
+  if (offsetEl) offsetEl.textContent = `${settings.offsetX}px, ${settings.offsetY}px`;
+  document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.fit === settings.fit);
+  });
+  _b2ApplyImgSettingsToDom(playerName, slot);
+}
+function _b2CenterImage(playerName, slot) {
+  const settings = _b2GetImgSettings(playerName, slot);
+  settings.offsetX = 0;
+  settings.offsetY = 0;
+  _b2SaveImgSettings();
+  _b2RefreshImageControls(playerName, slot);
+}
+function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
+  const settings = _b2GetImgSettings(playerName, slot);
+  const safeName = (playerName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const prefix = _b2GetImgControlPrefix(slot);
+  const disabled = hasImage ? '' : 'disabled';
+  return `
+    <div class="b2-players-slot-card ${hasImage ? '' : 'is-disabled'}">
+      <div class="b2-players-slot-title">${label}${hasImage ? '' : ' <span>미등록</span>'}</div>
+      <div class="b2-players-img-control-group">
+        <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
+        <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
+          oninput="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
+      </div>
+      <div class="b2-players-img-control-group">
+        <div class="b2-players-img-label">밝기 <span id="${prefix}-brightness-val">${settings.brightness}%</span></div>
+        <input type="range" class="b2-players-img-slider" min="20" max="180" value="${settings.brightness}" ${disabled}
+          oninput="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
+      </div>
+      <div class="b2-players-img-control-group">
+        <div class="b2-players-img-label">배치</div>
+        <div class="b2-players-img-btns">
+          <button class="b2-players-img-btn ${settings.fit === 'cover' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="cover" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','cover')">채우기</button>
+          <button class="b2-players-img-btn ${settings.fit === 'contain' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="contain" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','contain')">맞춤</button>
+          <button class="b2-players-img-btn ${settings.fit === 'fill' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="fill" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','fill')">늘리기</button>
+          <button class="b2-players-img-btn" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','scale',200)">2배 확대</button>
+          <button class="b2-players-img-btn" ${disabled} onclick="_b2CenterImage('${safeName}','${slot}')">중앙 정렬</button>
+        </div>
+      </div>
+      <div class="b2-players-img-control-group">
+        <div class="b2-players-img-label">위치 <span id="${prefix}-offset-val">${settings.offsetX}px, ${settings.offsetY}px</span></div>
+        <div class="b2-players-img-btns">
+          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',0,-12)">상</button>
+          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',0,12)">하</button>
+          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',-12,0)">좌</button>
+          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',12,0)">우</button>
+          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2ResetImgSettings('${safeName}','${slot}');_b2RefreshImageControls('${safeName}','${slot}')">초기화</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
 let b2BgAlpha     = J('su_b2ba')  ?? 9;
@@ -265,7 +450,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
           <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
-          ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
+          ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:1000;position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
         </div>
       </div>
       <div class="b2-card-body" style="${_b2Collapsed.has(univName)?'display:none':''}">
@@ -668,7 +853,7 @@ function _b2CrewView() {
       h += '<button class="btn btn-xs" style="background:#ef444433;color:#fff;border-color:#ef444455;font-size:10px" onclick="event.stopPropagation();deleteCrewCfg(\'' + safeName + '\')">🗑</button>';
     }
     // 접기/펼치기
-    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px" onclick="event.stopPropagation();_b2CrewCollapsed.' + (isCollapsed ? 'delete' : 'add') + '(\'' + safeName + '\');document.getElementById(\'b2-content\').innerHTML=_b2CrewView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:1000;position:relative" onclick="event.stopPropagation();_b2CrewCollapsed.' + (isCollapsed ? 'delete' : 'add') + '(\'' + safeName + '\');document.getElementById(\'b2-content\').innerHTML=_b2CrewView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
     h += '</div>';
     h += '</div>';
 
@@ -1331,7 +1516,7 @@ function _b2GameView() {
     h += '<div style="font-size:11px;color:#ffffffcc">' + members.total + '명' + (c.desc ? ' · ' + c.desc : '') + '</div>';
     h += '</div>';
     h += '<div class="no-export" style="position:relative;display:flex;gap:4px;align-items:center">';
-    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px" onclick="event.stopPropagation();_b2CrewCollapsed[' + (isCollapsed ? 'delete' : 'add') + '](' + "'game_" + safeName + "'" + ');document.getElementById(\'b2-content\').innerHTML=_b2GameView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:1000;position:relative" onclick="event.stopPropagation();_b2CrewCollapsed[' + (isCollapsed ? 'delete' : 'add') + '](' + "'game_" + safeName + "'" + ');document.getElementById(\'b2-content\').innerHTML=_b2GameView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
     h += '</div>';
     h += '</div>';
 
@@ -1512,7 +1697,126 @@ function _b2PlayersView() {
         min-height: 100%;
         object-fit: contain;
         object-position: center;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
+        will-change: transform, filter, opacity;
+      }
+      .b2-players-img-controls {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 12px;
+        z-index: 10;
+        width: min(320px, calc(100% - 32px));
+        max-height: calc(100% - 120px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+      .b2-players-controls-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 10px;
+      }
+      .b2-players-slot-card {
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        margin-bottom: 10px;
+      }
+      .b2-players-slot-card.is-disabled {
+        opacity: 0.55;
+      }
+      .b2-players-slot-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+      .b2-players-slot-title span {
+        font-size: 10px;
+        color: rgba(255,255,255,0.65);
+      }
+      .b2-players-img-controls::-webkit-scrollbar {
+        width: 4px;
+      }
+      .b2-players-img-controls::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 4px;
+      }
+      .b2-players-img-control-group {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+      }
+      .b2-players-img-control-group:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      .b2-players-img-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .b2-players-img-label span {
+        font-size: 10px;
+        color: rgba(255,255,255,0.7);
+      }
+      .b2-players-img-slider {
+        width: 100%;
+        height: 4px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: rgba(255,255,255,0.3);
+        border-radius: 2px;
+        outline: none;
+        margin-bottom: 8px;
+      }
+      .b2-players-img-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        background: #3b82f6;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .b2-players-img-btns {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .b2-players-img-btn {
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex: 1;
+        min-width: 45px;
+      }
+      .b2-players-img-btn:hover {
+        background: rgba(255,255,255,0.3);
+      }
+      .b2-players-img-btn.active {
+        background: #3b82f6;
+      }
+      .b2-players-img-btn-sm {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-width: 30px;
       }
       .b2-players-info {
         position: absolute;
@@ -1587,26 +1891,47 @@ function _b2PlayersView() {
           flex-direction: column;
           height: auto;
           min-height: auto;
+          gap: 14px;
         }
         .b2-players-main {
           flex: none;
           width: 100%;
-          height: 50vh;
-          min-height: 400px;
-          max-height: 80vh;
+          min-height: 320px;
+          height: clamp(320px, 52vh, 480px);
+          order: 0;
+          position: sticky;
+          top: 0;
+          z-index: 4;
+        }
+        .b2-players-main-content {
+          height: 100%;
+          border-radius: 18px;
+        }
+        .b2-players-img-controls {
+          width: calc(100% - 20px);
+          padding: 8px;
+          top: 10px;
+          left: 10px;
+          max-height: 48%;
+        }
+        .b2-players-img-label {
+          font-size: 10px;
+        }
+        .b2-players-img-btn {
+          padding: 3px 6px;
+          font-size: 10px;
+          min-width: 35px;
         }
         .b2-players-grid-wrapper {
           flex: none;
-          width: 100%;
           height: auto;
-          max-height: 600px;
-          -webkit-overflow-scrolling: touch;
+          max-height: none;
+          order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        }
-        .b2-players-card {
-          touch-action: manipulation;
+          grid-template-columns: repeat(3, 1fr);
+          max-height: none;
+          overflow-y: visible;
         }
         .b2-players-name {
           font-size: 24px;
@@ -1614,31 +1939,23 @@ function _b2PlayersView() {
         .b2-players-info {
           padding: 20px;
         }
+        .b2-players-thumbnail {
+          height: 80px;
+          font-size: 28px;
+        }
       }
-      .b2-players-thumbnail {
-        width: 100%;
-        aspect-ratio: 1;
-        object-fit: contain;
-        object-position: center;
-        border-radius: 16px;
-        border: 2px solid transparent;
-        background: rgba(255,255,255,0.1);
-        transition: all 0.3s ease;
-      }
-      .b2-players-card.active .b2-players-thumbnail {
-        border-color: ${theme.border};
-        box-shadow: 0 8px 25px ${theme.glow};
-      }
-      .b2-players-label {
-        margin-top: 8px;
-        font-size: 13px;
-        color: var(--text1);
-        font-weight: 700;
-        text-align: center;
-      }
-      .b2-players-card.active .b2-players-label {
-        color: var(--text1);
-        font-weight: 800;
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .b2-players-wrapper {
+          flex-direction: row;
+          height: 600px;
+        }
+        .b2-players-main {
+          flex: 0 0 45%;
+          height: 100%;
+        }
+        .b2-players-grid-wrapper {
+          flex: 0 0 55%;
+        }
       }
       .b2-players-filter-btn {
         background: rgba(255,255,255,0.1);
@@ -1688,13 +2005,11 @@ function _b2PlayersView() {
         }
         .b2-players-main {
           flex: none;
-          height: auto;
-          min-height: 400px;
-          max-height: 80vh;
+          max-height: none;
         }
         .b2-players-grid-wrapper {
           height: auto;
-          min-height: 600px;
+          min-height: 0;
         }
       }
     </style>
@@ -1727,13 +2042,53 @@ function _b2PlayersView() {
   h += `<div class="b2-players-wrapper">`;
   
   // 좌측 메인 디스플레이
+  const primarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'primary');
+  const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
+  const imgSettings = primarySettings;
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" alt="${_b2SelectedPlayer.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:contain;object-position:center">`
+          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
+        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+        <!-- 이미지 조절 컨트롤 패널 -->
+        <div class="b2-players-img-controls">
+          <div class="b2-players-img-control-group">
+            <div class="b2-players-img-label">🔍 확대/축소 <span id="b2-zoom-val">${imgSettings.zoom}%</span></div>
+            <input type="range" class="b2-players-img-slider" min="50" max="200" value="${imgSettings.zoom}" oninput="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'zoom', this.value)">
+            <div class="b2-players-img-btns">
+              <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'zoom', 200)">2배</button>
+              <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'zoom', 100)">원래</button>
+            </div>
+          </div>
+          <div class="b2-players-img-control-group">
+            <div class="b2-players-img-label">☀️ 밝기 <span id="b2-brightness-val">${imgSettings.brightness}%</span></div>
+            <input type="range" class="b2-players-img-slider" min="20" max="150" value="${imgSettings.brightness}" oninput="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'brightness', this.value)">
+          </div>
+          <div class="b2-players-img-control-group">
+            <div class="b2-players-img-label">🖼️ 채우기 모드</div>
+            <div class="b2-players-img-btns">
+              <button class="b2-players-img-btn ${imgSettings.fill === 'contain' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'fill', 'contain')">맞추기</button>
+              <button class="b2-players-img-btn ${imgSettings.fill === 'cover' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'fill', 'cover')">채우기</button>
+              <button class="b2-players-img-btn ${imgSettings.fill === 'fill' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'fill', 'fill')">늘리기</button>
+            </div>
+          </div>
+          <div class="b2-players-img-control-group">
+            <div class="b2-players-img-label">🎯 위치 이동</div>
+            <div class="b2-players-img-btns">
+              <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', -10, 0)">←</button>
+              <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 10, 0)">→</button>
+              <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 0, -10)">↑</button>
+              <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 0, 10)">↓</button>
+              <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'posX', 0);_b2UpdateImgSetting('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'posY', 0)">중앙</button>
+            </div>
+          </div>
+          <div class="b2-players-img-control-group" style="text-align:center">
+            <button class="b2-players-img-btn" style="width:100%" onclick="_b2ResetImgSettings('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')">⚙️ 초기화</button>
+          </div>
+        </div>
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
@@ -1789,6 +2144,73 @@ function _b2PlayersView() {
   return h;
 }
 
+// 이미지 설정 실시간 업데이트 함수
+function _b2UpdateImgSetting(playerName, slot, key, val) {
+  if (val === undefined) {
+    val = key;
+    key = slot;
+    slot = 'primary';
+  }
+  const keyMap = { zoom: 'scale', fill: 'fit', posX: 'offsetX', posY: 'offsetY' };
+  key = keyMap[key] || key;
+  const s = _b2GetImgSettings(playerName, slot);
+  const numVal = parseInt(val, 10);
+  s[key] = isNaN(numVal) ? val : numVal;
+  s.zoom = s.scale;
+  s.fill = s.fit;
+  s.posX = s.offsetX;
+  s.posY = s.offsetY;
+  _b2SaveImgSettings();
+  _b2RefreshImageControls(playerName, slot);
+  return;
+  
+  const mainBox = document.getElementById('b2-players-main-box');
+  if (!mainBox) return;
+  
+  // CSS 변수 업데이트
+  if (key === 'zoom') {
+    mainBox.style.setProperty('--img-zoom', s.zoom / 100);
+    const zoomVal = document.getElementById('b2-zoom-val');
+    if (zoomVal) zoomVal.textContent = s.zoom + '%';
+  } else if (key === 'brightness') {
+    mainBox.style.setProperty('--img-brightness', s.brightness / 100);
+    const brightnessVal = document.getElementById('b2-brightness-val');
+    if (brightnessVal) brightnessVal.textContent = s.brightness + '%';
+  } else if (key === 'posX') {
+    mainBox.style.setProperty('--img-pos-x', s.posX + 'px');
+  } else if (key === 'posY') {
+    mainBox.style.setProperty('--img-pos-y', s.posY + 'px');
+  } else if (key === 'fill') {
+    const img1 = document.getElementById('b2-main-img-1');
+    const img2 = document.getElementById('b2-main-img-2');
+    if (img1) img1.style.objectFit = val;
+    if (img2) img2.style.objectFit = val;
+    // 버튼 활성화 상태 업데이트
+    const btns = mainBox.querySelectorAll('.b2-players-img-btn');
+    btns.forEach(btn => {
+      if (btn.textContent === '맞추기') btn.classList.toggle('active', val === 'contain');
+      if (btn.textContent === '채우기') btn.classList.toggle('active', val === 'cover');
+      if (btn.textContent === '늘리기') btn.classList.toggle('active', val === 'fill');
+    });
+  }
+}
+
+// 이미지 위치 이동 함수
+function _b2MoveImg(playerName, slot, dx, dy) {
+  if (dy === undefined) {
+    dy = dx;
+    dx = slot;
+    slot = 'primary';
+  }
+  const s = _b2GetImgSettings(playerName, slot);
+  s.offsetX += dx;
+  s.offsetY += dy;
+  s.posX = s.offsetX;
+  s.posY = s.offsetY;
+  _b2SaveImgSettings();
+  _b2RefreshImageControls(playerName, slot);
+}
+
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
@@ -1807,9 +2229,69 @@ function _b2UpdateMainDisplay(playerName) {
   
   // 메인 디스플레이 업데이트
   const mainBox = document.getElementById('b2-players-main-box');
+  const imgSettings = _b2GetImgSettings(player.name);
+  const primarySettings = _b2GetImgSettings(player.name, 'primary');
+  const secondarySettings = _b2GetImgSettings(player.name, 'secondary');
+  const hasSecondProfile = !!(player.secondProfileFile && player.secondProfileFile.length > 0);
+
+  if (mainBox) {
+    _b2ClearSwapTimer(mainBox);
+    mainBox.innerHTML = `
+      ${player.photo
+        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
+      }
+      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+      <div class="b2-players-img-controls">
+        <div class="b2-players-controls-title">이미지 설정</div>
+        ${_b2BuildImageControlGroup(player.name, 'primary', '프로필 이미지 1', !!player.photo)}
+        ${_b2BuildImageControlGroup(player.name, 'secondary', '프로필 이미지 2', hasSecondProfile)}
+      </div>
+      <div class="b2-players-info">
+        <div class="b2-players-name">${player.name || '?대쫫 ?놁쓬'}</div>
+        <div class="b2-players-details">
+          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}?곗뼱</span>
+          <span class="b2-players-race">${player.race === 'P' ? '?꾨줈?좎뒪' : player.race === 'T' ? '?뚮?' : player.race === 'Z' ? '?洹? : '醫낆”誘몄젙'}</span>
+          ${player.univ ? (() => {
+            const uCfg = univCfg.find(x => x.name === player.univ) || {};
+            const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
+            return iconUrl
+              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+              : `<span>?룶 ${player.univ}</span>`;
+          })() : ''}
+        </div>
+        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">?륅툘 ?꾨줈???섏젙</button>` : ''}
+      </div>
+    `;
+    _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
+    _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
+    _b2ScheduleImageSwap(player.name);
+  }
+
+  document.querySelectorAll('.b2-players-card').forEach(card => {
+    card.classList.remove('active');
+    const cardName = card.querySelector('.b2-players-label')?.textContent;
+    const thumbnail = card.querySelector('.b2-players-thumbnail');
+    if (cardName === playerName) {
+      card.classList.add('active');
+      if (thumbnail) {
+        thumbnail.style.borderColor = theme.border;
+        thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
+      }
+    } else if (thumbnail) {
+      thumbnail.style.borderColor = 'transparent';
+      thumbnail.style.boxShadow = 'none';
+    }
+  });
+  return;
+
   if (mainBox) {
     mainBox.style.setProperty('--theme-glow', theme.glow);
     mainBox.style.setProperty('--theme-bg', theme.bg);
+    mainBox.style.setProperty('--img-zoom', imgSettings.zoom / 100);
+    mainBox.style.setProperty('--img-brightness', imgSettings.brightness / 100);
+    mainBox.style.setProperty('--img-pos-x', imgSettings.posX + 'px');
+    mainBox.style.setProperty('--img-pos-y', imgSettings.posY + 'px');
     
     // 기존 타이머 정리
     if (mainBox._videoTimeout) {
@@ -1825,14 +2307,47 @@ function _b2UpdateMainDisplay(playerName) {
     
     mainBox.innerHTML = `
       ${player.photo
-        ? `<img src="${player.photo}" class="b2-players-main-image" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'fill'};object-position:center;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:1;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
-      ${hasSecondProfile ? (isGif || isImage
-        ? `<img src="${player.secondProfileFile}" class="b2-players-second" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 두 번째 프로필 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'">`
-        : `<video class="b2-players-video" src="${player.secondProfileFile}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:0;transition:opacity 0.5s ease" autoplay loop playsinline onerror="console.warn('[프로필 탭] 두 번째 프로필 비디오 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none'"></video>`
-      ) : ''}
+      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:2;opacity:0;transition:opacity 0.5s ease">` : ''}
+      <!-- 이미지 조절 컨트롤 패널 -->
+      <div class="b2-players-img-controls">
+        <div class="b2-players-img-control-group">
+          <div class="b2-players-img-label">🔍 확대/축소 <span id="b2-zoom-val">${imgSettings.zoom}%</span></div>
+          <input type="range" class="b2-players-img-slider" min="50" max="200" value="${imgSettings.zoom}" oninput="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', this.value)">
+          <div class="b2-players-img-btns">
+            <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', 200)">2배</button>
+            <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', 100)">원래</button>
+          </div>
+        </div>
+        <div class="b2-players-img-control-group">
+          <div class="b2-players-img-label">☀️ 밝기 <span id="b2-brightness-val">${imgSettings.brightness}%</span></div>
+          <input type="range" class="b2-players-img-slider" min="20" max="150" value="${imgSettings.brightness}" oninput="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'brightness', this.value)">
+        </div>
+        <div class="b2-players-img-control-group">
+          <div class="b2-players-img-label">🖼️ 채우기 모드</div>
+          <div class="b2-players-img-btns">
+            <button class="b2-players-img-btn ${imgSettings.fill === 'contain' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'contain')">맞추기</button>
+            <button class="b2-players-img-btn ${imgSettings.fill === 'cover' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'cover')">채우기</button>
+            <button class="b2-players-img-btn ${imgSettings.fill === 'fill' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'fill')">늘리기</button>
+          </div>
+        </div>
+        <div class="b2-players-img-control-group">
+          <div class="b2-players-img-label">🎯 위치 이동</div>
+          <div class="b2-players-img-btns">
+            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', -10, 0)">←</button>
+            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 10, 0)">→</button>
+            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 0, -10)">↑</button>
+            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 0, 10)">↓</button>
+            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'posX', 0);_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'posY', 0)">중앙</button>
+          </div>
+        </div>
+        <div class="b2-players-img-control-group" style="text-align:center">
+          <button class="b2-players-img-btn" style="width:100%" onclick="_b2ResetImgSettings('${player.name.replace(/'/g,"\\'")}')">⚙️ 초기화</button>
+        </div>
+      </div>
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
@@ -1850,25 +2365,13 @@ function _b2UpdateMainDisplay(playerName) {
       </div>
     `;
     
-    // 1초 후 두번째 프로필 표시 (음성 포함)
+    // 1초 후 두번째 프로필 표시
     if (hasSecondProfile) {
       mainBox._videoTimeout = setTimeout(() => {
-        const mainImage = mainBox.querySelector('.b2-players-main-image');
-        if (mainImage) mainImage.style.opacity = '0';
-        
-        if (isGif || isImage) {
-          const secondImg = mainBox.querySelector('.b2-players-second');
-          if (secondImg) secondImg.style.opacity = '1';
-        } else if (isVideo) {
-          const video = mainBox.querySelector('.b2-players-video');
-          if (video) {
-            video.play().then(() => {
-              video.style.opacity = '1';
-            }).catch(err => {
-              console.log('Video autoplay failed:', err);
-            });
-          }
-        }
+        const img1 = document.getElementById('b2-main-img-1');
+        const img2 = document.getElementById('b2-main-img-2');
+        if (img1) img1.style.opacity = '0';
+        if (img2) img2.style.opacity = '1';
       }, 1000);
     }
   }
@@ -1913,7 +2416,7 @@ function openB2ProfileEditModal(playerName) {
         <div style="font-size:14px;color:var(--text3);padding:8px 12px;background:var(--surface);border-radius:8px">${player.name}</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🖼 첫 번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시)</span></label>
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" id="b2-ed-photo" value="${player.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
           <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
@@ -1923,9 +2426,9 @@ function openB2ProfileEditModal(playerName) {
         <div id="b2-ed-photo-warn" style="font-size:10px;color:${player.photo&&player.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${player.photo&&player.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🎬 두 번째 프로필 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(프로필 탭에서 1초 후 자동 전환 · GIF/비디오)</span></label>
-        <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... GIF 또는 비디오 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">프로필 탭에서만 1초 후 두번째 프로필(GIF/비디오)로 자동 전환됩니다.</div>
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(1초 후 자동 교체)</span></label>
+        <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 1초 뒤 이 이미지로 자동 전환됩니다.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
         <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
