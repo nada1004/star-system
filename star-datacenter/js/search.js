@@ -2479,6 +2479,31 @@ function cleanupIndGjDuplicates(){
   alert(`✅ 중복 제거 완료 (4월 1일 ~ ${today})\n개인전: ${indRemoved}건 제거\n끝장전: ${gjRemoved}건 제거`);
 }
 
+function clearAllIndRecords(){
+  if(!confirm('개인전 기록 전체를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n관련 선수들의 개인 전적 히스토리도 함께 정리됩니다.')) return;
+  
+  let indRemoved = 0;
+  
+  // indM 전체 삭제
+  if(typeof indM!=='undefined' && indM.length){
+    indRemoved = indM.length;
+    indM.length = 0;
+  }
+  
+  // 선수들의 개인전 관련 히스토리 정리
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      if(p.history && p.history.length){
+        p.history = p.history.filter(h => h.mode !== '개인전');
+      }
+    });
+  }
+  
+  save();
+  render();
+  alert(`✅ 개인전 기록 ${indRemoved}건 삭제 완료`);
+}
+
 function onPasteModeChange(val) {
   const compWrap = document.getElementById('paste-comp-wrap');
   const hint     = document.getElementById('paste-mode-hint');
