@@ -2256,19 +2256,19 @@ function _b2UpdateMainDisplay(playerName) {
         ${_b2BuildImageControlGroup(player.name, 'secondary', '프로필 이미지 2', hasSecondProfile)}
       </div>
       <div class="b2-players-info">
-        <div class="b2-players-name">${player.name || '?대쫫 ?놁쓬'}</div>
+        <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
-          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}?곗뼱</span>
-          <span class="b2-players-race">${player.race === 'P' ? '?꾨줈?좎뒪' : player.race === 'T' ? '?뚮?' : player.race === 'Z' ? '?洹? : '醫낆”誘몄젙'}</span>
+          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
+          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
           ${player.univ ? (() => {
             const uCfg = univCfg.find(x => x.name === player.univ) || {};
             const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
             return iconUrl
               ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
-              : `<span>?룶 ${player.univ}</span>`;
+              : `<span>🏫 ${player.univ}</span>`;
           })() : ''}
         </div>
-        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">?륅툘 ?꾨줈???섏젙</button>` : ''}
+        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
       </div>
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
