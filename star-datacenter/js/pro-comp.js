@@ -100,13 +100,9 @@ function proCompSyncHistory() {
       });
     });
   });
-  // ttM에서 잘못 저장된 프로리그 대진표 기록 정리 (_proKey 또는 티어대회 제거)
-  const ttOrig = ttM.length;
-  for (let i=ttM.length-1; i>=0; i--) { if(ttM[i]._proKey) ttM.splice(i,1); }
-  const ttRemoved = ttOrig - ttM.length;
-  if (cnt > 0 || ttRemoved > 0) {
+  if (cnt > 0) {
     save();
-    alert(`총 ${cnt}경기 전적 동기화${ttRemoved>0?`, 티어대회 오염 기록 ${ttRemoved}건 정리`:''}`);
+    alert(`총 ${cnt}경기 전적 동기화`);
     render();
   } else alert('이미 모두 동기화되어 있습니다.');
 }
@@ -138,7 +134,6 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
     }
 
     if (tn.type === 'tier') {
-      const _ei = ttM.findIndex(x => x._id === matchId);
       let rndLbl = '';
       if (ri === '3rd') {
         rndLbl = '3·4위전';
@@ -158,11 +153,12 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
         n: tn.name, compName: tn.name, teamALabel: m.a, teamBLabel: m.b,
         stage: 'bkt'
       };
-      if (_ei >= 0) ttM[_ei] = _rec; else ttM.unshift(_rec);
+      // 기존 동일 ID 기록 제거 후 추가
+      const existingIdx = ttM.findIndex(x => x._id === matchId);
+      if (existingIdx >= 0) ttM.splice(existingIdx, 1);
+      ttM.push(_rec);
     }
   } else {
-    const _ei = ttM.findIndex(x => x._id === matchId);
-    if (_ei >= 0) ttM.splice(_ei, 1);
   }
 }
 
