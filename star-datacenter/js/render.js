@@ -678,25 +678,8 @@ function buildPlayerDetailHTML(p){
   const _cWin=_cp.win; const _cLoss=_cp.loss;
   // ── 연도 필터 (indM/gjM 포함) ──
   const _year=window._playerModalYear||'';
-  // p.history에 indM/gjM 매치도 포함하여 표시
-  const _indMatches = (typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
-    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
-    opp:m.wName===p.name?m.lName:m.wName,
-    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그':'개인전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
-  }));
-  const _gjMatches = (typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
-    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
-    opp:m.wName===p.name?m.lName:m.wName,
-    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
-  }));
   // p.history의 matchId Set (tourneys 중복 제거용)
   const _existingMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
-  // p.history의 중복 키 Set (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
-  const _existingKeys=new Set((p.history||[]).map(h=>`${h.date||''}|${h.map||'-'}|${[p.name,h.opp].sort().join('|')}`));
   // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
   const _tourMatches=[];
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
@@ -727,8 +710,8 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // 중복되지 않는 indM/gjM + tourMatches 추가 - 중복 키로 판단
-  const _extraMatches=[..._indMatches,..._gjMatches,..._tourMatches].filter(m=>!_existingKeys.has(m._dupKey||`${m.date||''}|${m.map||'-'}|${[p.name,m.opp].sort().join('|')}`));
+  // 중복되지 않는 tourMatches 추가
+  const _extraMatches=_tourMatches;
   // p.history 자체도 중복 제거 (날짜+맵+상대로 판단)
   const _historySet=new Set();
   const _dedupedHistory=(p.history||[]).filter(h=>{
