@@ -2517,6 +2517,16 @@ function clearAllIndRecords(){
 function recalculateAllELO(){
   if(!confirm('모든 선수의 ELO를 처음부터 다시 계산하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n- 모든 ELO가 기본값으로 초기화됩니다\n- 승/패/포인트가 재계산됩니다\n- 모든 기록이 날짜순으로 다시 적용됩니다')) return;
 
+  // 기존 기록 백업
+  const backupHistory = {};
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      if(p.history && p.history.length){
+        backupHistory[p.name] = [...p.history];
+      }
+    });
+  }
+
   // 모든 선수 초기화
   if(typeof players!=='undefined' && players.length){
     players.forEach(p => {
@@ -2686,14 +2696,31 @@ function recalculateAllELO(){
 
   // applyGameResult로 다시 적용
   let appliedCount = 0;
+  const processedKeys = new Set();
   dedupedGames.forEach(g => {
     applyGameResult(g.wName, g.lName, g.date, g.map, g.matchId || '', '', '', g.mode);
+    processedKeys.add(`${g.wName}|${g.lName}|${g.date}|${g.map}`);
     appliedCount++;
+  });
+
+  // 백업에서 처리되지 않은 기록 복구
+  let restoredCount = 0;
+  Object.entries(backupHistory).forEach(([playerName, history]) => {
+    const p = players.find(x => x.name === playerName);
+    if(!p) return;
+    history.forEach(h => {
+      const key = `${h.opp === p.name ? h.opp : p.name}|${h.opp === p.name ? p.name : h.opp}|${h.date}|${h.map}`;
+      if(!processedKeys.has(key)){
+        // 백업된 기록을 그대로 복구 (ELO는 재계산되지 않음)
+        p.history.push(h);
+        restoredCount++;
+      }
+    });
   });
 
   save();
   render();
-  alert(`✅ ELO 재계산 완료\n총 ${appliedCount}경기가 재계산되었습니다`);
+  alert(`✅ ELO 재계산 완료\n총 ${appliedCount}경기 재계산\n${restoredCount}건 백업 복구`);
 }
 
 function onPasteModeChange(val) {
