@@ -2617,27 +2617,57 @@ function recalculateAllELO(){
     tourneys.forEach(tn => {
       (tn.groups||[]).forEach(grp => {
         (grp.matches||[]).forEach(m => {
+          // 개별 게임이 있는 경우
+          let hasGames = false;
           (m.sets||[]).forEach(s => {
             (s.games||[]).forEach(g => {
               if(g.playerA && g.playerB && g.winner){
                 const wName = g.winner === 'A' ? g.playerA : g.playerB;
                 const lName = g.winner === 'A' ? g.playerB : g.playerA;
-                allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그'});
+                const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+                // 원본 matchId 보존
+                allGames.push({wName, lName, date: date, map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: m._id || ''});
+                hasGames = true;
               }
             });
           });
+          // 개별 게임이 없고 점수만 있는 경우 (팀 단위 결과)
+          if(!hasGames && m.sa != null && m.sb != null && m.a && m.b){
+            const teamAPlayers = players.filter(p => p.univ === m.a);
+            const teamBPlayers = players.filter(p => p.univ === m.b);
+            // 각 팀의 랜덤 선수 1명씩 대전으로 처리 (단순화)
+            if(teamAPlayers.length > 0 && teamBPlayers.length > 0){
+              const wName = m.sa > m.sb ? teamAPlayers[0].name : teamBPlayers[0].name;
+              const lName = m.sa > m.sb ? teamBPlayers[0].name : teamAPlayers[0].name;
+              const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+              allGames.push({wName, lName, date: date, map: '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: m._id || ''});
+            }
+          }
         });
       });
       Object.values((tn.bracket||{}).matchDetails||{}).forEach(m => {
+        let hasGames = false;
         (m.sets||[]).forEach(s => {
           (s.games||[]).forEach(g => {
             if(g.playerA && g.playerB && g.winner){
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '토너먼트'});
+              const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+              allGames.push({wName, lName, date: date, map: g.map || '-', mode: '토너먼트', matchId: m._id || ''});
+              hasGames = true;
             }
           });
         });
+        if(!hasGames && m.sa != null && m.sb != null && m.a && m.b){
+          const teamAPlayers = players.filter(p => p.univ === m.a);
+          const teamBPlayers = players.filter(p => p.univ === m.b);
+          if(teamAPlayers.length > 0 && teamBPlayers.length > 0){
+            const wName = m.sa > m.sb ? teamAPlayers[0].name : teamBPlayers[0].name;
+            const lName = m.sa > m.sb ? teamBPlayers[0].name : teamAPlayers[0].name;
+            const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+            allGames.push({wName, lName, date: date, map: '-', mode: '토너먼트', matchId: m._id || ''});
+          }
+        }
       });
     });
   }
@@ -2645,10 +2675,19 @@ function recalculateAllELO(){
   // 날짜순 정렬 (오래된 순서)
   allGames.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
+  // 중복 제거 (날짜+맵+선수쌍 기준)
+  const gameSet = new Set();
+  const dedupedGames = allGames.filter(g => {
+    const key = `${g.date}|${g.map}|${[g.wName, g.lName].sort().join('|')}`;
+    if (gameSet.has(key)) return false;
+    gameSet.add(key);
+    return true;
+  });
+
   // applyGameResult로 다시 적용
   let appliedCount = 0;
-  allGames.forEach(g => {
-    applyGameResult(g.wName, g.lName, g.date, g.map, '', '', '', g.mode);
+  dedupedGames.forEach(g => {
+    applyGameResult(g.wName, g.lName, g.date, g.map, g.matchId || '', '', '', g.mode);
     appliedCount++;
   });
 
