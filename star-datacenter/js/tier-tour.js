@@ -4803,7 +4803,44 @@ function _renderCfgPdSection(){
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
       ${univRows}
-    </div>`;
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">🖼️ 프로필 이미지 설정</div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">📱 프로필 이미지 1 (PC/기본)</div>
+        <input type="text" id="cfg-pd-img1" value="${s.img1||''}" placeholder="이미지 URL 입력" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;box-sizing:border-box" onchange="_setPdImg('img1',this.value)">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">📱 프로필 이미지 2 (모바일)</div>
+        <input type="text" id="cfg-pd-img2" value="${s.img2||''}" placeholder="이미지 URL 입력" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;box-sizing:border-box" onchange="_setPdImg('img2',this.value)">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">🔍 이미지 크기 조정</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--gray-l);min-width:50px">확대/축소</span>
+          <input type="range" min="50" max="200" step="10" value="${s.img_zoom||100}" style="flex:1;accent-color:var(--blue)" oninput="_setPdImgZoom(this.value);document.getElementById('pd-zoom-val').textContent=this.value+'%'">
+          <span id="pd-zoom-val" style="font-size:11px;color:var(--gray-l);min-width:40px;font-weight:700">${s.img_zoom||100}%</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-xs btn-w" onclick="_setPdImgFill('cover')">📐 채우기</button>
+          <button class="btn btn-xs btn-w" onclick="_setPdImgFill('contain')">🖼️ 맞추기</button>
+          <button class="btn btn-xs btn-w" onclick="_setPdImgFill('stretch')">↔️ 늘리기</button>
+          <button class="btn btn-xs btn-w" onclick="_setPdImgZoom(200)">🔍 2배</button>
+          <button class="btn btn-xs btn-w" onclick="_setPdImgPos(0,0)">🎯 중앙</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">🎯 이미지 위치 이동</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-xs btn-w" onclick="_movePdImg(-10,0)">⬅️ 왼쪽</button>
+          <button class="btn btn-xs btn-w" onclick="_movePdImg(10,0)">➡️ 오른쪽</button>
+          <button class="btn btn-xs btn-w" onclick="_movePdImg(0,-10)">⬆️ 위</button>
+          <button class="btn btn-xs btn-w" onclick="_movePdImg(0,10)">⬇️ 아래</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">현재 위치: X:${s.img_x||0}px, Y:${s.img_y||0}px</div>
+      </div>
+    </div>
+  `;
 }
 
 function _setPdFontSize(size){
@@ -4833,6 +4870,44 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
+}
+
+function _setPdImg(key,val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s[key]=val.trim();
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _setPdImgZoom(val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.img_zoom=parseInt(val)||100;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  const el=document.getElementById('pd-zoom-val');
+  if(el) el.textContent=val+'%';
+}
+
+function _setPdImgFill(mode){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.img_fill=mode;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  alert('이미지 채우기 모드: '+(mode==='cover'?'채우기':mode==='contain'?'맞추기':'늘리기'));
+}
+
+function _setPdImgPos(x,y){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.img_x=x;
+  s.img_y=y;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _movePdImg(dx,dy){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.img_x=(s.img_x||0)+dx;
+  s.img_y=(s.img_y||0)+dy;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
 }
 
 /* ══════════════════════════════════════
