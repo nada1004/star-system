@@ -1598,9 +1598,13 @@ function _b2PlayersView() {
           width: 100%;
           height: auto;
           max-height: 600px;
+          -webkit-overflow-scrolling: touch;
         }
         .b2-players-grid {
           grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+        .b2-players-card {
+          touch-action: manipulation;
         }
         .b2-players-name {
           font-size: 24px;
