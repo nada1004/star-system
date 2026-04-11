@@ -2931,13 +2931,13 @@ function rCfg(C,T){
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
-        <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
-        <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
+        <input type="range" min="0" max="100" value="${typeof b2BgAlpha!=='undefined'?b2BgAlpha:9}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
+        <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${typeof b2BgAlpha!=='undefined'?b2BgAlpha:9}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
-        <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
-        <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
+        <input type="range" min="0" max="100" value="${typeof b2LabelAlpha!=='undefined'?b2LabelAlpha:16}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
+        <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${typeof b2LabelAlpha!=='undefined'?b2LabelAlpha:16}</span>
       </div>
     </div>
   </div>
