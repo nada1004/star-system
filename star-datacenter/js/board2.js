@@ -136,7 +136,7 @@ function _b2UnivView() {
     ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:repeat(2,1fr)!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -1591,16 +1591,16 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          height: 500px;
+          height: 600px;
         }
         .b2-players-grid-wrapper {
           flex: none;
           width: 100%;
           height: auto;
-          max-height: 500px;
+          max-height: 600px;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         }
         .b2-players-name {
           font-size: 24px;
@@ -1682,11 +1682,11 @@ function _b2PlayersView() {
         }
         .b2-players-main {
           flex: none;
-          height: 500px;
+          height: 600px;
         }
         .b2-players-grid-wrapper {
           height: auto;
-          min-height: 500px;
+          min-height: 600px;
         }
       }
     </style>
