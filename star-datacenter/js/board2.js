@@ -1591,7 +1591,9 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          height: 600px;
+          height: auto;
+          min-height: 400px;
+          max-height: 80vh;
         }
         .b2-players-grid-wrapper {
           flex: none;
@@ -1686,7 +1688,9 @@ function _b2PlayersView() {
         }
         .b2-players-main {
           flex: none;
-          height: 600px;
+          height: auto;
+          min-height: 400px;
+          max-height: 80vh;
         }
         .b2-players-grid-wrapper {
           height: auto;
