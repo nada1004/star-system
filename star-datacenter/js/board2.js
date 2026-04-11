@@ -244,6 +244,7 @@ function _b2VisUnivs() {
 }
 
 function rBoard2(C, T) {
+  try {
   T.innerText = '📊 현황판';
 
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
@@ -305,6 +306,13 @@ function rBoard2(C, T) {
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+  }
+  } catch(e) {
+    console.error('[rBoard2] 오류:', e);
+    C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
+      <div style="font-weight:700;margin-bottom:8px">현황판 로딩 중 오류가 발생했습니다</div>
+      <div style="font-size:12px;color:var(--gray-l)">${e.message}</div>
+    </div>`;
   }
 }
 
