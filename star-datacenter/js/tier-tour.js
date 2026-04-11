@@ -849,21 +849,49 @@ function _cfgD(id,title,extra){return `<details class="ssec" ${_cfgOpen(id)?'ope
 /* ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
    ?�정
 
+
+/* ==========================================
+   설정 탭
+========================================== */
 function rCfg(C,T){
   try{
     T.innerText='설정';
-    C.innerHTML='<div style=`"padding:20px`">설정 메뉴 준비 중...</div>';
+    let h = '<div style="padding:20px;max-width:800px">';
+    
+    // 대학 관리
+    h += '<details open style="margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface)">';
+    h += '<summary style="font-weight:700;cursor:pointer;font-size:16px">🏛️ 대학 관리</summary>';
+    h += '<div style="margin-top:12px">';
+    if(univCfg&&univCfg.length){
+      univCfg.forEach((u,i)=>{
+        const isHidden=!!u.hidden;
+        const isDissolved=!!u.dissolved;
+        h+=<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--white);border-radius:6px;border:1px solid var(--border2)">;
+        h+=<div style="width:16px;height:16px;border-radius:50%;background:"></div>;
+        h+=<input type="text" value="" style="flex:1;max-width:150px" onblur="const v=this.value.trim();if(v&&v!==''){univCfg[].name=v;save();}">;
+        h+=<input type="color" value="" style="width:40px" onchange="univCfg[].color=this.value;save();render();">;
+        if(isDissolved){
+          h+=<span style="font-size:11px;color:#dc2626">🏚️ 해체</span>;
+          h+=<button class="btn btn-xs" onclick="univCfg[].dissolved=false;univCfg[].hidden=false;delete univCfg[].dissolvedDate;save();render();">🔄 복구</button>;
+        }else{
+          h+=<button class="btn btn-xs" onclick="univCfg[].hidden=!univCfg[].hidden;save();render();"></button>;
+          h+=<button class="btn btn-xs" onclick="openDissolveModal()">🏚️ 해체</button>;
+        }
+        h+=<button class="btn btn-r btn-xs" onclick="delUniv()">🗑️ 삭제</button>;
+        h+=</div>;
+      });
+    }
+    h+='<div style="display:flex;gap:8px;margin-top:12px">';
+    h+='<input type="text" id="new-univ-name" placeholder="새 대학명" style="width:150px">';
+    h+='<input type="color" id="new-univ-color" value="#2563eb" style="width:40px">';
+    h+='<button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>';
+    h+='</div>';
+    h+='</div></details>';
+    
+    C.innerHTML=h;
   }catch(e){
     console.error('rCfg error:',e);
-    C.innerHTML='<div style=`"padding:20px;color:red`">설정 로드 오류: '+e.message+'</div>';
+    C.innerHTML='<div style="padding:20px;color:#dc2626">설정 로드 오류: '+e.message+'</div>';
   }
 }
 
-/* ==========================================
-   통계 탭
-========================================== */
-let statsSub='overview';
-function rStats(C,T){
-  T.innerText='통계';
-  C.innerHTML='<div style=`"padding:40px;text-align:center;color:var(--gray-l)`">통계 기능 준비 중...</div>';
-}

@@ -1782,7 +1782,7 @@ function _b2PlayersView() {
         height: 100%;
         min-width: 100%;
         min-height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         object-position: center;
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
@@ -2333,42 +2333,6 @@ function _b2UpdateMainDisplay(playerName) {
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:2;opacity:0;transition:opacity 0.5s ease">` : ''}
-      <!-- 이미지 조절 컨트롤 패널 -->
-      <div class="b2-players-img-controls">
-        <div class="b2-players-img-control-group">
-          <div class="b2-players-img-label">🔍 확대/축소 <span id="b2-zoom-val">${imgSettings.zoom}%</span></div>
-          <input type="range" class="b2-players-img-slider" min="50" max="200" value="${imgSettings.zoom}" oninput="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', this.value)">
-          <div class="b2-players-img-btns">
-            <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', 200)">2배</button>
-            <button class="b2-players-img-btn" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'zoom', 100)">원래</button>
-          </div>
-        </div>
-        <div class="b2-players-img-control-group">
-          <div class="b2-players-img-label">☀️ 밝기 <span id="b2-brightness-val">${imgSettings.brightness}%</span></div>
-          <input type="range" class="b2-players-img-slider" min="20" max="150" value="${imgSettings.brightness}" oninput="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'brightness', this.value)">
-        </div>
-        <div class="b2-players-img-control-group">
-          <div class="b2-players-img-label">🖼️ 채우기 모드</div>
-          <div class="b2-players-img-btns">
-            <button class="b2-players-img-btn ${imgSettings.fill === 'contain' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'contain')">맞추기</button>
-            <button class="b2-players-img-btn ${imgSettings.fill === 'cover' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'cover')">채우기</button>
-            <button class="b2-players-img-btn ${imgSettings.fill === 'fill' ? 'active' : ''}" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'fill', 'fill')">늘리기</button>
-          </div>
-        </div>
-        <div class="b2-players-img-control-group">
-          <div class="b2-players-img-label">🎯 위치 이동</div>
-          <div class="b2-players-img-btns">
-            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', -10, 0)">←</button>
-            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 10, 0)">→</button>
-            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 0, -10)">↑</button>
-            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2MoveImg('${player.name.replace(/'/g,"\\'")}', 0, 10)">↓</button>
-            <button class="b2-players-img-btn b2-players-img-btn-sm" onclick="_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'posX', 0);_b2UpdateImgSetting('${player.name.replace(/'/g,"\\'")}', 'posY', 0)">중앙</button>
-          </div>
-        </div>
-        <div class="b2-players-img-control-group" style="text-align:center">
-          <button class="b2-players-img-btn" style="width:100%" onclick="_b2ResetImgSettings('${player.name.replace(/'/g,"\\'")}')">⚙️ 초기화</button>
-        </div>
-      </div>
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
