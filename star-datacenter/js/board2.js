@@ -29,11 +29,11 @@ function _b2DefaultSingleImgSettings() {
   return {
     scale: 100,
     brightness: 100,
-    fit: 'contain',
+    fit: 'cover',
     offsetX: 0,
     offsetY: 0,
     zoom: 100,
-    fill: 'contain',
+    fill: 'cover',
     posX: 0,
     posY: 0
   };
