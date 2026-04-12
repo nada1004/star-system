@@ -561,8 +561,12 @@ async function generateResponse(msg) {
     }
 
     // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈)
-    const similarUniv = findSimilarUniversity(query, universities);
-    if (similarUniv) return formatUniversityInfo(similarUniv);
+    // 단, 한글 자음만 있는 경우는 건너뜀 (ㅇㄴㅇ 같은 무의미한 입력 방지)
+    const koreanConsonantsOnly = /^[ㄱ-ㅎ]+$/;
+    if (!koreanConsonantsOnly.test(query)) {
+      const similarUniv = findSimilarUniversity(query, universities);
+      if (similarUniv) return formatUniversityInfo(similarUniv);
+    }
 
     // 5) 못 찾으면 랜덤 스트리머
     if (typeof players !== 'undefined' && players.length > 0) {
@@ -662,7 +666,7 @@ async function generateResponse(msg) {
     return '감사합니다 😊 더 궁금한 게 있으면 언제든지 물어보세요!';
   }
 
-  // 기본 응답 - 랜덤 스트리머 소개
+  // 기본 응답 - 랜덤 스트리머 소개 (모든 입력에 대해)
   if (typeof players !== 'undefined' && players.length > 0) {
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     return `🎲 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);

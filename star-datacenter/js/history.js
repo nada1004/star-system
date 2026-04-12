@@ -190,11 +190,12 @@ function histAllHTML(){
   // 검색어 필터
   const _sq=((window._recQ&&window._recQ['all'])||'').toLowerCase().trim();
   const filtered=_sq?allItems.filter(({m})=>{
-    return [
+    const searchableText=[
       m.a||'',m.b||'',m.d||'',m.wName||'',m.lName||'',m.compName||'',m.memo||'',
       (m.teamAMembers||[]).map(x=>x.name||'').join(' '),(m.teamBMembers||[]).map(x=>x.name||'').join(' '),
-      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.wName||'',g.lName||''])).join(' ')
-    ].join(' ').toLowerCase().includes(_sq);
+      (m.sets||[]).flatMap(s=>(s.games||[]).flatMap(g=>[g.playerA||'',g.playerB||'',g.winner||'',g.wName||'',g.lName||''])).join(' ')
+    ].join(' ').toLowerCase();
+    return searchableText.includes(_sq);
   }):allItems;
 
   const initQ=(window._recQ&&window._recQ['all'])||'';
@@ -861,7 +862,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 function _histPSearchResultsHTML(q){
   const modeBadgeColors={'조별리그':'#2563eb','대회':'#b45309','미니대전':'#2563eb','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','개인':'#8b5cf6'};
   if(!q){
-    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">모든 종목의 경기 기록을 한번에 확인할 수 있습니다</div></div>`;
+    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">선수의 최근 기록(p.history)에서 검색합니다</div></div>`;
   }
   const ql=q.toLowerCase();
   const matched=players.filter(p=>p.name.toLowerCase().includes(ql));
@@ -871,17 +872,19 @@ function _histPSearchResultsHTML(q){
   let h='';
   matched.forEach(p=>{
     const hist=(p.history||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
-    if(!hist.length)return;
+    // 날짜 필터 적용
+    const filteredHist=typeof passDateFilter==='function'?hist.filter(h=>passDateFilter(h.date||'')):hist;
+    if(!filteredHist.length)return;
     const col=gc(p.univ)||'#6b7280';
-    const wins=hist.filter(hh=>hh.result==='승').length;
-    const losses=hist.length-wins;
-    const wr=hist.length?Math.round(wins/hist.length*100):0;
+    const wins=filteredHist.filter(hh=>hh.result==='승').length;
+    const losses=filteredHist.length-wins;
+    const wr=filteredHist.length?Math.round(wins/filteredHist.length*100):0;
     h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">
         <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
         <span style="font-weight:800;font-size:15px;color:var(--text)">${p.name}</span>
         <span style="font-size:12px;color:var(--gray-l)">${p.univ||''}</span>
-        <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--text3)">${hist.length}게임</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--text3)">${filteredHist.length}게임</span>
         <span style="font-size:12px;font-weight:700;color:#16a34a">${wins}승</span>
         <span style="font-size:12px;font-weight:700;color:#dc2626">${losses}패</span>
         <span style="font-size:12px;padding:2px 8px;border-radius:20px;background:${wr>=50?'#dcfce7':'#fee2e2'};color:${wr>=50?'#16a34a':'#dc2626'};font-weight:800">${wr}%</span>
@@ -890,7 +893,7 @@ function _histPSearchResultsHTML(q){
         <table style="margin:0;border:none;border-radius:0;font-size:12px"><thead><tr>
           <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>
         </tr></thead><tbody>`;
-    hist.forEach(hh=>{
+    filteredHist.forEach(hh=>{
       const isWin=hh.result==='승';
       const mc=modeBadgeColors[hh.mode||'']||'#6b7280';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';

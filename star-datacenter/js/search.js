@@ -264,7 +264,10 @@ function findPlayerByPartialName(namePart) {
     const memos = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.trim()).filter(Boolean);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
-  if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
+  if (memoExact.length === 1) {
+    // 메모 일치 시 실제 스트리머 이름으로 변환하여 반환
+    return { player: memoExact[0], candidates: memoExact, similar: [], memoMatch: true };
+  }
   if (memoExact.length > 1)   return { player: null, candidates: memoExact, similar: [] };
 
   // 2.5) 공백 제거 후 정확 일치: "안    아" → "안아"
@@ -319,6 +322,16 @@ function findPlayerByPartialName(namePart) {
     });
     if (rsMemo.length === 1) return { player: rsMemo[0], candidates: rsMemo, similar: [] };
     if (rsMemo.length > 1)   return { player: null, candidates: rsMemo, similar: [] };
+    // 메모 포함 일치 (별명 우선)
+    if (_raceStripped.length >= 2) {
+      const rsMemoPartial = players.filter(p => {
+        if (!p.memo) return false;
+        const memoNorm = _nfc(p.memo);
+        return memoNorm.includes(_rsLow) || memoNorm.toLowerCase().includes(_rsLow);
+      });
+      if (rsMemoPartial.length === 1) return { player: rsMemoPartial[0], candidates: rsMemoPartial, similar: [] };
+      if (rsMemoPartial.length > 1) return { player: null, candidates: rsMemoPartial, similar: [] };
+    }
     // 이름 부분 일치
     if (_raceStripped.length >= 2) {
       const rsPartial = players.filter(p =>
@@ -2072,7 +2085,6 @@ function pasteApply() {
 
   const mode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || 'individual';
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
-  try { if(dateVal) localStorage.setItem('su_paste_last_date', dateVal); } catch(e) {}
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
   if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
@@ -2187,31 +2199,53 @@ function pasteApply() {
     const _normMap2 = s => resolveMapName((s||'').trim()) || (s||'').trim();
     // ind 저장
     if (_mixGroups.ind.length) {
+      const _idDup = { count: 0, dup: [] };
       const _indDG = {};
       _mixGroups.ind.forEach(r => { const d=r._lineDate||dateVal; (_indDG[d]||(_indDG[d]=[])).push(r); });
-      let _idDup=0;
       Object.entries(_indDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(indM.some(m=>m.d===d&&_normMap2(m.map)===_normMap2(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_idDup++;return false;}return true;});
-        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
-        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const gameSet = new Set();
+        const dedupedGrp = grp.filter(r => {
+          const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
+          if (gameSet.has(key)) {
+            _idDup.count++;
+            _idDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
+            return false;
+          }
+          gameSet.add(key);
+          return true;
+        });
+        // 개인전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
+        const games=dedupedGrp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) indM.unshift(...games);
       });
-      if(_idDup>0) alert(`⚠️ 개인전 중복 ${_idDup}건 제외`);
+      if (_idDup.count > 0) alert(`개인전(혼합) 중복 ${_idDup.count}건 제거됨`);
     }
     // gj 저장
     if (_mixGroups.gj.length) {
+      const _gjDup = { count: 0, dup: [] };
       const _gjDG = {};
       _mixGroups.gj.forEach(r => { const d=r._lineDate||dateVal; (_gjDG[d]||(_gjDG[d]=[])).push(r); });
-      let _gjDup=0;
       Object.entries(_gjDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(gjM.some(m=>m.d===d&&(m.map||'')===(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_gjDup++;return false;}return true;});
-        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
-        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const gameSet = new Set();
+        const dedupedGrp = grp.filter(r => {
+          const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
+          if (gameSet.has(key)) {
+            _gjDup.count++;
+            _gjDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
+            return false;
+          }
+          gameSet.add(key);
+          return true;
+        });
+        // 끝장전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
+        const games=dedupedGrp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) gjM.unshift(...games);
       });
-      if(_gjDup>0) alert(`⚠️ 끝장전 중복 ${_gjDup}건 제외`);
+      if (_gjDup.count > 0) alert(`끝장전(혼합) 중복 ${_gjDup.count}건 제거됨`);
     }
     // mini 저장
     if (_mixGroups.mini.length) {
@@ -2219,7 +2253,8 @@ function pasteApply() {
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
+        // 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
         miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
       });
@@ -2234,12 +2269,13 @@ function pasteApply() {
   }
 
   if (mode !== 'ind' && mode !== 'gj') {
-    savable.forEach(r => {
-      const _ab = resolveAB(r);
-      const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
-      const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
-      applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL, _pasteModeLabel);
-    });
+    // 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+    // savable.forEach(r => {
+    //   const _ab = resolveAB(r);
+    //   const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
+    //   const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
+    //   applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL, _pasteModeLabel);
+    // });
   }
 
   // 모드별 기록 추가
@@ -2296,15 +2332,6 @@ function pasteApply() {
     curComp = compName;
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
-    // 중복 체크: 날짜+맵+선수쌍(순서 무관) 동일하면 차단
-    const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
-    const _indIsDup = (d, map, w, l) => indM.some(m => {
-      if (m.d !== d) return false;
-      if (_normMap(m.map) !== _normMap(map)) return false;
-      const pair1 = [m.wName, m.lName].sort().join('|');
-      const pair2 = [w, l].sort().join('|');
-      return pair1 === pair2;
-    });
     // _lineDate 있으면 날짜별 다른 sid로 분리 저장
     const _indDateGroups = {};
     savable.forEach(r => {
@@ -2312,33 +2339,30 @@ function pasteApply() {
       if (!_indDateGroups[d]) _indDateGroups[d] = [];
       _indDateGroups[d].push(r);
     });
-    let _indDupCount = 0;
+    const _idDup = { count: 0, dup: [] };
     Object.entries(_indDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const indSid = genId();
-      const passed = group.filter(r => {
-        const map = r.map && r.map !== '-' ? r.map : '';
-        if (_indIsDup(d, map, r.wPlayer.name, r.lPlayer.name)) { _indDupCount++; return false; }
+      const gameSet = new Set();
+      const dedupedGames = group.filter(r => {
+        const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
+        if (gameSet.has(key)) {
+          _idDup.count++;
+          _idDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
+          return false;
+        }
+        gameSet.add(key);
         return true;
       });
-      passed.forEach(r => {
-        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+      dedupedGames.forEach(r => {
+        // 개인전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
-      const games = passed.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
-      if (games.length) indM.unshift(...games);
+      const games = dedupedGames.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      if(games.length) indM.unshift(...games);
     });
-    if (_indDupCount > 0) alert(`⚠️ 중복 ${_indDupCount}건 제외하고 저장했습니다.`);
+    if (_idDup.count > 0) alert(`개인전 중복 ${_idDup.count}건 제거됨 (중복: ${_idDup.dup.map(x=>`${x.w} vs ${x.l}`).join(', ')})`);
   } else if (mode === 'gj') {
     const _gjPro = !!window._gjProPaste;
-    // 중복 체크: 날짜+맵+선수쌍(순서 무관) 동일하면 차단
-    const _gjIsDup = (d, map, w, l) => gjM.some(m => {
-      if (m.d !== d) return false;
-      const mMap = m.map || '';
-      const rMap = map || '';
-      if (mMap !== rMap) return false;
-      const pair1 = [m.wName, m.lName].sort().join('|');
-      const pair2 = [w, l].sort().join('|');
-      return pair1 === pair2;
-    });
     // _lineDate 있으면 날짜별 다른 sid로 분리 저장
     const _gjDateGroups = {};
     savable.forEach(r => {
@@ -2346,21 +2370,28 @@ function pasteApply() {
       if (!_gjDateGroups[d]) _gjDateGroups[d] = [];
       _gjDateGroups[d].push(r);
     });
-    let _gjDupCount = 0;
+    const _gjDup = { count: 0, dup: [] };
     Object.entries(_gjDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const gjSid = genId();
-      const passed = group.filter(r => {
-        const map = r.map && r.map !== '-' ? r.map : '';
-        if (_gjIsDup(d, map, r.wPlayer.name, r.lPlayer.name)) { _gjDupCount++; return false; }
+      const gameSet = new Set();
+      const dedupedGames = group.filter(r => {
+        const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
+        if (gameSet.has(key)) {
+          _gjDup.count++;
+          _gjDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
+          return false;
+        }
+        gameSet.add(key);
         return true;
       });
-      passed.forEach(r => {
-        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+      dedupedGames.forEach(r => {
+        // 끝장전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
-      const games = passed.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
-      if (games.length) gjM.unshift(...games);
+      const games = dedupedGames.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      if(games.length) gjM.unshift(...games);
     });
-    if (_gjDupCount > 0) alert(`⚠️ 중복 ${_gjDupCount}건 제외하고 저장했습니다.`);
+    if (_gjDup.count > 0) alert(`끝장전 중복 ${_gjDup.count}건 제거됨 (중복: ${_gjDup.dup.map(x=>`${x.w} vs ${x.l}`).join(', ')})`);
   } else if (mode === 'tt') {
     const ttAB = (r) => {
       const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
@@ -2406,6 +2437,301 @@ function pasteApply() {
   toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2800);
+}
+
+function cleanupIndGjDuplicates(){
+  if(!confirm('4월 1일부터 현재까지의 개인전/끝장전/프로리그 끝장전 중복 데이터를 제거하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) return;
+  
+  const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
+  const startDate = '2024-04-01';
+  const today = new Date().toISOString().slice(0, 10);
+  
+  let indRemoved = 0;
+  let gjRemoved = 0;
+  
+  // indM 중복 제거 (맵+날짜+선수쌍 비교, 4월1일부터만)
+  if(typeof indM!=='undefined' && indM.length){
+    const seen = new Set();
+    const uniqueInd = [];
+    indM.forEach(m => {
+      if(!m.wName || !m.lName) return;
+      if(m.d < startDate || m.d > today) return; // 날짜 범위 필터
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seen.has(key)){
+        indRemoved++;
+      } else {
+        seen.add(key);
+        uniqueInd.push(m);
+      }
+    });
+    // 전체 배열에서 중복 제거
+    const seenAll = new Set();
+    const finalInd = [];
+    indM.forEach(m => {
+      if(!m.wName || !m.lName) {
+        finalInd.push(m);
+        return;
+      }
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seenAll.has(key)){
+        indRemoved++;
+      } else {
+        seenAll.add(key);
+        finalInd.push(m);
+      }
+    });
+    indM.length = 0;
+    indM.push(...finalInd);
+  }
+  
+  // gjM 중복 제거 (맵+날짜+선수쌍 비교, 4월1일부터만, 프로리그 끝장전 포함)
+  if(typeof gjM!=='undefined' && gjM.length){
+    const seenAll = new Set();
+    const finalGj = [];
+    gjM.forEach(m => {
+      if(!m.wName || !m.lName) {
+        finalGj.push(m);
+        return;
+      }
+      if(m.d < startDate || m.d > today) return; // 날짜 범위 필터
+      const key = `${m.d||''}|${_normMap(m.map)}|[${[m.wName,m.lName].sort().join('|')}]`;
+      if(seenAll.has(key)){
+        gjRemoved++;
+      } else {
+        seenAll.add(key);
+        finalGj.push(m);
+      }
+    });
+    gjM.length = 0;
+    gjM.push(...finalGj);
+  }
+  
+  save();
+  render();
+  alert(`✅ 중복 제거 완료 (4월 1일 ~ ${today})\n개인전: ${indRemoved}건 제거\n끝장전: ${gjRemoved}건 제거`);
+}
+
+function clearAllIndRecords(){
+  if(!confirm('개인전 기록 전체를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n관련 선수들의 개인 전적 히스토리도 함께 정리됩니다.')) return;
+
+  let indRemoved = 0;
+
+  // indM 전체 삭제
+  if(typeof indM!=='undefined' && indM.length){
+    indRemoved = indM.length;
+    indM.length = 0;
+  }
+
+  // 선수들의 개인전 관련 히스토리 정리
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      if(p.history && p.history.length){
+        p.history = p.history.filter(h => h.mode !== '개인전');
+      }
+    });
+  }
+
+  save();
+  render();
+  alert(`✅ 개인전 기록 ${indRemoved}건 삭제 완료`);
+}
+
+function recalculateAllELO(){
+  if(!confirm('모든 선수의 ELO를 처음부터 다시 계산하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n- 모든 ELO가 기본값으로 초기화됩니다\n- 승/패/포인트가 재계산됩니다\n- 모든 기록이 날짜순으로 다시 적용됩니다')) return;
+
+  // 기존 기록 백업
+  const backupHistory = {};
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      if(p.history && p.history.length){
+        backupHistory[p.name] = [...p.history];
+      }
+    });
+  }
+
+  // 모든 선수 초기화
+  if(typeof players!=='undefined' && players.length){
+    players.forEach(p => {
+      p.elo = ELO_DEFAULT;
+      p.win = 0;
+      p.loss = 0;
+      p.points = 0;
+      p.history = [];
+    });
+  }
+
+  // 모든 경기 기록 수집
+  const allGames = [];
+
+  // miniM (미니대전)
+  if(typeof miniM!=='undefined' && miniM.length){
+    miniM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: m.type === 'civil' ? '시빌워' : '미니대전'});
+      }
+    });
+  }
+
+  // univM (대학대전)
+  if(typeof univM!=='undefined' && univM.length){
+    univM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: '대학대전'});
+      }
+    });
+  }
+
+  // ckM (대학CK)
+  if(typeof ckM!=='undefined' && ckM.length){
+    ckM.forEach(m => {
+      if(m.a && m.b && m.winner){
+        const wName = m.winner === 'A' ? m.a : m.b;
+        const lName = m.winner === 'A' ? m.b : m.a;
+        allGames.push({wName, lName, date: m.d || '', map: m.map || '-', mode: '대학CK'});
+      }
+    });
+  }
+
+  // proM (프로리그)
+  if(typeof proM!=='undefined' && proM.length){
+    proM.forEach(m => {
+      (m.sets||[]).forEach(s => {
+        (s.games||[]).forEach(g => {
+          if(g.playerA && g.playerB && g.winner){
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '프로리그'});
+          }
+        });
+      });
+    });
+  }
+
+  // indM (개인전)
+  if(typeof indM!=='undefined' && indM.length){
+    indM.forEach(m => {
+      if(m.wName && m.lName){
+        allGames.push({wName: m.wName, lName: m.lName, date: m.d || '', map: m.map || '-', mode: m._proLabel ? '프로리그' : '개인전'});
+      }
+    });
+  }
+
+  // gjM (끝장전)
+  if(typeof gjM!=='undefined' && gjM.length){
+    gjM.forEach(m => {
+      if(m.wName && m.lName){
+        allGames.push({wName: m.wName, lName: m.lName, date: m.d || '', map: m.map || '-', mode: m._proLabel ? '프로리그끝장전' : '끝장전'});
+      }
+    });
+  }
+
+  // ttM (티어대회)
+  if(typeof ttM!=='undefined' && ttM.length){
+    ttM.forEach(m => {
+      (m.sets||[]).forEach(s => {
+        (s.games||[]).forEach(g => {
+          if(g.playerA && g.playerB && g.winner){
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '티어대회'});
+          }
+        });
+      });
+    });
+  }
+
+  // tourneys (대회)
+  if(typeof tourneys!=='undefined' && tourneys.length){
+    tourneys.forEach(tn => {
+      (tn.groups||[]).forEach(grp => {
+        (grp.matches||[]).forEach(m => {
+          // 개별 게임이 있는 경우
+          let hasGames = false;
+          (m.sets||[]).forEach(s => {
+            (s.games||[]).forEach(g => {
+              if(g.playerA && g.playerB && g.winner){
+                const wName = g.winner === 'A' ? g.playerA : g.playerB;
+                const lName = g.winner === 'A' ? g.playerB : g.playerA;
+                const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+                // 원본 matchId 보존
+                allGames.push({wName, lName, date: date, map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: m._id || ''});
+                hasGames = true;
+              }
+            });
+          });
+          // 개별 게임이 없고 점수만 있는 경우 (팀 단위 결과)
+          if(!hasGames && m.sa != null && m.sb != null && m.a && m.b){
+            const teamAPlayers = players.filter(p => p.univ === m.a);
+            const teamBPlayers = players.filter(p => p.univ === m.b);
+            // 각 팀의 랜덤 선수 1명씩 대전으로 처리 (단순화)
+            if(teamAPlayers.length > 0 && teamBPlayers.length > 0){
+              const wName = m.sa > m.sb ? teamAPlayers[0].name : teamBPlayers[0].name;
+              const lName = m.sa > m.sb ? teamBPlayers[0].name : teamAPlayers[0].name;
+              const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+              allGames.push({wName, lName, date: date, map: '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: m._id || ''});
+            }
+          }
+        });
+      });
+      Object.values((tn.bracket||{}).matchDetails||{}).forEach(m => {
+        let hasGames = false;
+        (m.sets||[]).forEach(s => {
+          (s.games||[]).forEach(g => {
+            if(g.playerA && g.playerB && g.winner){
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+              allGames.push({wName, lName, date: date, map: g.map || '-', mode: '토너먼트', matchId: m._id || ''});
+              hasGames = true;
+            }
+          });
+        });
+        if(!hasGames && m.sa != null && m.sb != null && m.a && m.b){
+          const teamAPlayers = players.filter(p => p.univ === m.a);
+          const teamBPlayers = players.filter(p => p.univ === m.b);
+          if(teamAPlayers.length > 0 && teamBPlayers.length > 0){
+            const wName = m.sa > m.sb ? teamAPlayers[0].name : teamBPlayers[0].name;
+            const lName = m.sa > m.sb ? teamBPlayers[0].name : teamAPlayers[0].name;
+            const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+            allGames.push({wName, lName, date: date, map: '-', mode: '토너먼트', matchId: m._id || ''});
+          }
+        }
+      });
+    });
+  }
+
+  // 날짜순 정렬 (오래된 순서)
+  allGames.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  // applyGameResult로 다시 적용 (중복 제거 안함)
+  let appliedCount = 0;
+  allGames.forEach(g => {
+    applyGameResult(g.wName, g.lName, g.date, g.map, g.matchId || '', '', '', g.mode);
+    appliedCount++;
+  });
+
+  // 백업에서 처리되지 않은 기록 복구
+  let restoredCount = 0;
+  Object.entries(backupHistory).forEach(([playerName, history]) => {
+    const p = players.find(x => x.name === playerName);
+    if(!p) return;
+    history.forEach(h => {
+      const key = `${h.opp === p.name ? h.opp : p.name}|${h.opp === p.name ? p.name : h.opp}|${h.date}|${h.map}`;
+      if(!processedKeys.has(key)){
+        // 백업된 기록을 그대로 복구 (ELO는 재계산되지 않음)
+        p.history.push(h);
+        restoredCount++;
+      }
+    });
+  });
+
+  save();
+  render();
+  alert(`✅ ELO 재계산 완료\n총 ${appliedCount}경기 재계산\n${restoredCount}건 백업 복구`);
 }
 
 function onPasteModeChange(val) {
@@ -2552,8 +2878,10 @@ function openPasteModal() {
 
   const dateInput = document.getElementById('paste-date');
   if (dateInput) {
-    const _saved = localStorage.getItem('su_paste_last_date');
-    dateInput.value = _saved || new Date().toISOString().slice(0, 10);
+    // Don't load from localStorage, but keep existing value if set
+    if (!dateInput.value) {
+      dateInput.value = new Date().toISOString().slice(0, 10);
+    }
   }
 
   // 모드 선택기 원상 복구
@@ -2699,7 +3027,7 @@ function openProPasteModal() {
   window._proPasteMode = 'game';
   // 날짜
   const di = document.getElementById('pro-paste-date');
-  if (di) di.value = new Date().toISOString().slice(0, 10);
+  if (di) di.value = new Date().toISOString().slice(0, 10); // Always reset to today
   // 경기방식 버튼 초기화
   setProPasteMode('game');
   om('proPasteModal');
@@ -3257,8 +3585,8 @@ function proApply() {
     sa = totalA; sb = totalB;
   }
 
-  // 개인 전적 반영 (승자=wPlayer 그대로)
-  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
+  // 개인 전적 반영 - 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+  // savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
 
   // A조/B조 멤버 목록 (팀 배정 기준으로)
   const mA=[], mB=[];
