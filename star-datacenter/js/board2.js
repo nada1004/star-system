@@ -1984,7 +1984,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid-wrapper {
         flex: 1;
-        background: rgba(255,255,255,0.05) url('https://i.imgur.com/3W8Gz5Q.png') center/contain no-repeat;
+        background: rgba(255,255,255,0.05);
         backdrop-filter: blur(15px);
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 24px;
