@@ -849,8 +849,16 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>!h.matchId||!_existingMatchIds.has(h.matchId)||!_existingKeys.has(_histDupKey(h)));
+  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거 - p.history 중복 및 배열 간 내부 중복 모두 제거)
+  const _extraSeenKeys=new Set();
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>{
+    if(h.matchId&&_existingMatchIds.has(h.matchId))return false;
+    const k=_histDupKey(h);
+    if(_existingKeys.has(k))return false;
+    if(_extraSeenKeys.has(k))return false;
+    _extraSeenKeys.add(k);
+    return true;
+  });
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)

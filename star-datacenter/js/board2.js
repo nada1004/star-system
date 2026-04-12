@@ -2390,13 +2390,19 @@ function _b2UpdateMainDisplay(playerName) {
     const thumbnail = card.querySelector('.b2-players-thumbnail');
     if (cardName === playerName) {
       card.classList.add('active');
+      card.style.border = `2px solid ${theme.border}`;
+      card.style.boxShadow = `0 4px 12px ${theme.glow}`;
       if (thumbnail) {
         thumbnail.style.borderColor = theme.border;
         thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
       }
-    } else if (thumbnail) {
-      thumbnail.style.borderColor = 'transparent';
-      thumbnail.style.boxShadow = 'none';
+    } else {
+      card.style.border = '2px solid transparent';
+      card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+      if (thumbnail) {
+        thumbnail.style.borderColor = 'transparent';
+        thumbnail.style.boxShadow = 'none';
+      }
     }
   });
 
@@ -2459,15 +2465,18 @@ function _b2UpdateMainDisplay(playerName) {
   document.querySelectorAll('.b2-players-card').forEach(card => {
     card.classList.remove('active');
     const cardName = card.querySelector('.b2-players-label')?.textContent;
+    const thumbnail = card.querySelector('.b2-players-thumbnail');
     if (cardName === playerName) {
       card.classList.add('active');
-      const thumbnail = card.querySelector('.b2-players-thumbnail');
+      card.style.border = `2px solid ${theme.border}`;
+      card.style.boxShadow = `0 4px 12px ${theme.glow}`;
       if (thumbnail) {
         thumbnail.style.borderColor = theme.border;
         thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
       }
     } else {
-      const thumbnail = card.querySelector('.b2-players-thumbnail');
+      card.style.border = '2px solid transparent';
+      card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
       if (thumbnail) {
         thumbnail.style.borderColor = 'transparent';
         thumbnail.style.boxShadow = 'none';
