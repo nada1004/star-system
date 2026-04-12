@@ -233,8 +233,8 @@ async function fbCloudSave() {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
-      fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
-      fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
+      fabHideMobile: localStorage.getItem('su_fabHideMobile')==='1',
+      fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
