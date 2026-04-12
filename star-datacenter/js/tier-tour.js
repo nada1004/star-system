@@ -955,10 +955,10 @@ function rCfg(C,T){
   })()}
   ${_cfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>
-  univCfg.forEach((u,i)=>{
+  ${univCfg.map((u,i)=>{
     const isHidden = !!u.hidden;
     const isDissolved = !!u.dissolved;
-    h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
+    return `<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
       <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
       <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
@@ -968,25 +968,23 @@ function rCfg(C,T){
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
             onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
             ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
-          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
+          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`}
       }
       <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
     </div>`;
-  });
-  h+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  }).join('')}
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
     <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
     <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
   </div></details>
-  ${_cfgD('maps','🗺️ 맵 관리')}<div id="map-list">`;
-  maps.forEach((m,i)=>{
-    h+=`<div class="srow">
+  ${_cfgD('maps','🗺️ 맵 관리')}<div id="map-list">
+  ${maps.map((m,i)=>`<div class="srow">
       <span style="font-size:14px">📍</span>
       <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
-    </div>`;
-  });
-  h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
+    </div>`).join('')}
+  </div><div style="margin-top:12px;display:flex;gap:8px">
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></details>
