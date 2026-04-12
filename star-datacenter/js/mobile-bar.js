@@ -15,8 +15,20 @@ function updateFabVisibility(){
   const fab=document.getElementById('mobileFab');
   if(!fab)return;
   
-  // FAB 버튼 완전 비활성화
-  fab.style.display='none';
+  const isMobile=window.innerWidth<=768;
+  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
+  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
+  
+  if(isMobile){
+    fab.style.display=hideMobile?'none':'flex';
+  }else{
+    fab.style.display=hidePC?'none':'flex';
+  }
+  // 로그인 상태에 따라 설정 옵션 표시/숨김
+  const settingsItem=document.querySelector('.fab-sub-item[onclick*="_fabGo(\'cfg\')"]');
+  if(settingsItem){
+    settingsItem.style.display=typeof isLoggedIn!=='undefined'&&isLoggedIn?'flex':'none';
+  }
 }
 
 // 창 크기 변경 시 FAB 표시 여부 재계산

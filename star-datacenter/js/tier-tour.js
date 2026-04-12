@@ -2984,7 +2984,7 @@ function rCfg(C,T){
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-mobile" ${localStorage.getItem('su_fabHideMobile')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility()">
+          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (모바일)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼</div>
@@ -2992,7 +2992,7 @@ function rCfg(C,T){
       </label>
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-pc" ${localStorage.getItem('su_fabHidePC')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility()">
+          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (PC)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">PC 화면 우측 하단 플로팅 버튼</div>
