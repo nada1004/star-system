@@ -1261,6 +1261,7 @@ function rCfg(C,T){
       </div>
 
     </div>
+    </div>
   </div>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
