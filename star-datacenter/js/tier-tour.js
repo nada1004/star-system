@@ -871,7 +871,7 @@ function rCfg(C,T){
     }
   },50);
   C.innerHTML=h;
-  setTimeout(_refreshAliasList, 10);
+  setTimeout(function(){ if(typeof _refreshAliasList === 'function') _refreshAliasList(); }, 10);
   // FAB 탭 설정 초기화
   window.saveFabTabSetting = function(btnKey, tabId){
     const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
@@ -1139,11 +1139,28 @@ window.sw = function(tab, el){
   }
 };
 
+// ── 맵 약자 목록 렌더링 ──
+function _refreshAliasList(){
+  const el=document.getElementById('alias-list');
+  if(!el)return;
+  const aliases=Object.entries(userMapAlias||{}).filter(([k])=>!k.endsWith('__disabled'));
+  if(!aliases.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">추가된 약자가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML=aliases.map(([k,v])=>
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:12px;margin-bottom:4px">
+      <span style="font-family:monospace"><b>${k}</b> → ${v}</span>
+      <button onclick="delMapAlias('${encodeURIComponent(k)}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:11px;padding:0 2px;line-height:1" title="삭제">✕</button>
+    </span>`
+  ).join('');
+}
+
 // ── 크루 관리 함수들 ──
 function _refreshCrewList(){
   const el=document.getElementById('crew-list');
   if(!el) return;
-  if(!crews||!crews.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">아직 추가된 크루가 없습니다.</div>';return;}
+  if(typeof crews==='undefined'||!crews||!crews.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">아직 추가된 크루가 없습니다.</div>';return;}
   el.innerHTML=crews.map((c,ci)=>{
     const col=c.color||'#6b7280';
     const memberBtns=(c.members||[]).map((m,mi)=>`
