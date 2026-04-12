@@ -1365,6 +1365,7 @@ function saveImageSettings(){
     interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
   };
   localStorage.setItem('su_img_settings', JSON.stringify(settings));
+  if(typeof save==='function')save();
   alert('이미지 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
 }
@@ -2529,7 +2530,14 @@ function rCfg(C,T){
     return;
   }
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`${_cfgD('notice','📢 공지 관리')}
+  let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+    <div>
+      <span style="font-size:14px;font-weight:700;color:var(--text)">⚙️ 설정 관리</span>
+      <span style="font-size:11px;color:var(--gray-l);margin-left:8px">설정 변경 시 자동으로 Firebase에 동기화됩니다</span>
+    </div>
+    <button class="btn btn-b" onclick="if(typeof save==='function')save();alert('설정이 저장되었습니다.');">💾 전체 저장</button>
+  </div>
+  ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
     ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
@@ -2981,7 +2989,7 @@ function rCfg(C,T){
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-mobile" ${localStorage.getItem('su_fabHideMobile')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility();">
+          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (모바일)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼</div>
@@ -2989,7 +2997,7 @@ function rCfg(C,T){
       </label>
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-pc" ${localStorage.getItem('su_fabHidePC')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility();">
+          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (PC)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">PC 화면 우측 하단 플로팅 버튼</div>
@@ -3087,12 +3095,12 @@ function rCfg(C,T){
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">배경 밝기</span>
-        <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render()">
+        <input type="range" min="0" max="100" value="${b2BgAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);this.nextElementSibling.textContent=b2BgAlpha;render();if(typeof save==='function')save()">
         <span id="cfg-b2ba-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2BgAlpha}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:13px;font-weight:700;color:var(--text2);min-width:60px">라벨 밝기</span>
-        <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render()">
+        <input type="range" min="0" max="100" value="${b2LabelAlpha}" style="width:120px;height:6px;cursor:pointer" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);this.nextElementSibling.textContent=b2LabelAlpha;render();if(typeof save==='function')save()">
         <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
       </div>
     </div>
