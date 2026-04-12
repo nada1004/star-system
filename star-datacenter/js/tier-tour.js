@@ -1356,11 +1356,11 @@ function renderStorageInfo(){
 // ── 이미지 설정 저장 함수 ──
 function saveImageSettings(){
   const settings = {
-    link1: document.getElementById('cfg-img-link1')?.value?.trim() || '',
-    link2: document.getElementById('cfg-img-link2')?.value?.trim() || '',
     fill: document.getElementById('cfg-img-fill')?.checked || false,
     scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
     brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
+    scaleLeft: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1,
+    scaleRight: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1,
     randomRotation: document.getElementById('cfg-img-random')?.checked || false,
     interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
   };
@@ -3108,21 +3108,6 @@ function rCfg(C,T){
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <h5 style="margin:0 0 10px 0;font-size:13px;color:var(--blue)">🖼️ 이미지 설정</h5>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">카드 이미지 관련 설정을 관리합니다.</div>
-      
-      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
-        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🔗 이미지 링크</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">첫 번째 이미지</label>
-            <input type="text" id="cfg-img-link1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">두 번째 이미지</label>
-            <input type="text" id="cfg-img-link2" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
-          </div>
-          <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
-        </div>
-      </div>
 
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
         <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🎨 스타일</div>
@@ -3134,6 +3119,14 @@ function rCfg(C,T){
           <div>
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">밝기 <span id="cfg-img-brightness-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1).toFixed(2)}x</span></label>
             <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">좌측 크기 <span id="cfg-img-scale-left-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale-left" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-left-val').textContent=this.value+'x'">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">우측 크기 <span id="cfg-img-scale-right-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale-right" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-right-val').textContent=this.value+'x'">
           </div>
           <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
         </div>
