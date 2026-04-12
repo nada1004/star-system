@@ -2980,16 +2980,11 @@ function rCfg(C,T){
   </div>
   </div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📱 FAB 버튼 설정</h4>
-      <button id="cfg-fab-btn-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fab-btn-body');const btn=document.getElementById('cfg-fab-btn-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-fab-btn-body" style="display:none">
+  ${_cfgD('fab','📱 FAB 버튼 설정')}
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-mobile" ${localStorage.getItem('su_fabHideMobile')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
+          onchange="localStorage.setItem('su_fabHideMobile',this.checked?'0':'1');updateFabVisibility()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (모바일)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">모바일 화면 우측 하단 플로팅 버튼</div>
@@ -2997,7 +2992,7 @@ function rCfg(C,T){
       </label>
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
         <input type="checkbox" id="cfg-fab-show-pc" ${localStorage.getItem('su_fabHidePC')!=='1'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)"
-          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility();if(typeof save==='function')save()">
+          onchange="localStorage.setItem('su_fabHidePC',this.checked?'0':'1');updateFabVisibility()">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text)">＋ FAB 버튼 표시 (PC)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:2px">PC 화면 우측 하단 플로팅 버튼</div>
@@ -3088,8 +3083,7 @@ function rCfg(C,T){
           </div>
         </div>
       </div>
-    </div>
-  </div>
+  </details>
   <div class="ssec"><h4>🎨 현황판 설정</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
@@ -3112,21 +3106,21 @@ function rCfg(C,T){
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
         <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🎨 스타일</div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">확대/축소 <span id="cfg-img-scale-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1).toFixed(2)}x</span></label>
-            <input type="range" id="cfg-img-scale" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-val').textContent=this.value+'x'">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">확대/축소 <span id="cfg-img-scale-val" style="font-size:11px;color:var(--blue)">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scale||1}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-img-scale-val').textContent=this.value+'x'">
           </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">밝기 <span id="cfg-img-brightness-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1).toFixed(2)}x</span></label>
-            <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">밝기 <span id="cfg-img-brightness-val" style="font-size:11px;color:var(--blue)">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
           </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">좌측 크기 <span id="cfg-img-scale-left-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1).toFixed(2)}x</span></label>
-            <input type="range" id="cfg-img-scale-left" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-left-val').textContent=this.value+'x'">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">좌측 크기 <span id="cfg-img-scale-left-val" style="font-size:11px;color:var(--blue)">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale-left" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleLeft||1}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-img-scale-left-val').textContent=this.value+'x'">
           </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">우측 크기 <span id="cfg-img-scale-right-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1).toFixed(2)}x</span></label>
-            <input type="range" id="cfg-img-scale-right" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1}" style="width:100%" oninput="document.getElementById('cfg-img-scale-right-val').textContent=this.value+'x'">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">우측 크기 <span id="cfg-img-scale-right-val" style="font-size:11px;color:var(--blue)">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1).toFixed(2)}x</span></label>
+            <input type="range" id="cfg-img-scale-right" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).scaleRight||1}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-img-scale-right-val').textContent=this.value+'x'">
           </div>
           <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
         </div>
@@ -3138,9 +3132,9 @@ function rCfg(C,T){
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px">
             <input type="checkbox" id="cfg-img-random" ${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).randomRotation?'checked':''}> 전체대학 보기에서 랜덤 회전
           </label>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">회전 간격 (초)</label>
-            <input type="number" id="cfg-img-interval" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).interval||5}" min="2" max="30" style="width:60px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);white-space:nowrap">회전 간격 (초)</label>
+            <input type="number" id="cfg-img-interval" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).interval||5}" min="2" max="30" style="width:70px;max-width:100%;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
           </div>
           <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
         </div>

@@ -473,7 +473,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
   const _tableRow = (label, isRole, chips) => `
     <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44${hasSide?';padding-right:190px':''}">
-      <div style="background:${labelCol};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
+      <div style="background:${labelCol}!important;min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
         <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
       <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
@@ -577,7 +577,7 @@ function _b2FreeView() {
     <div style="background:#64748b${_b2AlphaHex(b2BgAlpha)};padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
-  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)};border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
   // 직책 그룹
   roledFree.forEach(p => {
@@ -897,8 +897,8 @@ function _b2CrewView() {
     const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
     const labelAlpha = Math.round(((c.labelAlpha != null ? c.labelAlpha : 18) / 100) * 255).toString(16).padStart(2, '0');
     const members = getMembersOf(c.name);
-    // 헤더: 항상 단색 배경 (크루 컬러)
-    const hdrStyle = 'background:linear-gradient(135deg,' + col + ',' + col + 'dd);';
+    // 헤더: 항상 단색 배경 (크루 컬러) - labelAlpha 적용
+    const hdrStyle = 'background:linear-gradient(135deg,' + col + ',' + col + labelAlpha + ')!important;';
     // 본문(스트리머 영역): bgImage 적용
     const bodyBgStyle = c.bgImage
       ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
@@ -1963,6 +1963,29 @@ function _b2PlayersView() {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 12px;
+      }
+      @media (max-width: 1024px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+          min-height: auto;
+        }
+        .b2-players-main {
+          flex: 0 0 auto;
+          width: 100%;
+          height: 400px;
+          min-height: 400px;
+        }
+        .b2-players-grid-wrapper {
+          flex: 1;
+          min-height: 300px;
+        }
+      }
+      @media (max-width: 768px) {
+        .b2-players-main {
+          height: 350px;
+          min-height: 350px;
+        }
       }
       .b2-players-card {
         cursor: pointer;

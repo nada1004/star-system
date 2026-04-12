@@ -154,14 +154,19 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
-  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - Firebase 데이터 항상 적용
+  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - Firebase 데이터 적용 (로컬 변경 보호)
   if(d.appSettings!==undefined){
     const s=d.appSettings;
     if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
     if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
     if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    // FAB 설정은 로컬 값과 다를 때만 적용 (사용자 로컬 변경 보호)
+    if(s.fabHideMobile!==undefined && localStorage.getItem('su_fabHideMobile') !== (s.fabHideMobile?'1':'0')) {
+      localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    }
+    if(s.fabHidePC!==undefined && localStorage.getItem('su_fabHidePC') !== (s.fabHidePC?'1':'0')) {
+      localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    }
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
