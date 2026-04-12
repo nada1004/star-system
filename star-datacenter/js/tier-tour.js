@@ -2454,7 +2454,7 @@ window.openEP=function(name){
 // 스트리머 상세 모달 → 수정창 열기
 // emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
 // 그 위에 emModal을 열기만 함 → cm/om 순서 경쟁조건 완전 제거
-function openEPFromModal(nameArg){
+window.openEPFromModal=function(nameArg){
   const name=nameArg||window._playerModalCurrentName;
   if(!name){alert('선수 이름을 확인할 수 없습니다.');return;}
   const p=players.find(x=>x.name===name);
@@ -2465,7 +2465,7 @@ function openEPFromModal(nameArg){
     console.error('[openEP] 오류:',e);
     alert('수정창 열기 실패: '+e.message);
   }
-}
+};
 function savePlayer(){
   try{
   const p=players.find(x=>x.name===editName);
@@ -3167,10 +3167,12 @@ function _renderCfgPdSection(){
   const st=s.stats_tint!==undefined?s.stats_tint:8;
   const mt=s.mode_tint!==undefined?s.mode_tint:10;
   const ps=s.profile_size!==undefined?s.profile_size:100;
+  const pshape=s.profile_shape!==undefined?s.profile_shape:'circle';
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
   const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
   const cpBtns=[['light','연하게'],['normal','기본'],['dark','진하게']].map(([k,l])=>`<button class="btn btn-xs ${cp===k?'btn-b':'btn-w'}" onclick="_setPdColorPreset('${k}')">${l}</button>`).join('');
+  const shapeBtns=[['circle','원형'],['square','네모']].map(([k,l])=>`<button class="btn btn-xs ${pshape===k?'btn-b':'btn-w'}" onclick="_setPdProfileShape('${k}')">${l}</button>`).join('');
   const univRows=univs.map((u,i)=>{
     const val=Math.round((darken[u.name]||0)*100);
     const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -3194,6 +3196,11 @@ function _renderCfgPdSection(){
         <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔲 프로필 이미지 모양</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${shapeBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 모양 (원형/네모)</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
@@ -3234,6 +3241,13 @@ function _setPdProfileSize(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.profile_size=parseInt(val)||100;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+function _setPdProfileShape(shape){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.profile_shape=shape;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
 }
 
 function _setPdColorPreset(cp){
