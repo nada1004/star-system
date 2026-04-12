@@ -155,20 +155,13 @@ function _applyCloudData(d) {
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
   // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
-  // 관리자의 로컬 FAB 변경 보호 (마지막 변경 타임스탬프 확인)
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
-  const lastFabChange = parseInt(localStorage.getItem('su_last_fab_change')||'0');
-  const justChangedFAB = isAdmin && lastFabChange && (Date.now() - lastFabChange < 10000);
   if(d.appSettings!==undefined){
     const s=d.appSettings;
     if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
     if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
     if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    // FAB 설정: 관리자가 방금 변경한 경우만 건너뜀 (10초 echo 방지)
-    if(!justChangedFAB){
-      if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-      if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    }
+    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
@@ -204,9 +197,6 @@ window.onFirebaseLoad = function(data) {
       window._fbPendingData = clean; // 마지막 수신 데이터 보관
       return;
     }
-    // 자기 에코 방지: 저장 직후 5초 이내 + 자기 기기에서 발생한 경우만 skip
-    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 5000);
-    if (justSaved) return;
   }
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
