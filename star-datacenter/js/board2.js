@@ -1777,7 +1777,9 @@ function _b2PlayersView() {
   };
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
+  const autoResize = layoutSettings.autoResize !== false;
   const leftSize = layoutSettings.leftSize || 55;
+  const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
   
@@ -1787,12 +1789,13 @@ function _b2PlayersView() {
         display: flex;
         gap: 24px;
         height: calc(100vh - 140px);
-        min-height: 600px;
+        min-height: ${pcHeight}px;
       }
       .b2-players-main {
         flex: 0 0 ${leftSize}%;
         position: relative;
       }
+      ${autoResize ? `
       @media (min-width: 1400px) {
         .b2-players-main {
           flex: 0 0 ${leftSize - 5}%;
@@ -1808,6 +1811,7 @@ function _b2PlayersView() {
           flex: 0 0 ${leftSize}%;
         }
       }
+      ` : ''}
       .b2-players-main-content {
         width: 100%;
         height: 100%;

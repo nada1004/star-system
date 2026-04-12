@@ -1356,7 +1356,9 @@ function renderStorageInfo(){
 // ── 이미지탭 레이아웃 저장 함수 ──
 function saveB2LayoutSettings(){
   const settings = {
+    autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
     leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
+    pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
     mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
     tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
   };
@@ -1382,6 +1384,16 @@ function saveImageSettings(){
   // 이미지탭(board2)과 동기화를 위한 저장
   const b2Settings = {
     primary: {
+      fill: settings.fill ? 'contain' : 'cover',
+      scale: settings.scale * 100,
+      brightness: settings.brightness * 100,
+      offsetX: 0,
+      offsetY: 0,
+      zoom: settings.scale * 100,
+      posX: 0,
+      posY: 0
+    },
+    secondary: {
       fill: settings.fill ? 'contain' : 'cover',
       scale: settings.scale * 100,
       brightness: settings.brightness * 100,
@@ -1528,7 +1540,8 @@ window.sw = function(tab, el){
   currentTab = tab;
   if(originalSw) originalSw(tab, el);
   
-  if(tab === 'total'){
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  if(tab === 'total' && imgSettings.randomRotation){
     startRandomRotation();
   } else {
     stopRandomRotation();
@@ -3135,9 +3148,16 @@ function rCfg(C,T){
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
         <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">📐 이미지탭 레이아웃</div>
         <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px">
+            <input type="checkbox" id="cfg-b2-auto-resize" ${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').autoResize!==false?'checked':''}> 브라우저 크기에 따라 자동 조절
+          </label>
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">PC 좌측 비율 <span id="cfg-b2-left-size-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55)}%</span></label>
             <input type="range" id="cfg-b2-left-size" min="40" max="70" step="1" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%'">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">PC 상하 크기 <span id="cfg-b2-pc-height-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').pcHeight||600)}px</span></label>
+            <input type="range" id="cfg-b2-pc-height" min="500" max="800" step="10" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').pcHeight||600}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-pc-height-val').textContent=this.value+'px'">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">모바일 높이 <span id="cfg-b2-mobile-height-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').mobileHeight||320)}px</span></label>
