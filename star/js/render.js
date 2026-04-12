@@ -1493,10 +1493,10 @@ function buildUnivDetailHTML(univName){
 }/* ══════════════════════════════════════
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
-var _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
-var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
-var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
-var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
+let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
+let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
+let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+let _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -1513,11 +1513,19 @@ function rMergedInd(C, T) {
   const sub = document.createElement('div');
   if(_mergedIndSub==='ind') { 
     if(typeof rInd==='function') rInd(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">개인전 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎮</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">개인전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else { 
     if(typeof rGJ==='function') rGJ(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">끝장전 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">끝장전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   C.innerHTML = bar;
   C.appendChild(sub);
@@ -1532,20 +1540,36 @@ function rMergedUnivM(C, T) {
   if(_mergedUnivSub==='civil')       { 
     miniType='civil';
     if(typeof rMini==='function') rMini(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">시빌워 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">시빌워 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else if(_mergedUnivSub==='mini')   { 
     miniType='mini';
     if(typeof rMini==='function') rMini(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">미니대전 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚡</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">미니대전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else if(_mergedUnivSub==='univck') { 
     if(typeof rCK==='function') rCK(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대학CK 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🤝</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대학CK 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else { 
     if(typeof rUnivM==='function') rUnivM(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대학대전 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🏟️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대학대전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   C.innerHTML = bar;
   C.appendChild(sub);
@@ -1559,11 +1583,19 @@ function rMergedComp(C, T) {
   const sub = document.createElement('div');
   if(_mergedCompSub==='comp') { 
     if(typeof rComp==='function') rComp(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대회 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎖️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else { 
     if(typeof rTierTourTab==='function') rTierTourTab(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎯</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">티어대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   C.innerHTML = bar;
   C.appendChild(sub);
@@ -1577,15 +1609,27 @@ function rMergedPro(C, T) {
   const sub = document.createElement('div');
   if(_mergedProSub==='pro') { 
     if(typeof rPro==='function') rPro(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 일반 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🏅</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 일반 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else if(_mergedProSub==='gj') { 
     if(typeof rGJ==='function') rGJ(sub,T,true,true);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 끝장전 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 끝장전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   else { 
     if(typeof rProComp==='function') rProComp(sub,T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 대회 렌더링 함수를 찾을 수 없습니다.</div>';
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎖️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
   }
   C.innerHTML = bar;
   C.appendChild(sub);
