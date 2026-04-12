@@ -58,9 +58,9 @@ function render(){
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
-    case 'comp': case 'tiertour':        console.log('comp/tiertour case, typeof rMergedComp:', typeof rMergedComp, 'typeof rComp:', typeof rComp, 'typeof rTierTourTab:', typeof rTierTourTab); rMergedComp(C,T);  break;
+    case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
-    case 'cfg':     console.log('cfg case, typeof rCfg:', typeof rCfg); if(typeof rCfg==='function') rCfg(C,T); else console.log('rCfg is not a function'); break;
+    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
     case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
@@ -704,14 +704,14 @@ function buildPlayerDetailHTML(p){
     opp:m.wName===p.name?m.lName:m.wName,
     oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
     map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그':'개인전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
+    _dupKey:`${m.d||''}|${m.map||'-'}|${[m.wName,m.lName].sort().join('|')}|${m._proLabel?'프로리그':'개인전'}`
   }));
   const _gjMatches=(typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
     date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
     opp:m.wName===p.name?m.lName:m.wName,
     oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
     map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
+    _dupKey:`${m.d||''}|${m.map||'-'}|${[m.wName,m.lName].sort().join('|')}|${m._proLabel?'프로리그끝장전':'끝장전'}`
   }));
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
