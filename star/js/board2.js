@@ -24,6 +24,8 @@ let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
+  // Firebase에 설정 동기화
+  if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
 }
 function _b2DefaultSingleImgSettings() {
   return {
@@ -209,7 +211,6 @@ function _b2ScheduleImageSwap(playerName) {
   const img2 = document.getElementById('b2-main-img-2');
   if (img1) img1.style.opacity = '1';
   if (img2) img2.style.opacity = '0';
-  if (!img2) return;
   mainBox._swapTimer = setTimeout(() => {
     const curImg1 = document.getElementById('b2-main-img-1');
     const curImg2 = document.getElementById('b2-main-img-2');
@@ -352,7 +353,7 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+      <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'free') {
     saveBar = `<div style="margin-left:auto;flex-shrink:0">
@@ -361,11 +362,35 @@ function rBoard2(C, T) {
   }
 
   const profileTabLabel = '👤 이미지별';
+  // 이미지별 필터를 상단 탭에 포함
+  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !dissolvedUnivs.has(p.univ));
+  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
+  const playerFilters = _b2View === 'players' ? `
+    <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+    <div style="position:relative">
+      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
+        ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
+      </select>
+      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div style="position:relative">
+      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
+        <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
+        <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
+        <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
+      </select>
+      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  ` : '';
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
       ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
+      ${playerFilters}
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -408,7 +433,7 @@ function _b2UnivView() {
     ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:repeat(2,1fr)!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -471,7 +496,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
   const _tableRow = (label, isRole, chips) => `
     <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44${hasSide?';padding-right:190px':''}">
-      <div style="background:${labelCol};min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
+      <div style="background:${labelCol}!important;min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
         <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
       <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
@@ -575,7 +600,7 @@ function _b2FreeView() {
     <div style="background:#64748b${_b2AlphaHex(b2BgAlpha)};padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
-  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)};border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
   // 직책 그룹
   roledFree.forEach(p => {
@@ -895,8 +920,8 @@ function _b2CrewView() {
     const bgAlpha = Math.round(((c.bgAlpha != null ? c.bgAlpha : 10) / 100) * 255).toString(16).padStart(2, '0');
     const labelAlpha = Math.round(((c.labelAlpha != null ? c.labelAlpha : 18) / 100) * 255).toString(16).padStart(2, '0');
     const members = getMembersOf(c.name);
-    // 헤더: 항상 단색 배경 (크루 컬러)
-    const hdrStyle = 'background:linear-gradient(135deg,' + col + ',' + col + 'dd);';
+    // 헤더: 항상 단색 배경 (크루 컬러) - labelAlpha 적용
+    const hdrStyle = 'background:linear-gradient(135deg,' + col + ',' + col + labelAlpha + ')!important;';
     // 본문(스트리머 영역): bgImage 적용
     const bodyBgStyle = c.bgImage
       ? 'background:url(' + JSON.stringify(c.bgImage) + ') center/cover no-repeat;'
@@ -1750,18 +1775,42 @@ function _b2PlayersView() {
     border: univColor
   };
 
+  const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
+  const autoResize = layoutSettings.autoResize !== false;
+  const leftSize = layoutSettings.leftSize || 55;
+  const pcHeight = layoutSettings.pcHeight || 600;
+  const mobileHeight = layoutSettings.mobileHeight || 320;
+  const tabletHeight = layoutSettings.tabletHeight || 400;
+  
   let h = `
     <style>
       .b2-players-wrapper {
         display: flex;
         gap: 24px;
         height: calc(100vh - 140px);
-        min-height: 600px;
+        min-height: ${pcHeight}px;
       }
       .b2-players-main {
-        flex: 0 0 60%;
+        flex: 0 0 ${leftSize}%;
         position: relative;
       }
+      ${autoResize ? `
+      @media (min-width: 1400px) {
+        .b2-players-main {
+          flex: 0 0 ${leftSize - 5}%;
+        }
+      }
+      @media (min-width: 1200px) and (max-width: 1399px) {
+        .b2-players-main {
+          flex: 0 0 ${leftSize - 3}%;
+        }
+      }
+      @media (min-width: 1025px) and (max-width: 1199px) {
+        .b2-players-main {
+          flex: 0 0 ${leftSize}%;
+        }
+      }
+      ` : ''}
       .b2-players-main-content {
         width: 100%;
         height: 100%;
@@ -1959,8 +2008,31 @@ function _b2PlayersView() {
       }
       .b2-players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 14px;
+      }
+      @media (max-width: 1024px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+          min-height: auto;
+        }
+        .b2-players-main {
+          flex: 0 0 auto;
+          width: 100%;
+          height: 400px;
+          min-height: 400px;
+        }
+        .b2-players-grid-wrapper {
+          flex: 1;
+          min-height: 300px;
+        }
+      }
+      @media (max-width: 768px) {
+        .b2-players-main {
+          height: 350px;
+          min-height: 350px;
+        }
       }
       .b2-players-card {
         cursor: pointer;
@@ -1983,8 +2055,66 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 320px;
-          height: clamp(320px, 52vh, 480px);
+          min-height: ${mobileHeight}px;
+          height: clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px);
+          order: 0;
+          position: sticky;
+          top: 0;
+          z-index: 4;
+        }
+        .b2-players-main-content {
+          height: 100%;
+          border-radius: 18px;
+        }
+        .b2-players-img-controls {
+          width: calc(100% - 20px);
+          padding: 8px;
+          top: 10px;
+          left: 10px;
+          max-height: 48%;
+        }
+        .b2-players-img-label {
+          font-size: 10px;
+        }
+        .b2-players-img-btn {
+          padding: 3px 6px;
+          font-size: 10px;
+          min-width: 35px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          height: auto;
+          max-height: none;
+          order: 1;
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(2, 1fr);
+          max-height: none;
+          overflow-y: visible;
+        }
+        .b2-players-name {
+          font-size: 24px;
+        }
+        .b2-players-info {
+          padding: 20px;
+        }
+        .b2-players-thumbnail {
+          height: 80px;
+          font-size: 28px;
+        }
+      }
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+          min-height: auto;
+          gap: 14px;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          min-height: ${tabletHeight}px;
+          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
           position: sticky;
           top: 0;
@@ -2031,19 +2161,6 @@ function _b2PlayersView() {
           font-size: 28px;
         }
       }
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: row;
-          height: 600px;
-        }
-        .b2-players-main {
-          flex: 0 0 45%;
-          height: 100%;
-        }
-        .b2-players-grid-wrapper {
-          flex: 0 0 55%;
-        }
-      }
       .b2-players-filter-btn {
         background: rgba(255,255,255,0.1);
         border: 1px solid rgba(255,255,255,0.2);
@@ -2065,26 +2182,6 @@ function _b2PlayersView() {
         color: #fff;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
       }
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: row;
-          height: 600px;
-        }
-        .b2-players-main {
-          flex: 0 0 45%;
-          height: 100%;
-        }
-        .b2-players-grid-wrapper {
-          flex: 1;
-          height: 100%;
-        }
-        .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        }
-        .b2-players-name {
-          font-size: 28px;
-        }
-      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
@@ -2100,29 +2197,6 @@ function _b2PlayersView() {
         }
       }
     </style>
-  `;
-
-  // 필터 바
-  h += `
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-      <div style="position:relative">
-        <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-          <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
-          ${univList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
-        </select>
-        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-      </div>
-      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
-      <div style="position:relative">
-        <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-          <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
-          <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
-          <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
-          <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
-        </select>
-        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-      </div>
-    </div>
   `;
 
   // 메인 래퍼

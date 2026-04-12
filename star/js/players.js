@@ -246,7 +246,7 @@ function rTotal(C,T){
               if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="?? ?? (30? ??)">?</span>`;
               return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="??? (30? ??)">?</span>';
             })()}</td>
-            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="window.openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
+            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
 
           </tr>`;
         });
@@ -306,7 +306,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img class="player-photo-img" src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
+            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
             <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
@@ -327,7 +327,7 @@ function rTotal(C,T){
           if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
           return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
         })()}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="window.openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
@@ -347,7 +347,7 @@ function rTotal(C,T){
 
 function _buildGalleryView(rankMap){
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
-  let html='<div class="gallery-grid-wrap">';
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루'&&!p.retired);

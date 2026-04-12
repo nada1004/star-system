@@ -102,9 +102,6 @@ function _applyCloudData(d) {
     }
   }
   {
-    const v = d.ttM||d.tt;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
-    if(arr !== null) ttM=arr;
   }
   {
     const v = d.indM||d.ind;
@@ -157,6 +154,33 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
+  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
+  if(d.appSettings!==undefined){
+    const s=d.appSettings;
+    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
+    if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    // UI 즉시 반영
+    if(typeof updateFabVisibility==='function') updateFabVisibility();
+    if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    if(s.darkMode!==undefined){
+      document.body.classList.toggle('dark', s.darkMode);
+      if(window._fixHdrBtns) window._fixHdrBtns();
+    }
+    // board2.js 변수 업데이트 및 재렌더링
+    if(s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
+    if(s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
+    const b2Content=document.getElementById('b2-content');
+    if(b2Content && typeof _b2UnivView==='function'){
+      b2Content.innerHTML=_b2UnivView();
+      if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
+    }
+  }
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -164,19 +188,13 @@ function _applyCloudData(d) {
 // - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
 // - 로컬 데이터 없음 (첫 접속): 항상 적용
 window.onFirebaseLoad = function(data) {
+  // ── 중복 호출 방지 (100ms 내 재호출 무시) ──
+  const now = Date.now();
+  if (window._lastFbLoadCall && now - window._lastFbLoadCall < 100) return;
+  window._lastFbLoadCall = now;
+
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
-  if (!window._forcingSync) {
-    // 저장 중 → 바로 버리지 않고 pending에 보관 후 저장 완료 시 재적용
-    if (window._isSaving) {
-      window._fbPendingData = clean; // 마지막 수신 데이터 보관
-      return;
-    }
-    // 자기 에코 방지: 저장 직후 5초 이내 + 자기 기기에서 발생한 경우만 skip
-    const justSaved = isAdmin && window._lastAdminSaveTime && (Date.now() - window._lastAdminSaveTime < 5000);
-    if (justSaved) return;
-  }
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
   // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
@@ -210,11 +228,22 @@ async function fbCloudSave() {
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, ttM, indM, gjM,
+    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
     curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
+    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
+    appSettings: {
+      fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
+      globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
+      imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
+      fabHideMobile: localStorage.getItem('su_fabHideMobile')==='1',
+      fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
+      darkMode: localStorage.getItem('su_dark')==='1',
+      b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
+    },
     savedAt
   };
   // 페이로드 크기 검사
@@ -608,13 +637,13 @@ function rBoard(C,T){
 <button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
-        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
-        <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();">
-        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
+        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap;margin-left:4px">라벨</span>
-        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
-        <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();">
-        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
+        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
       </div>
     </div>
     ${_brdStatsHtml}
@@ -826,7 +855,7 @@ function buildUnivBoardCard(u, forExport){
         const tColor=_TIER_BG[tier]||col;
         const tText=_TIER_TEXT[tier]||'#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
-          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
+          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
         </div>`;
       }).join('');
@@ -837,7 +866,7 @@ function buildUnivBoardCard(u, forExport){
         const tColor = _TIER_BG[tier] || col;
         const tText = _TIER_TEXT[tier] || '#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
-          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))};border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
+          <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
         </div>`;
       }).join('');
