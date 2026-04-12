@@ -65,7 +65,7 @@ function render(){
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
     case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
-    case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
+    case 'board':   if(typeof rCloudBoard==='function')   rCloudBoard(C,T);   break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
     default: break;
   }
