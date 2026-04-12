@@ -2099,24 +2099,57 @@ function _b2PlayersView() {
         .b2-players-wrapper {
           flex-direction: column;
           height: auto;
-          gap: 20px;
+          min-height: auto;
+          gap: 14px;
         }
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 500px;
-          max-height: 650px;
+          min-height: 320px;
+          height: clamp(320px, 52vh, 480px);
           order: 0;
+          position: sticky;
+          top: 0;
+          z-index: 4;
+        }
+        .b2-players-main-content {
+          height: 100%;
+          border-radius: 18px;
+        }
+        .b2-players-img-controls {
+          width: calc(100% - 20px);
+          padding: 8px;
+          top: 10px;
+          left: 10px;
+          max-height: 48%;
+        }
+        .b2-players-img-label {
+          font-size: 10px;
+        }
+        .b2-players-img-btn {
+          padding: 3px 6px;
+          font-size: 10px;
+          min-width: 35px;
         }
         .b2-players-grid-wrapper {
           flex: none;
           height: auto;
+          max-height: none;
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          grid-template-columns: repeat(2, 1fr);
+          max-height: none;
+          overflow-y: visible;
         }
         .b2-players-name {
+          font-size: 24px;
+        }
+        .b2-players-info {
+          padding: 20px;
+        }
+        .b2-players-thumbnail {
+          height: 80px;
           font-size: 28px;
         }
       }
