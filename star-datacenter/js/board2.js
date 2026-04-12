@@ -1785,6 +1785,21 @@ function _b2PlayersView() {
         flex: 0 0 65%;
         position: relative;
       }
+      @media (min-width: 1400px) {
+        .b2-players-main {
+          flex: 0 0 60%;
+        }
+      }
+      @media (min-width: 1200px) and (max-width: 1399px) {
+        .b2-players-main {
+          flex: 0 0 62%;
+        }
+      }
+      @media (min-width: 1025px) and (max-width: 1199px) {
+        .b2-players-main {
+          flex: 0 0 65%;
+        }
+      }
       .b2-players-main-content {
         width: 100%;
         height: 100%;
@@ -2085,8 +2100,8 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 350px;
-          max-height: 500px;
+          min-height: 450px;
+          max-height: 600px;
         }
         .b2-players-grid-wrapper {
           flex: none;
