@@ -264,7 +264,10 @@ function findPlayerByPartialName(namePart) {
     const memos = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.trim()).filter(Boolean);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
-  if (memoExact.length === 1) return { player: memoExact[0], candidates: memoExact, similar: [] };
+  if (memoExact.length === 1) {
+    // 메모 일치 시 실제 스트리머 이름으로 변환하여 반환
+    return { player: memoExact[0], candidates: memoExact, similar: [], memoMatch: true };
+  }
   if (memoExact.length > 1)   return { player: null, candidates: memoExact, similar: [] };
 
   // 2.5) 공백 제거 후 정확 일치: "안    아" → "안아"
@@ -2198,29 +2201,23 @@ function pasteApply() {
     if (_mixGroups.ind.length) {
       const _indDG = {};
       _mixGroups.ind.forEach(r => { const d=r._lineDate||dateVal; (_indDG[d]||(_indDG[d]=[])).push(r); });
-      let _idDup=0;
       Object.entries(_indDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(indM.some(m=>m.d===d&&_normMap2(m.map)===_normMap2(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_idDup++;return false;}return true;});
-        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
-        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
+        const games=grp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) indM.unshift(...games);
       });
-      if(_idDup>0) alert(`⚠️ 개인전 중복 ${_idDup}건 제외`);
     }
     // gj 저장
     if (_mixGroups.gj.length) {
       const _gjDG = {};
       _mixGroups.gj.forEach(r => { const d=r._lineDate||dateVal; (_gjDG[d]||(_gjDG[d]=[])).push(r); });
-      let _gjDup=0;
       Object.entries(_gjDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        const passed=grp.filter(r=>{ const mp=r.map&&r.map!=='-'?r.map:''; if(gjM.some(m=>m.d===d&&(m.map||'')===(mp)&&[m.wName,m.lName].sort().join('|')===[r.wPlayer.name,r.lPlayer.name].sort().join('|'))){_gjDup++;return false;}return true;});
-        passed.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
-        const games=passed.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
+        const games=grp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) gjM.unshift(...games);
       });
-      if(_gjDup>0) alert(`⚠️ 끝장전 중복 ${_gjDup}건 제외`);
     }
     // mini 저장
     if (_mixGroups.mini.length) {
@@ -2652,21 +2649,10 @@ function recalculateAllELO(){
   // 날짜순 정렬 (오래된 순서)
   allGames.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-  // 중복 제거 (날짜+맵+선수쌍 기준)
-  const gameSet = new Set();
-  const dedupedGames = allGames.filter(g => {
-    const key = `${g.date}|${g.map}|${[g.wName, g.lName].sort().join('|')}`;
-    if (gameSet.has(key)) return false;
-    gameSet.add(key);
-    return true;
-  });
-
-  // applyGameResult로 다시 적용
+  // applyGameResult로 다시 적용 (중복 제거 안함)
   let appliedCount = 0;
-  const processedKeys = new Set();
-  dedupedGames.forEach(g => {
+  allGames.forEach(g => {
     applyGameResult(g.wName, g.lName, g.date, g.map, g.matchId || '', '', '', g.mode);
-    processedKeys.add(`${g.wName}|${g.lName}|${g.date}|${g.map}`);
     appliedCount++;
   });
 

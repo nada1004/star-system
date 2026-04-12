@@ -683,19 +683,12 @@ function buildPlayerDetailHTML(p){
     if(h?.matchId) return `mid:${h.matchId}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
-  // p.history 자체 중복 제거 먼저 수행 (날짜+맵+상대로 판단)
+  // p.history 사용 (중복 제거 안함)
   const _historySet=new Set();
-  const _dedupedHistory=(p.history||[]).filter(h=>{
-    const key=_histDupKey(h);
-    if(_historySet.has(key))return false;
-    _historySet.add(key);
-    return true;
-  });
-  // 중복 제거된 history에서 matchId Set 추출 (tourneys 중복 제거용)
+  const _dedupedHistory=(p.history||[]);
+  // history에서 matchId Set 추출
   const _existingMatchIds=new Set(_dedupedHistory.map(h=>h.matchId).filter(Boolean));
-  // 중복 제거된 history에서 중복 키 Set 추출 (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
-  // 중복 키를 항상 정렬된 선수쌍로 생성하여 indM/gjM의 _dupKey와 일치시킴
-  // _dedupedHistory에서는 h.opp만 있으므로 [p.name, h.opp]를 정렬하여 키 생성
+  // history에서 중복 키 Set 추출
   const _existingKeys=new Set(_dedupedHistory.map(h=>_histDupKey(h)));
 
   // indM/gjM에서 추출 (p.history 미반영분)
@@ -851,8 +844,8 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // 중복되지 않는 indM/gjM/otherMatches/tourMatches 추가 - 중복 키로 판단
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(m=>!_existingKeys.has(m.matchId?`mid:${m.matchId}`:(m._dupKey||`${m.date||''}|${m.map||'-'}|${[p.name,m.opp].sort().join('|')}|${m.mode||''}`)));
+  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거 안함)
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches];
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)
