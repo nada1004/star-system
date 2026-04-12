@@ -2312,6 +2312,7 @@ function _b2UpdateMainDisplay(playerName) {
       thumbnail.style.boxShadow = 'none';
     }
   });
+  return;
 
   if (mainBox) {
     mainBox.style.setProperty('--theme-glow', theme.glow);

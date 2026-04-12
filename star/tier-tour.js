@@ -981,6 +981,17 @@ function rCfg(C,T){
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></details>
+      <div class="ssec">
+      <h4>🎮 크루 관리</h4>
+      <div id="crew-list" style="margin-bottom:12px"></div>
+      ${isLoggedIn?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <input type="text" id="crew-name" placeholder="크루 이름" style="width:120px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="text" id="crew-icon" placeholder="아이콘 (이모지)" style="width:90px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <input type="color" id="crew-color" value="#6366f1" style="width:40px;height:30px;border:1px solid var(--border2);border-radius:6px;cursor:pointer">
+        <input type="text" id="crew-desc" placeholder="설명 (선택)" style="width:150px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <button class="btn btn-b btn-sm" onclick="addCrew()">+ 크루 추가</button>
+      </div>`:``}
+    </div>
 
     ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
@@ -3079,12 +3090,7 @@ function rCfg(C,T){
       </div>
     </div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎨 현황판 설정</h4>
-      <button id="cfg-b2-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-b2-body');const btn=document.getElementById('cfg-b2-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-b2-body">
+  <div class="ssec"><h4>🎨 현황판 설정</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드 배경/라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px">
@@ -3098,29 +3104,21 @@ function rCfg(C,T){
         <span id="cfg-b2la-val" style="font-size:12px;color:var(--gray-l);min-width:24px">${b2LabelAlpha}</span>
       </div>
     </div>
-
+    
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <h5 style="margin:0 0 10px 0;font-size:13px;color:var(--blue)">🖼️ 이미지 설정</h5>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">카드 이미지 관련 설정을 관리합니다.</div>
       
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
         <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🔗 이미지 링크</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:8px">
           <div>
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">첫 번째 이미지</label>
-            <input type="text" id="cfg-img-link1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;margin-bottom:6px">
-            <div>
-              <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">좌우 크기 <span id="cfg-img-link1-scale-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1Scale||1).toFixed(2)}x</span></label>
-              <input type="range" id="cfg-img-link1-scale" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1Scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-link1-scale-val').textContent=this.value+'x'">
-            </div>
+            <input type="text" id="cfg-img-link1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link1||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
           </div>
           <div>
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">두 번째 이미지</label>
-            <input type="text" id="cfg-img-link2" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;margin-bottom:6px">
-            <div>
-              <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">좌우 크기 <span id="cfg-img-link2-scale-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2Scale||1).toFixed(2)}x</span></label>
-              <input type="range" id="cfg-img-link2-scale" min="0.5" max="3" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2Scale||1}" style="width:100%" oninput="document.getElementById('cfg-img-link2-scale-val').textContent=this.value+'x'">
-            </div>
+            <input type="text" id="cfg-img-link2" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).link2||''}" placeholder="https://..." style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
           </div>
           <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
         </div>
@@ -3136,22 +3134,6 @@ function rCfg(C,T){
           <div>
             <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">밝기 <span id="cfg-img-brightness-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1).toFixed(2)}x</span></label>
             <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).brightness||1}" style="width:100%" oninput="document.getElementById('cfg-img-brightness-val').textContent=this.value+'x'">
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">좌우 위치 <span id="cfg-img-posx-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).posX||0)}px</span></label>
-            <input type="range" id="cfg-img-posx" min="-200" max="200" step="5" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).posX||0}" style="width:100%" oninput="document.getElementById('cfg-img-posx-val').textContent=this.value+'px'">
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">상하 위치 <span id="cfg-img-posy-val">${((JSON.parse(localStorage.getItem('su_img_settings')||'{}')).posY||0)}px</span></label>
-            <input type="range" id="cfg-img-posy" min="-200" max="200" step="5" value="${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).posY||0}" style="width:100%" oninput="document.getElementById('cfg-img-posy-val').textContent=this.value+'px'">
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px">이미지 체우기</label>
-            <select id="cfg-img-fit" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
-              <option value="cover" ${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).fit==='cover'?'selected':''}>꽉 차게 (cover)</option>
-              <option value="contain" ${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).fit==='contain'?'selected':''}>비율 유지 (contain)</option>
-              <option value="fill" ${(JSON.parse(localStorage.getItem('su_img_settings')||'{}')).fit==='fill'?'selected':''}>늘리기 (fill)</option>
-            </select>
           </div>
           <button class="btn btn-b btn-xs" onclick="saveImageSettings()">💾 저장</button>
         </div>
@@ -3171,14 +3153,8 @@ function rCfg(C,T){
         </div>
       </div>
     </div>
-    </div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">👥 스트리머 일괄 등록</h4>
-      <button id="cfg-bulk-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-body');const btn=document.getElementById('cfg-bulk-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-body">
+  <div class="ssec"><h4>👥 스트리머 일괄 등록</h4>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       한 줄에 한 명씩 입력: <code style="background:var(--surface);padding:1px 5px;border-radius:4px">이름 종족 소속 [티어] [hide]</code><br>
       종족: T/Z/P/N &nbsp;|&nbsp; 티어: G/K/JA/J/S/미정 &nbsp;|&nbsp; 소속 생략 시 무소속<br>
@@ -3189,7 +3165,6 @@ function rCfg(C,T){
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
       <button class="btn btn-b" onclick="bulkAddPlayers()">👥 일괄 등록</button>
       <div id="bulk-player-result" style="font-size:12px;display:none;white-space:pre-line;color:var(--text2)"></div>
-    </div>
     </div>
   </div>
   <div class="ssec">
@@ -3206,12 +3181,7 @@ function rCfg(C,T){
     </div>
     <div id="cfg-pd-body" style="display:none"></div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📦 데이터 백업 / 복원</h4>
-      <button id="cfg-backup-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-backup-body');const btn=document.getElementById('cfg-backup-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-backup-body">
+  <div class="ssec"><h4>📦 데이터 백업 / 복원</h4>
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">전체 데이터를 JSON 파일로 내보내거나 가져옵니다. 복원 시 기존 데이터를 덮어씁니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b" onclick="exportDataJSON()">📥 JSON 내보내기</button>
@@ -3221,8 +3191,6 @@ function rCfg(C,T){
       </label>
     </div>
     <div id="backup-msg" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)"></div>
-    </div>
-  </div>
   </div>`;
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
