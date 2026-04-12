@@ -2174,26 +2174,6 @@ function _b2PlayersView() {
         color: #fff;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
       }
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: row;
-          height: 600px;
-        }
-        .b2-players-main {
-          flex: 0 0 45%;
-          height: 100%;
-        }
-        .b2-players-grid-wrapper {
-          flex: 1;
-          height: 100%;
-        }
-        .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        }
-        .b2-players-name {
-          font-size: 28px;
-        }
-      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
