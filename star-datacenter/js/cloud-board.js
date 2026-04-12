@@ -154,18 +154,19 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
-  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등)
+  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - 로컬 설정이 있는 경우 덮어쓰지 않음
   if(d.appSettings!==undefined){
     const s=d.appSettings;
-    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    if(s.fabTabs && !localStorage.getItem('su_fabTabs')) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(s.globalImgSettings && !localStorage.getItem('su_b2_global_img_settings')) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(s.imgSettings && !localStorage.getItem('su_img_settings')) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+    if(s.fabHideMobile!==undefined && localStorage.getItem('su_fabHideMobile')===null) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(s.fabHidePC!==undefined && localStorage.getItem('su_fabHidePC')===null) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(s.darkMode!==undefined && localStorage.getItem('su_dark')===null) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-    if(s.darkMode!==undefined){
+    if(s.darkMode!==undefined && localStorage.getItem('su_dark')===null){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
     }
@@ -232,6 +233,7 @@ async function fbCloudSave() {
     appSettings: {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
+      imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
       fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
       fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
       darkMode: localStorage.getItem('su_dark')==='1'
@@ -629,13 +631,13 @@ function rBoard(C,T){
 <button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
-        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
-        <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();">
-        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
+        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap;margin-left:4px">라벨</span>
-        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
-        <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();">
-        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
+        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
       </div>
     </div>
     ${_brdStatsHtml}
