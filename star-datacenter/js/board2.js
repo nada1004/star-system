@@ -1776,6 +1776,9 @@ function _b2PlayersView() {
     border: univColor
   };
 
+  const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
+  const leftSize = layoutSettings.leftSize || 55;
+  
   let h = `
     <style>
       .b2-players-wrapper {
@@ -1785,22 +1788,22 @@ function _b2PlayersView() {
         min-height: 600px;
       }
       .b2-players-main {
-        flex: 0 0 55%;
+        flex: 0 0 ${leftSize}%;
         position: relative;
       }
       @media (min-width: 1400px) {
         .b2-players-main {
-          flex: 0 0 50%;
+          flex: 0 0 ${leftSize - 5}%;
         }
       }
       @media (min-width: 1200px) and (max-width: 1399px) {
         .b2-players-main {
-          flex: 0 0 52%;
+          flex: 0 0 ${leftSize - 3}%;
         }
       }
       @media (min-width: 1025px) and (max-width: 1199px) {
         .b2-players-main {
-          flex: 0 0 55%;
+          flex: 0 0 ${leftSize}%;
         }
       }
       .b2-players-main-content {

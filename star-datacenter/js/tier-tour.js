@@ -1353,6 +1353,17 @@ function renderStorageInfo(){
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
 
+// ── 이미지탭 레이아웃 저장 함수 ──
+function saveB2LayoutSettings(){
+  const settings = {
+    leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55
+  };
+  localStorage.setItem('su_b2_layout', JSON.stringify(settings));
+  if(typeof save==='function')save();
+  alert('이미지탭 레이아웃이 저장되었습니다.');
+  if(typeof render === 'function') render();
+}
+
 // ── 이미지 설정 저장 함수 ──
 function saveImageSettings(){
   const settings = {
@@ -1365,6 +1376,22 @@ function saveImageSettings(){
     interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
   };
   localStorage.setItem('su_img_settings', JSON.stringify(settings));
+  
+  // 이미지탭(board2)과 동기화를 위한 저장
+  const b2Settings = {
+    primary: {
+      fill: settings.fill ? 'contain' : 'cover',
+      scale: settings.scale * 100,
+      brightness: settings.brightness * 100,
+      offsetX: 0,
+      offsetY: 0,
+      zoom: settings.scale * 100,
+      posX: 0,
+      posY: 0
+    }
+  };
+  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(b2Settings));
+  
   if(typeof save==='function')save();
   alert('이미지 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
@@ -3102,6 +3129,17 @@ function rCfg(C,T){
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <h5 style="margin:0 0 10px 0;font-size:13px;color:var(--blue)">🖼️ 이미지 설정</h5>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">카드 이미지 관련 설정을 관리합니다.</div>
+
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">📐 이미지탭 PC 좌우 크기</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">좌측 비율 <span id="cfg-b2-left-size-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55)}%</span></label>
+            <input type="range" id="cfg-b2-left-size" min="40" max="70" step="1" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%'">
+          </div>
+          <button class="btn btn-b btn-xs" onclick="saveB2LayoutSettings()">💾 이미지탭 레이아웃 저장</button>
+        </div>
+      </div>
 
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
         <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">🎨 스타일</div>
