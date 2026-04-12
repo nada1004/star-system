@@ -1867,7 +1867,7 @@ let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
 // ※ tier-tour.js가 render.js보다 먼저 로드되므로 즉시 오버라이드하면 originalSw가 undefined
-// → 모든 스크립트 로드 완료 후 오버라이드 (window.addEventListener 사용)
+//   → 모든 스크립트 로드 완료 후 오버라이드
 window.addEventListener('load', function(){
   const originalSw = window.sw;
   window.sw = function(tab, el){

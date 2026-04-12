@@ -367,7 +367,6 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        // 게임별 고유 ID로 중복 방지 (같은 matchId 재사용 시 2번째부터 무시되는 버그 수정)
         const gameId=`${sid}_g${gi}`;
         applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
         gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:gameId,...(bld._proLabel?{_proLabel:true}:{})});
@@ -386,7 +385,6 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        // 게임별 고유 ID로 중복 방지
         const gameId=`${sid}_g${gi}`;
         applyGameResult(wName,lName,date,g.map||'-',gameId,'','','개인전');
         if(typeof indM!=='undefined')indM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:gameId});
@@ -404,9 +402,8 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      // 게임별 고유 ID로 중복 방지 (같은 matchId 재사용 시 2번째부터 무시되는 버그 수정)
-      const gameId=`${matchId}_g${gi}`;
-      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
+      // 게임별 고유 ID → 동일 matchId로 중복 차단되는 버그 수정
+      applyGameResult(wName,lName,date,g.map||'-',`${matchId}_g${gi}`,univW,univL,_modeLabel);
     });
     
     let totalA=0,totalB=0;
@@ -481,7 +478,6 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        // 게임별 고유 ID로 중복 방지
         const gameId=`${sid}_s${si}_g${gi}`;
         applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
         gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:gameId,...(bld._proLabel?{_proLabel:true}:{})});
@@ -500,9 +496,8 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      // 게임별 고유 ID로 중복 방지 (같은 matchId 재사용 시 2번째부터 무시되는 버그 수정)
-      const gameId=`${matchId}_s${si}_g${gi}`;
-      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
+      // 게임별 고유 ID → 동일 matchId로 중복 차단되는 버그 수정
+      applyGameResult(wName,lName,date,g.map||'-',`${matchId}_s${si}_g${gi}`,univW,univL,_modeLabel);
     });
   });
   if(mode==='mini'){

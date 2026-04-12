@@ -164,27 +164,7 @@ function openPlayerModal(name){
   setTimeout(()=>initPEloChart(name),60);
 }
 
-// openEPFromModal은 tier-tour.js에 정의됨. 로드 지연 대비 fallback
-function openEPFromModal(nameArg) {
-  const name = nameArg || window._playerModalCurrentName;
-  if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
-  if (typeof openEP !== 'function') {
-    // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
-    let attempts = 0;
-    const checkOpenEP = setInterval(() => {
-      attempts++;
-      if (typeof openEP === 'function') {
-        clearInterval(checkOpenEP);
-        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
-      } else if (attempts >= 20) {
-        clearInterval(checkOpenEP);
-        alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
-      }
-    }, 200);
-    return;
-  }
-  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
-}
+// openEPFromModal은 tier-tour.js에 정의됨 (중복 정의 제거)
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
 function deletePlayerHist(playerName, histIdx){
