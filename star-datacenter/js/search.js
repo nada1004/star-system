@@ -3580,8 +3580,8 @@ function proApply() {
     sa = totalA; sb = totalB;
   }
 
-  // 개인 전적 반영 (승자=wPlayer 그대로)
-  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
+  // 개인 전적 반영 - 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+  // savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
 
   // A조/B조 멤버 목록 (팀 배정 기준으로)
   const mA=[], mB=[];
