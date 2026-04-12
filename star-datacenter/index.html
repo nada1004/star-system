@@ -555,8 +555,15 @@ function updateFabVisibility(){
   const fab=document.getElementById('mobileFab');
   if(!fab)return;
   
-  // FAB 버튼 완전 비활성화
-  fab.style.display='none';
+  const isMobile=window.innerWidth<=768;
+  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
+  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
+  
+  if(isMobile){
+    fab.style.display=hideMobile?'none':'flex';
+  }else{
+    fab.style.display=hidePC?'none':'flex';
+  }
 }
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
