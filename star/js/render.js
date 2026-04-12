@@ -1511,8 +1511,14 @@ function rMergedInd(C, T) {
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
-  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
-  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
+  if(_mergedIndSub==='ind') { 
+    if(typeof rInd==='function') rInd(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">개인전 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else { 
+    if(typeof rGJ==='function') rGJ(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">끝장전 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1523,10 +1529,24 @@ function rMergedUnivM(C, T) {
     _mergedUnivSub, '_mergedUnivSub'
   );
   const sub = document.createElement('div');
-  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
-  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
+  if(_mergedUnivSub==='civil')       { 
+    miniType='civil';
+    if(typeof rMini==='function') rMini(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">시빌워 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else if(_mergedUnivSub==='mini')   { 
+    miniType='mini';
+    if(typeof rMini==='function') rMini(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">미니대전 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else if(_mergedUnivSub==='univck') { 
+    if(typeof rCK==='function') rCK(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대학CK 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else { 
+    if(typeof rUnivM==='function') rUnivM(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대학대전 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1537,8 +1557,14 @@ function rMergedComp(C, T) {
     _mergedCompSub, '_mergedCompSub'
   );
   const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  if(_mergedCompSub==='comp') { 
+    if(typeof rComp==='function') rComp(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">대회 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else { 
+    if(typeof rTierTourTab==='function') rTierTourTab(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">티어대회 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1549,9 +1575,18 @@ function rMergedPro(C, T) {
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
-  if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
-  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true,true); }
-  else                            { if(typeof rProComp==='function') rProComp(sub,T); }
+  if(_mergedProSub==='pro') { 
+    if(typeof rPro==='function') rPro(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 일반 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else if(_mergedProSub==='gj') { 
+    if(typeof rGJ==='function') rGJ(sub,T,true,true);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 끝장전 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
+  else { 
+    if(typeof rProComp==='function') rProComp(sub,T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">프로 대회 렌더링 함수를 찾을 수 없습니다.</div>';
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
