@@ -1269,6 +1269,140 @@ function rCfg(C,T){
 
     </div>
   </div>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지별 설정</h4>
+      <button id="cfg-board-bg-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-bg-body');const btn=document.getElementById('cfg-board-bg-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-board-bg-body" style="display:none">
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
+    <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+  ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
+        <input type="number" id="cfg-b2-left-size" value="55" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">%</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 높이:</label>
+        <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="800" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 높이:</label>
+        <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 높이:</label>
+        <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
+        </label>
+      </div>
+      <button class="btn btn-b" onclick="saveB2LayoutSettings()">💾 레이아웃 저장</button>
+    </div>
+  </details>
+  ${_cfgD('imgsettings','🖼️ 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 기본 이미지 설정을 구성합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-fill"> 채우기 모드 (contain/cover)
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 크기:</label>
+        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 밝기:</label>
+        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-brightness-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
+        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-left-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
+        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-right-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-random"> 랜덤 회전
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">회전 간격:</label>
+        <input type="number" id="cfg-img-interval" value="5" min="1" max="60" style="width:60px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">초</span>
+      </div>
+      <button class="btn btn-b" onclick="saveImageSettings()">💾 이미지 설정 저장</button>
+    </div>
+  </details>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🎨 스트리머 상세 스타일 설정</h4>
+      <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';_renderCfgPdSection();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-pd-body" style="display:none"></div>
+  </div>
+  ${_cfgD('fab','🔘 FAB 버튼 탭 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">하단 FAB 버튼 클릭 시 이동할 탭을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">캘린더:</label>
+        <select id="cfg-fab-cal" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="cal">📅 캘린더</option>
+          <option value="stats">📊 통계</option>
+          <option value="roulette">🎰 룰렛</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">대회:</label>
+        <select id="cfg-fab-comp" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="comp">🏆 대회</option>
+          <option value="pro">🏅 프로리그</option>
+          <option value="stats">📊 통계</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">대학대전:</label>
+        <select id="cfg-fab-univm" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="univm">🏫 대학대전</option>
+          <option value="ck">🏆 CK</option>
+          <option value="stats">📊 통계</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">개인전:</label>
+        <select id="cfg-fab-ind" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="ind">👤 개인전</option>
+          <option value="gj">⚔️ 끝장전</option>
+          <option value="stats">📊 통계</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">프로리그:</label>
+        <select id="cfg-fab-pro" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="pro">🏅 프로리그</option>
+          <option value="comp">🏆 대회</option>
+          <option value="stats">📊 통계</option>
+        </select>
+      </div>
+    </div>
+  </details>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링
@@ -1289,6 +1423,64 @@ function rCfg(C,T){
           <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">🗑️ 삭제</button>
         </div>`).join('');
     }
+    // 현황판 배경 설정 렌더링
+    const bgListEl=document.getElementById('cfg-board-bg-list');
+    if(bgListEl){
+      bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="cdot" style="background:${u.color}"></div>
+          <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
+          ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
+        </div>
+        ${u.bgImg?`<div style="margin-top:8px">
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
+          <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+            <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
+            <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
+            <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
+            <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
+            <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
+            <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
+            <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
+            <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
+            <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
+          </select>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
+          <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+            <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
+            <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
+            <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
+          </select>
+        </div>`:''}
+      </div>`).join('');
+    }
+    // 이미지탭 레이아웃 설정 초기화
+    const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
+    if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
+    if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
+    if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
+    if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
+    if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
+    // 이미지 설정 초기화
+    const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
+    if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleLeft||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleLeft||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scaleRight||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scaleRight||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
+    if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
+    // 이미지 설정 슬라이더 이벤트 리스너
+    ['scale','brightness','scaleLeft','scaleRight'].forEach(key=>{
+      const el=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key));
+      const valEl=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key)+'-val');
+      if(el&&valEl){
+        el.addEventListener('input',()=>valEl.textContent=parseFloat(el.value).toFixed(1)+'x');
+      }
+    });
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
