@@ -35,6 +35,10 @@ function sw(t,el){
   if(C) C.innerHTML='';
   render();
 }
+/* ── 로딩 스피너 헬퍼 ── */
+function _showLoading(){const el=document.getElementById('pageLoading');if(el){el.classList.remove('hidden');}}
+function _hideLoading(){const el=document.getElementById('pageLoading');if(el){el.classList.add('hidden');}}
+
 function render(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
@@ -48,26 +52,38 @@ function render(){
   });
   // 이전 내용 제거
   C.innerHTML='';
+  // 스켈레톤 로딩 표시
+  C.innerHTML='<div style="padding:40px 20px;text-align:center"><div class="loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:13px;color:var(--gray-l);font-weight:600">로딩 중...</div></div>';
   // 날짜 필터 변경 시 캐시 초기화
   window._compListCache={};
   window._histTourneyCache={};
   // 탭별 렌더 함수 직접 호출 (object literal 일괄 평가 에러 방지)
+  try{
   switch(curTab){
-    case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   break;
-    case 'tier':    if(typeof rTier==='function')    rTier(C,T);    break;
-    case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
+    case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   else C.innerHTML='';break;
+    case 'tier':    if(typeof rTier==='function')    rTier(C,T);    else C.innerHTML='';break;
+    case 'hist':    if(typeof rHist==='function')    rHist(C,T);    else C.innerHTML='';break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
-    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
-    case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
-    case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
-    case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
-    case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
-    case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
-    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
-    default: break;
+    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     else C.innerHTML='';break;
+    case 'stats':   if(typeof rStats==='function')   rStats(C,T);   else C.innerHTML='';break;
+    case 'cal':     if(typeof rCal==='function')     rCal(C,T);     else C.innerHTML='';break;
+    case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);else C.innerHTML='';break;
+    case 'vote':    if(typeof rVote==='function')    rVote(C,T);    else C.innerHTML='';break;
+    case 'board':   if(typeof rCloudBoard==='function')   rCloudBoard(C,T);   else C.innerHTML='';break;
+    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  else C.innerHTML='';break;
+    default: C.innerHTML=''; break;
+  }
+  }catch(e){
+    console.error('[render] 탭 렌더 오류 ('+curTab+'):', e);
+    C.innerHTML=`<div style="padding:40px 20px;text-align:center;color:#dc2626">
+      <div style="font-size:32px;margin-bottom:10px">⚠️</div>
+      <div style="font-weight:800;font-size:15px;margin-bottom:6px">렌더링 오류가 발생했습니다</div>
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">${e.message}</div>
+      <button class="btn btn-b btn-sm" onclick="render()">🔄 다시 시도</button>
+    </div>`;
   }
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
   // 즉시 1차 inject (PC 포함 즉시 적용)
@@ -164,27 +180,7 @@ function openPlayerModal(name){
   setTimeout(()=>initPEloChart(name),60);
 }
 
-// openEPFromModal은 tier-tour.js에 정의됨. 로드 지연 대비 fallback
-function openEPFromModal(nameArg) {
-  const name = nameArg || window._playerModalCurrentName;
-  if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
-  if (typeof openEP !== 'function') {
-    // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
-    let attempts = 0;
-    const checkOpenEP = setInterval(() => {
-      attempts++;
-      if (typeof openEP === 'function') {
-        clearInterval(checkOpenEP);
-        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
-      } else if (attempts >= 20) {
-        clearInterval(checkOpenEP);
-        alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
-      }
-    }, 200);
-    return;
-  }
-  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
-}
+// openEPFromModal은 tier-tour.js에 정의됨 (중복 정의 제거)
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
 function deletePlayerHist(playerName, histIdx){
@@ -655,7 +651,8 @@ function buildPlayerDetailHTML(p){
   // 모바일/PC 이미지 설정 적용
   const _isMobile=window.innerWidth<=768;
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
-  const _imgZoom=_pdStyle.img_zoom||100;
+  const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
   const _imgFill=_pdStyle.img_fill||'cover';
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
@@ -682,19 +679,17 @@ function buildPlayerDetailHTML(p){
     if(h?.matchId) return `mid:${h.matchId}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
-  // p.history 자체 중복 제거 먼저 수행 (날짜+맵+상대로 판단)
+  // p.history 중복 제거
   const _historySet=new Set();
   const _dedupedHistory=(p.history||[]).filter(h=>{
-    const key=_histDupKey(h);
-    if(_historySet.has(key))return false;
-    _historySet.add(key);
+    const k=_histDupKey(h);
+    if(_historySet.has(k))return false;
+    _historySet.add(k);
     return true;
   });
-  // 중복 제거된 history에서 matchId Set 추출 (tourneys 중복 제거용)
+  // history에서 matchId Set 추출
   const _existingMatchIds=new Set(_dedupedHistory.map(h=>h.matchId).filter(Boolean));
-  // 중복 제거된 history에서 중복 키 Set 추출 (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
-  // 중복 키를 항상 정렬된 선수쌍로 생성하여 indM/gjM의 _dupKey와 일치시킴
-  // _dedupedHistory에서는 h.opp만 있으므로 [p.name, h.opp]를 정렬하여 키 생성
+  // history에서 중복 키 Set 추출
   const _existingKeys=new Set(_dedupedHistory.map(h=>_histDupKey(h)));
 
   // indM/gjM에서 추출 (p.history 미반영분)
@@ -717,15 +712,15 @@ function buildPlayerDetailHTML(p){
   const _otherMatches=[];
   if(typeof miniM!=='undefined'&&miniM.length){
     miniM.forEach(m=>{
-      (m.sets||[]).forEach(s=>{
-        (s.games||[]).forEach(g=>{
+      (m.sets||[]).forEach((s,si)=>{
+        (s.games||[]).forEach((g,gi)=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
               opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:m.type==='civil'?'시빌워':'미니대전',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
+              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}|${si}|${gi}|${m._id||''}`
             });
           }
         });
@@ -850,8 +845,16 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // 중복되지 않는 indM/gjM/otherMatches/tourMatches 추가 - 중복 키로 판단
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(m=>!_existingKeys.has(m.matchId?`mid:${m.matchId}`:(m._dupKey||`${m.date||''}|${m.map||'-'}|${[p.name,m.opp].sort().join('|')}|${m.mode||''}`)));
+  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거 - p.history 중복 및 배열 간 내부 중복 모두 제거)
+  const _extraSeenKeys=new Set();
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>{
+    if(h.matchId&&_existingMatchIds.has(h.matchId))return false;
+    const k=_histDupKey(h);
+    if(_existingKeys.has(k))return false;
+    if(_extraSeenKeys.has(k))return false;
+    _extraSeenKeys.add(k);
+    return true;
+  });
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)
@@ -873,7 +876,10 @@ function buildPlayerDetailHTML(p){
     if(p.photo){
       const raceL=p.race||'?';
       const imageFit = localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain';
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center" onerror="this.style.display='none'">`;
+      const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+      const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
+      const _imgBrightness=_imgSettings.brightness||1;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url
@@ -1503,10 +1509,10 @@ function buildUnivDetailHTML(univName){
 }/* ══════════════════════════════════════
    통합 탭 렌더 함수
 ══════════════════════════════════════ */
-var _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
-var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
-var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
-var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
+let _mergedIndSub  = 'ind';   // 개인전 서브탭: 'ind' | 'gj'
+let _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'univm' | 'univck'
+let _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
+let _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
   return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -1521,8 +1527,22 @@ function rMergedInd(C, T) {
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
-  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
-  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
+  if(_mergedIndSub==='ind') { 
+    if(typeof rInd==='function') rInd(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎮</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">개인전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else { 
+    if(typeof rGJ==='function') rGJ(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">끝장전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1533,10 +1553,40 @@ function rMergedUnivM(C, T) {
     _mergedUnivSub, '_mergedUnivSub'
   );
   const sub = document.createElement('div');
-  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
-  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
+  if(_mergedUnivSub==='civil')       { 
+    miniType='civil';
+    if(typeof rMini==='function') rMini(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">시빌워 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else if(_mergedUnivSub==='mini')   { 
+    miniType='mini';
+    if(typeof rMini==='function') rMini(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚡</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">미니대전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else if(_mergedUnivSub==='univck') { 
+    if(typeof rCK==='function') rCK(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🤝</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대학CK 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else { 
+    if(typeof rUnivM==='function') rUnivM(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🏟️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대학대전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1547,8 +1597,22 @@ function rMergedComp(C, T) {
     _mergedCompSub, '_mergedCompSub'
   );
   const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  if(_mergedCompSub==='comp') { 
+    if(typeof rComp==='function') rComp(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎖️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else { 
+    if(typeof rTierTourTab==='function') rTierTourTab(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎯</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">티어대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -1559,9 +1623,30 @@ function rMergedPro(C, T) {
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
-  if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
-  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true,true); }
-  else                            { if(typeof rProComp==='function') rProComp(sub,T); }
+  if(_mergedProSub==='pro') { 
+    if(typeof rPro==='function') rPro(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🏅</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 일반 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else if(_mergedProSub==='gj') { 
+    if(typeof rGJ==='function') rGJ(sub,T,true,true);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 끝장전 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
+  else { 
+    if(typeof rProComp==='function') rProComp(sub,T);
+    else sub.innerHTML = `<div style="padding:60px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🎖️</div>
+      <div style="font-weight:700;font-size:16px;color:var(--text1);margin-bottom:8px">프로 대회 렌더링 함수를 찾을 수 없습니다</div>
+      <div style="font-size:13px;color:var(--gray-l)">해당 기능은 현재 준비 중입니다.</div>
+    </div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
