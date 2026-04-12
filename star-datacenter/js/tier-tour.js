@@ -1264,6 +1264,37 @@ function rCfg(C,T){
     </div>
     <div id="cfg-board-bg-body" style="display:none">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
+    <div style="margin-bottom:14px;padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
+      <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px">📋 일괄 설정 (전체 대학)</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">이미지 URL:</label>
+        <input type="text" id="bulk-bg-img-url" placeholder="https://..." style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">위치:</label>
+        <select id="bulk-bg-img-pos" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="top left">좌상단</option>
+          <option value="top center">중상단</option>
+          <option value="top right">우상단</option>
+          <option value="center left">좌중앙</option>
+          <option value="center center" selected>중앙</option>
+          <option value="center right">우중앙</option>
+          <option value="bottom left">좌하단</option>
+          <option value="bottom center">중하단</option>
+          <option value="bottom right">우하단</option>
+        </select>
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">크기:</label>
+        <select id="bulk-bg-img-size" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="cover" selected>채우기 (cover)</option>
+          <option value="contain">맞춤 (contain)</option>
+          <option value="fill">늘리기 (fill)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="bulkSetBoardBgImg()">📋 전체 적용</button>
+        <button class="btn btn-r btn-sm" onclick="bulkClearBoardBgImg()">🗑️ 전체 삭제</button>
+      </div>
+    </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
     </div>
   </div>
@@ -2766,6 +2797,32 @@ function promptBoardBgImgUrl(univName){
   const trimmed=url.trim();
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   setBoardBgImg(univName,trimmed);
+}
+function bulkSetBoardBgImg(){
+  if(!isLoggedIn)return;
+  const url=(document.getElementById('bulk-bg-img-url')?.value||'').trim();
+  const pos=document.getElementById('bulk-bg-img-pos')?.value||'center center';
+  const size=document.getElementById('bulk-bg-img-size')?.value||'cover';
+  if(!url){showToast('이미지 URL을 입력해주세요.');return;}
+  if(!confirm('모든 대학에 동일한 배경 이미지를 적용하시겠습니까?'))return;
+  univCfg.forEach(u=>{
+    u.bgImg=url;
+    u.bgImgPos=pos;
+    u.bgImgSize=size;
+  });
+  save();render();
+  showToast('전체 대학에 배경 이미지가 적용되었습니다.');
+}
+function bulkClearBoardBgImg(){
+  if(!isLoggedIn)return;
+  if(!confirm('모든 대학의 배경 이미지를 삭제하시겠습니까?'))return;
+  univCfg.forEach(u=>{
+    delete u.bgImg;
+    delete u.bgImgPos;
+    delete u.bgImgSize;
+  });
+  save();render();
+  showToast('전체 대학의 배경 이미지가 삭제되었습니다.');
 }
 function promptBoardMemoImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
