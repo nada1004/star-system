@@ -1409,6 +1409,28 @@ function rCfg(C,T){
       <div style="font-size:12px;font-weight:700;color:var(--gray-l);margin-bottom:12px">선수를 선택하면 설정이 표시됩니다</div>
     </div>
   </details>
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🎨 구현황판 카드 배경/라벨 밝기 조절</h4>
+      <button id="cfg-old-bright-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-old-bright-body');const btn=document.getElementById('cfg-old-bright-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-old-bright-body" style="display:none">
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">배경 밝기:</label>
+        <input type="range" id="cfg-b2-bg-alpha" min="0" max="30" value="9" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-bg-alpha-val').textContent=this.value+'%'">
+        <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="cfg-b2-bg-alpha-val">9%</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:80px">라벨 밝기:</label>
+        <input type="range" id="cfg-b2-label-alpha" min="0" max="40" value="16" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('cfg-b2-label-alpha-val').textContent=this.value+'%'">
+        <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="cfg-b2-label-alpha-val">16%</span>
+      </div>
+      <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>
+    </div>
+    </div>
+  </div>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링
@@ -1487,6 +1509,11 @@ function rCfg(C,T){
         el.addEventListener('input',()=>valEl.textContent=parseFloat(el.value).toFixed(1)+'x');
       }
     });
+    // 구현황판 밝기 설정 초기화
+    const b2LabelAlpha=parseInt(localStorage.getItem('su_b2la')||'16');
+    const b2BgAlpha=parseInt(localStorage.getItem('su_b2ba')||'9');
+    if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
+    if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
@@ -1567,6 +1594,17 @@ function saveB2LayoutSettings(){
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
   if(typeof save==='function')save();
   alert('이미지탭 레이아웃이 저장되었습니다.');
+  if(typeof render === 'function') render();
+}
+
+// ── 구현황판 밝기 저장 함수 ──
+function saveOldDashboardBrightness(){
+  const labelAlpha = parseInt(document.getElementById('cfg-b2-label-alpha')?.value) || 16;
+  const bgAlpha = parseInt(document.getElementById('cfg-b2-bg-alpha')?.value) || 9;
+  localStorage.setItem('su_b2la', labelAlpha);
+  localStorage.setItem('su_b2ba', bgAlpha);
+  if(typeof save==='function')save();
+  alert('구현황판 밝기 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
 }
 
