@@ -2305,15 +2305,6 @@ function pasteApply() {
     curComp = compName;
     comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
   } else if (mode === 'ind') {
-    // 중복 체크: 날짜+맵+선수쌍(순서 무관) 동일하면 차단
-    const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
-    const _indIsDup = (d, map, w, l) => indM.some(m => {
-      if (m.d !== d) return false;
-      if (_normMap(m.map) !== _normMap(map)) return false;
-      const pair1 = [m.wName, m.lName].sort().join('|');
-      const pair2 = [w, l].sort().join('|');
-      return pair1 === pair2;
-    });
     // _lineDate 있으면 날짜별 다른 sid로 분리 저장
     const _indDateGroups = {};
     savable.forEach(r => {
@@ -2321,33 +2312,16 @@ function pasteApply() {
       if (!_indDateGroups[d]) _indDateGroups[d] = [];
       _indDateGroups[d].push(r);
     });
-    let _indDupCount = 0;
     Object.entries(_indDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const indSid = genId();
-      const passed = group.filter(r => {
-        const map = r.map && r.map !== '-' ? r.map : '';
-        if (_indIsDup(d, map, r.wPlayer.name, r.lPlayer.name)) { _indDupCount++; return false; }
-        return true;
-      });
-      passed.forEach(r => {
+      group.forEach(r => {
         applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
-      const games = passed.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = group.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) indM.unshift(...games);
     });
-    if (_indDupCount > 0) alert(`⚠️ 중복 ${_indDupCount}건 제외하고 저장했습니다.`);
   } else if (mode === 'gj') {
     const _gjPro = !!window._gjProPaste;
-    // 중복 체크: 날짜+맵+선수쌍(순서 무관) 동일하면 차단
-    const _gjIsDup = (d, map, w, l) => gjM.some(m => {
-      if (m.d !== d) return false;
-      const mMap = m.map || '';
-      const rMap = map || '';
-      if (mMap !== rMap) return false;
-      const pair1 = [m.wName, m.lName].sort().join('|');
-      const pair2 = [w, l].sort().join('|');
-      return pair1 === pair2;
-    });
     // _lineDate 있으면 날짜별 다른 sid로 분리 저장
     const _gjDateGroups = {};
     savable.forEach(r => {
@@ -2355,21 +2329,14 @@ function pasteApply() {
       if (!_gjDateGroups[d]) _gjDateGroups[d] = [];
       _gjDateGroups[d].push(r);
     });
-    let _gjDupCount = 0;
     Object.entries(_gjDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const gjSid = genId();
-      const passed = group.filter(r => {
-        const map = r.map && r.map !== '-' ? r.map : '';
-        if (_gjIsDup(d, map, r.wPlayer.name, r.lPlayer.name)) { _gjDupCount++; return false; }
-        return true;
-      });
-      passed.forEach(r => {
+      group.forEach(r => {
         applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
-      const games = passed.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = group.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) gjM.unshift(...games);
     });
-    if (_gjDupCount > 0) alert(`⚠️ 중복 ${_gjDupCount}건 제외하고 저장했습니다.`);
   } else if (mode === 'tt') {
     const ttAB = (r) => {
       const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
