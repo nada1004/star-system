@@ -132,7 +132,7 @@ function getYearOptions(){
   s.add(String(new Date().getFullYear())); // 현재 연도는 항상 포함
   const flat=[
     ...(miniM||[]),...(univM||[]),...(ckM||[]),...(proM||[]),
-    ...(gjM||[]),...(indM||[]),...(ttM||[]),...(comps||[])
+    ...(gjM||[]),...(indM||[]),...(comps||[])
   ];
   flat.forEach(m=>{if(m.d&&m.d.length>=4)s.add(m.d.slice(0,4));});
   // tourneys 내부 경기 날짜
@@ -368,7 +368,7 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        gjM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
@@ -385,7 +385,7 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         applyGameResult(wName,lName,date,g.map||'-',sid,'','','개인전');
-        if(typeof indM!=='undefined')indM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||''});
+        if(typeof indM!=='undefined')indM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -433,8 +433,6 @@ function saveMatch(mode){
         else if (mode==='pro') proM.unshift(matchData);
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
-            const _ttComp=_ttCurComp||'';
-            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp, stage:'general'});
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
@@ -476,7 +474,7 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        gjM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -554,11 +552,19 @@ function saveMatch(mode){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('팀 멤버를 추가하세요.');
     const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
-    ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
-      teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:_ttCurComp||'',stage:'general'
-    });
+    // 티어대회는 tourneys에 저장
+    const tn=(tourneys||[]).find(t=>t.name===(_ttCurComp||''));
+    if(tn){
+      const grp=tn.groups?.[0];
+      if(grp){
+        grp.matches||=[];
+        grp.matches.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
+          teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
+          teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
+          compName:_ttCurComp||'',stage:'general'
+        });
+      }
+    }
   }
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
   if(mode==='mini')miniSub='records';

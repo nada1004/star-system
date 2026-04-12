@@ -1143,13 +1143,13 @@ window.sw = function(tab, el){
 function _refreshAliasList(){
   const el=document.getElementById('alias-list');
   if(!el)return;
-  const aliases=Object.entries(userMapAlias||{}).filter(([k])=>!k.endsWith('__disabled'));
+  const aliases=Object.entries(typeof userMapAlias!=='undefined'?userMapAlias:{}).filter(([k])=>!k.endsWith('__disabled'));
   if(!aliases.length){
     el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">추가된 약자가 없습니다.</div>';
     return;
   }
   el.innerHTML=aliases.map(([k,v])=>
-    `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:12px;margin-bottom:4px">
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:12px;margin-bottom:4px;margin-right:4px">
       <span style="font-family:monospace"><b>${k}</b> → ${v}</span>
       <button onclick="delMapAlias('${encodeURIComponent(k)}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:11px;padding:0 2px;line-height:1" title="삭제">✕</button>
     </span>`

@@ -188,21 +188,19 @@ function _applyCloudData(d) {
 // - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
 // - 로컬 데이터 없음 (첫 접속): 항상 적용
 window.onFirebaseLoad = function(data) {
-  // ── 중복 호출 방지 (100ms 내 재호출 무시) ──
-  const now = Date.now();
-  if (window._lastFbLoadCall && now - window._lastFbLoadCall < 100) return;
-  window._lastFbLoadCall = now;
+  // ── 중복 수신 방지: savedAt이 동일하면 같은 데이터이므로 무시 ──
+  const incomingSavedAt = data.savedAt || 0;
+  if (incomingSavedAt && incomingSavedAt === window._lastAppliedSavedAt) return;
+  window._lastAppliedSavedAt = incomingSavedAt;
 
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
   _applyCloudData(clean);
-  // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
-  // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
-  // 열려있는 선수/대학 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
+  // 열려있는 선수/대학 상세 모달도 자동 갱신
   const _openModal = document.getElementById('playerModal');
   if (_openModal && _openModal.style.display !== 'none' && window._playerModalCurrentName) {
     if (typeof openPlayerModal === 'function') openPlayerModal(window._playerModalCurrentName);
