@@ -954,7 +954,7 @@ function rCfg(C,T){
   </div>`;
   })()}
   ${_cfgD('univ','🏛️ 대학 관리')}
-    <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
+    <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
     const isDissolved = !!u.dissolved;
