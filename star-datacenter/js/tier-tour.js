@@ -1320,6 +1320,11 @@ function rCfg(C,T){
         <span style="font-size:11px;color:var(--gray-l)">%</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
+        <input type="number" id="cfg-b2-right-size" value="45" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">%</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 높이:</label>
         <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="800" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
         <span style="font-size:11px;color:var(--gray-l)">px</span>
@@ -1539,6 +1544,7 @@ function rCfg(C,T){
     // 이미지탭 레이아웃 설정 초기화
     const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
     if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
+    if(document.getElementById('cfg-b2-right-size'))document.getElementById('cfg-b2-right-size').value=b2Layout.rightSize||45;
     if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
     if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
     if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
@@ -1567,7 +1573,7 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
     // 이미지탭 레이아웃 자동 저장 이벤트 리스너
-    ['cfg-b2-left-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
+    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
@@ -1665,6 +1671,7 @@ function saveB2LayoutSettings(){
   const settings = {
     autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
     leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
+    rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
     mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
     tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
@@ -2819,7 +2826,6 @@ function promptBoardBgImgUrl(univName){
   setBoardBgImg(univName,trimmed);
 }
 function bulkSetBoardBgImg(){
-  if(!isLoggedIn)return;
   const url=(document.getElementById('bulk-bg-img-url')?.value||'').trim();
   const pos=document.getElementById('bulk-bg-img-pos')?.value||'center center';
   const size=document.getElementById('bulk-bg-img-size')?.value||'cover';
@@ -2832,9 +2838,42 @@ function bulkSetBoardBgImg(){
   });
   save();render();
   showToast('전체 대학에 배경 이미지가 적용되었습니다.');
+  // 리스트 갱신
+  const bgListEl=document.getElementById('cfg-board-bg-list');
+  if(bgListEl){
+    bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="cdot" style="background:${u.color}"></div>
+        <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
+        ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
+      </div>
+      ${u.bgImg?`<div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
+        <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
+          <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
+          <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
+          <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
+          <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
+          <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
+          <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
+          <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
+          <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
+        </select>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
+        <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
+          <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
+          <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
+        </select>
+      </div>`:''}
+    </div>`).join('');
+  }
 }
 function bulkClearBoardBgImg(){
-  if(!isLoggedIn)return;
   if(!confirm('모든 대학의 배경 이미지를 삭제하시겠습니까?'))return;
   univCfg.forEach(u=>{
     delete u.bgImg;
@@ -2843,6 +2882,40 @@ function bulkClearBoardBgImg(){
   });
   save();render();
   showToast('전체 대학의 배경 이미지가 삭제되었습니다.');
+  // 리스트 갱신
+  const bgListEl=document.getElementById('cfg-board-bg-list');
+  if(bgListEl){
+    bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="cdot" style="background:${u.color}"></div>
+        <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
+        ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
+      </div>
+      ${u.bgImg?`<div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
+        <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
+          <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
+          <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
+          <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
+          <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
+          <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
+          <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
+          <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
+          <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
+        </select>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
+        <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
+          <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
+          <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
+        </select>
+      </div>`:''}
+    </div>`).join('');
+  }
 }
 function promptBoardMemoImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
