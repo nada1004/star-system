@@ -56,9 +56,9 @@ function render(){
     case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   break;
     case 'tier':    if(typeof rTier==='function')    rTier(C,T);    break;
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
-    case 'ind': case 'gj':               rMergedInd(C,T);   break;
-    case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
-    case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
+    case 'ind': case 'gj':               if(typeof rMergedInd==='function') rMergedInd(C,T);   break;
+    case 'mini': case 'univm': case 'univck': if(typeof rMergedUnivM==='function') rMergedUnivM(C,T); break;
+    case 'comp': case 'tiertour':        if(typeof rMergedComp==='function') rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
