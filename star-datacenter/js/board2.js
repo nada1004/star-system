@@ -2359,10 +2359,10 @@ function _b2UpdateMainDisplay(playerName) {
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
       ${player.photo
-        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
-      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
