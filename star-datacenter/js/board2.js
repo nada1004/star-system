@@ -1785,22 +1785,22 @@ function _b2PlayersView() {
         min-height: 600px;
       }
       .b2-players-main {
-        flex: 0 0 65%;
+        flex: 0 0 55%;
         position: relative;
       }
       @media (min-width: 1400px) {
         .b2-players-main {
-          flex: 0 0 60%;
+          flex: 0 0 50%;
         }
       }
       @media (min-width: 1200px) and (max-width: 1399px) {
         .b2-players-main {
-          flex: 0 0 62%;
+          flex: 0 0 52%;
         }
       }
       @media (min-width: 1025px) and (max-width: 1199px) {
         .b2-players-main {
-          flex: 0 0 65%;
+          flex: 0 0 55%;
         }
       }
       .b2-players-main-content {
@@ -2000,7 +2000,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 14px;
       }
       @media (max-width: 1024px) {
