@@ -1403,6 +1403,12 @@ function rCfg(C,T){
       </div>
     </div>
   </details>
+  ${_cfgD('imgsettings2','🖼️ 선수별 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭에서 선택한 선수의 이미지를 개별 설정합니다. 선수를 선택하면 설정이 표시됩니다.</div>
+    <div id="cfg-img-settings-area" style="display:none;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--gray-l);margin-bottom:12px">선수를 선택하면 설정이 표시됩니다</div>
+    </div>
+  </details>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링
