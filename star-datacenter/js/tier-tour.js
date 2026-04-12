@@ -1459,12 +1459,6 @@ function rCfg(C,T){
       </div>
     </div>
   </details>
-  ${_cfgD('imgsettings2','🖼️ 선수별 이미지 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭에서 선택한 선수의 이미지를 개별 설정합니다. 선수를 선택하면 설정이 표시됩니다.</div>
-    <div id="cfg-img-settings-area" style="display:none;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--gray-l);margin-bottom:12px">선수를 선택하면 설정이 표시됩니다</div>
-    </div>
-  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🎨 구현황판 카드 배경/라벨 밝기 조절</h4>

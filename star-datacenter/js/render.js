@@ -683,9 +683,14 @@ function buildPlayerDetailHTML(p){
     if(h?.matchId) return `mid:${h.matchId}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
-  // p.history 사용 (중복 제거 안함)
+  // p.history 중복 제거
   const _historySet=new Set();
-  const _dedupedHistory=(p.history||[]);
+  const _dedupedHistory=(p.history||[]).filter(h=>{
+    const k=_histDupKey(h);
+    if(_historySet.has(k))return false;
+    _historySet.add(k);
+    return true;
+  });
   // history에서 matchId Set 추출
   const _existingMatchIds=new Set(_dedupedHistory.map(h=>h.matchId).filter(Boolean));
   // history에서 중복 키 Set 추출
@@ -844,8 +849,8 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거 안함)
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches];
+  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>!h.matchId||!_existingMatchIds.has(h.matchId)||!_existingKeys.has(_histDupKey(h)));
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)
