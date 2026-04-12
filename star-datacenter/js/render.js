@@ -655,7 +655,8 @@ function buildPlayerDetailHTML(p){
   // 모바일/PC 이미지 설정 적용
   const _isMobile=window.innerWidth<=768;
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
-  const _imgZoom=_pdStyle.img_zoom||100;
+  const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
   const _imgFill=_pdStyle.img_fill||'cover';
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
