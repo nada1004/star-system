@@ -1866,18 +1866,22 @@ function rotateRandomImage(){
 let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
-const originalSw = window.sw;
-window.sw = function(tab, el){
-  currentTab = tab;
-  if(originalSw) originalSw(tab, el);
+// ※ tier-tour.js가 render.js보다 먼저 로드되므로 즉시 오버라이드하면 originalSw가 undefined
+// → 모든 스크립트 로드 완료 후 오버라이드 (window.addEventListener 사용)
+window.addEventListener('load', function(){
+  const originalSw = window.sw;
+  window.sw = function(tab, el){
+    currentTab = tab;
+    if(originalSw) originalSw(tab, el);
 
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(imgSettings.randomRotation){
-    startRandomRotation();
-  } else {
-    stopRandomRotation();
-  }
-};
+    const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    if(imgSettings.randomRotation){
+      startRandomRotation();
+    } else {
+      stopRandomRotation();
+    }
+  };
+});
 
 function bulkChangeTier(){
   if(!isLoggedIn) return;
