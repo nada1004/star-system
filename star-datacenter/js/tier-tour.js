@@ -1298,6 +1298,19 @@ function rCfg(C,T){
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
     </div>
   </div>
+  ${_cfgD('sync','🔄 데이터 동기화')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">경기 기록을 스트리머 최근 경기에 소급 반영합니다.</div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="syncAllHistoryBtn()">🔄 전체 데이터 동기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">모든 대전 기록(미니/대학/CK/프로/티어/개인전/대회 등)을 스트리머 최근 경기에 소급 반영</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="syncTourneyHistoryBtn()">🏆 대전기록 반영</button>
+        <span style="font-size:11px;color:var(--gray-l)">대회/티어대회 경기를 스트리머 최근 경기에 소급 반영</span>
+      </div>
+    </div>
+  </details>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
