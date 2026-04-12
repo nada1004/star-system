@@ -154,21 +154,30 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
-  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - 로컬 설정이 있는 경우 덮어쓰지 않음
+  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - Firebase 데이터 항상 적용
   if(d.appSettings!==undefined){
     const s=d.appSettings;
-    if(s.fabTabs && !localStorage.getItem('su_fabTabs')) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-    if(s.globalImgSettings && !localStorage.getItem('su_b2_global_img_settings')) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-    if(s.imgSettings && !localStorage.getItem('su_img_settings')) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(s.fabHideMobile!==undefined && localStorage.getItem('su_fabHideMobile')===null) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined && localStorage.getItem('su_fabHidePC')===null) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    if(s.darkMode!==undefined && localStorage.getItem('su_dark')===null) localStorage.setItem('su_dark', s.darkMode?'1':'0');
-    // UI 즉시 반영
-    if(typeof updateFabVisibility==='function') updateFabVisibility();
-    if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-    if(s.darkMode!==undefined && localStorage.getItem('su_dark')===null){
-      document.body.classList.toggle('dark', s.darkMode);
-      if(window._fixHdrBtns) window._fixHdrBtns();
+    // Firebase 데이터가 더 최신이거나 로컬 설정이 없는 경우 적용
+    const fbTime = d.savedAt || 0;
+    const localTime = parseInt(localStorage.getItem('su_last_admin_save') || '0');
+    const useFb = fbTime > localTime;
+
+    if(useFb){
+      if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+      if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+      if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+      if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+      if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+      if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+      if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
+      if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+      // UI 즉시 반영
+      if(typeof updateFabVisibility==='function') updateFabVisibility();
+      if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+      if(s.darkMode!==undefined){
+        document.body.classList.toggle('dark', s.darkMode);
+        if(window._fixHdrBtns) window._fixHdrBtns();
+      }
     }
   }
 }
@@ -236,7 +245,9 @@ async function fbCloudSave() {
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
       fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
       fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
-      darkMode: localStorage.getItem('su_dark')==='1'
+      darkMode: localStorage.getItem('su_dark')==='1',
+      b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
     },
     savedAt
   };
