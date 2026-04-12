@@ -157,27 +157,28 @@ function _applyCloudData(d) {
   // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - Firebase 데이터 항상 적용
   if(d.appSettings!==undefined){
     const s=d.appSettings;
-    // Firebase 데이터가 더 최신이거나 로컬 설정이 없는 경우 적용
-    const fbTime = d.savedAt || 0;
-    const localTime = parseInt(localStorage.getItem('su_last_admin_save') || '0');
-    const useFb = fbTime > localTime;
-
-    if(useFb){
-      if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-      if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-      if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-      if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-      if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-      if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
-      if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
-      if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
-      // UI 즉시 반영
-      if(typeof updateFabVisibility==='function') updateFabVisibility();
-      if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-      if(s.darkMode!==undefined){
-        document.body.classList.toggle('dark', s.darkMode);
-        if(window._fixHdrBtns) window._fixHdrBtns();
-      }
+    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
+    if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    // UI 즉시 반영
+    if(typeof updateFabVisibility==='function') updateFabVisibility();
+    if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    if(s.darkMode!==undefined){
+      document.body.classList.toggle('dark', s.darkMode);
+      if(window._fixHdrBtns) window._fixHdrBtns();
+    }
+    // board2.js 변수 업데이트 및 재렌더링
+    if(s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
+    if(s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
+    const b2Content=document.getElementById('b2-content');
+    if(b2Content && typeof _b2UnivView==='function'){
+      b2Content.innerHTML=_b2UnivView();
+      if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
     }
   }
 }
