@@ -2266,12 +2266,13 @@ function pasteApply() {
   }
 
   if (mode !== 'ind' && mode !== 'gj') {
-    savable.forEach(r => {
-      const _ab = resolveAB(r);
-      const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
-      const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
-      applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL, _pasteModeLabel);
-    });
+    // 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+    // savable.forEach(r => {
+    //   const _ab = resolveAB(r);
+    //   const _univW = _ab.winner==='A' ? (finalTeamA||_ab.playerA?.univ||'') : (finalTeamB||_ab.playerB?.univ||'');
+    //   const _univL = _ab.winner==='A' ? (finalTeamB||_ab.playerB?.univ||'') : (finalTeamA||_ab.playerA?.univ||'');
+    //   applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map || '-', matchId, _univW, _univL, _pasteModeLabel);
+    // });
   }
 
   // 모드별 기록 추가
