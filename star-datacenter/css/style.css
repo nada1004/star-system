@@ -70,7 +70,7 @@ b,strong{font-weight:600;}
 /* 종족 필터링된 선수 선택 개선 */
 .race-player-select{border-left:3px solid var(--blue);background:var(--blue-l)!important;}
 
-.tabs-scroll-wrap{position:relative;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;}
+.tabs-scroll-wrap{position:sticky;top:0;z-index:200;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;}
 .tabs{flex:1;min-width:0;display:flex;gap:2px;padding:6px 8px;background:transparent;border-bottom:none;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
 .tabs-arrow{flex-shrink:0;background:var(--surface);border:none;border-left:1px solid var(--border);padding:0 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:opacity .2s,background .15s;opacity:0;pointer-events:none;}
@@ -374,11 +374,6 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .col-hide-mobile { display: none !important; }
   .tab-cont { overflow-x: hidden; }
   .tab-cont > div { overflow-x: hidden; }
-
-  /* ── 직책자 테이블 반응형 ── */
-  .role-table { font-size: 10px !important; }
-  .role-table th, .role-table td { padding: 6px 3px !important; }
-  .role-table .tgrp td { padding: 8px 6px !important; font-size: 11px !important; }
 
   /* ── 섹션 카드 ── */
   .ssec { padding: 12px 10px; margin-bottom: 10px; border-radius: 10px; }
@@ -1310,3 +1305,96 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   .chat-content { font-size: 14px; }
   #chatInput { font-size: 14px; }
 }
+
+/* ══════════════════════════════════════
+   로딩 스피너 오버레이
+══════════════════════════════════════ */
+.page-loading{
+  position:fixed;inset:0;background:rgba(255,255,255,.82);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  transition:opacity .2s;
+}
+.page-loading.hidden{opacity:0;pointer-events:none;}
+.loading-spinner{
+  width:42px;height:42px;
+  border:4px solid var(--border);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin .75s linear infinite;
+}
+.loading-text{font-size:13px;color:var(--gray-l);font-weight:600;letter-spacing:.3px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+body.dark .page-loading{background:rgba(15,23,42,.85);}
+
+/* ══════════════════════════════════════
+   태블릿 반응형 (769px ~ 1024px)
+══════════════════════════════════════ */
+@media (min-width:769px) and (max-width:1024px){
+  body{padding:8px;}
+  .app{max-width:100%;}
+  .umbox{width:92vw;max-width:92vw;}
+  .mbox{width:90vw;max-width:90vw;}
+  .main{padding:14px;}
+  table{font-size:12px;}
+  th,td{padding:7px 8px;}
+  /* 갤러리 그리드 */
+  .gallery-grid{grid-template-columns:repeat(auto-fill,140px)!important;}
+  /* 설정 탭 */
+  .ssec{padding:14px 16px;}
+}
+
+/* ══════════════════════════════════════
+   갤러리 뷰 3행 정렬 보정 (가운데 정렬)
+══════════════════════════════════════ */
+.gallery-grid-wrap{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,130px);
+  gap:10px;padding:4px 0;
+  justify-content:center;
+}
+@media (max-width:768px){
+  .gallery-grid-wrap{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));justify-content:start;}
+}
+
+/* ══════════════════════════════════════
+   종족별 시각적 구분
+══════════════════════════════════════ */
+/* 종족 배지 강화 */
+.rbadge.rT{background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;font-weight:700;}
+.rbadge.rZ{background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700;}
+.rbadge.rP{background:#fef3c7;color:#92400e;border:1px solid #fbbf24;font-weight:700;}
+/* 테이블 행: 종족별 왼쪽 테두리 색 */
+tr[data-r="T"]:not(.ugrp):not(.tgrp) td:first-child{box-shadow:inset 3px 0 0 #2563eb;}
+tr[data-r="Z"]:not(.ugrp):not(.tgrp) td:first-child{box-shadow:inset 3px 0 0 #7c3aed;}
+tr[data-r="P"]:not(.ugrp):not(.tgrp) td:first-child{box-shadow:inset 3px 0 0 #b45309;}
+/* 이름 클릭 텍스트 종족 색상 */
+tr[data-r="T"] .clickable-name{color:#1d4ed8!important;}
+tr[data-r="Z"] .clickable-name{color:#6d28d9!important;}
+tr[data-r="P"] .clickable-name{color:#92400e!important;}
+
+/* ══════════════════════════════════════
+   프로필 이미지 형태 설정 (설정 탭)
+══════════════════════════════════════ */
+/* body에 클래스로 적용 */
+body.profile-square .brd-photo-img,
+body.profile-square .player-photo-img{border-radius:10px!important;}
+body.profile-circle .brd-photo-img,
+body.profile-circle .player-photo-img{border-radius:50%!important;}
+/* 설정 탭 토글 버튼 */
+.shape-toggle-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:10px;border:2px solid var(--border2);
+  background:var(--white);color:var(--text2);font-size:13px;font-weight:700;
+  cursor:pointer;transition:var(--tr);min-width:100px;
+}
+.shape-toggle-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.35);}
+.shape-toggle-btn:hover:not(.on){background:var(--blue-l);border-color:var(--blue);color:var(--blue);}
+
+/* ══════════════════════════════════════
+   다크모드: 추가 로딩 · 스티키탭
+══════════════════════════════════════ */
+body.dark .tabs-scroll-wrap{background:#162032;border-color:#2d3f55;}
+/* 스티키 탭이 콘텐츠 위에 겹치도록 z-index 확보 */
+.app{overflow:visible!important;}
+

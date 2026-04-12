@@ -853,9 +853,39 @@ function rCfg(C,T){
   T.innerText='?? 설정';
   // Show player detail style settings to all users
   let h='';
+
+  // ── 프로필 이미지 형태 설정 (모든 사용자 공개) ──
+  const _pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const _curShape=_pdStyle.profile_shape||'circle';
+  h+=`<div class="ssec">
+    <h4 style="margin-bottom:12px">🖼️ 프로필 이미지 형태 설정</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">대학별/무소속 스트리머의 프로필 이미지를 원형 또는 사각형으로 변경합니다. 현황판·이미지탭 모두 적용됩니다.</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="shape-toggle-btn ${_curShape==='circle'?'on':''}" onclick="(function(){
+        const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+        s.profile_shape='circle';
+        localStorage.setItem('su_pd_style',JSON.stringify(s));
+        document.body.classList.remove('profile-square');
+        document.body.classList.add('profile-circle');
+        render();
+      })()">⭕ 원형 (기본)</button>
+      <button class="shape-toggle-btn ${_curShape==='square'?'on':''}" onclick="(function(){
+        const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+        s.profile_shape='square';
+        localStorage.setItem('su_pd_style',JSON.stringify(s));
+        document.body.classList.remove('profile-circle');
+        document.body.classList.add('profile-square');
+        render();
+      })()">⬛ 사각형</button>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text2)">현재 설정: <strong>${_curShape==='square'?'⬛ 사각형':'⭕ 원형'}</strong></span>
+    </div>
+  </div>`;
+
   h+=`<div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">?? 스트리머 상세 스타일 설정</h4>
+      <h4 style="margin:0">👤 스트리머 상세 스타일 설정</h4>
       <button id="cfg-pd-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-pd-body');const btn=document.getElementById('cfg-pd-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';_renderCfgPdSection();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
     <div id="cfg-pd-body" style="display:none"></div>
@@ -2342,6 +2372,19 @@ function bulkAddPlayers(){
     if(added>0)document.getElementById('bulk-player-input').value='';
   }
 }
+/* ── 승률 자동 계산 헬퍼 ── */
+window._updateEdWinRate=function(){
+  const w=parseInt(document.getElementById('ed-win')?.value)||0;
+  const l=parseInt(document.getElementById('ed-loss')?.value)||0;
+  const total=w+l;
+  const rate=total?Math.round(w/total*100):null;
+  const valEl=document.getElementById('ed-winrate-val');
+  const detEl=document.getElementById('ed-winrate-detail');
+  if(valEl) valEl.textContent=rate!==null?rate+'%':'-';
+  if(detEl) detEl.textContent=`${w}승 ${l}패 (${total}경기)`;
+  if(valEl){valEl.style.color=rate===null?'var(--gray-l)':rate>=50?'var(--green)':'var(--red)';}
+};
+
 window.openEP=function(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
@@ -2391,16 +2434,22 @@ window.openEP=function(name){
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="flex:1;min-width:100px">
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">승 (현재: ${p.win})</div>
-          <input type="number" id="ed-win" value="${p.win}" min="0" style="width:100%">
+          <input type="number" id="ed-win" value="${p.win}" min="0" style="width:100%" oninput="_updateEdWinRate()">
         </div>
         <div style="flex:1;min-width:100px">
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">패 (현재: ${p.loss})</div>
-          <input type="number" id="ed-loss" value="${p.loss}" min="0" style="width:100%">
+          <input type="number" id="ed-loss" value="${p.loss}" min="0" style="width:100%" oninput="_updateEdWinRate()">
         </div>
         <div style="flex:1;min-width:100px">
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">포인트 (현재: ${p.points})</div>
           <input type="number" id="ed-pts" value="${p.points}" style="width:100%">
         </div>
+      </div>
+      <!-- 승률 자동 계산 표시 -->
+      <div id="ed-winrate-display" style="margin-top:8px;padding:8px 12px;background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:8px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;font-weight:700;color:var(--blue)">📈 승률</span>
+        <span id="ed-winrate-val" style="font-size:16px;font-weight:900;color:var(--blue)">${(()=>{const t=(p.win||0)+(p.loss||0);return t?Math.round((p.win||0)/t*100)+'%':'-';})()}</span>
+        <span id="ed-winrate-detail" style="font-size:11px;color:var(--gray-l)">${(p.win||0)}승 ${(p.loss||0)}패 (${(p.win||0)+(p.loss||0)}경기)</span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-o btn-sm" onclick="
@@ -2409,6 +2458,7 @@ window.openEP=function(name){
             p.win=0;p.loss=0;p.points=0;p.history=[];
             document.getElementById('ed-win').value=0;
             document.getElementById('ed-loss').value=0;
+            _updateEdWinRate();
             document.getElementById('ed-pts').value=0;
             save();render();
           }
