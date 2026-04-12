@@ -164,7 +164,27 @@ function openPlayerModal(name){
   setTimeout(()=>initPEloChart(name),60);
 }
 
-// openEPFromModal은 tier-tour.js에 정의됨 (중복 정의 제거)
+// openEPFromModal은 tier-tour.js에 정의됨. 로드 지연 대비 fallback
+function openEPFromModal(nameArg) {
+  const name = nameArg || window._playerModalCurrentName;
+  if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
+  if (typeof openEP !== 'function') {
+    // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
+    let attempts = 0;
+    const checkOpenEP = setInterval(() => {
+      attempts++;
+      if (typeof openEP === 'function') {
+        clearInterval(checkOpenEP);
+        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+      } else if (attempts >= 20) {
+        clearInterval(checkOpenEP);
+        alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
+      }
+    }, 200);
+    return;
+  }
+  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+}
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
 function deletePlayerHist(playerName, histIdx){
@@ -635,8 +655,7 @@ function buildPlayerDetailHTML(p){
   // 모바일/PC 이미지 설정 적용
   const _isMobile=window.innerWidth<=768;
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
-  const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
+  const _imgZoom=_pdStyle.img_zoom||100;
   const _imgFill=_pdStyle.img_fill||'cover';
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
@@ -663,17 +682,19 @@ function buildPlayerDetailHTML(p){
     if(h?.matchId) return `mid:${h.matchId}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
-  // p.history 중복 제거
+  // p.history 자체 중복 제거 먼저 수행 (날짜+맵+상대로 판단)
   const _historySet=new Set();
   const _dedupedHistory=(p.history||[]).filter(h=>{
-    const k=_histDupKey(h);
-    if(_historySet.has(k))return false;
-    _historySet.add(k);
+    const key=_histDupKey(h);
+    if(_historySet.has(key))return false;
+    _historySet.add(key);
     return true;
   });
-  // history에서 matchId Set 추출
+  // 중복 제거된 history에서 matchId Set 추출 (tourneys 중복 제거용)
   const _existingMatchIds=new Set(_dedupedHistory.map(h=>h.matchId).filter(Boolean));
-  // history에서 중복 키 Set 추출
+  // 중복 제거된 history에서 중복 키 Set 추출 (indM/gjM 중복 제거용) - 날짜+맵+선수쌍으로 판단
+  // 중복 키를 항상 정렬된 선수쌍로 생성하여 indM/gjM의 _dupKey와 일치시킴
+  // _dedupedHistory에서는 h.opp만 있으므로 [p.name, h.opp]를 정렬하여 키 생성
   const _existingKeys=new Set(_dedupedHistory.map(h=>_histDupKey(h)));
 
   // indM/gjM에서 추출 (p.history 미반영분)
@@ -696,15 +717,15 @@ function buildPlayerDetailHTML(p){
   const _otherMatches=[];
   if(typeof miniM!=='undefined'&&miniM.length){
     miniM.forEach(m=>{
-      (m.sets||[]).forEach((s,si)=>{
-        (s.games||[]).forEach((g,gi)=>{
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
               opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:m.type==='civil'?'시빌워':'미니대전',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}|${si}|${gi}|${m._id||''}`
+              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
             });
           }
         });
@@ -829,16 +850,8 @@ function buildPlayerDetailHTML(p){
       });});
     });
   });
-  // indM/gjM/otherMatches/tourMatches 추가 (중복 제거 - p.history 중복 및 배열 간 내부 중복 모두 제거)
-  const _extraSeenKeys=new Set();
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>{
-    if(h.matchId&&_existingMatchIds.has(h.matchId))return false;
-    const k=_histDupKey(h);
-    if(_existingKeys.has(k))return false;
-    if(_extraSeenKeys.has(k))return false;
-    _extraSeenKeys.add(k);
-    return true;
-  });
+  // 중복되지 않는 indM/gjM/otherMatches/tourMatches 추가 - 중복 키로 판단
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(m=>!_existingKeys.has(m.matchId?`mid:${m.matchId}`:(m._dupKey||`${m.date||''}|${m.map||'-'}|${[p.name,m.opp].sort().join('|')}|${m.mode||''}`)));
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
   // 소스별 필터 (mode 기반)
@@ -860,10 +873,7 @@ function buildPlayerDetailHTML(p){
     if(p.photo){
       const raceL=p.race||'?';
       const imageFit = localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain';
-      const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-      const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
-      const _imgBrightness=_imgSettings.brightness||1;
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url

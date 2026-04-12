@@ -95,9 +95,9 @@ function applyLoginState(){
   document.querySelectorAll('.lock-admin').forEach(el=>{
     el.classList.toggle('locked',!isLoggedIn);
   });
-  // 관리자 전용 탭 (설정) - 로그인 필요
+  // 관리자 전용 탭 (설정) - 부관리자는 접근 불가
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=isLoggedIn?'':'none';
+  if(_cfgTab) _cfgTab.style.display=(!isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
   if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
@@ -143,7 +143,7 @@ function doFile(inp){
       miniM=d.miniM||[];univM=d.univM||[];comps=d.comps||[];ckM=d.ckM||[];
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
-      tourneys=d.tourneys||[];
+      tourneys=d.tourneys||[];ttM=d.ttM||[];
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
       if(d.gjM!==undefined) gjM=d.gjM||[];
@@ -182,7 +182,7 @@ function refreshSel(){
 function openGameEditModal(editRef, si, gi){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
@@ -245,7 +245,7 @@ function openGameEditModal(editRef, si, gi){
 function saveGameEdit(editRef, si, gi, btn){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
@@ -396,6 +396,7 @@ function copyMatchResult(a, sa, b, sb, date, mode, idx){
   else if(mode==='ck'&&idx!=null&&idx!=='null') m=ckM[idx];
   else if(mode==='pro'&&idx!=null&&idx!=='null') m=proM[idx];
   else if(mode==='comp'&&idx!=null&&idx!=='null') m=comps[idx];
+  else if(mode==='tt'&&idx!=null&&idx!=='null') m=ttM[idx];
 
   if(m&&m.sets&&m.sets.length){
     lines.push('');
