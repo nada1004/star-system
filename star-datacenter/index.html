@@ -525,7 +525,7 @@
   </div>
 </div>
 
-<script>['js/constants.js','js/data.js','js/auth.js','js/tier-tour.js','js/competition.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js','js/mobile-bar.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
+<script>['js/constants.js','js/data.js','js/auth.js','js/tier-tour.js','js/competition.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js','js/mobile-bar.js'].forEach(function(s){document.write('<sc'+'ript defer src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
@@ -640,24 +640,7 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
 
 
 
-<script src="js/firebase-init.js"></script>
-<!-- test.js 제거 (파일 없음 404 오류) -->
-
-
-
-
-  
-
-<script src="js/data.js"></script>
-<script src="js/init.js"></script>
-<script src="js/render.js"></script>
-<script src="js/match.js"></script>
-<script src="js/match-builder.js"></script>
-<script src="js/competition.js"></script>
-<script src="js/tier-tour.js"></script>
-<script src="js/chatbot.js"></script>
-<script src="js/search.js"></script>
-<script src="js/calendar.js"></script>
+<script type="module" src="js/firebase-init.js"></script>
 
 </body>
 </html>
