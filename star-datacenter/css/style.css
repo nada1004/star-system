@@ -748,8 +748,6 @@ body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
   align-items: flex-end;
   gap: 8px;
 }
-@media (max-width: 768px) { #mobileFab { display: flex; } }
-@media (min-width: 769px) { #mobileFab { display: flex; bottom: 80px; right: 20px; } }
 .fab-main {
   width: 52px; height: 52px;
   border-radius: 50%;
