@@ -58,9 +58,9 @@ function render(){
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
-    case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
+    case 'comp': case 'tiertour':        console.log('comp/tiertour case, typeof rMergedComp:', typeof rMergedComp, 'typeof rComp:', typeof rComp, 'typeof rTierTourTab:', typeof rTierTourTab); rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
-    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
+    case 'cfg':     console.log('cfg case, typeof rCfg:', typeof rCfg); if(typeof rCfg==='function') rCfg(C,T); else console.log('rCfg is not a function'); break;
     case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
     case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
