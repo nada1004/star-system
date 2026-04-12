@@ -586,9 +586,8 @@ function indDirectSave(){
     lName:g.winner==='A'?gi.playerB:gi.playerA,
     map:g.map||''
   }));
-  // ★ matchId=sid로 통일: applyGameResult 중복체크와 syncIndHistory 모두 sid 기준으로 동작
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,m.map||'',sid,'','','개인전');
+    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','','개인전');
   });
   indM.unshift(...newGames);
   _indInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
@@ -836,7 +835,7 @@ function gjDirectSave(){
     map:'',
     ...(_gjProMode?{_proLabel:true}:{})
   }));
-  // ★ matchId=sid로 통일: applyGameResult 중복체크와 syncGjM 모두 sid 기준으로 동작
+  // 개인 전적 반영
   newGames.forEach(m=>{
     applyGameResult(m.wName,m.lName,dateVal,'',sid,'','',_gjProMode?'프로리그끝장전':'끝장전');
   });

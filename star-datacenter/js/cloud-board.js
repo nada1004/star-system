@@ -188,19 +188,16 @@ function _applyCloudData(d) {
 // - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
 // - 로컬 데이터 없음 (첫 접속): 항상 적용
 window.onFirebaseLoad = function(data) {
-  // ── 중복 수신 방지: savedAt이 동일하면 같은 데이터이므로 무시 ──
-  const incomingSavedAt = data.savedAt || 0;
-  if (incomingSavedAt && incomingSavedAt === window._lastAppliedSavedAt) return;
-  window._lastAppliedSavedAt = incomingSavedAt;
-
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
   _applyCloudData(clean);
+  // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
+  // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
   if (typeof localSave === 'function') localSave();
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
-  // 열려있는 선수/대학 상세 모달도 자동 갱신
+  // 열려있는 선수/대학 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
   const _openModal = document.getElementById('playerModal');
   if (_openModal && _openModal.style.display !== 'none' && window._playerModalCurrentName) {
     if (typeof openPlayerModal === 'function') openPlayerModal(window._playerModalCurrentName);
@@ -633,7 +630,16 @@ function rBoard(C,T){
       <button class="brd-tbtn" onclick="boardCardView=!boardCardView;render()" style="${boardCardView?'background:#fdf4ff;border-color:#a855f7;color:#7e22ce;':''}" title="포토카드 뷰 전환">▦ 포토카드</button>
       <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
 <button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
-
+      <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
+        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap;margin-left:4px">라벨</span>
+        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
+        <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()">
+        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
+      </div>
     </div>
     ${_brdStatsHtml}
     <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
@@ -661,8 +667,7 @@ function buildUnivBoardCard(u, forExport){
   const col=gc(u.name);
   const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const sorted=_getBoardPlayers(u.name);
-  const _visibleSorted = (u.name==='무소속'&&!forExport) ? sorted.filter(p=>p.tier&&TIERS.includes(p.tier)) : sorted;
-  if(!_visibleSorted.length&&!forExport){
+  if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
       ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
@@ -670,7 +675,7 @@ function buildUnivBoardCard(u, forExport){
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
   }
-  const cnt=u.name==='무소속'?sorted.filter(p=>p.tier&&TIERS.includes(p.tier)).length:sorted.length;
+  const cnt=sorted.length;
   const allUnivs=getAllUnivs();
 
   const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',txt:'테'},Z:{bg:'#ede9fe',col:'#5b21b6',txt:'저'},P:{bg:'#fef3c7',col:'#92400e',txt:'프'},N:{bg:'#f1f5f9',col:'#475569',txt:'?'}};
@@ -833,14 +838,13 @@ function buildUnivBoardCard(u, forExport){
     // 무소속: 티어 레이블 포함 flat 리스트
     let tierRows='', allRows='';
     if(u.name==='무소속'&&!forExport){
-      // 티어 미지정자 제외: tier가 없거나 TIERS에 없는 플레이어는 표시하지 않음
-      const tierSorted=[...sorted].filter(p=>p.tier&&TIERS.includes(p.tier)).sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+      const tierSorted=[...sorted].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
       const chipIdxMapElo={};
       tierSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
-      // 티어별 그룹핑하여 레이블 표시 (기타 그룹 제외)
+      // 티어별 그룹핑하여 레이블 표시
       const freeTierMap={};
-      tierSorted.forEach(p=>{ const t=p.tier; if(!freeTierMap[t])freeTierMap[t]=[]; freeTierMap[t].push(p); });
-      const freeTierOrder=TIERS.filter(t=>freeTierMap[t]);
+      tierSorted.forEach(p=>{ const t=p.tier||'기타'; if(!freeTierMap[t])freeTierMap[t]=[]; freeTierMap[t].push(p); });
+      const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
       tierRows=freeTierOrder.map(tier=>{
         const ps=freeTierMap[tier];
         const tColor=_TIER_BG[tier]||col;

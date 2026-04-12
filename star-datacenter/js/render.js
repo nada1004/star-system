@@ -704,14 +704,14 @@ function buildPlayerDetailHTML(p){
     opp:m.wName===p.name?m.lName:m.wName,
     oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
     map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그':'개인전',
-    _dupKey:`${m.d||''}|${m.map||'-'}|${[m.wName,m.lName].sort().join('|')}|${m._proLabel?'프로리그':'개인전'}`
+    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
   }));
   const _gjMatches=(typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
     date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
     opp:m.wName===p.name?m.lName:m.wName,
     oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
     map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전',
-    _dupKey:`${m.d||''}|${m.map||'-'}|${[m.wName,m.lName].sort().join('|')}|${m._proLabel?'프로리그끝장전':'끝장전'}`
+    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
   }));
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
