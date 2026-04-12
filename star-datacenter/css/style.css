@@ -375,6 +375,11 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .tab-cont { overflow-x: hidden; }
   .tab-cont > div { overflow-x: hidden; }
 
+  /* ── 직책자 테이블 반응형 ── */
+  .role-table { font-size: 10px !important; }
+  .role-table th, .role-table td { padding: 6px 3px !important; }
+  .role-table .tgrp td { padding: 8px 6px !important; font-size: 11px !important; }
+
   /* ── 섹션 카드 ── */
   .ssec { padding: 12px 10px; margin-bottom: 10px; border-radius: 10px; }
   .scards { gap: 6px; }
