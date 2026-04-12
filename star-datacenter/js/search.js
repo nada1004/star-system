@@ -2251,7 +2251,8 @@ function pasteApply() {
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
+        // 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
+        // grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
         miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
       });
