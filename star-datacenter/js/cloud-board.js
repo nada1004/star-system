@@ -154,14 +154,14 @@ function _applyCloudData(d) {
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
-  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
+  // 🔧 설정 동기화 (이미지 설정, 다크모드 등) - Firebase 데이터 적용
+  // FAB 설정은 Firebase 동기화 제외 (로컬 전용)
   if(d.appSettings!==undefined){
     const s=d.appSettings;
     if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
     if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
     if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    // FAB 설정 동기화 제거
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
@@ -228,13 +228,12 @@ async function fbCloudSave() {
     curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
-    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
+    // 🔧 앱 설정 동기화 (이미지 설정, 다크모드 등)
+    // FAB 설정은 Firebase 동기화 제외 (로컬 전용)
     appSettings: {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
-      fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
-      fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
