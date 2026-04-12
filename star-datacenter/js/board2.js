@@ -211,6 +211,7 @@ function _b2ScheduleImageSwap(playerName) {
   const img2 = document.getElementById('b2-main-img-2');
   if (img1) img1.style.opacity = '1';
   if (img2) img2.style.opacity = '0';
+  if (!img2) return;
   mainBox._swapTimer = setTimeout(() => {
     const curImg1 = document.getElementById('b2-main-img-1');
     const curImg2 = document.getElementById('b2-main-img-2');

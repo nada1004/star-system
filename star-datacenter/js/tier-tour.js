@@ -2571,6 +2571,36 @@ function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
+  save();
+}
+function setBoardMemo2(univName, text){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.memo2=text;
+  save();
+}
+function setBoardNote(univName, text){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.bMemo=text;
+  save();
+}
+function addBoardNoteImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(!u.bMemoImgs)u.bMemoImgs=[];
+  u.bMemoImgs.push(dataUrl);
+  save();render();
+}
+function removeBoardNoteImg(univName, idx){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  if(!u.bMemoImgs)u.bMemoImgs=[];
+  u.bMemoImgs.splice(idx,1);
+  save();render();
+}
+function setBoardMemoImg(univName, dataUrl){
+  const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
   u.memoImg=dataUrl;
   save();render();
