@@ -2163,76 +2163,6 @@ function _bktPasteApplyLogic(savable, tn){
   return true;
 }
 
-/* ══════════════════════════════════════
-   🎯 티어대회 - CK 방식 경기 입력
-══════════════════════════════════════ */
-// _ttSub, _ttCurComp: constants.js에서 선언 및 localStorage 복원
-
-function rTierTourTab(C, T){
-  _migrateTierTourneys();
-  T.innerText = '🎯 티어대회';
-  if(!isLoggedIn && _ttSub==='input') _ttSub='records';
-  const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
-  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
-  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
-  let h='';
-  h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
-    <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
-    <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
-      <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{const _tDates=[];(t.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{if(m.d&&m.sa!=null)_tDates.push(m.d);}));(ttM||[]).filter(m=>m.compName===t.name&&m.d).forEach(m=>_tDates.push(m.d));_tDates.sort();const _ds=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'/')}${_tDates.length>1&&_tDates[0]!==_tDates[_tDates.length-1]?'~'+_tDates[_tDates.length-1].slice(2).replace(/-/g,'/'):''})`:(t.createdAt?` (${t.createdAt.slice(0,10)})`:'');return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_ds}</option>`;}).join('')}
-    </select>
-    ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
-    ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
-    <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
-  </div>`;
-  if(!tierTourneys.length){
-    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
-    C.innerHTML=h; return;
-  }
-  const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
-  // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
-  if(!_validSubs.includes(_ttSub)) _ttSub='records';
-  if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
-  if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
-  const subOpts=[
-    ...(isLoggedIn?[{id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`},
-    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
-    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
-    {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
-    ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
-  ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
-  const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
-  if(_ttSub==='input' && isLoggedIn){
-    if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
-    h+=buildTierTourInputHTML();
-  } else if(_ttSub==='rank'){
-    h+=ttPlayerRankHTML(_ttCurComp);
-  } else if(_ttSub==='league'){
-    h+=_curTierTn ? rCompLeague(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='grprank'){
-    h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
-  } else if(_ttSub==='grpedit'){
-    if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
-    // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환
-    if(grpSub!=='edit'){ _ttSub='records'; C.innerHTML=h; render(); return; }
-    grpEditId=_curTierTn.id;
-    h+=rGrpEditInner();
-  } else {
-    // records 탭
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
-  }
-  C.innerHTML=h;
-}
-
 function ttFixOrphanRecords(compName,includeWrong){
   const orphans=ttM.filter(m=>!m.compName||m.compName==='');
   const wrongComp=includeWrong?ttM.filter(m=>m.compName&&m.compName!==compName):[];
@@ -2570,8 +2500,6 @@ function grpAddUniv(tnId,gi){
 function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
-}
-  save();
 }
 function setBoardMemo2(univName, text){
   const u=univCfg.find(x=>x.name===univName);
