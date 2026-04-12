@@ -537,7 +537,7 @@ function saveBoardPlayerOrder(){
   localStorage.setItem('su_bpo', JSON.stringify(boardPlayerOrder));
 }
 
-function rCloudBoard(C,T){
+function rBoard(C,T){
   T.textContent='📊 현황판';
   const univs=_getBoardUnivs();
   const visUnivs=(isLoggedIn?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);

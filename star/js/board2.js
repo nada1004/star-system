@@ -324,163 +324,108 @@ function _b2VisUnivs() {
   return getAllUnivs().filter(u => !u.hidden);
 }
 
-// 탭 전환 함수 (내용만 업데이트)
-function _b2SwitchTab(view) {
-  _b2View = view;
-  const contentEl = document.getElementById('b2-content');
-  const navEl = document.getElementById('b2-nav');
-  
-  if (!contentEl || !navEl) return;
-  
-  // 탭 버튼 활성 상태 업데이트
-  navEl.querySelectorAll('.b2-tab-btn').forEach(btn => {
-    const btnView = btn.dataset.view;
-    const isActive = btnView === view;
-    btn.classList.toggle('active', isActive);
-    btn.style.background = isActive ? '#3b82f6' : '#fff';
-    btn.style.color = isActive ? '#fff' : '#1e293b';
-    btn.style.borderColor = isActive ? '#3b82f6' : 'var(--border2)';
-  });
-  
-  // 저장/초기화 바 토글
-  const saveBar = navEl.querySelector('.b2-save-bar');
-  if (saveBar) {
-    saveBar.style.display = (view === 'univ' || view === 'free') ? 'flex' : 'none';
-  }
-  
-  // 플레이어 필터 토글
-  const playerFilters = navEl.querySelector('.b2-player-filters');
-  if (playerFilters) {
-    playerFilters.style.display = view === 'players' ? 'flex' : 'none';
-  }
-  
-  // 내용 업데이트
-  if (view === 'univ') {
-    contentEl.innerHTML = _b2UnivView();
-    injectUnivIcons(contentEl);
-  } else if (view === 'free') {
-    contentEl.innerHTML = _b2FreeView();
-    injectUnivIcons(contentEl);
-  } else if (view === 'players') {
-    contentEl.innerHTML = _b2PlayersView();
-    if (_b2SelectedPlayer) {
-      _b2UpdateMainDisplay(_b2SelectedPlayer.name);
-    }
-  } else if (view === 'old') {
-    const T = document.getElementById('rtitle');
-    if (typeof rCloudBoard === 'function') {
-      rCloudBoard(contentEl, T);
-    } else {
-      contentEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
-    }
-  }
-}
-
 function rBoard2(C, T) {
   try {
-    T.innerText = '📊 현황판';
+  T.innerText = '📊 현황판';
 
-    const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
 
-    // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
-    if (_b2View === 'game' || _b2View === 'crew') _b2View = 'univ';
-    if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
+  // 탭 버튼 스타일 헬퍼
+  function _b2TabBtn(view, color, label) {
+    const on = _b2View === view;
+    const c = color || 'var(--blue)';
+    // 활성 상태일 때 배경색을 직접 색상으로 설정 (모든 탭 파란색 통일)
+    const bgColor = on ? '#3b82f6' : '#fff';
+    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?bgColor:'var(--border2)'};background:${bgColor};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+  }
 
-    const profileTabLabel = '👤 이미지별';
-    // 이미지별 필터를 상단 탭에 포함
-    const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-    const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
-    const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
-    // univCfg 순서로 정렬
-    if (typeof univCfg !== 'undefined') {
-      playerUnivList.sort((a, b) => {
-        const idxA = univCfg.findIndex(u => u.name === a);
-        const idxB = univCfg.findIndex(u => u.name === b);
-        return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
-      });
-    } else {
-      playerUnivList.sort();
-    }
+  // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
+  if (_b2View === 'game' || _b2View === 'crew') _b2View = 'univ';
+  if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
 
-    // 저장/초기화 바
-    let saveBarHtml = '';
-    if (_b2View === 'univ') {
-      saveBarHtml = `<div class="b2-save-bar" style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
-        <div style="position:relative">
-          <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-            <option value="전체">🏫 전체</option>
-            ${univList.map(u=>`<option value="${u.name}"${_b2SaveUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
-          </select>
-          <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-        </div>
-        <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
-      </div>`;
-    } else if (_b2View === 'free') {
-      saveBarHtml = `<div class="b2-save-bar" style="display:flex;margin-left:auto;flex-shrink:0">
-        <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
-      </div>`;
-    } else {
-      saveBarHtml = `<div class="b2-save-bar" style="display:none"></div>`;
-    }
-
-    const playerFiltersHtml = `
-    <div class="b2-player-filters" style="display:${_b2View === 'players' ? 'flex' : 'none'};align-items:center;gap:8px">
-      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+  // 저장/초기화 바
+  let saveBar = '';
+  if (_b2View === 'univ') {
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
       <div style="position:relative">
-        <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;_b2SwitchTab('players')" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-          <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
-          ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
+        <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="전체">🏫 전체</option>
+          ${univList.map(u=>`<option value="${u.name}"${_b2SaveUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
-        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="position:relative">
-        <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;_b2SwitchTab('players')" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-          <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
-          <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
-          <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
-          <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
-        </select>
-        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-      </div>
+      <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
+  } else if (_b2View === 'free') {
+    saveBar = `<div style="margin-left:auto;flex-shrink:0">
+      <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+    </div>`;
+  }
 
-    // 탭 버튼 스타일 헬퍼
-    function _b2TabBtn(view, label) {
-      const on = _b2View === view;
-      const bgColor = on ? '#3b82f6' : '#fff';
-      return `<button class="b2-tab-btn" data-view="${view}" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?bgColor:'var(--border2)'};background:${bgColor};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
-    }
-
-    const filterBar = `
+  const profileTabLabel = '👤 이미지별';
+  // 이미지별 필터를 상단 탭에 포함
+  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  // univCfg 순서로 정렬
+  if (typeof univCfg !== 'undefined') {
+    playerUnivList.sort((a, b) => {
+      const idxA = univCfg.findIndex(u => u.name === a);
+      const idxB = univCfg.findIndex(u => u.name === b);
+      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+    });
+  } else {
+    playerUnivList.sort();
+  }
+  const playerFilters = _b2View === 'players' ? `
+    <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+    <div style="position:relative">
+      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},100)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
+        ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
+      </select>
+      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div style="position:relative">
+      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
+        <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
+        <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
+        <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
+      </select>
+      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  ` : '';
+  const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${_b2TabBtn('univ','🏟️ 대학별')}
-      ${_b2TabBtn('free','🚶 무소속')}
-      ${_b2TabBtn('players',profileTabLabel)}
-      ${playerFiltersHtml}
-      ${isLoggedIn?_b2TabBtn('old','📊 구현황판'):''}
-      ${saveBarHtml}
+      ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
+      ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
+      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
+      ${playerFilters}
+      ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
+      ${saveBar}
     </div>
     <div id="b2-content"></div>`;
 
-    C.innerHTML = filterBar;
+  C.innerHTML = filterBar;
 
-    // 이벤트 위임으로 탭 클릭 처리
-    const navEl = document.getElementById('b2-nav');
-    if (navEl) {
-      navEl.addEventListener('click', function(e) {
-        const btn = e.target.closest('.b2-tab-btn');
-        if (btn) {
-          const view = btn.dataset.view;
-          if (view && view !== _b2View) {
-            _b2SwitchTab(view);
-          }
-        }
-      });
+  const sub = document.getElementById('b2-content');
+  if (_b2View === 'univ') {
+    sub.innerHTML = _b2UnivView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'free') {
+    sub.innerHTML = _b2FreeView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'players') {
+    sub.innerHTML = _b2PlayersView();
+    // 최초 진입 시에도 저장된 이미지 설정값(zoom/brightness/pos 등)을 즉시 반영
+    if (_b2SelectedPlayer) {
+      setTimeout(() => _b2UpdateMainDisplay(_b2SelectedPlayer.name), 50);
     }
-
-    // 초기 내용 렌더링
-    _b2SwitchTab(_b2View);
-
+  } else if (_b2View === 'old') {
+    if (typeof rBoard === 'function') rBoard(sub, T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+  }
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
