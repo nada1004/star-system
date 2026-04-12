@@ -539,9 +539,9 @@ function rCfg(C,T){
       ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
       <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
       ${isDissolved
-        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;saveCfg();render()">🔄 복구</button>`
+        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;save();render()">🔄 복구</button>`
         : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
+            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;save();render()">
             ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
           <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
       }
@@ -557,7 +557,7 @@ function rCfg(C,T){
   maps.forEach((m,i)=>{
     h+=`<div class="srow">
       <span style="font-size:14px">📍</span>
-      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
+      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;save();refreshSel()">
       <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
     </div>`;
   });
@@ -847,6 +847,17 @@ function rCfg(C,T){
         <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
       </div>
 
+    </div>
+  </div>
+
+  <div class="ssec" id="cfg-board2-img-sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지 설정</h4>
+      <button id="cfg-b2img-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-b2img-body');const btn=document.getElementById('cfg-b2img-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgB2ImgSettings();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-b2img-body" style="display:none">
+      <p style="font-size:12px;color:var(--gray-l);margin-bottom:14px">대학별 현황판 카드의 배경 이미지 URL, 표시 위치, 크기, 밝기를 설정합니다.</p>
+      <div id="cfg-b2img-list"><div style="color:var(--gray-l);font-size:12px;padding:10px">▼ 펼치기 버튼을 눌러 로드하세요</div></div>
     </div>
   </div>
   `;
@@ -1772,3 +1783,176 @@ function ttFixOrphanRecords(compName,includeWrong){
   save();render();
 }
 
+
+/* ══════════════════════════════════════
+   설정 탭 — 현황판 라벨 배경 이미지 설정
+   대학별 bgImg URL, bgImgPos, bgImgSize(opacity) 조정
+══════════════════════════════════════ */
+function _renderCfgB2ImgSettings() {
+  const el = document.getElementById('cfg-b2img-list');
+  if (!el) return;
+
+  const univList = (univCfg || []).filter(u => u.name !== '무소속');
+  if (!univList.length) {
+    el.innerHTML = '<div style="color:var(--gray-l);font-size:12px;padding:8px">등록된 대학이 없습니다.</div>';
+    return;
+  }
+
+  const sizeOptions = [
+    { v: 'cover',   l: '꽉 채우기 (cover)' },
+    { v: 'contain', l: '맞춤 (contain)' },
+    { v: '50%',     l: '작게 (50%)' },
+    { v: '70%',     l: '중간 (70%)' },
+    { v: '100%',    l: '원본 (100%)' },
+    { v: '150%',    l: '크게 (150%)' },
+  ];
+  const posOptions = [
+    { v: 'center center', l: '가운데' },
+    { v: 'top center',    l: '위 중앙' },
+    { v: 'bottom center', l: '아래 중앙' },
+    { v: 'center left',   l: '왼쪽' },
+    { v: 'center right',  l: '오른쪽' },
+    { v: 'top left',      l: '왼쪽 위' },
+    { v: 'top right',     l: '오른쪽 위' },
+  ];
+
+  let h = '';
+  univList.forEach((u, i) => {
+    const col = u.color || '#2563eb';
+    const bg  = u.bgImg    || '';
+    const pos = u.bgImgPos || 'center center';
+    const sz  = u.bgImgSize|| 'cover';
+    const op  = u.bgImgOp  !== undefined ? u.bgImgOp : 0.18;
+    const safe = JSON.stringify(u.name);
+
+    h += `
+    <div style="border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden">
+      <!-- 대학 헤더 -->
+      <div style="background:${col};padding:8px 14px;display:flex;align-items:center;gap:8px">
+        <span style="font-weight:900;font-size:13px;color:#fff">${u.name}</span>
+        <span style="flex:1"></span>
+        ${bg ? `<span style="font-size:10px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.2);padding:2px 8px;border-radius:5px">이미지 설정됨 ✅</span>` : ''}
+      </div>
+      <!-- 설정 패널 -->
+      <div style="padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:10px">
+
+        <!-- URL 입력 -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🔗 배경 이미지 URL</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="b2img-url-${i}" value="${bg.replace(/"/g,'&quot;')}" placeholder="https://... 이미지 주소 입력"
+              style="flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px">
+            <button class="btn btn-b btn-xs" onclick="_cfgB2ImgSave(${i})">저장</button>
+            ${bg ? `<button class="btn btn-r btn-xs" onclick="_cfgB2ImgClear(${i})">삭제</button>` : ''}
+          </div>
+        </div>
+
+        ${bg ? `
+        <!-- 미리보기 + 세부 설정 -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+
+          <!-- 미리보기 -->
+          <div style="width:120px;height:70px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;position:relative;background:${col}20">
+            <div id="b2img-prev-${i}" style="position:absolute;inset:0;background:url('${bg}') ${pos}/${sz} no-repeat;opacity:${op}"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col}">미리보기</div>
+          </div>
+
+          <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px">
+            <!-- 크기 -->
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <label style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap;min-width:36px">📐 크기</label>
+              <select id="b2img-size-${i}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);flex:1;min-width:120px"
+                onchange="_cfgB2ImgPreview(${i})">
+                ${sizeOptions.map(o=>`<option value="${o.v}"${sz===o.v?' selected':''}>${o.l}</option>`).join('')}
+              </select>
+            </div>
+            <!-- 위치 -->
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <label style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap;min-width:36px">📍 위치</label>
+              <select id="b2img-pos-${i}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);flex:1;min-width:120px"
+                onchange="_cfgB2ImgPreview(${i})">
+                ${posOptions.map(o=>`<option value="${o.v}"${pos===o.v?' selected':''}>${o.l}</option>`).join('')}
+              </select>
+            </div>
+            <!-- 밝기(불투명도) -->
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <label style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap">☀️ 밝기</label>
+                <span id="b2img-op-val-${i}" style="font-size:11px;color:var(--blue);font-weight:700">${Math.round(op*100)}%</span>
+              </div>
+              <input type="range" id="b2img-op-${i}" min="0" max="60" step="1" value="${Math.round(op*100)}"
+                style="width:100%"
+                oninput="document.getElementById('b2img-op-val-${i}').textContent=this.value+'%';_cfgB2ImgPreview(${i})">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l)">
+                <span>0% (투명)</span><span>30% (기본)</span><span>60% (진하게)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 저장 버튼 -->
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-b btn-sm" onclick="_cfgB2ImgSave(${i})">💾 설정 저장</button>
+          <button class="btn btn-r btn-xs" onclick="_cfgB2ImgClear(${i})">🗑️ 이미지 삭제</button>
+        </div>
+        ` : ''}
+
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = h;
+}
+
+// 미리보기 갱신
+function _cfgB2ImgPreview(i) {
+  const prev = document.getElementById('b2img-prev-'+i);
+  if (!prev) return;
+  const url  = (document.getElementById('b2img-url-'+i)||{}).value || '';
+  const sz   = (document.getElementById('b2img-size-'+i)||{}).value || 'cover';
+  const pos  = (document.getElementById('b2img-pos-'+i)||{}).value  || 'center center';
+  const opPct= parseInt((document.getElementById('b2img-op-'+i)||{}).value || '18');
+  prev.style.background = url ? `url('${url}') ${pos}/${sz} no-repeat` : 'none';
+  prev.style.opacity = (opPct / 100).toFixed(2);
+}
+
+// 저장
+function _cfgB2ImgSave(i) {
+  const univList = (univCfg || []).filter(u => u.name !== '무소속');
+  if (i < 0 || i >= univList.length) return;
+  const u    = univList[i];
+  const uIdx = univCfg.findIndex(x => x.name === u.name);
+  if (uIdx < 0) return;
+
+  const url  = (document.getElementById('b2img-url-'+i)||{}).value.trim() || '';
+  const sz   = (document.getElementById('b2img-size-'+i)||{}).value  || 'cover';
+  const pos  = (document.getElementById('b2img-pos-'+i)||{}).value   || 'center center';
+  const opPct= parseInt((document.getElementById('b2img-op-'+i)||{}).value || '18');
+
+  univCfg[uIdx].bgImg    = url;
+  univCfg[uIdx].bgImgPos = pos;
+  univCfg[uIdx].bgImgSize= sz;
+  univCfg[uIdx].bgImgOp  = opPct / 100;
+
+  save();
+  if (typeof renderBoard === 'function') renderBoard();
+  // 목록 재렌더링
+  _renderCfgB2ImgSettings();
+  // 간단 피드백
+  const btn = document.querySelector(`#cfg-b2img-list [onclick="_cfgB2ImgSave(${i})"]`);
+  if (btn) { const orig = btn.textContent; btn.textContent = '✅ 저장됨'; setTimeout(() => { btn.textContent = orig; }, 1500); }
+}
+
+// 이미지 삭제
+function _cfgB2ImgClear(i) {
+  const univList = (univCfg || []).filter(u => u.name !== '무소속');
+  if (i < 0 || i >= univList.length) return;
+  const uIdx = univCfg.findIndex(x => x.name === univList[i].name);
+  if (uIdx < 0) return;
+  delete univCfg[uIdx].bgImg;
+  delete univCfg[uIdx].bgImgPos;
+  delete univCfg[uIdx].bgImgSize;
+  delete univCfg[uIdx].bgImgOp;
+  save();
+  if (typeof renderBoard === 'function') renderBoard();
+  _renderCfgB2ImgSettings();
+}

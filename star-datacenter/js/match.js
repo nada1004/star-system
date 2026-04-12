@@ -363,13 +363,17 @@ function saveMatch(mode){
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       const sid=matchId;
+      // ★ 게임별로 고유 _id 생성 (sid는 세션 묶음 식별자, _id는 개별 항목 식별자)
+      const newEntries=[];
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
+        const gameId=genId();
         applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        newEntries.push({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
+      gjM.unshift(...newEntries);
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
       render();
@@ -380,13 +384,17 @@ function saveMatch(mode){
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
       const sid=matchId;
+      // ★ 게임별로 고유 _id 생성
+      const newEntries=[];
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
+        const gameId=genId();
         applyGameResult(wName,lName,date,g.map||'-',sid,'','','개인전');
-        if(typeof indM!=='undefined')indM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||''});
+        newEntries.push({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
       });
+      if(typeof indM!=='undefined')indM.unshift(...newEntries);
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof indSub!=='undefined') indSub='records';
@@ -468,15 +476,19 @@ function saveMatch(mode){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
     const sid=matchId;
+    // ★ 세트 방식: 게임마다 고유 _id, sid는 세션 묶음
+    const newEntries=[];
     setsSnap.forEach(set=>{
       (set.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
+        const gameId=genId();
         applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:sid,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        newEntries.push({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
+    gjM.unshift(...newEntries);
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
     if(typeof gjSub!=='undefined') gjSub='records';
     render();

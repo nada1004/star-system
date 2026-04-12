@@ -9,12 +9,6 @@ function revertMatchRecord(matchObj){
   const mid=matchObj._id||null;
   const mdate=matchObj.d||'';
 
-  // ttM(티어대회 기록)에서도 동기화된 데이터 삭제
-  if(mid){
-    const ttIdx=ttM.findIndex(m=>m._id===mid);
-    if(ttIdx>=0) ttM.splice(ttIdx,1);
-  }
-
   // sets 없는 경우(스코어만 입력된 경기): matchId 기반으로 history에서 직접 제거
   if(!matchObj.sets||!matchObj.sets.length){
     if(!mid)return;
@@ -125,22 +119,28 @@ function syncIndHistory(){
   const existingIds=new Set();
   players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
   let added=0;
-  // indM (개인전)
+  // ★ indM: sid가 있으면 sid를 matchId로 사용 (세션 단위 중복체크)
+  const seenSids=new Set();
   (typeof indM!=='undefined'?indM:[]).forEach(m=>{
-    if(!m._id||!m.wName||!m.lName)return;
-    if(existingIds.has(m._id))return;
+    if(!m.wName||!m.lName)return;
+    const mid=m.sid||m._id;
+    if(!mid)return;
+    if(existingIds.has(mid))return;
+    // 같은 sid의 게임은 모두 처리 (중복 실행 방지용 seenSids는 여기서 불필요)
     const mode=m._proLabel?'프로리그':'개인전';
-    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-    existingIds.add(m._id);
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',mid,'','',mode);
+    existingIds.add(mid);
     added++;
   });
   // gjM (끝장전)
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
-    if(!m._id||!m.wName||!m.lName)return;
-    if(existingIds.has(m._id))return;
+    if(!m.wName||!m.lName)return;
+    const mid=m.sid||m._id;
+    if(!mid)return;
+    if(existingIds.has(mid))return;
     const mode=m._proLabel?'프로리그끝장전':'끝장전';
-    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-    existingIds.add(m._id);
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',mid,'','',mode);
+    existingIds.add(mid);
     added++;
   });
   if(added>0)save();
@@ -158,11 +158,13 @@ function syncIndM(){
   players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
   let added=0;
   (typeof indM!=='undefined'?indM:[]).forEach(m=>{
-    if(!m._id||!m.wName||!m.lName)return;
-    if(existingIds.has(m._id))return;
+    if(!m.wName||!m.lName)return;
+    const mid=m.sid||m._id;
+    if(!mid)return;
+    if(existingIds.has(mid))return;
     const mode=m._proLabel?'프로리그':'개인전';
-    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-    existingIds.add(m._id);
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',mid,'','',mode);
+    existingIds.add(mid);
     added++;
   });
   if(added>0)save();
@@ -173,11 +175,13 @@ function syncGjM(){
   players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
   let added=0;
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
-    if(!m._id||!m.wName||!m.lName)return;
-    if(existingIds.has(m._id))return;
+    if(!m.wName||!m.lName)return;
+    const mid=m.sid||m._id;
+    if(!mid)return;
+    if(existingIds.has(mid))return;
     const mode=m._proLabel?'프로리그끝장전':'끝장전';
-    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
-    existingIds.add(m._id);
+    applyGameResult(m.wName,m.lName,m.d||'',m.map||'',mid,'','',mode);
+    existingIds.add(mid);
     added++;
   });
   if(added>0)save();
@@ -274,27 +278,6 @@ function syncProM(){
   if(added>0)save();
   return added;
 }
-function syncTtM(){
-  const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
-  let added=0;
-  (typeof ttM!=='undefined'?ttM:[]).forEach(m=>{
-    if(!m._id)return;
-    if(existingIds.has(m._id))return;
-    (m.sets||[]).forEach(s=>{
-      (s.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','티어대회');
-        added++;
-      });
-    });
-    existingIds.add(m._id);
-  });
-  if(added>0)save();
-  return added;
-}
 function syncTourneys(){
   const existingIds=new Set();
   players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
@@ -365,11 +348,6 @@ function syncProMBtn(){
   if(n>0){alert('✅ '+n+'건의 프로리그 기록이 반영되었습니다.');render();}
   else{alert('✅ 이미 모든 프로리그 기록이 반영되어 있습니다.');}
 }
-function syncTtMBtn(){
-  const n=syncTtM();
-  if(n>0){alert('✅ '+n+'건의 티어대회 기록이 반영되었습니다.');render();}
-  else{alert('✅ 이미 모든 티어대회 기록이 반영되어 있습니다.');}
-}
 function syncTourneysBtn(){
   const n=syncTourneys();
   if(n>0){alert('✅ '+n+'건의 대회 기록이 반영되었습니다.');render();}
@@ -378,7 +356,7 @@ function syncTourneysBtn(){
 
 /* ══════════════════════════════════════
    전체 대전 기록 → 선수 최근 기록 소급 동기화
-   miniM, univM, ckM, proM, ttM, comps, indM, gjM, tourneys 모두 처리
+   miniM, univM, ckM, proM, comps, indM, gjM, tourneys 모두 처리
 ══════════════════════════════════════ */
 function syncAllHistory(){
   const existingIds=new Set();
@@ -444,22 +422,6 @@ function syncAllHistory(){
         const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
         const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
         applyGameResult(wn,ln,m.d||'',g.map||'',m._id,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
-        added++;
-      });
-    });
-    existingIds.add(m._id);
-  });
-
-  // ttM (티어대전) — sets[].games[] 구조
-  (typeof ttM!=='undefined'?ttM:[]).forEach(m=>{
-    if(!m||!m._id)return;
-    if(existingIds.has(m._id))return;
-    (m.sets||[]).forEach(set=>{
-      (set.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wn,ln,m.d||'',g.map||'',m._id,'','','티어대전');
         added++;
       });
     });
@@ -614,7 +576,7 @@ function syncAllHistoryBtn(){
 
 /* ══════════════════════════════════════
    2025년 이전 경기 기록 일괄 삭제
-   - miniM/univM/ckM/proM/indM/gjM/ttM 필터
+   - miniM/univM/ckM/proM/indM/gjM 필터
    - player.history 필터 후 win/loss/points/ELO 재계산
 ══════════════════════════════════════ */
 function cleanupPlayerHistoryDuplicates(){
@@ -674,7 +636,6 @@ function purgeOldRecords(){
   _filter(proM);
   if(typeof indM!=='undefined') _filter(indM);
   if(typeof gjM!=='undefined')  _filter(gjM);
-  if(typeof ttM!=='undefined')  _filter(ttM);
 
   // 2) 선수 history 필터 + 스탯 재계산
   let playerCount = 0;
