@@ -1984,7 +1984,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid-wrapper {
         flex: 1;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.05) url('https://i.imgur.com/3W8Gz5Q.png') center/contain no-repeat;
         backdrop-filter: blur(15px);
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 24px;
@@ -2105,8 +2105,8 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 320px;
-          height: clamp(320px, 52vh, 480px);
+          min-height: 400px;
+          height: clamp(400px, 55vh, 550px);
           order: 0;
           position: sticky;
           top: 0;
@@ -2138,7 +2138,7 @@ function _b2PlayersView() {
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           max-height: none;
           overflow-y: visible;
         }
