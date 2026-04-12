@@ -1,7 +1,6 @@
 // 알등이 - 스타대학 데이터 분석 챗봇
 // Aldeungi - StarCraft University Data Analysis Chatbot
 
-(function(){
 let chatHistory = [];
 let chatbotOpen = false;
 
@@ -2096,4 +2095,4 @@ function formatPlayerAllRecords(player) {
 
   if(!rows) return _noRecordCard('📊',`${player.name}의 대전`);
   return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${_matchCardHeader('📊',`${player.name} 전체 기록 요약`,`총 ${total.w}승 ${total.l}패 (${totalRate}%)`,'linear-gradient(135deg,#1e293b,#334155)')}<div style="background:#fff;padding:8px 8px 4px">${rows}</div></div>`;
-})();
+}

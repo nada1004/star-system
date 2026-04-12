@@ -1,7 +1,6 @@
 /* ══════════════════════════════════════
    공통: 스트리머 선택 (풀 + 필터 방식)
 ══════════════════════════════════════ */
-(function(){
 function _matchPlayerPoolHTML(side, type) {
   const pList = players.filter(p => p.name).sort((a,b) => a.name.localeCompare(b.name));
   const poolId = `pool_${type}_${side}`;
@@ -1771,4 +1770,4 @@ function deleteUnivFromRank(name, mode){
     miniM = miniM.filter(m=>m.a!==name&&m.b!==name);
   }
   save(); render();
-})();
+}

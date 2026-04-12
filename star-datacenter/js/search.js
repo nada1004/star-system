@@ -1,5 +1,4 @@
 ﻿// ── 검색바 실시간 DOM 필터링 (render() 없이 한글 IME 호환) ──────────────────
-(function(){
 function recFilterInPlace(mode, query) {
   const q = (query || '').toLowerCase().trim();
   const container = document.getElementById('rec-list-' + mode);
@@ -3617,5 +3616,5 @@ function proApply() {
   toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(), 2800);
-})();
+}
 
