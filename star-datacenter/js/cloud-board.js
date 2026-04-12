@@ -155,15 +155,16 @@ function _applyCloudData(d) {
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
   if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
   // 🔧 설정 동기화 (FAB 버튼, 이미지 설정 등) - Firebase 데이터 적용
-  // 관리자가 방금 저장한 경우(5초 이내) FAB 설정만 건너뜀 (echo 방지)
+  // 관리자가 방금 저장한 경우(5초 이내)에만 echo 방지 (다른 기기 동기화 허용)
   const isAdmin = typeof isLoggedIn !== 'undefined' && isLoggedIn && !!(localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT);
-  const justSavedFAB = isAdmin && window._lastFabSettingChange && (Date.now() - window._lastFabSettingChange < 5000);
+  const localChangeTs = parseInt(localStorage.getItem('su_fab_change_ts')||'0');
+  const justSavedFAB = isAdmin && localChangeTs && (Date.now() - localChangeTs < 5000);
   if(d.appSettings!==undefined){
     const s=d.appSettings;
     if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
     if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
     if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    // FAB 설정: 관리자가 방금 변경한 경우만 건너뜀
+    // FAB 설정: 관리자가 방금 변경한 경우에만 echo 방지, 그 외엔 정상 동기화
     if(!justSavedFAB){
       if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
       if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
