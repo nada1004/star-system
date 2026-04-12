@@ -1372,6 +1372,11 @@ function rCfg(C,T){
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-use-right-scale"> 우측 크기 적용
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="cfg-img-random"> 랜덤 회전
         </label>
       </div>
@@ -1545,6 +1550,7 @@ function rCfg(C,T){
     if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleLeft||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleLeft||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scaleRight||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scaleRight||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-use-right-scale'))document.getElementById('cfg-img-use-right-scale').checked=imgSettings.useRightScale||false;
     if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
     if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
     // 이미지 설정 슬라이더 이벤트 리스너
@@ -1688,6 +1694,7 @@ function saveImageSettings(){
     brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
     scaleLeft: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1,
     scaleRight: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1,
+    useRightScale: document.getElementById('cfg-img-use-right-scale')?.checked || false,
     randomRotation: document.getElementById('cfg-img-random')?.checked || false,
     interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
   };
@@ -1858,9 +1865,9 @@ const originalSw = window.sw;
 window.sw = function(tab, el){
   currentTab = tab;
   if(originalSw) originalSw(tab, el);
-  
+
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(tab === 'total' && imgSettings.randomRotation){
+  if(imgSettings.randomRotation){
     startRandomRotation();
   } else {
     stopRandomRotation();
