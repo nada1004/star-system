@@ -1778,6 +1778,8 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const leftSize = layoutSettings.leftSize || 55;
+  const mobileHeight = layoutSettings.mobileHeight || 320;
+  const tabletHeight = layoutSettings.tabletHeight || 400;
   
   let h = `
     <style>
@@ -2050,8 +2052,8 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 320px;
-          height: clamp(320px, 52vh, 480px);
+          min-height: ${mobileHeight}px;
+          height: clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px);
           order: 0;
           position: sticky;
           top: 0;
@@ -2108,8 +2110,8 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: none;
           width: 100%;
-          min-height: 400px;
-          height: clamp(400px, 55vh, 550px);
+          min-height: ${tabletHeight}px;
+          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
           position: sticky;
           top: 0;

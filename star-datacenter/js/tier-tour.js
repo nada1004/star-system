@@ -1356,7 +1356,9 @@ function renderStorageInfo(){
 // ── 이미지탭 레이아웃 저장 함수 ──
 function saveB2LayoutSettings(){
   const settings = {
-    leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55
+    leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
+    mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
+    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
   };
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
   if(typeof save==='function')save();
@@ -3131,11 +3133,19 @@ function rCfg(C,T){
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:12px">카드 이미지 관련 설정을 관리합니다.</div>
 
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
-        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">📐 이미지탭 PC 좌우 크기</div>
+        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">📐 이미지탭 레이아웃</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">좌측 비율 <span id="cfg-b2-left-size-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55)}%</span></label>
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">PC 좌측 비율 <span id="cfg-b2-left-size-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55)}%</span></label>
             <input type="range" id="cfg-b2-left-size" min="40" max="70" step="1" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').leftSize||55}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%'">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">모바일 높이 <span id="cfg-b2-mobile-height-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').mobileHeight||320)}px</span></label>
+            <input type="range" id="cfg-b2-mobile-height" min="280" max="500" step="10" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').mobileHeight||320}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-mobile-height-val').textContent=this.value+'px'">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:600;color:var(--text3);display:flex;justify-content:space-between;align-items:center">태블릿 높이 <span id="cfg-b2-tablet-height-val" style="font-size:11px;color:var(--blue)">${(JSON.parse(localStorage.getItem('su_b2_layout')||'{}').tabletHeight||400)}px</span></label>
+            <input type="range" id="cfg-b2-tablet-height" min="350" max="650" step="10" value="${JSON.parse(localStorage.getItem('su_b2_layout')||'{}').tabletHeight||400}" style="width:100%;height:6px;cursor:pointer" oninput="document.getElementById('cfg-b2-tablet-height-val').textContent=this.value+'px'">
           </div>
           <button class="btn btn-b btn-xs" onclick="saveB2LayoutSettings()">💾 이미지탭 레이아웃 저장</button>
         </div>
