@@ -985,19 +985,7 @@ function rCfg(C,T){
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></details>
-      <div class="ssec">
-      <h4>🎮 크루 관리</h4>
-      <div id="crew-list" style="margin-bottom:12px"></div>
-      ${isLoggedIn?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <input type="text" id="crew-name" placeholder="크루 이름" style="width:120px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <input type="text" id="crew-icon" placeholder="아이콘 (이모지)" style="width:90px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <input type="color" id="crew-color" value="#6366f1" style="width:40px;height:30px;border:1px solid var(--border2);border-radius:6px;cursor:pointer">
-        <input type="text" id="crew-desc" placeholder="설명 (선택)" style="width:150px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <button class="btn btn-b btn-sm" onclick="addCrew()">+ 크루 추가</button>
-      </div>`:``}
-    </div>
-
-    ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
+  ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
@@ -1402,6 +1390,21 @@ function rCfg(C,T){
         </select>
       </div>
     </div>
+    <div style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">FAB 버튼 표시 설정</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-fab-hide-mobile" onchange="saveFabVisibilitySettings()">
+          모바일에서 숨기기
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings()">
+          PC에서 숨기기
+        </label>
+      </div>
+    </div>
   </details>
   ${_cfgD('imgsettings2','🖼️ 선수별 이미지 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭에서 선택한 선수의 이미지를 개별 설정합니다. 선수를 선택하면 설정이 표시됩니다.</div>
@@ -1437,7 +1440,6 @@ function rCfg(C,T){
   setTimeout(()=>{
     renderStorageInfo();
     renderSeasonList();
-    _refreshCrewList();
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -1514,6 +1516,18 @@ function rCfg(C,T){
     const b2BgAlpha=parseInt(localStorage.getItem('su_b2ba')||'9');
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
+    // 이미지탭 레이아웃 자동 저장 이벤트 리스너
+    ['cfg-b2-left-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener('change',saveB2LayoutSettings);
+    });
+    const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
+    if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
+    // 이미지 설정 자동 저장 이벤트 리스너
+    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener('change',saveImageSettings);
+    });
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
@@ -1537,7 +1551,21 @@ function rCfg(C,T){
     });
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
   };
-  setTimeout(function(){window.initFabTabSettings();}, 50);
+  window.saveFabVisibilitySettings = function(){
+    const hideMobile = document.getElementById('cfg-fab-hide-mobile')?.checked;
+    const hidePC = document.getElementById('cfg-fab-hide-pc')?.checked;
+    localStorage.setItem('su_fabHideMobile', hideMobile ? '1' : '0');
+    localStorage.setItem('su_fabHidePC', hidePC ? '1' : '0');
+    if(typeof updateFabVisibility==='function')updateFabVisibility();
+    if(typeof save==='function')save();
+  };
+  window.initFabVisibilitySettings = function(){
+    const hideMobile = localStorage.getItem('su_fabHideMobile') === '1';
+    const hidePC = localStorage.getItem('su_fabHidePC') === '1';
+    if(document.getElementById('cfg-fab-hide-mobile'))document.getElementById('cfg-fab-hide-mobile').checked = hideMobile;
+    if(document.getElementById('cfg-fab-hide-pc'))document.getElementById('cfg-fab-hide-pc').checked = hidePC;
+  };
+  setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
 } // end first rCfg
 
 function renderStorageInfo(){
@@ -1794,86 +1822,6 @@ window.sw = function(tab, el){
     stopRandomRotation();
   }
 };
-
-// ── 크루 관리 함수들 ──
-function _refreshCrewList(){
-  const el=document.getElementById('crew-list');
-  if(!el) return;
-  if(!crews||!crews.length){el.innerHTML='<div style="font-size:12px;color:var(--gray-l)">아직 추가된 크루가 없습니다.</div>';return;}
-  el.innerHTML=crews.map((c,ci)=>{
-    const col=c.color||'#6b7280';
-    const memberBtns=(c.members||[]).map((m,mi)=>`
-      <span style="display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px">
-        ${m.name}${m.role?`<span style="color:${col};font-size:10px;margin-left:2px">(${m.role})</span>`:''}
-        ${isLoggedIn?`<button onclick="delCrewMember(${ci},${mi})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0 2px">✕</button>`:''}
-      </span>`).join('');
-    return `<div style="border:1.5px solid ${col}55;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:${col}08">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        ${c.icon?`<span style="font-size:20px">${c.icon}</span>`:''}
-        <span style="font-weight:800;font-size:14px;color:${col}">${c.name}</span>
-        ${c.desc?`<span style="font-size:11px;color:var(--gray-l)">${c.desc}</span>`:''}
-        <span style="font-size:11px;color:var(--gray-l)">${(c.members||[]).length}명</span>
-        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="delCrew(${ci})">🗑️ 삭제</button>`:''}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${memberBtns}</div>
-      ${isLoggedIn?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <select id="crew-add-mem-${ci}" style="font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
-          <option value="">멤버 추가...</option>
-          ${players.filter(p=>!(c.members||[]).some(m=>m.name===p.name)).map(p=>{
-              const hasUniv=p.univ&&p.univ!=='무소속';
-              return `<option value="${p.name}">${p.name} (${p.univ||'무소속'})${hasUniv?' ⚠️대학있음':''}`;
-            }).join('')}
-        </select>
-        <input type="text" id="crew-add-role-${ci}" placeholder="역할 (선택, 예:리더)" style="width:100px;font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px">
-        <button class="btn btn-b btn-xs" onclick="addCrewMember(${ci})">+ 추가</button>
-      </div>`:''}
-    </div>`;
-  }).join('');
-}
-
-function addCrew(){
-  const name=(document.getElementById('crew-name')?.value||'').trim();
-  if(!name){alert('크루 이름을 입력하세요.');return;}
-  if(crews.find(c=>c.name===name)){alert('같은 이름의 크루가 있습니다.');return;}
-  const color=document.getElementById('crew-color')?.value||'#6366f1';
-  const icon=(document.getElementById('crew-icon')?.value||'').trim();
-  const desc=(document.getElementById('crew-desc')?.value||'').trim();
-  const id='crew_'+Date.now();
-  crews.push({id,name,color,icon,desc,members:[]});
-  save();
-  document.getElementById('crew-name').value='';
-  document.getElementById('crew-icon').value='';
-  document.getElementById('crew-desc').value='';
-  _refreshCrewList();
-}
-
-function delCrew(ci){
-  if(!confirm(`"${crews[ci]?.name}" 크루를 삭제할까요?`)) return;
-  crews.splice(ci,1);
-  save(); render();
-}
-
-function addCrewMember(ci){
-  const name=document.getElementById(`crew-add-mem-${ci}`)?.value||'';
-  if(!name) return;
-  const role=(document.getElementById(`crew-add-role-${ci}`)?.value||'').trim();
-  if(!(crews[ci].members)) crews[ci].members=[];
-  crews[ci].members.push({name,role});
-  // 크루 소속 = 자동 무소속 처리
-  const p=players.find(x=>x.name===name);
-  if(p && p.univ && p.univ!=='무소속'){
-    if(confirm(`"${name}"의 대학 소속(${p.univ})을 무소속으로 변경할까요?`)){
-      delete p.role;
-      p.univ='무소속';
-    }
-  }
-  save(); _refreshCrewList();
-}
-
-function delCrewMember(ci,mi){
-  crews[ci].members.splice(mi,1);
-  save(); _refreshCrewList();
-}
 
 function bulkChangeTier(){
   if(!isLoggedIn) return;
@@ -3804,6 +3752,7 @@ function _renderCfgPdSection(){
   const cp=s.color_preset||'normal';
   const st=s.stats_tint!==undefined?s.stats_tint:8;
   const mt=s.mode_tint!==undefined?s.mode_tint:10;
+  const ps=s.profile_size!==undefined?s.profile_size:100;
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
   const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
@@ -3823,6 +3772,14 @@ function _renderCfgPdSection(){
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지 크기</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="60" max="140" step="5" value="${ps}" style="flex:1;accent-color:var(--blue)" oninput="_setPdProfileSize(this.value);document.getElementById('pd-ps-val').textContent=this.value+'%'">
+        <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
@@ -3857,6 +3814,12 @@ function _setPdFontSize(size){
   s.font_size=size;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
+}
+
+function _setPdProfileSize(val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.profile_size=parseInt(val)||100;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
 }
 
 function _setPdColorPreset(cp){
