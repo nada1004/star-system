@@ -908,7 +908,11 @@ function rCfg(C,T){
     const uniq=[...new Set(dupNames)];
     if(!uniq.length) return '';
     return `<div class="ssec" style="border:2px solid #fca5a5;background:#fff5f5">
-      <h4 style="color:#dc2626">⚠️ 동명이인 감지 (${uniq.length}건)</h4>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0;color:#dc2626">⚠️ 동명이인 감지 (${uniq.length}건)</h4>
+      <button class="btn btn-w btn-xs" onclick="(function(){const c=this.nextElementSibling;if(c.style.display==='none'){c.style.display='';this.textContent='▲ 접기';}else{c.style.display='none';this.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div style="display:none">
       <div style="font-size:12px;color:#7f1d1d;margin-bottom:12px">중복 이름이 있으면 승패·기록이 뒤섞입니다. 한 명의 이름을 바꿔 구분하세요.</div>
       ${uniq.map(name=>{
         const dupes=players.map((p,i)=>({p,i})).filter(({p})=>p.name===name);
@@ -944,9 +948,10 @@ function rCfg(C,T){
               save();render();
             })()">✅ 적용</button>
           </div>`).join('')}
-        </div>`;
-      }).join('')}
-    </div>`;
+      </div>
+    </div>
+    </div>
+  </div>`;
   })()}
   ${_cfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
@@ -1146,128 +1151,115 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
   </details>
-    <div class="ssec">
+    <div class="ssec" id="cfg-bulk-edit-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📅 날짜 일괄 변경</h4>
-      <button id="cfg-bulk-date-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-date-body');const btn=document.getElementById('cfg-bulk-date-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+      <h4 style="margin:0">✏️ 경기 일괄 수정</h4>
+      <button id="cfg-me-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-me-body');const btn=document.getElementById('cfg-me-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
     </div>
-    <div id="cfg-bulk-date-body" style="display:none">
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
-        <input type="date" id="bulk-date-from" style="font-size:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경 후</label>
-        <input type="date" id="bulk-date-to" style="font-size:12px">
+    <div id="cfg-me-body" style="display:none">
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">특정 날짜 범위의 경기 날짜·맵을 한 번에 수정하거나, 맵 이름 오타를 전체 교체합니다.</p>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- 날짜 일괄 변경 -->
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">📅 날짜 일괄 변경</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
+          <input type="date" id="bulk-date-from" style="font-size:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경 후</label>
+          <input type="date" id="bulk-date-to" style="font-size:12px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-date-chk-${m}" checked style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
+        <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-        ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
-        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
-          <input type="checkbox" id="bulk-date-chk-${m}" checked style="cursor:pointer">
-          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
-        </label>`).join('')}
+
+      <!-- 맵 이름 일괄 교체 -->
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:10px">🗺️ 맵 이름 일괄 교체</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
+          <input type="text" id="bulk-map-from" placeholder="예: 투혼II" style="font-size:12px;width:120px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 교체 후</label>
+          <input type="text" id="bulk-map-to" placeholder="예: 투혼" style="font-size:12px;width:120px">
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
+        <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
       </div>
-      <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
-      <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
-    </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗺️ 맵 이름 일괄 교체</h4>
-      <button id="cfg-bulk-map-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-map-body');const btn=document.getElementById('cfg-bulk-map-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-map-body" style="display:none">
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
-        <input type="text" id="bulk-map-from" placeholder="예: 투혼II" style="font-size:12px;width:120px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 교체 후</label>
-        <input type="text" id="bulk-map-to" placeholder="예: 투혼" style="font-size:12px;width:120px">
+
+      <!-- 선수 일괄 티어 변경 -->
+      <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#0369a1;margin-bottom:10px">🎖️ 선수 일괄 티어 변경</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
+          <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 (상관없음)</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경할 티어</label>
+          <select id="bulk-tier-to" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">선택</option>
+            ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
+            <option value="미정">미정</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">대상 대학</label>
+          <select id="bulk-tier-univ" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
+            <option value="">전체 대학</option>
+            ${getAllUnivs().map(u=>`<option value="${u.name}">${u.name}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
+        <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
       </div>
-      <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
-      <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
-    </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎖️ 선수 일괄 티어 변경</h4>
-      <button id="cfg-bulk-tier-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-tier-body');const btn=document.getElementById('cfg-bulk-tier-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-tier-body" style="display:none">
-    <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
-        <select id="bulk-tier-from" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
-          <option value="">전체 (상관없음)</option>
-          ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
-          <option value="미정">미정</option>
-        </select>
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 변경할 티어</label>
-        <select id="bulk-tier-to" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
-          <option value="">선택</option>
-          ${TIERS.map(t=>`<option value="${t}">${getTierLabel(t)||t}</option>`).join('')}
-          <option value="미정">미정</option>
-        </select>
+
+      <!-- 날짜 범위 일괄 삭제 -->
+      <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:10px">🗑️ 날짜 범위 일괄 삭제</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
+          <input type="date" id="bulk-del-from" style="font-size:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">~</label>
+          <input type="date" id="bulk-del-to" style="font-size:12px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
+        <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">대상 대학</label>
-        <select id="bulk-tier-univ" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2)">
-          <option value="">전체 대학</option>
-          ${getAllUnivs().map(u=>`<option value="${u.name}">${u.name}</option>`).join('')}
-        </select>
+
+      <!-- 세트제→게임수 합산 일괄 변환 -->
+      <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:6px">🔄 세트제 → 게임수 합산 일괄 변환</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
+          ${['mini','univm','ck','pro','tt'].map(m=>`
+          <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
+            ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
+          </label>`).join('')}
+        </div>
+        <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
+        <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
       </div>
-      <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
-      <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
-    </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗑️ 날짜 범위 일괄 삭제</h4>
-      <button id="cfg-bulk-del-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-del-body');const btn=document.getElementById('cfg-bulk-del-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-del-body" style="display:none">
-    <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
-        <input type="date" id="bulk-del-from" style="font-size:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">~</label>
-        <input type="date" id="bulk-del-to" style="font-size:12px">
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-        ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
-        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
-          <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
-          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
-        </label>`).join('')}
-      </div>
-      <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
-      <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
-    </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🔄 세트제 → 게임수 합산 일괄 변환</h4>
-      <button id="cfg-bulk-conv-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-conv-body');const btn=document.getElementById('cfg-bulk-conv-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-conv-body" style="display:none">
-    <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-        ${['mini','univm','ck','pro','tt'].map(m=>`
-        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
-          <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
-          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
-        </label>`).join('')}
-      </div>
-      <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
-      <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
-    </div>
+
     </div>
   </div>
   <div class="ssec">
