@@ -1,3 +1,4 @@
+(function(){
 function rCal(C,T){
   T.textContent='📅 경기 캘린더';
 
@@ -506,4 +507,5 @@ function swNav(t,el){
     if(C) C.innerHTML='';
     render();
   }
+})();
 }
