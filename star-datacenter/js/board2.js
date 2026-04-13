@@ -1798,7 +1798,7 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
-  const leftSize = layoutSettings.leftSize || 55;
+  const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
