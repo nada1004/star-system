@@ -238,8 +238,15 @@ function deletePlayerHist(playerName, histIdx){
   }
   if(typeof fixPoints==='function')fixPoints();
   save();
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  render();
+  const pb=document.getElementById('playerModalBody');
+  if(pb){
+    const p=players.find(x=>x.name===playerName);
+    if(p){
+      pb.innerHTML=buildPlayerDetailHTML(p);
+      injectUnivIcons(pb);
+    }
+  }
 }
 
 function deletePlayerHistBulk(playerName){
@@ -398,9 +405,16 @@ function savePlayerHistBulkEdit(playerName){
   
   _playerHistBulkSelected.clear();
   save();
+  render();
   cm('reModal');
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  const pb=document.getElementById('playerModalBody');
+  if(pb){
+    const p=players.find(x=>x.name===playerName);
+    if(p){
+      pb.innerHTML=buildPlayerDetailHTML(p);
+      injectUnivIcons(pb);
+    }
+  }
 }
 
 function openPlayerHistEdit(playerName, histIdx){
@@ -536,11 +550,15 @@ function openPlayerHistEdit(playerName, histIdx){
       saveBtnOrig.onclick=_prevOnclick;
       if(typeof fixPoints==='function')fixPoints();
       save();
+      render();
       cm('reModal');
       const pb=document.getElementById('playerModalBody');
-      if(pb&&window._playerModalCurrentName===playerName){
-        pb.innerHTML=buildPlayerDetailHTML(p);
-        injectUnivIcons(pb);
+      if(pb){
+        const p=players.find(x=>x.name===playerName);
+        if(p){
+          pb.innerHTML=buildPlayerDetailHTML(p);
+          injectUnivIcons(pb);
+        }
       }
     };
   }
@@ -1169,11 +1187,11 @@ function buildPlayerDetailHTML(p){
   const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
     <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-        <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} onchange="if(this.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')}" style="cursor:pointer;display:none">전체
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+        <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
-      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-        <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} onchange="const arr=window._playerHistFilters||[];if(this.checked){arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')}" style="cursor:pointer;display:none">${m}
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+        <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
       style="padding:4px 10px;border:1.5px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
@@ -1196,11 +1214,11 @@ function buildPlayerDetailHTML(p){
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-          <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} onchange="if(this.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer;display:none">전체
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+          <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
         </label>
-        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-          <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} onchange="const arr=window._playerModalYears||[];if(this.checked){arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer;display:none">${y}년
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+          <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
         style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
@@ -1358,14 +1376,14 @@ function buildPlayerDetailHTML(p){
       seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
         ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-          <label class="season-filter-chip ${window._playerSeasonFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerSeasonFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerSeasonFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-            <input type="checkbox" ${window._playerSeasonFilters.length===0?'checked':''} onchange="if(this.checked){window._playerSeasonFilters=[];window._playerSeasonFilter='전체';}else{window._playerSeasonFilters=seasons.map(s=>s.id);window._playerSeasonFilter='multi';}playerHistPage=0;${_rbFn}" style="cursor:pointer;display:none">전체
+          <label class="season-filter-chip ${window._playerSeasonFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerSeasonFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerSeasonFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerSeasonFilters=[];window._playerSeasonFilter='전체';}else{window._playerSeasonFilters=seasons.map(s=>s.id);window._playerSeasonFilter='multi';}playerHistPage=0;${_rbFn}">
+            <input type="checkbox" ${window._playerSeasonFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
           </label>
           ${seasons.map(s=>{
             const isOn=window._playerSeasonFilters.includes(s.id);
             const _sid=escJS(s.id);
-            return `<label class="season-filter-chip ${isOn?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
-              <input type="checkbox" value="${s.id}" ${isOn?'checked':''} onchange="const arr=window._playerSeasonFilters||[];if(this.checked){arr.push('${s.id}');}else{const idx=arr.indexOf('${s.id}');if(idx>-1)arr.splice(idx,1);}window._playerSeasonFilters=arr;window._playerSeasonFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'전체');playerHistPage=0;${_rbFn}" style="cursor:pointer;display:none">${s.name}
+            return `<label class="season-filter-chip ${isOn?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerSeasonFilters||[];if(cb.checked){if(!arr.includes('${s.id}'))arr.push('${s.id}');}else{const idx=arr.indexOf('${s.id}');if(idx>-1)arr.splice(idx,1);}window._playerSeasonFilters=arr;window._playerSeasonFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'전체');playerHistPage=0;${_rbFn}">
+              <input type="checkbox" value="${s.id}" ${isOn?'checked':''} style="cursor:pointer;pointer-events:none">${s.name}
             </label>`;
           }).join('')}
         </div>`:`<button onclick="window._playerSeasonFilter='전체';window._playerSeasonFilters=[];playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
