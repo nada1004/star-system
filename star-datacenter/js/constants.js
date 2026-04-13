@@ -638,3 +638,12 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }
+
+// game 객체에서 playerA, playerB, winner 정보를 추출해서 history 업데이트
+function updatePlayerHistoryFromGame(game, date, mode){
+  if(!game.playerA||!game.playerB||!game.winner)return;
+  const winName=game.winner==='A'?game.playerA:game.winner==='B'?game.playerB:game.winner;
+  const loseName=game.winner==='A'?game.playerB:game.winner==='B'?game.playerA:'';
+  if(!winName||!loseName)return;
+  applyGameResult(winName,loseName,date,game.map||'',game._id||'',game.univA||'',game.univB||'',mode);
+}

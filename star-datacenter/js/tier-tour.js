@@ -3626,10 +3626,22 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 선수 history 업데이트
+    (miniM[reIdx].sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        updatePlayerHistoryFromGame(game, d, 'mini');
+      });
+    });
   } else if(reMode==='univm'){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        updatePlayerHistoryFromGame(game, d, 'univ');
+      });
+    });
   } else if(reMode==='comp'){
     const c=comps[reIdx];c.d=d;c.n=document.getElementById('re-cn').value;
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
@@ -3641,12 +3653,24 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        updatePlayerHistoryFromGame(game, m.d, 'pro');
+      });
+    });
   } else if(reMode==='tt'){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        updatePlayerHistoryFromGame(game, m.d, 'tier');
+      });
+    });
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
