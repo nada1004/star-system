@@ -1727,8 +1727,8 @@ function _b2PlayersView() {
     </div>`;
   }
 
-  // 기본 선택 선수 (랜덤 선택 제거, 항상 첫 번째 선수 선택)
-  if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+  // 기본 선택 선수 (필터 변경 시에만 첫 번째 선수 선택, 초기 로드 시 localStorage 유지)
+  if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
   }
 
@@ -1778,10 +1778,15 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
-  const leftSize = layoutSettings.leftSize || 55;
+  const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
+  const pcThumbSize = layoutSettings.pcThumbSize || 116;
+  const mobileThumbSize = layoutSettings.mobileThumbSize || 80;
+  const tabletThumbSize = layoutSettings.tabletThumbSize || 100;
+  const mobileThumbFit = layoutSettings.mobileThumbFit || 'cover';
+  const tabletThumbFit = layoutSettings.tabletThumbFit || 'cover';
   
   let h = `
     <style>
@@ -2046,15 +2051,22 @@ function _b2PlayersView() {
       .b2-players-card.active {
         transform: translateY(-4px);
       }
+      .b2-players-thumbnail {
+        width: ${pcThumbSize}px;
+        height: ${pcThumbSize}px;
+      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
-          height: auto;
-          min-height: auto;
-          gap: 14px;
+        }
+        .b2-players-thumbnail {
+          width: ${mobileThumbSize}px;
+          height: ${mobileThumbSize}px;
+        }
+        .b2-players-thumbnail img {
+          object-fit: ${mobileThumbFit};
         }
         .b2-players-main {
-          flex: none;
           width: 100%;
           min-height: ${mobileHeight}px;
           height: clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px);
@@ -2099,10 +2111,6 @@ function _b2PlayersView() {
         .b2-players-info {
           padding: 20px;
         }
-        .b2-players-thumbnail {
-          height: 80px;
-          font-size: 28px;
-        }
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
@@ -2110,6 +2118,13 @@ function _b2PlayersView() {
           height: auto;
           min-height: auto;
           gap: 14px;
+        }
+        .b2-players-thumbnail {
+          width: ${tabletThumbSize}px;
+          height: ${tabletThumbSize}px;
+        }
+        .b2-players-thumbnail img {
+          object-fit: ${tabletThumbFit};
         }
         .b2-players-main {
           flex: none;
@@ -2156,10 +2171,6 @@ function _b2PlayersView() {
         }
         .b2-players-info {
           padding: 20px;
-        }
-        .b2-players-thumbnail {
-          height: 80px;
-          font-size: 28px;
         }
       }
       .b2-players-filter-btn {
@@ -2249,11 +2260,11 @@ function _b2PlayersView() {
     };
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid ${isActive?playerTheme.border:'transparent'};box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
         ${p.photo 
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:cover;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
-          : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="border-radius:10px;object-fit:cover;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="b2-players-thumbnail" style="border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+          : `<div class="b2-players-thumbnail" style="border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
         <div class="b2-players-label" style="font-size:14px;font-weight:600;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
       </div>
