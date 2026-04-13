@@ -862,7 +862,7 @@ function buildPlayerDetailHTML(p){
   // ── 연도 필터 (indM/gjM 포함) ──
   const _year=window._playerModalYear||'';
   const _histDupKey=h=>{
-    if(h?.matchId) return `mid:${h.matchId}`;
+    if(h?.matchId) return `mid:${h.matchId}|${h?.map||'-'}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
   // p.history 중복 제거
