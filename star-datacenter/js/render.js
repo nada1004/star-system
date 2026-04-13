@@ -845,7 +845,7 @@ function buildPlayerDetailHTML(p){
         if(wn!==p.name&&ln!==p.name)return;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:'대회',_readOnly:true});
+        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:tn.type==='tier'?'티어대회':'대회',_readOnly:true});
       });});
     });
   });

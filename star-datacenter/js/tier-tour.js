@@ -469,7 +469,7 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tourschedule','grpedit'];
+  const _validSubs=['input','records','rank','league','grprank','tourschedule','bktrecords','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
@@ -480,6 +480,7 @@ function rTierTourTab(C, T){
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
     {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
+    {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
   h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
@@ -495,6 +496,26 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
     h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
+  } else if(_ttSub==='bktrecords'){
+    if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
+    const _bktRecs=ttM.filter(m=>m.compName===_ttCurComp&&m.stage==='bkt');
+    // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
+    const _bktIds=new Set(_bktRecs.map(m=>m._id));
+    const _bktFromBracket=[];
+    const _br=_curTierTn.bracket||{};
+    Object.values(_br.matchDetails||{}).forEach(m=>{
+      if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
+        _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt'});
+      }
+    });
+    (_br.manualMatches||[]).forEach(m=>{
+      if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
+        _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt',rndLabel:m.rndLabel||'토너먼트 경기'});
+      }
+    });
+    const _allBkt=[..._bktRecs,..._bktFromBracket].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
+    h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환
@@ -2392,6 +2413,12 @@ function _bktPasteApplyLogic(savable, tn){
       applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
     });
   });
+  // 티어대회 브라켓: ttM에도 동기화 (기록 탭에서 표시되도록)
+  if(tn&&tn.type==='tier'){
+    const _ei=ttM.findIndex(x=>x._id===matchId);
+    const _rec={_id:matchId,d:m.d||dateStr,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
+    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
+  }
   save();
   const _matchModal=document.getElementById('grpMatchModal');
   if(_matchModal&&_matchModal.style.display!=='none'&&_matchModal.offsetParent!==null){
