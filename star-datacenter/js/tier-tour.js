@@ -3626,6 +3626,8 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 이전 기록 롤백
+    if(miniM[reIdx]._id)revertMatchRecord({...miniM[reIdx],_id:miniM[reIdx]._id});
     // miniM에 _id가 없으면 생성
     if(!miniM[reIdx]._id)miniM[reIdx]._id=genId();
     // 선수 history 업데이트
@@ -3639,6 +3641,8 @@ function saveRow(){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 이전 기록 롤백
+    if(m._id)revertMatchRecord({...m,_id:m._id});
     // univM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -3659,6 +3663,8 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 이전 기록 롤백
+    if(m._id)revertMatchRecord({...m,_id:m._id});
     // proM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -3674,6 +3680,8 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 이전 기록 롤백
+    if(m._id)revertMatchRecord({...m,_id:m._id});
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
