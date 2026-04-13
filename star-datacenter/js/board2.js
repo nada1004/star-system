@@ -2087,7 +2087,7 @@ function _b2PlayersView() {
           object-fit: ${mobileThumbFit};
         }
       }
-      @media (min-width: 769px) and (max-width: 1024px) {
+      @media (min-width: 769px) and (max-width: 1366px) {
         .b2-players-thumbnail {
           width: ${tabletThumbSize}px;
           height: ${tabletThumbSize}px;
@@ -2154,7 +2154,7 @@ function _b2PlayersView() {
           font-size: 28px;
         }
       }
-      @media (min-width: 769px) and (max-width: 1024px) {
+      @media (min-width: 769px) and (max-width: 1366px) {
         .b2-players-wrapper {
           flex-direction: column;
           height: auto;
