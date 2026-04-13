@@ -422,7 +422,7 @@ function _bktPasteApplyLogic(savable, tn){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'대회');
+      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
     });
   });
   save();
@@ -479,10 +479,10 @@ function rTierTourTab(C, T){
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`).join('')}</div>`;
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -2389,7 +2389,7 @@ function _bktPasteApplyLogic(savable, tn){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'대회');
+      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
     });
   });
   save();
@@ -4006,5 +4006,62 @@ let statsSub='overview';
 function rStats(C,T){
   T.innerText='Statistics';
   C.innerHTML='<div style=`"padding:40px;text-align:center`">Statistics feature coming soon.</div>';
+}
+
+// 토너먼트 버튼 우클릭 메뉴
+function showTournamentContext(e){
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const existingMenu = document.getElementById('tournament-context-menu');
+  if(existingMenu) existingMenu.remove();
+  
+  const menu = document.createElement('div');
+  menu.id = 'tournament-context-menu';
+  menu.style.cssText = `
+    position: fixed;
+    left: ${e.clientX}px;
+    top: ${e.clientY}px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 99999;
+    min-width: 160px;
+    padding: 4px 0;
+  `;
+  
+  menu.innerHTML = `
+    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f9fafb'" 
+         onmouseout="this.style.background='white'"
+         onclick="goToTournamentRecords()">
+      <span style="font-size: 14px">🏆</span>
+      <span>토너먼트 기록</span>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  const closeMenu = (ev) => {
+    if(!menu.contains(ev.target)){
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 10);
+}
+
+// 대전기록 탭의 티어대회 토너먼트 서브탭으로 이동
+function goToTournamentRecords(){
+  const menu = document.getElementById('tournament-context-menu');
+  if(menu) menu.remove();
+  
+  curTab = 'hist';
+  histSub = 'tiertour-bkt';
+  openDetails = {};
+  if(!window.histPage) window.histPage = {};
+  window.histPage['tiertour-bkt'] = 0;
+  render();
 }
 
