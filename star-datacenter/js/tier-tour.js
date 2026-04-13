@@ -1687,6 +1687,11 @@ function saveB2LayoutSettings(){
   if(typeof save==='function')save();
   alert('이미지탭 레이아웃이 저장되었습니다.');
   if(typeof render === 'function') render();
+  // board2 탭이 열려있으면 다시 렌더링
+  if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')) {
+    document.getElementById('b2-content').innerHTML = _b2PlayersView();
+    if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
+  }
 }
 
 // ── 구현황판 밝기 저장 함수 ──
