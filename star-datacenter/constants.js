@@ -175,7 +175,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const txt=p?.race||'?';
     return '<span style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42)">'+txt+'</span>';
   }
-  return '<img src="'+p.photo+'" style="'+base+';object-fit:cover;'+bdr+'" onerror="this.style.display=\'none\'">';
+  return '<img src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
