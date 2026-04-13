@@ -618,14 +618,12 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: matchId가 있을 때만 체크 (없으면 중복 체크하지 않음)
+  // 중복 체크: matchId가 있을 때도 map과 opp 체크
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  if(matchId){
-    const wDup=(w.history||[]).find(h=>h.matchId===matchId);
-    const lDup=(l.history||[]).find(h=>h.matchId===matchId);
-    if(wDup||lDup)return; // 이미 기록되어 있으면 중단
-  }
+  const wDup=(w.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===l.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===l.name));
+  const lDup=(l.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===w.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===w.name));
+  if(wDup||lDup)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -642,7 +640,7 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
 }
 
 // game 객체에서 playerA, playerB, winner 정보를 추출해서 
-// applyGameResult를 호출하고 history 길이를 제한한다.
+// applyGameResult를 호출한다.
 function updatePlayerHistoryFromGame(game, date, mode){
   if(!game.playerA || !game.playerB || !game.winner) return;
 
@@ -656,10 +654,4 @@ function updatePlayerHistoryFromGame(game, date, mode){
   // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
   applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
                   game.univA||'', game.univB||'', mode);
-
-  // history 길이 제한 (30개 초과 시 가장 오래된 기록 제거)
-  const pA = players.find(p => p.name === winName);
-  const pB = players.find(p => p.name === loseName);
-  if(pA && pA.history && pA.history.length > 30) pA.history.pop();
-  if(pB && pB.history && pB.history.length > 30) pB.history.pop();
 }
