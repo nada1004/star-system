@@ -903,7 +903,6 @@ function rCfg(C,T){
   };
   setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
   }
-} // end first rCfg
 
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
