@@ -59,13 +59,13 @@ function _b2SetImgSetting(playerName, key, val) {
   s[key] = val;
   _b2SaveImgSettings();
 }
-function _b2ResetImgSettings(playerName, slot) {
+window._b2ResetImgSettings = function(playerName, slot) {
   // 전역 설정 초기화 (모든 선수 동일하게 적용)
   if (slot === 'primary' || slot === 'secondary') {
     _b2GlobalImgSettings[slot] = _b2DefaultSingleImgSettings();
     _b2SaveImgSettings();
   }
-}
+};
 function _b2GetImgDomId(slot) {
   return slot === 'secondary' ? 'b2-main-img-2' : 'b2-main-img-1';
 }
@@ -219,7 +219,7 @@ function _b2ScheduleImageSwap(playerName) {
     if (curImg2) curImg2.style.opacity = '1';
   }, 1000);
 }
-function _b2RefreshImageControls(playerName, slot) {
+window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.zoom = settings.scale;
   settings.fill = settings.fit;
@@ -236,14 +236,14 @@ function _b2RefreshImageControls(playerName, slot) {
     btn.classList.toggle('active', btn.dataset.fit === settings.fit);
   });
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
-function _b2CenterImage(playerName, slot) {
+};
+window._b2CenterImage = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.offsetX = 0;
   settings.offsetY = 0;
   _b2SaveImgSettings();
   _b2RefreshImageControls(playerName, slot);
-}
+};
 function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
   const settings = _b2GetImgSettings(playerName, slot);
   const safeName = (playerName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -2240,6 +2240,7 @@ function _b2PlayersView() {
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
         
+        ${isLoggedIn ? `
         <!-- 이미지 컨트롤 패널 -->
         <div class="b2-players-img-controls" id="b2-img-controls">
           <div class="b2-players-controls-title">🎨 이미지 설정</div>
@@ -2249,6 +2250,7 @@ function _b2PlayersView() {
         
         <!-- 컨트롤 패널 토글 버튼 -->
         <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+        ` : ''}
         
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
@@ -2306,7 +2308,7 @@ function _b2PlayersView() {
 }
 
 // 이미지 설정 실시간 업데이트 함수
-function _b2UpdateImgSetting(playerName, slot, key, val) {
+window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   if (val === undefined) {
     val = key;
     key = slot;
@@ -2326,10 +2328,10 @@ function _b2UpdateImgSetting(playerName, slot, key, val) {
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
+};
 
 // 이미지 위치 이동 함수
-function _b2MoveImg(playerName, slot, dx, dy) {
+window._b2MoveImg = function(playerName, slot, dx, dy) {
   if (dy === undefined) {
     dy = dx;
     dx = slot;
@@ -2345,7 +2347,7 @@ function _b2MoveImg(playerName, slot, dx, dy) {
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
+};
 
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
@@ -2383,6 +2385,7 @@ function _b2UpdateMainDisplay(playerName) {
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
       
+      ${isLoggedIn ? `
       <!-- 이미지 컨트롤 패널 -->
       <div class="b2-players-img-controls" id="b2-img-controls">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
@@ -2392,6 +2395,7 @@ function _b2UpdateMainDisplay(playerName) {
       
       <!-- 컨트롤 패널 토글 버튼 -->
       <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+      ` : ''}
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
