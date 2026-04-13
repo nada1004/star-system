@@ -1364,6 +1364,12 @@ function rCfg(C,T){
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 기본 이미지 설정을 구성합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-auto-fit" checked> 카드에 맞게 자동 조절
+        </label>
+        <span style="font-size:10px;color:var(--gray-l)">(이미지 비율에 맞춰 자동 조절)</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">첫번째 이미지 맞춤:</label>
         <select id="cfg-img-fill" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
           <option value="cover">꽉 차게 (cover)</option>
@@ -1556,6 +1562,7 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-pc-thumb-size'))document.getElementById('cfg-b2-pc-thumb-size').value=b2Layout.pcThumbSize||116;
     // 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    if(document.getElementById('cfg-img-auto-fit'))document.getElementById('cfg-img-auto-fit').checked=imgSettings.autoFit!==false;
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').value=imgSettings.fill||'cover';
     if(document.getElementById('cfg-img-fill-second'))document.getElementById('cfg-img-fill-second').value=imgSettings.fillSecond||'cover';
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
@@ -1584,7 +1591,7 @@ function rCfg(C,T){
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-fill','cfg-img-fill-second','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-auto-fit','cfg-img-fill','cfg-img-fill-second','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
@@ -1712,6 +1719,7 @@ function saveOldDashboardBrightness(){
 // ── 이미지 설정 저장 함수 ──
 function saveImageSettings(){
   const settings = {
+    autoFit: document.getElementById('cfg-img-auto-fit')?.checked !== false,
     fill: document.getElementById('cfg-img-fill')?.value || 'cover',
     fillSecond: document.getElementById('cfg-img-fill-second')?.value || 'cover',
     scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
@@ -1725,7 +1733,7 @@ function saveImageSettings(){
   // 이미지탭(board2)과 동기화를 위한 저장
   const b2Settings = {
     primary: {
-      fill: settings.fill,
+      fill: settings.autoFit ? 'contain' : settings.fill,
       scale: settings.scale * 100,
       brightness: settings.brightness * 100,
       offsetX: 0,
@@ -1735,7 +1743,7 @@ function saveImageSettings(){
       posY: 0
     },
     secondary: {
-      fill: settings.fillSecond,
+      fill: settings.autoFit ? 'contain' : settings.fillSecond,
       scale: settings.secondScale * 100,
       brightness: settings.brightness * 100,
       offsetX: 0,
