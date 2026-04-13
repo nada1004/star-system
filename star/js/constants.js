@@ -310,7 +310,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const txt=p?.race||'?';
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:cover;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);

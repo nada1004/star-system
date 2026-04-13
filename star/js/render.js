@@ -187,6 +187,9 @@ function openEPFromModal(nameArg) {
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
+let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
+let _playerHistBulkMode = false; // 일괄 선택 모드
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
@@ -235,8 +238,183 @@ function deletePlayerHist(playerName, histIdx){
   }
   if(typeof fixPoints==='function')fixPoints();
   save();
+  render();
+  const pb=document.getElementById('playerModalBody');
+  if(pb){
+    const p=players.find(x=>x.name===playerName);
+    if(p){
+      pb.innerHTML=buildPlayerDetailHTML(p);
+      injectUnivIcons(pb);
+    }
+  }
+}
+
+function deletePlayerHistBulk(playerName){
+  if(!isLoggedIn)return;
+  if(_playerHistBulkSelected.size===0){
+    alert('선택된 경기 기록이 없습니다.');
+    return;
+  }
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  // 인덱스 내림차순 정렬 후 삭제 (인덱스 변동 방지)
+  const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
+  sortedIdx.forEach(idx=>{
+    if(p.history[idx]){
+      const hh=p.history[idx];
+      if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
+      if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
+      else { p.loss=Math.max(0,(p.loss||0)-1); p.points=(p.points||0)+3; }
+      // 상대 기록도 차감
+      const opp=players.find(x=>x.name===hh.opp);
+      if(opp){
+        const oppHist=opp.history||[];
+        const oppIdx=oppHist.findIndex(o=>o.opp===playerName&&o.date===hh.date&&o.map===hh.map);
+        if(oppIdx>=0){
+          const oh=oppHist[oppIdx];
+          if(oh.eloDelta!=null) opp.elo=(opp.elo||ELO_DEFAULT)-oh.eloDelta;
+          if(oh.result==='승'){ opp.win=Math.max(0,(opp.win||0)-1); opp.points=(opp.points||0)-3; }
+          else { opp.loss=Math.max(0,(opp.loss||0)-1); opp.points=(opp.points||0)+3; }
+          oppHist.splice(oppIdx,1);
+        }
+      }
+      p.history.splice(idx,1);
+    }
+  });
+  _playerHistBulkSelected.clear();
+  if(typeof fixPoints==='function')fixPoints();
+  save();
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
   injectUnivIcons(document.getElementById('playerModalBody'));
+}
+
+function togglePlayerHistBulkMode(){
+  _playerHistBulkMode=!_playerHistBulkMode;
+  _playerHistBulkSelected.clear();
+  if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(window._playerModalCurrentName||'');
+}
+
+function togglePlayerHistSelect(idx){
+  if(_playerHistBulkSelected.has(idx)){
+    _playerHistBulkSelected.delete(idx);
+  }else{
+    _playerHistBulkSelected.add(idx);
+  }
+  const btn=document.getElementById('bulk-delete-btn');
+  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+}
+
+function togglePlayerHistSelectAll(playerName, allIndices){
+  if(_playerHistBulkSelected.size===allIndices.length){
+    _playerHistBulkSelected.clear();
+  }else{
+    allIndices.forEach(idx=>_playerHistBulkSelected.add(idx));
+  }
+  const btn=document.getElementById('bulk-delete-btn');
+  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  const editBtn=document.getElementById('bulk-edit-btn');
+  if(editBtn) editBtn.textContent=`✏️ 선택 수정 (${_playerHistBulkSelected.size})`;
+  const checkboxes=document.querySelectorAll('.hist-select-checkbox');
+  checkboxes.forEach(cb=>cb.checked=_playerHistBulkSelected.has(parseInt(cb.value)));
+}
+
+function openPlayerHistBulkEdit(playerName){
+  if(!isLoggedIn)return;
+  if(_playerHistBulkSelected.size===0){
+    alert('선택된 경기 기록이 없습니다.');
+    return;
+  }
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  
+  // 선택된 기록들의 공통 값 추출
+  const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
+  const allModes=[...new Set(selectedHists.map(h=>h.mode).filter(Boolean))];
+  const allMaps=[...new Set(selectedHists.map(h=>h.map).filter(Boolean))];
+  
+  document.getElementById('reTitle').textContent=`✏️ 일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
+  document.getElementById('reBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">
+        ⚠️ 선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">종목 변경</label>
+        <select id="phe-bulk-mode" style="width:100%">
+          <option value="">변경 안함</option>
+          ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
+          <option value="개인전">개인전</option>
+          <option value="프로리그">프로리그</option>
+          <option value="끝장전">끝장전</option>
+          <option value="미니대전">미니대전</option>
+          <option value="시빌워">시빌워</option>
+          <option value="대학대전">대학대전</option>
+          <option value="대학CK">대학CK</option>
+          <option value="티어대회">티어대회</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">맵 변경</label>
+        <div style="display:flex;gap:6px">
+          <select id="phe-bulk-map-sel" style="flex:1" onchange="const v=this.value;const inp=document.getElementById('phe-bulk-map');if(v)inp.value=v;">
+            <option value="">목록에서 선택</option>
+            ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
+          </select>
+          <input id="phe-bulk-map" type="text" placeholder="또는 직접 입력" style="flex:1">
+        </div>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">날짜 변경</label>
+        <input id="phe-bulk-date" type="date" placeholder="YYYY-MM-DD" style="width:100%">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-g" onclick="savePlayerHistBulkEdit('${playerName}')" style="flex:1">저장</button>
+        <button class="btn btn-w" onclick="cm('reModal')" style="flex:1">취소</button>
+      </div>
+    </div>
+  `;
+  om('reModal');
+}
+
+function savePlayerHistBulkEdit(playerName){
+  if(!isLoggedIn)return;
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  
+  const newMode=document.getElementById('phe-bulk-mode').value;
+  const newMap=document.getElementById('phe-bulk-map').value;
+  const newDate=document.getElementById('phe-bulk-date').value;
+  
+  if(!newMode&&!newMap&&!newDate){
+    alert('변경할 항목을 선택해주세요.');
+    return;
+  }
+  
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 수정할까요?`))return;
+  
+  const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
+  sortedIdx.forEach(idx=>{
+    if(p.history[idx]){
+      const hh=p.history[idx];
+      if(newMode) hh.mode=newMode;
+      if(newMap) hh.map=newMap;
+      if(newDate) hh.date=newDate;
+    }
+  });
+  
+  _playerHistBulkSelected.clear();
+  save();
+  render();
+  cm('reModal');
+  const pb=document.getElementById('playerModalBody');
+  if(pb){
+    const p=players.find(x=>x.name===playerName);
+    if(p){
+      pb.innerHTML=buildPlayerDetailHTML(p);
+      injectUnivIcons(pb);
+    }
+  }
 }
 
 function openPlayerHistEdit(playerName, histIdx){
@@ -372,11 +550,15 @@ function openPlayerHistEdit(playerName, histIdx){
       saveBtnOrig.onclick=_prevOnclick;
       if(typeof fixPoints==='function')fixPoints();
       save();
+      render();
       cm('reModal');
       const pb=document.getElementById('playerModalBody');
-      if(pb&&window._playerModalCurrentName===playerName){
-        pb.innerHTML=buildPlayerDetailHTML(p);
-        injectUnivIcons(pb);
+      if(pb){
+        const p=players.find(x=>x.name===playerName);
+        if(p){
+          pb.innerHTML=buildPlayerDetailHTML(p);
+          injectUnivIcons(pb);
+        }
       }
     };
   }
@@ -845,17 +1027,24 @@ function buildPlayerDetailHTML(p){
         if(wn!==p.name&&ln!==p.name)return;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:'대회',_readOnly:true});
+        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:tn.type==='tier'?'티어대회':'대회',_readOnly:true});
       });});
     });
   });
   // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
   const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>!h.matchId||!_existingMatchIds.has(h.matchId)||!_existingKeys.has(_histDupKey(h)));
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
-  const _hist=_year?_histAll.filter(h=>(h.date||'').startsWith(_year)):_histAll;
-  // 소스별 필터 (mode 기반)
+  // 연도 필터링 (단일 또는 멀티)
+  const _hist=_year?_histAll.filter(h=>{
+    const y=(h.date||'').slice(0,4);
+    if(window._playerModalYears&&window._playerModalYears.length>0) return window._playerModalYears.includes(y);
+    return y.startsWith(_year);
+  }):_histAll;
+  // 소스별 필터 (mode 기반 - 단일 또는 멀티)
   if(window._playerHistFilter===undefined)window._playerHistFilter=null;
-  const _modeHist=window._playerHistFilter?_hist.filter(hh=>hh.mode===window._playerHistFilter):_hist;
+  const _modeHist=(window._playerHistFilters&&window._playerHistFilters.length>0)
+    ?_hist.filter(hh=>window._playerHistFilters.includes(hh.mode))
+    :(window._playerHistFilter?_hist.filter(hh=>hh.mode===window._playerHistFilter):_hist);
   const _availYears=[...new Set(_histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
   _modeHist.forEach(h=>{
@@ -992,32 +1181,52 @@ function buildPlayerDetailHTML(p){
 
   // ── 소스별 필터 드롭다운 ──
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
+  // 멀티 선택 지원을 위한 배열 초기화
+  if(!window._playerHistFilters) window._playerHistFilters=[];
+  if(!window._playerHistFilter) window._playerHistFilter='';
   const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
     <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📂 종목</span>
-    <select onchange="window._playerHistFilter=this.value||null;window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
+    ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+        <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
+      </label>
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+        <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
+      </label>`).join('')}
+    </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
       style="padding:4px 10px;border:1.5px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
       <option value="" ${!window._playerHistFilter?'selected':''}>전체</option>
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
-    </select>
+    </select>`}
   </div>`:'';
   h+=filterBar;
 
   // ── 연도 필터 드롭다운 ──
   if(_availYears.length>0){
     const _pSafeY=escJS(p.name);
+    // 멀티 선택 지원을 위한 배열 초기화
+    if(!window._playerModalYears) window._playerModalYears=[];
+    if(!window._playerModalYear) window._playerModalYear='';
     const _yWin=_modeHist.filter(h=>h.result==='승').length;
     const _yLoss=_modeHist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
-      <select onchange="window._playerModalYear=this.value;window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
+      ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+          <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
+        </label>
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+          <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
+        </label>`).join('')}
+      </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
         style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
-      </select>
+      </select>`}
       ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
-      ${_year?`<button onclick="window._playerModalYear='';window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
     </div>`;
   }
 
@@ -1161,14 +1370,28 @@ function buildPlayerDetailHTML(p){
     let seasonBar='';
     if(typeof seasons!=='undefined' && seasons && seasons.length){
       const _rbFn=`window._rebuildPlayerDetail('${escJS(p.name)}')`;
+      // 멀티 선택 지원을 위한 배열 초기화
+      if(!window._playerSeasonFilters) window._playerSeasonFilters=[];
+      if(!window._playerSeasonFilter) window._playerSeasonFilter='전체';
       seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
-        <button onclick="window._playerSeasonFilter='전체';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
+        ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <label class="season-filter-chip ${window._playerSeasonFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerSeasonFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerSeasonFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerSeasonFilters=[];window._playerSeasonFilter='전체';}else{window._playerSeasonFilters=seasons.map(s=>s.id);window._playerSeasonFilter='multi';}playerHistPage=0;${_rbFn}">
+            <input type="checkbox" ${window._playerSeasonFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
+          </label>
+          ${seasons.map(s=>{
+            const isOn=window._playerSeasonFilters.includes(s.id);
+            const _sid=escJS(s.id);
+            return `<label class="season-filter-chip ${isOn?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerSeasonFilters||[];if(cb.checked){if(!arr.includes('${s.id}'))arr.push('${s.id}');}else{const idx=arr.indexOf('${s.id}');if(idx>-1)arr.splice(idx,1);}window._playerSeasonFilters=arr;window._playerSeasonFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'전체');playerHistPage=0;${_rbFn}">
+              <input type="checkbox" value="${s.id}" ${isOn?'checked':''} style="cursor:pointer;pointer-events:none">${s.name}
+            </label>`;
+          }).join('')}
+        </div>`:`<button onclick="window._playerSeasonFilter='전체';window._playerSeasonFilters=[];playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
         ${seasons.map(s=>{
           const isOn=window._playerSeasonFilter===s.id;
           const _sid=escJS(s.id);
-          return `<button onclick="window._playerSeasonFilter='${_sid}';playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
-        }).join('')}
+          return `<button onclick="window._playerSeasonFilter='${_sid}';window._playerSeasonFilters=[];playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
+        }).join('')}`}
       </div>`;
     }
 
@@ -1176,10 +1399,13 @@ function buildPlayerDetailHTML(p){
       if(!window._playerSeasonFilter||window._playerSeasonFilter==='전체') return null;
       return (typeof seasons!=='undefined'?seasons:[]).find(s=>s.id===window._playerSeasonFilter)||null;
     })();
-    const filteredHist = _curSeason
+    const _curSeasons=(window._playerSeasonFilters&&window._playerSeasonFilters.length>0)
+      ?(typeof seasons!=='undefined'?seasons:[]).filter(s=>window._playerSeasonFilters.includes(s.id))
+      :(_curSeason?[_curSeason]:[]);
+    const filteredHist = _curSeasons.length>0
       ? _modeHist.filter(hh=>{
           const d=hh.date||'';
-          return d>=(_curSeason.start||'') && d<=(_curSeason.end||'9999-99-99');
+          return _curSeasons.some(season=>d>=(season.start||'') && d<=(season.end||'9999-99-99'));
         })
       : _modeHist;
     const totalGames=filteredHist.length;
@@ -1192,10 +1418,14 @@ function buildPlayerDetailHTML(p){
       .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span></div>`;
+    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
-    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
+    const selectAllCheckbox = _playerHistBulkMode
+      ? `<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" onchange="togglePlayerHistSelectAll('${escJS(p.name)}',[${displayHist.map(h=>h._origIdx).join(',')}])" style="cursor:pointer"></th>`
+      : '';
+    const manageHeader = isLoggedIn ? '<th class="no-export" style="width:48px">관리</th>' : '';
+    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${manageHeader}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
@@ -1203,6 +1433,7 @@ function buildPlayerDetailHTML(p){
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
+      const selectCheckboxHTML=_playerHistBulkMode?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:'';
       const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
@@ -1217,6 +1448,7 @@ function buildPlayerDetailHTML(p){
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+        ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
@@ -1233,6 +1465,11 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="window._goPlayerHistPage(${curPage-1},'${escJS(p.name)}')">◀ 이전</button>
         <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
         <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="window._goPlayerHistPage(${curPage+1},'${escJS(p.name)}')">다음 ▶</button>
+        ${_playerHistBulkMode?`<button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" onclick="openPlayerHistBulkEdit('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${_playerHistBulkSelected.size})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>`:''}
+      </div>`;
+    }else if(_playerHistBulkMode){
+      h+=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
+        <button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" onclick="openPlayerHistBulkEdit('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${_playerHistBulkSelected.size})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>
       </div>`;
     }
     h+=`</div>`;

@@ -93,7 +93,7 @@ function rHist(C,T){
       <button class="stab ${histSub==='tiertour'?'on':''}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
       <button class="stab ${histSub==='tiertour-gen'?'on':''}" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
       <button class="stab ${histSub==='tiertour-league'?'on':''}" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
-      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트</button>
+      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
     const _ttAll=ttM.filter(m=>!m._proKey);

@@ -59,13 +59,13 @@ function _b2SetImgSetting(playerName, key, val) {
   s[key] = val;
   _b2SaveImgSettings();
 }
-function _b2ResetImgSettings(playerName, slot) {
+window._b2ResetImgSettings = function(playerName, slot) {
   // 전역 설정 초기화 (모든 선수 동일하게 적용)
   if (slot === 'primary' || slot === 'secondary') {
     _b2GlobalImgSettings[slot] = _b2DefaultSingleImgSettings();
     _b2SaveImgSettings();
   }
-}
+};
 function _b2GetImgDomId(slot) {
   return slot === 'secondary' ? 'b2-main-img-2' : 'b2-main-img-1';
 }
@@ -219,7 +219,7 @@ function _b2ScheduleImageSwap(playerName) {
     if (curImg2) curImg2.style.opacity = '1';
   }, 1000);
 }
-function _b2RefreshImageControls(playerName, slot) {
+window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.zoom = settings.scale;
   settings.fill = settings.fit;
@@ -236,14 +236,23 @@ function _b2RefreshImageControls(playerName, slot) {
     btn.classList.toggle('active', btn.dataset.fit === settings.fit);
   });
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
-function _b2CenterImage(playerName, slot) {
+};
+window._b2CenterImage = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.offsetX = 0;
   settings.offsetY = 0;
+  settings.posX = 0;
+  settings.posY = 0;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
-}
+  
+  // 직접 offset 값 표시 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (offsetEl) offsetEl.textContent = `0px, 0px`;
+  
+  // 이미지에 즉시 적용
+  _b2ApplyImgSettingsToDom(playerName, slot);
+};
 function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
   const settings = _b2GetImgSettings(playerName, slot);
   const safeName = (playerName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -255,12 +264,14 @@ function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
         <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
-          oninput="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
+          oninput="document.getElementById('${prefix}-scale-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          onchange="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
       </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">밝기 <span id="${prefix}-brightness-val">${settings.brightness}%</span></div>
         <input type="range" class="b2-players-img-slider" min="20" max="180" value="${settings.brightness}" ${disabled}
-          oninput="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
+          oninput="document.getElementById('${prefix}-brightness-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          onchange="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
       </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">배치</div>
@@ -387,7 +398,7 @@ function rBoard2(C, T) {
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
     <div style="position:relative">
-      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
         <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
         <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
@@ -1110,7 +1121,7 @@ function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentC
 
   // 이미지: 카드 전체를 원형으로 꽉 채움 (aspect-ratio 1:1, 둥근 모서리)
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
       + '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:none;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:flex;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
 
@@ -1294,7 +1305,7 @@ async function saveCrewImg(target, btn) {
 function _crewMemberCardStatic(name, photo, link, col, crewRole) {
   const roleTag = crewRole ? '<div style="font-size:9px;color:#ffffffbb;font-weight:700;margin-bottom:1px">' + crewRole + '</div>' : '';
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0">'
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px 10px 0 0">'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
   const overlay = '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 10px 10px;padding:18px 8px 8px;text-align:center">'
     + roleTag
@@ -1737,8 +1748,8 @@ function _b2PlayersView() {
     </div>`;
   }
 
-  // 기본 선택 선수 (랜덤 선택 제거, 항상 첫 번째 선수 선택)
-  if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+  // 기본 선택 선수 (필터 변경 시에만 첫 번째 선수 선택, 초기 로드 시 localStorage 유지)
+  if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
   }
 
@@ -1798,7 +1809,7 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
-  const leftSize = layoutSettings.leftSize || 55;
+  const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
@@ -1852,7 +1863,7 @@ function _b2PlayersView() {
         height: 100%;
         min-width: 100%;
         min-height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         object-position: center;
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
@@ -2227,6 +2238,10 @@ function _b2PlayersView() {
   const primarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'primary');
   const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
   const imgSettings = primarySettings;
+  const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const hasPrimary = !!_b2SelectedPlayer.photo;
+  const hasSecondary = !!_b2SelectedPlayer.secondProfileFile;
+  
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
@@ -2235,6 +2250,19 @@ function _b2PlayersView() {
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
+        
+        ${isLoggedIn ? `
+        <!-- 이미지 컨트롤 패널 -->
+        <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
+          <div class="b2-players-controls-title">🎨 이미지 설정</div>
+          ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
+          ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+        </div>
+        
+        <!-- 컨트롤 패널 토글 버튼 -->
+        <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+        ` : ''}
+        
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
@@ -2269,9 +2297,9 @@ function _b2PlayersView() {
     };
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid ${isActive?playerTheme.border:'transparent'};box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
-        ${p.photo 
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:cover;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
+        ${p.photo
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
           : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
@@ -2291,7 +2319,7 @@ function _b2PlayersView() {
 }
 
 // 이미지 설정 실시간 업데이트 함수
-function _b2UpdateImgSetting(playerName, slot, key, val) {
+window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   if (val === undefined) {
     val = key;
     key = slot;
@@ -2307,14 +2335,25 @@ function _b2UpdateImgSetting(playerName, slot, key, val) {
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
+  
+  // 슬라이더/버튼 클릭 시에만 컨트롤 UI 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const scaleEl = document.getElementById(`${prefix}-scale-val`);
+  const brightnessEl = document.getElementById(`${prefix}-brightness-val`);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (scaleEl) scaleEl.textContent = `${s.scale}%`;
+  if (brightnessEl) brightnessEl.textContent = `${s.brightness}%`;
+  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
+  document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.fit === s.fit);
+  });
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
+};
 
 // 이미지 위치 이동 함수
-function _b2MoveImg(playerName, slot, dx, dy) {
+window._b2MoveImg = function(playerName, slot, dx, dy) {
   if (dy === undefined) {
     dy = dx;
     dx = slot;
@@ -2326,11 +2365,15 @@ function _b2MoveImg(playerName, slot, dx, dy) {
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
+  
+  // 직접 offset 값 표시 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
-}
+};
 
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
@@ -2355,6 +2398,10 @@ function _b2UpdateMainDisplay(playerName) {
   const secondarySettings = _b2GetImgSettings(player.name, 'secondary');
   const hasSecondProfile = !!(player.secondProfileFile && player.secondProfileFile.length > 0);
 
+  const safeName = (player.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const hasPrimary = !!player.photo;
+  const hasSecondary = !!player.secondProfileFile;
+  
   if (mainBox) {
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
@@ -2363,6 +2410,19 @@ function _b2UpdateMainDisplay(playerName) {
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+      
+      ${isLoggedIn ? `
+      <!-- 이미지 컨트롤 패널 -->
+      <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
+        <div class="b2-players-controls-title">🎨 이미지 설정</div>
+        ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
+        ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+      </div>
+      
+      <!-- 컨트롤 패널 토글 버튼 -->
+      <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+      ` : ''}
+      
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
