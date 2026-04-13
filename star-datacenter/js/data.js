@@ -106,7 +106,7 @@ function syncTourneyHistory(){
 
   let added=0;
 
-  function processMatch(m, modeLabel, tn){
+  function processMatch(m, modeLabel){
     if(!m||!m._id)return;
     if(existingIds.has(m._id))return;
     (m.sets||[]).forEach(set=>{
@@ -120,36 +120,17 @@ function syncTourneyHistory(){
         added++;
       });
     });
-    // 티어대회(tourneys type=tier)면 ttM에도 동기화
-    if(tn && tn.type==='tier' && typeof ttM!=='undefined'){
-      const stage = m._bktStage || 'league';
-      const exists = ttM.some(x=>x._id===m._id);
-      if(!exists){
-        ttM.unshift({
-          _id:m._id, d:m.d, a:m.a, b:m.b,
-          sa:m.sa, sb:m.sb, sets:m.sets,
-          n:tn.name, compName:tn.name,
-          teamALabel:m.a, teamBLabel:m.b,
-          stage: stage
-        });
-      }
-    }
     existingIds.add(m._id);
   }
 
   tourneys.forEach(tn=>{
     const isTier=tn.type==='tier';
     (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>processMatch(m, isTier?'티어대회':'조별리그', tn));
+      (grp.matches||[]).forEach(m=>processMatch(m, isTier?'티어대회':'조별리그'));
     });
     const br=tn.bracket||{};
-    Object.values(br.matchDetails||{}).forEach(m=>{
-      if(m) m._bktStage='bkt';
-      processMatch(m, isTier?'티어대회':'대회', tn);
-    });
-    (br.manualMatches||[]).forEach(m=>{
-      if(m){ m._bktStage='bkt'; processMatch(m, isTier?'티어대회':'대회', tn); }
-    });
+    Object.values(br.matchDetails||{}).forEach(m=>processMatch(m, isTier?'티어대회':'대회'));
+    (br.manualMatches||[]).forEach(m=>{if(m)processMatch(m, isTier?'티어대회':'대회');});
   });
 
   if(added>0){save();}
@@ -555,36 +536,6 @@ function syncAllHistory(){
     const br=tn.bracket||{};
     Object.values(br.matchDetails||{}).forEach(m=>processTourneyMatch(m,isTier?'티어대회':'대회'));
     (br.manualMatches||[]).forEach(m=>{if(m)processTourneyMatch(m,isTier?'티어대회':'대회');});
-  });
-
-  // tourneys(type=tier) → ttM 동기화
-  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn => {
-    if(tn.type !== 'tier') return;
-    // 조별리그
-    (tn.groups||[]).forEach(grp => {
-      (grp.matches||[]).forEach(m => {
-        if(!m||!m._id) return;
-        const exists = ttM.some(x => x._id === m._id);
-        if(!exists) {
-          ttM.unshift({_id:m._id, d:m.d, a:m.a, b:m.b, sa:m.sa, sb:m.sb,
-            sets:m.sets, n:tn.name, compName:tn.name,
-            teamALabel:m.a, teamBLabel:m.b, stage:'league'});
-          added++;
-        }
-      });
-    });
-    // 브라켓(토너먼트)
-    const br = tn.bracket || {};
-    [...Object.values(br.matchDetails||{}), ...(br.manualMatches||[])].forEach(m => {
-      if(!m||!m._id) return;
-      const exists = ttM.some(x => x._id === m._id);
-      if(!exists) {
-        ttM.unshift({_id:m._id, d:m.d, a:m.a, b:m.b, sa:m.sa, sb:m.sb,
-          sets:m.sets, n:tn.name, compName:tn.name,
-          teamALabel:m.a, teamBLabel:m.b, stage:'bkt'});
-        added++;
-      }
-    });
   });
 
   if(added>0)save();

@@ -164,6 +164,28 @@ function openPlayerModal(name){
   setTimeout(()=>initPEloChart(name),60);
 }
 
+// openEPFromModal은 tier-tour.js에 정의됨. 로드 지연 대비 fallback
+function openEPFromModal(nameArg) {
+  const name = nameArg || window._playerModalCurrentName;
+  if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
+  if (typeof openEP !== 'function') {
+    // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
+    let attempts = 0;
+    const checkOpenEP = setInterval(() => {
+      attempts++;
+      if (typeof openEP === 'function') {
+        clearInterval(checkOpenEP);
+        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+      } else if (attempts >= 20) {
+        clearInterval(checkOpenEP);
+        alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
+      }
+    }, 200);
+    return;
+  }
+  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+}
+
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
 let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
@@ -840,7 +862,7 @@ function buildPlayerDetailHTML(p){
   // ── 연도 필터 (indM/gjM 포함) ──
   const _year=window._playerModalYear||'';
   const _histDupKey=h=>{
-    if(h?.matchId) return `mid:${h.matchId}|${h?.map||'-'}`;
+    if(h?.matchId) return `mid:${h.matchId}`;
     return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
   };
   // p.history 중복 제거
