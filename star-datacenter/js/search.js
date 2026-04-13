@@ -2215,8 +2215,7 @@ function pasteApply() {
           gameSet.add(key);
           return true;
         });
-        // 개인전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-        // dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
+        dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
         const games=dedupedGrp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) indM.unshift(...games);
       });
@@ -2240,8 +2239,7 @@ function pasteApply() {
           gameSet.add(key);
           return true;
         });
-        // 끝장전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-        // dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
+        dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
         const games=dedupedGrp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) gjM.unshift(...games);
       });
@@ -2253,8 +2251,7 @@ function pasteApply() {
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        // 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-        // grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
+        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
         miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
       });
@@ -2354,8 +2351,7 @@ function pasteApply() {
         return true;
       });
       dedupedGames.forEach(r => {
-        // 개인전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-        // applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
       const games = dedupedGames.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) indM.unshift(...games);
@@ -2385,8 +2381,7 @@ function pasteApply() {
         return true;
       });
       dedupedGames.forEach(r => {
-        // 끝장전은 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-        // applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
       });
       const games = dedupedGames.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) gjM.unshift(...games);
@@ -3585,8 +3580,8 @@ function proApply() {
     sa = totalA; sb = totalB;
   }
 
-  // 개인 전적 반영 - 팀 경기는 동기화 함수에서 처리하므로 저장 시 applyGameResult 호출 제거
-  // savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
+  // 개인 전적 반영 (승자=wPlayer 그대로)
+  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
 
   // A조/B조 멤버 목록 (팀 배정 기준으로)
   const mA=[], mB=[];

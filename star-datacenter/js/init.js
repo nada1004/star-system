@@ -32,12 +32,6 @@ function closeNoticePopup(){
 }
 
 function init(){
-  // 프로필 형태 설정 적용
-  (function(){
-    const _ps=(JSON.parse(localStorage.getItem('su_pd_style')||'{}').profile_shape)||'circle';
-    document.body.classList.remove('profile-circle','profile-square');
-    document.body.classList.add('profile-'+_ps);
-  })();
   fixPoints();
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){

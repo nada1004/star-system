@@ -506,3 +506,4 @@ function swNav(t,el){
     if(C) C.innerHTML='';
     render();
   }
+}

@@ -123,26 +123,25 @@ function rTotal(C,T){
         style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">`:''}
   </div>`;
 
-    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table class="role-table" style="table-layout:fixed;width:100%;border-collapse:collapse"><colgroup>
+    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
-    <col style="width:50px"><col style="width:75px"><col style="width:55px"><col style="width:260px">
-    <col class="col-hide-mobile" style="width:45px"><col class="col-hide-mobile" style="width:45px">
-    <col style="width:65px">
-    <col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:50px">
-    ${isLoggedIn?'<col style="width:65px">':''}
+    <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
+    <col style="width:52px"><col style="width:52px">
+    <col style="width:70px"><col style="width:80px"><col style="width:60px">
+    ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
-    <th style="text-align:center;white-space:nowrap;padding:8px 4px">순위</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 8px">티어</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 6px">종족</th>
-    <th style="text-align:left;padding:8px 10px">스트리머</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">승</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">패</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 8px">승률</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">포인트</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">ELO</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 4px">활동</th>
-    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 8px">관리</th>':''}
+    <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
+    <th style="text-align:left;padding:8px 12px">스트리머</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
+    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
+    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
 
   // 전체 순위 맵 (points 기준)
@@ -202,13 +201,7 @@ function rTotal(C,T){
         const displayList = rolePl.length ? [...rolePl, null, ...normalPl] : normalPl;
         let inRoleSection = rolePl.length > 0;
         
-        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="padding:10px 12px;background:linear-gradient(135deg,${crewColor}15,${crewColor}25);border-left:4px solid ${crewColor};border-radius:8px;margin:8px 0">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:18px">👑</span>
-            <span style="font-weight:800;font-size:13px;color:${crewColor}">직책자</span>
-            <span style="background:${crewColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">${rolePl.length}명</span>
-          </div>
-        </td></tr>`;
+        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="background:${crewColor}22;color:${crewColor}">?? ?? (${rolePl.length}?)</td></tr>`;
         
         displayList.forEach(p => {
           if(p===null){
@@ -238,7 +231,7 @@ function rTotal(C,T){
             </td>
             <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
             <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=60?'#2563eb':wr>=50?'var(--green)':'var(--red)'}">
+            <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
               ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}?</span>`:''}
             </td>
             <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
@@ -253,7 +246,7 @@ function rTotal(C,T){
               if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="?? ?? (30? ??)">?</span>`;
               return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="??? (30? ??)">?</span>';
             })()}</td>
-            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="window.openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
+            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
 
           </tr>`;
         });
@@ -289,13 +282,7 @@ function rTotal(C,T){
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="padding:10px 12px;background:linear-gradient(135deg,${(u.color||'#6366f1')}15,${(u.color||'#6366f1')}25);border-left:4px solid ${u.color||'#6366f1'};border-radius:8px;margin:8px 0">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:18px">👑</span>
-        <span style="font-weight:800;font-size:13px;color:${u.color||'#6366f1'}">직책자</span>
-        <span style="background:${u.color||'#6366f1'};color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">${_rolePl.length}명</span>
-      </div>
-    </td></tr>`;
+    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
     _displayList.forEach(p=>{
       if(p===null){
         // 구분자 - 직책 섹션 끝, 일반 선수 시작
@@ -319,13 +306,13 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img class="player-photo-img" src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
+            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
             <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
         <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
         <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=60?'#2563eb':wr>=50?'var(--green)':'var(--red)'}">
+        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
           ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}전</span>`:''}
         </td>
         <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
@@ -340,7 +327,7 @@ function rTotal(C,T){
           if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
           return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
         })()}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="window.openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
@@ -360,7 +347,7 @@ function rTotal(C,T){
 
 function _buildGalleryView(rankMap){
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
-  let html='<div class="gallery-grid-wrap">';
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루'&&!p.retired);
