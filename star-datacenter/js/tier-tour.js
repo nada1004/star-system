@@ -1328,71 +1328,33 @@ function rCfg(C,T){
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">이미지 영역 크기:</label>
         <input type="number" id="cfg-b2-left-size" value="55" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
         <span style="font-size:11px;color:var(--gray-l)">%</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
-        <input type="number" id="cfg-b2-right-size" value="45" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">%</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 높이:</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">높이:</label>
         <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="800" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">px</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 높이:</label>
-        <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">px</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 높이:</label>
-        <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
         <span style="font-size:11px;color:var(--gray-l)">px</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
         </label>
+        <span style="font-size:10px;color:var(--gray-l)">(화면 크기에 따라 자동 조절)</span>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">스트리머 썸네일 설정</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">스트리머 썸네일</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" id="cfg-b2-thumb-auto-resize" checked> 썸네일 자동 크기 조절
-          </label>
-          <span style="font-size:10px;color:var(--gray-l)">(화면 크기에 따라 자동 조절)</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 썸네일 크기:</label>
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">크기:</label>
           <input type="number" id="cfg-b2-pc-thumb-size" value="116" min="80" max="200" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
           <span style="font-size:11px;color:var(--gray-l)">px</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 썸네일 크기:</label>
-          <input type="number" id="cfg-b2-mobile-thumb-size" value="80" min="50" max="150" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 썸네일 크기:</label>
-          <input type="number" id="cfg-b2-tablet-thumb-size" value="100" min="60" max="180" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 채우기 모드:</label>
-          <select id="cfg-b2-mobile-thumb-fit" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
-            <option value="cover">꽉 차게 (cover)</option>
-            <option value="contain">비율 유지 (contain)</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 채우기 모드:</label>
-          <select id="cfg-b2-tablet-thumb-fit" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
-            <option value="cover">꽉 차게 (cover)</option>
-            <option value="contain">비율 유지 (contain)</option>
-          </select>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+            <input type="checkbox" id="cfg-b2-thumb-auto-resize" checked> 자동 크기 조절
+          </label>
+          <span style="font-size:10px;color:var(--gray-l)">(화면 크기에 따라 자동 조절)</span>
         </div>
       </div>
       <button class="btn btn-b" onclick="saveB2LayoutSettings()">💾 레이아웃 저장</button>
@@ -1402,8 +1364,15 @@ function rCfg(C,T){
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 기본 이미지 설정을 구성합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">이미지 맞춤:</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">첫번째 이미지 맞춤:</label>
         <select id="cfg-img-fill" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
+          <option value="cover">꽉 차게 (cover)</option>
+          <option value="contain">비율 유지 (contain)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">두번째 이미지 맞춤:</label>
+        <select id="cfg-img-fill-second" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
           <option value="cover">꽉 차게 (cover)</option>
           <option value="contain">비율 유지 (contain)</option>
         </select>
@@ -1581,20 +1550,14 @@ function rCfg(C,T){
     // 이미지탭 레이아웃 설정 초기화
     const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
     if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
-    if(document.getElementById('cfg-b2-right-size'))document.getElementById('cfg-b2-right-size').value=b2Layout.rightSize||45;
     if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
-    if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
-    if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
     if(document.getElementById('cfg-b2-thumb-auto-resize'))document.getElementById('cfg-b2-thumb-auto-resize').checked=b2Layout.thumbAutoResize!==false;
     if(document.getElementById('cfg-b2-pc-thumb-size'))document.getElementById('cfg-b2-pc-thumb-size').value=b2Layout.pcThumbSize||116;
-    if(document.getElementById('cfg-b2-mobile-thumb-size'))document.getElementById('cfg-b2-mobile-thumb-size').value=b2Layout.mobileThumbSize||80;
-    if(document.getElementById('cfg-b2-tablet-thumb-size'))document.getElementById('cfg-b2-tablet-thumb-size').value=b2Layout.tabletThumbSize||100;
-    if(document.getElementById('cfg-b2-mobile-thumb-fit'))document.getElementById('cfg-b2-mobile-thumb-fit').value=b2Layout.mobileThumbFit||'cover';
-    if(document.getElementById('cfg-b2-tablet-thumb-fit'))document.getElementById('cfg-b2-tablet-thumb-fit').value=b2Layout.tabletThumbFit||'cover';
     // 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').value=imgSettings.fill||'cover';
+    if(document.getElementById('cfg-img-fill-second'))document.getElementById('cfg-img-fill-second').value=imgSettings.fillSecond||'cover';
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-second-scale')){document.getElementById('cfg-img-second-scale').value=imgSettings.secondScale||1;document.getElementById('cfg-img-second-scale-val').textContent=(imgSettings.secondScale||1).toFixed(1)+'x';}
@@ -1614,14 +1577,14 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
     // 이미지탭 레이아웃 자동 저장 이벤트 리스너
-    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height','cfg-b2-pc-thumb-size','cfg-b2-mobile-thumb-size','cfg-b2-tablet-thumb-size','cfg-b2-mobile-thumb-fit','cfg-b2-tablet-thumb-fit','cfg-b2-thumb-auto-resize'].forEach(id=>{
+    ['cfg-b2-left-size','cfg-b2-pc-height','cfg-b2-pc-thumb-size','cfg-b2-thumb-auto-resize'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-fill','cfg-img-fill-second','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
@@ -1709,19 +1672,20 @@ function renderStorageInfo(){
 
 // ── 이미지탭 레이아웃 저장 함수 ──
 function saveB2LayoutSettings(){
+  const leftSize = parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55;
   const settings = {
     autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
     thumbAutoResize: document.getElementById('cfg-b2-thumb-auto-resize')?.checked !== false,
-    leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
-    rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
+    leftSize: leftSize,
+    rightSize: 100 - leftSize,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
-    mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
-    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400,
+    mobileHeight: Math.round(leftSize * 6),
+    tabletHeight: Math.round(leftSize * 7),
     pcThumbSize: parseInt(document.getElementById('cfg-b2-pc-thumb-size')?.value) || 116,
-    mobileThumbSize: parseInt(document.getElementById('cfg-b2-mobile-thumb-size')?.value) || 80,
-    tabletThumbSize: parseInt(document.getElementById('cfg-b2-tablet-thumb-size')?.value) || 100,
-    mobileThumbFit: document.getElementById('cfg-b2-mobile-thumb-fit')?.value || 'cover',
-    tabletThumbFit: document.getElementById('cfg-b2-tablet-thumb-fit')?.value || 'cover'
+    mobileThumbSize: Math.round(parseInt(document.getElementById('cfg-b2-pc-thumb-size')?.value || 116) * 0.7),
+    tabletThumbSize: Math.round(parseInt(document.getElementById('cfg-b2-pc-thumb-size')?.value || 116) * 0.85),
+    mobileThumbFit: 'cover',
+    tabletThumbFit: 'cover'
   };
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
   if(typeof save==='function')save();
@@ -1749,6 +1713,7 @@ function saveOldDashboardBrightness(){
 function saveImageSettings(){
   const settings = {
     fill: document.getElementById('cfg-img-fill')?.value || 'cover',
+    fillSecond: document.getElementById('cfg-img-fill-second')?.value || 'cover',
     scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
     brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
     secondScale: parseFloat(document.getElementById('cfg-img-second-scale')?.value) || 1,
@@ -1770,7 +1735,7 @@ function saveImageSettings(){
       posY: 0
     },
     secondary: {
-      fill: settings.fill,
+      fill: settings.fillSecond,
       scale: settings.secondScale * 100,
       brightness: settings.brightness * 100,
       offsetX: 0,

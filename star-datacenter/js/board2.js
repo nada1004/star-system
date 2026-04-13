@@ -2181,10 +2181,12 @@ function _b2PlayersView() {
           height: auto;
           min-height: auto;
           gap: 14px;
+          align-items: center;
         }
         .b2-players-main {
           flex: none;
           width: 100%;
+          max-width: 100%;
           min-height: ${tabletHeight}px;
           height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
@@ -2213,14 +2215,20 @@ function _b2PlayersView() {
         }
         .b2-players-grid-wrapper {
           flex: none;
+          width: 100%;
           height: auto;
           max-height: none;
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(3, 1fr);
-          max-height: none;
-          overflow-y: visible;
+          grid-template-columns: repeat(auto-fill, minmax(${pcThumbSize + 24}px, 1fr));
+          gap: 16px;
+          align-items: start;
+          overflow-y: auto;
+          padding-right: 8px;
+        }
+        .b2-players-card {
+          width: auto;
         }
         .b2-players-name {
           font-size: 24px;
