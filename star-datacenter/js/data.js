@@ -1,4 +1,27 @@
 /* ══════════════════════════════════════
+   🔧 기존 데이터 마이그레이션: 티어대전 → 티어대회
+══════════════════════════════════════ */
+let _tierTourNameMigrated = false;
+function _migrateTierTourName(){
+  if(_tierTourNameMigrated) return;
+  _tierTourNameMigrated = true;
+  let changed = false;
+  players.forEach(p=>{
+    if(!p.history) return;
+    p.history.forEach(h=>{
+      if(h.mode==='티어대전'){
+        h.mode='티어대회';
+        changed=true;
+      }
+    });
+  });
+  if(changed){
+    save();
+    console.log('[마이그레이션] 티어대전 → 티어대회 명칭 변경 완료');
+  }
+}
+
+/* ══════════════════════════════════════
    대전 기록 삭제 시 선수 스탯 완전 롤백
    - matchId 있으면 matchId로 정확히 제거
    - matchId 없으면(구 데이터) 날짜+상대 조합으로 제거

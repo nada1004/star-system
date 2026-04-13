@@ -41,6 +41,8 @@ function init(){
   if(typeof syncTourneyHistory==='function') syncTourneyHistory();
   // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
   if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
+  // 티어대전 → 티어대회 명칭 마이그레이션
+  if(typeof _migrateTierTourName==='function') _migrateTierTourName();
   // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
@@ -149,6 +151,11 @@ initDark();
       if(typeof _migrateTierTourneys==='function'){
         if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
         _migrateTierTourneys();
+      }
+      // autoLoad 후 티어대전→티어대회 명칭 마이그레이션 재실행
+      if(typeof _migrateTierTourName==='function'){
+        if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
+        _migrateTierTourName();
       }
       save(); render();
       gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
