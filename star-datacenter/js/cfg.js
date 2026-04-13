@@ -783,7 +783,7 @@ function rCfg(C,T){
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
           <span style="flex:1;font-size:13px;font-weight:600">${a.label||'(이름없음)'}</span>
           <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'?? 부관리자':'?? 관리자'}</span>
-          <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">??? 삭제</button>
+          <button class="btn btn-r btn-xs" onclick="deleteAdminAccount('+i+')">??? 삭제</button>
         </div>`).join('');
     }
     // 현황판 배경 설정 렌더링
