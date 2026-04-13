@@ -1798,16 +1798,10 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
-  const thumbAutoResize = layoutSettings.thumbAutoResize !== false;
   const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
-  const pcThumbSize = layoutSettings.pcThumbSize || 116;
-  const mobileThumbSize = layoutSettings.mobileThumbSize || 80;
-  const tabletThumbSize = layoutSettings.tabletThumbSize || 100;
-  const mobileThumbFit = layoutSettings.mobileThumbFit || 'cover';
-  const tabletThumbFit = layoutSettings.tabletThumbFit || 'cover';
   
   let h = `
     <style>
@@ -2072,51 +2066,6 @@ function _b2PlayersView() {
       .b2-players-card.active {
         transform: translateY(-4px);
       }
-      .b2-players-thumbnail {
-        width: ${pcThumbSize}px;
-        height: ${pcThumbSize}px;
-      }
-      ${thumbAutoResize ? `
-      @media (min-width: 1600px) {
-        .b2-players-thumbnail {
-          width: ${Math.min(pcThumbSize + 20, 200)}px;
-          height: ${Math.min(pcThumbSize + 20, 200)}px;
-        }
-      }
-      @media (min-width: 1400px) and (max-width: 1599px) {
-        .b2-players-thumbnail {
-          width: ${pcThumbSize}px;
-          height: ${pcThumbSize}px;
-        }
-      }
-      @media (min-width: 1200px) and (max-width: 1399px) {
-        .b2-players-thumbnail {
-          width: ${Math.max(pcThumbSize - 10, 80)}px;
-          height: ${Math.max(pcThumbSize - 10, 80)}px;
-        }
-      }
-      ` : ''}
-      @media (max-width: 768px) {
-        .b2-players-wrapper {
-          flex-direction: column;
-        }
-        .b2-players-thumbnail {
-          width: ${mobileThumbSize}px;
-          height: ${mobileThumbSize}px;
-        }
-        .b2-players-thumbnail img {
-          object-fit: ${mobileThumbFit};
-        }
-      }
-      @media (min-width: 769px) and (max-width: 1366px) {
-        .b2-players-thumbnail {
-          width: ${tabletThumbSize}px;
-          height: ${tabletThumbSize}px;
-        }
-        .b2-players-thumbnail img {
-          object-fit: ${tabletThumbFit};
-        }
-      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
@@ -2175,18 +2124,16 @@ function _b2PlayersView() {
           font-size: 28px;
         }
       }
-      @media (min-width: 769px) and (max-width: 1366px) {
+      @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
           flex-direction: column;
           height: auto;
           min-height: auto;
           gap: 14px;
-          align-items: center;
         }
         .b2-players-main {
           flex: none;
           width: 100%;
-          max-width: 100%;
           min-height: ${tabletHeight}px;
           height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
@@ -2215,20 +2162,14 @@ function _b2PlayersView() {
         }
         .b2-players-grid-wrapper {
           flex: none;
-          width: 100%;
           height: auto;
           max-height: none;
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(auto-fill, minmax(${pcThumbSize + 24}px, 1fr));
-          gap: 16px;
-          align-items: start;
-          overflow-y: auto;
-          padding-right: 8px;
-        }
-        .b2-players-card {
-          width: auto;
+          grid-template-columns: repeat(3, 1fr);
+          max-height: none;
+          overflow-y: visible;
         }
         .b2-players-name {
           font-size: 24px;
