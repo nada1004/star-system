@@ -1798,6 +1798,7 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
+  const thumbAutoResize = layoutSettings.thumbAutoResize !== false;
   const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
@@ -2075,6 +2076,26 @@ function _b2PlayersView() {
         width: ${pcThumbSize}px;
         height: ${pcThumbSize}px;
       }
+      ${thumbAutoResize ? `
+      @media (min-width: 1600px) {
+        .b2-players-thumbnail {
+          width: ${Math.min(pcThumbSize + 20, 200)}px;
+          height: ${Math.min(pcThumbSize + 20, 200)}px;
+        }
+      }
+      @media (min-width: 1400px) and (max-width: 1599px) {
+        .b2-players-thumbnail {
+          width: ${pcThumbSize}px;
+          height: ${pcThumbSize}px;
+        }
+      }
+      @media (min-width: 1200px) and (max-width: 1399px) {
+        .b2-players-thumbnail {
+          width: ${Math.max(pcThumbSize - 10, 80)}px;
+          height: ${Math.max(pcThumbSize - 10, 80)}px;
+        }
+      }
+      ` : ''}
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
