@@ -1780,8 +1780,10 @@ function _b2PlayersView() {
   const autoResize = layoutSettings.autoResize !== false;
   const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
-  const mobileHeight = layoutSettings.mobileHeight || 320;
-  const tabletHeight = layoutSettings.tabletHeight || 400;
+  const mobileTopHeight = layoutSettings.mobileTopHeight || 320;
+  const mobileBottomHeight = layoutSettings.mobileBottomHeight || 300;
+  const tabletTopHeight = layoutSettings.tabletTopHeight || 400;
+  const tabletBottomHeight = layoutSettings.tabletBottomHeight || 350;
   const pcThumbSize = layoutSettings.pcThumbSize || 116;
   const mobileThumbSize = layoutSettings.mobileThumbSize || 80;
   const tabletThumbSize = layoutSettings.tabletThumbSize || 100;
@@ -2058,6 +2060,16 @@ function _b2PlayersView() {
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
+          gap: 12px;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          min-height: ${mobileTopHeight}px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          min-height: ${mobileBottomHeight}px;
         }
         .b2-players-thumbnail {
           width: ${mobileThumbSize}px;
@@ -2066,44 +2078,8 @@ function _b2PlayersView() {
         .b2-players-thumbnail img {
           object-fit: ${mobileThumbFit};
         }
-        .b2-players-main {
-          width: 100%;
-          min-height: ${mobileHeight}px;
-          height: clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px);
-          order: 0;
-          position: sticky;
-          top: 0;
-          z-index: 4;
-        }
-        .b2-players-main-content {
-          height: 100%;
-          border-radius: 18px;
-        }
-        .b2-players-img-controls {
-          width: calc(100% - 20px);
-          padding: 8px;
-          top: 10px;
-          left: 10px;
-          max-height: 48%;
-        }
-        .b2-players-img-label {
-          font-size: 10px;
-        }
-        .b2-players-img-btn {
-          padding: 3px 6px;
-          font-size: 10px;
-          min-width: 35px;
-        }
-        .b2-players-grid-wrapper {
-          flex: none;
-          height: auto;
-          max-height: none;
-          order: 1;
-        }
         .b2-players-grid {
           grid-template-columns: repeat(2, 1fr);
-          max-height: none;
-          overflow-y: visible;
         }
         .b2-players-name {
           font-size: 24px;
@@ -2115,9 +2091,16 @@ function _b2PlayersView() {
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
           flex-direction: column;
-          height: auto;
-          min-height: auto;
           gap: 14px;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          min-height: ${tabletTopHeight}px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          min-height: ${tabletBottomHeight}px;
         }
         .b2-players-thumbnail {
           width: ${tabletThumbSize}px;
@@ -2126,45 +2109,9 @@ function _b2PlayersView() {
         .b2-players-thumbnail img {
           object-fit: ${tabletThumbFit};
         }
-        .b2-players-main {
-          flex: none;
-          width: 100%;
-          min-height: ${tabletHeight}px;
-          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
-          order: 0;
-          position: sticky;
-          top: 0;
-          z-index: 4;
-        }
-        .b2-players-main-content {
-          height: 100%;
-          border-radius: 18px;
-        }
-        .b2-players-img-controls {
-          width: calc(100% - 20px);
-          padding: 8px;
-          top: 10px;
-          left: 10px;
-          max-height: 48%;
-        }
-        .b2-players-img-label {
-          font-size: 10px;
-        }
-        .b2-players-img-btn {
-          padding: 3px 6px;
-          font-size: 10px;
-          min-width: 35px;
-        }
-        .b2-players-grid-wrapper {
-          flex: none;
-          height: auto;
-          max-height: none;
-          order: 1;
-        }
         .b2-players-grid {
           grid-template-columns: repeat(3, 1fr);
-          max-height: none;
-          overflow-y: visible;
+          justify-content: center;
         }
         .b2-players-name {
           font-size: 24px;
