@@ -1755,6 +1755,13 @@ function saveImageSettings(){
   };
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(b2Settings));
   
+  // 랜덤 회전 타이머 재시작
+  if(settings.randomRotation){
+    if(typeof startRandomRotation === 'function') startRandomRotation();
+  } else {
+    if(typeof stopRandomRotation === 'function') stopRandomRotation();
+  }
+  
   if(typeof save==='function')save();
   alert('이미지 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
@@ -1866,19 +1873,22 @@ function stopRandomRotation(){
 function rotateRandomImage(){
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(!imgSettings.randomRotation) return;
-  
+
+  const fillMode = imgSettings.autoFit ? 'contain' : (imgSettings.fill || 'cover');
+
   // 랜덤 스트리머 선택
   if(players && players.length > 0){
-    const randomPlayer = players[Math.floor(Math.random() * players.length)];
-    
+    const randomPlayer = players[Math.floor(Math.random() * players.length);
+
     // 전체대학 보기
     if(currentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = randomPlayer.photo;
+        imgContainer.style.objectFit = fillMode;
       }
     }
-    
+
     // 이미지탭(board2)
     const b2MainImg = document.getElementById('b2-main-img-1');
     if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){

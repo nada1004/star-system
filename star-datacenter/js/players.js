@@ -347,6 +347,8 @@ function rTotal(C,T){
 
 function _buildGalleryView(rankMap){
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
+  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const fillMode = imgSettings.autoFit ? 'contain' : (imgSettings.fill || 'cover');
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
@@ -380,7 +382,7 @@ function _buildGalleryView(rankMap){
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)'"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
-          ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${fillMode};object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
