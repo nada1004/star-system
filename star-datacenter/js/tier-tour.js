@@ -1889,9 +1889,9 @@ function rotateRandomImage(){
       }
     }
 
-    // 이미지탭(board2)
-    const b2MainImg = document.getElementById('b2-main-img-1');
-    if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
+    // 이미지탭(board2) - 현재 탭이 board2이거나 board2 요소가 존재할 때
+    const b2Content = document.getElementById('b2-content');
+    if(b2Content && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
       _b2UpdateMainDisplay(randomPlayer.name);
     }
   }
@@ -1907,7 +1907,7 @@ window.sw = function(tab, el){
   if(originalSw) originalSw(tab, el);
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(imgSettings.randomRotation){
+  if(imgSettings.randomRotation && (tab === 'total' || tab === 'board2')){
     startRandomRotation();
   } else {
     stopRandomRotation();
