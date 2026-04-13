@@ -2215,8 +2215,8 @@ function pasteApply() {
           gameSet.add(key);
           return true;
         });
-        dedupedGrp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','개인전'));
-        const games=dedupedGrp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        dedupedGrp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','개인전');});
+        const games=dedupedGrp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) indM.unshift(...games);
       });
       if (_idDup.count > 0) alert(`개인전(혼합) 중복 ${_idDup.count}건 제거됨`);
@@ -2228,8 +2228,8 @@ function pasteApply() {
       Object.entries(_gjDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
         // 중복 허용: 필터링 없이 전체 저장
-        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','끝장전'));
-        const games=grp.map(r=>({_id:genId(),sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','끝장전');});
+        const games=grp.map(r=>({_id:r._id,sid,d,wName:r.wPlayer.name,lName:r.lPlayer.name,map:r.map&&r.map!=='-'?r.map:'',...(r._lineMemo?{memo:r._lineMemo}:{})}));
         if(games.length) gjM.unshift(...games);
       });
     }
@@ -2239,7 +2239,7 @@ function pasteApply() {
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        grp.forEach(r=>applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',genId(),'','','미니대전'));
+        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','미니대전');});
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
         miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
       });
@@ -2339,9 +2339,10 @@ function pasteApply() {
         return true;
       });
       dedupedGames.forEach(r => {
-        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+        r._id = genId();
+        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', r._id, '', '', _pasteModeLabel);
       });
-      const games = dedupedGames.map(r => ({ _id: genId(), sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = dedupedGames.map(r => ({ _id: r._id, sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) indM.unshift(...games);
     });
     if (_idDup.count > 0) alert(`개인전 중복 ${_idDup.count}건 제거됨 (중복: ${_idDup.dup.map(x=>`${x.w} vs ${x.l}`).join(', ')})`);
@@ -2358,9 +2359,10 @@ function pasteApply() {
       const gjSid = genId();
       // 중복 허용: 필터링 없이 전체 저장
       group.forEach(r => {
-        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', genId(), '', '', _pasteModeLabel);
+        r._id = genId();
+        applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', r._id, '', '', _pasteModeLabel);
       });
-      const games = group.map(r => ({ _id: genId(), sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
+      const games = group.map(r => ({ _id: r._id, sid: gjSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(_gjPro?{_proLabel:true}:{}), ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) gjM.unshift(...games);
     });
   } else if (mode === 'tt') {
