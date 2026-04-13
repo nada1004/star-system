@@ -1802,6 +1802,11 @@ function _b2PlayersView() {
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
+  const pcThumbSize = layoutSettings.pcThumbSize || 116;
+  const mobileThumbSize = layoutSettings.mobileThumbSize || 80;
+  const tabletThumbSize = layoutSettings.tabletThumbSize || 100;
+  const mobileThumbFit = layoutSettings.mobileThumbFit || 'cover';
+  const tabletThumbFit = layoutSettings.tabletThumbFit || 'cover';
   
   let h = `
     <style>
@@ -2065,6 +2070,31 @@ function _b2PlayersView() {
       }
       .b2-players-card.active {
         transform: translateY(-4px);
+      }
+      .b2-players-thumbnail {
+        width: ${pcThumbSize}px;
+        height: ${pcThumbSize}px;
+      }
+      @media (max-width: 768px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+        }
+        .b2-players-thumbnail {
+          width: ${mobileThumbSize}px;
+          height: ${mobileThumbSize}px;
+        }
+        .b2-players-thumbnail img {
+          object-fit: ${mobileThumbFit};
+        }
+      }
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .b2-players-thumbnail {
+          width: ${tabletThumbSize}px;
+          height: ${tabletThumbSize}px;
+        }
+        .b2-players-thumbnail img {
+          object-fit: ${tabletThumbFit};
+        }
       }
       @media (max-width: 768px) {
         .b2-players-wrapper {

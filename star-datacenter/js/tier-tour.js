@@ -1357,6 +1357,38 @@ function rCfg(C,T){
           <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
         </label>
       </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">스트리머 썸네일 설정</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 썸네일 크기:</label>
+          <input type="number" id="cfg-b2-pc-thumb-size" value="116" min="80" max="200" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <span style="font-size:11px;color:var(--gray-l)">px</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 썸네일 크기:</label>
+          <input type="number" id="cfg-b2-mobile-thumb-size" value="80" min="50" max="150" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <span style="font-size:11px;color:var(--gray-l)">px</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 썸네일 크기:</label>
+          <input type="number" id="cfg-b2-tablet-thumb-size" value="100" min="60" max="180" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <span style="font-size:11px;color:var(--gray-l)">px</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 채우기 모드:</label>
+          <select id="cfg-b2-mobile-thumb-fit" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
+            <option value="cover">꽉 차게 (cover)</option>
+            <option value="contain">비율 유지 (contain)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 채우기 모드:</label>
+          <select id="cfg-b2-tablet-thumb-fit" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--white);color:var(--text2)">
+            <option value="cover">꽉 차게 (cover)</option>
+            <option value="contain">비율 유지 (contain)</option>
+          </select>
+        </div>
+      </div>
       <button class="btn btn-b" onclick="saveB2LayoutSettings()">💾 레이아웃 저장</button>
     </div>
   </details>
@@ -1556,6 +1588,11 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
     if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
+    if(document.getElementById('cfg-b2-pc-thumb-size'))document.getElementById('cfg-b2-pc-thumb-size').value=b2Layout.pcThumbSize||116;
+    if(document.getElementById('cfg-b2-mobile-thumb-size'))document.getElementById('cfg-b2-mobile-thumb-size').value=b2Layout.mobileThumbSize||80;
+    if(document.getElementById('cfg-b2-tablet-thumb-size'))document.getElementById('cfg-b2-tablet-thumb-size').value=b2Layout.tabletThumbSize||100;
+    if(document.getElementById('cfg-b2-mobile-thumb-fit'))document.getElementById('cfg-b2-mobile-thumb-fit').value=b2Layout.mobileThumbFit||'cover';
+    if(document.getElementById('cfg-b2-tablet-thumb-fit'))document.getElementById('cfg-b2-tablet-thumb-fit').value=b2Layout.tabletThumbFit||'cover';
     // 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
@@ -1580,7 +1617,7 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
     // 이미지탭 레이아웃 자동 저장 이벤트 리스너
-    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
+    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height','cfg-b2-pc-thumb-size','cfg-b2-mobile-thumb-size','cfg-b2-tablet-thumb-size','cfg-b2-mobile-thumb-fit','cfg-b2-tablet-thumb-fit'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
@@ -1681,7 +1718,12 @@ function saveB2LayoutSettings(){
     rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
     mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
-    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
+    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400,
+    pcThumbSize: parseInt(document.getElementById('cfg-b2-pc-thumb-size')?.value) || 116,
+    mobileThumbSize: parseInt(document.getElementById('cfg-b2-mobile-thumb-size')?.value) || 80,
+    tabletThumbSize: parseInt(document.getElementById('cfg-b2-tablet-thumb-size')?.value) || 100,
+    mobileThumbFit: document.getElementById('cfg-b2-mobile-thumb-fit')?.value || 'cover',
+    tabletThumbFit: document.getElementById('cfg-b2-tablet-thumb-fit')?.value || 'cover'
   };
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
   if(typeof save==='function')save();
