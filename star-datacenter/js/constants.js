@@ -653,6 +653,8 @@ function rebuildAllPlayerHistory() {
     p.elo = ELO_DEFAULT;
   });
 
+  let count = 0;
+
   // 2. miniM에서 복구
   (miniM || []).forEach(m => {
     (m.sets || []).forEach(set => {
@@ -662,7 +664,9 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
         const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        count++;
       });
     });
   });
@@ -676,7 +680,9 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, univW, univL, '대학대전');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        count++;
       });
     });
   });
@@ -688,7 +694,9 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, '', '', '대학CK');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        count++;
       });
     });
   });
@@ -700,7 +708,9 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, '', '', '프로리그');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        count++;
       });
     });
   });
@@ -712,7 +722,9 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, '', '', '티어대회');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        count++;
       });
     });
   });
@@ -720,13 +732,15 @@ function rebuildAllPlayerHistory() {
   // 7. indM에서 복구
   (indM || []).forEach(m => {
     if(!m.wName || !m.lName) return;
-    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id, '', '', m._proLabel ? '프로리그' : '개인전');
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
+    count++;
   });
 
   // 8. gjM에서 복구
   (gjM || []).forEach(m => {
     if(!m.wName || !m.lName) return;
-    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id, '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
+    count++;
   });
 
   // 9. comps에서 복구
@@ -738,13 +752,15 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        applyGameResult(wName, lName, m.d, g.map || '-', m._id, univW, univL, '대회');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        count++;
       });
     });
   });
 
   save();
-  alert('✅ 모든 스트리머의 경기 기록이 복구되었습니다!');
+  alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
   render();
 }
 
