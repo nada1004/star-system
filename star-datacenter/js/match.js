@@ -363,11 +363,12 @@ function saveMatch(mode){
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       const sid=matchId;
-      freeGames.forEach(g=>{
+      freeGames.forEach((g,gi)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
+        const gameMatchId=`${sid}_g${gi}`;
+        applyGameResult(wName,lName,date,g.map||'-',gameMatchId,'','',_modeLabel);
         gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -380,11 +381,12 @@ function saveMatch(mode){
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
       const sid=matchId;
-      freeGames.forEach(g=>{
+      freeGames.forEach((g,gi)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','','개인전');
+        const gameMatchId=`${sid}_g${gi}`;
+        applyGameResult(wName,lName,date,g.map||'-',gameMatchId,'','','개인전');
         if(typeof indM!=='undefined')indM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
@@ -394,13 +396,14 @@ function saveMatch(mode){
       return;
     }
 
-    freeGames.forEach(g=>{
+    freeGames.forEach((g,gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
+      const gameMatchId=`${matchId}_g${gi}`;
+      applyGameResult(wName,lName,date,g.map||'-',gameMatchId,univW,univL,_modeLabel);
     });
     
     let totalA=0,totalB=0;
@@ -470,12 +473,13 @@ function saveMatch(mode){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
     const sid=matchId;
-    setsSnap.forEach(set=>{
-      (set.games||[]).forEach(g=>{
+    setsSnap.forEach((set,si)=>{
+      (set.games||[]).forEach((g,gi)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
+        const gameMatchId=`${sid}_s${si}_g${gi}`;
+        applyGameResult(wName,lName,date,g.map||'-',gameMatchId,'','',_modeLabel);
         gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
@@ -485,14 +489,15 @@ function saveMatch(mode){
     return;
   }
   // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
-  bld.sets.forEach(set=>{
-    set.games.forEach(g=>{
+  bld.sets.forEach((set,si)=>{
+    set.games.forEach((g,gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
+      const gameMatchId=`${matchId}_s${si}_g${gi}`;
+      applyGameResult(wName,lName,date,g.map||'-',gameMatchId,univW,univL,_modeLabel);
     });
   });
   if(mode==='mini'){
