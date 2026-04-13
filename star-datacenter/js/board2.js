@@ -241,8 +241,17 @@ window._b2CenterImage = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
   settings.offsetX = 0;
   settings.offsetY = 0;
+  settings.posX = 0;
+  settings.posY = 0;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
+  
+  // 직접 offset 값 표시 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (offsetEl) offsetEl.textContent = `0px, 0px`;
+  
+  // 이미지에 즉시 적용
+  _b2ApplyImgSettingsToDom(playerName, slot);
 };
 function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
   const settings = _b2GetImgSettings(playerName, slot);
@@ -255,12 +264,14 @@ function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
         <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
-          oninput="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
+          oninput="document.getElementById('${prefix}-scale-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          onchange="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
       </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">밝기 <span id="${prefix}-brightness-val">${settings.brightness}%</span></div>
         <input type="range" class="b2-players-img-slider" min="20" max="180" value="${settings.brightness}" ${disabled}
-          oninput="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
+          oninput="document.getElementById('${prefix}-brightness-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          onchange="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
       </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">배치</div>
@@ -2242,7 +2253,7 @@ function _b2PlayersView() {
         
         ${isLoggedIn ? `
         <!-- 이미지 컨트롤 패널 -->
-        <div class="b2-players-img-controls" id="b2-img-controls">
+        <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
           <div class="b2-players-controls-title">🎨 이미지 설정</div>
           ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
           ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
@@ -2324,7 +2335,18 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
+  
+  // 슬라이더/버튼 클릭 시에만 컨트롤 UI 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const scaleEl = document.getElementById(`${prefix}-scale-val`);
+  const brightnessEl = document.getElementById(`${prefix}-brightness-val`);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (scaleEl) scaleEl.textContent = `${s.scale}%`;
+  if (brightnessEl) brightnessEl.textContent = `${s.brightness}%`;
+  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
+  document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.fit === s.fit);
+  });
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
@@ -2343,7 +2365,11 @@ window._b2MoveImg = function(playerName, slot, dx, dy) {
   s.posX = s.offsetX;
   s.posY = s.offsetY;
   _b2SaveImgSettings();
-  _b2RefreshImageControls(playerName, slot);
+  
+  // 직접 offset 값 표시 업데이트
+  const prefix = _b2GetImgControlPrefix(slot);
+  const offsetEl = document.getElementById(`${prefix}-offset-val`);
+  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
   
   // 이미지에 즉시 적용
   _b2ApplyImgSettingsToDom(playerName, slot);
@@ -2387,7 +2413,7 @@ function _b2UpdateMainDisplay(playerName) {
       
       ${isLoggedIn ? `
       <!-- 이미지 컨트롤 패널 -->
-      <div class="b2-players-img-controls" id="b2-img-controls">
+      <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
         ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
         ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
