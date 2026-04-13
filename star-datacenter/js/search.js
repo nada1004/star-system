@@ -3559,7 +3559,10 @@ function proApply() {
   }
 
   // 개인 전적 반영 (승자=wPlayer 그대로)
-  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
+  savable.forEach(r => {
+    const gameId = genId(); // 각 게임마다 고유 ID 생성
+    applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', gameId, '', '', '프로리그');
+  });
 
   // A조/B조 멤버 목록 (팀 배정 기준으로)
   const mA=[], mB=[];
