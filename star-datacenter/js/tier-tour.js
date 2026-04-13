@@ -468,12 +468,6 @@ function _bktPasteApplyLogic(savable, tn){
       applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
     });
   });
-  // 티어대회 브라켓: ttM에도 동기화 (기록 탭에서 표시되도록)
-  if(tn.type==='tier'){
-    const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
-    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
-  }
   save();
   const _matchModal=document.getElementById('grpMatchModal');
   if(_matchModal&&_matchModal.style.display!=='none'&&_matchModal.offsetParent!==null){
@@ -1423,6 +1417,13 @@ function rCfg(C,T){
       </div>
     </div>
   </details>
+  <div class="ssec">
+    <h4 style="margin:0">🔄 전체 경기 기록 복구</h4>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">대전 데이터에서 스트리머 history를 다시 생성합니다. 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.</div>
+    <button onclick="rebuildAllPlayerHistory()" class="btn btn-r" style="margin-top:10px">
+      🔄 전체 경기 기록 복구 (대전 데이터 → 스트리머 history)
+    </button>
+  </div>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
