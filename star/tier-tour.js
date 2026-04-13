@@ -3817,6 +3817,7 @@ function bulkDeleteByDate(){
   if(total === 0){ alert('해당 기간에 삭제할 경기가 없습니다.'); return; }
   if(!confirm(`${fromD} ~ ${toD} 기간의 경기 ${total}건을 삭제합니다.\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) return;
 
+  const deletedIds=new Set();
   checkedModes.forEach(mode => {
     const arr = modeMap[mode];
     if(!arr) return;
@@ -3836,8 +3837,23 @@ function bulkDeleteByDate(){
       else if(mode==='pro')  { proM.length=0;   proM.push(...newArr);  }
       else if(mode==='tt')   { ttM.length=0;    ttM.push(...newArr);   }
       else if(mode==='comp') { comps.length=0;  comps.push(...newArr); }
+      toDelete.forEach(m=>{if(m._id)deletedIds.add(m._id);});
     }
   });
+  // 안전 처리: player.history에서 삭제된 경기 기록 제거
+  if(deletedIds.size>0){
+    players.forEach(p=>{
+      if(!p.history)return;
+      const removed=p.history.filter(h=>h.matchId&&deletedIds.has(h.matchId));
+      if(!removed.length)return;
+      p.history=p.history.filter(h=>!h.matchId||!deletedIds.has(h.matchId));
+      removed.forEach(hr=>{
+        if(hr.result==='승'){p.win=Math.max(0,(p.win||0)-1);p.points=(p.points||0)-3;}
+        else if(hr.result==='패'){p.loss=Math.max(0,(p.loss||0)-1);p.points=(p.points||0)+3;}
+        if(hr.eloDelta!=null)p.elo=(p.elo||1500)-hr.eloDelta;
+      });
+    });
+  }
   if(typeof fixPoints==='function') fixPoints();
   save(); render();
   const el = document.getElementById('bulk-del-result');
