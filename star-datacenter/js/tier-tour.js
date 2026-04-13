@@ -1927,9 +1927,10 @@ function rotateRandomImage(){
     }
     
     // 이미지탭(board2)
-    const b2MainImg = document.getElementById('b2-main-img-1');
-    if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
-      _b2UpdateMainDisplay(randomPlayer.name);
+    if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')){
+      if(randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
+        _b2UpdateMainDisplay(randomPlayer.name);
+      }
     }
   }
 }
@@ -1945,7 +1946,12 @@ window.sw = function(tab, el){
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(imgSettings.randomRotation){
-    startRandomRotation();
+    // 전체대학 보기 또는 이미지탭에서 랜덤 회전 시작
+    if(tab === 'total' || (typeof _b2View !== 'undefined' && document.getElementById('b2-content'))){
+      startRandomRotation();
+    } else {
+      stopRandomRotation();
+    }
   } else {
     stopRandomRotation();
   }

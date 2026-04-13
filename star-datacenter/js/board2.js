@@ -2072,9 +2072,41 @@ function _b2PlayersView() {
       }
       .b2-players-card.active {
         transform: translateY(-4px);
+      }
       .b2-players-thumbnail {
         width: ${pcThumbSize}px;
         height: ${pcThumbSize}px;
+      }
+      @media (max-width: 768px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          gap: 12px;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          min-height: ${mobileTopHeight}px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          min-height: ${mobileBottomHeight}px;
+        }
+        .b2-players-thumbnail {
+          width: ${mobileThumbSize}px;
+          height: ${mobileThumbSize}px;
+        }
+        .b2-players-thumbnail img {
+          object-fit: ${mobileThumbFit};
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .b2-players-name {
+          font-size: 24px;
+        }
+        .b2-players-info {
+          padding: 20px;
+        }
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
