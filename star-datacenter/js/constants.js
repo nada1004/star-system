@@ -618,11 +618,13 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: matchId가 있을 때도 map과 opp 체크
+  // 중복 체크: 항상 게임 단위 고유 키 사용 (date|map|playerA|playerB)
+  // matchId가 있어도 같은 매치 내 다른 맵/선수 조합은 각각 독립적으로 기록됨
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const wDup=(w.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===l.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===l.name));
-  const lDup=(l.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===w.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===w.name));
+  const gameKey = `${d}|${m}|${[winName,loseName].sort().join('|')}`;
+  const wDup=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+  const lDup=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
   if(wDup||lDup)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
