@@ -306,8 +306,101 @@ function togglePlayerHistSelectAll(playerName, allIndices){
   }
   const btn=document.getElementById('bulk-delete-btn');
   if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  const editBtn=document.getElementById('bulk-edit-btn');
+  if(editBtn) editBtn.textContent=`✏️ 선택 수정 (${_playerHistBulkSelected.size})`;
   const checkboxes=document.querySelectorAll('.hist-select-checkbox');
   checkboxes.forEach(cb=>cb.checked=_playerHistBulkSelected.has(parseInt(cb.value)));
+}
+
+function openPlayerHistBulkEdit(playerName){
+  if(!isLoggedIn)return;
+  if(_playerHistBulkSelected.size===0){
+    alert('선택된 경기 기록이 없습니다.');
+    return;
+  }
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  
+  // 선택된 기록들의 공통 값 추출
+  const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
+  const allModes=[...new Set(selectedHists.map(h=>h.mode).filter(Boolean))];
+  const allMaps=[...new Set(selectedHists.map(h=>h.map).filter(Boolean))];
+  
+  document.getElementById('reTitle').textContent=`✏️ 일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
+  document.getElementById('reBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">
+        ⚠️ 선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">종목 변경</label>
+        <select id="phe-bulk-mode" style="width:100%">
+          <option value="">변경 안함</option>
+          ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
+          <option value="개인전">개인전</option>
+          <option value="프로리그">프로리그</option>
+          <option value="끝장전">끝장전</option>
+          <option value="미니대전">미니대전</option>
+          <option value="시빌워">시빌워</option>
+          <option value="대학대전">대학대전</option>
+          <option value="대학CK">대학CK</option>
+          <option value="티어대회">티어대회</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">맵 변경</label>
+        <div style="display:flex;gap:6px">
+          <select id="phe-bulk-map-sel" style="flex:1" onchange="const v=this.value;const inp=document.getElementById('phe-bulk-map');if(v)inp.value=v;">
+            <option value="">목록에서 선택</option>
+            ${maps.map(m=>`<option value="${m}">${m}</option>`).join('')}
+          </select>
+          <input id="phe-bulk-map" type="text" placeholder="또는 직접 입력" style="flex:1">
+        </div>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">날짜 변경</label>
+        <input id="phe-bulk-date" type="date" placeholder="YYYY-MM-DD" style="width:100%">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-g" onclick="savePlayerHistBulkEdit('${playerName}')" style="flex:1">저장</button>
+        <button class="btn btn-w" onclick="cm('reModal')" style="flex:1">취소</button>
+      </div>
+    </div>
+  `;
+  om('reModal');
+}
+
+function savePlayerHistBulkEdit(playerName){
+  if(!isLoggedIn)return;
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  
+  const newMode=document.getElementById('phe-bulk-mode').value;
+  const newMap=document.getElementById('phe-bulk-map').value;
+  const newDate=document.getElementById('phe-bulk-date').value;
+  
+  if(!newMode&&!newMap&&!newDate){
+    alert('변경할 항목을 선택해주세요.');
+    return;
+  }
+  
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 수정할까요?`))return;
+  
+  const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
+  sortedIdx.forEach(idx=>{
+    if(p.history[idx]){
+      const hh=p.history[idx];
+      if(newMode) hh.mode=newMode;
+      if(newMap) hh.map=newMap;
+      if(newDate) hh.date=newDate;
+    }
+  });
+  
+  _playerHistBulkSelected.clear();
+  save();
+  cm('reModal');
+  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
+  injectUnivIcons(document.getElementById('playerModalBody'));
 }
 
 function openPlayerHistEdit(playerName, histIdx){
@@ -1076,11 +1169,11 @@ function buildPlayerDetailHTML(p){
   const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
     <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer">
-        <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} onchange="if(this.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')" style="cursor:pointer">전체
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+        <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} onchange="if(this.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')}" style="cursor:pointer;display:none">전체
       </label>
-      ${allModes.map(m=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer">
-        <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} onchange="const arr=window._playerHistFilters||[];if(this.checked){arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')" style="cursor:pointer">${m}
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+        <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} onchange="const arr=window._playerHistFilters||[];if(this.checked){arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')}" style="cursor:pointer;display:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
       style="padding:4px 10px;border:1.5px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
@@ -1103,11 +1196,11 @@ function buildPlayerDetailHTML(p){
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer">
-          <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} onchange="if(this.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer">전체
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+          <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} onchange="if(this.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer;display:none">전체
         </label>
-        ${_availYears.map(y=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer">
-          <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} onchange="const arr=window._playerModalYears||[];if(this.checked){arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer">${y}년
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+          <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} onchange="const arr=window._playerModalYears||[];if(this.checked){arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)" style="cursor:pointer;display:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
         style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
@@ -1265,14 +1358,14 @@ function buildPlayerDetailHTML(p){
       seasonBar=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
         ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--text3);cursor:pointer">
-            <input type="checkbox" ${window._playerSeasonFilters.length===0?'checked':''} onchange="if(this.checked){window._playerSeasonFilters=[];window._playerSeasonFilter='전체';}else{window._playerSeasonFilters=seasons.map(s=>s.id);window._playerSeasonFilter='multi';}playerHistPage=0;${_rbFn}" style="cursor:pointer">전체
+          <label class="season-filter-chip ${window._playerSeasonFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerSeasonFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerSeasonFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+            <input type="checkbox" ${window._playerSeasonFilters.length===0?'checked':''} onchange="if(this.checked){window._playerSeasonFilters=[];window._playerSeasonFilter='전체';}else{window._playerSeasonFilters=seasons.map(s=>s.id);window._playerSeasonFilter='multi';}playerHistPage=0;${_rbFn}" style="cursor:pointer;display:none">전체
           </label>
           ${seasons.map(s=>{
             const isOn=window._playerSeasonFilters.includes(s.id);
             const _sid=escJS(s.id);
-            return `<label style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--text3);cursor:pointer">
-              <input type="checkbox" value="${s.id}" ${isOn?'checked':''} onchange="const arr=window._playerSeasonFilters||[];if(this.checked){arr.push('${s.id}');}else{const idx=arr.indexOf('${s.id}');if(idx>-1)arr.splice(idx,1);}window._playerSeasonFilters=arr;window._playerSeasonFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'전체');playerHistPage=0;${_rbFn}" style="cursor:pointer">${s.name}
+            return `<label class="season-filter-chip ${isOn?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+              <input type="checkbox" value="${s.id}" ${isOn?'checked':''} onchange="const arr=window._playerSeasonFilters||[];if(this.checked){arr.push('${s.id}');}else{const idx=arr.indexOf('${s.id}');if(idx>-1)arr.splice(idx,1);}window._playerSeasonFilters=arr;window._playerSeasonFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'전체');playerHistPage=0;${_rbFn}" style="cursor:pointer;display:none">${s.name}
             </label>`;
           }).join('')}
         </div>`:`<button onclick="window._playerSeasonFilter='전체';window._playerSeasonFilters=[];playerHistPage=0;${_rbFn}" style="padding:2px 8px;border-radius:10px;border:1px solid ${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--border2)'};background:${window._playerSeasonFilter==='전체'?'var(--blue)':'var(--white)'};color:${window._playerSeasonFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
@@ -1354,11 +1447,11 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="window._goPlayerHistPage(${curPage-1},'${escJS(p.name)}')">◀ 이전</button>
         <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
         <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="window._goPlayerHistPage(${curPage+1},'${escJS(p.name)}')">다음 ▶</button>
-        ${_playerHistBulkMode?`<button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>`:''}
+        ${_playerHistBulkMode?`<button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" onclick="openPlayerHistBulkEdit('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${_playerHistBulkSelected.size})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>`:''}
       </div>`;
     }else if(_playerHistBulkMode){
       h+=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
-        <button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>
+        <button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" onclick="openPlayerHistBulkEdit('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${_playerHistBulkSelected.size})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>
       </div>`;
     }
     h+=`</div>`;
