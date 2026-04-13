@@ -211,6 +211,7 @@ function _b2ScheduleImageSwap(playerName) {
   const img2 = document.getElementById('b2-main-img-2');
   if (img1) img1.style.opacity = '1';
   if (img2) img2.style.opacity = '0';
+  if (!img2) return;
   mainBox._swapTimer = setTimeout(() => {
     const curImg1 = document.getElementById('b2-main-img-1');
     const curImg2 = document.getElementById('b2-main-img-2');
@@ -364,12 +365,22 @@ function rBoard2(C, T) {
   const profileTabLabel = '👤 이미지별';
   // 이미지별 필터를 상단 탭에 포함
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !dissolvedUnivs.has(p.univ));
-  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  // univCfg 순서로 정렬
+  if (typeof univCfg !== 'undefined') {
+    playerUnivList.sort((a, b) => {
+      const idxA = univCfg.findIndex(u => u.name === a);
+      const idxB = univCfg.findIndex(u => u.name === b);
+      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+    });
+  } else {
+    playerUnivList.sort();
+  }
   const playerFilters = _b2View === 'players' ? `
     <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
     <div style="position:relative">
-      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView()" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
         ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
       </select>
@@ -1704,7 +1715,7 @@ if (savedSelectedPlayerName) {
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !dissolvedUnivs.has(p.univ));
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
   
   // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
@@ -1732,7 +1743,17 @@ function _b2PlayersView() {
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
-  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))].sort();
+  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  // univCfg 순서로 정렬
+  if (typeof univCfg !== 'undefined') {
+    univList.sort((a, b) => {
+      const idxA = univCfg.findIndex(u => u.name === a);
+      const idxB = univCfg.findIndex(u => u.name === b);
+      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+    });
+  } else {
+    univList.sort();
+  }
   
   // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
   const roleOrder = ['이사장', '총장', '교수', '코치'];
@@ -2210,10 +2231,10 @@ function _b2PlayersView() {
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1));translate:var(--img-pos-x,0) var(--img-pos-y,0)">`
+          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
-        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1));translate:var(--img-pos-x,0) var(--img-pos-y,0)">` : ''}
+        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
