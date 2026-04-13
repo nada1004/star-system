@@ -409,19 +409,24 @@ function rBoard2(C, T) {
 
   C.innerHTML = filterBar;
 
-  const sub = document.getElementById('b2-content');
-  if (_b2View === 'univ') {
-    sub.innerHTML = _b2UnivView();
-    injectUnivIcons(sub);
-  } else if (_b2View === 'free') {
-    sub.innerHTML = _b2FreeView();
-    injectUnivIcons(sub);
-  } else if (_b2View === 'players') {
-    sub.innerHTML = _b2PlayersView();
-  } else if (_b2View === 'old') {
-    if (typeof rBoard === 'function') rBoard(sub, T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
-  }
+  setTimeout(() => {
+    const sub = document.getElementById('b2-content');
+    if (_b2View === 'univ') {
+      sub.innerHTML = _b2UnivView();
+      injectUnivIcons(sub);
+    } else if (_b2View === 'free') {
+      sub.innerHTML = _b2FreeView();
+      injectUnivIcons(sub);
+    } else if (_b2View === 'players') {
+      sub.innerHTML = _b2PlayersView();
+      setTimeout(() => {
+        if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
+      }, 0);
+    } else if (_b2View === 'old') {
+      if (typeof rBoard === 'function') rBoard(sub, T);
+      else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+    }
+  }, 0);
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
