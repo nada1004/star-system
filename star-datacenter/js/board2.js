@@ -2227,6 +2227,10 @@ function _b2PlayersView() {
   const primarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'primary');
   const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
   const imgSettings = primarySettings;
+  const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const hasPrimary = !!_b2SelectedPlayer.photo;
+  const hasSecondary = !!_b2SelectedPlayer.secondProfileFile;
+  
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
@@ -2235,6 +2239,17 @@ function _b2PlayersView() {
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
+        
+        <!-- 이미지 컨트롤 패널 -->
+        <div class="b2-players-img-controls" id="b2-img-controls">
+          <div class="b2-players-controls-title">🎨 이미지 설정</div>
+          ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
+          ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+        </div>
+        
+        <!-- 컨트롤 패널 토글 버튼 -->
+        <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+        
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
@@ -2355,6 +2370,10 @@ function _b2UpdateMainDisplay(playerName) {
   const secondarySettings = _b2GetImgSettings(player.name, 'secondary');
   const hasSecondProfile = !!(player.secondProfileFile && player.secondProfileFile.length > 0);
 
+  const safeName = (player.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const hasPrimary = !!player.photo;
+  const hasSecondary = !!player.secondProfileFile;
+  
   if (mainBox) {
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
@@ -2363,6 +2382,17 @@ function _b2UpdateMainDisplay(playerName) {
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+      
+      <!-- 이미지 컨트롤 패널 -->
+      <div class="b2-players-img-controls" id="b2-img-controls">
+        <div class="b2-players-controls-title">🎨 이미지 설정</div>
+        ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
+        ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+      </div>
+      
+      <!-- 컨트롤 패널 토글 버튼 -->
+      <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+      
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
