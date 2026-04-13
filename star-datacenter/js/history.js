@@ -533,8 +533,11 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   let h='';
   let _filtered=false;
   arr.forEach(m=>{
-    if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
-    else{if(!m.a||!m.b) return;}
+    if(mode==='ck'||mode==='pro'){
+      if(!m.teamAMembers||!m.teamBMembers) return;
+    } else {
+      if(!m.a||!m.b) return;
+    }
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
@@ -565,7 +568,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-          ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck'||mode==='ind'||mode==='gj')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`):''}
+          ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck'||mode==='ind'||mode==='gj')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openREById('${mode}','${m._id||''}')">✏️ 수정</button>`):''}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
         </div>
       </div>
@@ -581,6 +584,15 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   });
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
+}
+
+function openREById(mode, id) {
+  const arr = mode==='tt'?ttM : mode==='mini'?miniM : mode==='univm'?univM
+            : mode==='pro'?proM : mode==='ck'?ckM : null;
+  if(!arr) return;
+  const idx = arr.findIndex(m => m._id === id);
+  if(idx < 0) return alert('기록을 찾을 수 없습니다.');
+  openRE(mode, idx);
 }
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
@@ -608,8 +620,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   })();
   let filtered=arr.map((m,i)=>({m,i:_srcArr!==arr?_srcArr.indexOf(m):i})).filter(({m})=>{
     if(extraFilter&&!extraFilter(m)) return false;
-    if(isCKmode){
-      if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return false;
+    if(mode==='ck'){
+      if(!m.teamAMembers||!m.teamBMembers) return false;
     } else {
       if(!m.a||!m.b) return false;
     }
@@ -672,8 +684,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     // teamALabel/B 필드 정리: 잘못된 값({...} 포함) 필터링
     const rawLA=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
     const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
-    const labelA=isCK?(rawLA||'A팀'):m.a;
-    const labelB=isCK?(rawLB||'B팀'):m.b;
+    // pro 모드일 때 teamAMembers가 없으면 m.a/m.b로 폴백
+    const labelA=(mode==='pro' && (!m.teamAMembers || !m.teamAMembers.length)) ? m.a : (isCK?(rawLA||'A팀'):m.a);
+    const labelB=(mode==='pro' && (!m.teamBMembers || !m.teamBMembers.length)) ? m.b : (isCK?(rawLB||'B팀'):m.b);
     const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
     const key=`${context}-${mode}-${i}`;
     // 검색용 hay 데이터
@@ -689,7 +702,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
+          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openREById('${mode}','${m._id||''}')">✏️ 수정</button>`)}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
           ${isLoggedIn&&(mode==='mini'||mode==='univm')?`<button class="btn btn-w btn-xs no-export" onclick="event.stopPropagation();openMoveMatchPop(this,'${mode}',${i})" title="다른 탭으로 이동">↗ 이동</button>`:''}
         </div>

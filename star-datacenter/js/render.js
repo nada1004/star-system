@@ -964,42 +964,6 @@ function buildPlayerDetailHTML(p){
       });
     });
   }
-  if(typeof tourneys!=='undefined'&&tourneys.length){
-    (tourneys.filter(t=>t.type==='tier')).forEach(tn=>{
-      (tn.groups||[]).forEach(grp=>{
-        (grp.matches||[]).forEach(m=>{
-          (m.sets||[]).forEach(s=>{
-            (s.games||[]).forEach(g=>{
-              if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
-                const opp=g.playerA===p.name?g.playerB:g.playerA;
-                const oppP=players.find(x=>x.name===opp);
-                _otherMatches.push({
-                  date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-                  opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:'티어대회',
-                  _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
-                });
-              }
-            });
-          });
-        });
-      });
-      Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-        (m.sets||[]).forEach(s=>{
-          (s.games||[]).forEach(g=>{
-            if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
-              const opp=g.playerA===p.name?g.playerB:g.playerA;
-              const oppP=players.find(x=>x.name===opp);
-              _otherMatches.push({
-                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-                opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:'티어대회',
-                _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
-              });
-            }
-          });
-        });
-      });
-    });
-  }
 
   // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
   const _tourMatches=[];
@@ -1032,7 +996,13 @@ function buildPlayerDetailHTML(p){
     });
   });
   // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>!h.matchId||!_existingMatchIds.has(h.matchId)||!_existingKeys.has(_histDupKey(h)));
+  const _seenIds = new Set();
+  const _extraMatches = [..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches]
+    .filter(h => {
+      if(h.matchId && _seenIds.has(h.matchId)) return false;
+      if(h.matchId) _seenIds.add(h.matchId);
+      return !_existingMatchIds.has(h.matchId||'');
+    });
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   // 연도 필터링 (단일 또는 멀티)
   const _hist=_year?_histAll.filter(h=>{
@@ -1250,7 +1220,7 @@ function buildPlayerDetailHTML(p){
 
 
   // ── 모드별 전적 ──
-  const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
+  const _modeColors={'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a','조별리그':'#2563eb','시빌워':'#db2777','프로리그끝장전':'#0891b2','프로리그대회':'#7c3aed','토너먼트':'#16a34a','테스트':'#6b7280'};
   const _histModeStats={};
   _modeHist.forEach(hh=>{if(hh.mode){if(!_histModeStats[hh.mode])_histModeStats[hh.mode]={w:0,l:0};if(hh.result==='승')_histModeStats[hh.mode].w++;else _histModeStats[hh.mode].l++;}});
   // 대회: 조별리그+토너먼트+대회 통합 (p.history + tourneys 직접 집계)
