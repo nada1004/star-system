@@ -1398,16 +1398,6 @@ function rCfg(C,T){
         <input type="range" id="cfg-img-second-scale" min="0.5" max="2" step="0.1" value="1" style="width:150px">
         <span id="cfg-img-second-scale-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-img-random"> 랜덤 회전
-        </label>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">회전 간격:</label>
-        <input type="number" id="cfg-img-interval" value="5" min="1" max="60" style="width:60px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">초</span>
-      </div>
       <button class="btn btn-b" onclick="saveImageSettings()">💾 이미지 설정 저장</button>
     </div>
   </details>
@@ -1568,8 +1558,6 @@ function rCfg(C,T){
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-second-scale')){document.getElementById('cfg-img-second-scale').value=imgSettings.secondScale||1;document.getElementById('cfg-img-second-scale-val').textContent=(imgSettings.secondScale||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
-    if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
     // 이미지 설정 슬라이더 이벤트 리스너
     ['scale','brightness','secondScale'].forEach(key=>{
       const el=document.getElementById('cfg-img-'+(key==='secondScale'?'second-scale':key));
@@ -1591,7 +1579,7 @@ function rCfg(C,T){
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-auto-fit','cfg-img-fill','cfg-img-fill-second','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-auto-fit','cfg-img-fill','cfg-img-fill-second','cfg-img-scale','cfg-img-brightness','cfg-img-second-scale'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
@@ -1724,9 +1712,7 @@ function saveImageSettings(){
     fillSecond: document.getElementById('cfg-img-fill-second')?.value || 'cover',
     scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
     brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
-    secondScale: parseFloat(document.getElementById('cfg-img-second-scale')?.value) || 1,
-    randomRotation: document.getElementById('cfg-img-random')?.checked || false,
-    interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
+    secondScale: parseFloat(document.getElementById('cfg-img-second-scale')?.value) || 1
   };
   localStorage.setItem('su_img_settings', JSON.stringify(settings));
   
@@ -1754,13 +1740,6 @@ function saveImageSettings(){
     }
   };
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(b2Settings));
-  
-  // 랜덤 회전 타이머 재시작
-  if(settings.randomRotation){
-    if(typeof startRandomRotation === 'function') startRandomRotation();
-  } else {
-    if(typeof stopRandomRotation === 'function') stopRandomRotation();
-  }
   
   if(typeof save==='function')save();
   alert('이미지 설정이 저장되었습니다.');
@@ -1889,9 +1868,9 @@ function rotateRandomImage(){
       }
     }
 
-    // 이미지탭(board2) - 현재 탭이 board2이거나 board2 요소가 존재할 때
-    const b2Content = document.getElementById('b2-content');
-    if(b2Content && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
+    // 이미지탭(board2)
+    const b2MainImg = document.getElementById('b2-main-img-1');
+    if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
       _b2UpdateMainDisplay(randomPlayer.name);
     }
   }
@@ -1907,7 +1886,7 @@ window.sw = function(tab, el){
   if(originalSw) originalSw(tab, el);
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(imgSettings.randomRotation && (tab === 'total' || tab === 'board2')){
+  if(imgSettings.randomRotation){
     startRandomRotation();
   } else {
     stopRandomRotation();
