@@ -1327,7 +1327,6 @@ function rCfg(C,T){
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">PC 레이아웃</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
         <input type="number" id="cfg-b2-left-size" value="55" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
@@ -1344,32 +1343,19 @@ function rCfg(C,T){
         <span style="font-size:11px;color:var(--gray-l)">px</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 높이:</label>
+        <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 높이:</label>
+        <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
         </label>
-      </div>
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">모바일/태블릿 레이아웃 (상단/하단)</div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 상단 높이:</label>
-          <input type="number" id="cfg-b2-mobile-top-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 하단 높이:</label>
-          <input type="number" id="cfg-b2-mobile-bottom-height" value="300" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 상단 높이:</label>
-          <input type="number" id="cfg-b2-tablet-top-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 하단 높이:</label>
-          <input type="number" id="cfg-b2-tablet-bottom-height" value="350" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <span style="font-size:11px;color:var(--gray-l)">px</span>
-        </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">스트리머 썸네일 설정</div>
@@ -1599,11 +1585,9 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
     if(document.getElementById('cfg-b2-right-size'))document.getElementById('cfg-b2-right-size').value=b2Layout.rightSize||45;
     if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
+    if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
+    if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
-    if(document.getElementById('cfg-b2-mobile-top-height'))document.getElementById('cfg-b2-mobile-top-height').value=b2Layout.mobileTopHeight||320;
-    if(document.getElementById('cfg-b2-mobile-bottom-height'))document.getElementById('cfg-b2-mobile-bottom-height').value=b2Layout.mobileBottomHeight||300;
-    if(document.getElementById('cfg-b2-tablet-top-height'))document.getElementById('cfg-b2-tablet-top-height').value=b2Layout.tabletTopHeight||400;
-    if(document.getElementById('cfg-b2-tablet-bottom-height'))document.getElementById('cfg-b2-tablet-bottom-height').value=b2Layout.tabletBottomHeight||350;
     if(document.getElementById('cfg-b2-pc-thumb-size'))document.getElementById('cfg-b2-pc-thumb-size').value=b2Layout.pcThumbSize||116;
     if(document.getElementById('cfg-b2-mobile-thumb-size'))document.getElementById('cfg-b2-mobile-thumb-size').value=b2Layout.mobileThumbSize||80;
     if(document.getElementById('cfg-b2-tablet-thumb-size'))document.getElementById('cfg-b2-tablet-thumb-size').value=b2Layout.tabletThumbSize||100;
@@ -1633,12 +1617,14 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
     // 이미지탭 레이아웃 자동 저장 이벤트 리스너
-    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-top-height','cfg-b2-mobile-bottom-height','cfg-b2-tablet-top-height','cfg-b2-tablet-bottom-height','cfg-b2-pc-thumb-size','cfg-b2-mobile-thumb-size','cfg-b2-tablet-thumb-size','cfg-b2-mobile-thumb-fit','cfg-b2-tablet-thumb-fit','cfg-b2-auto-resize'].forEach(id=>{
+    ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height','cfg-b2-pc-thumb-size','cfg-b2-mobile-thumb-size','cfg-b2-tablet-thumb-size','cfg-b2-mobile-thumb-fit','cfg-b2-tablet-thumb-fit'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
+    const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
+    if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-use-right-scale','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
@@ -1731,10 +1717,8 @@ function saveB2LayoutSettings(){
     leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
     rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
-    mobileTopHeight: parseInt(document.getElementById('cfg-b2-mobile-top-height')?.value) || 320,
-    mobileBottomHeight: parseInt(document.getElementById('cfg-b2-mobile-bottom-height')?.value) || 300,
-    tabletTopHeight: parseInt(document.getElementById('cfg-b2-tablet-top-height')?.value) || 400,
-    tabletBottomHeight: parseInt(document.getElementById('cfg-b2-tablet-bottom-height')?.value) || 350,
+    mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
+    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400,
     pcThumbSize: parseInt(document.getElementById('cfg-b2-pc-thumb-size')?.value) || 116,
     mobileThumbSize: parseInt(document.getElementById('cfg-b2-mobile-thumb-size')?.value) || 80,
     tabletThumbSize: parseInt(document.getElementById('cfg-b2-tablet-thumb-size')?.value) || 100,
@@ -1927,10 +1911,9 @@ function rotateRandomImage(){
     }
     
     // 이미지탭(board2)
-    if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')){
-      if(randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
-        _b2UpdateMainDisplay(randomPlayer.name);
-      }
+    const b2MainImg = document.getElementById('b2-main-img-1');
+    if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
+      _b2UpdateMainDisplay(randomPlayer.name);
     }
   }
 }
@@ -1946,12 +1929,7 @@ window.sw = function(tab, el){
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(imgSettings.randomRotation){
-    // 전체대학 보기 또는 이미지탭에서 랜덤 회전 시작
-    if(tab === 'total' || (typeof _b2View !== 'undefined' && document.getElementById('b2-content'))){
-      startRandomRotation();
-    } else {
-      stopRandomRotation();
-    }
+    startRandomRotation();
   } else {
     stopRandomRotation();
   }

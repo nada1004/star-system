@@ -409,24 +409,19 @@ function rBoard2(C, T) {
 
   C.innerHTML = filterBar;
 
-  setTimeout(() => {
-    const sub = document.getElementById('b2-content');
-    if (_b2View === 'univ') {
-      sub.innerHTML = _b2UnivView();
-      injectUnivIcons(sub);
-    } else if (_b2View === 'free') {
-      sub.innerHTML = _b2FreeView();
-      injectUnivIcons(sub);
-    } else if (_b2View === 'players') {
-      sub.innerHTML = _b2PlayersView();
-      setTimeout(() => {
-        if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
-      }, 0);
-    } else if (_b2View === 'old') {
-      if (typeof rBoard === 'function') rBoard(sub, T);
-      else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
-    }
-  }, 0);
+  const sub = document.getElementById('b2-content');
+  if (_b2View === 'univ') {
+    sub.innerHTML = _b2UnivView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'free') {
+    sub.innerHTML = _b2FreeView();
+    injectUnivIcons(sub);
+  } else if (_b2View === 'players') {
+    sub.innerHTML = _b2PlayersView();
+  } else if (_b2View === 'old') {
+    if (typeof rBoard === 'function') rBoard(sub, T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+  }
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
@@ -1805,10 +1800,8 @@ function _b2PlayersView() {
   const autoResize = layoutSettings.autoResize !== false;
   const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
-  const mobileTopHeight = layoutSettings.mobileTopHeight || 320;
-  const mobileBottomHeight = layoutSettings.mobileBottomHeight || 300;
-  const tabletTopHeight = layoutSettings.tabletTopHeight || 400;
-  const tabletBottomHeight = layoutSettings.tabletBottomHeight || 350;
+  const mobileHeight = layoutSettings.mobileHeight || 320;
+  const tabletHeight = layoutSettings.tabletHeight || 400;
   const pcThumbSize = layoutSettings.pcThumbSize || 116;
   const mobileThumbSize = layoutSettings.mobileThumbSize || 80;
   const tabletThumbSize = layoutSettings.tabletThumbSize || 100;
@@ -2049,11 +2042,11 @@ function _b2PlayersView() {
           flex-direction: column;
           height: auto;
           min-height: auto;
-          gap: 14px;
         }
         .b2-players-main {
-          flex: none;
+          flex: 0 0 auto;
           width: 100%;
+          height: 400px;
           min-height: 400px;
         }
         .b2-players-grid-wrapper {
@@ -2085,16 +2078,6 @@ function _b2PlayersView() {
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
-          gap: 12px;
-        }
-        .b2-players-main {
-          flex: none;
-          width: 100%;
-          min-height: ${mobileTopHeight}px;
-        }
-        .b2-players-grid-wrapper {
-          flex: none;
-          min-height: ${mobileBottomHeight}px;
         }
         .b2-players-thumbnail {
           width: ${mobileThumbSize}px;
@@ -2103,30 +2086,8 @@ function _b2PlayersView() {
         .b2-players-thumbnail img {
           object-fit: ${mobileThumbFit};
         }
-        .b2-players-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .b2-players-name {
-          font-size: 24px;
-        }
-        .b2-players-info {
-          padding: 20px;
-        }
       }
       @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: column;
-          gap: 14px;
-        }
-        .b2-players-main {
-          flex: none;
-          width: 100%;
-          min-height: ${tabletTopHeight}px;
-        }
-        .b2-players-grid-wrapper {
-          flex: none;
-          min-height: ${tabletBottomHeight}px;
-        }
         .b2-players-thumbnail {
           width: ${tabletThumbSize}px;
           height: ${tabletThumbSize}px;
@@ -2134,9 +2095,53 @@ function _b2PlayersView() {
         .b2-players-thumbnail img {
           object-fit: ${tabletThumbFit};
         }
+      }
+      @media (max-width: 768px) {
+        .b2-players-wrapper {
+          flex-direction: column;
+          height: auto;
+          min-height: auto;
+          gap: 14px;
+        }
+        .b2-players-main {
+          flex: none;
+          width: 100%;
+          min-height: ${mobileHeight}px;
+          height: clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px);
+          order: 0;
+          position: sticky;
+          top: 0;
+          z-index: 4;
+        }
+        .b2-players-main-content {
+          height: 100%;
+          border-radius: 18px;
+        }
+        .b2-players-img-controls {
+          width: calc(100% - 20px);
+          padding: 8px;
+          top: 10px;
+          left: 10px;
+          max-height: 48%;
+        }
+        .b2-players-img-label {
+          font-size: 10px;
+        }
+        .b2-players-img-btn {
+          padding: 3px 6px;
+          font-size: 10px;
+          min-width: 35px;
+        }
+        .b2-players-grid-wrapper {
+          flex: none;
+          height: auto;
+          max-height: none;
+          order: 1;
+        }
         .b2-players-grid {
-          grid-template-columns: repeat(3, 1fr);
-          justify-content: center;
+          grid-template-columns: repeat(2, 1fr);
+          max-height: none;
+          overflow-y: visible;
         }
         .b2-players-name {
           font-size: 24px;
@@ -2144,19 +2149,67 @@ function _b2PlayersView() {
         .b2-players-info {
           padding: 20px;
         }
+        .b2-players-thumbnail {
+          height: 80px;
+          font-size: 28px;
+        }
       }
-      @media (max-width: 768px) {
+      @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
           flex-direction: column;
           height: auto;
+          min-height: auto;
+          gap: 14px;
         }
         .b2-players-main {
           flex: none;
-          max-height: none;
+          width: 100%;
+          min-height: ${tabletHeight}px;
+          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
+          order: 0;
+          position: sticky;
+          top: 0;
+          z-index: 4;
+        }
+        .b2-players-main-content {
+          height: 100%;
+          border-radius: 18px;
+        }
+        .b2-players-img-controls {
+          width: calc(100% - 20px);
+          padding: 8px;
+          top: 10px;
+          left: 10px;
+          max-height: 48%;
+        }
+        .b2-players-img-label {
+          font-size: 10px;
+        }
+        .b2-players-img-btn {
+          padding: 3px 6px;
+          font-size: 10px;
+          min-width: 35px;
         }
         .b2-players-grid-wrapper {
+          flex: none;
           height: auto;
-          min-height: 0;
+          max-height: none;
+          order: 1;
+        }
+        .b2-players-grid {
+          grid-template-columns: repeat(3, 1fr);
+          max-height: none;
+          overflow-y: visible;
+        }
+        .b2-players-name {
+          font-size: 24px;
+        }
+        .b2-players-info {
+          padding: 20px;
+        }
+        .b2-players-thumbnail {
+          height: 80px;
+          font-size: 28px;
         }
       }
       .b2-players-filter-btn {
@@ -2376,6 +2429,7 @@ function _b2UpdateMainDisplay(playerName) {
       thumbnail.style.boxShadow = 'none';
     }
   });
+  return;
 
   if (mainBox) {
     mainBox.style.setProperty('--theme-glow', theme.glow);
@@ -2553,7 +2607,5 @@ function saveB2Profile(playerName) {
   // 프로필 탭 업데이트
   if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
     _b2UpdateMainDisplay(playerName);
-  }
-}
   }
 }
