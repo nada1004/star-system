@@ -600,46 +600,6 @@ _proPasteResults      프로리그 파싱 결과
 
 ---
 
-### 2026-04-13 — 4개 버그 수정 및 조별리그 기록 탭 추가
-
-#### 1. cfg.js 설정 탭 복구 (cfg.js 906줄)
-- **문제**: `} // end first rCfg` 주석이 남아있어 설정 탭이 정상적으로 렌더링되지 않음
-- **수정**: 906줄의 `} // end first rCfg` 삭제
-
-#### 2. tier-tour.js + cfg.js UTF-8 인코딩 수정
-- **문제**: '??' 이모지가 깨져서 표시됨
-- **수정**: tier-tour.js와 cfg.js 전체 파일 UTF-8로 다시 저장
-
-#### 3. 조별리그 기록·토너먼트 기록 탭 추가 (tier-tour.js)
-- **추가**: `_validSubs`에 `'leaguerecords'`, `'tourrecords'` 추가
-- **추가**: `subOpts`에 레이블 및 렌더링 블록 추가
-- **기능**: 조별리그 기록 탭, 토너먼트 기록 탭 새로 추가
-
-#### 4. 스트리머 상세 최근 기록 중복 제거 버그 수정 (render.js)
-- **문제**: 조별리그/티어대회에서 같은 경기 내 SET1과 SET2에서 동일 선수 조합 + 동일 맵이 나오면 중복으로 차단돼서 스트리머 상세 최근 경기에 1개만 등록됨
-- **원인**: `_histDupKey` 함수가 matchId가 있으면 map을 무시하고 'mid:{matchId}' 하나의 키만 생성함
-- **수정**: `_histDupKey` 함수에서 map을 키에 포함하도록 수정
-  ```js
-  // 수정 전
-  if(h?.matchId) return `mid:${h.matchId}`;
-  // 수정 후
-  if(h?.matchId) return `mid:${h.matchId}|${h?.map||'-'}`;
-  ```
-
-#### 5. match.js 게임별 고유 ID 적용 (match.js)
-- **문제**: match.js에서 applyGameResult에 경기 전체 ID(matchId)를 넘겨서 같은 경기 내 게임들이 중복 제거됨
-- **수정**: 게임별 고유 ID 사용
-  - sets 루프: `${matchId}_s${si}_g${gi}` 형태
-  - freeGames 루프: `${matchId}_g${gi}` 형태
-- **수정 위치**:
-  - gj 모드 freeGames 루프 (366-373줄)
-  - ind 모드 freeGames 루프 (384-391줄)
-  - noSetMode freeGames 루프 (399-407줄)
-  - gj 모드 sets 루프 (476-485줄)
-  - 공통 sets 루프 (492-502줄)
-
----
-
 ### 향후 작업 시 참고사항
 
 - 파싱 관련 수정 → `search.js` 의 `parsePasteLine`, `pastePreview`, `parseSetSeparator`
