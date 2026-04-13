@@ -1387,15 +1387,33 @@ function rCfg(C,T){
     </div>
   </div>
   ${_cfgD('sync','🔄 데이터 동기화')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">경기 기록을 스트리머 최근 경기에 소급 반영합니다.</div>
-    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 기록을 각 탭 기록 및 스트리머 최근 경기에 반영합니다.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-b btn-sm" onclick="syncAllHistoryBtn()">🔄 전체 데이터 동기화</button>
-        <span style="font-size:11px;color:var(--gray-l)">모든 대전 기록(미니/대학/CK/프로/티어/개인전/대회 등)을 스트리머 최근 경기에 소급 반영</span>
+        <button class="btn btn-b btn-sm" onclick="
+          _ttMigrated=false;_migrateTierTourneys();
+          const n=syncAllHistory?syncAllHistory():0;
+          alert('✅ 티어대회 기록 동기화 + '+n+'건 스트리머 반영 완료');render();">🔄 전체 동기화 (기록탭 + 스트리머)</button>
+        <span style="font-size:11px;color:var(--gray-l)">티어대회 기록탭·대전기록 반영 + 스트리머 최근 경기 소급 반영</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-b btn-sm" onclick="syncTourneyHistoryBtn()">🏆 대전기록 반영</button>
-        <span style="font-size:11px;color:var(--gray-l)">대회/티어대회 경기를 스트리머 최근 경기에 소급 반영</span>
+        <button class="btn btn-p btn-sm" onclick="
+          _ttMigrated=false;_migrateTierTourneys();
+          const before=ttM.length;save();render();
+          alert('✅ 티어대회 기록 동기화 완료\\n추가된 기록: '+(ttM.length-before)+'건');">🎯 티어대회 기록 동기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">조별리그·토너먼트 경기를 기록탭·대전기록에 반영 (누락 시 사용)</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="syncAllHistoryBtn()">📋 스트리머 최근 경기 반영</button>
+        <span style="font-size:11px;color:var(--gray-l)">모든 경기를 스트리머 상세의 최근 경기에 소급 반영</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-w btn-sm" onclick="
+          const seen=new Set();let removed=0;
+          ttM=ttM.filter(m=>{if(!m._id)return true;if(seen.has(m._id)){removed++;return false;}seen.add(m._id);return true;});
+          save();render();alert('✅ ttM 중복 제거 완료: '+removed+'건 삭제');
+        ">🗑️ 중복 경기 제거</button>
+        <span style="font-size:11px;color:var(--gray-l)">같은 _id로 이중 등록된 티어대회 경기 제거</span>
       </div>
     </div>
   </details>
