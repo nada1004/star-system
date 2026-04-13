@@ -106,7 +106,7 @@ function syncTourneyHistory(){
 
   let added=0;
 
-  function processMatch(m, modeLabel){
+  function processMatch(m, modeLabel, tn){
     if(!m||!m._id)return;
     if(existingIds.has(m._id))return;
     (m.sets||[]).forEach(set=>{
@@ -120,17 +120,36 @@ function syncTourneyHistory(){
         added++;
       });
     });
+    // 티어대회(tourneys type=tier)면 ttM에도 동기화
+    if(tn && tn.type==='tier' && typeof ttM!=='undefined'){
+      const stage = m._bktStage || 'league';
+      const exists = ttM.some(x=>x._id===m._id);
+      if(!exists){
+        ttM.unshift({
+          _id:m._id, d:m.d, a:m.a, b:m.b,
+          sa:m.sa, sb:m.sb, sets:m.sets,
+          n:tn.name, compName:tn.name,
+          teamALabel:m.a, teamBLabel:m.b,
+          stage: stage
+        });
+      }
+    }
     existingIds.add(m._id);
   }
 
   tourneys.forEach(tn=>{
     const isTier=tn.type==='tier';
     (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>processMatch(m, isTier?'티어대회':'조별리그'));
+      (grp.matches||[]).forEach(m=>processMatch(m, isTier?'티어대회':'조별리그', tn));
     });
     const br=tn.bracket||{};
-    Object.values(br.matchDetails||{}).forEach(m=>processMatch(m, isTier?'티어대회':'대회'));
-    (br.manualMatches||[]).forEach(m=>{if(m)processMatch(m, isTier?'티어대회':'대회');});
+    Object.values(br.matchDetails||{}).forEach(m=>{
+      if(m) m._bktStage='bkt';
+      processMatch(m, isTier?'티어대회':'대회', tn);
+    });
+    (br.manualMatches||[]).forEach(m=>{
+      if(m){ m._bktStage='bkt'; processMatch(m, isTier?'티어대회':'대회', tn); }
+    });
   });
 
   if(added>0){save();}
