@@ -18,6 +18,35 @@ function _migrateTierTourneys(){
       delete r._proKey; changed=true;
     }
   });
+  // ttM에 없는 stage 미설정 레코드에 stage:'general' 적용
+  (ttM||[]).forEach(r=>{
+    if(!r.stage&&!r._proKey){ r.stage='general'; changed=true; }
+  });
+  // tourneys 조별리그 경기 → ttM 동기화 (기존 기록 반영)
+  const _ttIds=new Set((ttM||[]).map(r=>r._id).filter(Boolean));
+  (tourneys||[]).filter(t=>t.type==='tier').forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id||_ttIds.has(m._id)||m.sa==null) return;
+        ttM.unshift({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],n:tn.name,compName:tn.name,teamALabel:m.a||'',teamBLabel:m.b||'',stage:'league'});
+        _ttIds.add(m._id);
+        changed=true;
+      });
+    });
+    // tourneys 브라켓 경기 → ttM 동기화
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id||_ttIds.has(m._id)||m.sa==null) return;
+      ttM.unshift({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],n:tn.name,compName:tn.name,teamALabel:m.a||'',teamBLabel:m.b||'',stage:'bkt'});
+      _ttIds.add(m._id);
+      changed=true;
+    });
+    ((tn.bracket||{}).manualMatches||[]).forEach(m=>{
+      if(!m._id||_ttIds.has(m._id)||m.sa==null) return;
+      ttM.unshift({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],n:tn.name,compName:tn.name,teamALabel:m.a||'',teamBLabel:m.b||'',stage:'bkt'});
+      _ttIds.add(m._id);
+      changed=true;
+    });
+  });
   if(changed) save();
 }
 
@@ -469,15 +498,16 @@ function rTierTourTab(C, T){
   }
   const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
   // 유효하지 않은 _ttSub 리셋
-  const _validSubs=['input','records','rank','league','grprank','tourschedule','bktrecords','grpedit'];
+  const _validSubs=['input','records','rank','league','grprecords','grprank','tourschedule','bktrecords','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
   const subOpts=[
-    ...(isLoggedIn?[{id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'📋 기록',fn:`_ttSub='records';openDetails={};render()`},
+    ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
+    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
     {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
+    {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
     {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
@@ -522,12 +552,28 @@ function rTierTourTab(C, T){
     if(grpSub!=='edit'){ _ttSub='records'; C.innerHTML=h; render(); return; }
     grpEditId=_curTierTn.id;
     h+=rGrpEditInner();
+  } else if(_ttSub==='grprecords'){
+    if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
+    const _grpRecs=ttM.filter(m=>m.compName===_ttCurComp&&m.stage==='league');
+    // tourneys 조별리그에서 아직 ttM에 없는 기존 경기도 포함 (fallback)
+    const _grpIds=new Set(_grpRecs.map(m=>m._id));
+    const _grpFromTn=[];
+    (_curTierTn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id||_grpIds.has(m._id)||m.sa==null) return;
+        _grpFromTn.push({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],compName:_ttCurComp,stage:'league'});
+      });
+    });
+    const _allGrp=[..._grpRecs,..._grpFromTn].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
+    h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
-    // records 탭
-    const _ttFiltered=_ttCurComp ? ttM.filter(m=>m.compName===_ttCurComp) : ttM;
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 기록</div>`;
-    
-    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
+    // records 탭 (일반 기록)
+    const _ttFiltered=_ttCurComp
+      ? ttM.filter(m=>m.compName===_ttCurComp&&(!m.stage||m.stage==='general'))
+      : ttM.filter(m=>!m.stage||m.stage==='general');
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 일반 기록</div>`;
+    h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">일반 기록이 없습니다.</div>';
   }
   C.innerHTML=h;
 }
@@ -1346,75 +1392,95 @@ function rCfg(C,T){
     </div>
   </details>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
-        <input type="number" id="cfg-b2-left-size" value="55" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">%</span>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(이미지) 너비</label>
+          <span id="cfg-b2-left-size-val" style="font-size:12px;font-weight:700;color:var(--blue)">55%</span>
+        </div>
+        <input type="range" id="cfg-b2-left-size" min="30" max="70" step="1" value="55" style="width:100%;accent-color:var(--blue)"
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
-        <input type="number" id="cfg-b2-right-size" value="45" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">%</span>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(목록) 너비</label>
+          <span id="cfg-b2-right-size-val" style="font-size:12px;font-weight:700;color:var(--blue)">45%</span>
+        </div>
+        <input type="range" id="cfg-b2-right-size" min="30" max="70" step="1" value="45" style="width:100%;accent-color:var(--blue)"
+          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 높이:</label>
-        <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="800" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">PC 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
+          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">태블릿 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
+          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">모바일 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
+          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:4px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
+            <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절
+          </label>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 높이:</label>
-        <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">px</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 높이:</label>
-        <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">px</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
-        </label>
-      </div>
-      <button class="btn btn-b" onclick="saveB2LayoutSettings()">💾 레이아웃 저장</button>
+      <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
     </div>
   </details>
-  ${_cfgD('imgsettings','🖼️ 이미지 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 기본 이미지 설정을 구성합니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-img-fill"> 채우기 모드 (contain/cover)
-        </label>
+  ${_cfgD('imgsettings','🖼️ 이미지탭 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭 ⚙️ 버튼과 동일한 설정입니다. 크기·밝기·배치·위치를 조절하면 즉시 반영됩니다.</div>
+    <div id="cfg-b2-img-settings-wrap" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin-top:6px;padding:0 2px">※ 스트리머 상세 모달 이미지 설정은 아래 별도 항목에서 설정</div>
+  </details>
+  ${_cfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
+        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
+      </label>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 크기</label>
+          <span id="cfg-img-scale-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.5x</span><span>2.0x</span></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 크기:</label>
-        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:150px">
-        <span id="cfg-img-scale-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 밝기</label>
+          <span id="cfg-img-brightness-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.3x</span><span>2.0x</span></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 밝기:</label>
-        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:150px">
-        <span id="cfg-img-brightness-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(모바일) 크기</label>
+          <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
-        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:150px">
-        <span id="cfg-img-scale-left-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(PC) 크기</label>
+          <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
-        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:150px">
-        <span id="cfg-img-scale-right-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-img-use-right-scale"> 우측 크기 적용
-        </label>
-      </div>
-      <button class="btn btn-b" onclick="saveImageSettings()">💾 이미지 설정 저장</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
+        <input type="checkbox" id="cfg-img-use-right-scale" style="width:14px;height:14px"> 좌우 개별 크기 사용
+      </label>
+      <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
   <div class="ssec">
@@ -1561,13 +1627,25 @@ function rCfg(C,T){
     }
     // 이미지탭 레이아웃 설정 초기화
     const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
-    if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
-    if(document.getElementById('cfg-b2-right-size'))document.getElementById('cfg-b2-right-size').value=b2Layout.rightSize||45;
+    const _b2ls=b2Layout.leftSize||55, _b2rs=b2Layout.rightSize||45;
+    const _b2lEl=document.getElementById('cfg-b2-left-size'), _b2rEl=document.getElementById('cfg-b2-right-size');
+    if(_b2lEl){_b2lEl.value=_b2ls;const v=document.getElementById('cfg-b2-left-size-val');if(v)v.textContent=_b2ls+'%';}
+    if(_b2rEl){_b2rEl.value=_b2rs;const v=document.getElementById('cfg-b2-right-size-val');if(v)v.textContent=_b2rs+'%';}
     if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
     if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
     if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
-    // 이미지 설정 초기화
+    // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
+    const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
+    if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
+      _cfgB2ImgWrap.innerHTML=`
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
+        ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
+        ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
+      `;
+    }
+    // 스트리머 상세 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
@@ -1577,27 +1655,19 @@ function rCfg(C,T){
     if(document.getElementById('cfg-img-use-right-scale'))document.getElementById('cfg-img-use-right-scale').checked=imgSettings.useRightScale||false;
     if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
     if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
-    // 이미지 설정 슬라이더 이벤트 리스너
-    ['scale','brightness','scaleLeft','scaleRight'].forEach(key=>{
-      const el=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key));
-      const valEl=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key)+'-val');
-      if(el&&valEl){
-        el.addEventListener('input',()=>valEl.textContent=parseFloat(el.value).toFixed(1)+'x');
-      }
-    });
     // 구현황판 밝기 설정 초기화
     const b2LabelAlpha=parseInt(localStorage.getItem('su_b2la')||'16');
     const b2BgAlpha=parseInt(localStorage.getItem('su_b2ba')||'9');
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
-    // 이미지탭 레이아웃 자동 저장 이벤트 리스너
+    // 레이아웃 자동 저장 이벤트 리스너
     ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
-    // 이미지 설정 자동 저장 이벤트 리스너
+    // 스트리머 상세 이미지 설정 자동 저장 이벤트 리스너
     ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
@@ -2307,7 +2377,7 @@ function _grpPasteApplyLogic(savable){
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
   if(tn.type==='tier'){
     const _ei=ttM.findIndex(x=>x._id===matchId);
-    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b};
+    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'league'};
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
 

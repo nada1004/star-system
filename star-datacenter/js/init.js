@@ -39,6 +39,8 @@ function init(){
   }
   // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
   if(typeof syncTourneyHistory==='function') syncTourneyHistory();
+  // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
+  if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
   // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
