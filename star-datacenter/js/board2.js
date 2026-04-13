@@ -1110,7 +1110,7 @@ function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentC
 
   // 이미지: 카드 전체를 원형으로 꽉 채움 (aspect-ratio 1:1, 둥근 모서리)
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
       + '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:none;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:flex;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
 
@@ -1294,7 +1294,7 @@ async function saveCrewImg(target, btn) {
 function _crewMemberCardStatic(name, photo, link, col, crewRole) {
   const roleTag = crewRole ? '<div style="font-size:9px;color:#ffffffbb;font-weight:700;margin-bottom:1px">' + crewRole + '</div>' : '';
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0">'
+    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px 10px 0 0">'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
   const overlay = '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 10px 10px;padding:18px 8px 8px;text-align:center">'
     + roleTag
@@ -1852,7 +1852,7 @@ function _b2PlayersView() {
         height: 100%;
         min-width: 100%;
         min-height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         object-position: center;
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
@@ -2270,8 +2270,8 @@ function _b2PlayersView() {
     
     h += `
       <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
-        ${p.photo 
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:cover;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+        ${p.photo
+          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
           : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }

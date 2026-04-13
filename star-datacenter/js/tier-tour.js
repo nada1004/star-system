@@ -1393,16 +1393,6 @@ function rCfg(C,T){
           <input type="checkbox" id="cfg-img-use-right-scale"> 우측 크기 적용
         </label>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-img-random"> 랜덤 회전
-        </label>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">회전 간격:</label>
-        <input type="number" id="cfg-img-interval" value="5" min="1" max="60" style="width:60px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-        <span style="font-size:11px;color:var(--gray-l)">초</span>
-      </div>
       <button class="btn btn-b" onclick="saveImageSettings()">💾 이미지 설정 저장</button>
     </div>
   </details>
