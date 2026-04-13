@@ -1310,7 +1310,11 @@ function buildPlayerDetailHTML(p){
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
-    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${_playerHistBulkMode?'<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" onchange="togglePlayerHistSelectAll('${escJS(p.name)}',[${displayHist.map(h=>h._origIdx).join(',')}])" style="cursor:pointer"></th>':''}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
+    const selectAllCheckbox = _playerHistBulkMode
+      ? `<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" onchange="togglePlayerHistSelectAll('${escJS(p.name)}',[${displayHist.map(h=>h._origIdx).join(',')}])" style="cursor:pointer"></th>`
+      : '';
+    const manageHeader = isLoggedIn ? '<th class="no-export" style="width:48px">관리</th>' : '';
+    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${manageHeader}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
