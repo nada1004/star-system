@@ -11,6 +11,20 @@ function _migrateTierTourneys(){
     if(!tn.groups){tn.groups=[];changed=true;}
     if(!tn.bracket){tn.bracket={slots:{},winners:{},champ:''};changed=true;}
   });
+  // _id 없는 조별리그/브라켓 경기에 ID 생성 (기존 데이터 호환)
+  (tourneys||[]).filter(t=>t.type==='tier').forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id){m._id=genId();changed=true;}
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(m&&!m._id){m._id=genId();changed=true;}
+    });
+    ((tn.bracket||{}).manualMatches||[]).forEach(m=>{
+      if(!m._id){m._id=genId();changed=true;}
+    });
+  });
   // 기존 브라켓 기록(_proKey가 ptn_으로 시작)에 stage:'bkt' 추가 및 _proKey 제거
   (ttM||[]).forEach(r=>{
     if(r._proKey && r._proKey.startsWith('ptn_')){
@@ -910,8 +924,8 @@ function grpRemoveUniv(tnId,gi,ui){
    ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
-function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));}catch(e){}}
-function _cfgD(id,title,extra){return `<details class="ssec" ${_cfgOpen(id)?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>`;}
+function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
+function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
 
 /* ══════════════════════════════════════
    설정
@@ -1079,12 +1093,7 @@ function rCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </details>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
-      <button id="cfg-si-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-si-body');const btn=document.getElementById('cfg-si-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgSiList();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-si-body" style="display:none">
+  ${_cfgD('si','🏷️ 스트리머 상태 아이콘 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
@@ -1111,8 +1120,7 @@ function rCfg(C,T){
       <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
-    </div>
-  </div>
+  </details>
   ${_cfgD('tier','🎭 티어 관리')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -1576,6 +1584,7 @@ function rCfg(C,T){
 
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
+    if(typeof _renderCfgSiList==='function') _renderCfgSiList();
     renderStorageInfo();
     renderSeasonList();
     const el=document.getElementById('adm-count');
