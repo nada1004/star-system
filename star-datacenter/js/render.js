@@ -187,6 +187,9 @@ function openEPFromModal(nameArg) {
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
+let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
+let _playerHistBulkMode = false; // 일괄 선택 모드
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
@@ -237,6 +240,74 @@ function deletePlayerHist(playerName, histIdx){
   save();
   document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
   injectUnivIcons(document.getElementById('playerModalBody'));
+}
+
+function deletePlayerHistBulk(playerName){
+  if(!isLoggedIn)return;
+  if(_playerHistBulkSelected.size===0){
+    alert('선택된 경기 기록이 없습니다.');
+    return;
+  }
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history)return;
+  // 인덱스 내림차순 정렬 후 삭제 (인덱스 변동 방지)
+  const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
+  sortedIdx.forEach(idx=>{
+    if(p.history[idx]){
+      const hh=p.history[idx];
+      if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
+      if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
+      else { p.loss=Math.max(0,(p.loss||0)-1); p.points=(p.points||0)+3; }
+      // 상대 기록도 차감
+      const opp=players.find(x=>x.name===hh.opp);
+      if(opp){
+        const oppHist=opp.history||[];
+        const oppIdx=oppHist.findIndex(o=>o.opp===playerName&&o.date===hh.date&&o.map===hh.map);
+        if(oppIdx>=0){
+          const oh=oppHist[oppIdx];
+          if(oh.eloDelta!=null) opp.elo=(opp.elo||ELO_DEFAULT)-oh.eloDelta;
+          if(oh.result==='승'){ opp.win=Math.max(0,(opp.win||0)-1); opp.points=(opp.points||0)-3; }
+          else { opp.loss=Math.max(0,(opp.loss||0)-1); opp.points=(opp.points||0)+3; }
+          oppHist.splice(oppIdx,1);
+        }
+      }
+      p.history.splice(idx,1);
+    }
+  });
+  _playerHistBulkSelected.clear();
+  if(typeof fixPoints==='function')fixPoints();
+  save();
+  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
+  injectUnivIcons(document.getElementById('playerModalBody'));
+}
+
+function togglePlayerHistBulkMode(){
+  _playerHistBulkMode=!_playerHistBulkMode;
+  _playerHistBulkSelected.clear();
+  if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(window._playerModalCurrentName||'');
+}
+
+function togglePlayerHistSelect(idx){
+  if(_playerHistBulkSelected.has(idx)){
+    _playerHistBulkSelected.delete(idx);
+  }else{
+    _playerHistBulkSelected.add(idx);
+  }
+  const btn=document.getElementById('bulk-delete-btn');
+  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+}
+
+function togglePlayerHistSelectAll(playerName, allIndices){
+  if(_playerHistBulkSelected.size===allIndices.length){
+    _playerHistBulkSelected.clear();
+  }else{
+    allIndices.forEach(idx=>_playerHistBulkSelected.add(idx));
+  }
+  const btn=document.getElementById('bulk-delete-btn');
+  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  const checkboxes=document.querySelectorAll('.hist-select-checkbox');
+  checkboxes.forEach(cb=>cb.checked=_playerHistBulkSelected.has(parseInt(cb.value)));
 }
 
 function openPlayerHistEdit(playerName, histIdx){
@@ -1236,10 +1307,10 @@ function buildPlayerDetailHTML(p){
       .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span></div>`;
+    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
-    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
+    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${_playerHistBulkMode?'<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" onchange="togglePlayerHistSelectAll('${escJS(p.name)}',[${displayHist.map(h=>h._origIdx).join(',')}])" style="cursor:pointer"></th>':''}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${isLoggedIn?'<th class="no-export" style="width:48px">관리</th>':''}</tr></thead><tbody>`;
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
@@ -1247,6 +1318,7 @@ function buildPlayerDetailHTML(p){
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
+      const selectCheckboxHTML=_playerHistBulkMode?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:'';
       const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
@@ -1261,6 +1333,7 @@ function buildPlayerDetailHTML(p){
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+        ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
@@ -1277,6 +1350,11 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} onclick="window._goPlayerHistPage(${curPage-1},'${escJS(p.name)}')">◀ 이전</button>
         <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
         <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} onclick="window._goPlayerHistPage(${curPage+1},'${escJS(p.name)}')">다음 ▶</button>
+        ${_playerHistBulkMode?`<button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>`:''}
+      </div>`;
+    }else if(_playerHistBulkMode){
+      h+=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
+        <button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" onclick="deletePlayerHistBulk('${escJS(p.name)}')" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${_playerHistBulkSelected.size})</button>
       </div>`;
     }
     h+=`</div>`;
