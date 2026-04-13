@@ -3656,7 +3656,7 @@ function saveRow(){
     // 선수 history 업데이트
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(game=>{
-        updatePlayerHistoryFromGame(game, m.d, 'pro');
+        updatePlayerHistoryFromGame(game, d, 'pro');
       });
     });
   } else if(reMode==='tt'){
@@ -3668,7 +3668,7 @@ function saveRow(){
     // 선수 history 업데이트
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(game=>{
-        updatePlayerHistoryFromGame(game, m.d, 'tier');
+        updatePlayerHistoryFromGame(game, d, 'tier');
       });
     });
   } else if(reMode==='ck'){

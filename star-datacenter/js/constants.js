@@ -639,16 +639,25 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }
 
-// game 객체에서 playerA, playerB, winner 정보를 추출해서 history 업데이트
+// game 객체에서 playerA, playerB, winner 정보를 추출해서 
+// applyGameResult를 호출하고 history 길이를 제한한다.
 function updatePlayerHistoryFromGame(game, date, mode){
-  if(!game.playerA||!game.playerB||!game.winner)return;
-  const winName=game.winner==='A'?game.playerA:game.winner==='B'?game.playerB:game.winner;
-  const loseName=game.winner==='A'?game.playerB:game.winner==='B'?game.playerA:'';
-  if(!winName||!loseName)return;
-  applyGameResult(winName,loseName,date,game.map||'',game._id||'',game.univA||'',game.univB||'',mode);
+  if(!game.playerA || !game.playerB || !game.winner) return;
+
+  const winName = game.winner === 'A' ? game.playerA : 
+                  game.winner === 'B' ? game.playerB : game.winner;
+  const loseName = game.winner === 'A' ? game.playerB : 
+                   game.winner === 'B' ? game.playerA : '';
+
+  if(!winName || !loseName) return;
+
+  // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
+  applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
+                  game.univA||'', game.univB||'', mode);
+
   // history 길이 제한 (30개 초과 시 가장 오래된 기록 제거)
-  const pA=players.find(p=>p.name===winName);
-  const pB=players.find(p=>p.name===loseName);
-  if(pA&&pA.history&&pA.history.length>30)pA.history.pop();
-  if(pB&&pB.history&&pB.history.length>30)pB.history.pop();
+  const pA = players.find(p => p.name === winName);
+  const pB = players.find(p => p.name === loseName);
+  if(pA && pA.history && pA.history.length > 30) pA.history.pop();
+  if(pB && pB.history && pB.history.length > 30) pB.history.pop();
 }
