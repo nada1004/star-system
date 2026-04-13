@@ -454,7 +454,7 @@ function syncAllHistory(){
     });
   });
 
-  // ttM (티어대전) — sets[].games[] 구조
+  // ttM (티어대회) — sets[].games[] 구조
   (typeof ttM!=='undefined'?ttM:[]).forEach(m=>{
     if(!m||!m._id)return;
     (m.sets||[]).forEach((set,setIdx)=>{
@@ -464,7 +464,7 @@ function syncAllHistory(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,'','','티어대전');
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,'','','티어대회');
         existingIds.add(gameMatchId);
         added++;
       });
