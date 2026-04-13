@@ -8,15 +8,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css">
+<script>var _cbv='?v='+Date.now()+'&force='+Math.random();</script>
+<script>document.write('<link rel="stylesheet" href="css/style.css'+_cbv+'">')</script>
 </head>
 <body>
-
-<!-- 페이지 로딩 오버레이 -->
-<div id="pageLoading" class="page-loading hidden">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">데이터 로딩 중...</div>
-</div>
 
 <!-- 공지 팝업 모달 -->
 <div id="noticePopupModal" class="modal no-export" style="display:none;z-index:9000">
@@ -328,7 +323,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
       <div class="mtitle" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
       <div style="display:flex;gap:6px;align-items:center">
-        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();try{window.openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️ 수정</button>
+        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️ 수정</button>
         <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
         <button class="btn btn-w btn-sm" onclick="cm('playerModal')">✕ 닫기</button>
@@ -530,48 +525,7 @@
   </div>
 </div>
 
-<!-- Core Data Layer -->
-<script src="js/app-namespace.js"></script>
-<script src="js/constants.js"></script>
-<script src="js/data.js"></script>
-
-<!-- Authentication & Firebase -->
-<script src="js/auth.js"></script>
-<script type="module" src="js/firebase-init.js"></script>
-
-<!-- Core Rendering & UI -->
-<script src="js/render.js"></script>
-<script src="js/players.js"></script>
-<script src="js/search.js"></script>
-
-<!-- Match & Competition Logic -->
-<script src="js/match.js"></script>
-<script src="js/match-builder.js"></script>
-<script src="js/competition.js"></script>
-<script src="js/tier-tour.js"></script>
-<script src="js/pro-comp.js"></script>
-<script src="js/history.js"></script>
-<script src="js/vs.js"></script>
-
-<!-- Feature Modules -->
-<script src="js/stats.js"></script>
-<script src="js/calendar.js"></script>
-<script src="js/roulette.js"></script>
-<script src="js/wheel.js"></script>
-<script src="js/duck-race.js"></script>
-<script src="js/vote.js"></script>
-
-<!-- Board & Cloud -->
-<script src="js/cloud-board.js"></script>
-<script src="js/board2.js"></script>
-
-<!-- Chatbot & Mobile -->
-<script src="js/chatbot.js"></script>
-<script src="js/mobile-bar.js"></script>
-
-<!-- Initialization -->
-<script src="js/init.js"></script>
-<script src="js/modal-drag.js"></script>
+<script>['js/constants.js','js/data.js','js/auth.js','js/tier-tour.js','js/competition.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js','js/mobile-bar.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
