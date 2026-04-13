@@ -646,4 +646,9 @@ function updatePlayerHistoryFromGame(game, date, mode){
   const loseName=game.winner==='A'?game.playerB:game.winner==='B'?game.playerA:'';
   if(!winName||!loseName)return;
   applyGameResult(winName,loseName,date,game.map||'',game._id||'',game.univA||'',game.univB||'',mode);
+  // history 길이 제한 (30개 초과 시 가장 오래된 기록 제거)
+  const pA=players.find(p=>p.name===winName);
+  const pB=players.find(p=>p.name===loseName);
+  if(pA&&pA.history&&pA.history.length>30)pA.history.pop();
+  if(pB&&pB.history&&pB.history.length>30)pB.history.pop();
 }
