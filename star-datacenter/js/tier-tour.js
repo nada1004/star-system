@@ -1216,7 +1216,7 @@ function rCfg(C,T){
           <option value="">스트리머 선택...</option>
           ${players.map(p=>`<option value="${p.name}">${p.name} (${p.univ||'무소속'})</option>`).join('')}
         </select>
-        <button class="btn btn-g btn-sm" onclick="const sel=document.getElementById('sync-player-select').value;if(!sel){alert('스트리머를 선택하세요.');return;}syncHistoryToMatches(sel)">🔄 기록 반영</button>
+        <button class="btn btn-g btn-sm" onclick="const sel=document.getElementById('sync-player-select').value;if(!sel){alert('스트리머를 선택하세요.');return;}if(typeof window.syncHistoryToMatches==='function'){window.syncHistoryToMatches(sel);}else{alert('기록 반영 기능이 로드되지 않았습니다. 페이지를 새로고침하세요.');}">🔄 기록 반영</button>
       </div>
       <div id="sync-result" style="font-size:12px;color:var(--gray-l);min-height:16px"></div>
     </div>

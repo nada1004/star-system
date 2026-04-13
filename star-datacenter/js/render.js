@@ -191,7 +191,7 @@ let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
 
 // 스트리머 상세 기록을 대전기록/기록탭에 반영
-function syncHistoryToMatches(playerName){
+window.syncHistoryToMatches = function(playerName){
   if(!isLoggedIn){ alert('관리자만 사용할 수 있습니다.'); return; }
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history){ alert('기록이 없습니다.'); return; }
