@@ -468,6 +468,12 @@ function _bktPasteApplyLogic(savable, tn){
       applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
     });
   });
+  // 티어대회 브라켓: ttM에도 동기화 (기록 탭에서 표시되도록)
+  if(tn.type==='tier'){
+    const _ei=ttM.findIndex(x=>x._id===matchId);
+    const _rec={_id:matchId,d:dateStr||m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
+    if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
+  }
   save();
   const _matchModal=document.getElementById('grpMatchModal');
   if(_matchModal&&_matchModal.style.display!=='none'&&_matchModal.offsetParent!==null){
