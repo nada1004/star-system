@@ -538,6 +538,36 @@ function syncAllHistory(){
     (br.manualMatches||[]).forEach(m=>{if(m)processTourneyMatch(m,isTier?'티어대회':'대회');});
   });
 
+  // tourneys(type=tier) 경기를 ttM에도 동기화
+  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn => {
+    if(tn.type !== 'tier') return;
+    // 조별리그
+    (tn.groups||[]).forEach(grp => {
+      (grp.matches||[]).forEach(m => {
+        if(!m||!m._id) return;
+        const exists = ttM.some(x => x._id === m._id);
+        if(!exists) {
+          ttM.unshift({_id:m._id, d:m.d, a:m.a, b:m.b, sa:m.sa, sb:m.sb,
+            sets:m.sets, n:tn.name, compName:tn.name,
+            teamALabel:m.a, teamBLabel:m.b, stage:'league'});
+          added++;
+        }
+      });
+    });
+    // 브라켓(토너먼트)
+    const br = tn.bracket || {};
+    [...Object.values(br.matchDetails||{}), ...(br.manualMatches||[])].forEach(m => {
+      if(!m||!m._id) return;
+      const exists = ttM.some(x => x._id === m._id);
+      if(!exists) {
+        ttM.unshift({_id:m._id, d:m.d, a:m.a, b:m.b, sa:m.sa, sb:m.sb,
+          sets:m.sets, n:tn.name, compName:tn.name,
+          teamALabel:m.a, teamBLabel:m.b, stage:'bkt'});
+        added++;
+      }
+    });
+  });
+
   if(added>0)save();
   return added;
 }

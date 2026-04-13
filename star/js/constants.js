@@ -618,11 +618,13 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: matchId가 있으면 matchId로, 없으면 날짜+맵+상대로 체크
+  // 중복 체크: 항상 게임 단위 고유 키 사용 (date|map|playerA|playerB)
+  // matchId가 있어도 같은 매치 내 다른 맵/선수 조합은 각각 독립적으로 기록됨
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const wDup=(w.history||[]).find(h=>(matchId&&h.matchId===matchId)||(!matchId&&h.date===d&&h.map===m&&h.opp===l.name));
-  const lDup=(l.history||[]).find(h=>(matchId&&h.matchId===matchId)||(!matchId&&h.date===d&&h.map===m&&h.opp===w.name));
+  const gameKey = `${d}|${m}|${[winName,loseName].sort().join('|')}`;
+  const wDup=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name&&h.matchId===matchId);
+  const lDup=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name&&h.matchId===matchId);
   if(wDup||lDup)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
@@ -637,4 +639,144 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+}
+
+function rebuildAllPlayerHistory() {
+  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
+
+  // 1. 모든 선수의 history, win, loss, points, elo 초기화
+  players.forEach(p => {
+    p.history = [];
+    p.win = 0;
+    p.loss = 0;
+    p.points = 0;
+    p.elo = ELO_DEFAULT;
+  });
+
+  let count = 0;
+
+  // 2. miniM에서 복구
+  (miniM || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
+        const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        count++;
+      });
+    });
+  });
+
+  // 3. univM에서 복구
+  (univM || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        count++;
+      });
+    });
+  });
+
+  // 4. ckM에서 복구
+  (ckM || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        count++;
+      });
+    });
+  });
+
+  // 5. proM에서 복구
+  (proM || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        count++;
+      });
+    });
+  });
+
+  // 6. ttM에서 복구
+  (ttM || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        count++;
+      });
+    });
+  });
+
+  // 7. indM에서 복구
+  (indM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
+    count++;
+  });
+
+  // 8. gjM에서 복구
+  (gjM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
+    count++;
+  });
+
+  // 9. comps에서 복구
+  (comps || []).forEach(m => {
+    (m.sets || []).forEach(set => {
+      (set.games || []).forEach(g => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = genId();
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        count++;
+      });
+    });
+  });
+
+  save();
+  alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
+  render();
+}
+
+// game 객체에서 playerA, playerB, winner 정보를 추출해서
+// applyGameResult를 호출한다.
+function updatePlayerHistoryFromGame(game, date, mode){
+  if(!game.playerA || !game.playerB || !game.winner) return;
+
+  const winName = game.winner === 'A' ? game.playerA : 
+                  game.winner === 'B' ? game.playerB : game.winner;
+  const loseName = game.winner === 'A' ? game.playerB : 
+                   game.winner === 'B' ? game.playerA : '';
+
+  if(!winName || !loseName) return;
+
+  // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
+  applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
+                  game.univA||'', game.univB||'', mode);
 }

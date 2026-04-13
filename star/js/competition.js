@@ -1264,6 +1264,37 @@ function grpDelGame(si,gi2){
 }
 
 
+// 선수 경기 history 업데이트 함수
+function updateHistoryFromGame(game, date) {
+  if (!game.playerA || !game.playerB) return;
+
+  const pA = players.find(p => p.name === game.playerA);
+  const pB = players.find(p => p.name === game.playerB);
+  if (!pA || !pB) return;
+
+  const isWinA = game.winner === 'A' || game.winner === game.playerA;
+
+  // A 선수 history
+  if (!pA.history) pA.history = [];
+  pA.history.unshift({  // 최신이 맨 위로
+    opp: pB.name,
+    result: isWinA ? '승' : '패',
+    date: date || new Date().toISOString().slice(0,10),
+    map: game.map || '',
+    type: 'teamGame'   // 구분용 (원하면)
+  });
+
+  // B 선수 history (반대 결과)
+  if (!pB.history) pB.history = [];
+  pB.history.unshift({
+    opp: pA.name,
+    result: isWinA ? '패' : '승',
+    date: date || new Date().toISOString().slice(0,10),
+    map: game.map || '',
+    type: 'teamGame'
+  });
+}
+
 function grpSaveMatch(){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
   const {gi,mi}=grpMatchState;const m=tn.groups[gi].matches[mi];
@@ -1297,6 +1328,8 @@ function grpSaveMatch(){
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
       applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_modeLabel);
+      // 선수 history 업데이트
+      updateHistoryFromGame(g, m.d);
     });
   });
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)

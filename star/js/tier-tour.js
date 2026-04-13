@@ -1415,6 +1415,10 @@ function rCfg(C,T){
         ">🗑️ 중복 경기 제거</button>
         <span style="font-size:11px;color:var(--gray-l)">같은 _id로 이중 등록된 티어대회 경기 제거</span>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-r btn-sm" onclick="rebuildAllPlayerHistory()">🔄 전체 경기 기록 복구</button>
+        <span style="font-size:11px;color:var(--gray-l)">대전 데이터에서 스트리머 history 재구성 (기존 history 초기화됨)</span>
+      </div>
     </div>
   </details>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
@@ -3626,10 +3630,28 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    // miniM에 _id가 없으면 생성
+    if(!miniM[reIdx]._id)miniM[reIdx]._id=genId();
+    // 선수 history 업데이트
+    (miniM[reIdx].sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        if(!game._id)game._id=miniM[reIdx]._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
+        updatePlayerHistoryFromGame(game, d, 'mini');
+      });
+    });
   } else if(reMode==='univm'){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // univM에 _id가 없으면 생성
+    if(!m._id)m._id=genId();
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
+        updatePlayerHistoryFromGame(game, d, 'univ');
+      });
+    });
   } else if(reMode==='comp'){
     const c=comps[reIdx];c.d=d;c.n=document.getElementById('re-cn').value;
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
@@ -3641,12 +3663,30 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // proM에 _id가 없으면 생성
+    if(!m._id)m._id=genId();
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
+        updatePlayerHistoryFromGame(game, d, 'pro');
+      });
+    });
   } else if(reMode==='tt'){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
+    if(!m._id)m._id=genId();
+    // 선수 history 업데이트
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(game=>{
+        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
+        updatePlayerHistoryFromGame(game, d, 'tier');
+      });
+    });
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;

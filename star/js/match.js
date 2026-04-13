@@ -367,8 +367,9 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        const gameId=genId(); // 각 게임마다 고유 ID 생성
+        applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
@@ -384,8 +385,9 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','','개인전');
-        if(typeof indM!=='undefined')indM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||''});
+        const gameId=genId(); // 각 게임마다 고유 ID 생성
+        applyGameResult(wName,lName,date,g.map||'-',gameId,'','','개인전');
+        if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -400,7 +402,8 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
+      const gameId=genId(); // 각 게임마다 고유 ID 생성
+      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
     });
     
     let totalA=0,totalB=0;

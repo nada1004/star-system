@@ -1082,7 +1082,7 @@ function buildPlayerDetailHTML(p){
     return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${icon} ${label}</a>`;
   })();
   const _eloSparkHTML=(()=>{
-    const deltas=(p.history||[]).filter(h=>h.eloDelta!=null).slice(-12);
+    const deltas=_histAll.filter(h=>h.eloDelta!=null).slice(-12);
     if(deltas.length<2) return '';
     let cur=eloVal;
     [...deltas].reverse().forEach(h=>{cur-=h.eloDelta;});
@@ -1141,7 +1141,7 @@ function buildPlayerDetailHTML(p){
   // ── 연승/연패 + 랭킹 위치 + 최근 폼 ──
   {
     // 연승/연패 계산
-    const hist = (p.history||[]).slice();
+    const hist = _histAll.slice();
     let streak = 0, streakType = '';
     for(const h of hist) {
       if(streak===0){ streak=1; streakType=h.result; }
@@ -1257,7 +1257,7 @@ function buildPlayerDetailHTML(p){
   let _compW=(_histModeStats['대회']?.w||0)+(_histModeStats['조별리그']?.w||0)+(_histModeStats['토너먼트']?.w||0);
   let _compL=(_histModeStats['대회']?.l||0)+(_histModeStats['조별리그']?.l||0)+(_histModeStats['토너먼트']?.l||0);
   // tourneys에만 있고 p.history에 없는 기록도 집계
-  const _histMatchIds=new Set((p.history||[]).map(h=>h.matchId).filter(Boolean));
+  const _histMatchIds=new Set(_histAll.map(h=>h.matchId).filter(Boolean));
   function _cGame(g,matchId){if(!g.playerA||!g.playerB||!g.winner)return;if(_histMatchIds.has(matchId))return;const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;if(wn===p.name)_compW++;else if(ln===p.name)_compL++;}
   (tourneys||[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>_cGame(g,m._id||''));});});});
@@ -1365,7 +1365,7 @@ function buildPlayerDetailHTML(p){
   }
 
   // ── 최근 기록 ──
-  if((p.history||[]).length){
+  if(_modeHist.length){
     // 시즌 필터 UI
     let seasonBar='';
     if(typeof seasons!=='undefined' && seasons && seasons.length){
