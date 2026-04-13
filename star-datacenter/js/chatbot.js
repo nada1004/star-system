@@ -2034,7 +2034,8 @@ function formatPlayerCompOnly(player) {
 // ── 티어대회 기록 (ttM만) ──
 function formatPlayerTtM(player) {
   const matches = (typeof ttM !== 'undefined' ? ttM : []).filter(m =>
-    [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name)
+    [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name) ||
+    (m.a===player.name || m.b===player.name)
   );
   if (!matches.length) return _noRecordCard('🎖️', `${player.name} 티어대회`);
   const totalWL = _calcWL_sets(matches, player.name);

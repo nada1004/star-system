@@ -157,6 +157,8 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
       const existingIdx = ttM.findIndex(x => x._id === matchId);
       if (existingIdx >= 0) ttM.splice(existingIdx, 1);
       ttM.push(_rec);
+      // ttM 변경 후 즉시 저장
+      save();
     }
   } else {
   }
@@ -2270,9 +2272,11 @@ function _proCompLeaguePasteApplyLogic(savable) {
   let added = 0;
   savable.forEach(r => {
     if (!r.wPlayer||!r.lPlayer) return;
-    const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    grp.matches.push({a:r.wPlayer.name, b:r.lPlayer.name, winner:'A', d:defDate, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
-    applyGameResult(r.wPlayer.name, r.lPlayer.name, defDate, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
+    const newMid = 'pco_'+(Date.now()+added).toString(36)+Math.random().toString(36).slice(2,5);
+    const aName = r.wPlayer.name;
+    const bName = r.lPlayer.name;
+    grp.matches.push({a:aName, b:bName, winner:'A', d:defDate, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
+    applyGameResult(aName, bName, defDate, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
     added++;
   });
   save(); render();
