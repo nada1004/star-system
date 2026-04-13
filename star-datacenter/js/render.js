@@ -190,6 +190,114 @@ function openEPFromModal(nameArg) {
 let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
 
+// 스트리머 상세 기록을 대전기록/기록탭에 반영
+function syncHistoryToMatches(playerName){
+  if(!isLoggedIn){ alert('관리자만 사용할 수 있습니다.'); return; }
+  const p=players.find(x=>x.name===playerName);
+  if(!p||!p.history){ alert('기록이 없습니다.'); return; }
+  
+  let syncedCount=0;
+  const now=new Date().toISOString().slice(0,10);
+  
+  p.history.forEach((hh, idx)=>{
+    // 이미 matchId가 있으면 건너뜀
+    if(hh.matchId) return;
+    
+    // mode에 따라 적절한 배열에 추가
+    if(hh.mode==='미니대전'||hh.mode==='시빌워'){
+      miniM.push({
+        _id:genId(),
+        d:hh.date||now,
+        a:playerName,
+        b:hh.opp||'',
+        w:hh.result==='승'?playerName:hh.opp||'',
+        map:hh.map||'-'
+      });
+      hh.matchId=miniM[miniM.length-1]._id;
+      syncedCount++;
+    }
+    else if(hh.mode==='대학대전'){
+      univM.push({
+        _id:genId(),
+        d:hh.date||now,
+        a:playerName,
+        b:hh.opp||'',
+        w:hh.result==='승'?playerName:hh.opp||'',
+        map:hh.map||'-'
+      });
+      hh.matchId=univM[univM.length-1]._id;
+      syncedCount++;
+    }
+    else if(hh.mode==='대학CK'){
+      ckM.push({
+        _id:genId(),
+        d:hh.date||now,
+        a:playerName,
+        b:hh.opp||'',
+        w:hh.result==='승'?playerName:hh.opp||'',
+        map:hh.map||'-'
+      });
+      hh.matchId=ckM[ckM.length-1]._id;
+      syncedCount++;
+    }
+    else if(hh.mode==='프로리그'){
+      proM.push({
+        _id:genId(),
+        d:hh.date||now,
+        a:playerName,
+        b:hh.opp||'',
+        w:hh.result==='승'?playerName:hh.opp||'',
+        map:hh.map||'-'
+      });
+      hh.matchId=proM[proM.length-1]._id;
+      syncedCount++;
+    }
+    else if(hh.mode==='개인전'){
+      indM.push({
+        _id:genId(),
+        d:hh.date||now,
+        wName:hh.result==='승'?playerName:hh.opp||'',
+        lName:hh.result==='승'?hh.opp||'':playerName,
+        map:hh.map||'-'
+      });
+      hh.matchId=indM[indM.length-1]._id;
+      syncedCount++;
+    }
+    else if(hh.mode==='끝장전'){
+      gjM.push({
+        _id:genId(),
+        d:hh.date||now,
+        wName:hh.result==='승'?playerName:hh.opp||'',
+        lName:hh.result==='승'?hh.opp||'':playerName,
+        map:hh.map||'-'
+      });
+      hh.matchId=gjM[gjM.length-1]._id;
+      syncedCount++;
+    }
+  });
+  
+  if(syncedCount>0){
+    save();
+    alert(`${syncedCount}개의 기록을 대전기록에 반영했습니다.`);
+    render();
+    const pb=document.getElementById('playerModalBody');
+    if(pb){
+      const p=players.find(x=>x.name===playerName);
+      if(p){
+        pb.innerHTML=buildPlayerDetailHTML(p);
+        injectUnivIcons(pb);
+      }
+    }
+  }else{
+    alert('반영할 기록이 없습니다. (이미 모든 기록이 matchId를 가지고 있습니다.)');
+  }
+}
+
+// 간단한 ID 생성 함수
+function genId(){
+  return Date.now().toString(36)+Math.random().toString(36).substr(2,9);
+}
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;

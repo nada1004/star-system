@@ -1202,7 +1202,28 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🔄 기록 반영 (스트리머 상세 → 대전기록)</h4>
+      <button id="cfg-sync-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-sync-body');const btn=document.getElementById('cfg-sync-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-sync-body" style="display:none">
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">스트리머 상세에 저장된 기록(p.history) 중 matchId가 없는 기록을 대전기록 탭에 반영합니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">반영할 스트리머 선택</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <select id="sync-player-select" style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <option value="">스트리머 선택...</option>
+          ${players.map(p=>`<option value="${p.name}">${p.name} (${p.univ||'무소속'})</option>`).join('')}
+        </select>
+        <button class="btn btn-g btn-sm" onclick="const sel=document.getElementById('sync-player-select').value;if(!sel){alert('스트리머를 선택하세요.');return;}syncHistoryToMatches(sel)">🔄 기록 반영</button>
+      </div>
+      <div id="sync-result" style="font-size:12px;color:var(--gray-l);min-height:16px"></div>
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">※ 반영 후 해당 기록은 matchId가 부여되어 대전기록 탭에서도 보입니다.</div>
+    </div>
+  </div>
+  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
