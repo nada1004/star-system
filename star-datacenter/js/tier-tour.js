@@ -349,14 +349,15 @@ function _grpPasteApplyLogic(savable){
   if(m._id) revertMatchRecord({...m, _id:matchId});
   m._id = matchId;
   const dateStr = dateEl?.value || m.d || '';
-  (m.sets||[]).forEach(set=>{
-    (set.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((set, si)=>{
+    (set.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner) return;
       const wn=g.winner==='A'?g.playerA:g.playerB;
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(teamA||m.a||''):(teamB||m.b||'');
       const univL=g.winner==='A'?(teamB||m.b||''):(teamA||m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
+      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
     });
   });
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
@@ -458,14 +459,15 @@ function _bktPasteApplyLogic(savable, tn){
   if(m._id) revertMatchRecord({...m, _id:matchId});
   m._id=matchId;
   const dateStr=m.d;
-  (m.sets||[]).forEach(s=>{
-    (s.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((s, si)=>{
+    (s.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
+      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,'티어대회 토너먼트');
     });
   });
   save();
@@ -2399,14 +2401,15 @@ function _grpPasteApplyLogic(savable){
   if(m._id) revertMatchRecord({...m, _id:matchId});
   m._id = matchId;
   const dateStr = dateEl?.value || m.d || '';
-  (m.sets||[]).forEach(set=>{
-    (set.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((set, si)=>{
+    (set.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner) return;
       const wn=g.winner==='A'?g.playerA:g.playerB;
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(teamA||m.a||''):(teamB||m.b||'');
       const univL=g.winner==='A'?(teamB||m.b||''):(teamA||m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
+      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
     });
   });
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
@@ -2508,14 +2511,15 @@ function _bktPasteApplyLogic(savable, tn){
   if(m._id) revertMatchRecord({...m, _id:matchId});
   m._id=matchId;
   const dateStr=m.d;
-  (m.sets||[]).forEach(s=>{
-    (s.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((s, si)=>{
+    (s.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,dateStr,g.map||'',matchId,univW,univL,'티어대회 토너먼트');
+      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,'티어대회 토너먼트');
     });
   });
   // 티어대회 브라켓: ttM에도 동기화 (기록 탭에서 표시되도록)

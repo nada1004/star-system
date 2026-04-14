@@ -635,8 +635,9 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
       :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
     :null;
   // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
-  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+  // 단, 고유 matchId(_sN_gN)가 있는 경우, 이미 위에서 검증했으므로 fallback 체크는 건너뜀 (동일 날짜/맵/상대 재경기 허용)
+  const wDupFallback=(!isGameId && (w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name));
+  const lDupFallback=(!isGameId && (l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name));
   // 둘 중 하나라도 중복이면 중단
   if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
