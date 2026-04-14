@@ -53,25 +53,20 @@ function rStats(C,T){
       ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
-  let h=`<div class="no-export" style="margin-bottom:12px">`;
+  // 현재 그룹 찾기
+  const _curGrp=_statsGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroups[0];
+  let h=``;
+  // 1행: 그룹 pill 바
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">`;
   _statsGroups.forEach(grp=>{
-    const _cgKey='su_statsGrp_'+grp.label;
-    const _collapsed=localStorage.getItem(_cgKey)==='1';
-    const _hasActive=grp.tabs.some(o=>o.id===(window.statsSub||'overview'));
-    const _open=!_collapsed||_hasActive;
-    h+=`<div style="margin-bottom:4px">
-      <div style="display:flex;align-items:center;gap:3px;cursor:pointer;user-select:none" onclick="(function(){const k='${_cgKey}';const v=localStorage.getItem(k)==='1';localStorage.setItem(k,v?'0':'1');render()})()">
-        <span style="font-size:10px;font-weight:800;color:var(--gray-l);min-width:52px;white-space:nowrap">${grp.label}</span>
-        <span style="font-size:10px;color:var(--gray-l)">${_open?'▾':'▸'}</span>
-      </div>`;
-    if(_open){
-      h+=`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px">`;
-      grp.tabs.forEach(o=>{
-        h+=`<button class="stab ${(window.statsSub||'overview')===o.id?'on':''}" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()" style="margin:1px 1px">${o.lbl}</button>`;
-      });
-      h+=`</div>`;
-    }
-    h+=`</div>`;
+    const isOn=grp===_curGrp;
+    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
+  });
+  h+=`</div>`;
+  // 2행: 선택 그룹 내 서브탭 pill 바
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px">`;
+  _curGrp.tabs.forEach(o=>{
+    h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });
   h+=`</div>`;
   // 전역 필터 바
