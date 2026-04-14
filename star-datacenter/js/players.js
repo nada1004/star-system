@@ -766,15 +766,6 @@ function rTier(C,T){
   const _activeMC=_modeColorMap[tierRankMode]||'#6366f1';
   if(window._tierFilterOpen===undefined) window._tierFilterOpen=false;
 
-  let fh=`<div style="display:flex;align-items:center;gap:3px;background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:8px">`;
-  modes.forEach(m=>{
-    const on=tierRankMode===m.id&&_curModeNoFilter;
-    const mc=_modeColorMap[m.id]||'#6366f1';
-    fh+=`<button onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()" style="flex-shrink:0;white-space:nowrap;padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:${on?'800':'600'};cursor:pointer;transition:all .15s;background:${on?mc:'transparent'};color:${on?'#fff':'var(--text2)'}">${m.lbl}</button>`;
-  });
-  fh+=`</div>`;
-
-  // ── 필터 토글 버튼 + 활성 필터 chip ──
   const _activeFilterCount=(()=>{
     if(tierRankMode==='recent'){
       return [
@@ -789,12 +780,28 @@ function rTier(C,T){
     ].filter(Boolean).length;
   })();
 
+  let fh=`<div style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:8px">`;
+  
+  // ── 필터 토글 버튼 ──
+  fh+=`<button onclick="window._tierFilterOpen=!window._tierFilterOpen;render()" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1.5px solid ${_activeFilterCount>0?_activeMC:'var(--border2)'};border-radius:8px;background:${_activeFilterCount>0?_activeMC+'18':'var(--surface)'};color:${_activeFilterCount>0?_activeMC:'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">⚙ 필터${_activeFilterCount>0?` (${_activeFilterCount})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
+  
+  // ── 구분선 ──
+  fh+=`<div style="width:1px;height:24px;background:var(--border2);margin:0 2px"></div>`;
+
+  // ── 모드 버튼 ──
+  modes.forEach(m=>{
+    const on=tierRankMode===m.id&&_curModeNoFilter;
+    const mc=_modeColorMap[m.id]||'#6366f1';
+    fh+=`<button onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()" style="flex-shrink:0;white-space:nowrap;padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:${on?'800':'600'};cursor:pointer;transition:all .15s;background:${on?mc:'transparent'};color:${on?'#fff':'var(--text2)'}">${m.lbl}</button>`;
+  });
+  fh+=`</div>`;
+
+  // ── 활성 필터 chip 영역 ──
   fh+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:${window._tierFilterOpen?'6px':'8px'}">`;
-  fh+=`<button onclick="window._tierFilterOpen=!window._tierFilterOpen;render()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1.5px solid ${_activeFilterCount>0?_activeMC:'var(--border2)'};border-radius:8px;background:${_activeFilterCount>0?_activeMC+'18':'var(--surface)'};color:${_activeFilterCount>0?_activeMC:'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">⚙ 필터${_activeFilterCount>0?` (${_activeFilterCount})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   if(tierRankMode==='recent'){
     if(window._recentRaceFilter&&window._recentRaceFilter!=='전체') fh+=`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--surface);border:1.5px solid var(--border2);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer" onclick="window._recentRaceFilter='전체';render()">${window._recentRaceFilter} ✕</span>`;
     if(window._recentTierFilter&&window._recentTierFilter!=='전체'){const _bc=getTierBtnColor(window._recentTierFilter);fh+=`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:${_bc}22;border:1.5px solid ${_bc};border-radius:20px;font-size:11px;font-weight:700;color:${_bc};cursor:pointer" onclick="window._recentTierFilter='전체';render()">${getTierPillLabel(window._recentTierFilter)} ✕</span>`;}
-    fh+=`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="window._recentRaceFilter='전체';window._recentTierFilter='전체';window._tierFilterOpen=false;render()">초기화</button>`;
+    if(_activeFilterCount>0) fh+=`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="window._recentRaceFilter='전체';window._recentTierFilter='전체';window._tierFilterOpen=false;render()">초기화</button>`;
   } else {
     if(fUniv!=='전체') fh+=`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--surface);border:1.5px solid var(--border2);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer" onclick="sf('전체','${fTier}')">${fUniv} ✕</span>`;
     if(fTier!=='전체'){const _bc=getTierBtnColor(fTier);fh+=`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:${_bc}22;border:1.5px solid ${_bc};border-radius:20px;font-size:11px;font-weight:700;color:${_bc};cursor:pointer" onclick="sf('${fUniv}','전체')">${fTier} ✕</span>`;}
@@ -805,7 +812,7 @@ function rTier(C,T){
         if(mb) fh+=`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:${mb.color}22;border:1.5px solid ${mb.color};border-radius:20px;font-size:11px;font-weight:700;color:${mb.color};cursor:pointer" onclick="window._tierTypeSet.delete('${id}');render()">${mb.lbl} ✕</span>`;
       });
     }
-    fh+=`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="sf('전체','전체');window._tierRaceFilter='전체';window._tierHideNoRecord=false;window._tierExcludeMale=false;window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;window._tierFilterOpen=false;render()">초기화</button>`;
+    if(_activeFilterCount>0) fh+=`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="sf('전체','전체');window._tierRaceFilter='전체';window._tierHideNoRecord=false;window._tierExcludeMale=false;window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;window._tierFilterOpen=false;render()">초기화</button>`;
   }
   fh+=`</div>`;
 
