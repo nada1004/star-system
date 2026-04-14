@@ -396,16 +396,17 @@ function saveMatch(mode){
       return;
     }
 
-    freeGames.forEach(g=>{
+    // 각 게임에 _id 부여 (rebuildAllPlayerHistory와 ID 일치를 위해, setsSnap spread에 포함됨)
+    freeGames.forEach((g,gi)=>{g._id=`${matchId}_s0_g${gi}`;});
+    freeGames.forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      const gameId=genId(); // 각 게임마다 고유 ID 생성
-      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
+      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
     });
-    
+
     let totalA=0,totalB=0;
     if(bld.directSA!=null||bld.directSB!=null){
       totalA=bld.directSA||0;
@@ -468,6 +469,8 @@ function saveMatch(mode){
   bld.sets.forEach((s,si)=>{recalcSet(mode,si);if(s.winner==='A')totalA++;else if(s.winner==='B')totalB++;});
   const date=bld.date||new Date().toISOString().slice(0,10);
   const matchId=genId();
+  // 각 게임에 _id 부여 (rebuildAllPlayerHistory와 ID 일치를 위해, setsSnap spread에 포함됨)
+  bld.sets.forEach((set,setIdx)=>{set.games.forEach((g,gameIdx)=>{g._id=`${matchId}_s${setIdx}_g${gameIdx}`;});});
   const setsSnap=bld.sets.map(s=>({scoreA:s.scoreA,scoreB:s.scoreB,winner:s.winner,games:s.games.map(g=>({...g}))}));
   if(mode==='gj'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
@@ -478,7 +481,7 @@ function saveMatch(mode){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        const gameId=`${sid}_s${setIdx}_g${gameIdx}`;
+        const gameId=g._id||`${sid}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
@@ -496,8 +499,7 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      const gameId=`${matchId}_s${setIdx}_g${gameIdx}`;
-      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
+      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
     });
   });
   if(mode==='mini'){

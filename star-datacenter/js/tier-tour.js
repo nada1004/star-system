@@ -1415,15 +1415,16 @@ function rCfg(C,T){
         ">🗑️ 중복 경기 제거</button>
         <span style="font-size:11px;color:var(--gray-l)">같은 _id로 이중 등록된 티어대회 경기 제거</span>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-y btn-sm" onclick="deduplicatePlayerHistory()">🧹 중복 기록 제거</button>
+        <span style="font-size:11px;color:var(--gray-l)">스트리머 history에서 중복 항목만 제거 (승패/ELO 재계산)</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-r btn-sm" onclick="rebuildAllPlayerHistory()">🔄 전체 경기 기록 복구</button>
+        <span style="font-size:11px;color:var(--gray-l)">대전 데이터에서 스트리머 history 재구성 (기존 history 초기화됨)</span>
+      </div>
     </div>
   </details>
-  <div class="ssec">
-    <h4 style="margin:0">🔄 전체 경기 기록 복구</h4>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">대전 데이터에서 스트리머 history를 다시 생성합니다. 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.</div>
-    <button onclick="rebuildAllPlayerHistory()" class="btn btn-r" style="margin-top:10px">
-      🔄 전체 경기 기록 복구 (대전 데이터 → 스트리머 history)
-    </button>
-  </div>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">

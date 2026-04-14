@@ -341,10 +341,10 @@ function localSave(){
     const _pNoPhoto=players.map(p=>{
       const c={...p};
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      // eloAfter(render.js fallback으로 재계산 가능) + time(위치 순으로 대체) 제거
+      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
       if(c.history&&c.history.length){
         // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,time,...h})=>h);
+        c.history=c.history.map(({eloAfter,...h})=>h);
       }
       return c;
     });
@@ -618,14 +618,20 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: matchId 있으면 matchId로, 없으면 date+map+opp fallback
+  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
+  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
+  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
   const wDup=matchId
-    ?(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name)
+    ?(isGameId
+      ?(w.history||[]).find(h=>h.matchId===matchId)
+      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
     :(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
   const lDup=matchId
-    ?(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name)
+    ?(isGameId
+      ?(l.history||[]).find(h=>h.matchId===matchId)
+      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
     :(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
   if(wDup||lDup)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
@@ -667,7 +673,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
         const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
         count++;
       });
@@ -684,7 +690,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
         count++;
       });
@@ -699,7 +705,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
         count++;
       });
@@ -714,7 +720,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
         count++;
       });
@@ -729,7 +735,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
         count++;
       });
@@ -760,7 +766,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
         count++;
       });
@@ -779,7 +785,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
               count++;
             });
@@ -793,7 +799,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             count++;
           });
@@ -806,7 +812,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             count++;
           });
@@ -826,7 +832,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
@@ -841,7 +847,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
@@ -855,7 +861,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${tp._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
             count++;
           });
@@ -874,6 +880,52 @@ function rebuildAllPlayerHistory() {
 
   save();
   alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
+  render();
+}
+
+function deduplicatePlayerHistory(){
+  if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
+
+  let totalRemoved=0;
+  players.forEach(p=>{
+    if(!p.history||!p.history.length)return;
+    const seen=new Set();
+    const before=p.history.length;
+    p.history=p.history.filter(h=>{
+      const mid=h.matchId||'';
+      // 게임 단위 고유 ID(_sN_gN 포함)면 matchId 자체가 고유 키
+      const isGameId=mid.includes('_s')&&mid.includes('_g');
+      let key;
+      if(isGameId){
+        key=mid;
+      } else if(h.time){
+        // time이 있으면 포함하여 진짜 중복만 제거 (합법적 재매치와 구분)
+        key=`${mid}|${h.opp||''}|${h.result||''}|${h.map||'-'}|${h.time}`;
+      } else {
+        // time도 없고 bare matchId면 건드리지 않음 (합법적 재매치와 구분 불가)
+        return true;
+      }
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
+    totalRemoved+=before-p.history.length;
+  });
+
+  // 승패/포인트/ELO 재계산 (날짜 오름차순으로 delta 누적)
+  players.forEach(p=>{
+    p.win=0;p.loss=0;p.points=0;p.elo=ELO_DEFAULT;
+    const sorted=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    sorted.forEach(h=>{
+      if(h.result==='승'){p.win++;p.points+=3;}
+      else if(h.result==='패'){p.loss++;p.points-=3;}
+      if(h.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)+h.eloDelta;
+    });
+  });
+
+  if(typeof fixPoints==='function')fixPoints();
+  save();
+  alert(`🧹 중복 제거 완료: ${totalRemoved}개 항목 삭제`);
   render();
 }
 
