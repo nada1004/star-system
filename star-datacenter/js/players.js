@@ -903,9 +903,39 @@ function rTier(C,T){
               wn=g.winner==='A'?g.playerA:g.playerB;
               ln=g.winner==='A'?g.playerB:g.playerA;
             } else return;
-            recentGames.push({date:m.d||g.d||'',matchId:m._id||m.id||'',setIdx:si,gameIdx:gi,winner:wn,loser:ln,map:g.map||'-',label:label||''});
+            const w = Array.isArray(wn) ? (wn[0]||'') : wn;
+            const l = Array.isArray(ln) ? (ln[0]||'') : ln;
+            recentGames.push({date:m.d||g.d||'',matchId:m._id||m.id||'',setIdx:si,gameIdx:gi,winner:w,loser:l,map:g.map||'-',label:label||''});
           });
         });
+      });
+    }
+    function extractProCompTourneys(){
+      (proTourneys||[]).forEach(tn=>{
+        (tn.groups||[]).forEach(grp=>{
+          (grp.matches||[]).forEach(m=>{
+            if(!m||!m.winner||!m.a||!m.b) return;
+            const w=m.winner==='A'?m.a:m.b;
+            const l=m.winner==='A'?m.b:m.a;
+            recentGames.push({date:m.d||'',matchId:m._id||'',winner:w,loser:l,map:m.map||'-',label:'프로리그대회'});
+          });
+        });
+        (tn.bracket||[]).forEach((rnd,ri)=>{
+          (rnd||[]).forEach((m,mi)=>{
+            if(!m||!m.winner||!m.a||!m.b) return;
+            const w=m.winner==='A'?m.a:m.b;
+            const l=m.winner==='A'?m.b:m.a;
+            const id=`pbn_${tn.id}_${ri}_${mi}`;
+            recentGames.push({date:m.d||'',matchId:id,winner:w,loser:l,map:m.map||'-',label:'프로리그대회'});
+          });
+        });
+        if(tn.thirdPlace && tn.thirdPlace.winner && tn.thirdPlace.a && tn.thirdPlace.b){
+          const tp=tn.thirdPlace;
+          const w=tp.winner==='A'?tp.a:tp.b;
+          const l=tp.winner==='A'?tp.b:tp.a;
+          const id=`pbn_${tn.id}_3rd`;
+          recentGames.push({date:tp.d||'',matchId:id,winner:w,loser:l,map:tp.map||'-',label:'프로리그대회'});
+        }
       });
     }
     extractGames(miniM,'미니대전');
@@ -913,6 +943,7 @@ function rTier(C,T){
     extractGames(comps,'대회');
     extractGames(ckM,'대학CK');
     extractGames(proM,'프로리그');
+    extractProCompTourneys();
     // 조별리그 대회 경기 포함
     const tourItems=typeof getTourneyMatches==='function'?getTourneyMatches():[];
     extractGames(tourItems,'조별대회');
@@ -967,7 +998,7 @@ function rTier(C,T){
       </div>`;
     }
     let _lastDate='';
-    const lblColors={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','조별대회':'#16a34a','티어대회':'#7c3aed','개인전':'#16a34a','끝장전':'#8b5cf6','프로끝장전':'#8b5cf6'};
+    const lblColors={'미니대전':'#2563eb','대학대전':'#7c3aed','대회':'#d97706','대학CK':'#dc2626','프로리그':'#0891b2','프로리그대회':'#7c3aed','조별대회':'#16a34a','티어대회':'#7c3aed','개인전':'#16a34a','끝장전':'#8b5cf6','프로끝장전':'#8b5cf6'};
     const _canNavLbl=new Set(['미니대전','대학대전','대학CK','프로리그','티어대회','대회','개인전','끝장전','프로끝장전']);
     h+=`<div style="display:flex;flex-direction:column;gap:10px">`;
     if(!paged.length){
