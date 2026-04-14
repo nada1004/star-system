@@ -355,16 +355,6 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     return '<span ' + clickAttr + ' style="' + base + ';' + bdr + 'background:' + rm.bg + ';color:' + rm.col + ';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(' + size + ' * 0.42);' + clickStyle + '">' + txt + '</span>';
   }
   return '<img ' + clickAttr + ' src="' + p.photo + '" style="' + base + ';object-fit:contain;' + bdr + clickStyle + '" onerror="this.style.display=\'none\'">';
-}"/g,'&quot;').replace(/'/g,'&#39;');
-  const clickStyle='cursor:pointer;';
-  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
-  if(!p||!p.photo){
-    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
-    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
-    const txt=p?.race||'?';
-    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
-  }
-  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);

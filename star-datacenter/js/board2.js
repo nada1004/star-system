@@ -473,52 +473,6 @@ function _b2UnivView() {
   });
   h += `</div>`;
 
-  // 이미지탭 렌더링 후 자동 전환 타이머 설정 (전체대학 선택 시)
-  if (window._b2AutoCycle && _b2PlayersUnivFilter === '전체') {
-    if (window._b2CycleTimer) clearInterval(window._b2CycleTimer);
-    window._b2CycleTimer = setInterval(() => {
-      // 다른 탭으로 이동했거나 모달이 열려있으면 중단
-      if (curTab !== 'mini' && curTab !== 'univm' && curTab !== 'univck') {
-        clearInterval(window._b2CycleTimer);
-        window._b2CycleTimer = null;
-        return;
-      }
-      if (document.querySelector('.modal.on')) return;
-
-      const idx = tierFilteredPlayers.findIndex(p => p.name === _b2SelectedPlayer?.name);
-      const nextIdx = (idx + 1) % tierFilteredPlayers.length;
-      _b2UpdateMainDisplay(tierFilteredPlayers[nextIdx].name);
-    }, 5000);
-  } else {
-    if (window._b2CycleTimer) {
-      clearInterval(window._b2CycleTimer);
-      window._b2CycleTimer = null;
-    }
-  }
-
-  // 이미지탭 렌더링 후 자동 전환 타이머 설정 (전체대학 선택 시)
-  if (window._b2AutoCycle && _b2PlayersUnivFilter === '전체') {
-    if (window._b2CycleTimer) clearInterval(window._b2CycleTimer);
-    window._b2CycleTimer = setInterval(() => {
-      // 다른 탭으로 이동했거나 모달이 열려있으면 중단
-      if (curTab !== 'mini' && curTab !== 'univm' && curTab !== 'univck') {
-        clearInterval(window._b2CycleTimer);
-        window._b2CycleTimer = null;
-        return;
-      }
-      if (document.querySelector('.modal.on')) return;
-
-      const idx = tierFilteredPlayers.findIndex(p => p.name === _b2SelectedPlayer?.name);
-      const nextIdx = (idx + 1) % tierFilteredPlayers.length;
-      _b2UpdateMainDisplay(tierFilteredPlayers[nextIdx].name);
-    }, 5000);
-  } else {
-    if (window._b2CycleTimer) {
-      clearInterval(window._b2CycleTimer);
-      window._b2CycleTimer = null;
-    }
-  }
-
   return h;
 }
 
@@ -1836,19 +1790,6 @@ function _b2PlayersView() {
   // 기본 선택 선수 (필터 변경 시에만 첫 번째 선수 선택, 초기 로드 시 localStorage 유지)
   if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
-  }
-
-  // 대학 목록 (필터용) - dissolved 대학 제외
-  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
-  // univCfg 순서로 정렬
-  if (typeof univCfg !== 'undefined') {
-    univList.sort((a, b) => {
-      const idxA = univCfg.findIndex(u => u.name === a);
-      const idxB = univCfg.findIndex(u => u.name === b);
-      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
-    });
-  } else {
-    univList.sort();
   }
   
   // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
