@@ -1744,11 +1744,17 @@ if (savedSelectedPlayerName) {
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const hiddenUnivs = J('su_hidden_univs') || [];
-  const hiddenUnivSet = new Set(hiddenUnivs);
+  const hiddenUnivsCfg = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => u.name)) : new Set();
+  const hiddenUnivsLS = J('su_hidden_univs') || [];
+  const hiddenUnivSet = new Set([...hiddenUnivsCfg, ...hiddenUnivsLS]);
   
   // 기본 필터링: 숨김, 은퇴, 현황판 숨김, 해체된 대학 제외
-  let visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  let visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ) && !hiddenUnivSet.has(p.univ));
+  
+  // 숨김 대학이 현재 선택된 경우 자동으로 전체로 복구
+  if (_b2PlayersUnivFilter !== '전체' && _b2PlayersUnivFilter !== '무소속' && hiddenUnivSet.has(_b2PlayersUnivFilter)) {
+    _b2PlayersUnivFilter = '전체';
+  }
   
   // 전체대학 선택 시: 구현황판에서 숨긴 대학도 제외 (사용자 요청)
   if (_b2PlayersUnivFilter === '전체') {
