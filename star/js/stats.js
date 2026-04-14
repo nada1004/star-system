@@ -53,25 +53,20 @@ function rStats(C,T){
       ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
-  let h=`<div class="no-export" style="margin-bottom:12px">`;
+  // 현재 그룹 찾기
+  const _curGrp=_statsGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroups[0];
+  let h=``;
+  // 1행: 그룹 pill 바
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">`;
   _statsGroups.forEach(grp=>{
-    const _cgKey='su_statsGrp_'+grp.label;
-    const _collapsed=localStorage.getItem(_cgKey)==='1';
-    const _hasActive=grp.tabs.some(o=>o.id===(window.statsSub||'overview'));
-    const _open=!_collapsed||_hasActive;
-    h+=`<div style="margin-bottom:4px">
-      <div style="display:flex;align-items:center;gap:3px;cursor:pointer;user-select:none" onclick="(function(){const k='${_cgKey}';const v=localStorage.getItem(k)==='1';localStorage.setItem(k,v?'0':'1');render()})()">
-        <span style="font-size:10px;font-weight:800;color:var(--gray-l);min-width:52px;white-space:nowrap">${grp.label}</span>
-        <span style="font-size:10px;color:var(--gray-l)">${_open?'▾':'▸'}</span>
-      </div>`;
-    if(_open){
-      h+=`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px">`;
-      grp.tabs.forEach(o=>{
-        h+=`<button class="stab ${(window.statsSub||'overview')===o.id?'on':''}" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()" style="margin:1px 1px">${o.lbl}</button>`;
-      });
-      h+=`</div>`;
-    }
-    h+=`</div>`;
+    const isOn=grp===_curGrp;
+    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
+  });
+  h+=`</div>`;
+  // 2행: 선택 그룹 내 서브탭 pill 바
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px">`;
+  _curGrp.tabs.forEach(o=>{
+    h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });
   h+=`</div>`;
   // 전역 필터 바
@@ -2915,7 +2910,7 @@ function statsPlayerSearchHTML(){
       ${q && !list.length ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>` : ''}
       ${list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${escJS(p.name)}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
@@ -2946,7 +2941,7 @@ function _statsPlayerSearchUpdate(){
     ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>`
     : list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${escJS(p.name)}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
@@ -3203,7 +3198,7 @@ function statsPlayerVsHTML(){
         onfocus="document.getElementById('${dropId}').style.display='block'"
         onblur="setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.style.display='none'},200)">
       <div id="${dropId}" style="display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:220px;box-shadow:var(--sh2)">
-        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${escJS(p.name)}';document.getElementById('${inputId}').value='${escJS(p.name)}';document.getElementById('${dropId}').style.display='none';render()">
+        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${p.name.replace(/'/g,"\'")}';document.getElementById('${inputId}').value='${p.name.replace(/'/g,"\'")}';document.getElementById('${dropId}').style.display='none';render()">
           <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
         </div>`).join('')}
       </div>

@@ -294,11 +294,11 @@ function rCal(C,T){
     <!-- 컨트롤 바 -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
       ${navHTML}
-      <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap">
-        <button class="btn btn-sm ${calView==='month'?'btn-b':'btn-w'}" onclick="calView='month';render()">월간</button>
-        <button class="btn btn-sm ${calView==='week'?'btn-b':'btn-w'}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
-        <button class="btn btn-sm ${calView==='day'?'btn-b':'btn-w'}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
-        ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
+      <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <button class="pill ${calView==='month'?'on':''}" onclick="calView='month';render()">월간</button>
+        <button class="pill ${calView==='week'?'on':''}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
+        <button class="pill ${calView==='day'?'on':''}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
+        ${isLoggedIn?`<button class="pill no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
       </div>
     </div>
     ${filterHTML}
