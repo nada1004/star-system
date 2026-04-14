@@ -378,92 +378,66 @@ function fixPoints(){
 }
 
 function localSave(){
-  // ⚠️ 중요: localStorage 용량 초과(QuotaExceeded)가 발생하면
-  // try 블록이 즉시 중단되면서 뒤쪽 키(대전기록 su_mm/su_um/su_ck/su_pro ...)가 저장되지 않아
-  // "기록 탭에 저장이 안됨"처럼 보일 수 있음.
-  // → 경기/기록 데이터를 먼저 저장하고, 각 키를 개별 try/catch로 처리하여 일부라도 최대한 보존.
-  const _isQuota = (e)=>e && (e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED');
-  let quotaHit = false;
-  let anySaved = false;
-  const _safeSave = (k, obj)=>{
-    try{ _lsSave(k, obj); anySaved = true; return true; }
-    catch(e){
-      if(_isQuota(e)){ quotaHit = true; return false; }
-      console.error('[localSave error]', k, e);
-      return false;
-    }
-  };
-
-  // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
-  const _trimM = (arr)=>(arr||[]).map(m=>{
-    if(!m || (!m.teamAMembers && !m.teamBMembers)) return m;
-    const r={...m};
-    if(r.teamAMembers)r.teamAMembers=r.teamAMembers.map(x=>({name:x.name,univ:x.univ}));
-    if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
-    return r;
-  });
-
-  // 1) 설정/기록(상대적으로 작은 데이터) 먼저 저장
-  _safeSave('su_tiers',TIERS);
-  _safeSave('su_u',univCfg);
-  _safeSave('su_m',maps);
-  _safeSave('su_mAlias',userMapAlias);
-  _safeSave('su_t',tourD);
-
-  // 2) 대전/대회 기록(핵심) 저장 — su_p(선수 히스토리)보다 먼저!
-  _safeSave('su_mm',miniM);
-  _safeSave('su_um',univM);
-  _safeSave('su_cm',comps);
-  _safeSave('su_ck',_trimM(ckM));
-  _safeSave('su_pro',_trimM(proM));
-  _safeSave('su_ptn',proTourneys);
-  _safeSave('su_ptc',curProComp);
-  _safeSave('su_tn',tourneys);
-  _safeSave('su_ttm',_trimM(ttM));
-  _safeSave('su_ttcur',_ttCurComp);
-  _safeSave('su_indm',indM);
-  _safeSave('su_gjm',gjM);
-  _safeSave('su_cn',compNames);
-  _safeSave('su_cc',curComp);
-
-  if(typeof boardOrder!=='undefined') _safeSave('su_boardOrder',boardOrder);
-  if(typeof boardPlayerOrder!=='undefined') _safeSave('su_bpo',boardPlayerOrder);
-  if(typeof playerStatusIcons!=='undefined') _safeSave('su_psi',playerStatusIcons);
-  _safeSave('su_notices',notices);
-  _safeSave('su_crew',crew);
-  _safeSave('su_crewcfg',crewCfg);
-  _safeSave('su_seasons',seasons);
-  _safeSave('su_cal_sched',calScheduled);
-  if(BLD['ck']) _safeSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
-  if(BLD['pro']) _safeSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
-
-  // 3) 선수(히스토리 포함)는 가장 마지막에 저장 (용량 초과 위험이 가장 큼)
-  // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
-  const _pPhotoMap={};
-  const _pNoPhoto=(players||[]).map(p=>{
-    const c={...p};
-    if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-    // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
-    if(c.history&&c.history.length){
-      // eslint-disable-next-line no-unused-vars
-      c.history=c.history.map(({eloAfter,...h})=>h);
-    }
-    return c;
-  });
-  _safeSave('su_pp',_pPhotoMap);
-  _safeSave('su_p',_pNoPhoto);
-
-  // 마지막 저장 시간 (가능하면 기록)
   try{
-    if(anySaved) localStorage.setItem('su_last_save_time',Date.now().toString());
+    _lsSave('su_tiers',TIERS);
+    // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
+    const _pPhotoMap={};
+    const _pNoPhoto=players.map(p=>{
+      const c={...p};
+      if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
+      if(c.history&&c.history.length){
+        // eslint-disable-next-line no-unused-vars
+        c.history=c.history.map(({eloAfter,...h})=>h);
+      }
+      return c;
+    });
+    // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
+    const _trimM=arr=>arr.map(m=>{
+      if(!m.teamAMembers&&!m.teamBMembers)return m;
+      const r={...m};
+      if(r.teamAMembers)r.teamAMembers=r.teamAMembers.map(x=>({name:x.name,univ:x.univ}));
+      if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
+      return r;
+    });
+    _lsSave('su_pp',_pPhotoMap);
+    _lsSave('su_p',_pNoPhoto);
+    _lsSave('su_u',univCfg);
+    _lsSave('su_m',maps);
+    _lsSave('su_mAlias',userMapAlias);
+    _lsSave('su_t',tourD);
+    _lsSave('su_mm',miniM);
+    _lsSave('su_um',univM);
+    _lsSave('su_cm',comps);
+    _lsSave('su_ck',_trimM(ckM));
+    _lsSave('su_cn',compNames);
+    _lsSave('su_cc',curComp);
+    _lsSave('su_pro',_trimM(proM));
+    _lsSave('su_ptn',proTourneys);
+    _lsSave('su_ptc',curProComp);
+    _lsSave('su_tn',tourneys);
+    _lsSave('su_ttm',_trimM(ttM));
+    _lsSave('su_ttcur',_ttCurComp);
+    _lsSave('su_indm',indM);
+    _lsSave('su_gjm',gjM);
+    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
+    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    _lsSave('su_notices',notices);
+    _lsSave('su_crew',crew);
+    _lsSave('su_crewcfg',crewCfg);
+    _lsSave('su_seasons',seasons);
+    _lsSave('su_cal_sched',calScheduled);
+    localStorage.setItem('su_last_save_time',Date.now().toString());
+    if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
+    if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
   }catch(e){
-    if(_isQuota(e)) quotaHit = true;
-    else console.error('[localSave error] su_last_save_time', e);
-  }
-
-  if(quotaHit){
-    if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다. 일부 데이터(특히 선수/사진)가 저장되지 않았을 수 있습니다. (대전기록은 우선 저장하도록 개선됨)',7000);
-    else alert('⚠️ 저장 공간이 부족합니다. 일부 데이터가 저장되지 않았을 수 있습니다.');
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
+      if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
+      else alert('⚠️ 저장 공간이 부족합니다! 브라우저 저장소를 정리해 주세요.');
+    }else{
+      console.error('[localSave error]',e);
+    }
   }
 }
 
@@ -988,148 +962,6 @@ function rebuildAllPlayerHistory() {
   save();
   alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
   render();
-}
-
-// 스트리머 history → 대전 기록 배열 역방향 복구
-// 스트리머 최근 경기에는 있지만 대전기록 탭에 없는 경우 복구
-function syncHistoryToMatchArrays(){
-  if(!confirm('스트리머 최근 경기 데이터를 기반으로\n대전기록 탭에 누락된 기록을 복구합니다.\n\n이미 등록된 기록은 중복 추가되지 않습니다.\n계속하시겠습니까?')) return;
-
-  // 기존 모든 배열의 _id 집합
-  const existingIds = new Set();
-  const _idx = (arr) => (arr||[]).forEach(m => { if(m._id) existingIds.add(m._id); });
-  _idx(miniM); _idx(univM); _idx(ckM); _idx(proM);
-  _idx(typeof ttM!=='undefined'?ttM:[]);
-  _idx(typeof indM!=='undefined'?indM:[]);
-  _idx(typeof gjM!=='undefined'?gjM:[]);
-
-  // 모든 선수 history에서 parentId별로 게임 수집
-  // parentId → { mode, date, games: { gameId → { winner, loser, winnerUniv, loserUniv, map, date } } }
-  const byParent = {};
-  players.forEach(p => {
-    (p.history||[]).forEach(h => {
-      if(!h.matchId || !h.date) return;
-      const isGameId = h.matchId.includes('_s') && h.matchId.includes('_g');
-      const parentId = isGameId ? h.matchId.split('_s')[0] : h.matchId;
-      const gameId = h.matchId;
-
-      if(!byParent[parentId]) byParent[parentId] = { mode: h.mode||'', date: h.date, games: {} };
-      const entry = byParent[parentId];
-      if(!entry.mode && h.mode) entry.mode = h.mode;
-      if(h.date && h.date > entry.date) entry.date = h.date;
-
-      if(!entry.games[gameId]) entry.games[gameId] = { gameId, map: h.map||'', date: h.date };
-      const g = entry.games[gameId];
-      if(h.result === '승') {
-        g.winner = p.name; g.winnerUniv = h.univ||p.univ||''; g.winnerRace = p.race||'N';
-      } else if(h.result === '패') {
-        g.loser = p.name; g.loserUniv = h.univ||p.univ||''; g.loserRace = p.race||'N';
-      }
-    });
-  });
-
-  let added = 0;
-
-  Object.entries(byParent).forEach(([parentId, data]) => {
-    if(existingIds.has(parentId)) return; // 이미 존재하면 건너뜀
-    // 구 데이터는 history에 mode가 비어있는 경우가 많음(과거 버전에서 applyGameResult에 mode 미전달)
-    // → mode가 없더라도 최소한 "미니대전(대학 기준)"으로 복구할 수 있게 추정 로직 추가
-    let mode = data.mode;
-    const date = data.date;
-    const games = Object.values(data.games).filter(g => g.winner && g.loser);
-    if(!games.length) return; // 승자+패자 쌍이 없으면 복구 불가
-
-    // mode 추정: winner/loser의 대학이 2개 이상 나오면 팀전(미니대전)으로 간주
-    if(!mode){
-      const uSet = new Set();
-      games.forEach(g=>{
-        if(g.winnerUniv) uSet.add(g.winnerUniv);
-        if(g.loserUniv) uSet.add(g.loserUniv);
-      });
-      // 대학 정보가 전혀 없으면 복구 불가(팀을 만들 수 없음)
-      if(uSet.size >= 1){
-        mode = '미니대전';
-      }
-    }
-
-    // 대상 배열 결정
-    let targetArr = null;
-    let isCivil = false, isProGj = false;
-    if(mode === '미니대전') targetArr = miniM;
-    else if(mode === '시빌워') { targetArr = miniM; isCivil = true; }
-    else if(mode === '대학대전') targetArr = univM;
-    else if(mode === '대학CK') targetArr = ckM;
-    else if(mode === '프로리그') targetArr = proM;
-    else if(mode === '티어대회') targetArr = (typeof ttM!=='undefined')?ttM:null;
-    else if(mode === '개인전') targetArr = (typeof indM!=='undefined')?indM:null;
-    else if(mode === '끝장전') targetArr = (typeof gjM!=='undefined')?gjM:null;
-    else if(mode === '프로리그끝장전') { targetArr = (typeof gjM!=='undefined')?gjM:null; isProGj = true; }
-    if(!targetArr) return;
-
-    // 개인전·끝장전: 게임 하나하나가 배열 엔트리
-    if(mode === '개인전' || mode === '끝장전' || mode === '프로리그끝장전') {
-      games.forEach(g => {
-        if(existingIds.has(g.gameId)) return;
-        const entry = { _id: g.gameId, sid: parentId, d: g.date||date, wName: g.winner, lName: g.loser, map: g.map||'' };
-        if(isProGj) entry._proLabel = true;
-        targetArr.unshift(entry);
-        existingIds.add(g.gameId);
-        added++;
-      });
-      return;
-    }
-
-    // 팀 경기(miniM·univM·ckM·proM·ttM): 부모 경기 단위로 복구
-    // 팀 결정: 승리 횟수 기준으로 teamA/teamB 배정
-    const winsByUniv = {};
-    games.forEach(g => { if(g.winnerUniv) winsByUniv[g.winnerUniv] = (winsByUniv[g.winnerUniv]||0)+1; });
-    const univsSorted = Object.entries(winsByUniv).sort((a,b)=>b[1]-a[1]);
-    const allUnivs = [...new Set(games.flatMap(g=>[g.winnerUniv,g.loserUniv]).filter(Boolean))];
-    const teamA = univsSorted[0]?.[0] || allUnivs[0] || '';
-    const teamB = allUnivs.find(u => u !== teamA) || teamA;
-
-    const aWins = games.filter(g => g.winnerUniv === teamA || (teamA === teamB && g.winner)).length;
-    const bWins = games.length - aWins;
-
-    const setsGames = games.map(g => {
-      const aWon = teamA !== teamB ? g.winnerUniv === teamA : true; // 동일팀이면 A가 항상 승
-      return {
-        playerA: aWon ? g.winner : g.loser,
-        playerB: aWon ? g.loser : g.winner,
-        winner: aWon ? 'A' : 'B',
-        map: g.map || '',
-        _id: g.gameId,
-      };
-    });
-
-    const mA = [...new Map(games.map(g => {
-      const name = (g.winnerUniv === teamA || teamA === teamB) ? g.winner : g.loser;
-      const pl = players.find(x=>x.name===name)||{name,univ:teamA,race:'N'};
-      return [name, {name: pl.name, univ: pl.univ||teamA, race: pl.race||'N'}];
-    })).values()];
-    const mB = [...new Map(games.map(g => {
-      const name = (g.winnerUniv === teamA || teamA === teamB) ? g.loser : g.winner;
-      const pl = players.find(x=>x.name===name)||{name,univ:teamB,race:'N'};
-      return [name, {name: pl.name, univ: pl.univ||teamB, race: pl.race||'N'}];
-    })).values()];
-
-    const matchEntry = {
-      _id: parentId, d: date, a: teamA, b: teamB, sa: aWins, sb: bWins,
-      sets: [{ scoreA: aWins, scoreB: bWins, winner: aWins>bWins?'A':bWins>aWins?'B':'', games: setsGames }],
-      teamAMembers: mA, teamBMembers: mB, _reconstructed: true,
-    };
-    if(isCivil) matchEntry.type = 'civil';
-    targetArr.unshift(matchEntry);
-    existingIds.add(parentId);
-    added++;
-  });
-
-  if(added > 0) {
-    save(); render();
-    alert(`✅ ${added}건의 경기 기록을 스트리머 데이터에서 복구하여 대전기록 탭에 반영했습니다.`);
-  } else {
-    alert('복구할 데이터가 없습니다.\n스트리머 최근 경기의 모든 기록이 이미 대전기록 탭에 반영되어 있습니다.');
-  }
 }
 
 function deduplicatePlayerHistory(){

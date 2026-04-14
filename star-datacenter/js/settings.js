@@ -642,10 +642,6 @@ function rCfg(C,T){
         <span style="font-size:11px;color:var(--gray-l)">스트리머 history에서 중복 항목만 제거 (승패/ELO 재계산)</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="syncHistoryToMatchArrays()">📥 기록 탭 역방향 반영</button>
-        <span style="font-size:11px;color:var(--gray-l)">스트리머 최근 경기에는 있지만 대전기록 탭에 없는 경기를 복구</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-r btn-sm" onclick="rebuildAllPlayerHistory()">🔄 전체 경기 기록 복구</button>
         <span style="font-size:11px;color:var(--gray-l)">대전 데이터에서 스트리머 history 재구성 (기존 history 초기화됨)</span>
       </div>
@@ -826,19 +822,7 @@ function rCfg(C,T){
           ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
         `;
       } else {
-        _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭 모듈 로딩 중...</div>`;
-        if(typeof _loadScriptOnce==='function'){
-          _loadScriptOnce('js/board2.js', ok=>{
-            if(ok && typeof _b2BuildImageControlGroup==='function'){
-              render();
-            }else{
-              const el=document.getElementById('cfg-b2-img-settings-wrap');
-              if(el) el.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭 모듈을 불러오지 못했습니다. (네트워크/콘솔 오류 확인)</div>`;
-            }
-          });
-        } else {
-          _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭(현황판) 모듈이 로드되지 않았습니다. 현황판 탭을 먼저 열어주세요.</div>`;
-        }
+        _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭(현황판) 모듈이 로드되지 않았습니다. 현황판 탭을 먼저 열어주세요.</div>`;
       }
     }
     // 스트리머 상세 이미지 설정 초기화
@@ -978,129 +962,12 @@ function saveProfileStyleSettings() {
   profileShape = profileShape || 'circle'; // 이미 클릭 이벤트로 설정됨
   profileSize = size;
 
-  localStorage.setItem('su_profile_shape', JSON.stringify(profileShape));
-  localStorage.setItem('su_profile_size', JSON.stringify(profileSize));
+  localStorage.setItem('su_profile_shape', profileShape);
+  localStorage.setItem('su_profile_size', profileSize);
 
   if(typeof save==='function')save();
   alert('프로필 스타일 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
-}
-
-function renderSeasonList(){
-  const el=document.getElementById('cfg-season-list');
-  if(!el) return;
-  const list=(seasons||[]).slice().sort((a,b)=>(b.from||'').localeCompare(a.from||''));
-  if(!list.length){
-    el.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px">등록된 시즌 없음</div>`;
-    return;
-  }
-  el.innerHTML=list.map((s,i)=>{
-    const id=s.id||'';
-    const name=s.name||'(이름 없음)';
-    const from=s.from||''; const to=s.to||'';
-    const range=(from||to)?`${from||'?'}`+(to?` ~ ${to}`:''):'';
-    const idx=(seasons||[]).findIndex(x=>(x.id||'')===id);
-    const delIdx=idx>=0?idx:i;
-    return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px">
-      <div style="flex:1;min-width:180px">
-        <div style="font-weight:800;font-size:13px;color:var(--text)">${name}</div>
-        <div style="font-size:11px;color:var(--gray-l)">${range}</div>
-      </div>
-      <button class="btn btn-r btn-xs" onclick="delSeason(${delIdx})">🗑️ 삭제</button>
-    </div>`;
-  }).join('');
-}
-
-function addSeason(){
-  const name=(document.getElementById('cfg-season-name')?.value||'').trim();
-  const from=(document.getElementById('cfg-season-from')?.value||'').trim();
-  const to=(document.getElementById('cfg-season-to')?.value||'').trim();
-  if(!name){ alert('시즌 이름을 입력하세요.'); return; }
-  if(!from||!to){ alert('시작일/종료일을 모두 입력하세요.'); return; }
-  if(from>to){ alert('시작일은 종료일보다 늦을 수 없습니다.'); return; }
-  const id='s_'+Date.now();
-  seasons = seasons || [];
-  seasons.push({id,name,from,to});
-  if(typeof save==='function') save();
-  document.getElementById('cfg-season-name').value='';
-  renderSeasonList();
-}
-
-function delSeason(idx){
-  if(!Array.isArray(seasons)||idx<0||idx>=seasons.length) return;
-  const s=seasons[idx];
-  if(!confirm(`시즌 "${s?.name||''}" 을(를) 삭제할까요?`)) return;
-  seasons.splice(idx,1);
-  if(typeof save==='function') save();
-  renderSeasonList();
-}
-
-function _refreshAliasList(){
-  const listEl=document.getElementById('alias-list');
-  if(!listEl) return;
-  userMapAlias = userMapAlias || {};
-  const keys=Object.keys(userMapAlias).filter(k=>!k.endsWith('__disabled')).sort((a,b)=>a.localeCompare(b));
-  if(!keys.length){
-    listEl.innerHTML=`<div style="padding:12px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px">사용자 약자 없음</div>`;
-  } else {
-    listEl.innerHTML=keys.map(k=>{
-      const v=userMapAlias[k];
-      return `<div style="display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px">
-        <span style="font-family:monospace;font-weight:800">${k}</span>
-        <span style="color:var(--gray-l)">→</span>
-        <span style="flex:1;min-width:120px">${v}</span>
-        <button class="btn btn-r btn-xs" onclick="delMapAlias('${encodeURIComponent(k)}')">🗑️ 삭제</button>
-      </div>`;
-    }).join('');
-  }
-  const dl=document.getElementById('alias-val-list');
-  if(dl && Array.isArray(maps)){
-    dl.innerHTML=maps.map(m=>`<option value="${m}">`).join('');
-  }
-}
-
-function addMapAlias(){
-  const k=(document.getElementById('alias-key')?.value||'').trim();
-  const v=(document.getElementById('alias-val')?.value||'').trim();
-  if(!k||!v){ alert('약자/맵 이름을 입력하세요.'); return; }
-  userMapAlias = userMapAlias || {};
-  userMapAlias[k]=v;
-  if(typeof saveCfg==='function') saveCfg();
-  else if(typeof save==='function') save();
-  document.getElementById('alias-key').value='';
-  document.getElementById('alias-val').value='';
-  const msg=document.getElementById('alias-msg'); if(msg) msg.textContent='✅ 저장됨';
-  _refreshAliasList();
-}
-
-function delMapAlias(encK){
-  const k=decodeURIComponent(encK||'');
-  if(!k) return;
-  if(!confirm(`약자 "${k}" 를 삭제할까요?`)) return;
-  if(userMapAlias) delete userMapAlias[k];
-  if(typeof saveCfg==='function') saveCfg();
-  else if(typeof save==='function') save();
-  _refreshAliasList();
-}
-
-function delDefaultMapAlias(encK, encV){
-  const k=decodeURIComponent(encK||'');
-  const v=decodeURIComponent(encV||'');
-  if(!k) return;
-  userMapAlias = userMapAlias || {};
-  userMapAlias[k+'__disabled']=v||true;
-  if(typeof saveCfg==='function') saveCfg();
-  else if(typeof save==='function') save();
-  _refreshAliasList();
-}
-
-function restoreDefaultMapAlias(encK){
-  const k=decodeURIComponent(encK||'');
-  if(!k) return;
-  if(userMapAlias) delete userMapAlias[k+'__disabled'];
-  if(typeof saveCfg==='function') saveCfg();
-  else if(typeof save==='function') save();
-  _refreshAliasList();
 }
 
 // ── 구현황판 밝기 저장 함수 ──
@@ -1319,118 +1186,4 @@ function bulkChangeTier(){
   save(); render();
   const el=document.getElementById('bulk-tier-result');
   if(el){ el.textContent=`✅ ${targets.length}명 변경 완료!`; setTimeout(()=>{if(el)el.textContent='';},3000); }
-}
-
-function _renderCfgPdSection(){
-  const body=document.getElementById('cfg-pd-body');
-  if(!body) return;
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  const fs=s.font_size||'normal';
-  const cp=s.color_preset||'normal';
-  const st=s.stats_tint!==undefined?s.stats_tint:8;
-  const mt=s.mode_tint!==undefined?s.mode_tint:10;
-  const ps=s.profile_size!==undefined?s.profile_size:100;
-  const pshape=s.profile_shape!==undefined?s.profile_shape:'circle';
-  const darken=s.univ_darken||{};
-  const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
-  const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
-  const cpBtns=[['light','연하게'],['normal','기본'],['dark','진하게']].map(([k,l])=>`<button class="btn btn-xs ${cp===k?'btn-b':'btn-w'}" onclick="_setPdColorPreset('${k}')">${l}</button>`).join('');
-  const shapeBtns=[['circle','원형'],['square','네모']].map(([k,l])=>`<button class="btn btn-xs ${pshape===k?'btn-b':'btn-w'}" onclick="_setPdProfileShape('${k}')">${l}</button>`).join('');
-  const univRows=univs.map((u,i)=>{
-    const val=Math.round((darken[u.name]||0)*100);
-    const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
-      <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
-      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
-      <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
-    </div>`;
-  }).join('');
-  body.innerHTML=`
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">폰트 크기</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">프로필 이미지 크기</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="60" max="140" step="5" value="${ps}" style="flex:1;accent-color:var(--blue)" oninput="_setPdProfileSize(this.value);document.getElementById('pd-ps-val').textContent=this.value+'%'">
-        <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">프로필 이미지 모양</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${shapeBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 모양 (원형/네모)</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">승패 색상 농도</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">전적·승률 배경 색상 강도</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="0" max="30" step="2" value="${st}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('stats',this.value);document.getElementById('pd-st-val').textContent=this.value+'%'">
-        <span id="pd-st-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">모드별 전적 배경 색상 강도</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="0" max="30" step="2" value="${mt}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('mode',this.value);document.getElementById('pd-mt-val').textContent=this.value+'%'">
-        <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도</div>
-    </div>
-    <div>
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">대학별 헤더 어둡기</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
-      ${univRows}
-    </div>`;
-}
-
-function _setPdFontSize(size){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  s.font_size=size;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-  _renderCfgPdSection();
-}
-
-function _setPdProfileSize(val){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  s.profile_size=parseInt(val)||100;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-}
-
-function _setPdProfileShape(shape){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  s.profile_shape=shape;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-  _renderCfgPdSection();
-}
-
-function _setPdColorPreset(cp){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  s.color_preset=cp;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-  _renderCfgPdSection();
-}
-
-function _setPdTint(type,val){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  s[type+'_tint']=parseInt(val)||0;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-}
-
-function _setPdUnivDarken(univ,val,idx){
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  if(!s.univ_darken) s.univ_darken={};
-  s.univ_darken[univ]=parseFloat(val)||0;
-  localStorage.setItem('su_pd_style',JSON.stringify(s));
-  const el=document.getElementById('pd-dv-'+idx);
-  if(el) el.textContent=Math.round(val*100)+'%';
 }
