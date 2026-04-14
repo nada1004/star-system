@@ -822,7 +822,19 @@ function rCfg(C,T){
           ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
         `;
       } else {
-        _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭(현황판) 모듈이 로드되지 않았습니다. 현황판 탭을 먼저 열어주세요.</div>`;
+        _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭 모듈 로딩 중...</div>`;
+        if(typeof _loadScriptOnce==='function'){
+          _loadScriptOnce('js/board2.js', ok=>{
+            if(ok && typeof _b2BuildImageControlGroup==='function'){
+              render();
+            }else{
+              const el=document.getElementById('cfg-b2-img-settings-wrap');
+              if(el) el.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭 모듈을 불러오지 못했습니다. (네트워크/콘솔 오류 확인)</div>`;
+            }
+          });
+        } else {
+          _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭(현황판) 모듈이 로드되지 않았습니다. 현황판 탭을 먼저 열어주세요.</div>`;
+        }
       }
     }
     // 스트리머 상세 이미지 설정 초기화
@@ -962,12 +974,129 @@ function saveProfileStyleSettings() {
   profileShape = profileShape || 'circle'; // 이미 클릭 이벤트로 설정됨
   profileSize = size;
 
-  localStorage.setItem('su_profile_shape', profileShape);
-  localStorage.setItem('su_profile_size', profileSize);
+  localStorage.setItem('su_profile_shape', JSON.stringify(profileShape));
+  localStorage.setItem('su_profile_size', JSON.stringify(profileSize));
 
   if(typeof save==='function')save();
   alert('프로필 스타일 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
+}
+
+function renderSeasonList(){
+  const el=document.getElementById('cfg-season-list');
+  if(!el) return;
+  const list=(seasons||[]).slice().sort((a,b)=>(b.from||'').localeCompare(a.from||''));
+  if(!list.length){
+    el.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px">등록된 시즌 없음</div>`;
+    return;
+  }
+  el.innerHTML=list.map((s,i)=>{
+    const id=s.id||'';
+    const name=s.name||'(이름 없음)';
+    const from=s.from||''; const to=s.to||'';
+    const range=(from||to)?`${from||'?'}`+(to?` ~ ${to}`:''):'';
+    const idx=(seasons||[]).findIndex(x=>(x.id||'')===id);
+    const delIdx=idx>=0?idx:i;
+    return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      <div style="flex:1;min-width:180px">
+        <div style="font-weight:800;font-size:13px;color:var(--text)">${name}</div>
+        <div style="font-size:11px;color:var(--gray-l)">${range}</div>
+      </div>
+      <button class="btn btn-r btn-xs" onclick="delSeason(${delIdx})">🗑️ 삭제</button>
+    </div>`;
+  }).join('');
+}
+
+function addSeason(){
+  const name=(document.getElementById('cfg-season-name')?.value||'').trim();
+  const from=(document.getElementById('cfg-season-from')?.value||'').trim();
+  const to=(document.getElementById('cfg-season-to')?.value||'').trim();
+  if(!name){ alert('시즌 이름을 입력하세요.'); return; }
+  if(!from||!to){ alert('시작일/종료일을 모두 입력하세요.'); return; }
+  if(from>to){ alert('시작일은 종료일보다 늦을 수 없습니다.'); return; }
+  const id='s_'+Date.now();
+  seasons = seasons || [];
+  seasons.push({id,name,from,to});
+  if(typeof save==='function') save();
+  document.getElementById('cfg-season-name').value='';
+  renderSeasonList();
+}
+
+function delSeason(idx){
+  if(!Array.isArray(seasons)||idx<0||idx>=seasons.length) return;
+  const s=seasons[idx];
+  if(!confirm(`시즌 "${s?.name||''}" 을(를) 삭제할까요?`)) return;
+  seasons.splice(idx,1);
+  if(typeof save==='function') save();
+  renderSeasonList();
+}
+
+function _refreshAliasList(){
+  const listEl=document.getElementById('alias-list');
+  if(!listEl) return;
+  userMapAlias = userMapAlias || {};
+  const keys=Object.keys(userMapAlias).filter(k=>!k.endsWith('__disabled')).sort((a,b)=>a.localeCompare(b));
+  if(!keys.length){
+    listEl.innerHTML=`<div style="padding:12px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px">사용자 약자 없음</div>`;
+  } else {
+    listEl.innerHTML=keys.map(k=>{
+      const v=userMapAlias[k];
+      return `<div style="display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px">
+        <span style="font-family:monospace;font-weight:800">${k}</span>
+        <span style="color:var(--gray-l)">→</span>
+        <span style="flex:1;min-width:120px">${v}</span>
+        <button class="btn btn-r btn-xs" onclick="delMapAlias('${encodeURIComponent(k)}')">🗑️ 삭제</button>
+      </div>`;
+    }).join('');
+  }
+  const dl=document.getElementById('alias-val-list');
+  if(dl && Array.isArray(maps)){
+    dl.innerHTML=maps.map(m=>`<option value="${m}">`).join('');
+  }
+}
+
+function addMapAlias(){
+  const k=(document.getElementById('alias-key')?.value||'').trim();
+  const v=(document.getElementById('alias-val')?.value||'').trim();
+  if(!k||!v){ alert('약자/맵 이름을 입력하세요.'); return; }
+  userMapAlias = userMapAlias || {};
+  userMapAlias[k]=v;
+  if(typeof saveCfg==='function') saveCfg();
+  else if(typeof save==='function') save();
+  document.getElementById('alias-key').value='';
+  document.getElementById('alias-val').value='';
+  const msg=document.getElementById('alias-msg'); if(msg) msg.textContent='✅ 저장됨';
+  _refreshAliasList();
+}
+
+function delMapAlias(encK){
+  const k=decodeURIComponent(encK||'');
+  if(!k) return;
+  if(!confirm(`약자 "${k}" 를 삭제할까요?`)) return;
+  if(userMapAlias) delete userMapAlias[k];
+  if(typeof saveCfg==='function') saveCfg();
+  else if(typeof save==='function') save();
+  _refreshAliasList();
+}
+
+function delDefaultMapAlias(encK, encV){
+  const k=decodeURIComponent(encK||'');
+  const v=decodeURIComponent(encV||'');
+  if(!k) return;
+  userMapAlias = userMapAlias || {};
+  userMapAlias[k+'__disabled']=v||true;
+  if(typeof saveCfg==='function') saveCfg();
+  else if(typeof save==='function') save();
+  _refreshAliasList();
+}
+
+function restoreDefaultMapAlias(encK){
+  const k=decodeURIComponent(encK||'');
+  if(!k) return;
+  if(userMapAlias) delete userMapAlias[k+'__disabled'];
+  if(typeof saveCfg==='function') saveCfg();
+  else if(typeof save==='function') save();
+  _refreshAliasList();
 }
 
 // ── 구현황판 밝기 저장 함수 ──
