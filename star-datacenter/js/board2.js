@@ -381,8 +381,10 @@ function rBoard2(C, T) {
   const profileTabLabel = '👤 이미지별';
   // 이미지별 필터를 상단 탭에 포함
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
-  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  const hiddenUnivsCfg = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => u.name)) : new Set();
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ) && !hiddenUnivsCfg.has(p.univ));
+  const hasSolo = visPlayers.some(p => !p.univ || p.univ === '무소속');
+  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속' && !hiddenUnivsCfg.has(u)))];
   // univCfg 순서로 정렬
   if (typeof univCfg !== 'undefined') {
     playerUnivList.sort((a, b) => {
@@ -398,6 +400,7 @@ function rBoard2(C, T) {
     <div style="position:relative">
       <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
+        ${hasSolo ? `<option value="무소속" ${_b2PlayersUnivFilter === '무소속' ? 'selected' : ''}>🚶 무소속</option>` : ``}
         ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
       </select>
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -434,6 +437,11 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
   } else if (_b2View === 'players') {
     sub.innerHTML = _b2PlayersView();
+    setTimeout(()=>{
+      try{
+        if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
+      }catch(e){}
+    },0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -1790,13 +1798,15 @@ function _b2PlayersView() {
   if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
   }
+  if (!_b2SelectedPlayer) {
+    _b2SelectedPlayer = tierFilteredPlayers[0];
+  }
   
-  // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
-  const roleOrder = ['이사장', '총장', '교수', '코치'];
-  const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
-
-  tierFilteredPlayers.sort((a, b) => {
+  // 정렬: 구현황판(현황판)에서 지정한 대학별 순서(boardPlayerOrder)가 있으면 우선 적용
+  const _b2FallbackSort = (a, b) => {
     // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
+    const roleOrder = ['이사장', '총장', '교수', '코치'];
+    const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
     const aHasRole = aRoleIdx >= 0;
@@ -1806,21 +1816,34 @@ function _b2PlayersView() {
     if (!aHasRole && bHasRole) return 1;
     if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
 
-    // 직급이 같거나 없는 경우 티어 순서 정렬 (숫자 추출)
     const aTier = a.tier || '?';
     const bTier = b.tier || '?';
     const aTierIdx = tierOrder.indexOf(aTier);
     const bTierIdx = tierOrder.indexOf(bTier);
-
     if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
 
-    // tierOrder에 없는 경우 숫자로 비교
     const aTierNum = parseInt(aTier) || 999;
     const bTierNum = parseInt(bTier) || 999;
     if (aTierNum !== bTierNum) return aTierNum - bTierNum;
 
-    // 티어도 같은 경우 이름 순
     return (a.name || '').localeCompare(b.name || '');
+  };
+
+  const _b2OrderKey = _b2PlayersUnivFilter === '전체' ? '' : _b2PlayersUnivFilter;
+  const _b2OrderArr = (_b2OrderKey && typeof boardPlayerOrder !== 'undefined' && boardPlayerOrder && Array.isArray(boardPlayerOrder[_b2OrderKey]))
+    ? boardPlayerOrder[_b2OrderKey]
+    : [];
+
+  tierFilteredPlayers.sort((a, b) => {
+    if (_b2OrderArr.length) {
+      const ai = _b2OrderArr.indexOf(a.name);
+      const bi = _b2OrderArr.indexOf(b.name);
+      if (ai >= 0 && bi >= 0) return ai - bi;
+      if (ai >= 0) return -1;
+      if (bi >= 0) return 1;
+    }
+    return _b2FallbackSort(a, b);
+    // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
   });
 
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};

@@ -365,8 +365,7 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
       <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
-    </div>
-  </div>
+  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🎖️ 선수 일괄 티어 변경</h4>
@@ -400,41 +399,6 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  ${_cfgD('bulkdel','🗑️ 날짜 범위 일괄 삭제')}
-    <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
-        <input type="date" id="bulk-del-from" style="font-size:12px">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">~</label>
-        <input type="date" id="bulk-del-to" style="font-size:12px">
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-        ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
-        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
-          <input type="checkbox" id="bulk-del-chk-${m}" style="cursor:pointer">
-          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
-        </label>`).join('')}
-      </div>
-      <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
-      <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
-    </div>
-  </details>
-  ${_cfgD('bulkconv','🔄 세트제 → 게임수 합산 일괄 변환')}
-    <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
-        ${['mini','univm','ck','pro','tt'].map(m=>`
-        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
-          <input type="checkbox" id="bulk-conv-chk-${m}" checked style="cursor:pointer">
-          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
-        </label>`).join('')}
-      </div>
-      <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
-      <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
-    </div>
-  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지별 설정</h4>
