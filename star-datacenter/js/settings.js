@@ -517,6 +517,28 @@ function rCfg(C,T){
       </div>
     </div>
   </details>
+  ${_cfgD('profilestyle','🎨 스트리머 프로필 스타일 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 및 시스템 전체에 표시되는 스트리머 프로필의 모양과 기본 크기를 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 모양</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm ${profileShape==='circle'?'btn-b':'btn-w'}" onclick="profileShape='circle';saveProfileStyleSettings();render()">🟢 원형</button>
+          <button class="btn btn-sm ${profileShape==='square'?'btn-b':'btn-w'}" onclick="profileShape='square';saveProfileStyleSettings();render()">🟦 사각형</button>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 크기 (px)</label>
+          <span id="cfg-profile-size-val" style="font-size:12px;font-weight:700;color:var(--blue)">${profileSize}px</span>
+        </div>
+        <input type="range" id="cfg-profile-size" min="20" max="60" step="1" value="${profileSize}" style="width:100%;accent-color:var(--blue)" 
+          oninput="document.getElementById('cfg-profile-size-val').textContent=this.value+'px'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>20px</span><span>60px</span></div>
+      </div>
+      <button class="btn btn-b" onclick="saveProfileStyleSettings()" style="align-self:flex-start">💾 설정 저장</button>
+    </div>
+  </details>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
@@ -555,6 +577,18 @@ function rCfg(C,T){
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
             <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절
           </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
+          <input type="checkbox" id="cfg-b2-auto-cycle" checked style="width:15px;height:15px"> 전체대학 5초 자동 전환
+        </label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">목록 레이아웃:</label>
+          <select id="cfg-b2-players-rows" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700">
+            <option value="1">1행 (세로형)</option>
+            <option value="2">2행 (기본)</option>
+          </select>
         </div>
       </div>
       <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
@@ -889,17 +923,31 @@ function saveB2LayoutSettings(){
     rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
     mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
-    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
+    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400,
+    autoCycle: document.getElementById('cfg-b2-auto-cycle')?.checked !== false,
+    playersRows: parseInt(document.getElementById('cfg-b2-players-rows')?.value) || 2
   };
   localStorage.setItem('su_b2_layout', JSON.stringify(settings));
+  // 전역 변수 동기화
+  if (typeof _b2AutoCycle !== 'undefined') window._b2AutoCycle = settings.autoCycle;
+  if (typeof _b2PlayersRows !== 'undefined') window._b2PlayersRows = settings.playersRows;
+  
   if(typeof save==='function')save();
   alert('이미지탭 레이아웃이 저장되었습니다.');
   if(typeof render === 'function') render();
-  // board2 탭이 열려있으면 다시 렌더링
-  if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')) {
-    document.getElementById('b2-content').innerHTML = _b2PlayersView();
-    if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
-  }
+}
+
+function saveProfileStyleSettings() {
+  const size = parseInt(document.getElementById('cfg-profile-size')?.value) || 32;
+  profileShape = profileShape || 'circle'; // 이미 클릭 이벤트로 설정됨
+  profileSize = size;
+  
+  localStorage.setItem('su_profile_shape', profileShape);
+  localStorage.setItem('su_profile_size', profileSize);
+  
+  if(typeof save==='function')save();
+  alert('프로필 스타일 설정이 저장되었습니다.');
+  if(typeof render === 'function') render();
 }
 
 // ── 구현황판 밝기 저장 함수 ──

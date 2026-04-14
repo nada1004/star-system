@@ -327,13 +327,35 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
+let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
+
+// 스트리머 프로필 전역 스타일 설정
+let profileShape = J('su_profile_shape') || 'circle'; // 'circle' | 'square'
+let profileSize  = J('su_profile_size')  || 32;       // px 단위
+
 function getPlayerPhotoHTML(playerName, size, extraStyle){
-  size=size||'32px'; extraStyle=extraStyle||'';
-  const p=players.find(x=>x.name===playerName);
-  const hasBorder=extraStyle.includes('border');
-  const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
-  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const shape = profileShape || 'circle';
+  const radius = shape === 'square' ? '8px' : '50%';
+  const globalSize = profileSize ? profileSize + 'px' : '32px';
+  
+  size = size || globalSize; 
+  extraStyle = extraStyle || '';
+  const p = players.find(x => x.name === playerName);
+  const hasBorder = extraStyle.includes('border');
+  const bdr = hasBorder ? '' : 'border:1.5px solid var(--border);';
+  const base = 'display:inline-block;width:' + size + ';height:' + size + ';border-radius:' + radius + ';flex-shrink:0;vertical-align:middle;' + extraStyle;
+  const safeName = (playerName || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const clickStyle = 'cursor:pointer;';
+  const clickAttr = 'onclick="openPlayerModal(\'' + safeName + '\')" title="스트리머 상세"';
+  
+  if (!p || !p.photo) {
+    const RMAP = { T: { bg: '#dbeafe', col: '#1e40af' }, Z: { bg: '#ede9fe', col: '#5b21b6' }, P: { bg: '#fef3c7', col: '#92400e' } };
+    const rm = RMAP[p?.race] || { bg: '#e2e8f0', col: '#64748b' };
+    const txt = p?.race || '?';
+    return '<span ' + clickAttr + ' style="' + base + ';' + bdr + 'background:' + rm.bg + ';color:' + rm.col + ';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(' + size + ' * 0.42);' + clickStyle + '">' + txt + '</span>';
+  }
+  return '<img ' + clickAttr + ' src="' + p.photo + '" style="' + base + ';object-fit:contain;' + bdr + clickStyle + '" onerror="this.style.display=\'none\'">';
+}"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
