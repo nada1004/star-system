@@ -35,6 +35,23 @@ function sw(t,el){
   if(C) C.innerHTML='';
   render();
 }
+
+function _loadScriptOnce(path, cb){
+  if(!window._dynScripts) window._dynScripts = {};
+  const key = path;
+  if(window._dynScripts[key] === 'loaded'){ cb && cb(true); return; }
+  if(window._dynScripts[key] === 'loading'){
+    setTimeout(()=>_loadScriptOnce(path, cb), 60);
+    return;
+  }
+  window._dynScripts[key] = 'loading';
+  const s = document.createElement('script');
+  const v = (typeof _cbv === 'string' && _cbv) ? _cbv : ('?v='+Date.now());
+  s.src = path + v;
+  s.onload = ()=>{ window._dynScripts[key] = 'loaded'; cb && cb(true); };
+  s.onerror = ()=>{ window._dynScripts[key] = 'error'; cb && cb(false); };
+  document.head.appendChild(s);
+}
 function render(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
@@ -66,12 +83,20 @@ function render(){
     case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
     case 'board':
-      if(typeof rBoard==='function') rBoard(C,T);
-      else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (스크립트 로드/콘솔 오류 확인)</div>';
+      if(typeof rBoard==='function') { rBoard(C,T); break; }
+      C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 로딩 중...</div>';
+      _loadScriptOnce('js/cloud-board.js', ok=>{
+        if(ok && typeof rBoard==='function') rBoard(C,T);
+        else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (네트워크/콘솔 오류 확인)</div>';
+      });
       break;
     case 'board2':
-      if(typeof rBoard2==='function') rBoard2(C,T);
-      else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (스크립트 로드/콘솔 오류 확인)</div>';
+      if(typeof rBoard2==='function') { rBoard2(C,T); break; }
+      C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 로딩 중...</div>';
+      _loadScriptOnce('js/board2.js', ok=>{
+        if(ok && typeof rBoard2==='function') rBoard2(C,T);
+        else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (네트워크/콘솔 오류 확인)</div>';
+      });
       break;
     default: break;
   }
