@@ -251,13 +251,11 @@ function saveGameEdit(editRef, si, gi, btn){
   const set=m.sets&&m.sets[si];if(!set)return;
   const g=set.games&&set.games[gi];if(!g)return;
 
-  // game-level ID 결정 (새 포맷 우선, 없으면 생성)
-  const _gameId = g._id || (m._id ? `${m._id}_s${si}_g${gi}` : null);
-
   // pro 외 모드: 기존 이 게임의 선수 history 되돌리기
   if(mode!=='pro' && g.playerA && g.playerB && g.winner){
     const oldWin=g.winner==='A'?g.playerA:g.playerB;
     const oldLose=g.winner==='A'?g.playerB:g.playerA;
+    const mid=m._id||null;
     const mdate=m.d||'';
     const wP=players.find(p=>p.name===oldWin);
     const lP=players.find(p=>p.name===oldLose);
@@ -265,8 +263,7 @@ function saveGameEdit(editRef, si, gi, btn){
       if(!wP.history)wP.history=[];
       wP.win=Math.max(0,(wP.win||0)-1);
       wP.points=(wP.points||0)-3;
-      // game-level ID 우선, 없으면 날짜+상대로 fallback
-      let wi=_gameId?wP.history.findIndex(h=>h.matchId===_gameId&&h.result==='승'):-1;
+      let wi=mid?wP.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===oldLose):-1;
       if(wi<0)wi=wP.history.findIndex(h=>h.result==='승'&&h.opp===oldLose&&h.date===mdate);
       if(wi>=0){const hr=wP.history[wi];if(hr.eloDelta!=null)wP.elo=(wP.elo||ELO_DEFAULT)-hr.eloDelta;wP.history.splice(wi,1);}
     }
@@ -274,7 +271,7 @@ function saveGameEdit(editRef, si, gi, btn){
       if(!lP.history)lP.history=[];
       lP.loss=Math.max(0,(lP.loss||0)-1);
       lP.points=(lP.points||0)+3;
-      let li=_gameId?lP.history.findIndex(h=>h.matchId===_gameId&&h.result==='패'):-1;
+      let li=mid?lP.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===oldWin):-1;
       if(li<0)li=lP.history.findIndex(h=>h.result==='패'&&h.opp===oldWin&&h.date===mdate);
       if(li>=0){const hr=lP.history[li];if(hr.eloDelta!=null)lP.elo=(lP.elo||ELO_DEFAULT)-hr.eloDelta;lP.history.splice(li,1);}
     }
@@ -285,17 +282,15 @@ function saveGameEdit(editRef, si, gi, btn){
   const newPB=document.getElementById('gem-pB').value||g.playerB;
   const newWinner=document.getElementById('gem-winner').value||g.winner;
   const newMap=document.getElementById('gem-map').value||g.map;
-  // _id가 없으면 이번에 확정
-  if(!g._id && m._id) g._id = `${m._id}_s${si}_g${gi}`;
   g.playerA=newPA; g.playerB=newPB; g.winner=newWinner; g.map=newMap;
 
-  // pro 외 모드: 새 결과 선수 history에 반영 (game-level ID 사용)
+  // pro 외 모드: 새 결과 선수 history에 반영
   if(mode!=='pro' && newPA && newPB && newWinner){
     const _geLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',tt:'티어대회',comp:'조별리그'}[mode]||'';
     applyGameResult(
       newWinner==='A'?newPA:newPB,
       newWinner==='A'?newPB:newPA,
-      m.d||'', newMap||'-', g._id||_gameId||'', '', '', _geLabel
+      m.d||'', newMap||'-', m._id||'', '', '', _geLabel
     );
   }
 

@@ -902,10 +902,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _d=(m.d||'');
     if(_d && _d!==_lastDate){
       _lastDate=_d;
-      h+=`<div class="no-export" style="position:sticky;top:118px;z-index:20;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin:10px 0 0;font-size:12px;font-weight:900;color:var(--text2);display:flex;align-items:center;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02)">
-        <span style="color:var(--gray-l);font-weight:800">📅</span>
-        <span>${_d.slice(2).replace(/-/g,'/')}</span>
-      </div>`;
     }
     const dLabel=_d?_d.slice(2).replace(/-/g,'/'):'';
     const isCK=(mode==='ck');
