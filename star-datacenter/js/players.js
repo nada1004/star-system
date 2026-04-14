@@ -896,10 +896,14 @@ function rTier(C,T){
       matchList.forEach(m=>{
         (m.sets||[]).forEach((set,si)=>{
           (set.games||[]).forEach((g,gi)=>{
-            if(!g.playerA||!g.playerB||!g.winner)return;
-            const wn=g.winner==='A'?g.playerA:g.playerB;
-            const ln=g.winner==='A'?g.playerB:g.playerA;
-            recentGames.push({date:m.d||'',matchId:m._id||'',setIdx:si,gameIdx:gi,winner:wn,loser:ln,map:g.map||'-',label:label||''});
+            let wn='',ln='';
+            if(g.wName&&g.lName){
+              wn=g.wName; ln=g.lName;
+            } else if(g.playerA&&g.playerB&&g.winner){
+              wn=g.winner==='A'?g.playerA:g.playerB;
+              ln=g.winner==='A'?g.playerB:g.playerA;
+            } else return;
+            recentGames.push({date:m.d||g.d||'',matchId:m._id||m.id||'',setIdx:si,gameIdx:gi,winner:wn,loser:ln,map:g.map||'-',label:label||''});
           });
         });
       });
