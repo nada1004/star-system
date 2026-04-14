@@ -446,20 +446,33 @@ function histAllHTML(){
   const curPage=histPage['all'];
   const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
-  let h=``;
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--gray-l);font-weight:700">총 ${_typeFiltered.length}건</span>
+    ${_typeFiltered.length>pageSize?`<span style="font-size:11px;color:var(--text3)">(${curPage+1}/${totalPages} 페이지)</span>`:''}
+  </div>`;
 
   if(!paged.length){
     h+=`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div></div>`;
     return h;
   }
 
+  // 날짜별 경기 타입 목록 미리 계산 (날짜 헤더에 타입 뱃지 표시용)
+  const _typesPerDate={};
+  paged.forEach(({type,d})=>{
+    if(!d)return;
+    if(!_typesPerDate[d])_typesPerDate[d]=[];
+    if(!_typesPerDate[d].includes(type))_typesPerDate[d].push(type);
+  });
+
   let _lastDate='';
   paged.forEach(({type,d,m})=>{
     if(d && d!==_lastDate){
       _lastDate=d;
-      h+=`<div class="no-export" style="position:sticky;top:118px;z-index:20;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin:10px 0 0;font-size:12px;font-weight:900;color:var(--text2);display:flex;align-items:center;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02)">
+      const _dtypes=(_typesPerDate[d]||[]).map(t=>{const ti2=typeInfo[t]||{lbl:t,col:'#64748b'};return `<span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px;background:${ti2.col}18;color:${ti2.col};border:1px solid ${ti2.col}33;white-space:nowrap">${ti2.lbl}</span>`;}).join('');
+      h+=`<div class="no-export" style="position:sticky;top:118px;z-index:20;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin:10px 0 0;font-size:12px;font-weight:900;color:var(--text2);display:flex;align-items:center;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02);flex-wrap:wrap">
         <span style="color:var(--gray-l);font-weight:800">📅</span>
         <span>${d.slice(2).replace(/-/g,'/')}</span>
+        ${_dtypes}
       </div>`;
     }
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
@@ -836,7 +849,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <button class="sort-btn ${recSortDir==='desc'?'on':''}" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="sort-btn ${recSortDir==='asc'?'on':''}" onclick="recSortDir='asc';render()">오래된순 ↑</button>
   </div>`;
-    return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+    // 미니대전 탭: 시빌워로 분류된 경기가 있을 수 있음을 알림
+    const _miniHint=(mode==='mini'&&miniM.length>0)?`<div class="no-export" style="margin-top:8px;padding:10px 14px;background:#eff6ff;border:1.5px solid var(--blue-ll);border-radius:10px;font-size:12px;color:var(--blue);display:flex;align-items:center;gap:8px"><span>💡</span><span>일부 기록이 <b>⚔️ 시빌워</b> 탭에 있을 수 있습니다. 확인해 보세요.</span><button onclick="histSub='civil';openDetails={};render()" style="padding:3px 10px;border-radius:8px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">시빌워 탭 이동</button></div>`:''
+    return emptyBar+`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`+_miniHint;
   }
   // 날짜 필터만 적용 (검색어 필터는 DOM에서 실시간 처리)
   // 필터된 부분 배열이 넘어올 수 있으므로 원본 배열에서 실제 인덱스를 구함
