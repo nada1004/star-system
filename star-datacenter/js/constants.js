@@ -623,19 +623,22 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
   const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
-  // matchId 기반 체크
+  const parentId=isGameId?matchId.split('_s')[0]:matchId;
+  
+  // matchId 기반 체크 강화
   const wDupMatch=matchId
     ?(isGameId
-      ?(w.history||[]).find(h=>h.matchId===matchId)
+      ?(w.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId) // 고유ID나 부모ID가 있으면 중복
       :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
     :null;
   const lDupMatch=matchId
     ?(isGameId
-      ?(l.history||[]).find(h=>h.matchId===matchId)
+      ?(l.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId)
       :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
     :null;
+
   // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
-  // 단, 고유 matchId(_sN_gN)가 있는 경우, 이미 위에서 검증했으므로 fallback 체크는 건너뜀 (동일 날짜/맵/상대 재경기 허용)
+  // 고유 matchId(_sN_gN)가 있는 경우, 부모 ID가 겹치지 않는 한 날짜/맵 중복은 허용 (재경기 등 대응)
   const wDupFallback=(!isGameId && (w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name));
   const lDupFallback=(!isGameId && (l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name));
   // 둘 중 하나라도 중복이면 중단

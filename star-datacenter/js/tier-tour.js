@@ -544,7 +544,8 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='bktrecords'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
-    const _bktRecs=ttM.filter(m=>m.compName===_ttCurComp&&m.stage==='bkt');
+    // stage 필드가 'bkt'이거나, stage가 없는데 토너먼트 데이터 구조(sets)를 가진 경우 포함
+    const _bktRecs=ttM.filter(m=>m.compName===_ttCurComp && (m.stage==='bkt' || (!m.stage && m.sets)));
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
     const _bktIds=new Set(_bktRecs.map(m=>m._id));
     const _bktFromBracket=[];
@@ -570,7 +571,8 @@ function rTierTourTab(C, T){
     h+=rGrpEditInner();
   } else if(_ttSub==='grprecords'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
-    const _grpRecs=ttM.filter(m=>m.compName===_ttCurComp&&m.stage==='league');
+    // stage 필드가 'league'이거나, stage가 없는데 리그 데이터 구조를 가진 경우 포함
+    const _grpRecs=ttM.filter(m=>m.compName===_ttCurComp && (m.stage==='league' || (!m.stage && m.sets)));
     // tourneys 조별리그에서 아직 ttM에 없는 기존 경기도 포함 (fallback)
     const _grpIds=new Set(_grpRecs.map(m=>m._id));
     const _grpFromTn=[];
@@ -663,7 +665,7 @@ function ttPlayerRankHTML(compName){
     const col=gc(p.univ);
     const _ri=_cp*_PAGE+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
-    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'32px')}<span style="font-weight:700;font-size:14px">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">${getPlayerPhotoHTML(p.name,'32px')}<span style="font-weight:700;font-size:14px">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
@@ -2624,7 +2626,7 @@ function ttPlayerRankHTML(compName){
     const col=gc(p.univ);
     const _ri=_cp*_PAGE+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
-    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'32px')}<span style="font-weight:700;font-size:14px">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">${getPlayerPhotoHTML(p.name,'32px')}<span style="font-weight:700;font-size:14px">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>

@@ -64,32 +64,37 @@ function revertMatchRecord(matchObj){
       const l=players.find(p=>p.name===lName);
       // 게임 레벨 ID (새 포맷) 및 매치 레벨 ID (구 데이터) 모두 지원
       const gameMatchId=mid?`${mid}_s${si}_g${gi}`:null;
-
+      
       if(w){
         if(!w.history)w.history=[];
         let idx=-1;
-        if(gameMatchId) idx=w.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='승'&&h.opp===lName);
-        if(idx<0&&mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
-        if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===mdate);
-        if(idx<0){ idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', wName,'vs',lName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
+        // 1순위: 정확한 게임 레벨 ID 매칭
+        if(gameMatchId) idx=w.history.findIndex(h=>h.matchId===gameMatchId);
+        // 2순위: 부모 매치 ID + 맵 매칭 (안전성 강화)
+        if(idx<0 && mid) idx=w.history.findIndex(h=>h.matchId===mid && h.map===g.map);
+        // 3순위: 부모 매치 ID만 매칭 (구 데이터 호환)
+        if(idx<0 && mid) idx=w.history.findIndex(h=>h.matchId===mid);
+
         if(idx>=0){
-          const hr=w.history[idx];
-          w.win=Math.max(0,(w.win||0)-1);w.points=(w.points||0)-3;
-          if(hr.eloDelta!=null){w.elo=(w.elo||ELO_DEFAULT)-hr.eloDelta;}
+          const h=w.history[idx];
+          if(h.result==='승'){ w.win=Math.max(0,(w.win||0)-1); w.points=(w.points||0)-3; }
+          else { w.loss=Math.max(0,(w.loss||0)-1); w.points=(w.points||0)+3; }
+          if(h.eloDelta!=null) w.elo=(w.elo||ELO_DEFAULT)-h.eloDelta;
           w.history.splice(idx,1);
         }
       }
       if(l){
         if(!l.history)l.history=[];
         let idx=-1;
-        if(gameMatchId) idx=l.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='패'&&h.opp===wName);
-        if(idx<0&&mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
-        if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===mdate);
-        if(idx<0){ idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', lName,'vs',wName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
+        if(gameMatchId) idx=l.history.findIndex(h=>h.matchId===gameMatchId);
+        if(idx<0 && mid) idx=l.history.findIndex(h=>h.matchId===mid && h.map===g.map);
+        if(idx<0 && mid) idx=l.history.findIndex(h=>h.matchId===mid);
+
         if(idx>=0){
-          const hr=l.history[idx];
-          l.loss=Math.max(0,(l.loss||0)-1);l.points=(l.points||0)+3;
-          if(hr.eloDelta!=null){l.elo=(l.elo||ELO_DEFAULT)-hr.eloDelta;}
+          const h=l.history[idx];
+          if(h.result==='승'){ l.win=Math.max(0,(l.win||0)-1); l.points=(l.points||0)-3; }
+          else { l.loss=Math.max(0,(l.loss||0)-1); l.points=(l.points||0)+3; }
+          if(h.eloDelta!=null) l.elo=(l.elo||ELO_DEFAULT)-h.eloDelta;
           l.history.splice(idx,1);
         }
       }
@@ -115,7 +120,7 @@ function syncTourneyHistory(){
     (m.sets||[]).forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -221,7 +226,7 @@ function syncMiniM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -243,7 +248,7 @@ function syncUnivM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -267,7 +272,7 @@ function syncCkM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -292,7 +297,7 @@ function syncProM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -317,7 +322,7 @@ function syncTtM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -341,7 +346,7 @@ function syncTourneys(){
         (m.sets||[]).forEach((s, setIdx)=>{
           (s.games||[]).forEach((g, gameIdx)=>{
             if(!g.playerA||!g.playerB||!g.winner)return;
-            const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
             if(existingIds.has(gameMatchId))return;
             const wn=g.winner==='A'?g.playerA:g.playerB;
             const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -358,7 +363,7 @@ function syncTourneys(){
       (m.sets||[]).forEach((s, setIdx)=>{
         (s.games||[]).forEach((g, gameIdx)=>{
           if(!g.playerA||!g.playerB||!g.winner)return;
-          const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+          const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
           if(existingIds.has(gameMatchId))return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
           const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -535,7 +540,7 @@ function syncAllHistory(){
     (m.sets||[]).forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -685,6 +690,71 @@ function syncAllHistoryBtn(){
   const n=syncAllHistory();
   if(n>0){alert('✅ '+n+'건의 경기가 스트리머 최근 경기에 소급 반영되었습니다.\n스트리머 상세 페이지에서 확인하세요.');render();}
   else{alert('✅ 이미 모든 기록이 반영되어 있습니다.');}
+}
+
+/**
+ * 모든 탭의 데이터(ttM, tourneys 등)를 기반으로 선수들의 p.history를 재구축합니다.
+ * ID 누락이나 잘못된 삭제로 인해 사라진 기록을 복구하는 용도입니다.
+ */
+function rebuildAllPlayerHistory(){
+  if(!confirm('모든 선수의 전적을 원본 데이터 기반으로 재구축하시겠습니까?\n(승/패/ELO/포인트가 다시 계산됩니다.)')) return;
+  
+  // 1. 모든 선수 전적 초기화
+  players.forEach(p=>{
+    p.win=0; p.loss=0; p.points=0; p.elo=ELO_DEFAULT; p.history=[];
+  });
+
+  // 2. ttM(티어대회 기록)에서 복구
+  (ttM || []).forEach(m=>{
+    if(!m._id) m._id = genId();
+    const mode = m.stage === 'bkt' ? '티어대회 토너먼트' : (m.stage === 'league' ? '티어대회 조별리그' : '티어대회');
+    (m.sets || []).forEach((s, si)=>{
+      (s.games || []).forEach((g, gi)=>{
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wn = g.winner === 'A' ? g.playerA : g.playerB;
+        const ln = g.winner === 'A' ? g.playerB : g.playerA;
+        const gid = `${m._id}_s${si}_g${gi}`;
+        applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', mode);
+      });
+    });
+  });
+
+  // 3. tourneys에서 복구 (조별리그 + 브라켓)
+  (tourneys || []).forEach(tn => {
+    const modeLabel = tn.type === 'tier' ? '티어대회' : '대회';
+    (tn.groups || []).forEach(grp => {
+      (grp.matches || []).forEach(m => {
+        if(!m._id) m._id = genId();
+        (m.sets || []).forEach((s, si)=>{
+          (s.games || []).forEach((g, gi)=>{
+            if(!g.playerA || !g.playerB || !g.winner) return;
+            const wn = g.winner === 'A' ? g.playerA : g.playerB;
+            const ln = g.winner === 'A' ? g.playerB : g.playerA;
+            const gid = `${m._id}_s${si}_g${gi}`;
+            applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', modeLabel);
+          });
+        });
+      });
+    });
+    // 브라켓
+    const br = tn.bracket || {};
+    Object.values(br.matchDetails || {}).forEach(m => {
+      if(!m._id) m._id = genId();
+      (m.sets || []).forEach((s, si)=>{
+        (s.games || []).forEach((g, gi)=>{
+          if(!g.playerA || !g.playerB || !g.winner) return;
+          const wn = g.winner === 'A' ? g.playerA : g.playerB;
+          const ln = g.winner === 'A' ? g.playerB : g.playerA;
+          const gid = `${m._id}_s${si}_g${gi}`;
+          applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', modeLabel);
+        });
+      });
+    });
+  });
+
+  save();
+  render();
+  alert('전적 재구축이 완료되었습니다.');
 }
 
 /* ══════════════════════════════════════
