@@ -759,6 +759,48 @@ function rebuildAllPlayerHistory() {
     });
   });
 
+  // 10. proTourneys에서 복구
+  if (typeof proTourneys !== 'undefined') {
+    proTourneys.forEach(tn => {
+      (tn.groups || []).forEach(grp => {
+        (grp.matches || []).forEach(m => {
+          if (!m.winner || !m.a || !m.b) return;
+          const wName = m.winner === 'A' ? m.a : m.b;
+          const lName = m.winner === 'A' ? m.b : m.a;
+          const gameId = genId();
+          applyGameResult(wName, lName, m.d || '', m.map || '', gameId, '', '', '프로리그대회');
+          count++;
+        });
+      });
+      (tn.bracket || []).forEach(rnd => {
+        rnd.forEach(m => {
+          if (!m || !m.winner || !m.a || !m.b) return;
+          const wName = m.winner === 'A' ? m.a : m.b;
+          const lName = m.winner === 'A' ? m.b : m.a;
+          const gameId = genId();
+          applyGameResult(wName, lName, m.d || '', m.map || '', gameId, '', '', '프로리그대회');
+          count++;
+        });
+      });
+      if (tn.thirdPlace && tn.thirdPlace.winner && tn.thirdPlace.a && tn.thirdPlace.b) {
+        const tp = tn.thirdPlace;
+        const wName = tp.winner === 'A' ? tp.a : tp.b;
+        const lName = tp.winner === 'A' ? tp.b : tp.a;
+        const gameId = genId();
+        applyGameResult(wName, lName, tp.d || '', tp.map || '', gameId, '', '', '프로리그대회');
+        count++;
+      }
+      (tn.teamMatches || []).forEach(tm => {
+        (tm.games || []).forEach(g => {
+          if (!g.wName || !g.lName) return;
+          const gameId = genId();
+          applyGameResult(g.wName, g.lName, tm.d || '', g.map || '', gameId, '', '', '프로리그대회');
+          count++;
+        });
+      });
+    });
+  }
+
   save();
   alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
   render();
