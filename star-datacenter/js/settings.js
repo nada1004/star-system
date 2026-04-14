@@ -94,9 +94,16 @@ function rCfg(C,T){
               const oldN=players[${i}].name;
               players[${i}].name=nw;
               players.forEach(other=>{(other.history||[]).forEach(h=>{if(h.opp===oldN)h.opp=nw;});});
-              [miniM,univM,comps,ckM,proM,ttM].forEach(arr=>(arr||[]).forEach(m=>{
+              [miniM,univM,comps,ckM,proM,ttM,indM,gjM].forEach(arr=>(arr||[]).forEach(m=>{
                 if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
-                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
+                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{
+                  if(Array.isArray(g.playerA)){
+                    g.playerA=g.playerA.map(p=>p===oldN?nw:p);
+                  } else if(g.playerA===oldN) g.playerA=nw;
+                  if(Array.isArray(g.playerB)){
+                    g.playerB=g.playerB.map(p=>p===oldN?nw:p);
+                  } else if(g.playerB===oldN) g.playerB=nw;
+                }));
               }));
               (tourneys||[]).forEach(tn=>{
                 (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});

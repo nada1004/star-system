@@ -230,7 +230,13 @@ function syncMiniM(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',label);
+        const wUniv=g.winner==='A'?(m.a||''):(m.b||'');
+        const lUniv=g.winner==='A'?(m.b||''):(m.a||'');
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,label);
+        } else {
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,label);
+        }
         existingIds.add(gameMatchId);
         added++;
       });
@@ -254,7 +260,11 @@ function syncUnivM(){
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const wUniv=g.winner==='A'?m.a:m.b;
         const lUniv=g.winner==='A'?m.b:m.a;
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
+        } else {
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
+        }
         existingIds.add(gameMatchId);
         added++;
       });
@@ -277,9 +287,13 @@ function syncCkM(){
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
-        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
-        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===(Array.isArray(wn)?wn[0]:wn));
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===(Array.isArray(ln)?ln[0]:ln));
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
+        } else {
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
+        }
         existingIds.add(gameMatchId);
         added++;
       });
@@ -302,9 +316,13 @@ function syncProM(){
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
-        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
-        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===(Array.isArray(wn)?wn[0]:wn));
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===(Array.isArray(ln)?ln[0]:ln));
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
+        } else {
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
+        }
         existingIds.add(gameMatchId);
         added++;
       });
@@ -326,7 +344,11 @@ function syncTtM(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
+        } else {
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
+        }
         existingIds.add(gameMatchId);
         added++;
       });
@@ -351,7 +373,11 @@ function syncTourneys(){
             const wn=g.winner==='A'?g.playerA:g.playerB;
             const ln=g.winner==='A'?g.playerB:g.playerA;
             const mode=tn.type==='tier'?'티어대회':'조별리그';
-            applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
+            if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+              applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
+            } else {
+              applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
+            }
             existingIds.add(gameMatchId);
             added++;
           });
@@ -367,7 +393,11 @@ function syncTourneys(){
           if(existingIds.has(gameMatchId))return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
           const ln=g.winner==='A'?g.playerB:g.playerA;
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
+          if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+            applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
+          } else {
+            applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
+          }
           existingIds.add(gameMatchId);
           added++;
         });
@@ -438,11 +468,17 @@ function syncAllHistory(){
         // 각 게임에 고유 matchId 부여 (matchId_setIndex_gameIndex)
         const gameMatchId = `${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
         const uW=g.winner==='A'?(univAName||m.a||''):(univBName||m.b||'');
         const uL=g.winner==='A'?(univBName||m.b||''):(univAName||m.a||'');
-        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
+        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
+          const wn = g.winner==='A'?g.playerA:g.playerB;
+          const ln = g.winner==='A'?g.playerB:g.playerA;
+          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
+        } else {
+          const wn=g.winner==='A'?g.playerA:g.playerB;
+          const ln=g.winner==='A'?g.playerB:g.playerA;
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
+        }
         existingIds.add(gameMatchId);
         added++;
       });

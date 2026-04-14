@@ -602,17 +602,18 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
+function _findPlayer(name){
+  if(!name) return null;
+  let p=players.find(x=>x.name===name);
+  if(p)return p;
+  const low=name.toLowerCase();
+  p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+  if(p)return p;
+  const ns=name.replace(/\s+/g,'');
+  return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+}
+
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
-  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
-  function _findPlayer(name){
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    const low=name.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=name.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
-  }
   const w=_findPlayer(winName);
   const l=_findPlayer(loseName);
   if(!w||!l||w===l)return;
@@ -656,6 +657,33 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+}
+
+function applyMultiGameResult(winNames, loseNames, date, map, matchId, univW, univL, mode){
+  const wins = (Array.isArray(winNames) ? winNames : [winNames]).map(n=>_findPlayer(n)).filter(Boolean);
+  const loss = (Array.isArray(loseNames) ? loseNames : [loseNames]).map(n=>_findPlayer(n)).filter(Boolean);
+  if(!wins.length || !loss.length) return;
+
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  const t=Date.now();
+
+  wins.forEach(w=>{
+    if(!w.history) w.history=[];
+    if(matchId && w.history.find(h=>h.matchId===matchId)) return;
+    w.win++; w.points+=3;
+    const opps = loss.map(x=>x.name);
+    const team = wins.filter(x=>x!==w).map(x=>x.name);
+    w.history.unshift({date:d,time:t,result:'승',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univW||w.univ||'',mode:mode||'',isMulti:true});
+  });
+  loss.forEach(l=>{
+    if(!l.history) l.history=[];
+    if(matchId && l.history.find(h=>h.matchId===matchId)) return;
+    l.loss++; l.points-=3;
+    const opps = wins.map(x=>x.name);
+    const team = loss.filter(x=>x!==l).map(x=>x.name);
+    l.history.unshift({date:d,time:t,result:'패',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univL||l.univ||'',mode:mode||'',isMulti:true});
+  });
 }
 
 function rebuildAllPlayerHistory() {

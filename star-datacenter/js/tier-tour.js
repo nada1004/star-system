@@ -344,10 +344,12 @@ function _grpPasteApplyLogic(savable){
   const dateEl = document.getElementById('paste-date');
   if(dateEl&&dateEl.value) m.d=dateEl.value;
 
-  // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (grpSaveMatch와 동일 패턴 → 이중저장 방지)
+  // 1순위: 정확한 게임 레벨 ID 매칭
   const matchId = m._id || genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
-  m._id = matchId;
+  // matchId와 날짜를 조합하여 고유성 강화
+  const uniqueMatchId = `${matchId}_${m.d||'nodate'}`;
+  if(m._id) revertMatchRecord({...m, _id:uniqueMatchId});
+  m._id = matchId; // 데이터에는 원래 ID 저장
   const dateStr = dateEl?.value || m.d || '';
   (m.sets||[]).forEach((set, si)=>{
     (set.games||[]).forEach((g, gi)=>{
@@ -356,7 +358,7 @@ function _grpPasteApplyLogic(savable){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(teamA||m.a||''):(teamB||m.b||'');
       const univL=g.winner==='A'?(teamB||m.b||''):(teamA||m.a||'');
-      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      const gameMatchId = `${uniqueMatchId}_s${si}_g${gi}`;
       applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,tn.type==='tier'?'티어대회':'조별리그');
     });
   });
@@ -456,8 +458,10 @@ function _bktPasteApplyLogic(savable, tn){
   }
   // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (이중저장 방지)
   const matchId=m._id||genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
-  m._id=matchId;
+  // matchId와 날짜를 조합하여 고유성 강화
+  const uniqueMatchId = `${matchId}_${m.d||'nodate'}`;
+  if(m._id) revertMatchRecord({...m, _id:uniqueMatchId});
+  m._id=matchId; // 데이터에는 원래 ID 저장
   const dateStr=m.d;
   (m.sets||[]).forEach((s, si)=>{
     (s.games||[]).forEach((g, gi)=>{
@@ -466,7 +470,7 @@ function _bktPasteApplyLogic(savable, tn){
       const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      const gameMatchId = `${matchId}_s${si}_g${gi}`;
+      const gameMatchId = `${uniqueMatchId}_s${si}_g${gi}`;
       applyGameResult(wn,ln,dateStr,g.map||'',gameMatchId,univW,univL,'티어대회 토너먼트');
     });
   });
@@ -923,162 +927,64 @@ function grpRemoveUniv(tnId,gi,ui){
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
 /* ══════════════════════════════════════
-
-/* ══════════════════════════════════════
-   ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
+   UTILS
 ══════════════════════════════════════ */
-function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
-function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
-function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
-
-/* ══════════════════════════════════════
-   설정
-══════════════════════════════════════ */
-function rCfg(C,T){
-  T.innerText='⚙️ 설정';
-  if(!isLoggedIn){
-    C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
-    return;
-  }
-  const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`${_cfgD('notice','📢 공지 관리')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
-    <div id="notice-list-area" style="margin-bottom:16px">
-    ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
-      notices.map((n,i)=>`<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:${n.active?'var(--white)':'var(--surface)'};opacity:${n.active?1:0.6}">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:18px">${n.type||'📢'}</span>
-          <span style="font-weight:700;flex:1;font-size:13px">${n.title||'(제목 없음)'}</span>
-          <span style="font-size:11px;color:var(--gray-l)">${n.date||''}</span>
-          <button class="btn btn-xs" style="background:${n.active?'#f0fdf4':'#f1f5f9'};color:${n.active?'#16a34a':'#64748b'};border:1px solid ${n.active?'#86efac':'#cbd5e1'};min-width:52px"
-            onclick="notices[${i}].active=!notices[${i}].active;save();render()">
-            ${n.active?'✅ 활성':'⭕ 비활성'}</button>
-          <button class="btn btn-r btn-xs" onclick="if(confirm('공지를 삭제할까요?')){notices.splice(${i},1);save();render()}">🗑️</button>
-        </div>
-        ${(n.body||'').length>120
-          ? `<div id="notice-body-${i}" style="font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden">${(n.body||'').slice(0,120)}...</div>
-             <button onclick="(function(){const el=document.getElementById('notice-body-${i}');const btn=document.getElementById('notice-exp-${i}');const open=el.style.maxHeight!=='none';el.style.maxHeight=open?'none':'60px';el.textContent=open?notices[${i}].body:notices[${i}].body.slice(0,120)+'...';btn.textContent=open?'▲ 접기':'▼ 전체보기';})()" id="notice-exp-${i}" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:2px 0;font-weight:600">▼ 전체보기</button>`
-          : `<div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${n.body||''}</div>`
-        }
-      </div>`).join('')
+// 토너먼트 버튼 우클릭 메뉴
+function showTournamentContext(e){
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const existingMenu = document.getElementById('tournament-context-menu');
+  if(existingMenu) existingMenu.remove();
+  
+  const menu = document.createElement('div');
+  menu.id = 'tournament-context-menu';
+  menu.style.cssText = `
+    position: fixed;
+    left: ${e.clientX}px;
+    top: ${e.clientY}px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 99999;
+    min-width: 160px;
+    padding: 4px 0;
+  `;
+  
+  menu.innerHTML = `
+    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f9fafb'" 
+         onmouseout="this.style.background='white'"
+         onclick="goToTournamentRecords()">
+      <span style="font-size: 14px">🏆</span>
+      <span>토너먼트 기록</span>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  const closeMenu = (ev) => {
+    if(!menu.contains(ev.target)){
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
     }
-    </div>
-    <div style="border:1.5px dashed var(--border2);border-radius:12px;padding:16px;background:var(--surface)">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">+ 새 공지 작성</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-        <select id="new-notice-type" style="width:140px;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
-          ${typeOpts.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}
-        </select>
-        <input type="text" id="new-notice-title" placeholder="공지 제목" style="flex:1;min-width:180px">
-      </div>
-      <textarea id="new-notice-body" placeholder="공지 내용을 입력하세요..." style="width:100%;height:80px;resize:vertical;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box"></textarea>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="new-notice-active" checked> 즉시 활성화
-        </label>
-        <button class="btn btn-b" style="margin-left:auto" onclick="
-          const t=document.getElementById('new-notice-title').value.trim();
-          const b=document.getElementById('new-notice-body').value.trim();
-          const tp=document.getElementById('new-notice-type').value;
-          const ac=document.getElementById('new-notice-active').checked;
-          if(!t){alert('제목을 입력하세요');return;}
-          notices.unshift({id:Date.now(),type:tp,title:t,body:b,active:ac,date:new Date().toLocaleDateString('ko-KR')});
-          save();render();">📢 공지 등록</button>
-      </div>
-    </div>
-  </details>
-  ${(()=>{
-    const seen={};const dupNames=[];
-    players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
-    const uniq=[...new Set(dupNames)];
-    if(!uniq.length) return '';
-    return `<div class="ssec" style="border:2px solid #fca5a5;background:#fff5f5">
-      <h4 style="color:#dc2626">⚠️ 동명이인 감지 (${uniq.length}건)</h4>
-      <div style="font-size:12px;color:#7f1d1d;margin-bottom:12px">중복 이름이 있으면 승패·기록이 뒤섞입니다. 한 명의 이름을 바꿔 구분하세요.</div>
-      ${uniq.map(name=>{
-        const dupes=players.map((p,i)=>({p,i})).filter(({p})=>p.name===name);
-        return `<div style="background:var(--white);border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:8px">
-          <div style="font-weight:800;color:#dc2626;font-size:13px;margin-bottom:6px">👥 "${name}" — ${dupes.length}명 중복</div>
-          ${dupes.map(({p,i})=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-size:11px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 7px;font-weight:700">${p.univ||'무소속'}</span>
-            <span style="font-size:11px;color:var(--gray-l)">${p.tier||'-'} · ${p.race||'-'}</span>
-            <input type="text" id="dupfix-${i}" placeholder="새 이름..." style="flex:1;min-width:100px;padding:3px 7px;border-radius:5px;border:1px solid #fca5a5;font-size:12px">
-            <button class="btn btn-xs" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="(function(){
-              const inp=document.getElementById('dupfix-${i}');
-              const nw=(inp?.value||'').trim();
-              if(!nw){alert('새 이름을 입력하세요.');return;}
-              if(players.find((x,xi)=>x.name===nw&&xi!==${i})){alert('이미 존재하는 이름입니다.');return;}
-              editName=players[${i}].name;
-              document.getElementById('emBody').innerHTML='';
-              const oldN=players[${i}].name;
-              players[${i}].name=nw;
-              players.forEach(other=>{(other.history||[]).forEach(h=>{if(h.opp===oldN)h.opp=nw;});});
-              [miniM,univM,comps,ckM,proM,ttM].forEach(arr=>(arr||[]).forEach(m=>{
-                if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
-                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
-              }));
-              (tourneys||[]).forEach(tn=>{
-                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
-                const br=tn.bracket||{};
-                Object.values(br.matchDetails||{}).forEach(m=>{if(m&&m.a===oldN)m.a=nw;if(m&&m.b===oldN)m.b=nw;});
-                (br.manualMatches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});
-              });
-              (proTourneys||[]).forEach(tn=>{
-                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
-              });
-              save();render();
-            })()">✅ 적용</button>
-          </div>`).join('')}
-        </div>`;
-      }).join('')}
-    </div>`;
-  })()}
-  ${_cfgD('univ','🏛️ 대학 관리')}
-    <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
-  univCfg.forEach((u,i)=>{
-    const isHidden = !!u.hidden;
-    const isDissolved = !!u.dissolved;
-    h+=`<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
-      <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
-      <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
-      ${isDissolved?`<span style="font-size:10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-weight:700">🏚️ 해체 ${u.dissolvedDate||''}</span>`:''}
-      <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상" onchange="univCfg[${i}].color=this.value;this.previousElementSibling.previousElementSibling${isDissolved?'.previousElementSibling':''}.style.background=this.value;save();if(typeof renderBoard==='function')renderBoard()">
-      ${isDissolved
-        ? `<button class="btn btn-xs" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" onclick="univCfg[${i}].dissolved=false;univCfg[${i}].hidden=false;delete univCfg[${i}].dissolvedDate;saveCfg();render()">🔄 복구</button>`
-        : `<button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
-            onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
-            ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
-          <button class="btn btn-xs" style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa" onclick="openDissolveModal(${i})">🏚️ 해체</button>`
-      }
-      <button class="btn btn-r btn-xs" onclick="delUniv(${i})">🗑️ 삭제</button>
-    </div>`;
-  });
-  h+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <input type="text" id="nu-n" placeholder="새 대학명" style="width:150px">
-    <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
-    <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
-  </div></details>
-  ${_cfgD('maps','🗺️ 맵 관리')}<div id="map-list">`;
-  maps.forEach((m,i)=>{
-    h+=`<div class="srow">
-      <span style="font-size:14px">📍</span>
-      <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
-      <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
-    </div>`;
-  });
-  h+=`</div><div style="margin-top:12px;display:flex;gap:8px">
-    <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
-    <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
-  </div></details>
-  ${_cfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
-      약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
-      <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">📦 기본 내장 약자 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(✕ 클릭 시 비활성화)</span></div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">
-        ${Object.entries(PASTE_MAP_ALIAS_DEFAULT).filter(([k,v])=>k!==v).map(([k,v])=>{
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 10);
+}
+
+// 대전기록 탭의 티어대회 토너먼트 서브탭으로 이동
+function goToTournamentRecords(){
+  const menu = document.getElementById('tournament-context-menu');
+  if(menu) menu.remove();
+  
+  curTab = 'hist';
+  histSub = 'tiertour-bkt';
+  openDetails = {};
+  if(!window.histPage) window.histPage = {};
+  window.histPage['tiertour-bkt'] = 0;
+  render();
+}
           const disabled=(userMapAlias||{}).hasOwnProperty(k+'__disabled');
           return disabled
             ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:2px 6px 2px 9px;font-size:11px;opacity:.5;text-decoration:line-through"><span style="font-family:monospace"><b>${k}</b> → ${v}</span><button onclick="restoreDefaultMapAlias('${encodeURIComponent(k)}')" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:10px;padding:0 2px;line-height:1;text-decoration:none" title="복원">↩</button></span>`

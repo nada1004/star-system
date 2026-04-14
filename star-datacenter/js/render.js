@@ -1455,13 +1455,34 @@ function buildPlayerDetailHTML(p){
         ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="해당 경기로 이동">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
+      const oppCellHTML = hh.isMulti && Array.isArray(hh.opps)
+        ? `<div style="display:flex;flex-direction:column;gap:2px;padding:2px 0">
+            ${hh.opps.map(opp => {
+              return `<span style="cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(opp)}'),100)">
+                ${getPlayerPhotoHTML(opp,'18px','pointer-events:none;')}<span style="color:var(--blue);font-size:11px">${opp}</span>
+              </span>`;
+            }).join('')}
+          </div>`
+        : `<span style="cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:5px" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)">
+            ${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span>
+          </span>`;
+      const oppRaceHTML = hh.isMulti && Array.isArray(hh.opps)
+        ? `<div style="display:flex;flex-direction:column;gap:2px;padding:2px 0;align-items:center">
+            ${hh.opps.map(opp => {
+              const opP = players.find(x => x.name === opp);
+              const r = opP ? opP.race : '';
+              return `<span class="rbadge r${r}" style="font-size:9px;padding:1px 3px">${r}</span>`;
+            }).join('')}
+          </div>`
+        : `<span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span>`;
+
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
-        <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
-        <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
+        <td>${oppCellHTML}</td>
+        <td style="text-align:center">${oppRaceHTML}</td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
         <td>${eloStr}</td>
         ${editBtnHTML}
