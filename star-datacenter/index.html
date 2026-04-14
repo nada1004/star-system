@@ -333,24 +333,6 @@
   </div>
 </div>
 
-<!-- 경기 미리보기 모달 -->
-<div id="matchPreviewModal" class="modal no-export" style="z-index:5400">
-  <div class="umbox" style="width:760px;max-width:96vw">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
-      <div class="mtitle" id="matchPreviewTitle" style="margin-bottom:0">경기 미리보기</div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="btn btn-w btn-sm" onclick="cm('matchPreviewModal')">✕ 닫기</button>
-      </div>
-    </div>
-    <div id="matchPreviewBody"></div>
-    <div class="mbtns" style="margin-top:14px;gap:8px">
-      <button id="matchPreviewGoBtn" class="btn btn-b" style="flex:1" onclick="if(window._mpNav){window._mpNav();}">➡️ 이동</button>
-      <button id="matchPreviewNewTabBtn" class="btn btn-w" style="flex:0 0 auto" onclick="if(window._mpNewTab){window._mpNewTab();}">🗗 새 탭</button>
-      <button class="btn btn-w" style="flex:0 0 auto" onclick="cm('matchPreviewModal')">닫기</button>
-    </div>
-  </div>
-</div>
-
 <!-- 대학 상세 모달 -->
 <div id="univModal" class="modal no-export">
   <div class="umbox">
@@ -543,7 +525,7 @@
   </div>
 </div>
 
-<script>['js/constants.js','js/data.js','js/auth.js','js/settings.js','js/tier-tour.js','js/competition.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/render.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/board2.js','js/chatbot.js','js/mobile-bar.js','js/init.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
+<script>['js/constants.js','js/data.js','js/auth.js','js/settings.js','js/tier-tour.js','js/competition.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js','js/mobile-bar.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
