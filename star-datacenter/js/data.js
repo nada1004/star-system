@@ -100,8 +100,9 @@ function revertMatchRecord(matchObj){
 ══════════════════════════════════════ */
 function syncTourneyHistory(){
   const existingIds=new Set();
+  const existingKeys=new Set();
   players.forEach(p=>{
-    (p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});
+    (p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});
   });
 
   let added=0;
@@ -114,9 +115,13 @@ function syncTourneyHistory(){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
+        const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+        const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+        if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
         const univW=g.winner==='A'?(m.a||''):(m.b||'');
         const univL=g.winner==='A'?(m.b||''):(m.a||'');
         applyGameResult(wn,ln,m.d,g.map||'',m._id,univW,univL,modeLabel);
+        existingKeys.add(keyW);existingKeys.add(keyL);
         added++;
       });
     });
@@ -146,24 +151,33 @@ function syncTourneyHistoryBtn(){
 function syncIndHistory(){
   // 이미 history에 있는 matchId 수집
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   // indM (개인전)
   (typeof indM!=='undefined'?indM:[]).forEach(m=>{
     if(!m._id||!m.wName||!m.lName)return;
     if(existingIds.has(m._id))return;
+    const keyW=`${m.d||''}_${m.map||''}_${m.lName}`;
+    const keyL=`${m.d||''}_${m.map||''}_${m.wName}`;
+    if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
     const mode=m._proLabel?'프로리그':'개인전';
     applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
     existingIds.add(m._id);
+    existingKeys.add(keyW);existingKeys.add(keyL);
     added++;
   });
   // gjM (끝장전)
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
     if(!m._id||!m.wName||!m.lName)return;
     if(existingIds.has(m._id))return;
+    const keyW=`${m.d||''}_${m.map||''}_${m.lName}`;
+    const keyL=`${m.d||''}_${m.map||''}_${m.wName}`;
+    if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
     const mode=m._proLabel?'프로리그끝장전':'끝장전';
     applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
     existingIds.add(m._id);
+    existingKeys.add(keyW);existingKeys.add(keyL);
     added++;
   });
   if(added>0)save();
@@ -178,14 +192,19 @@ function syncIndHistoryBtn(){
 // 개별 소스별 동기화 함수들
 function syncIndM(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   (typeof indM!=='undefined'?indM:[]).forEach(m=>{
     if(!m._id||!m.wName||!m.lName)return;
     if(existingIds.has(m._id))return;
+    const keyW=`${m.d||''}_${m.map||''}_${m.lName}`;
+    const keyL=`${m.d||''}_${m.map||''}_${m.wName}`;
+    if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
     const mode=m._proLabel?'프로리그':'개인전';
     applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
     existingIds.add(m._id);
+    existingKeys.add(keyW);existingKeys.add(keyL);
     added++;
   });
   if(added>0)save();
@@ -193,14 +212,19 @@ function syncIndM(){
 }
 function syncGjM(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
     if(!m._id||!m.wName||!m.lName)return;
     if(existingIds.has(m._id))return;
+    const keyW=`${m.d||''}_${m.map||''}_${m.lName}`;
+    const keyL=`${m.d||''}_${m.map||''}_${m.wName}`;
+    if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
     const mode=m._proLabel?'프로리그끝장전':'끝장전';
     applyGameResult(m.wName,m.lName,m.d||'',m.map||'',m._id,'','',mode);
     existingIds.add(m._id);
+    existingKeys.add(keyW);existingKeys.add(keyL);
     added++;
   });
   if(added>0)save();
@@ -208,7 +232,8 @@ function syncGjM(){
 }
 function syncMiniM(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   (typeof miniM!=='undefined'?miniM:[]).forEach(m=>{
     if(!m._id)return;
@@ -219,7 +244,11 @@ function syncMiniM(){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
+        const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+        const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+        if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
         applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'',label);
+        existingKeys.add(keyW);existingKeys.add(keyL);
         added++;
       });
     });
@@ -316,7 +345,8 @@ function syncProM(){
 }
 function syncTtM(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   (typeof ttM!=='undefined'?ttM:[]).forEach(m=>{
     if(!m._id)return;
@@ -326,7 +356,11 @@ function syncTtM(){
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
+        const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+        const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+        if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
         applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','티어대회');
+        existingKeys.add(keyW);existingKeys.add(keyL);
         added++;
       });
     });
@@ -337,7 +371,8 @@ function syncTtM(){
 }
 function syncTourneys(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{
@@ -348,8 +383,12 @@ function syncTourneys(){
             if(!g.playerA||!g.playerB||!g.winner)return;
             const wn=g.winner==='A'?g.playerA:g.playerB;
             const ln=g.winner==='A'?g.playerB:g.playerA;
+            const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+            const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+            if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
             const mode=tn.type==='tier'?'티어대회':'조별리그';
             applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'',mode);
+            existingKeys.add(keyW);existingKeys.add(keyL);
             added++;
           });
         });
@@ -363,7 +402,11 @@ function syncTourneys(){
           if(!g.playerA||!g.playerB||!g.winner)return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
           const ln=g.winner==='A'?g.playerB:g.playerA;
+          const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+          const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+          if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
           applyGameResult(wn,ln,m.d||'',g.map||'',m._id,m.a||'',m.b||'','대회');
+          existingKeys.add(keyW);existingKeys.add(keyL);
           added++;
         });
       });
@@ -422,7 +465,8 @@ function syncTourneysBtn(){
 ══════════════════════════════════════ */
 function syncAllHistory(){
   const existingIds=new Set();
-  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);});});
+  const existingKeys=new Set();
+  players.forEach(p=>{(p.history||[]).forEach(h=>{if(h.matchId)existingIds.add(h.matchId);existingKeys.add(`${h.date}_${h.map}_${h.opp}`);});});
   let added=0;
 
   // sets[].games[] 구조를 가진 매치 배열 처리 공통 함수
@@ -436,10 +480,14 @@ function syncAllHistory(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
+        const keyW=`${m.d||''}_${g.map||''}_${ln}`;
+        const keyL=`${m.d||''}_${g.map||''}_${wn}`;
+        if(existingKeys.has(keyW)||existingKeys.has(keyL))return;
         const uW=g.winner==='A'?(univAName||m.a||''):(univBName||m.b||'');
         const uL=g.winner==='A'?(univBName||m.b||''):(univAName||m.a||'');
         applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
         existingIds.add(gameMatchId);
+        existingKeys.add(keyW);existingKeys.add(keyL);
         added++;
       });
     });
