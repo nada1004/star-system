@@ -31,6 +31,33 @@ function closeNoticePopup(){
   cm('noticePopupModal');
 }
 
+// ── 자동 복구: "스트리머 최근 경기(history)는 있는데 대전기록 탭은 비어 있음" 케이스 ──
+// (예: localStorage 용량 초과로 저장이 중간에 끊겨 su_p만 남고 su_mm/su_um/... 가 누락된 경우)
+function _autoFixRecordTabsFromHistoryOnce(){
+  try{
+    if(localStorage.getItem('su_autofix_records_v1')==='1') return;
+    if(typeof players==='undefined' || !Array.isArray(players) || players.length<50) return;
+    const histCnt = players.reduce((a,p)=>a+((p && p.history && p.history.length)?p.history.length:0),0);
+    const recCnt =
+      (typeof miniM!=='undefined'&&Array.isArray(miniM)?miniM.length:0) +
+      (typeof univM!=='undefined'&&Array.isArray(univM)?univM.length:0) +
+      (typeof ckM!=='undefined'&&Array.isArray(ckM)?ckM.length:0) +
+      (typeof proM!=='undefined'&&Array.isArray(proM)?proM.length:0) +
+      (typeof ttM!=='undefined'&&Array.isArray(ttM)?ttM.length:0) +
+      (typeof comps!=='undefined'&&Array.isArray(comps)?comps.length:0) +
+      (typeof indM!=='undefined'&&Array.isArray(indM)?indM.length:0) +
+      (typeof gjM!=='undefined'&&Array.isArray(gjM)?gjM.length:0);
+
+    // history는 많은데 기록 탭 데이터가 거의 없으면 복구 제안
+    if(histCnt > 200 && recCnt < 10 && typeof syncHistoryToMatchArrays==='function'){
+      // 반복 팝업 방지 (취소해도 수동으로 설정탭에서 실행 가능)
+      localStorage.setItem('su_autofix_records_v1','1');
+      // 내부 confirm 포함
+      setTimeout(()=>{ try{ syncHistoryToMatchArrays(); }catch(e){} }, 300);
+    }
+  }catch(e){}
+}
+
 function init(){
   fixPoints();
   // ELO 미설정 선수에게 기본값 부여
@@ -50,6 +77,7 @@ function init(){
   try{refreshSel();}catch(e){}
   initLoginHash();
   applyLoginState();
+  _autoFixRecordTabsFromHistoryOnce();
   render();
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
@@ -90,7 +118,23 @@ initDark();
   try{
     // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
     const localPlayers = J('su_p');
-    if(localPlayers && localPlayers.length > 0) return;
+    // ⚠️ 중요: su_p(선수)만 기준으로 "로컬 데이터 없음"을 판단하면,
+    // 저장 용량 초과 등으로 su_p가 저장되지 않은 환경에서
+    // 대전기록(su_mm/su_um/...)이 있음에도 자동 로드가 실행되어
+    // 로컬 기록이 원격 data.json으로 덮어쓰기될 수 있음.
+    // → 선수 OR 대전/대회 기록 중 하나라도 있으면 자동 로드 중단.
+    const hasPlayers = !!(localPlayers && localPlayers.length > 0);
+    const hasRecords = (()=>{
+      try{
+        const keys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'];
+        for(const k of keys){
+          const v = J(k);
+          if(Array.isArray(v) && v.length > 0) return true;
+        }
+      }catch(e){}
+      return false;
+    })();
+    if(hasPlayers || hasRecords) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
