@@ -2915,7 +2915,7 @@ function statsPlayerSearchHTML(){
       ${q && !list.length ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>` : ''}
       ${list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        return`<div onclick="openPlayerModal('${escJS(p.name)}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
@@ -2946,7 +2946,7 @@ function _statsPlayerSearchUpdate(){
     ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>`
     : list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        return`<div onclick="openPlayerModal('${escJS(p.name)}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
@@ -3203,7 +3203,7 @@ function statsPlayerVsHTML(){
         onfocus="document.getElementById('${dropId}').style.display='block'"
         onblur="setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.style.display='none'},200)">
       <div id="${dropId}" style="display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:220px;box-shadow:var(--sh2)">
-        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${p.name.replace(/'/g,"\'")}';document.getElementById('${inputId}').value='${p.name.replace(/'/g,"\'")}';document.getElementById('${dropId}').style.display='none';render()">
+        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${escJS(p.name)}';document.getElementById('${inputId}').value='${escJS(p.name)}';document.getElementById('${dropId}').style.display='none';render()">
           <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
         </div>`).join('')}
       </div>
