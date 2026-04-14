@@ -759,6 +759,14 @@ function buildTierTourInputHTML(){
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
     </div>`;
+
+    ${mA.length>0&&mB.length>0?`
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">⚡ N:N 자동 매칭</span>
+      <span style="font-size:11px;color:var(--gray-l)">A팀[i] vs B팀[i] 순서로 게임 자동 생성</span>
+      ${[2,3,4,5,6].filter(n=>mA.length>=n&&mB.length>=n).map(n=>`<button class="btn btn-b btn-sm" onclick="ckProAutoMatchNN('tt',${n})">⚡ ${n}:${n} 매치</button>`).join('')}
+      ${mA.length===mB.length&&mA.length>0?`<button class="btn btn-p btn-sm" onclick="ckProAutoMatchNN('tt',${mA.length})">⚡ ${mA.length}:${mB.length} 전원 매칭</button>`:''}
+    </div>`:''}
   h+=setBuilderHTML(bld,'tt');h+=`</div>`;return h;
 }
 
@@ -1518,6 +1526,14 @@ function buildTierTourInputHTML(){
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
       </div>
     </div>`;
+
+    ${mA.length>0&&mB.length>0?`
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">⚡ N:N 자동 매칭</span>
+      <span style="font-size:11px;color:var(--gray-l)">A팀[i] vs B팀[i] 순서로 게임 자동 생성</span>
+      ${[2,3,4,5,6].filter(n=>mA.length>=n&&mB.length>=n).map(n=>`<button class="btn btn-b btn-sm" onclick="ckProAutoMatchNN('tt',${n})">⚡ ${n}:${n} 매치</button>`).join('')}
+      ${mA.length===mB.length&&mA.length>0?`<button class="btn btn-p btn-sm" onclick="ckProAutoMatchNN('tt',${mA.length})">⚡ ${mA.length}:${mB.length} 전원 매칭</button>`:''}
+    </div>`:''}
   h+=setBuilderHTML(bld,'tt');h+=`</div>`;return h;
 }
 

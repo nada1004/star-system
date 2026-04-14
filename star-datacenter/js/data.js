@@ -115,7 +115,7 @@ function syncTourneyHistory(){
     (m.sets||[]).forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -221,7 +221,7 @@ function syncMiniM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -243,7 +243,7 @@ function syncUnivM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -267,7 +267,7 @@ function syncCkM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -292,7 +292,7 @@ function syncProM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -317,7 +317,7 @@ function syncTtM(){
     (m.sets||[]).forEach((s, setIdx)=>{
       (s.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -341,7 +341,7 @@ function syncTourneys(){
         (m.sets||[]).forEach((s, setIdx)=>{
           (s.games||[]).forEach((g, gameIdx)=>{
             if(!g.playerA||!g.playerB||!g.winner)return;
-            const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
             if(existingIds.has(gameMatchId))return;
             const wn=g.winner==='A'?g.playerA:g.playerB;
             const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -358,7 +358,7 @@ function syncTourneys(){
       (m.sets||[]).forEach((s, setIdx)=>{
         (s.games||[]).forEach((g, gameIdx)=>{
           if(!g.playerA||!g.playerB||!g.winner)return;
-          const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+          const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
           if(existingIds.has(gameMatchId))return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
           const ln=g.winner==='A'?g.playerB:g.playerA;
@@ -535,7 +535,7 @@ function syncAllHistory(){
     (m.sets||[]).forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const gameMatchId=`${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameMatchId=g._id||`${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;

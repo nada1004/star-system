@@ -1087,7 +1087,14 @@ function buildCKInputHTML(){
         </div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
       </div>
-    </div>`;
+    </div>
+    ${mA.length>0&&mB.length>0?`
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">⚡ N:N 자동 매칭</span>
+      <span style="font-size:11px;color:var(--gray-l)">A팀[i] vs B팀[i] 순서로 게임 자동 생성</span>
+      ${[2,3,4,5,6].filter(n=>mA.length>=n&&mB.length>=n).map(n=>`<button class="btn btn-b btn-sm" onclick="ckProAutoMatchNN('ck',${n})">⚡ ${n}:${n} 매치</button>`).join('')}
+      ${mA.length===mB.length&&mA.length>0?`<button class="btn btn-p btn-sm" onclick="ckProAutoMatchNN('ck',${mA.length})">⚡ ${mA.length}:${mB.length} 전원 매칭</button>`:''}
+    </div>`:''}`;
   h+=setBuilderHTML(bld,'ck');h+=`</div>`;return h;
 }
 
@@ -1138,6 +1145,21 @@ function ckAddBySearch(team, name){
   render();
 }
 
+/* ══ N:N 자동 매칭: A팀[0..n-1] vs B팀[0..n-1] 순서로 freeGames 생성 ══ */
+function ckProAutoMatchNN(mode, n){
+  const bld=BLD[mode];
+  if(!bld)return;
+  const mA=bld.membersA||[];
+  const mB=bld.membersB||[];
+  if(mA.length<n||mB.length<n)return alert(`양 팀 모두 ${n}명 이상 필요합니다.`);
+  // noSetMode로 전환 + 기존 freeGames 초기화
+  bld.noSetMode=true;
+  bld.freeGames=[];
+  for(let i=0;i<n;i++){
+    bld.freeGames.push({playerA:mA[i].name,playerB:mB[i].name,winner:'',map:''});
+  }
+  render();
+}
 
 function ckFilterPlayers(team){
   const univSel=document.getElementById(`ck-${team.toLowerCase()}-univ`);
@@ -1401,7 +1423,14 @@ function buildProInputHTML(){
         <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
       </div>
-    </div>`;
+    </div>
+    ${mA.length>0&&mB.length>0?`
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text2)">⚡ N:N 자동 매칭</span>
+      <span style="font-size:11px;color:var(--gray-l)">A팀[i] vs B팀[i] 순서로 게임 자동 생성</span>
+      ${[2,3,4,5,6].filter(n=>mA.length>=n&&mB.length>=n).map(n=>`<button class="btn btn-b btn-sm" onclick="ckProAutoMatchNN('pro',${n})">⚡ ${n}:${n} 매치</button>`).join('')}
+      ${mA.length===mB.length&&mA.length>0?`<button class="btn btn-p btn-sm" onclick="ckProAutoMatchNN('pro',${mA.length})">⚡ ${mA.length}:${mB.length} 전원 매칭</button>`:''}
+    </div>`:''}`;
   h+=setBuilderHTML(bld,'pro');h+=`</div>`;return h;
 }
 
