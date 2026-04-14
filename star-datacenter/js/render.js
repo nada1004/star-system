@@ -893,6 +893,8 @@ function openMatchPreview(matchId, modeLbl, ev){
     }
   }catch(e){}
 
+  const _mpModeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#4f46e5','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#d97706','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#0891b2','테스트':'#6b7280'};
+
   const rawId = matchId;
   let parentId = matchId;
   let setIdx = null, gameIdx = null;
@@ -903,46 +905,51 @@ function openMatchPreview(matchId, modeLbl, ev){
     parentId = matchId.split('_s')[0];
   }
 
-  // 모달 DOM이 없으면 동적으로 생성 (배포/캐시 꼬임 방지)
-  if(!document.getElementById('matchPreviewModal')){
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
-      <div id="matchPreviewModal" class="modal no-export" style="z-index:5400">
-        <div class="umbox" style="width:760px;max-width:96vw">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
-            <div class="mtitle" id="matchPreviewTitle" style="margin-bottom:0">경기 미리보기</div>
-            <div style="display:flex;gap:6px;align-items:center">
-              <button class="btn btn-w btn-sm" onclick="cm('matchPreviewModal')">✕ 닫기</button>
-            </div>
-          </div>
-          <div id="matchPreviewBody"></div>
-          <div class="mbtns" style="margin-top:14px;gap:8px">
-            <button id="matchPreviewGoBtn" class="btn btn-b" style="flex:1" onclick="if(window._mpNav){window._mpNav();}">➡️ 이동</button>
-            <button id="matchPreviewNewTabBtn" class="btn btn-w" style="flex:0 0 auto" onclick="if(window._mpNewTab){window._mpNewTab();}">🗗 새 탭</button>
-            <button class="btn btn-w" style="flex:0 0 auto" onclick="cm('matchPreviewModal')">닫기</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(wrap.firstElementChild);
-  }
+  // 항상 재생성 (구 버전 mbtns 중복 방지)
+  const _oldMp = document.getElementById('matchPreviewModal');
+  if(_oldMp) _oldMp.remove();
+  const _mob = window.innerWidth < 600;
+  const _tab = window.innerWidth < 1024;
+  const _boxW = _mob ? '100vw' : _tab ? 'min(94vw,480px)' : '480px';
+  const _boxR = _mob ? '14px 14px 0 0' : '14px';
+  const _mpWrap = document.createElement('div');
+  _mpWrap.innerHTML = `
+    <div id="matchPreviewModal" class="modal no-export" style="z-index:5400;align-items:${_mob?'flex-end':'center'}">
+      <div class="umbox" style="width:${_boxW};max-height:88vh;padding:0;overflow:hidden;border-radius:${_boxR};display:flex;flex-direction:column">
+        <div id="matchPreviewBody" style="overflow-y:auto;flex:1;min-height:0"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(_mpWrap.firstElementChild);
 
-  const titleEl = document.getElementById('matchPreviewTitle');
   const bodyEl = document.getElementById('matchPreviewBody');
-  if(titleEl) titleEl.textContent = (modeLbl||'') ? `${modeLbl} 경기 미리보기` : '경기 미리보기';
-
   const fmtPlayers = (x) => Array.isArray(x) ? x.join(' / ') : (x||'');
-  const fmtMap = (m) => (m && m !== '-') ? m : '';
-  const badge = (txt, bg) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:${bg||'var(--surface)'};border:1px solid var(--border);font-size:11px;font-weight:800;color:var(--text2)">${txt}</span>`;
+  const fmtMap = (mp) => (mp && mp !== '-') ? mp : '';
 
-  const findIn = (arr) => (arr||[]).find(m=>m && m._id===parentId) || null;
+  const modeColor = _mpModeColors[modeLbl] || '#6b7280';
+
+  // gjM/indM 단일 경기를 match 형식으로 변환
+  const _singleGameMatch = (entry) => entry ? {
+    a: entry.wName, b: entry.lName, d: entry.d||'', sa: 1, sb: 0,
+    sets: [{games:[{playerA:entry.wName, playerB:entry.lName, winner:'A', map:entry.map||'-'}]}]
+  } : null;
+
+  const findIn = (arr) => (arr||[]).find(x=>x && x._id===parentId) || null;
   let m = null;
   if(modeLbl==='티어대회') m = findIn(typeof ttM!=='undefined'?ttM:[]);
   else if(modeLbl==='미니대전' || modeLbl==='시빌워') m = findIn(typeof miniM!=='undefined'?miniM:[]);
   else if(modeLbl==='대학대전') m = findIn(typeof univM!=='undefined'?univM:[]);
   else if(modeLbl==='대학CK') m = findIn(typeof ckM!=='undefined'?ckM:[]);
   else if(modeLbl==='프로리그') m = findIn(typeof proM!=='undefined'?proM:[]);
-  else if(modeLbl==='대회' || modeLbl==='조별리그' || modeLbl==='토너먼트' || modeLbl==='프로리그대회' || modeLbl==='프로리그팀전') m = findIn(typeof comps!=='undefined'?comps:[]);
-  else m = findIn(typeof ttM!=='undefined'?ttM:[]) || findIn(typeof proM!=='undefined'?proM:[]) || findIn(typeof ckM!=='undefined'?ckM:[]) || findIn(typeof univM!=='undefined'?univM:[]) || findIn(typeof miniM!=='undefined'?miniM:[]) || findIn(typeof comps!=='undefined'?comps:[]);
+  else if(modeLbl==='대회'||modeLbl==='조별리그'||modeLbl==='토너먼트'||modeLbl==='프로리그대회'||modeLbl==='프로리그팀전') m = findIn(typeof comps!=='undefined'?comps:[]);
+  else if(modeLbl==='끝장전'||modeLbl==='프로리그끝장전'||modeLbl==='프로리그대회끝장전') m = _singleGameMatch(findIn(typeof gjM!=='undefined'?gjM:[]));
+  else if(modeLbl==='개인전') m = _singleGameMatch(findIn(typeof indM!=='undefined'?indM:[]));
+  else {
+    m = findIn(typeof ttM!=='undefined'?ttM:[]) || findIn(typeof proM!=='undefined'?proM:[]) ||
+        findIn(typeof ckM!=='undefined'?ckM:[]) || findIn(typeof univM!=='undefined'?univM:[]) ||
+        findIn(typeof miniM!=='undefined'?miniM:[]) || findIn(typeof comps!=='undefined'?comps:[]);
+    if(!m){ const _gj=findIn(typeof gjM!=='undefined'?gjM:[]); if(_gj) m=_singleGameMatch(_gj); }
+    if(!m){ const _ind=findIn(typeof indM!=='undefined'?indM:[]); if(_ind) m=_singleGameMatch(_ind); }
+  }
 
   const a = m ? (m.a || m.teamALabel || '') : '';
   const b = m ? (m.b || m.teamBLabel || '') : '';
@@ -959,50 +966,87 @@ function openMatchPreview(matchId, modeLbl, ev){
     });
     sa=_sa; sb=_sb;
   }
+  const aWin = sa!=null && sb!=null && sa>sb;
+  const bWin = sa!=null && sb!=null && sb>sa;
 
-  let h = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-    ${modeLbl?badge(modeLbl,'#eff6ff'):''}
-    ${d?badge('📅 '+d,'#f8fafc'):''}
-    ${badge('ID: '+parentId,'#f1f5f9')}
-    ${(gm!=null)?badge(`게임: 세트 ${setIdx+1} · ${gameIdx+1}경기`,'#fff7ed'):''}
-  </div>`;
-
-  h += `<div style="padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-weight:900;font-size:16px;color:var(--text)">${a||'A'} <span style="color:var(--gray-l)">vs</span> ${b||'B'}</div>
-      ${(sa!=null && sb!=null)?`<div style="margin-left:auto;font-weight:900;font-size:15px;color:var(--text2)">${sa} : ${sb}</div>`:''}
+  // ── 헤더 (종목 컬러 그라디언트) ──
+  let h = `<div style="background:linear-gradient(135deg,${modeColor}ee,${modeColor}99);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:14px;font-weight:900;color:#fff">${modeLbl||'경기 미리보기'}</span>
+      ${(gm!=null)?`<span style="font-size:11px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.18);padding:2px 8px;border-radius:20px;font-weight:700">세트${setIdx+1} · ${gameIdx+1}경기</span>`:''}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${d?`<span style="font-size:12px;color:rgba(255,255,255,.85);font-weight:600">📅 ${d}</span>`:''}
+      <button onclick="cm('matchPreviewModal')" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:700;flex-shrink:0">✕</button>
     </div>
   </div>`;
 
-  if(!m){
-    h += `<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:12px">
-      미리보기 데이터를 찾지 못했습니다. (이동 버튼으로 기록 탭에서 열어보세요)
+  // ── 스코어보드 ──
+  h += `<div style="padding:18px 16px 14px;background:var(--white)">
+    <div style="display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:8px;margin-bottom:${sets.length?'16px':'0'}">
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:900;color:${aWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${aWin?modeColor+'14':'transparent'};transition:.2s">${a||'팀 A'}</div>
+      </div>
+      <div style="text-align:center">
+        ${(sa!=null && sb!=null)
+          ? `<div style="font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text)"><span style="color:${aWin?modeColor:bWin?'var(--gray-l)':'var(--text)'}">${sa}</span><span style="color:var(--border2);font-size:20px;margin:0 3px">:</span><span style="color:${bWin?modeColor:aWin?'var(--gray-l)':'var(--text)'}">${sb}</span></div>
+            <div style="font-size:10px;font-weight:700;color:var(--gray-l);margin-top:4px">SCORE</div>`
+          : `<div style="font-size:18px;font-weight:900;color:var(--border2)">VS</div>`
+        }
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:900;color:${bWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${bWin?modeColor+'14':'transparent'};transition:.2s">${b||'팀 B'}</div>
+      </div>
     </div>`;
-  } else {
-    const setCards = sets.map((s, si)=>{
-      const gs = (s.games||[]);
-      const scoreA = (s.scoreA!=null)?s.scoreA:gs.filter(g=>g.winner==='A').length;
-      const scoreB = (s.scoreB!=null)?s.scoreB:gs.filter(g=>g.winner==='B').length;
-      const sTitle = (si===2?'🎯 에이스전':`세트 ${si+1}`) + ` (${scoreA}:${scoreB})`;
-      const rows = gs.map((g, gi)=>{
-        const hi = (setIdx===si && gameIdx===gi);
-        return `<div style="display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:10px;background:${hi?'#eff6ff':'var(--surface)'};border:1px solid ${hi?'#93c5fd':'var(--border)'}">
-          <div style="min-width:64px;font-size:11px;font-weight:800;color:var(--gray-l)">${gi+1}G</div>
-          <div style="flex:1;font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtPlayers(g.playerA)} <span style="color:var(--gray-l)">vs</span> ${fmtPlayers(g.playerB)}</div>
-          <div style="min-width:120px;text-align:right;font-size:11px;color:var(--gray-l)">${fmtMap(g.map)}</div>
-          <div style="min-width:40px;text-align:right;font-size:11px;font-weight:900;color:${g.winner==='A'?'#2563eb':'#dc2626'}">${g.winner||''}</div>
+
+  // ── 세트 탭 ──
+  if(sets.length > 0){
+    const _initSet = gm ? setIdx : 0;
+    const setTabsHTML = sets.map((s,si)=>{
+      const gs = s.games||[];
+      const sA = (s.scoreA!=null)?s.scoreA:gs.filter(g=>g.winner==='A').length;
+      const sB = (s.scoreB!=null)?s.scoreB:gs.filter(g=>g.winner==='B').length;
+      const lbl = si===2?'에이스':`세트 ${si+1}`;
+      const isOn = si===_initSet;
+      return `<button onclick="(function(b,i){document.querySelectorAll('#matchPreviewBody .mp-sp').forEach(p=>p.style.display='none');document.querySelectorAll('#matchPreviewBody .mp-st').forEach(t=>{t.style.background='var(--surface)';t.style.color='var(--text2)';t.style.borderColor='var(--border2)';});document.getElementById('mp-sp-'+i).style.display='';b.style.background='${modeColor}';b.style.color='#fff';b.style.borderColor='${modeColor}';})(this,${si})"
+        class="mp-st" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${isOn?modeColor:'var(--border2)'};background:${isOn?modeColor:'var(--surface)'};color:${isOn?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer;transition:all .15s">${lbl} <span style="opacity:.75;font-weight:600">${sA}:${sB}</span></button>`;
+    }).join('');
+    h += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${setTabsHTML}</div>`;
+
+    const setPanels = sets.map((s,si)=>{
+      const gs = s.games||[];
+      const isOn = si===_initSet;
+      const rows = gs.map((g,gi)=>{
+        const hl = gm && setIdx===si && gameIdx===gi;
+        const wA = g.winner==='A';
+        const wB = g.winner==='B';
+        return `<div style="display:grid;grid-template-columns:26px 1fr 1fr minmax(0,100px);gap:6px;align-items:center;padding:8px 10px;border-radius:9px;background:${hl?modeColor+'12':'var(--surface)'};border:1.5px solid ${hl?modeColor+'55':'transparent'};margin-bottom:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--gray-l);text-align:center">${gi+1}G</span>
+          <span style="font-size:12px;font-weight:${wA?'800':'500'};color:${wA?modeColor:'var(--text2)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtPlayers(g.playerA)}${wA?' ✓':''}</span>
+          <span style="font-size:12px;font-weight:${wB?'800':'500'};color:${wB?modeColor:'var(--text2)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">${wB?'✓ ':''}${fmtPlayers(g.playerB)}</span>
+          <span style="font-size:10px;color:var(--gray-l);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtMap(g.map)}</span>
         </div>`;
       }).join('');
-      return `<details ${gm && setIdx===si ? 'open' : ''} style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--white);margin-bottom:10px">
-        <summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;color:var(--text2)">
-          <span>${sTitle}</span>
-          <span style="margin-left:auto;font-size:11px;color:var(--gray-l);font-weight:700">${gs.length}경기</span>
-        </summary>
-        <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">${rows||'<div style="padding:10px;color:var(--gray-l);font-size:12px">세트 데이터 없음</div>'}</div>
-      </details>`;
+      return `<div id="mp-sp-${si}" class="mp-sp" style="${isOn?'':'display:none'}">
+        ${rows || `<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">게임 데이터 없음</div>`}
+      </div>`;
     }).join('');
-    h += setCards || `<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:12px">세트 데이터가 없습니다.</div>`;
+    h += setPanels;
+  } else if(!m){
+    h += `<div style="padding:24px;text-align:center;color:var(--gray-l);background:var(--surface);border:1.5px solid var(--border);border-radius:12px">
+      <div style="font-size:28px;margin-bottom:8px">🔍</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2)">미리보기 데이터를 찾지 못했습니다</div>
+      <div style="font-size:11px;margin-top:4px">이동 버튼으로 기록 탭에서 확인하세요</div>
+    </div>`;
   }
+
+  h += `</div>`;
+
+  // ── 하단 버튼 ──
+  h += `<div style="display:flex;gap:8px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border)">
+    <button onclick="if(window._mpNav){window._mpNav();}" style="flex:1;padding:10px;background:${modeColor};color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">➡️ 기록 탭에서 보기</button>
+    <button onclick="if(window._mpNewTab){window._mpNewTab();}" title="새 탭에서 열기" style="padding:10px 14px;background:var(--white);color:var(--text2);border:1.5px solid var(--border2);border-radius:10px;font-size:14px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='${modeColor}';this.style.color='${modeColor}'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🗗</button>
+  </div>`;
 
   if(bodyEl) bodyEl.innerHTML = h;
 
@@ -1401,8 +1445,6 @@ function buildPlayerDetailHTML(p){
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
     </select>`}
   </div>`:'';
-  h+=filterBar;
-
   // ── 연도 필터 드롭다운 ──
   if(_availYears.length>0){
     const _pSafeY=escJS(p.name);
@@ -1621,6 +1663,7 @@ function buildPlayerDetailHTML(p){
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
+    h+=filterBar;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     const selectAllCheckbox = _playerHistBulkMode
@@ -1670,11 +1713,11 @@ function buildPlayerDetailHTML(p){
           </div>`
         : `<span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span>`;
 
-      h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+      h+=`<tr style="background:${isWin?'#f0fdf408':'#fef2f208'};border-left:3px solid ${isWin?'#16a34a':'#dc2626'}">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
-        <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
+        <td>${isWin?`<span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;letter-spacing:.3px">WIN</span>`:`<span style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;letter-spacing:.3px">LOSE</span>`}</td>
         <td>${oppCellHTML}</td>
         <td style="text-align:center">${oppRaceHTML}</td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>

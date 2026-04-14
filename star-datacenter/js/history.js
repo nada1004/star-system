@@ -25,6 +25,8 @@ function rHist(C,T){
   ];
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
+  if(window._histDetailOpen===undefined) window._histDetailOpen=false;
+  const _needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   // 상단: 그룹 pill + 드롭다운
   let h=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
   grps.forEach(g=>{
@@ -34,20 +36,31 @@ function rHist(C,T){
       style="padding:5px 12px;border-radius:20px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">${g}</button>`;
   });
   h+=`</div>`;
-  // 선택 그룹 내 탭 (가로 스크롤 pill 바)
-  const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
-  if(grpTabs.length>1){
-    h+=`<div class="no-export" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:6px">`;
-    grpTabs.forEach(t=>{
-      const isOn=histSub===t.id;
-      h+=`<button onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()"
-        style="flex-shrink:0;padding:4px 12px;border-radius:16px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'#eff6ff':'var(--surface)'};color:${isOn?'var(--blue)':'var(--text3)'};font-size:12px;font-weight:${isOn?700:500};cursor:pointer;white-space:nowrap">${t.lbl}</button>`;
-    });
-    h+=`</div>`;
-  }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
-  if(needDateFilter && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('hist');
+  // 적용 필터 요약 + 상세 필터 토글
+  const _curLbl=(curTab.lbl||'').replace(/^[^ ]+ /,'');
+  const _ym=(filterYear!=='전체'||filterMonth!=='전체')?`${filterYear==='전체'?'전체':filterYear+'년'}${filterMonth==='전체'?'':' '+parseInt(filterMonth,10)+'월'}`:'';
+  h+=`<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1.5px solid var(--border2);border-radius:12px;background:var(--surface);margin-bottom:10px">
+    <div style="font-size:13px;font-weight:900;color:var(--text2);white-space:nowrap">${_curLbl}</div>
+    ${_ym?`<span style="font-size:11px;font-weight:700;color:var(--text3);padding:3px 10px;border-radius:999px;background:var(--white);border:1px solid var(--border2)">📅 ${_ym}</span>`:''}
+    ${recSortDir!=='desc'?`<span style="font-size:11px;font-weight:700;color:var(--text3);padding:3px 10px;border-radius:999px;background:var(--white);border:1px solid var(--border2)">정렬: 오래된순</span>`:''}
+    <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="filterYear='전체';filterMonth='전체';recSortDir='desc';openDetails={};window._histDetailOpen=false;render()">초기화</button>
+    <button class="btn btn-w btn-xs" onclick="window._histDetailOpen=!window._histDetailOpen;render()">${window._histDetailOpen?'▲ 상세 닫기':'▼ 상세 필터'}</button>
+  </div>`;
+
+  if(window._histDetailOpen){
+    const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
+    if(grpTabs.length>1){
+      h+=`<div class="no-export" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:-4px 0 10px">`;
+      grpTabs.forEach(t=>{
+        const isOn=histSub===t.id;
+        h+=`<button onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()"
+          style="flex-shrink:0;padding:6px 12px;border-radius:999px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:12px;font-weight:${isOn?800:600};cursor:pointer;white-space:nowrap">${t.lbl}</button>`;
+      });
+      h+=`</div>`;
+    }
+    if(_needDateFilter && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('hist');
+    }
   }
   if(histSub==='vs'){
     h+=vsSearchHTML();
@@ -114,55 +127,6 @@ function rHist(C,T){
   C.innerHTML=h;
 }
 
-// ── 기록(대전) 공통 호환 헬퍼 ─────────────────────────────
-function _teamMembers(m, side){
-  // 구버전 호환: teamAMembers/teamBMembers 대신 membersA/membersB를 쓰던 데이터 지원
-  if(!m) return [];
-  if(side==='A') return m.teamAMembers || m.membersA || [];
-  return m.teamBMembers || m.membersB || [];
-}
-function _hasGamesInSets(m){
-  if(!m) return false;
-  return (m.sets||[]).some(s=>{
-    if(s && (s.scoreA!=null || s.scoreB!=null)) return true;
-    return (s?.games||[]).some(g=>g && (g.winner!=null || g.playerA || g.playerB || g.wName || g.lName));
-  });
-}
-function _calcScoreFromSets(m){
-  // winner가 'A'/'B'인 경우 게임 수(또는 set.scoreA/scoreB)로 sa/sb 계산
-  let sa=0, sb=0;
-  (m?.sets||[]).forEach(s=>{
-    if(!s) return;
-    if(s.scoreA!=null || s.scoreB!=null){
-      sa += Number(s.scoreA||0);
-      sb += Number(s.scoreB||0);
-      return;
-    }
-    (s.games||[]).forEach(g=>{
-      if(!g) return;
-      if(g.winner==='A') sa++;
-      else if(g.winner==='B') sb++;
-    });
-  });
-  return {sa,sb};
-}
-function _ensureScoreOnMatch(m){
-  // m.sa/m.sb가 비어있고 sets 기반 계산이 가능하면 보정하여 반환
-  if(!m) return {sa:0,sb:0, ok:false};
-  let sa=m.sa, sb=m.sb;
-  const empty = (sa==null||sa==='') || (sb==null||sb==='');
-  if(empty){
-    const sc=_calcScoreFromSets(m);
-    sa=sc.sa; sb=sc.sb;
-    // sets에서도 계산이 안 되면 ok=false
-    if((sa+sb)===0) return {sa:0,sb:0, ok:false};
-    // 렌더링에서도 보이도록 값 보정
-    if(m.sa==null||m.sa==='') m.sa=sa;
-    if(m.sb==null||m.sb==='') m.sb=sb;
-  }
-  return {sa:Number(sa||0), sb:Number(sb||0), ok:true};
-}
-
 
 /* ══════════════════════════════════════
    대전 기록 > 전체 통합 탭
@@ -186,19 +150,9 @@ function histAllHTML(){
   [[miniM,'mini'],[ckM,'ck'],[univM,'univm'],[proM,'pro']].forEach(([arr,type])=>{
     (arr||[]).forEach(m=>{
       const isCK=(type==='ck'||type==='pro');
-      if(isCK){
-        const memA=_teamMembers(m,'A'), memB=_teamMembers(m,'B');
-        const hasTeams=Array.isArray(memA)&&Array.isArray(memB)&&memA.length&&memB.length;
-        const hasAB=!!(m.a&&m.b)||!!(m.playerA&&m.playerB);
-        const hasGames=_hasGamesInSets(m);
-        if(!(hasTeams||hasAB||hasGames)) return;
-      }else{
-        if(!m.a||!m.b) return;
-      }
-      // sa/sb 없으면 sets로 보정 시도
-      const sc=_ensureScoreOnMatch(m);
-      if(!sc.ok) return;
-      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
+      if(isCK){if(!m.teamAMembers||!m.teamBMembers)return;}else{if(!m.a||!m.b)return;}
+      if(m.sa==null||m.sb==null||m.sa===''||m.sb==='')return;
+      if(!passDateFilter(m.d||''))return;
       allItems.push({type,d:m.d||'',m});
     });
   });
@@ -212,24 +166,15 @@ function histAllHTML(){
   });
   // 티어대회 (tt): m.a, m.b, m.sa, m.sb, m.d
   (ttM||[]).forEach(m=>{
-    const memA=_teamMembers(m,'A'), memB=_teamMembers(m,'B');
-    const hasTeams=Array.isArray(memA)&&Array.isArray(memB)&&memA.length&&memB.length;
-    const hasAB=!!(m.a&&m.b)||!!(m.playerA&&m.playerB);
-    const hasGames=_hasGamesInSets(m);
-    if(!(hasTeams||hasAB||hasGames)) return;
-    // sa/sb 없으면 sets로 보정 시도
-    const sc=_ensureScoreOnMatch(m);
-    if(!sc.ok) return;
-    if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
+    if(!m.a||!m.b)return;
+    if(!passDateFilter(m.d||''))return;
     allItems.push({type:'tt',d:m.d||'',m});
   });
   // 대회 tourney
   if(typeof getTourneyMatches==='function'){
     getTourneyMatches().forEach(m=>{
-      if(!m.a||!m.b) return;
-      const sc=_ensureScoreOnMatch(m);
-      if(!sc.ok) return;
-      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
+      if(!m.a||!m.b||m.sa==null||m.sb==null)return;
+      if(!passDateFilter(m.d||''))return;
       allItems.push({type:'tourney',d:m.d||'',m});
     });
   }
@@ -601,17 +546,10 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   let h='';
   let _filtered=false;
   arr.forEach(m=>{
-    if(isCKmode){
-      const memA=_teamMembers(m,'A'), memB=_teamMembers(m,'B');
-      const hasTeams=Array.isArray(memA)&&Array.isArray(memB)&&memA.length&&memB.length;
-      const hasAB=!!(m.a&&m.b)||!!(m.playerA&&m.playerB);
-      const hasGames=_hasGamesInSets(m);
-      if(!(hasTeams||hasAB||hasGames)) return;
-    } else {
-      if(!m.a||!m.b) return;
-    }
-    const sc=_ensureScoreOnMatch(m);
-    if(!sc.ok) return;
+    if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
+    else{if(!m.a||!m.b) return;}
+    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
+    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
     const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:mode==='tt'?ttM:ckM;
@@ -684,17 +622,12 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   let filtered=arr.map((m,i)=>({m,i:_srcArr!==arr?_srcArr.indexOf(m):i})).filter(({m})=>{
     if(extraFilter&&!extraFilter(m)) return false;
     if(isCKmode){
-      const memA=_teamMembers(m,'A'), memB=_teamMembers(m,'B');
-      const hasTeams=Array.isArray(memA)&&Array.isArray(memB)&&memA.length&&memB.length;
-      const hasAB=!!(m.a&&m.b)||!!(m.playerA&&m.playerB);
-      const hasGames=_hasGamesInSets(m);
-      if(!(hasTeams||hasAB||hasGames)) return false;
+      if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return false;
     } else {
       if(!m.a||!m.b) return false;
     }
-    // sa/sb 없으면 sets로 보정 시도
-    const sc=_ensureScoreOnMatch(m);
-    if(!sc.ok) return false;
+    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
+    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
@@ -745,7 +678,16 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   }
 
   let h=sortBar+`<div id="rec-list-${mode}">`;
+  let _lastDate='';
   paged.forEach(({m,i})=>{
+    const _d=(m.d||'');
+    if(_d && _d!==_lastDate){
+      _lastDate=_d;
+      h+=`<div class="no-export" style="position:sticky;top:0;z-index:20;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin:10px 0 8px;font-size:12px;font-weight:900;color:var(--text2);display:flex;align-items:center;gap:8px">
+        <span style="color:var(--gray-l);font-weight:800">📅</span>
+        <span>${_d.slice(2).replace(/-/g,'/')}</span>
+      </div>`;
+    }
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
     const ca=isCK?'#2563eb':gc(m.a);
     const cb=isCK?'#dc2626':gc(m.b);
@@ -1171,9 +1113,7 @@ function getTourneyMatches(){
       const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
       (grp.matches||[]).forEach((m,mi)=>{
         if(!m.a||!m.b)return;
-        // sa/sb가 없더라도 sets 기반으로 계산 가능한 경우 포함
-        const sc=_ensureScoreOnMatch(m);
-        if(!sc.ok) return;
+        if(m.sa==null||m.sb==null)return;
         result.push({
           _src:'tour',_tnId:tn.id,_gi:gi,_mi:mi,
           d:m.d||'',n:tn.name,a:m.a,b:m.b,
@@ -1185,9 +1125,7 @@ function getTourneyMatches(){
     // 브라켓 경기 (matchDetails)
     const br=tn.bracket||{};
     Object.entries(br.matchDetails||{}).forEach(([key,m])=>{
-      if(!m||!m.a||!m.b) return;
-      const sc=_ensureScoreOnMatch(m);
-      if(!sc.ok) return;
+      if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
       result.push({
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
@@ -1214,9 +1152,7 @@ function getTourneyMatches(){
     });
     // 수동 추가 브라켓 경기 (manualMatches)
     (br.manualMatches||[]).forEach((m,idx)=>{
-      if(!m||!m.a||!m.b) return;
-      const sc=_ensureScoreOnMatch(m);
-      if(!sc.ok) return;
+      if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
       result.push({
         _src:'tour_manual',_tnId:tn.id,_manualIdx:idx,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
