@@ -313,12 +313,7 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
   </details>
-    <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📅 날짜 일괄 변경</h4>
-      <button id="cfg-bulk-date-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-date-body');const btn=document.getElementById('cfg-bulk-date-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-date-body" style="display:none">
+  ${_cfgD('bulkdate','📅 날짜 일괄 변경')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
@@ -337,14 +332,29 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
       <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
+  </details>
+  ${_cfgD('bulkdel','🗑️ 날짜 범위 일괄 삭제')}
+    <div style="padding:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px">
+      <div style="font-size:12px;color:#dc2626;font-weight:700;margin-bottom:10px">⚠️ 주의: 선택한 기간 내의 모든 경기가 완전히 삭제됩니다.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <label style="font-size:12px;font-weight:600;color:#991b1b">시작 날짜</label>
+        <input type="date" id="bulk-del-from" style="font-size:12px">
+        <label style="font-size:12px;font-weight:600;color:#991b1b">~ 종료 날짜</label>
+        <input type="date" id="bulk-del-to" style="font-size:12px">
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <label style="font-size:11px;font-weight:600;color:#991b1b">대상:</label>
+        ${['mini','univm','ck','pro','tt','ind','gj','comp'].map(m=>`
+        <label style="display:inline-flex;align-items:center;gap:3px;font-size:11px;cursor:pointer;color:#991b1b">
+          <input type="checkbox" id="bulk-del-chk-${m}" checked style="cursor:pointer">
+          ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회', ind:'개인전', gj:'끝장전', comp:'대회' }[m]}
+        </label>`).join('')}
+      </div>
+      <button class="btn btn-r btn-sm" onclick="bulkDeleteRecordsByDate()">🗑️ 범위 일괄 삭제</button>
+      <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:#dc2626;font-weight:700"></span>
     </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗺️ 맵 이름 일괄 교체</h4>
-      <button id="cfg-bulk-map-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-map-body');const btn=document.getElementById('cfg-bulk-map-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-map-body" style="display:none">
+  </details>
+  ${_cfgD('bulkmap','🗺️ 맵 이름 일괄 교체')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
@@ -390,12 +400,7 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗑️ 날짜 범위 일괄 삭제</h4>
-      <button id="cfg-bulk-del-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-del-body');const btn=document.getElementById('cfg-bulk-del-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-del-body" style="display:none">
+  ${_cfgD('bulkdel','🗑️ 날짜 범위 일괄 삭제')}
     <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
@@ -414,14 +419,8 @@ function rCfg(C,T){
       <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
       <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🔄 세트제 → 게임수 합산 일괄 변환</h4>
-      <button id="cfg-bulk-conv-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-conv-body');const btn=document.getElementById('cfg-bulk-conv-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-conv-body" style="display:none">
+  </details>
+  ${_cfgD('bulkconv','🔄 세트제 → 게임수 합산 일괄 변환')}
     <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
@@ -435,8 +434,7 @@ function rCfg(C,T){
       <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
       <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
     </div>
-    </div>
-  </div>
+  </details>
   <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지별 설정</h4>
@@ -798,13 +796,17 @@ function rCfg(C,T){
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
     const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
-    if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
-      _cfgB2ImgWrap.innerHTML=`
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
-        ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
-        ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
-      `;
+    if(_cfgB2ImgWrap){
+      if(typeof _b2BuildImageControlGroup==='function') {
+        _cfgB2ImgWrap.innerHTML=`
+          <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
+          ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
+          <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
+          ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
+        `;
+      } else {
+        _cfgB2ImgWrap.innerHTML=`<div style="font-size:12px;color:var(--gray-l);padding:10px 0;text-align:center">이미지 탭(현황판) 모듈이 로드되지 않았습니다. 현황판 탭을 먼저 열어주세요.</div>`;
+      }
     }
     // 스트리머 상세 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
