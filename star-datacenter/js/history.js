@@ -264,7 +264,14 @@ function _renderRecCardsSimple(arr, mode, context){
     const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
     const labelA=isCK?(m.a||rawLA||'A팀'):m.a;
     const labelB=isCK?(m.b||rawLB||'B팀'):m.b;
-    const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
+    let sa=m.sa, sb=m.sb;
+    if(sa==null||sb==null){
+      sa=0;sb=0;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{if(g.winner==='A')sa++;else if(g.winner==='B')sb++;});
+      });
+    }
+    const aWin=(sa>sb);const bWin=(sb>sa);
     const key=`${context}-${mode}-${i}`;
     const iconA=(()=>{if(isCK) return ''; const n=m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{if(isCK) return ''; const n=m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
