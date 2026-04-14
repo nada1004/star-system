@@ -657,14 +657,15 @@ function rebuildAllPlayerHistory() {
 
   // 2. miniM에서 복구
   (miniM || []).forEach(m => {
-    (m.sets || []).forEach(set => {
-      (set.games || []).forEach(g => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
         const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
-        const gameId = genId();
+        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
         count++;
       });
@@ -673,14 +674,15 @@ function rebuildAllPlayerHistory() {
 
   // 3. univM에서 복구
   (univM || []).forEach(m => {
-    (m.sets || []).forEach(set => {
-      (set.games || []).forEach(g => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = genId();
+        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
         count++;
       });
@@ -689,12 +691,13 @@ function rebuildAllPlayerHistory() {
 
   // 4. ckM에서 복구
   (ckM || []).forEach(m => {
-    (m.sets || []).forEach(set => {
-      (set.games || []).forEach(g => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = genId();
+        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
         count++;
       });
@@ -703,12 +706,13 @@ function rebuildAllPlayerHistory() {
 
   // 5. proM에서 복구
   (proM || []).forEach(m => {
-    (m.sets || []).forEach(set => {
-      (set.games || []).forEach(g => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = genId();
+        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
         count++;
       });
@@ -717,12 +721,13 @@ function rebuildAllPlayerHistory() {
 
   // 6. ttM에서 복구
   (ttM || []).forEach(m => {
-    (m.sets || []).forEach(set => {
-      (set.games || []).forEach(g => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = genId();
+        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
         count++;
       });
