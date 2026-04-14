@@ -124,10 +124,12 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
     const d = m.d || new Date().toISOString().slice(0,10);
     const mode = tn.type === 'tier' ? '티어대회' : '프로리그대회';
     if (Array.isArray(m._games) && m._games.length > 0) {
-      m._games.forEach(g => {
+      m._games.forEach((g, gIdx) => {
         const win = g.winner === 'A' ? m.a : m.b;
         const loss = g.winner === 'A' ? m.b : m.a;
-        applyGameResult(win, loss, d, g.map || '', matchId, '', '', mode);
+        // 세트 내 각 게임에 고유 ID 부여 (_s0_g0 형식)
+        const gid = `${matchId}_s0_g${gIdx}`;
+        applyGameResult(win, loss, d, g.map || '', gid, '', '', mode);
       });
     } else {
       applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
@@ -1079,7 +1081,7 @@ function proCompBracket(tn) {
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
           ${_photo(m.a, aWin, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${escJS(m.a)}')`:''}">${m.a||'TBD'}</div>
             ${!aTBD?_info(m.a):''}
           </div>
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${aWin?col:'#94a3b8'};flex-shrink:0">${scoreA}</span>`:''}
@@ -1089,7 +1091,7 @@ function proCompBracket(tn) {
         <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
           ${_photo(m.b, bWin, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${escJS(m.b)}')`:''}">${m.b||'TBD'}</div>
             ${!bTBD?_info(m.b):''}
           </div>
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${bWin?col:'#94a3b8'};flex-shrink:0">${scoreB}</span>`:''}
@@ -1131,7 +1133,7 @@ function proCompBracket(tn) {
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${tpA?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpA?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpA?'opacity:.55':''}">
           ${_photo(tp.a, tpA, tpCol)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${tpA?'800':'550'};color:${tpA?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.a&&tp.a!=='TBD'?'pointer':'default'}" onclick="${tp.a&&tp.a!=='TBD'?`openPlayerModal('${(tp.a||'').replace(/'/g,"\\'")}')`:''}">${tp.a||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${tpA?'800':'550'};color:${tpA?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.a&&tp.a!=='TBD'?'pointer':'default'}" onclick="${tp.a&&tp.a!=='TBD'?`openPlayerModal('${escJS(tp.a)}')`:''}">${tp.a||'TBD'}</div>
             ${tp.a&&tp.a!=='TBD'?_info(tp.a):''}
           </div>
           ${tpB?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🏆 3위</span>`:''}
@@ -1139,7 +1141,7 @@ function proCompBracket(tn) {
         <div style="padding:9px 12px;background:${tpB?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpB?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpB?'opacity:.55':''}">
           ${_photo(tp.b, tpB, tpCol)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${tpB?'800':'550'};color:${tpB?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${(tp.b||'').replace(/'/g,"\\'")}')`:''}">${tp.b||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${tpB?'800':'550'};color:${tpB?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${escJS(tp.b)}')`:''}">${tp.b||'TBD'}</div>
             ${tp.b&&tp.b!=='TBD'?_info(tp.b):''}
           </div>
           ${tpB?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🏆 3위</span>`:''}
@@ -2423,12 +2425,17 @@ function _revertProMatch(matchId) {
   if (!matchId) return;
   players.forEach(p => {
     if (!p.history) return;
-    const h = p.history.find(x => x.matchId === matchId);
-    if (!h) return;
-    if (h.result === '승') { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
-    else { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
-    p.elo = (p.elo||1200) - h.eloDelta;
-    p.history = p.history.filter(x => x.matchId !== matchId);
+    // 해당 matchId와 정확히 일치하거나, 해당 ID로 시작하는 하위 게임들(_s0_g0 등) 모두 찾기
+    const targets = p.history.filter(h => h.matchId === matchId || (h.matchId && h.matchId.startsWith(matchId + '_s')));
+    if (targets.length === 0) return;
+
+    targets.forEach(h => {
+      if (h.result === '승') { p.win = Math.max(0, (p.win || 0) - 1); p.points = (p.points || 0) - 3; }
+      else { p.loss = Math.max(0, (p.loss || 0) - 1); p.points = (p.points || 0) + 3; }
+      if (h.eloDelta != null) p.elo = (p.elo || 1200) - h.eloDelta;
+    });
+
+    p.history = p.history.filter(h => h.matchId !== matchId && !(h.matchId && h.matchId.startsWith(matchId + '_s')));
   });
 }
 
@@ -2743,7 +2750,7 @@ function proCompTourneyStats(tn) {
     const tb = p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
     h += `<tr style="border-top:1px solid var(--border);${idx===0?'background:#2563eb08':''}">
       <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||idx+1}</td>
-      <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'};cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${r.name.replace(/'/g,"\\'")}')">${r.name}</span>${rb}${tb}</div></td>
+      <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'};cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${escJS(r.name)}')">${r.name}</span>${rb}${tb}</div></td>
       <td style="padding:8px 12px;text-align:center;font-weight:700;color:#16a34a">${r.w}</td>
       <td style="padding:8px 12px;text-align:center;color:var(--red)">${r.l}</td>
       <td style="padding:8px 12px;text-align:center;font-weight:700">${r.rate}%</td>

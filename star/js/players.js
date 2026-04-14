@@ -921,12 +921,12 @@ function rTier(C,T){
         <td><span style="background:${lblColor};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${g.label||'-'}</span></td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;font-weight:800" class="wt">
           ${wp?getPlayerPhotoHTML(g.winner,'22px'):''}
-          <span style="cursor:pointer" onclick="openPlayerModal('${(g.winner||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+          <span style="cursor:pointer" onclick="openPlayerModal('${escJS(g.winner)}')">
             ${wp?`<span class="rbadge r${wp.race}" style="font-size:10px;margin-right:2px">${wp.race}</span>`:''}${g.winner}${getStatusIconHTML(g.winner)}</span></span>
           ${wp?`<span class="ubadge" style="background:${wc};font-size:10px;padding:1px 6px;margin-left:4px">${wp.univ}</span>`:''}</td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;opacity:.75">
           ${lp?getPlayerPhotoHTML(g.loser,'22px'):''}
-          <span style="cursor:pointer" onclick="openPlayerModal('${(g.loser||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+          <span style="cursor:pointer" onclick="openPlayerModal('${escJS(g.loser)}')">
             ${lp?`<span class="rbadge r${lp.race}" style="font-size:10px;margin-right:2px">${lp.race}</span>`:''}${g.loser}</span></span>
           ${lp?`<span class="ubadge" style="background:${lc};font-size:10px;padding:1px 6px;margin-left:4px;opacity:.7">${lp.univ}</span>`:''}</td>
         <td style="color:var(--gray-l);font-size:11px">${g.map}</td>
@@ -1127,13 +1127,13 @@ function rTier(C,T){
       extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
     }
     const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
-    const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const _pSafe=escJS(p.name);
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${escJS(p.univ)}')">${univIconHTML}${p.univ}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
       <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'40px')}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>

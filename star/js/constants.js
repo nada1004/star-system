@@ -92,6 +92,38 @@ function getRoleBadgeHTML(role, size='11px'){
   return `<span style="font-size:${size};padding:1px 6px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
 }
 
+// 맵 약자 → 전체 이름 매핑 (시스템 maps 배열에도 없으면 그대로 사용)
+const PASTE_MAP_ALIAS_DEFAULT = {
+  // ── 전체 이름 ──
+  '투혼':'투혼','라데온':'라데온','라데리안':'라데온','녹아웃':'녹아웃','리트리트':'리트리트',
+  '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
+  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
+  '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
+  '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
+  // ── 약자 ──
+  '라데':'라데온','라':'라데온','라데리안':'라데온',
+  '녹아':'녹아웃','녹':'녹아웃',
+  '리트':'리트리트','리':'리트리트',
+  '폴':'폴리포이드','폴리':'폴리포이드','폴스':'폴리포이드',   // 폴스 추가
+  '플스':'플스타','플립':'플스타',                             // 플립 추가
+  '옥':'옥타곤','옥타':'옥타곤',                               // 옥타 추가
+  '에티':'에티튜드','에':'에티튜드',
+  '매':'매치포인트','매치':'매치포인트',
+  '도미':'도미네이터','도':'도미네이터',
+  '실':'실피드','실피':'실피드',
+  '블리':'블리츠','블':'블리츠',
+  '서':'서킷',
+  '투':'투혼',
+  '메트':'메트로폴리스','메':'메트로폴리스',
+  '개마':'신 개마고원','신개마':'신 개마고원','개':'신 개마고원',
+  '아이':'아이언포리스트','포리':'아이언포리스트','아이언':'아이언포리스트',
+  '파이':'파이썬','파':'파이썬',
+  '화':'화랑',
+  '지옥':'지옥섬','지':'지옥섬',
+  '네오':'네오리게이트','리게':'네오리게이트',
+};
+
 /* ══════════════════════════════════════
    DATA LOAD
 ══════════════════════════════════════ */
@@ -295,22 +327,34 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
+let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
+
+// 스트리머 프로필 전역 스타일 설정
+let profileShape = J('su_profile_shape') || 'circle'; // 'circle' | 'square'
+let profileSize  = J('su_profile_size')  || 32;       // px 단위
+
 function getPlayerPhotoHTML(playerName, size, extraStyle){
-  size=size||'32px'; extraStyle=extraStyle||'';
-  const p=players.find(x=>x.name===playerName);
-  const hasBorder=extraStyle.includes('border');
-  const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
-  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  const clickStyle='cursor:pointer;';
-  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
-  if(!p||!p.photo){
-    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
-    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
-    const txt=p?.race||'?';
-    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
+  const shape = profileShape || 'circle';
+  const radius = shape === 'square' ? '8px' : '50%';
+  const globalSize = profileSize ? profileSize + 'px' : '32px';
+  
+  size = size || globalSize; 
+  extraStyle = extraStyle || '';
+  const p = players.find(x => x.name === playerName);
+  const hasBorder = extraStyle.includes('border');
+  const bdr = hasBorder ? '' : 'border:1.5px solid var(--border);';
+  const base = 'display:inline-block;width:' + size + ';height:' + size + ';border-radius:' + radius + ';flex-shrink:0;vertical-align:middle;' + extraStyle;
+  const safeName = (playerName || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const clickStyle = 'cursor:pointer;';
+  const clickAttr = 'onclick="openPlayerModal(\'' + safeName + '\')" title="스트리머 상세"';
+  
+  if (!p || !p.photo) {
+    const RMAP = { T: { bg: '#dbeafe', col: '#1e40af' }, Z: { bg: '#ede9fe', col: '#5b21b6' }, P: { bg: '#fef3c7', col: '#92400e' } };
+    const rm = RMAP[p?.race] || { bg: '#e2e8f0', col: '#64748b' };
+    const txt = p?.race || '?';
+    return '<span ' + clickAttr + ' style="' + base + ';' + bdr + 'background:' + rm.bg + ';color:' + rm.col + ';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(' + size + ' * 0.42);' + clickStyle + '">' + txt + '</span>';
   }
-  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  return '<img ' + clickAttr + ' src="' + p.photo + '" style="' + base + ';object-fit:contain;' + bdr + clickStyle + '" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
@@ -341,10 +385,10 @@ function localSave(){
     const _pNoPhoto=players.map(p=>{
       const c={...p};
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      // eloAfter(render.js fallback으로 재계산 가능) + time(위치 순으로 대체) 제거
+      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
       if(c.history&&c.history.length){
         // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,time,...h})=>h);
+        c.history=c.history.map(({eloAfter,...h})=>h);
       }
       return c;
     });
@@ -602,29 +646,48 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
+function _findPlayer(name){
+  if(!name) return null;
+  let p=players.find(x=>x.name===name);
+  if(p)return p;
+  const low=name.toLowerCase();
+  p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+  if(p)return p;
+  const ns=name.replace(/\s+/g,'');
+  return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+}
+
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
-  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
-  function _findPlayer(name){
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    const low=name.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=name.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
-  }
   const w=_findPlayer(winName);
   const l=_findPlayer(loseName);
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: 항상 게임 단위 고유 키 사용 (date|map|playerA|playerB)
-  // matchId가 있어도 같은 매치 내 다른 맵/선수 조합은 각각 독립적으로 기록됨
+  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
+  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const wDup=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-  const lDup=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
-  if(wDup||lDup)return; // 이미 기록되어 있으면 중단
+  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
+  const parentId=isGameId?matchId.split('_s')[0]:matchId;
+  
+  // matchId 기반 체크 강화
+  const wDupMatch=matchId
+    ?(isGameId
+      ?(w.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId) // 고유ID나 부모ID가 있으면 중복
+      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
+    :null;
+  const lDupMatch=matchId
+    ?(isGameId
+      ?(l.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId)
+      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
+    :null;
+
+  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
+  // 고유 matchId(_sN_gN)가 있는 경우, 부모 ID가 겹치지 않는 한 날짜/맵 중복은 허용 (재경기 등 대응)
+  const wDupFallback=(!isGameId && (w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name));
+  const lDupFallback=(!isGameId && (l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name));
+  // 둘 중 하나라도 중복이면 중단
+  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -638,6 +701,33 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+}
+
+function applyMultiGameResult(winNames, loseNames, date, map, matchId, univW, univL, mode){
+  const wins = (Array.isArray(winNames) ? winNames : [winNames]).map(n=>_findPlayer(n)).filter(Boolean);
+  const loss = (Array.isArray(loseNames) ? loseNames : [loseNames]).map(n=>_findPlayer(n)).filter(Boolean);
+  if(!wins.length || !loss.length) return;
+
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  const t=Date.now();
+
+  wins.forEach(w=>{
+    if(!w.history) w.history=[];
+    if(matchId && w.history.find(h=>h.matchId===matchId)) return;
+    w.win++; w.points+=3;
+    const opps = loss.map(x=>x.name);
+    const team = wins.filter(x=>x!==w).map(x=>x.name);
+    w.history.unshift({date:d,time:t,result:'승',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univW||w.univ||'',mode:mode||'',isMulti:true});
+  });
+  loss.forEach(l=>{
+    if(!l.history) l.history=[];
+    if(matchId && l.history.find(h=>h.matchId===matchId)) return;
+    l.loss++; l.points-=3;
+    const opps = wins.map(x=>x.name);
+    const team = loss.filter(x=>x!==l).map(x=>x.name);
+    l.history.unshift({date:d,time:t,result:'패',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univL||l.univ||'',mode:mode||'',isMulti:true});
+  });
 }
 
 function rebuildAllPlayerHistory() {
@@ -664,7 +754,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
         const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
         count++;
       });
@@ -681,7 +771,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
         count++;
       });
@@ -696,7 +786,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
         count++;
       });
@@ -711,7 +801,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
         count++;
       });
@@ -726,7 +816,7 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
         count++;
       });
@@ -757,7 +847,7 @@ function rebuildAllPlayerHistory() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
         count++;
       });
@@ -776,7 +866,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
               count++;
             });
@@ -790,7 +880,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             count++;
           });
@@ -803,7 +893,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             count++;
           });
@@ -823,7 +913,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
@@ -838,7 +928,7 @@ function rebuildAllPlayerHistory() {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
@@ -852,7 +942,7 @@ function rebuildAllPlayerHistory() {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = `${tp._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
             count++;
           });
@@ -871,6 +961,52 @@ function rebuildAllPlayerHistory() {
 
   save();
   alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
+  render();
+}
+
+function deduplicatePlayerHistory(){
+  if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
+
+  let totalRemoved=0;
+  players.forEach(p=>{
+    if(!p.history||!p.history.length)return;
+    const seen=new Set();
+    const before=p.history.length;
+    p.history=p.history.filter(h=>{
+      const mid=h.matchId||'';
+      // 게임 단위 고유 ID(_sN_gN 포함)면 matchId 자체가 고유 키
+      const isGameId=mid.includes('_s')&&mid.includes('_g');
+      let key;
+      if(isGameId){
+        key=mid;
+      } else if(h.time){
+        // time이 있으면 포함하여 진짜 중복만 제거 (합법적 재매치와 구분)
+        key=`${mid}|${h.opp||''}|${h.result||''}|${h.map||'-'}|${h.time}`;
+      } else {
+        // time도 없고 bare matchId면 건드리지 않음 (합법적 재매치와 구분 불가)
+        return true;
+      }
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
+    totalRemoved+=before-p.history.length;
+  });
+
+  // 승패/포인트/ELO 재계산 (날짜 오름차순으로 delta 누적)
+  players.forEach(p=>{
+    p.win=0;p.loss=0;p.points=0;p.elo=ELO_DEFAULT;
+    const sorted=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    sorted.forEach(h=>{
+      if(h.result==='승'){p.win++;p.points+=3;}
+      else if(h.result==='패'){p.loss++;p.points-=3;}
+      if(h.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)+h.eloDelta;
+    });
+  });
+
+  if(typeof fixPoints==='function')fixPoints();
+  save();
+  alert(`🧹 중복 제거 완료: ${totalRemoved}개 항목 삭제`);
   render();
 }
 
