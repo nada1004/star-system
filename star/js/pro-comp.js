@@ -2646,8 +2646,6 @@ function proCompDelGrp(tnId, gi) {
 ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
 function proCompTourneyStats(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
-  // 전적 자동 동기화 (조용히)
-  _proCompSyncSilent();
   // 전체 경기 수집 (조별리그 + 대진표 + 3위전)
   const allM = [];
   tn.groups.forEach(grp => (grp.matches||[]).forEach(m => allM.push(m)));
