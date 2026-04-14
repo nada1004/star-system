@@ -11,12 +11,17 @@ function _getTeamName(m, side){
   const uCount={};
   mems.forEach(p=>{const u=p.univ||'무소속';uCount[u]=(uCount[u]||0)+1;});
   const uKeys=Object.keys(uCount);
-  if(uKeys.length===1 && uKeys[0]!=='무소속'){
-    if(m.a===m.b || (m.teamALabel&&m.teamBLabel&&m.teamALabel.includes('A')&&m.teamBLabel.includes('B'))) return uKeys[0]+' '+side+'팀';
-    return uKeys[0];
+  const mainUniv=uKeys.sort((a,b)=>(uCount[b]||0)-(uCount[a]||0))[0]||'';
+  const mainCnt=uCount[mainUniv]||0;
+  const isSameUniv=uKeys.length===1 && mainUniv && mainUniv!=='무소속';
+  const isUnivTeam=mainUniv && mainUniv!=='무소속' && mainCnt>=4;
+  if(isSameUniv && isUnivTeam){
+    if(m.a===m.b || (m.teamALabel&&m.teamBLabel&&m.teamALabel.includes('A')&&m.teamBLabel.includes('B'))) return mainUniv+' '+side+'팀';
+    return mainUniv;
   }
+  if(!isSameUniv && isUnivTeam) return mainUniv;
   if(tLabel && !['A팀','B팀','A조','B조'].includes(tLabel)) return tLabel;
-  return '연합';
+  return '연합팀';
 }
 
 function _hasValidScore(m){
@@ -847,8 +852,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     } else {
       if(!m.a||!m.b) return false;
     }
-    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
-    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    if(!_hasValidScore(m)) return false;
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
@@ -903,11 +907,43 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <span>${_d.slice(2).replace(/-/g,'/')}</span>
       </div>`;
     }
-    const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
-    const labelA=(mode==='pro')?(m.teamALabel||_getTeamName(m,'A')):_getTeamName(m,'A');
-    const labelB=(mode==='pro')?(m.teamBLabel||_getTeamName(m,'B')):_getTeamName(m,'B');
-    const ca=isCK?'#2563eb':gc(labelA);
-    const cb=isCK?'#dc2626':gc(labelB);
+    const dLabel=_d?_d.slice(2).replace(/-/g,'/'):'';
+    const isCK=(mode==='ck');
+    const isPro=(mode==='pro');
+    const isTT=(mode==='tt');
+    const ttName=isTT?(m.compName||m.tourneyName||m.tn||m.t||''):'';
+
+    let labelA='', labelB='';
+    let leftHTML='', rightHTML='';
+    let ca='#2563eb', cb='#dc2626';
+
+    if(isPro){
+      labelA='프로 '+(m.teamALabel||'A팀');
+      labelB='프로 '+(m.teamBLabel||'B팀');
+      ca='#2563eb'; cb='#dc2626';
+    } else if(isTT && Array.isArray(m.teamAMembers) && Array.isArray(m.teamBMembers) && m.teamAMembers.length===1 && m.teamBMembers.length===1){
+      const aM=m.teamAMembers[0]||{}; const bM=m.teamBMembers[0]||{};
+      const aName=aM.name||''; const bName=bM.name||'';
+      const aP=players.find(p=>p.name===aName)||{}; const bP=players.find(p=>p.name===bName)||{};
+      const aUniv=aM.univ||aP.univ||''; const bUniv=bM.univ||bP.univ||'';
+      const aPhoto=aM.photo||aP.photo||''; const bPhoto=bM.photo||bP.photo||'';
+      const aUIcon=UNIV_ICONS[aUniv] ? `<img src="${UNIV_ICONS[aUniv]}" style="width:16px;height:16px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'">` : '';
+      const bUIcon=UNIV_ICONS[bUniv] ? `<img src="${UNIV_ICONS[bUniv]}" style="width:16px;height:16px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'">` : '';
+      const aPhotoHTML=aPhoto?`<img src="${aPhoto}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display='none'">`:``;
+      const bPhotoHTML=bPhoto?`<img src="${bPhoto}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display='none'">`:``;
+      labelA=aName||'스트리머A';
+      labelB=bName||'스트리머B';
+      ca=aUniv?gc(aUniv):'#2563eb';
+      cb=bUniv?gc(bUniv):'#dc2626';
+      leftHTML=`<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${aPhotoHTML}<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0"><div style="font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labelA}</div><div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">${aUIcon}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${aUniv||'무소속'}</span></div></div></div>`;
+      rightHTML=`<div style="display:flex;align-items:center;gap:8px;justify-content:flex-start"><div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0"><div style="font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labelB}</div><div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">${bUIcon}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${bUniv||'무소속'}</span></div></div>${bPhotoHTML}</div>`;
+    } else {
+      labelA=_getTeamName(m,'A');
+      labelB=_getTeamName(m,'B');
+      ca=isCK?'#2563eb':gc(labelA);
+      cb=isCK?'#dc2626':gc(labelB);
+    }
+
     let sa=m.sa, sb=m.sb;
     if(sa==null||sb==null){
       sa=0;sb=0;
@@ -917,9 +953,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     }
     const aWin=(sa>sb);const bWin=(sb>sa);
     const key=`${context}-${mode}-${i}`;
-    // 대학 아이콘
-    const iconA=(()=>{if(isCK) return ''; const n=labelA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const iconB=(()=>{if(isCK) return ''; const n=labelB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const allowUnivIcon = (mode==='mini' || mode==='univm' || mode==='civil' || mode==='ck');
+    const iconA=(()=>{if(!allowUnivIcon) return ''; const n=labelA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconB=(()=>{if(!allowUnivIcon) return ''; const n=labelB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
     
     const modeBadgeMap={mini:'⚡ 미니대전',ck:'🤝 대학CK',univm:'🏟️ 대학대전',pro:'🏅 일반',tt:'🎯 티어대회',comp:'🏆 대회'};
@@ -929,7 +965,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:6px;min-width:0">
           ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
+          ${dLabel?`<span style="font-size:11px;color:var(--gray-l);font-weight:800;white-space:nowrap">📅 ${dLabel}</span>`:''}
           <span style="background:var(--surface);color:var(--text2);font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);display:inline-flex;align-items:center">${modeBadge}</span>
+          ${ttName?`<span style="font-size:11px;color:var(--text2);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">🏷️ ${ttName}</span>`:''}
           ${m.map?`<span style="font-size:11px;color:var(--text3);display:inline-flex;align-items:center;gap:2px">📍 ${m.map}</span>`:''}
           <span style="font-size:11px;color:var(--text2);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">⚔ ${labelA} vs ${labelB}</span>
         </div>
@@ -946,7 +984,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
 
       <div style="display:flex;align-items:center;justify-content:center;padding:4px 0">
         <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK && (univCfg||[]).some(x=>x.name===labelA) ? `openUnivModal('${labelA}')` : (!isCK && (univCfg||[]).some(x=>x.name===m.a) ? `openUnivModal('${m.a||''}')` : '')}">${labelA}${iconA}</span>
+          ${leftHTML||`<span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${(!isCK && (univCfg||[]).some(x=>x.name===labelA)) ? `openUnivModal('${labelA}')` : ''}">${iconA}${labelA}</span>`}
           ${aWin?`<span style="font-size:10px;font-weight:800;color:${ca};padding:0 4px">WINNER 🏆</span>`:''}
         </div>
         
@@ -957,7 +995,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         </div>
         
         <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px">
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK && (univCfg||[]).some(x=>x.name===labelB) ? `openUnivModal('${labelB}')` : (!isCK && (univCfg||[]).some(x=>x.name===m.b) ? `openUnivModal('${m.b||''}')` : '')}">${iconB}${labelB}</span>
+          ${rightHTML||`<span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${(!isCK && (univCfg||[]).some(x=>x.name===labelB)) ? `openUnivModal('${labelB}')` : ''}">${iconB}${labelB}</span>`}
           ${bWin?`<span style="font-size:10px;font-weight:800;color:${cb};padding:0 4px">WINNER 🏆</span>`:''}
         </div>
       </div>

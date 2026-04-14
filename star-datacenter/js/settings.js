@@ -1316,3 +1316,117 @@ function bulkChangeTier(){
   const el=document.getElementById('bulk-tier-result');
   if(el){ el.textContent=`✅ ${targets.length}명 변경 완료!`; setTimeout(()=>{if(el)el.textContent='';},3000); }
 }
+
+function _renderCfgPdSection(){
+  const body=document.getElementById('cfg-pd-body');
+  if(!body) return;
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const fs=s.font_size||'normal';
+  const cp=s.color_preset||'normal';
+  const st=s.stats_tint!==undefined?s.stats_tint:8;
+  const mt=s.mode_tint!==undefined?s.mode_tint:10;
+  const ps=s.profile_size!==undefined?s.profile_size:100;
+  const pshape=s.profile_shape!==undefined?s.profile_shape:'circle';
+  const darken=s.univ_darken||{};
+  const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
+  const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
+  const cpBtns=[['light','연하게'],['normal','기본'],['dark','진하게']].map(([k,l])=>`<button class="btn btn-xs ${cp===k?'btn-b':'btn-w'}" onclick="_setPdColorPreset('${k}')">${l}</button>`).join('');
+  const shapeBtns=[['circle','원형'],['square','네모']].map(([k,l])=>`<button class="btn btn-xs ${pshape===k?'btn-b':'btn-w'}" onclick="_setPdProfileShape('${k}')">${l}</button>`).join('');
+  const univRows=univs.map((u,i)=>{
+    const val=Math.round((darken[u.name]||0)*100);
+    const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
+      <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
+      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
+      <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
+    </div>`;
+  }).join('');
+  body.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">폰트 크기</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">프로필 이미지 크기</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="60" max="140" step="5" value="${ps}" style="flex:1;accent-color:var(--blue)" oninput="_setPdProfileSize(this.value);document.getElementById('pd-ps-val').textContent=this.value+'%'">
+        <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">프로필 이미지 모양</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${shapeBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 모양 (원형/네모)</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">승패 색상 농도</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">전적·승률 배경 색상 강도</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="0" max="30" step="2" value="${st}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('stats',this.value);document.getElementById('pd-st-val').textContent=this.value+'%'">
+        <span id="pd-st-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">모드별 전적 배경 색상 강도</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" min="0" max="30" step="2" value="${mt}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('mode',this.value);document.getElementById('pd-mt-val').textContent=this.value+'%'">
+        <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도</div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">대학별 헤더 어둡기</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
+      ${univRows}
+    </div>`;
+}
+
+function _setPdFontSize(size){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.font_size=size;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _setPdProfileSize(val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.profile_size=parseInt(val)||100;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+function _setPdProfileShape(shape){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.profile_shape=shape;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _setPdColorPreset(cp){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.color_preset=cp;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+}
+
+function _setPdTint(type,val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s[type+'_tint']=parseInt(val)||0;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+function _setPdUnivDarken(univ,val,idx){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  if(!s.univ_darken) s.univ_darken={};
+  s.univ_darken[univ]=parseFloat(val)||0;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  const el=document.getElementById('pd-dv-'+idx);
+  if(el) el.textContent=Math.round(val*100)+'%';
+}
