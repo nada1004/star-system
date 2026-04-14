@@ -65,8 +65,14 @@ function render(){
     case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
     case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
-    case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
-    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
+    case 'board':
+      if(typeof rBoard==='function') rBoard(C,T);
+      else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (스크립트 로드/콘솔 오류 확인)</div>';
+      break;
+    case 'board2':
+      if(typeof rBoard2==='function') rBoard2(C,T);
+      else C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">현황판 모듈을 불러오지 못했습니다. (스크립트 로드/콘솔 오류 확인)</div>';
+      break;
     default: break;
   }
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
