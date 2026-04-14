@@ -790,8 +790,20 @@ function saveUnivEdit(){
 }
 
 // 스트리머 상세 최근 경기 배지 클릭 → 해당 기록 탭으로 이동
-function navToMatch(matchId, modeLbl){
+function navToMatch(matchId, modeLbl, ev){
   if(!matchId) return;
+  try{
+    if(ev && (ev.ctrlKey || ev.metaKey)){
+      const base = window.location.origin + window.location.pathname;
+      const url = base + '?match=' + encodeURIComponent(matchId) + '&mode=' + encodeURIComponent(modeLbl||'');
+      window.open(url, '_blank');
+      return;
+    }
+  }catch(e){}
+  // gameMatchId(_sN_gM) → 부모 경기 ID로 정규화
+  if(matchId && matchId.includes('_s') && matchId.includes('_g')){
+    matchId = matchId.split('_s')[0];
+  }
   if(modeLbl==='티어대회'){
     navToTierMatch(matchId);
     return;
@@ -852,6 +864,117 @@ function navToMatch(matchId, modeLbl){
       },400);
     }
   }
+}
+
+function openMatchPreview(matchId, modeLbl, ev){
+  if(!matchId) return;
+  try{
+    if(ev && (ev.ctrlKey || ev.metaKey)){
+      const base = window.location.origin + window.location.pathname;
+      const url = base + '?match=' + encodeURIComponent(matchId) + '&mode=' + encodeURIComponent(modeLbl||'');
+      window.open(url, '_blank');
+      return;
+    }
+  }catch(e){}
+
+  const rawId = matchId;
+  let parentId = matchId;
+  let setIdx = null, gameIdx = null;
+  const gm = (matchId||'').match(/_s(\d+)_g(\d+)/);
+  if(gm){
+    setIdx = parseInt(gm[1],10);
+    gameIdx = parseInt(gm[2],10);
+    parentId = matchId.split('_s')[0];
+  }
+
+  const titleEl = document.getElementById('matchPreviewTitle');
+  const bodyEl = document.getElementById('matchPreviewBody');
+  if(titleEl) titleEl.textContent = (modeLbl||'') ? `${modeLbl} 경기 미리보기` : '경기 미리보기';
+
+  const fmtPlayers = (x) => Array.isArray(x) ? x.join(' / ') : (x||'');
+  const fmtMap = (m) => (m && m !== '-') ? m : '';
+  const badge = (txt, bg) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:${bg||'var(--surface)'};border:1px solid var(--border);font-size:11px;font-weight:800;color:var(--text2)">${txt}</span>`;
+
+  const findIn = (arr) => (arr||[]).find(m=>m && m._id===parentId) || null;
+  let m = null;
+  if(modeLbl==='티어대회') m = findIn(typeof ttM!=='undefined'?ttM:[]);
+  else if(modeLbl==='미니대전' || modeLbl==='시빌워') m = findIn(typeof miniM!=='undefined'?miniM:[]);
+  else if(modeLbl==='대학대전') m = findIn(typeof univM!=='undefined'?univM:[]);
+  else if(modeLbl==='대학CK') m = findIn(typeof ckM!=='undefined'?ckM:[]);
+  else if(modeLbl==='프로리그') m = findIn(typeof proM!=='undefined'?proM:[]);
+  else if(modeLbl==='대회' || modeLbl==='조별리그' || modeLbl==='토너먼트' || modeLbl==='프로리그대회' || modeLbl==='프로리그팀전') m = findIn(typeof comps!=='undefined'?comps:[]);
+  else m = findIn(typeof ttM!=='undefined'?ttM:[]) || findIn(typeof proM!=='undefined'?proM:[]) || findIn(typeof ckM!=='undefined'?ckM:[]) || findIn(typeof univM!=='undefined'?univM:[]) || findIn(typeof miniM!=='undefined'?miniM:[]) || findIn(typeof comps!=='undefined'?comps:[]);
+
+  const a = m ? (m.a || m.teamALabel || '') : '';
+  const b = m ? (m.b || m.teamBLabel || '') : '';
+  const d = m ? (m.d || m.date || '') : '';
+  let sa = m ? m.sa : null, sb = m ? m.sb : null;
+  const sets = m ? (m.sets || []) : [];
+  if((sa===null || sb===null) && sets && sets.length){
+    let _sa=0,_sb=0;
+    sets.forEach(s=>{
+      const gs = (s.games||[]);
+      const cA = (s.scoreA!=null)?s.scoreA:gs.filter(g=>g.winner==='A').length;
+      const cB = (s.scoreB!=null)?s.scoreB:gs.filter(g=>g.winner==='B').length;
+      _sa += cA; _sb += cB;
+    });
+    sa=_sa; sb=_sb;
+  }
+
+  let h = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+    ${modeLbl?badge(modeLbl,'#eff6ff'):''}
+    ${d?badge('📅 '+d,'#f8fafc'):''}
+    ${badge('ID: '+parentId,'#f1f5f9')}
+    ${(gm!=null)?badge(`게임: 세트 ${setIdx+1} · ${gameIdx+1}경기`,'#fff7ed'):''}
+  </div>`;
+
+  h += `<div style="padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:900;font-size:16px;color:var(--text)">${a||'A'} <span style="color:var(--gray-l)">vs</span> ${b||'B'}</div>
+      ${(sa!=null && sb!=null)?`<div style="margin-left:auto;font-weight:900;font-size:15px;color:var(--text2)">${sa} : ${sb}</div>`:''}
+    </div>
+  </div>`;
+
+  if(!m){
+    h += `<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      미리보기 데이터를 찾지 못했습니다. (이동 버튼으로 기록 탭에서 열어보세요)
+    </div>`;
+  } else {
+    const setCards = sets.map((s, si)=>{
+      const gs = (s.games||[]);
+      const scoreA = (s.scoreA!=null)?s.scoreA:gs.filter(g=>g.winner==='A').length;
+      const scoreB = (s.scoreB!=null)?s.scoreB:gs.filter(g=>g.winner==='B').length;
+      const sTitle = (si===2?'🎯 에이스전':`세트 ${si+1}`) + ` (${scoreA}:${scoreB})`;
+      const rows = gs.map((g, gi)=>{
+        const hi = (setIdx===si && gameIdx===gi);
+        return `<div style="display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:10px;background:${hi?'#eff6ff':'var(--surface)'};border:1px solid ${hi?'#93c5fd':'var(--border)'}">
+          <div style="min-width:64px;font-size:11px;font-weight:800;color:var(--gray-l)">${gi+1}G</div>
+          <div style="flex:1;font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtPlayers(g.playerA)} <span style="color:var(--gray-l)">vs</span> ${fmtPlayers(g.playerB)}</div>
+          <div style="min-width:120px;text-align:right;font-size:11px;color:var(--gray-l)">${fmtMap(g.map)}</div>
+          <div style="min-width:40px;text-align:right;font-size:11px;font-weight:900;color:${g.winner==='A'?'#2563eb':'#dc2626'}">${g.winner||''}</div>
+        </div>`;
+      }).join('');
+      return `<details ${gm && setIdx===si ? 'open' : ''} style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--white);margin-bottom:10px">
+        <summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;color:var(--text2)">
+          <span>${sTitle}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--gray-l);font-weight:700">${gs.length}경기</span>
+        </summary>
+        <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px">${rows||'<div style="padding:10px;color:var(--gray-l);font-size:12px">세트 데이터 없음</div>'}</div>
+      </details>`;
+    }).join('');
+    h += setCards || `<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border:1px solid var(--border);border-radius:12px">세트 데이터가 없습니다.</div>`;
+  }
+
+  if(bodyEl) bodyEl.innerHTML = h;
+
+  window._mpNav = ()=>{ try{ cm('matchPreviewModal'); navToMatch(rawId, modeLbl||''); }catch(e){} };
+  window._mpNewTab = ()=>{ try{
+    const base = window.location.origin + window.location.pathname;
+    const url = base + '?match=' + encodeURIComponent(rawId) + '&mode=' + encodeURIComponent(modeLbl||'');
+    window.open(url, '_blank');
+  }catch(e){} };
+
+  om('matchPreviewModal');
 }
 
 function buildPlayerDetailHTML(p){
@@ -1483,7 +1606,7 @@ function buildPlayerDetailHTML(p){
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
       const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
       const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="해당 경기로 이동">${modeLbl}</span>`
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="openMatchPreview('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}',event)" title="클릭: 경기 미리보기 · Ctrl/⌘+클릭: 새 탭에서 열기">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       const oppCellHTML = hh.isMulti && Array.isArray(hh.opps)
