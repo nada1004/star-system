@@ -622,8 +622,6 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // matchId가 있어도 같은 매치 내 다른 맵/선수 조합은 각각 독립적으로 기록됨
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const gameKey = `${d}|${m}|${[winName,loseName].sort().join('|')}`;
-  // matchId 체크 제거 - 같은 경기 내의 여러 게임이 모두 기록되도록
   const wDup=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
   const lDup=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
   if(wDup||lDup)return; // 이미 기록되어 있으면 중단
