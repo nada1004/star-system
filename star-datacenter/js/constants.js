@@ -964,6 +964,133 @@ function rebuildAllPlayerHistory() {
   render();
 }
 
+// 스트리머 history → 대전 기록 배열 역방향 복구
+// 스트리머 최근 경기에는 있지만 대전기록 탭에 없는 경우 복구
+function syncHistoryToMatchArrays(){
+  if(!confirm('스트리머 최근 경기 데이터를 기반으로\n대전기록 탭에 누락된 기록을 복구합니다.\n\n이미 등록된 기록은 중복 추가되지 않습니다.\n계속하시겠습니까?')) return;
+
+  // 기존 모든 배열의 _id 집합
+  const existingIds = new Set();
+  const _idx = (arr) => (arr||[]).forEach(m => { if(m._id) existingIds.add(m._id); });
+  _idx(miniM); _idx(univM); _idx(ckM); _idx(proM);
+  _idx(typeof ttM!=='undefined'?ttM:[]);
+  _idx(typeof indM!=='undefined'?indM:[]);
+  _idx(typeof gjM!=='undefined'?gjM:[]);
+
+  // 모든 선수 history에서 parentId별로 게임 수집
+  // parentId → { mode, date, games: { gameId → { winner, loser, winnerUniv, loserUniv, map, date } } }
+  const byParent = {};
+  players.forEach(p => {
+    (p.history||[]).forEach(h => {
+      if(!h.matchId || !h.date) return;
+      const isGameId = h.matchId.includes('_s') && h.matchId.includes('_g');
+      const parentId = isGameId ? h.matchId.split('_s')[0] : h.matchId;
+      const gameId = h.matchId;
+
+      if(!byParent[parentId]) byParent[parentId] = { mode: h.mode||'', date: h.date, games: {} };
+      const entry = byParent[parentId];
+      if(!entry.mode && h.mode) entry.mode = h.mode;
+      if(h.date && h.date > entry.date) entry.date = h.date;
+
+      if(!entry.games[gameId]) entry.games[gameId] = { gameId, map: h.map||'', date: h.date };
+      const g = entry.games[gameId];
+      if(h.result === '승') {
+        g.winner = p.name; g.winnerUniv = h.univ||p.univ||''; g.winnerRace = p.race||'N';
+      } else if(h.result === '패') {
+        g.loser = p.name; g.loserUniv = h.univ||p.univ||''; g.loserRace = p.race||'N';
+      }
+    });
+  });
+
+  let added = 0;
+
+  Object.entries(byParent).forEach(([parentId, data]) => {
+    if(existingIds.has(parentId)) return; // 이미 존재하면 건너뜀
+    const mode = data.mode;
+    const date = data.date;
+    const games = Object.values(data.games).filter(g => g.winner && g.loser);
+    if(!games.length) return; // 승자+패자 쌍이 없으면 복구 불가
+
+    // 대상 배열 결정
+    let targetArr = null;
+    let isCivil = false, isProGj = false;
+    if(mode === '미니대전') targetArr = miniM;
+    else if(mode === '시빌워') { targetArr = miniM; isCivil = true; }
+    else if(mode === '대학대전') targetArr = univM;
+    else if(mode === '대학CK') targetArr = ckM;
+    else if(mode === '프로리그') targetArr = proM;
+    else if(mode === '티어대회') targetArr = (typeof ttM!=='undefined')?ttM:null;
+    else if(mode === '개인전') targetArr = (typeof indM!=='undefined')?indM:null;
+    else if(mode === '끝장전') targetArr = (typeof gjM!=='undefined')?gjM:null;
+    else if(mode === '프로리그끝장전') { targetArr = (typeof gjM!=='undefined')?gjM:null; isProGj = true; }
+    if(!targetArr) return;
+
+    // 개인전·끝장전: 게임 하나하나가 배열 엔트리
+    if(mode === '개인전' || mode === '끝장전' || mode === '프로리그끝장전') {
+      games.forEach(g => {
+        if(existingIds.has(g.gameId)) return;
+        const entry = { _id: g.gameId, sid: parentId, d: g.date||date, wName: g.winner, lName: g.loser, map: g.map||'' };
+        if(isProGj) entry._proLabel = true;
+        targetArr.unshift(entry);
+        existingIds.add(g.gameId);
+        added++;
+      });
+      return;
+    }
+
+    // 팀 경기(miniM·univM·ckM·proM·ttM): 부모 경기 단위로 복구
+    // 팀 결정: 승리 횟수 기준으로 teamA/teamB 배정
+    const winsByUniv = {};
+    games.forEach(g => { if(g.winnerUniv) winsByUniv[g.winnerUniv] = (winsByUniv[g.winnerUniv]||0)+1; });
+    const univsSorted = Object.entries(winsByUniv).sort((a,b)=>b[1]-a[1]);
+    const allUnivs = [...new Set(games.flatMap(g=>[g.winnerUniv,g.loserUniv]).filter(Boolean))];
+    const teamA = univsSorted[0]?.[0] || allUnivs[0] || '';
+    const teamB = allUnivs.find(u => u !== teamA) || teamA;
+
+    const aWins = games.filter(g => g.winnerUniv === teamA || (teamA === teamB && g.winner)).length;
+    const bWins = games.length - aWins;
+
+    const setsGames = games.map(g => {
+      const aWon = teamA !== teamB ? g.winnerUniv === teamA : true; // 동일팀이면 A가 항상 승
+      return {
+        playerA: aWon ? g.winner : g.loser,
+        playerB: aWon ? g.loser : g.winner,
+        winner: aWon ? 'A' : 'B',
+        map: g.map || '',
+        _id: g.gameId,
+      };
+    });
+
+    const mA = [...new Map(games.map(g => {
+      const name = (g.winnerUniv === teamA || teamA === teamB) ? g.winner : g.loser;
+      const pl = players.find(x=>x.name===name)||{name,univ:teamA,race:'N'};
+      return [name, {name: pl.name, univ: pl.univ||teamA, race: pl.race||'N'}];
+    })).values()];
+    const mB = [...new Map(games.map(g => {
+      const name = (g.winnerUniv === teamA || teamA === teamB) ? g.loser : g.winner;
+      const pl = players.find(x=>x.name===name)||{name,univ:teamB,race:'N'};
+      return [name, {name: pl.name, univ: pl.univ||teamB, race: pl.race||'N'}];
+    })).values()];
+
+    const matchEntry = {
+      _id: parentId, d: date, a: teamA, b: teamB, sa: aWins, sb: bWins,
+      sets: [{ scoreA: aWins, scoreB: bWins, winner: aWins>bWins?'A':bWins>aWins?'B':'', games: setsGames }],
+      teamAMembers: mA, teamBMembers: mB, _reconstructed: true,
+    };
+    if(isCivil) matchEntry.type = 'civil';
+    targetArr.unshift(matchEntry);
+    existingIds.add(parentId);
+    added++;
+  });
+
+  if(added > 0) {
+    save(); render();
+    alert(`✅ ${added}건의 경기 기록을 스트리머 데이터에서 복구하여 대전기록 탭에 반영했습니다.`);
+  } else {
+    alert('복구할 데이터가 없습니다.\n스트리머 최근 경기의 모든 기록이 이미 대전기록 탭에 반영되어 있습니다.');
+  }
+}
+
 function deduplicatePlayerHistory(){
   if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
 

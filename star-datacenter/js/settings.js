@@ -642,6 +642,10 @@ function rCfg(C,T){
         <span style="font-size:11px;color:var(--gray-l)">스트리머 history에서 중복 항목만 제거 (승패/ELO 재계산)</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="syncHistoryToMatchArrays()">📥 기록 탭 역방향 반영</button>
+        <span style="font-size:11px;color:var(--gray-l)">스트리머 최근 경기에는 있지만 대전기록 탭에 없는 경기를 복구</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-r btn-sm" onclick="rebuildAllPlayerHistory()">🔄 전체 경기 기록 복구</button>
         <span style="font-size:11px;color:var(--gray-l)">대전 데이터에서 스트리머 history 재구성 (기존 history 초기화됨)</span>
       </div>
