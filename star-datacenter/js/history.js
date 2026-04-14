@@ -25,6 +25,8 @@ function rHist(C,T){
   ];
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
+  if(window._histDetailOpen===undefined) window._histDetailOpen=false;
+  const _needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   // 상단: 그룹 pill + 드롭다운
   let h=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
   grps.forEach(g=>{
@@ -34,20 +36,31 @@ function rHist(C,T){
       style="padding:5px 12px;border-radius:20px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">${g}</button>`;
   });
   h+=`</div>`;
-  // 선택 그룹 내 탭 (가로 스크롤 pill 바)
-  const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
-  if(grpTabs.length>1){
-    h+=`<div class="no-export" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:6px">`;
-    grpTabs.forEach(t=>{
-      const isOn=histSub===t.id;
-      h+=`<button onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()"
-        style="flex-shrink:0;padding:4px 12px;border-radius:16px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'#eff6ff':'var(--surface)'};color:${isOn?'var(--blue)':'var(--text3)'};font-size:12px;font-weight:${isOn?700:500};cursor:pointer;white-space:nowrap">${t.lbl}</button>`;
-    });
-    h+=`</div>`;
-  }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
-  if(needDateFilter && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('hist');
+  // 적용 필터 요약 + 상세 필터 토글
+  const _curLbl=(curTab.lbl||'').replace(/^[^ ]+ /,'');
+  const _ym=(filterYear!=='전체'||filterMonth!=='전체')?`${filterYear==='전체'?'전체':filterYear+'년'}${filterMonth==='전체'?'':' '+parseInt(filterMonth,10)+'월'}`:'';
+  h+=`<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1.5px solid var(--border2);border-radius:12px;background:var(--surface);margin-bottom:10px">
+    <div style="font-size:13px;font-weight:900;color:var(--text2);white-space:nowrap">${_curLbl}</div>
+    ${_ym?`<span style="font-size:11px;font-weight:700;color:var(--text3);padding:3px 10px;border-radius:999px;background:var(--white);border:1px solid var(--border2)">📅 ${_ym}</span>`:''}
+    ${recSortDir!=='desc'?`<span style="font-size:11px;font-weight:700;color:var(--text3);padding:3px 10px;border-radius:999px;background:var(--white);border:1px solid var(--border2)">정렬: 오래된순</span>`:''}
+    <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="filterYear='전체';filterMonth='전체';recSortDir='desc';openDetails={};window._histDetailOpen=false;render()">초기화</button>
+    <button class="btn btn-w btn-xs" onclick="window._histDetailOpen=!window._histDetailOpen;render()">${window._histDetailOpen?'▲ 상세 닫기':'▼ 상세 필터'}</button>
+  </div>`;
+
+  if(window._histDetailOpen){
+    const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
+    if(grpTabs.length>1){
+      h+=`<div class="no-export" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:-4px 0 10px">`;
+      grpTabs.forEach(t=>{
+        const isOn=histSub===t.id;
+        h+=`<button onclick="histSub='${t.id}';openDetails={};if(histPage['${t.id}']!==undefined)histPage['${t.id}']=0;render()"
+          style="flex-shrink:0;padding:6px 12px;border-radius:999px;border:1.5px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};font-size:12px;font-weight:${isOn?800:600};cursor:pointer;white-space:nowrap">${t.lbl}</button>`;
+      });
+      h+=`</div>`;
+    }
+    if(_needDateFilter && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('hist');
+    }
   }
   if(histSub==='vs'){
     h+=vsSearchHTML();
@@ -665,7 +678,16 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   }
 
   let h=sortBar+`<div id="rec-list-${mode}">`;
+  let _lastDate='';
   paged.forEach(({m,i})=>{
+    const _d=(m.d||'');
+    if(_d && _d!==_lastDate){
+      _lastDate=_d;
+      h+=`<div class="no-export" style="position:sticky;top:0;z-index:20;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin:10px 0 8px;font-size:12px;font-weight:900;color:var(--text2);display:flex;align-items:center;gap:8px">
+        <span style="color:var(--gray-l);font-weight:800">📅</span>
+        <span>${_d.slice(2).replace(/-/g,'/')}</span>
+      </div>`;
+    }
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
     const ca=isCK?'#2563eb':gc(m.a);
     const cb=isCK?'#dc2626':gc(m.b);
