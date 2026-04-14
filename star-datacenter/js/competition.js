@@ -1303,8 +1303,9 @@ function grpSaveMatch(){
   m.b=document.getElementById('gm-b')?.value||'';
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
   // 이전 기록 롤백
-  if(m._id)revertMatchRecord({...m,_id:m._id});
-  const matchId=genId();m._id=matchId;
+  const matchId=m._id||genId();
+  if(m._id)revertMatchRecord({...m,_id:matchId});
+  m._id=matchId;
   let sa=0,sb=0;
   (m.sets||[]).forEach(set=>{
     let sA=0,sB=0;
@@ -1538,8 +1539,9 @@ function bktSaveMatch(){
     const rl=document.getElementById('gm-rndlabel');
     if(rl)m.rndLabel=rl.value.trim()||'토너먼트 경기';
   }
-  if(m._id)revertMatchRecord({...m,_id:m._id});
-  const matchId=genId();m._id=matchId;
+  const matchId=m._id||genId();
+  if(m._id)revertMatchRecord({...m,_id:matchId});
+  m._id=matchId;
   let sa=0,sb=0;
   (m.sets||[]).forEach(set=>{
     let sA=0,sB=0;

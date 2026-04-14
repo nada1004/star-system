@@ -623,17 +623,22 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
   const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
-  const wDup=matchId
+  // matchId 기반 체크
+  const wDupMatch=matchId
     ?(isGameId
       ?(w.history||[]).find(h=>h.matchId===matchId)
       :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
-    :(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-  const lDup=matchId
+    :null;
+  const lDupMatch=matchId
     ?(isGameId
       ?(l.history||[]).find(h=>h.matchId===matchId)
       :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
-    :(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
-  if(wDup||lDup)return; // 이미 기록되어 있으면 중단
+    :null;
+  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
+  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+  // 둘 중 하나라도 중복이면 중단
+  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
