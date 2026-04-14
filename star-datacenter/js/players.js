@@ -894,8 +894,10 @@ function rTier(C,T){
     const recentGames=[];
     function extractGames(matchList,label){
       matchList.forEach(m=>{
+        let hasGames = false;
         (m.sets||[]).forEach((set,si)=>{
           (set.games||[]).forEach((g,gi)=>{
+            hasGames = true;
             let wn='',ln='';
             if(g.wName&&g.lName){
               wn=g.wName; ln=g.lName;
@@ -908,6 +910,17 @@ function rTier(C,T){
             recentGames.push({date:m.d||g.d||'',matchId:m._id||m.id||'',setIdx:si,gameIdx:gi,winner:w,loser:l,map:g.map||'-',label:label||''});
           });
         });
+        if(!hasGames && m.a && m.b && m.sa!=null && m.sb!=null){
+          // 세부 게임 정보가 없는 경우, a/b가 선수인지 확인 후 반영 (예: 1v1 티어대회/대회 단판)
+          const wp=players.find(p=>p.name===m.a);
+          const lp=players.find(p=>p.name===m.b);
+          if(wp && lp){
+             const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
+             if(aWin||bWin){
+               recentGames.push({date:m.d||'',matchId:m._id||'',winner:aWin?m.a:m.b,loser:aWin?m.b:m.a,map:m.map||'-',label:label||''});
+             }
+          }
+        }
       });
     }
     function extractProCompTourneys(){

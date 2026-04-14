@@ -1,3 +1,30 @@
+// --- 공통 헬퍼 ---
+function _getTeamName(m, side){
+  const tLabel=side==='A'?m.teamALabel:m.teamBLabel;
+  const tName=side==='A'?m.a:m.b;
+  if(tName && !['A팀','B팀','A조','B조'].includes(tName)){
+    if(m.a===m.b) return tName+' '+side+'팀';
+    return tName;
+  }
+  const mems=side==='A'?m.teamAMembers:m.teamBMembers;
+  if(!mems||!mems.length) return side==='A'?'A팀':'B팀';
+  const uCount={};
+  mems.forEach(p=>{const u=p.univ||'무소속';uCount[u]=(uCount[u]||0)+1;});
+  const uKeys=Object.keys(uCount);
+  if(uKeys.length===1 && uKeys[0]!=='무소속'){
+    if(m.a===m.b || (m.teamALabel&&m.teamBLabel&&m.teamALabel.includes('A')&&m.teamBLabel.includes('B'))) return uKeys[0]+' '+side+'팀';
+    return uKeys[0];
+  }
+  if(tLabel && !['A팀','B팀','A조','B조'].includes(tLabel)) return tLabel;
+  return '연합';
+}
+
+function _hasValidScore(m){
+  if(m.sa!=null && m.sa!=='' && m.sb!=null && m.sb!=='') return true;
+  if(Array.isArray(m.sets) && m.sets.length>0) return true;
+  return false;
+}
+
 function rHist(C,T){
   T.innerText='📅 대전 기록';
 
@@ -91,6 +118,15 @@ function rHist(C,T){
       h+=`<div style="display:flex;flex-direction:column;gap:6px">
         <span style="font-size:11px;font-weight:800;color:var(--text3)">기간 필터</span>
         ${buildYearMonthFilter('hist')}
+      </div>`;
+    }
+    // 일괄 선택 (기간 옆)
+    if(isLoggedIn && (histSub==='mini' || histSub==='civil' || histSub==='univm')){
+      const _bulkKey=(histSub==='civil')?'civil':histSub;
+      const _bulkOn=!!_bulkModes[_bulkKey];
+      h+=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:11px;font-weight:800;color:var(--text3)">일괄 선택</span>
+        <button onclick="toggleBulkMode('${_bulkKey}')" style="padding:6px 12px;border-radius:10px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--white)'};color:${_bulkOn?'#dc2626':'var(--text2)'};font-size:12px;font-weight:800;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
       </div>`;
     }
 
@@ -190,8 +226,7 @@ function _renderRecCardsSimple(arr, mode, context){
     } else {
       if(!m.a||!m.b) return false;
     }
-    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
-    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
+    if(!_hasValidScore(m)) return false;
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
@@ -237,7 +272,7 @@ function _renderRecCardsSimple(arr, mode, context){
           ${m.map?`<span style="font-size:11px;color:var(--text3);display:inline-flex;align-items:center;gap:2px">📍 ${m.map}</span>`:''}
         </div>
         <div class="rec-actions no-export" style="display:flex;align-items:center;gap:4px">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${escJS(labelA||'')}',${m.sa||0},'${escJS(labelB||'')}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 텍스트로 복사" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">📋 <span class="hide-mobile">복사</span></button>
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${escJS(labelA||'')}',${sa||0},'${escJS(labelB||'')}',${sb||0},'${m.d||''}','${mode}',${i})" title="결과 텍스트로 복사" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">📋 <span class="hide-mobile">복사</span></button>
           <button class="btn btn-w btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드 이미지 생성" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">🎴 <span class="hide-mobile">카드</span></button>
           <button id="detbtn-${key}" class="btn btn-b btn-xs" onclick="toggleDetail('${key}')" style="padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">📂 <span class="hide-mobile">상세</span></button>
           ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})" title="수정">✏️</button>`)}
@@ -251,9 +286,9 @@ function _renderRecCardsSimple(arr, mode, context){
           ${aWin?`<span style="font-size:10px;font-weight:800;color:${ca};padding:0 4px">WINNER 🏆</span>`:''}
         </div>
         <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기" style="margin:0 16px;padding:6px 16px;background:var(--surface);border-radius:12px;border:1.5px solid var(--border2)">
-          <span style="font-size:24px;font-weight:900;color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+          <span style="font-size:24px;font-weight:900;color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span>
           <span style="color:var(--gray-l);font-size:16px;font-weight:400;margin:0 6px">:</span>
-          <span style="font-size:24px;font-weight:900;color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+          <span style="font-size:24px;font-weight:900;color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px">
           <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
@@ -327,7 +362,7 @@ function histAllHTML(){
       } else {
         if(!m.a||!m.b) return;
       }
-      if(m.sa==null||m.sb==null||m.sa===''||m.sb==='')return;
+      if(!_hasValidScore(m)) return;
       if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
       allItems.push({type,d:m.d||'',m});
     });
@@ -345,6 +380,7 @@ function histAllHTML(){
     const hasTeams = Array.isArray(m.teamAMembers) && Array.isArray(m.teamBMembers) && m.teamAMembers.length && m.teamBMembers.length;
     const hasAB = !!(m.a && m.b);
     if(!(hasTeams || hasAB)) return;
+    if(!_hasValidScore(m)) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     allItems.push({type:'tt',d:m.d||'',m});
   });
@@ -389,24 +425,7 @@ function histAllHTML(){
     return searchableText.includes(_sq);
   }):allItems;
 
-  const initQ=(window._recQ&&window._recQ['all'])||'';
-  if(!window._recTypeFilter) window._recTypeFilter='전체';
-  const _typeFiltered = window._recTypeFilter==='전체' ? filtered
-    : filtered.filter(({type})=>type===window._recTypeFilter);
-  const _typeCountMap={};
-  filtered.forEach(({type})=>{_typeCountMap[type]=(_typeCountMap[type]||0)+1;});
-  const _typeButtons=[
-    {id:'전체',lbl:'전체'},
-    {id:'mini',lbl:'⚡ 미니'},
-    {id:'univm',lbl:'🏟️ 대학대전'},
-    {id:'ck',lbl:'🤝 CK'},
-    {id:'pro',lbl:'🏅 프로'},
-    {id:'tt',lbl:'🎯 티어'},
-    {id:'ind',lbl:'🎮 개인전'},
-    {id:'gj',lbl:'⚔️ 끝장전'},
-    {id:'tourney',lbl:'🎖️ 대회'},
-    {id:'procomp',lbl:'🏅 프로리그대회'},
-  ].filter(t=>t.id==='전체'||_typeCountMap[t.id]>0);
+  const _typeFiltered = filtered;
   // 페이지네이션
   const pageSize=getHistPageSize();
   if(histPage['all']===undefined) histPage['all']=0;
@@ -415,12 +434,7 @@ function histAllHTML(){
   const curPage=histPage['all'];
   const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
-  let h=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span style="font-size:11px;color:var(--gray-l)">${_typeFiltered.length}건</span>
-  </div>
-  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-    ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
-  </div>`;
+  let h=``;
 
   if(!paged.length){
     h+=`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div></div>`;
@@ -444,11 +458,16 @@ function histAllHTML(){
       teamA=m.wName||''; teamB=m.lName||'';
       scoreA=''; scoreB='';
     } else {
-      const rawLA=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
-      const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
-      teamA=isTeamLabelType ? (m.a||rawLA||'A팀') : (m.a||'');
-      teamB=isTeamLabelType ? (m.b||rawLB||'B팀') : (m.b||'');
-      scoreA=m.sa!=null?m.sa:''; scoreB=m.sb!=null?m.sb:'';
+      teamA=isTeamLabelType ? _getTeamName(m,'A') : (m.a||'');
+      teamB=isTeamLabelType ? _getTeamName(m,'B') : (m.b||'');
+      let t_sa=m.sa, t_sb=m.sb;
+      if(t_sa==null||t_sb==null){
+        t_sa=0;t_sb=0;
+        (m.sets||[]).forEach(s=>{
+          (s.games||[]).forEach(g=>{if(g.winner==='A')t_sa++;else if(g.winner==='B')t_sb++;});
+        });
+      }
+      scoreA=t_sa; scoreB=t_sb;
     }
     const winner=isInd?teamA:(!isInd&&scoreA!==''&&scoreB!==''?(Number(scoreA)>Number(scoreB)?teamA:(Number(scoreB)>Number(scoreA)?teamB:'')):'');
     const dLabel=d?d.slice(2).replace(/-/g,'/'):'미정';
@@ -749,17 +768,16 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   arr.forEach(m=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
-    if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
-    if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
+    if(!_hasValidScore(m)) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
     const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:mode==='tt'?ttM:ckM;
     const i=srcArr.indexOf(m);
     const isCK=isCKmode;
-    const ca=isCK?'#2563eb':gc(m.a);const cb=isCK?'#dc2626':gc(m.b);
-    const rawLA2=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
-    const rawLB2=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
-    const labelA=isCK?(rawLA2||'A팀'):m.a;const labelB=isCK?(rawLB2||'B팀'):m.b;
+    const labelA=_getTeamName(m,'A');
+    const labelB=_getTeamName(m,'B');
+    const ca=isCK?'#2563eb':gc(labelA);
+    const cb=isCK?'#dc2626':gc(labelB);
     const aWin=(m.sa>m.sb),bWin=(m.sb>m.sa);
     const col=gc(filterUniv);
     const isA=(!isCK&&m.a===filterUniv)||(isCK&&(m.teamAMembers||[]).some(x=>x.univ===filterUniv));
@@ -858,11 +876,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _bulkDests=_bulkKey==='mini'?[{l:'⚔️ 시빌워',d:'civil'},{l:'🏟️ 대학대전',d:'univm'}]
     :_bulkKey==='civil'?[{l:'⚡ 미니대전',d:'mini'},{l:'🏟️ 대학대전',d:'univm'}]
     :_bulkKey==='univm'?[{l:'⚡ 미니대전',d:'mini'},{l:'⚔️ 시빌워',d:'civil'}]:[];
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
-    ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="margin-left:auto;padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
-  </div>
-  ${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+  const sortBar=`${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
     <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
       <input type="checkbox" id="bulk-all-${_bulkKey}" onchange="bulkToggleAll('${_bulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
     </label>
@@ -870,6 +884,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     <span style="color:var(--border2)">│</span>
     ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
     <button onclick="bulkDeleteRecs('${_bulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+    <button onclick="toggleBulkMode('${_bulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">✕ 선택 해제</button>
   </div>`:''}
   `;
 
@@ -889,18 +904,22 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>`;
     }
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
-    const ca=isCK?'#2563eb':gc(m.a);
-    const cb=isCK?'#dc2626':gc(m.b);
-    // teamALabel/B 필드 정리: 잘못된 값({...} 포함) 필터링
-    const rawLA=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
-    const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
-    const labelA=isCK?(m.a||rawLA||'A팀'):m.a;
-    const labelB=isCK?(m.b||rawLB||'B팀'):m.b;
-    const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
+    const labelA=(mode==='pro')?(m.teamALabel||_getTeamName(m,'A')):_getTeamName(m,'A');
+    const labelB=(mode==='pro')?(m.teamBLabel||_getTeamName(m,'B')):_getTeamName(m,'B');
+    const ca=isCK?'#2563eb':gc(labelA);
+    const cb=isCK?'#dc2626':gc(labelB);
+    let sa=m.sa, sb=m.sb;
+    if(sa==null||sb==null){
+      sa=0;sb=0;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{if(g.winner==='A')sa++;else if(g.winner==='B')sb++;});
+      });
+    }
+    const aWin=(sa>sb);const bWin=(sb>sa);
     const key=`${context}-${mode}-${i}`;
     // 대학 아이콘
-    const iconA=(()=>{if(isCK) return ''; const n=m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const iconB=(()=>{if(isCK) return ''; const n=m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconA=(()=>{if(isCK) return ''; const n=labelA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconB=(()=>{if(isCK) return ''; const n=labelB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:20px;height:20px;object-fit:contain;border-radius:4px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
     
     const modeBadgeMap={mini:'⚡ 미니대전',ck:'🤝 대학CK',univm:'🏟️ 대학대전',pro:'🏅 일반',tt:'🎯 티어대회',comp:'🏆 대회'};
@@ -908,14 +927,15 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
 
     h+=`<div class="rec-summary" style="border-left:4px solid ${_wBorderCol};background:var(--white);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);padding:14px;display:flex;flex-direction:column;gap:12px;margin:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0">
           ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
           <span style="background:var(--surface);color:var(--text2);font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);display:inline-flex;align-items:center">${modeBadge}</span>
           ${m.map?`<span style="font-size:11px;color:var(--text3);display:inline-flex;align-items:center;gap:2px">📍 ${m.map}</span>`:''}
+          <span style="font-size:11px;color:var(--text2);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">⚔ ${labelA} vs ${labelB}</span>
         </div>
         
         <div class="rec-actions no-export" style="display:flex;align-items:center;gap:4px">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${escJS(labelA||'')}',${m.sa||0},'${escJS(labelB||'')}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 텍스트로 복사" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">📋 <span class="hide-mobile">복사</span></button>
+          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${escJS(labelA||'')}',${sa||0},'${escJS(labelB||'')}',${sb||0},'${m.d||''}','${mode}',${i})" title="결과 텍스트로 복사" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">📋 <span class="hide-mobile">복사</span></button>
           <button class="btn btn-w btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드 이미지 생성" style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">🎴 <span class="hide-mobile">카드</span></button>
           <button id="detbtn-${key}" class="btn btn-b btn-xs" onclick="toggleDetail('${key}')" style="padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">📂 <span class="hide-mobile">상세</span></button>
           ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})" title="수정">✏️</button>`)}
@@ -926,18 +946,18 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
 
       <div style="display:flex;align-items:center;justify-content:center;padding:4px 0">
         <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${labelA}${iconA}</span>
+          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK && (univCfg||[]).some(x=>x.name===labelA) ? `openUnivModal('${labelA}')` : (!isCK && (univCfg||[]).some(x=>x.name===m.a) ? `openUnivModal('${m.a||''}')` : '')}">${labelA}${iconA}</span>
           ${aWin?`<span style="font-size:10px;font-weight:800;color:${ca};padding:0 4px">WINNER 🏆</span>`:''}
         </div>
         
         <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기" style="margin:0 16px;padding:6px 16px;background:var(--surface);border-radius:12px;border:1.5px solid var(--border2)">
-          <span style="font-size:24px;font-weight:900;color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+          <span style="font-size:24px;font-weight:900;color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span>
           <span style="color:var(--gray-l);font-size:16px;font-weight:400;margin:0 6px">:</span>
-          <span style="font-size:24px;font-weight:900;color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+          <span style="font-size:24px;font-weight:900;color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span>
         </div>
         
         <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px">
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
+          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:6px;font-size:14px;padding:4px 12px" onclick="${!isCK && (univCfg||[]).some(x=>x.name===labelB) ? `openUnivModal('${labelB}')` : (!isCK && (univCfg||[]).some(x=>x.name===m.b) ? `openUnivModal('${m.b||''}')` : '')}">${iconB}${labelB}</span>
           ${bWin?`<span style="font-size:10px;font-weight:800;color:${cb};padding:0 4px">WINNER 🏆</span>`:''}
         </div>
       </div>
@@ -953,6 +973,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
     </div>`;
   });
+  h+=`</div>`;
 
   // ── 페이지 컨트롤 ──
   if(totalItems>getHistPageSize()){

@@ -954,6 +954,25 @@ function openMatchPreview(matchId, modeLbl, ev){
   const a = m ? (m.a || m.teamALabel || '') : '';
   const b = m ? (m.b || m.teamBLabel || '') : '';
   const d = m ? (m.d || m.date || '') : '';
+  
+  const isIndMode = (modeLbl==='개인전'||modeLbl==='끝장전'||modeLbl==='프로리그끝장전'||modeLbl==='프로리그대회끝장전');
+  const wp = isIndMode ? players.find(p=>p.name===a) : null;
+  const lp = isIndMode ? players.find(p=>p.name===b) : null;
+  
+  const getPlayerCard = (p, defaultName) => {
+    if(!p) return defaultName || '';
+    const uIcon = UNIV_ICONS[p.univ] ? `<img src="${UNIV_ICONS[p.univ]}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;vertical-align:middle"> ` : '';
+    const pPhoto = p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;margin-bottom:6px;border:1.5px solid var(--border)">` : '';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      ${pPhoto}
+      <div style="font-size:10px;font-weight:700;color:var(--gray-l);background:var(--surface);padding:2px 6px;border-radius:4px">${uIcon}${p.univ||'무소속'}</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text)">${p.name}</div>
+    </div>`;
+  };
+
+  const aLabel = isIndMode ? getPlayerCard(wp, a) : (a||'팀 A');
+  const bLabel = isIndMode ? getPlayerCard(lp, b) : (b||'팀 B');
+
   let sa = m ? m.sa : null, sb = m ? m.sb : null;
   const sets = m ? (m.sets || []) : [];
   if((sa===null || sb===null) && sets && sets.length){
@@ -985,7 +1004,7 @@ function openMatchPreview(matchId, modeLbl, ev){
   h += `<div style="padding:18px 16px 14px;background:var(--white)">
     <div style="display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:8px;margin-bottom:${sets.length?'16px':'0'}">
       <div style="text-align:center">
-        <div style="font-size:16px;font-weight:900;color:${aWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${aWin?modeColor+'14':'transparent'};transition:.2s">${a||'팀 A'}</div>
+        <div style="font-size:${isIndMode?'inherit':'16px'};font-weight:900;color:${aWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${aWin?modeColor+'14':'transparent'};transition:.2s">${aLabel}</div>
       </div>
       <div style="text-align:center">
         ${(sa!=null && sb!=null)
@@ -995,7 +1014,7 @@ function openMatchPreview(matchId, modeLbl, ev){
         }
       </div>
       <div style="text-align:center">
-        <div style="font-size:16px;font-weight:900;color:${bWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${bWin?modeColor+'14':'transparent'};transition:.2s">${b||'팀 B'}</div>
+        <div style="font-size:${isIndMode?'inherit':'16px'};font-weight:900;color:${bWin?modeColor:'var(--text)'};padding:8px 6px;border-radius:10px;background:${bWin?modeColor+'14':'transparent'};transition:.2s">${bLabel}</div>
       </div>
     </div>`;
 
