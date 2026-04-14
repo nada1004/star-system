@@ -905,33 +905,51 @@ function openMatchPreview(matchId, modeLbl, ev){
     parentId = matchId.split('_s')[0];
   }
 
-  // 모달 DOM이 없으면 동적으로 생성 (배포/캐시 꼬임 방지)
-  if(!document.getElementById('matchPreviewModal')){
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
-      <div id="matchPreviewModal" class="modal no-export" style="z-index:5400">
-        <div class="umbox" style="width:720px;max-width:96vw;padding:0;overflow:hidden;border-radius:16px">
-          <div id="matchPreviewBody"></div>
-        </div>
-      </div>`;
-    document.body.appendChild(wrap.firstElementChild);
-  }
+  // 항상 재생성 (구 버전 mbtns 중복 방지)
+  const _oldMp = document.getElementById('matchPreviewModal');
+  if(_oldMp) _oldMp.remove();
+  const _mob = window.innerWidth < 600;
+  const _tab = window.innerWidth < 1024;
+  const _boxW = _mob ? '100vw' : _tab ? 'min(94vw,480px)' : '480px';
+  const _boxR = _mob ? '14px 14px 0 0' : '14px';
+  const _mpWrap = document.createElement('div');
+  _mpWrap.innerHTML = `
+    <div id="matchPreviewModal" class="modal no-export" style="z-index:5400;align-items:${_mob?'flex-end':'center'}">
+      <div class="umbox" style="width:${_boxW};max-height:88vh;padding:0;overflow:hidden;border-radius:${_boxR};display:flex;flex-direction:column">
+        <div id="matchPreviewBody" style="overflow-y:auto;flex:1;min-height:0"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(_mpWrap.firstElementChild);
 
   const bodyEl = document.getElementById('matchPreviewBody');
   const fmtPlayers = (x) => Array.isArray(x) ? x.join(' / ') : (x||'');
-  const fmtMap = (m) => (m && m !== '-') ? m : '';
+  const fmtMap = (mp) => (mp && mp !== '-') ? mp : '';
 
   const modeColor = _mpModeColors[modeLbl] || '#6b7280';
 
-  const findIn = (arr) => (arr||[]).find(m=>m && m._id===parentId) || null;
+  // gjM/indM 단일 경기를 match 형식으로 변환
+  const _singleGameMatch = (entry) => entry ? {
+    a: entry.wName, b: entry.lName, d: entry.d||'', sa: 1, sb: 0,
+    sets: [{games:[{playerA:entry.wName, playerB:entry.lName, winner:'A', map:entry.map||'-'}]}]
+  } : null;
+
+  const findIn = (arr) => (arr||[]).find(x=>x && x._id===parentId) || null;
   let m = null;
   if(modeLbl==='티어대회') m = findIn(typeof ttM!=='undefined'?ttM:[]);
   else if(modeLbl==='미니대전' || modeLbl==='시빌워') m = findIn(typeof miniM!=='undefined'?miniM:[]);
   else if(modeLbl==='대학대전') m = findIn(typeof univM!=='undefined'?univM:[]);
   else if(modeLbl==='대학CK') m = findIn(typeof ckM!=='undefined'?ckM:[]);
   else if(modeLbl==='프로리그') m = findIn(typeof proM!=='undefined'?proM:[]);
-  else if(modeLbl==='대회' || modeLbl==='조별리그' || modeLbl==='토너먼트' || modeLbl==='프로리그대회' || modeLbl==='프로리그팀전') m = findIn(typeof comps!=='undefined'?comps:[]);
-  else m = findIn(typeof ttM!=='undefined'?ttM:[]) || findIn(typeof proM!=='undefined'?proM:[]) || findIn(typeof ckM!=='undefined'?ckM:[]) || findIn(typeof univM!=='undefined'?univM:[]) || findIn(typeof miniM!=='undefined'?miniM:[]) || findIn(typeof comps!=='undefined'?comps:[]);
+  else if(modeLbl==='대회'||modeLbl==='조별리그'||modeLbl==='토너먼트'||modeLbl==='프로리그대회'||modeLbl==='프로리그팀전') m = findIn(typeof comps!=='undefined'?comps:[]);
+  else if(modeLbl==='끝장전'||modeLbl==='프로리그끝장전'||modeLbl==='프로리그대회끝장전') m = _singleGameMatch(findIn(typeof gjM!=='undefined'?gjM:[]));
+  else if(modeLbl==='개인전') m = _singleGameMatch(findIn(typeof indM!=='undefined'?indM:[]));
+  else {
+    m = findIn(typeof ttM!=='undefined'?ttM:[]) || findIn(typeof proM!=='undefined'?proM:[]) ||
+        findIn(typeof ckM!=='undefined'?ckM:[]) || findIn(typeof univM!=='undefined'?univM:[]) ||
+        findIn(typeof miniM!=='undefined'?miniM:[]) || findIn(typeof comps!=='undefined'?comps:[]);
+    if(!m){ const _gj=findIn(typeof gjM!=='undefined'?gjM:[]); if(_gj) m=_singleGameMatch(_gj); }
+    if(!m){ const _ind=findIn(typeof indM!=='undefined'?indM:[]); if(_ind) m=_singleGameMatch(_ind); }
+  }
 
   const a = m ? (m.a || m.teamALabel || '') : '';
   const b = m ? (m.b || m.teamBLabel || '') : '';
@@ -1427,8 +1445,6 @@ function buildPlayerDetailHTML(p){
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
     </select>`}
   </div>`:'';
-  h+=filterBar;
-
   // ── 연도 필터 드롭다운 ──
   if(_availYears.length>0){
     const _pSafeY=escJS(p.name);
@@ -1647,6 +1663,7 @@ function buildPlayerDetailHTML(p){
     const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
     const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
     h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
+    h+=filterBar;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     const selectAllCheckbox = _playerHistBulkMode
