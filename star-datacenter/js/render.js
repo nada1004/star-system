@@ -825,20 +825,34 @@ function navToMatch(matchId, modeLbl, ev){
     '프로리그대회':   {histSub:'procomp'},
     '프로리그팀전':   {histSub:'procompteam'},
   }[modeLbl];
-  if(!_cfg) return;
+  // 모드 라벨이 없거나 새로운 값일 때: matchId가 속한 배열로 추정해서 이동
+  const _inferCfgById = ()=>{
+    try{
+      if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.some(x=>x&&x._id===matchId)) return {kind:'tt'};
+      if(typeof miniM!=='undefined' && Array.isArray(miniM) && miniM.some(x=>x&&x._id===matchId)) return {histSub:'mini',arrMode:'mini',arr:()=>miniM};
+      if(typeof univM!=='undefined' && Array.isArray(univM) && univM.some(x=>x&&x._id===matchId)) return {histSub:'univm',arrMode:'univm',arr:()=>univM};
+      if(typeof ckM!=='undefined' && Array.isArray(ckM) && ckM.some(x=>x&&x._id===matchId)) return {histSub:'ck',arrMode:'ck',arr:()=>ckM};
+      if(typeof proM!=='undefined' && Array.isArray(proM) && proM.some(x=>x&&x._id===matchId)) return {histSub:'pro',arrMode:'pro',arr:()=>proM};
+      if(typeof comps!=='undefined' && Array.isArray(comps) && comps.some(x=>x&&x._id===matchId)) return {histSub:'comp',arrMode:'comp',arr:()=>comps};
+    }catch(e){}
+    return null;
+  };
+  const cfg = _cfg || _inferCfgById();
+  if(!cfg) return;
+  if(cfg.kind==='tt'){ navToTierMatch(matchId); return; }
   cm('playerModal');
   curTab='hist';
-  histSub=_cfg.histSub;
+  histSub=cfg.histSub;
   openDetails={};
   document.querySelectorAll('.tab').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';
     b.classList.toggle('on',oc.includes("'hist'"));
   });
-  if(_cfg.arr&&_cfg.arrMode){
-    const srcArr=_cfg.arr();
+  if(cfg.arr&&cfg.arrMode){
+    const srcArr=cfg.arr();
     const idx=srcArr.findIndex(m=>m._id===matchId);
     if(idx>=0){
-      const isCK=(_cfg.arrMode==='ck'||_cfg.arrMode==='pro');
+      const isCK=(cfg.arrMode==='ck'||cfg.arrMode==='pro');
       filterYear='전체';filterMonth='전체';
       const filt=srcArr.map((m,i)=>({m,i})).filter(({m})=>{
         if(isCK){if(!m.teamAMembers||!m.teamBMembers)return false;}
@@ -847,15 +861,15 @@ function navToMatch(matchId, modeLbl, ev){
       });
       const pos=filt.findIndex(f=>f.i===idx);
       const ps=typeof getHistPageSize==='function'?getHistPageSize():20;
-      if(pos>=0) histPage[_cfg.arrMode]=Math.floor(pos/ps);
+      if(pos>=0) histPage[cfg.arrMode]=Math.floor(pos/ps);
     }
   }
   render();
-  if(_cfg.arr&&_cfg.arrMode){
-    const srcArr=_cfg.arr();
+  if(cfg.arr&&cfg.arrMode){
+    const srcArr=cfg.arr();
     const idx=srcArr.findIndex(m=>m._id===matchId);
     if(idx>=0){
-      const key='hist-'+_cfg.arrMode+'-'+idx;
+      const key='hist-'+cfg.arrMode+'-'+idx;
       setTimeout(()=>{
         const el=document.getElementById('det-'+key);
         if(el){
@@ -1617,7 +1631,7 @@ function buildPlayerDetailHTML(p){
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
-      const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
+      const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
@@ -1630,11 +1644,11 @@ function buildPlayerDetailHTML(p){
       const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
       const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
-      const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
-      const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="openMatchPreview('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="클릭: 경기 미리보기 · Ctrl/⌘+클릭: 새 탭에서 열기">${modeLbl}</span>`
-        :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
-        :'';
+      const modeCellHTML=modeLbl
+        ? (_hhMid
+          ? `<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="openMatchPreview('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="클릭: 경기 미리보기 · Ctrl/⌘+클릭: 새 탭에서 열기">${modeLbl}</span>`
+          : `<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;opacity:.7" title="연결된 경기 ID 없음">${modeLbl}</span>`)
+        : '';
       const oppCellHTML = hh.isMulti && Array.isArray(hh.opps)
         ? `<div style="display:flex;flex-direction:column;gap:2px;padding:2px 0">
             ${hh.opps.map(opp => {
