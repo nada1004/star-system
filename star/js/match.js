@@ -473,13 +473,14 @@ function saveMatch(mode){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
     const sid=matchId;
-    setsSnap.forEach(set=>{
-      (set.games||[]).forEach(g=>{
+    setsSnap.forEach((set, setIdx)=>{
+      (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
-        applyGameResult(wName,lName,date,g.map||'-',sid,'','',_modeLabel);
-        gjM.unshift({_id:genId(),sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        const gameId=`${sid}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -488,14 +489,15 @@ function saveMatch(mode){
     return;
   }
   // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
-  bld.sets.forEach(set=>{
-    set.games.forEach(g=>{
+  bld.sets.forEach((set, setIdx)=>{
+    set.games.forEach((g, gameIdx)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
       const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',matchId,univW,univL,_modeLabel);
+      const gameId=`${matchId}_s${setIdx}_g${gameIdx}`;
+      applyGameResult(wName,lName,date,g.map||'-',gameId,univW,univL,_modeLabel);
     });
   });
   if(mode==='mini'){
