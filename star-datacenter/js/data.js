@@ -54,19 +54,22 @@ function revertMatchRecord(matchObj){
     return;
   }
 
-  matchObj.sets.forEach(set=>{
+  matchObj.sets.forEach((set, si)=>{
     if(!set.games)return;
-    set.games.forEach(g=>{
+    set.games.forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const w=players.find(p=>p.name===wName);
       const l=players.find(p=>p.name===lName);
+      // 게임 레벨 ID (새 포맷) 및 매치 레벨 ID (구 데이터) 모두 지원
+      const gameMatchId=mid?`${mid}_s${si}_g${gi}`:null;
 
       if(w){
         if(!w.history)w.history=[];
         let idx=-1;
-        if(mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
+        if(gameMatchId) idx=w.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='승'&&h.opp===lName);
+        if(idx<0&&mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
         if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===mdate);
         if(idx<0){ idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', wName,'vs',lName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){
@@ -79,7 +82,8 @@ function revertMatchRecord(matchObj){
       if(l){
         if(!l.history)l.history=[];
         let idx=-1;
-        if(mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
+        if(gameMatchId) idx=l.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='패'&&h.opp===wName);
+        if(idx<0&&mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
         if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===mdate);
         if(idx<0){ idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', lName,'vs',wName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){

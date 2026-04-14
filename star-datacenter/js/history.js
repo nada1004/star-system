@@ -1322,7 +1322,15 @@ function bulkDeleteRecs(bulkKey){
   indices.forEach(idx=>{
     const matchObj=arr[idx];
     if(matchObj){
-      if(matchObj._id) deletedIds.add(matchObj._id);
+      if(matchObj._id){
+        deletedIds.add(matchObj._id);
+        // 게임 레벨 ID도 추가 (sets 기반 저장: matchId_sN_gN 포맷)
+        (matchObj.sets||[]).forEach((set,si)=>{
+          (set.games||[]).forEach((g,gi)=>{
+            deletedIds.add(`${matchObj._id}_s${si}_g${gi}`);
+          });
+        });
+      }
       arr.splice(idx,1);
       revertMatchRecord(matchObj);
     }
