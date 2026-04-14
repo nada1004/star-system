@@ -64,6 +64,65 @@ function _migrateTierTourneys(){
   if(changed) save();
 }
 
+let _ttDupNameMigrated=false;
+function _migrateTierTourneyDuplicateNames(){
+  if(_ttDupNameMigrated) return;
+  _ttDupNameMigrated=true;
+  const tiers=(tourneys||[]).filter(t=>t&&t.type==='tier'&&(t.name||'').trim());
+  if(!tiers.length) return;
+  const byName={};
+  tiers.forEach((tn, idx)=>{
+    const n=(tn.name||'').trim();
+    if(!byName[n]) byName[n]=[];
+    byName[n].push({tn, idx});
+  });
+  let changed=false;
+  Object.keys(byName).forEach(n=>{
+    const list=byName[n]||[];
+    if(list.length<=1) return;
+    const used=new Set();
+    list.forEach(it=>{
+      const dates=[];
+      (it.tn.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{ if(m&&m.d) dates.push(m.d); }));
+      dates.sort();
+      const ds=dates.length
+        ? ` (${dates[0].slice(2).replace(/-/g,'/')}${dates[dates.length-1]!==dates[0]?'~'+dates[dates.length-1].slice(2).replace(/-/g,'/'):''})`
+        : ` (#${it.idx+1})`;
+      let nn=(n+ds).trim();
+      let k=2;
+      while(used.has(nn)) nn=(n+ds+'-'+(k++)).trim();
+      used.add(nn);
+      if(it.tn.name!==nn){ it.tn.name=nn; changed=true; }
+    });
+  });
+  if(!changed) return;
+
+  const matchToName={};
+  (tourneys||[]).filter(t=>t&&t.type==='tier').forEach(tn=>{
+    const tnName=(tn.name||'').trim();
+    (tn.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{ if(m&&m._id) matchToName[m._id]=tnName; }));
+  });
+  if(typeof ttM!=='undefined' && Array.isArray(ttM)){
+    ttM.forEach(m=>{
+      const nn=matchToName[m._id];
+      if(nn){
+        if(m.compName!==nn){ m.compName=nn; changed=true; }
+        if(m.n && m.n!==nn){ m.n=nn; changed=true; }
+        if(m.t && m.t!==nn){ m.t=nn; changed=true; }
+      }
+    });
+  }
+  if(typeof _ttCurComp!=='undefined'){
+    const ok=(tourneys||[]).some(t=>t&&t.type==='tier'&&t.name===_ttCurComp);
+    if(!ok){
+      const first=(tourneys||[]).find(t=>t&&t.type==='tier');
+      _ttCurComp=first?first.name:'';
+      changed=true;
+    }
+  }
+  if(changed && typeof save==='function') save();
+}
+
 /* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */

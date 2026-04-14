@@ -792,6 +792,7 @@ function saveUnivEdit(){
 // 스트리머 상세 최근 경기 배지 클릭 → 해당 기록 탭으로 이동
 function navToMatch(matchId, modeLbl, ev){
   if(!matchId) return;
+  ev = ev || (typeof window !== 'undefined' ? window.event : null);
   try{
     if(ev && (ev.ctrlKey || ev.metaKey)){
       const base = window.location.origin + window.location.pathname;
@@ -868,6 +869,7 @@ function navToMatch(matchId, modeLbl, ev){
 
 function openMatchPreview(matchId, modeLbl, ev){
   if(!matchId) return;
+  ev = ev || (typeof window !== 'undefined' ? window.event : null);
   try{
     if(ev && (ev.ctrlKey || ev.metaKey)){
       const base = window.location.origin + window.location.pathname;
@@ -885,6 +887,29 @@ function openMatchPreview(matchId, modeLbl, ev){
     setIdx = parseInt(gm[1],10);
     gameIdx = parseInt(gm[2],10);
     parentId = matchId.split('_s')[0];
+  }
+
+  // 모달 DOM이 없으면 동적으로 생성 (배포/캐시 꼬임 방지)
+  if(!document.getElementById('matchPreviewModal')){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div id="matchPreviewModal" class="modal no-export" style="z-index:5400">
+        <div class="umbox" style="width:760px;max-width:96vw">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
+            <div class="mtitle" id="matchPreviewTitle" style="margin-bottom:0">경기 미리보기</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn btn-w btn-sm" onclick="cm('matchPreviewModal')">✕ 닫기</button>
+            </div>
+          </div>
+          <div id="matchPreviewBody"></div>
+          <div class="mbtns" style="margin-top:14px;gap:8px">
+            <button id="matchPreviewGoBtn" class="btn btn-b" style="flex:1" onclick="if(window._mpNav){window._mpNav();}">➡️ 이동</button>
+            <button id="matchPreviewNewTabBtn" class="btn btn-w" style="flex:0 0 auto" onclick="if(window._mpNewTab){window._mpNewTab();}">🗗 새 탭</button>
+            <button class="btn btn-w" style="flex:0 0 auto" onclick="cm('matchPreviewModal')">닫기</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap.firstElementChild);
   }
 
   const titleEl = document.getElementById('matchPreviewTitle');
@@ -974,7 +999,8 @@ function openMatchPreview(matchId, modeLbl, ev){
     window.open(url, '_blank');
   }catch(e){} };
 
-  om('matchPreviewModal');
+  if(typeof om==='function') om('matchPreviewModal');
+  else { const el=document.getElementById('matchPreviewModal'); if(el) el.style.display='block'; }
 }
 
 function buildPlayerDetailHTML(p){
@@ -1606,7 +1632,7 @@ function buildPlayerDetailHTML(p){
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
       const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
       const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="openMatchPreview('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}',event)" title="클릭: 경기 미리보기 · Ctrl/⌘+클릭: 새 탭에서 열기">${modeLbl}</span>`
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="openMatchPreview('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="클릭: 경기 미리보기 · Ctrl/⌘+클릭: 새 탭에서 열기">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       const oppCellHTML = hh.isMulti && Array.isArray(hh.opps)

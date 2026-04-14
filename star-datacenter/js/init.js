@@ -1,4 +1,4 @@
-﻿function showNoticePopup(){
+function showNoticePopup(){
   if(typeof notices==='undefined'||!notices.length) return;
   const active=notices.filter(n=>n.active);
   if(!active.length) return;
@@ -37,10 +37,11 @@ function init(){
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
   }
-  // ⚠️ 자동 소급 반영 제거: saveMatch 저장 시점에만 history 반영
-  // 수동 반영이 필요하면 설정탭 > 데이터 동기화 버튼 사용
+  // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
+  if(typeof syncTourneyHistory==='function') syncTourneyHistory();
   // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
   if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
+  if(typeof _migrateTierTourneyDuplicateNames==='function') _migrateTierTourneyDuplicateNames();
   // 티어대전 → 티어대회 명칭 마이그레이션
   if(typeof _migrateTierTourName==='function') _migrateTierTourName();
   // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
@@ -58,6 +59,8 @@ function init(){
       const playerParam = params.get('player');
       const univParam = params.get('univ');
       const queryParam = params.get('query');
+      const matchParam = params.get('match');
+      const modeParam = params.get('mode');
       if(playerParam && typeof openPlayerModal==='function'){
         openPlayerModal(decodeURIComponent(playerParam));
       } else if(univParam && typeof openUnivModal==='function'){
@@ -73,6 +76,8 @@ function init(){
           if(typeof _psearchQ!=='undefined') _psearchQ=q;
           if(typeof render==='function') render();
         }
+      } else if(matchParam && modeParam && typeof navToMatch==='function'){
+        navToMatch(decodeURIComponent(matchParam), decodeURIComponent(modeParam));
       }
     }catch(e){}
   }, 1200);
