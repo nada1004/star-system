@@ -225,6 +225,9 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _pcLeaguePasteApplyLogic==='function' ? _pcLeaguePasteApplyLogic(savable,tn) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
@@ -2315,6 +2318,9 @@ function _grpPasteApplyLogic(savable){
   }
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
+  }
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _pcLeaguePasteApplyLogic==='function' ? _pcLeaguePasteApplyLogic(savable,tn) : false;
   }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
