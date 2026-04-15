@@ -81,21 +81,21 @@ function rCfg(C,T){
     '시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
     '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
   }[window._cfgCat]||[];
-  let h=`<div class="no-export" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px">
-    ${_cfgCats.map(c=>`
-      <button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}"
-        style="text-align:left;padding:12px 12px;border-radius:12px;border:1.5px solid ${window._cfgCat===c?'var(--blue)':'var(--border2)'};background:${window._cfgCat===c?'var(--blue-ll)':'var(--white)'};cursor:pointer">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="font-size:18px">${_cfgCatIcons[c]}</span>
-          <span style="font-weight:900;color:var(--text)">${c}</span>
+  let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:8px">
+      ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}"
+        style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border:2px solid ${on?'var(--blue)':'var(--border)'};border-radius:12px;background:${on?'var(--blue-ll)':'var(--surface)'};cursor:pointer;transition:all .15s;text-align:left;width:100%">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:20px;line-height:1">${_cfgCatIcons[c]}</span>
+          <span style="font-size:13px;font-weight:${on?900:700};color:${on?'var(--blue)':'var(--text)'}">${c}</span>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);font-weight:600">${_cfgCatDesc[c]||''}</div>
-      </button>
-    `).join('')}
-  </div>
-  <div class="fbar no-export" style="gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <span style="font-size:11px;font-weight:800;color:var(--text3)">바로가기</span>
-    ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
+        <span style="font-size:10px;color:${on?'var(--blue)':'var(--gray-l)'};font-weight:400;line-height:1.3">${_cfgCatDesc[c]}</span>
+      </button>`;}).join('')}
+    </div>
+    <div class="fbar no-export" style="gap:5px;flex-wrap:wrap;padding:4px 0 2px;border-top:1px solid var(--border);padding-top:6px">
+      <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">바로가기</span>
+      ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
+    </div>
   </div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
@@ -721,7 +721,7 @@ ${_cfgD('notice','📢 공지 관리')}
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 이미지 모양</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()" onclick="boardChipPhotoShape='circle';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-b';document.getElementById('cfg-bcp-square').className='btn btn-w';render()">⭕ 원형 (기본)</button>
+          <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()}" onclick="boardChipPhotoShape='circle';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-b';document.getElementById('cfg-bcp-square').className='btn btn-w';render()">⭕ 원형 (기본)</button>
           <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})()" onclick="boardChipPhotoShape='square';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-w';document.getElementById('cfg-bcp-square').className='btn btn-b';render()">⬛ 네모형</button>
         </div>
       </div>

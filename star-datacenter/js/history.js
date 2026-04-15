@@ -683,6 +683,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
+        ${m.fmt>0?`<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700;flex-shrink:0">${m.fmt}:${m.fmt}</span>`:''}
         ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
