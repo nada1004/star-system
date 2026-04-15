@@ -1,4 +1,4 @@
-﻿﻿/* ══════════════════════════════════════
+﻿﻿﻿/* ══════════════════════════════════════
    🔧 구버전 티어대회 데이터 1회 마이그레이션
 ══════════════════════════════════════ */
 let _ttMigrated = false;
@@ -3781,7 +3781,7 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-let _univDragSrc=-1;
+var _univDragSrc=-1;
 function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
@@ -3794,7 +3794,7 @@ function _univDrop(e,i){
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-let _dissolveIdx = -1;
+var _dissolveIdx = -1;
 function openDissolveModal(i){
   _dissolveIdx = i;
   const u = univCfg[i];

@@ -120,9 +120,9 @@ function raceSummaryHTML(){
    공통 세트 빌더
 ══════════════════════════════════════ */
 function stabs(current, opts){
-  return `<div class="stabs no-export">${opts.map(o=>{
+  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
-    return `<button class="stab ${current===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
+    return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('')}</div>`;
 }
 
@@ -274,14 +274,25 @@ function setBuilderHTML(bld, mode){
         <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
       </div>`;}
       freeGames.forEach((g,gi)=>{
-        const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
-        const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        const showTeamSize=(mode!=='gj'&&mode!=='ind');
+        const curSize=showTeamSize?(g.teamSize||((Array.isArray(g.playerA)?g.playerA.length:0)||(Array.isArray(g.playerB)?g.playerB.length:0)||1)):1;
+        const aSel=Array.isArray(g.playerA)?g.playerA:(g.playerA?[g.playerA]:[]);
+        const bSel=Array.isArray(g.playerB)?g.playerB:(g.playerB?[g.playerB]:[]);
+        const buildOpts=(list,sel)=>list.map(p=>`<option value="${p.name}"${sel===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        let aSelects='',bSelects='';
+        for(let pi=0; pi<curSize; pi++){
+          const selA=aSel[pi]||''; const selB=bSel[pi]||'';
+          aSelects+=`<select onchange="(function(){const g=BLD['${mode}'].freeGames[${gi}];const n=(g.teamSize||1);if(n>1){if(!Array.isArray(g.playerA))g.playerA=g.playerA?[g.playerA]:[];g.playerA[${pi}]=this.value;}else{g.playerA=this.value;}})()"><option value="">A${curSize>1?pi+1:''} 선택</option>${buildOpts(mA,selA)}</select>`;
+          bSelects+=`<select onchange="(function(){const g=BLD['${mode}'].freeGames[${gi}];const n=(g.teamSize||1);if(n>1){if(!Array.isArray(g.playerB))g.playerB=g.playerB?[g.playerB]:[];g.playerB[${pi}]=this.value;}else{g.playerB=this.value;}})()"><option value="">B${curSize>1?pi+1:''} 선택</option>${buildOpts(mB,selB)}</select>`;
+        }
+        const sizeSel=showTeamSize?`<select onchange="(function(){const g=BLD['${mode}'].freeGames[${gi}];const n=parseInt(this.value)||1;g.teamSize=n;if(n>1){if(!Array.isArray(g.playerA))g.playerA=g.playerA?[g.playerA]:[];if(!Array.isArray(g.playerB))g.playerB=g.playerB?[g.playerB]:[];g.playerA=g.playerA.slice(0,n);g.playerB=g.playerB.slice(0,n);}else{if(Array.isArray(g.playerA))g.playerA=g.playerA[0]||'';if(Array.isArray(g.playerB))g.playerB=g.playerB[0]||'';}render();})()" style="max-width:82px"><option value="1" ${curSize===1?'selected':''}>1:1</option><option value="2" ${curSize===2?'selected':''}>2:2</option><option value="3" ${curSize===3?'selected':''}>3:3</option><option value="4" ${curSize===4?'selected':''}>4:4</option></select>`:'';
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-          <select onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+          ${sizeSel}
+          ${aSelects}
           <span style="font-size:11px;color:var(--gray-l)">vs</span>
-          <select onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+          ${bSelects}
           <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
           <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
           <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='B';render()">B 승</button>
@@ -312,14 +323,25 @@ function setBuilderHTML(bld, mode){
             <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
           </div>`;
         set.games.forEach((g,gi)=>{
-          const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
-          const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          const showTeamSize=(mode!=='gj'&&mode!=='ind');
+          const curSize=showTeamSize?(g.teamSize||((Array.isArray(g.playerA)?g.playerA.length:0)||(Array.isArray(g.playerB)?g.playerB.length:0)||1)):1;
+          const aSel=Array.isArray(g.playerA)?g.playerA:(g.playerA?[g.playerA]:[]);
+          const bSel=Array.isArray(g.playerB)?g.playerB:(g.playerB?[g.playerB]:[]);
+          const buildOpts=(list,sel)=>list.map(p=>`<option value="${p.name}"${sel===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          let aSelects='',bSelects='';
+          for(let pi=0; pi<curSize; pi++){
+            const selA=aSel[pi]||''; const selB=bSel[pi]||'';
+            aSelects+=`<select onchange="(function(){const g=BLD['${mode}'].sets[${si}].games[${gi}];const n=(g.teamSize||1);if(n>1){if(!Array.isArray(g.playerA))g.playerA=g.playerA?[g.playerA]:[];g.playerA[${pi}]=this.value;}else{g.playerA=this.value;}})()"><option value="">A${curSize>1?pi+1:''} 선택</option>${buildOpts(mA,selA)}</select>`;
+            bSelects+=`<select onchange="(function(){const g=BLD['${mode}'].sets[${si}].games[${gi}];const n=(g.teamSize||1);if(n>1){if(!Array.isArray(g.playerB))g.playerB=g.playerB?[g.playerB]:[];g.playerB[${pi}]=this.value;}else{g.playerB=this.value;}})()"><option value="">B${curSize>1?pi+1:''} 선택</option>${buildOpts(mB,selB)}</select>`;
+          }
+          const sizeSel=showTeamSize?`<select onchange="(function(){const g=BLD['${mode}'].sets[${si}].games[${gi}];const n=parseInt(this.value)||1;g.teamSize=n;if(n>1){if(!Array.isArray(g.playerA))g.playerA=g.playerA?[g.playerA]:[];if(!Array.isArray(g.playerB))g.playerB=g.playerB?[g.playerB]:[];g.playerA=g.playerA.slice(0,n);g.playerB=g.playerB.slice(0,n);}else{if(Array.isArray(g.playerA))g.playerA=g.playerA[0]||'';if(Array.isArray(g.playerB))g.playerB=g.playerB[0]||'';}recalcSet('${mode}',${si});render();})()" style="max-width:82px"><option value="1" ${curSize===1?'selected':''}>1:1</option><option value="2" ${curSize===2?'selected':''}>2:2</option><option value="3" ${curSize===3?'selected':''}>3:3</option><option value="4" ${curSize===4?'selected':''}>4:4</option></select>`:'';
           const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
           h+=`<div class="game-row">
             <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+            ${sizeSel}
+            ${aSelects}
             <span style="font-size:11px;color:var(--gray-l)">vs</span>
-            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+            ${bSelects}
             <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
             <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
             <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>
@@ -345,6 +367,29 @@ function recalcSet(mode,si){
   const set=BLD[mode].sets[si];let a=0,b=0;
   set.games.forEach(g=>{if(g.winner==='A')a++;else if(g.winner==='B')b++;});
   set.scoreA=a;set.scoreB=b;set.winner=a>b?'A':b>a?'B':'';
+}
+
+function _normNames(v){
+  if(Array.isArray(v)) return v.filter(Boolean);
+  if(typeof v==='string' && v) return [v];
+  return [];
+}
+
+function _applyTeamGameToHistory(g, date, map, baseId, univA, univB, modeLabel){
+  const aList=_normNames(g.playerA);
+  const bList=_normNames(g.playerB);
+  const size=Math.max(aList.length||0, bList.length||0, 1);
+  for(let pi=0; pi<size; pi++){
+    const a=aList[pi]||aList[0]||'';
+    const b=bList[pi]||bList[0]||'';
+    if(!a||!b||!g.winner) continue;
+    const id = size>1 ? `${baseId}_p${pi}` : baseId;
+    const wName=g.winner==='A'?a:b;
+    const lName=g.winner==='A'?b:a;
+    const univW=g.winner==='A'?(univA||''):(univB||'');
+    const univL=g.winner==='A'?(univB||''):(univA||'');
+    applyGameResult(wName,lName,date,map||'-',id,univW,univL,modeLabel);
+  }
 }
 
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -398,13 +443,8 @@ function saveMatch(mode){
 
     // 각 게임에 _id 부여 (rebuildAllPlayerHistory와 ID 일치를 위해, setsSnap spread에 포함됨)
     freeGames.forEach((g,gi)=>{g._id=`${matchId}_s0_g${gi}`;});
-    freeGames.forEach((g, gi)=>{
-      if(!g.playerA||!g.playerB||!g.winner)return;
-      const wName=g.winner==='A'?g.playerA:g.playerB;
-      const lName=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
-      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+    freeGames.forEach((g)=>{
+      _applyTeamGameToHistory(g,date,g.map,g._id,bld.teamA||'',bld.teamB||'',_modeLabel);
     });
 
     let totalA=0,totalB=0;
@@ -422,13 +462,19 @@ function saveMatch(mode){
 
         const univW={},univL={};
         freeGames.forEach(g=>{
-            if(!g.playerA||!g.playerB||!g.winner)return;
-            const wName=g.winner==='A'?g.playerA:g.playerB;
-            const lName=g.winner==='A'?g.playerB:g.playerA;
-            const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-            const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-            if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-            if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+            const aList=_normNames(g.playerA); const bList=_normNames(g.playerB);
+            const size=Math.max(aList.length||0,bList.length||0,1);
+            for(let pi=0; pi<size; pi++){
+              if(!g.winner) continue;
+              const a=aList[pi]||aList[0]||''; const b=bList[pi]||bList[0]||'';
+              if(!a||!b) continue;
+              const wName=g.winner==='A'?a:b;
+              const lName=g.winner==='A'?b:a;
+              const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
+              const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
+              if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
+              if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+            }
         });
 
         const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:mode==='ck'?'A조':'A팀', teamBLabel:mode==='ck'?'B조':'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
@@ -492,14 +538,9 @@ function saveMatch(mode){
     return;
   }
   // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
-  bld.sets.forEach((set, setIdx)=>{
-    set.games.forEach((g, gameIdx)=>{
-      if(!g.playerA||!g.playerB||!g.winner)return;
-      const wName=g.winner==='A'?g.playerA:g.playerB;
-      const lName=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
-      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
-      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+  bld.sets.forEach((set)=>{
+    set.games.forEach((g)=>{
+      _applyTeamGameToHistory(g,date,g.map,g._id,bld.teamA||'',bld.teamB||'',_modeLabel);
     });
   });
   if(mode==='mini'){
@@ -514,13 +555,19 @@ function saveMatch(mode){
     const univW={},univL={};
     bld.sets.forEach(set=>{
       set.games.forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-        const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-        if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-        if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        const aList=_normNames(g.playerA); const bList=_normNames(g.playerB);
+        const size=Math.max(aList.length||0,bList.length||0,1);
+        for(let pi=0; pi<size; pi++){
+          if(!g.winner) continue;
+          const a=aList[pi]||aList[0]||''; const b=bList[pi]||bList[0]||'';
+          if(!a||!b) continue;
+          const wName=g.winner==='A'?a:b;
+          const lName=g.winner==='A'?b:a;
+          const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
+          const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
+          if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
+          if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        }
       });
     });
     ckM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
@@ -535,13 +582,19 @@ function saveMatch(mode){
     const univW={},univL={};
     bld.sets.forEach(set=>{
       set.games.forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-        const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-        if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-        if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        const aList=_normNames(g.playerA); const bList=_normNames(g.playerB);
+        const size=Math.max(aList.length||0,bList.length||0,1);
+        for(let pi=0; pi<size; pi++){
+          if(!g.winner) continue;
+          const a=aList[pi]||aList[0]||''; const b=bList[pi]||bList[0]||'';
+          if(!a||!b) continue;
+          const wName=g.winner==='A'?a:b;
+          const lName=g.winner==='A'?b:a;
+          const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
+          const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
+          if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
+          if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        }
       });
     });
     proM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
