@@ -8,49 +8,7 @@ function rRoulette(C, T) {
   const _capR = Math.round(_dome * 0.076);
   window._GC_DOME = _dome;
   window._GC_CAP_R = _capR;
-
-  // [Fix-4] players 비어있으면 구슬뽑기 탭 진입 시 경고 배너 + 재시도 버튼
-  const _playersEmpty = (typeof players === 'undefined' || !Array.isArray(players) || players.length === 0);
-  if (_playersEmpty && _gcTab === 'player') {
-    const _pad = Math.max(14, Math.round(_dome * 0.085));
-    C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
-    // 탭바 위에 경고 배너 삽입
-    const _tabBarEl = C.querySelector('.subtab-bar');
-    if (_tabBarEl) {
-      const _banner = document.createElement('div');
-      _banner.id = 'gc-players-banner';
-      _banner.style.cssText = 'background:#FFF7ED;border:2px solid #FED7AA;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px';
-      _banner.innerHTML = '<div style="font-size:14px;font-weight:800;color:#C2410C">⚠️ 스트리머 데이터 로드 실패</div>'
-        + '<div style="font-size:12px;color:#92400E;line-height:1.6">구슬뽑기를 사용하려면 스트리머 목록이 필요합니다.<br>데이터를 불러오지 못했거나 아직 로딩 중입니다.</div>'
-        + '<button onclick="location.reload()" style="align-self:flex-start;padding:7px 16px;border-radius:8px;border:none;background:#EA580C;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🔄 페이지 새로고침</button>';
-      C.insertBefore(_banner, C.firstChild);
-    }
-    // textarea 값 주입
-    (function _injectTextareaValues() {
-      var _gcInp = document.getElementById('gc-items-input');
-      if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
-      var _ldN = document.getElementById('ld-names-input');
-      if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
-      var _ldI = document.getElementById('ld-items-input');
-      if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
-    })();
-    if (_gcTab === 'ladder') { setTimeout(_ldInit, 60); }
-    else if (_gcTab === 'duck') { setTimeout(_drInit, 60); }
-    else if (_gcTab === 'wheel') { setTimeout(_whInit, 60); }
-    else { setTimeout(_gcSetup, 60); }
-    return;
-  }
-
   C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
-  // [Fix-2] localStorage 값을 innerHTML 삽입 대신 .value로 안전하게 세팅 (XSS/DOM 깨짐 방지)
-  (function _injectTextareaValues() {
-    var _gcInp = document.getElementById('gc-items-input');
-    if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
-    var _ldN = document.getElementById('ld-names-input');
-    if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
-    var _ldI = document.getElementById('ld-items-input');
-    if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
-  })();
   if (_gcTab === 'ladder') {
     setTimeout(_ldInit, 60);
   } else if (_gcTab === 'duck') {
@@ -123,13 +81,20 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const fsLg = Math.max(16, Math.round(dome * 0.095));
   const pad  = Math.max(14, Math.round(dome * 0.085));
 
-  // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일
-  const _tabBar = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-    <button class="pill${_gcTab==='player'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
-    <button class="pill${_gcTab==='map'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
-    <button class="pill${_gcTab==='ladder'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
-    <button class="pill${_gcTab==='duck'?' on':''}"   style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('duck')">🐥 경주</button>
-    <button class="pill${_gcTab==='wheel'?' on':''}"  style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+  // 탭 버튼 스타일 헬퍼 (TDZ 방지: isDuck 블록보다 먼저 선언)
+  const _tbP = Math.round(pad * 0.65);
+  const _tbF = Math.max(11, fs - 1);
+  const tbStyle = (active, isSpecial) => active
+    ? `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:800;border:none;border-radius:10px;background:${isSpecial?'linear-gradient(135deg,#0ea5e9,#38bdf8)':'linear-gradient(135deg,#FF4B6E,#FF89AB)'};color:#fff;cursor:pointer;transition:.15s;box-shadow:0 2px 8px ${isSpecial?'rgba(14,165,233,.35)':'rgba(255,75,110,.35)'};text-align:center;line-height:1.3;min-width:0`
+    : `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:700;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;text-align:center;line-height:1.3;min-width:0`;
+
+  // 공통 탭바 HTML
+  const _tabBar = `<div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
+    <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(_gcTab==='wheel',true)}">🎡 휠</button>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃
@@ -181,13 +146,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     : `display:flex;flex-direction:column;align-items:center`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
+  // 탭 버튼 스타일 헬퍼 (상단에서 이미 선언됨 - 중복 선언 제거)
 
   // 사다리: 항상 표시할 결과 항목 블록 (접기 영역 밖)
   const ldItemsAlways = isLadder ? `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">결과 항목 (쉼표 구분, 이름 수와 동일하게)</div>
       <textarea id="ld-items-input" rows="2" oninput="_ldSaveItems(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldItemsText}</textarea>
       <button onclick="_ldRebuild()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid #a78bfa;background:#f5f3ff;color:#7c3aed;cursor:pointer;font-weight:600">🎲 사다리 다시 만들기</button>
     </div>
     <div id="ld-hist-box"></div>
@@ -198,13 +164,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
       <textarea id="ld-names-input" rows="2" oninput="_ldSaveNames(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldNamesText}</textarea>
     </div>
   ` : `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
       <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${savedText}</textarea>
       <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
     </div>
     ${(!isPlayer && mapBadges) ? `
@@ -283,12 +249,12 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   `;
 
   return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  <div class="subtab-bar"><!-- [Fix-3] 인라인 style 제거, CSS 클래스 사용 -->
-    <button class="subtab-btn${_gcTab==='player'?' is-active':''}" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
-    <button class="subtab-btn${_gcTab==='map'?' is-active':''}"    onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
-    <button class="subtab-btn${_gcTab==='ladder'?' is-active':''}" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
-    <button class="subtab-btn is-special${_gcTab==='duck'?' is-active':''}" onclick="_gcSwitchTab('duck')">🐥 경주</button>
-    <button class="subtab-btn is-special${_gcTab==='wheel'?' is-active':''}" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+  <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
+    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
+    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
+    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
+    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
+    <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(false,true)}">🎡 휠</button>
   </div>
   <div style="${innerLayout}">
     <div style="${inputColStyle}">

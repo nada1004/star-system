@@ -365,7 +365,7 @@ function indRecordsHTML(){
       const p1photo=getPlayerPhotoHTML(s.p1,'22px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
       const p2photo=getPlayerPhotoHTML(s.p2,'22px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
       h+=`<tr>
-        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px;vertical-align:middle">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</td>
+        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${escJS(s.p1)}')">${s.p1}</span></span></td>
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${escJS(s.p2)}')">${s.p2}</span></span></td>
@@ -995,7 +995,7 @@ function gjRecordsHTML(proOnly){
       const p1photo=getPlayerPhotoHTML(s.p1,'22px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
       const p2photo=getPlayerPhotoHTML(s.p2,'22px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
       h+=`<tr>
-        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px;vertical-align:middle">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</td>
+        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기</td>
         <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
         <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span></span></td>
