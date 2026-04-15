@@ -600,6 +600,37 @@ _proPasteResults      프로리그 파싱 결과
 
 ---
 
+### 2026-04-15 — 설정탭 테마 메뉴 / 프로리그 자동인식 개선 / 엘보드 관리자 전용
+
+#### 1. 설정탭 카테고리 → 2×2 테마 카드 메뉴 (settings.js)
+- **변경**: 기존 탭 pill 스타일 → 2×2 그리드 카드 스타일로 교체
+- **카드 구성**: 아이콘 + 카테고리명 + 설명 텍스트 (예: "공지/티어/시즌/경기 운영")
+- **활성 상태**: 선택된 카드에 파란 테두리 + 파란 배경 강조
+- **바로가기 줄**: 카드 아래 구분선 후 동일하게 유지
+
+#### 2. 프로리그 자동인식 — 여러 경기 별도 레코드로 저장 (search.js)
+- **변경**: `===경기구분===` 구분선이 세트 번호 증가 대신 새 **경기 그룹** 시작으로 동작
+- `proPreview()`: `/경기\s*구분/` 패턴 감지 시 `currentMatch++`, `currentSet` 리셋
+- 각 결과 객체에 `matchGroup` 필드 추가
+- 경기 그룹별 날짜: 블록 내 `일자: YYYY-MM-DD` 줄이 있으면 해당 그룹 날짜로 저장 (`window._proMatchDates[mg]`)
+- `proApply()`: matchGroup별로 반복 → **각 그룹을 별도 proM 레코드로 저장**
+- 저장 토스트: 여러 경기일 때 "N경기 (M게임) 저장 완료" 표시
+
+#### 3. 프로리그 자동인식 — 포맷(2:2/3:3/4:4) proM에 저장 (search.js, history.js)
+- `proApply()`: `window._proFormat > 0` 이면 proM 레코드에 `fmt: N` 필드 저장
+- `renderProPreview()`: 멀티매치 헤더 및 결과 요약에 포맷 배지 표시
+- `recSummaryListHTML()` (history.js): proM 목록에서 `m.fmt > 0` 이면 날짜 옆에 `N:N` 보라색 배지 표시
+
+#### 4. 프로리그 자동인식 — renderProPreview matchGroup별 분리 렌더링 (search.js)
+- 단일 경기: 기존과 동일한 단일 테이블
+- 여러 경기: 각 경기 그룹을 보라색 테두리 카드로 래핑, 헤더에 "경기 N" + 날짜 + 포맷 배지
+
+#### 5. 엘보드(최근전적) 탭 — 관리자 전용 접근 제한 (elboard.js)
+- `rElboard()` 시작 부분에 `isLoggedIn` 체크 추가
+- 비로그인 시 설정 탭과 동일한 잠금 UI 표시
+
+---
+
 ### 향후 작업 시 참고사항
 
 - 파싱 관련 수정 → `search.js` 의 `parsePasteLine`, `pastePreview`, `parseSetSeparator`
