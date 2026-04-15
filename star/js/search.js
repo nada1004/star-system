@@ -129,7 +129,16 @@ function parseFormatC(line, prevScore) {
     // 판단 기준: alias에 있거나, maps[]에 있거나, 선수 이름이 아닌 한글 단어(맵명 추정)
     const inAlias = !!alias[tok0];
     const inMaps  = typeof maps !== 'undefined' && maps.includes(tok0);
-    const isPlayerName = typeof players !== 'undefined' && players.some(p => p.name === tok0);
+    // tok0이 "선수 이름"인지 판별:
+    // - 기존: players.name 정확 일치만 확인 → 메모 별명(예: 샤이니)이면 선수로 인식 못해서
+    //        tok0을 맵으로 오판(C-1)하는 문제 발생
+    // - 개선: findPlayerByPartialName(메모/별명 포함) 결과까지 반영
+    const _fp = (typeof findPlayerByPartialName === 'function')
+      ? findPlayerByPartialName(tok0)
+      : { player: null, candidates: [] };
+    const isPlayerName = (typeof players !== 'undefined' && players.some(p => p.name === tok0))
+      || !!_fp.player
+      || ((_fp.candidates||[]).length > 0);
     // 맵 판별:
     //  1) alias에 있거나 maps[]에 있으면 → 맵
     //  2) 선수 이름에 해당하면 → 선수(C-2 시도)
@@ -304,7 +313,7 @@ function findPlayerByPartialName(namePart) {
   // 2.8) 종족 접미사(T/Z/P, 대소문자 무관) 제거 후 재시도
   // "샤이니T" → "샤이니" 로 재검색. parsePartWithRace가 종족을 못 걸러낸 경우 또는
   // 사용자가 종족 포함 이름을 그대로 입력했을 때도 메모/이름 매칭이 되도록 보장
-  const _raceStripped = trimmed.replace(/\s*[TZPtzp]$/i, '').trim();
+  const _raceStripped = trimmed.replace(/\s*[TZPNtzpn]$/i, '').trim();
   if (_raceStripped && _raceStripped !== trimmed) {
     const _rsLow = _nfc(_raceStripped).toLowerCase();
     const _rsNS  = _nfc(_raceStripped).replace(/\s+/g,'').toLowerCase();
@@ -454,7 +463,7 @@ function parseFormatD_blocks(raw) {
 
   // 여러 줄에 걸쳐 이름+종족 수집 헬퍼
   // 종족 단독줄: T, Z, P, T선픽, P선픽, Z선픽, T후픽, 선픽, 후픽 등
-  const isRaceLine = l => /^([TZP](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
+  const isRaceLine = l => /^([TZPN](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
   const isResultLine = l => l==='승리!'||l==='패배!';
   const isVsLine = l => /^VS$/i.test(l);
   const isMapLine = l => l.startsWith('맵:');
@@ -478,7 +487,7 @@ function parseFormatD_blocks(raw) {
       nextIdx++;
     }
     // 이름에서 종족+픽옵션 제거하여 순수 이름 추출
-    const cleaned = name.replace(/[TZP](선픽|후픽)?$/, '').replace(/(선픽|후픽)$/, '').trim();
+    const cleaned = name.replace(/[TZPN](선픽|후픽)?$/, '').replace(/(선픽|후픽)$/, '').trim();
     return { name: cleaned, consumed: nextIdx - startIdx };
   }
 
@@ -761,7 +770,7 @@ function parsePasteLine(line) {
       if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
       const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
       if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
-      const simpleM = s.match(/^(.+?)([TZP])$/);
+      const simpleM = s.match(/^(.+?)([TZPN])$/);
       if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
       return { name: s.trim(), race: '' };
     };
@@ -809,11 +818,11 @@ function parsePasteLine(line) {
       }
       const eMap = mapAlias ? resolveMapName(mapAlias) : '-';
       const splitNR_E = (s) => {
-        const prefixM = s.match(/^([TZP])(.+)$/);
+        const prefixM = s.match(/^([TZPN])(.+)$/);
         if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
-        const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
+        const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
         if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
-        const simpleM = s.match(/^(.+?)([TZP])$/);
+        const simpleM = s.match(/^(.+?)([TZPN])$/);
         if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
         return { name: s.trim(), race: '' };
       };
@@ -859,9 +868,9 @@ function parsePasteLine(line) {
         const lWin = WIN_F.includes(lMark), rWin = WIN_F.includes(rMark);
         if (lWin !== rWin) {
           const splitNR_F = (s) => {
-            const pm = s.match(/^([TZP])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
-            const bm = s.match(/^(.+?)\[(\d*)([TZP])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
-            const sm = s.match(/^(.+?)([TZP])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
+            const pm = s.match(/^([TZPN])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
+            const bm = s.match(/^(.+?)\[(\d*)([TZPN])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
+            const sm = s.match(/^(.+?)([TZPN])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
             return { name: s.trim(), race: '' };
           };
           const left = splitNR_F(lp), right = splitNR_F(rp);
@@ -954,10 +963,10 @@ function parsePasteLine(line) {
   const parsePartWithRace = (s) => {
     s = s.trim();
     // 이름 종족(선택) (승/패) : "장윤철T(패)", "장윤철 T (패)", "장윤철(패)"
-    const m = s.match(/^(.+?)\s*([TZP])?\s*\((승|패)\)$/);
+    const m = s.match(/^(.+?)\s*([TZPN])?\s*\((승|패)\)$/);
     if (m) return { name: m[1].trim(), race: m[2] || '', result: m[3] };
     // (승/패) 이름 종족(선택) 형식: "(패) 이재호T", "(승)이재호"
-    const m2 = s.match(/^\((승|패)\)\s*(.+?)\s*([TZP])?$/);
+    const m2 = s.match(/^\((승|패)\)\s*(.+?)\s*([TZPN])?$/);
     if (m2) return { name: m2[2].trim(), race: m2[3] || '', result: m2[1] };
     return null;
   };
@@ -975,7 +984,7 @@ function parsePasteLine(line) {
   // 예: "[에티] 장윤철(패) (승)이재호" (vs 생략)
   {
     const parts = [];
-    const pat = /(.+?)\s*([TZP])?\s*\((승|패)\)|(\((?:승|패)\))\s*(.+?)\s*([TZP])?(?=\s|$)/g;
+    const pat = /(.+?)\s*([TZPN])?\s*\((승|패)\)|(\((?:승|패)\))\s*(.+?)\s*([TZPN])?(?=\s|$)/g;
     let m3;
     while ((m3 = pat.exec(line)) !== null) {
       if (m3[1]) parts.push({ name: m3[1].trim(), result: m3[3] });
@@ -3590,4 +3599,3 @@ function proApply() {
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(), 2800);
 }
-
