@@ -2075,20 +2075,46 @@ function pasteApply() {
   if (window._grpPasteMode) {
     const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
     if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
-    const ok = window._grpPasteApplyLogic(savable);
-    if (ok) {
+
+    const _closeGrpPaste = () => {
       window._grpPasteMode = false;
       cm('pasteModal');
       window._pasteResults = null;
       window._pasteErrors  = null;
-      // 저장 형식 원복
       const compWrap = document.getElementById('paste-comp-wrap');
       if(compWrap) { compWrap.style.display='none'; compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">'; }
       const hintEl = document.getElementById('paste-mode-hint');
       if(hintEl) hintEl.textContent='';
       const applyBtn = document.getElementById('paste-apply-btn');
       if(applyBtn) applyBtn.textContent='✅ 저장하기';
+    };
+
+    const _getGrpFn = () => {
+      if (typeof window._grpPasteApplyLogic === 'function') return window._grpPasteApplyLogic;
+      if (typeof _grpPasteApplyLogic === 'function') return _grpPasteApplyLogic;
+      return null;
+    };
+
+    const fn = _getGrpFn();
+    if (!fn) {
+      if (typeof _loadScriptOnce === 'function') {
+        _loadScriptOnce('js/tier-tour.js', ok => {
+          const fn2 = _getGrpFn();
+          if (!ok || !fn2) {
+            alert('일괄 입력 저장 모듈이 로드되지 않았습니다.\n티어대회 탭을 한 번 열고 다시 시도해주세요.');
+            return;
+          }
+          const ok2 = fn2(savable);
+          if (ok2) _closeGrpPaste();
+        });
+        return;
+      }
+      alert('일괄 입력 저장 모듈이 로드되지 않았습니다.\n티어대회 탭을 한 번 열고 다시 시도해주세요.');
+      return;
     }
+
+    const ok = fn(savable);
+    if (ok) _closeGrpPaste();
     return;
   }
 
