@@ -27,6 +27,12 @@ function _cfgGo(secId){
   if(el.tagName==='DETAILS') el.open=true;
   el.scrollIntoView({behavior:'smooth',block:'start'});
   try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
+  el.style.transition='background-color 0.3s ease';
+  el.style.backgroundColor='var(--blue-ll)';
+  setTimeout(() => {
+    el.style.backgroundColor='';
+    setTimeout(() => el.style.transition='', 300);
+  }, 1000);
 }
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
