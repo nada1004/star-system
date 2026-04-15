@@ -20,12 +20,6 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
-// 이미지탭 레이아웃 및 자동 전환 설정
-const _b2LayoutSaved = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
-window._b2AutoCycle = _b2LayoutSaved.autoCycle !== false;
-window._b2PlayersRows = _b2LayoutSaved.playersRows || 2;
-let _b2CycleTimer = null;
-
 // 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
@@ -309,6 +303,7 @@ let b2BgAlpha     = J('su_b2ba')  ?? 9;
 let b2BgImgAlpha      = J('su_b2bia')  ?? 12; // 배경 이미지 진하기 기본값 (0~100, %)
 let b2FreeBgAlpha     = J('su_b2fba')  ?? 25; // 무소속 배경 진하기 (기본 25%)
 let b2FreeTierBgAlpha = J('su_b2ftba') ?? 15; // 무소속 티어 우측 배경 진하기 (기본 15%)
+let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 
 function _b2ToggleCard(btn, univName) {
@@ -381,10 +376,8 @@ function rBoard2(C, T) {
   const profileTabLabel = '👤 이미지별';
   // 이미지별 필터를 상단 탭에 포함
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const hiddenUnivsCfg = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ) && !hiddenUnivsCfg.has(p.univ));
-  const hasSolo = visPlayers.some(p => !p.univ || p.univ === '무소속');
-  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속' && !hiddenUnivsCfg.has(u)))];
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
   // univCfg 순서로 정렬
   if (typeof univCfg !== 'undefined') {
     playerUnivList.sort((a, b) => {
@@ -400,7 +393,6 @@ function rBoard2(C, T) {
     <div style="position:relative">
       <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
-        ${hasSolo ? `<option value="무소속" ${_b2PlayersUnivFilter === '무소속' ? 'selected' : ''}>🚶 무소속</option>` : ``}
         ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
       </select>
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -437,11 +429,6 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
   } else if (_b2View === 'players') {
     sub.innerHTML = _b2PlayersView();
-    setTimeout(()=>{
-      try{
-        if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
-      }catch(e){}
-    },0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -479,7 +466,6 @@ function _b2UnivView() {
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
-
   return h;
 }
 
@@ -708,8 +694,6 @@ function _b2Chip(p, accentCol) {
 function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
   const s = size || 28;
-  const shape = profileShape || 'circle';
-  const radius = shape === 'square' ? '12px' : '50%'; // 현황판은 조금 더 둥근 네모
   const badgeSize = Math.round(s * 0.38);
   const _rawIcon = getStatusIcon(p.name);
   const statusHtml = getStatusIconHTML(p.name);
@@ -727,18 +711,16 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:${radius};object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
       ${badge}
     </span>`;
   }
-  return `<span style="width:${s}px;height:${s}px;border-radius:${radius};background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
 }
 
 function _b2AvatarFallback(letter, col, size) {
   const s = size || 28;
-  const shape = profileShape || 'circle';
-  const radius = shape === 'square' ? '12px' : '50%';
-  return `<span style="width:${s}px;height:${s}px;border-radius:${radius};background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
 
@@ -1744,56 +1726,22 @@ if (savedSelectedPlayerName) {
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const hiddenUnivsCfg = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => u.name)) : new Set();
-  const hiddenUnivsLS = J('su_hidden_univs') || [];
-  const hiddenUnivSet = new Set([...hiddenUnivsCfg, ...hiddenUnivsLS]);
+  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
   
-  // 기본 필터링: 숨김, 은퇴, 현황판 숨김, 해체된 대학 제외
-  let visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ) && !hiddenUnivSet.has(p.univ));
-  
-  // 숨김 대학이 현재 선택된 경우 자동으로 전체로 복구
-  if (_b2PlayersUnivFilter !== '전체' && _b2PlayersUnivFilter !== '무소속' && hiddenUnivSet.has(_b2PlayersUnivFilter)) {
-    _b2PlayersUnivFilter = '전체';
-  }
-  
-  // 전체대학 선택 시: 구현황판에서 숨긴 대학도 제외 (사용자 요청)
-  if (_b2PlayersUnivFilter === '전체') {
-    visPlayers = visPlayers.filter(p => !hiddenUnivSet.has(p.univ));
-  }
-
-  // 대학 필터링 (무소속 포함)
+  // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
     ? visPlayers 
-    : visPlayers.filter(p => (p.univ || '무소속') === _b2PlayersUnivFilter);
+    : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
   
   // 종족 필터링
   const filteredPlayers = _b2PlayersFilter === 'all'
     ? univFilteredPlayers
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
 
-  // 티어 필터링 (전체인 경우 '?' 등 제외하고 유효 티어만)
-  const tierFilteredPlayers = filteredPlayers.filter(p => {
-    if (_b2PlayersTierFilter !== '전체') return p.tier === _b2PlayersTierFilter;
-    return p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인';
-  });
-
-  // 대학 목록 (필터용) - 숨겨진 대학 제외, 무소속 포함
-  const univList = [...new Set(visPlayers.map(p => p.univ || '무소속'))].filter(u => !hiddenUnivSet.has(u));
-  
-  // univCfg 순서로 정렬 (무소속은 맨 뒤로)
-  univList.sort((a, b) => {
-    if (a === '무소속') return 1;
-    if (b === '무소속') return -1;
-    if (typeof univCfg !== 'undefined') {
-      const idxA = univCfg.findIndex(u => u.name === a);
-      const idxB = univCfg.findIndex(u => u.name === b);
-      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
-    }
-    return a.localeCompare(b);
-  });
+  // 티어 미정(미확인) 필터링
+  const tierFilteredPlayers = filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인');
 
   if (!tierFilteredPlayers.length) {
-    // ... (표시할 선수 없음 UI)
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
       <div style="font-size:48px;margin-bottom:12px">👤</div>
       <div style="font-weight:700">표시할 선수가 없습니다</div>
@@ -1804,15 +1752,26 @@ function _b2PlayersView() {
   if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
   }
-  if (!_b2SelectedPlayer) {
-    _b2SelectedPlayer = tierFilteredPlayers[0];
+
+  // 대학 목록 (필터용) - dissolved 대학 제외
+  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  // univCfg 순서로 정렬
+  if (typeof univCfg !== 'undefined') {
+    univList.sort((a, b) => {
+      const idxA = univCfg.findIndex(u => u.name === a);
+      const idxB = univCfg.findIndex(u => u.name === b);
+      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+    });
+  } else {
+    univList.sort();
   }
   
-  // 정렬: 구현황판(현황판)에서 지정한 대학별 순서(boardPlayerOrder)가 있으면 우선 적용
-  const _b2FallbackSort = (a, b) => {
+  // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
+  const roleOrder = ['이사장', '총장', '교수', '코치'];
+  const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
+
+  tierFilteredPlayers.sort((a, b) => {
     // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
-    const roleOrder = ['이사장', '총장', '교수', '코치'];
-    const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
     const aRoleIdx = roleOrder.indexOf(a.role || '');
     const bRoleIdx = roleOrder.indexOf(b.role || '');
     const aHasRole = aRoleIdx >= 0;
@@ -1822,34 +1781,21 @@ function _b2PlayersView() {
     if (!aHasRole && bHasRole) return 1;
     if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
 
+    // 직급이 같거나 없는 경우 티어 순서 정렬 (숫자 추출)
     const aTier = a.tier || '?';
     const bTier = b.tier || '?';
     const aTierIdx = tierOrder.indexOf(aTier);
     const bTierIdx = tierOrder.indexOf(bTier);
+
     if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
 
+    // tierOrder에 없는 경우 숫자로 비교
     const aTierNum = parseInt(aTier) || 999;
     const bTierNum = parseInt(bTier) || 999;
     if (aTierNum !== bTierNum) return aTierNum - bTierNum;
 
+    // 티어도 같은 경우 이름 순
     return (a.name || '').localeCompare(b.name || '');
-  };
-
-  const _b2OrderKey = _b2PlayersUnivFilter === '전체' ? '' : _b2PlayersUnivFilter;
-  const _b2OrderArr = (_b2OrderKey && typeof boardPlayerOrder !== 'undefined' && boardPlayerOrder && Array.isArray(boardPlayerOrder[_b2OrderKey]))
-    ? boardPlayerOrder[_b2OrderKey]
-    : [];
-
-  tierFilteredPlayers.sort((a, b) => {
-    if (_b2OrderArr.length) {
-      const ai = _b2OrderArr.indexOf(a.name);
-      const bi = _b2OrderArr.indexOf(b.name);
-      if (ai >= 0 && bi >= 0) return ai - bi;
-      if (ai >= 0) return -1;
-      if (bi >= 0) return 1;
-    }
-    return _b2FallbackSort(a, b);
-    // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
   });
 
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
@@ -2094,7 +2040,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid {
         display: grid;
-        grid-template-columns: repeat(${window._b2PlayersRows || 2}, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 14px;
       }
       @media (max-width: 1024px) {
@@ -2174,7 +2120,7 @@ function _b2PlayersView() {
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(${window._b2PlayersRows || 2}, 1fr);
+          grid-template-columns: repeat(2, 1fr);
           max-height: none;
           overflow-y: visible;
         }
@@ -2232,7 +2178,7 @@ function _b2PlayersView() {
           order: 1;
         }
         .b2-players-grid {
-          grid-template-columns: repeat(${window._b2PlayersRows || 2}, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           max-height: none;
           overflow-y: visible;
         }
@@ -2368,31 +2314,6 @@ function _b2PlayersView() {
   `;
 
   h += `</div>`;
-
-  // 이미지탭 렌더링 후 자동 전환 타이머 설정 (전체대학 선택 시)
-  if (window._b2AutoCycle && _b2PlayersUnivFilter === '전체') {
-    if (window._b2CycleTimer) clearInterval(window._b2CycleTimer);
-    window._b2CycleTimer = setInterval(() => {
-      // 다른 탭으로 이동했거나 모달이 열려있으면 중단
-      if (curTab !== 'mini' && curTab !== 'univm' && curTab !== 'univck') {
-        clearInterval(window._b2CycleTimer);
-        window._b2CycleTimer = null;
-        return;
-      }
-      if (document.querySelector('.modal.on')) return;
-
-      const idx = tierFilteredPlayers.findIndex(p => p.name === _b2SelectedPlayer?.name);
-      if (idx >= 0 && tierFilteredPlayers.length > 0) {
-        const nextIdx = (idx + 1) % tierFilteredPlayers.length;
-        _b2UpdateMainDisplay(tierFilteredPlayers[nextIdx].name);
-      }
-    }, 5000);
-  } else {
-    if (window._b2CycleTimer) {
-      clearInterval(window._b2CycleTimer);
-      window._b2CycleTimer = null;
-    }
-  }
 
   return h;
 }

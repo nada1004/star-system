@@ -20,9 +20,9 @@ function _cfgApplyCat(cat){
   window._cfgCat=cat;
   const catSecs={
     '기본':['notice','univ','maps','mAlias','si','tier','acct','season'],
-    '데이터':['sync'],
-    '외형':['b2layout','imgsettings','imgmodalsettings','pd','oldbright'],
-    '시스템':['fab'],
+    '데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
+    '외형':['b2layout','imgsettings','imgmodalsettings','pd','oldbright','boardbg'],
+    '시스템':['fab','storage'],
   };
   const show=catSecs[cat]||null;
   document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
@@ -267,22 +267,14 @@ ${_cfgD('notice','📢 공지 관리')}
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </details>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">💾 로컬 저장소 사용량</h4>
-      <button id="cfg-storage-toggle2" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-storage-wrap2');const btn=document.getElementById('cfg-storage-toggle2');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';renderStorageInfo();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-storage-wrap2" style="display:none">
+  ${_cfgD('storage','💾 로컬 저장소 사용량')}
+    <div id="cfg-storage-wrap2">
       <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
-      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-fb-body" style="display:none">
+  </details>
+  ${_cfgD('firebase','☁️ Firebase 실시간 동기화')}
+    <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -313,7 +305,7 @@ ${_cfgD('notice','📢 공지 관리')}
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
     </div>
-  </div>
+  </details>
   ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
@@ -333,12 +325,7 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
   </details>
-    <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📅 날짜 일괄 변경</h4>
-      <button id="cfg-bulk-date-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-date-body');const btn=document.getElementById('cfg-bulk-date-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-date-body" style="display:none">
+    ${_cfgD('bulkdate','📅 날짜 일괄 변경')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
@@ -357,14 +344,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
       <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗺️ 맵 이름 일괄 교체</h4>
-      <button id="cfg-bulk-map-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-map-body');const btn=document.getElementById('cfg-bulk-map-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-map-body" style="display:none">
+  </details>
+  ${_cfgD('bulkmap','🗺️ 맵 이름 일괄 교체')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
@@ -375,14 +356,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
       <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎖️ 선수 일괄 티어 변경</h4>
-      <button id="cfg-bulk-tier-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-tier-body');const btn=document.getElementById('cfg-bulk-tier-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-tier-body" style="display:none">
+  </details>
+  ${_cfgD('bulktier','🎖️ 선수 일괄 티어 변경')}
     <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
@@ -408,14 +383,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
       <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗑️ 날짜 범위 일괄 삭제</h4>
-      <button id="cfg-bulk-del-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-del-body');const btn=document.getElementById('cfg-bulk-del-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-del-body" style="display:none">
+  </details>
+  ${_cfgD('bulkdel','🗑️ 날짜 범위 일괄 삭제')}
     <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
@@ -434,14 +403,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
       <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🔄 세트제 → 게임수 합산 일괄 변환</h4>
-      <button id="cfg-bulk-conv-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-conv-body');const btn=document.getElementById('cfg-bulk-conv-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-conv-body" style="display:none">
+  </details>
+  ${_cfgD('bulkconv','🔄 세트제 → 게임수 합산 일괄 변환')}
     <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
@@ -455,14 +418,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
       <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지별 설정</h4>
-      <button id="cfg-board-bg-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-bg-body');const btn=document.getElementById('cfg-board-bg-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-board-bg-body" style="display:none">
+  </details>
+  ${_cfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
     <div style="margin-bottom:14px;padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
       <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px">📋 일괄 설정 (전체 대학)</div>
@@ -496,8 +453,7 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
     </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
-    </div>
-  </div>
+  </details>
   ${_cfgD('sync','🔄 데이터 동기화')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 기록을 각 탭 기록 및 스트리머 최근 경기에 반영합니다.</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -690,12 +646,7 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
-  <div class="ssec" data-cfg-sec="oldbright">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎨 구현황판 카드 배경/라벨 밝기 조절</h4>
-      <button id="cfg-old-bright-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-old-bright-body');const btn=document.getElementById('cfg-old-bright-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-old-bright-body" style="display:none">
+  ${_cfgD('oldbright','🎨 구현황판 카드 배경/라벨 밝기 조절')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
@@ -710,8 +661,7 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
       <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>
     </div>
-    </div>
-  </div>
+  </details>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링

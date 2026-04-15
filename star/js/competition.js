@@ -78,7 +78,7 @@ function rComp(C,T){
     ];
     if(compSub==='tiertour'||compSub==='input') compSub='league';
   }
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${compSub===o.id?'on':''}" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${compSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
 
   if(!tn && compSub!=='grpedit'){
     h+=`<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
@@ -1322,14 +1322,13 @@ function grpSaveMatch(){
   m.sa=sa;m.sb=sb;
   const _modeLabel=tn.type==='tier'?'티어대회':'조별리그';
   // 선수 개인 전적 자동 반영 (경기 시점 대학 저장)
-  (m.sets||[]).forEach((set, setIdx)=>{
-    (set.games||[]).forEach((g, gameIdx)=>{
+  (m.sets||[]).forEach(set=>{
+    (set.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      const gameMatchId = `${matchId}_s${setIdx}_g${gameIdx}`;
-      applyGameResult(wn,ln,m.d,g.map||'',gameMatchId,univW,univL,_modeLabel);
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_modeLabel);
       // 선수 history 업데이트
       updateHistoryFromGame(g, m.d);
     });
@@ -1565,14 +1564,13 @@ function bktSaveMatch(){
     if(w)br.winners[`${rnd}-${mi}`]=w;
   }
   const _bktModeLabel=tn&&tn.type==='tier'?'티어대회':'대회';
-  (m.sets||[]).forEach((set, setIdx)=>{
-    (set.games||[]).forEach((g, gameIdx)=>{
+  (m.sets||[]).forEach(set=>{
+    (set.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
       const univW=g.winner==='A'?(m.a||''):(m.b||'');
       const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      const gameMatchId = `${matchId}_s${setIdx}_g${gameIdx}`;
-      applyGameResult(wn,ln,m.d,g.map||'',gameMatchId,univW,univL,_bktModeLabel);
+      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_bktModeLabel);
     });
   });
   // 티어대회 브라켓: ttM에도 동기화

@@ -37,6 +37,38 @@ function recClearSearch(mode) {
    붙여넣기 자동 입력 기능
 ══════════════════════════════════════ */
 
+// 맵 약자 → 전체 이름 매핑 (시스템 maps 배열에도 없으면 그대로 사용)
+const PASTE_MAP_ALIAS_DEFAULT = {
+  // ── 전체 이름 ──
+  '투혼':'투혼','라데온':'라데온','라데리안':'라데온','녹아웃':'녹아웃','리트리트':'리트리트',
+  '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
+  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
+  '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
+  '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
+  // ── 약자 ──
+  '라데':'라데온','라':'라데온','라데리안':'라데온',
+  '녹아':'녹아웃','녹':'녹아웃',
+  '리트':'리트리트','리':'리트리트',
+  '폴':'폴리포이드','폴리':'폴리포이드','폴스':'폴리포이드',   // 폴스 추가
+  '플스':'플스타','플립':'플스타',                             // 플립 추가
+  '옥':'옥타곤','옥타':'옥타곤',                               // 옥타 추가
+  '에티':'에티튜드','에':'에티튜드',
+  '매':'매치포인트','매치':'매치포인트',
+  '도미':'도미네이터','도':'도미네이터',
+  '실':'실피드','실피':'실피드',
+  '블리':'블리츠','블':'블리츠',
+  '서':'서킷',
+  '투':'투혼',
+  '메트':'메트로폴리스','메':'메트로폴리스',
+  '개마':'신 개마고원','신개마':'신 개마고원','개':'신 개마고원',
+  '아이':'아이언포리스트','포리':'아이언포리스트','아이언':'아이언포리스트',
+  '파이':'파이썬','파':'파이썬',
+  '화':'화랑',
+  '지옥':'지옥섬','지':'지옥섬',
+  '네오':'네오리게이트','리게':'네오리게이트',
+};
+
 // 기본 약자 + 사용자 정의 약자를 합쳐 반환
 function getMapAlias() {
   const user = typeof userMapAlias !== 'undefined' ? userMapAlias : {};
@@ -423,13 +455,10 @@ function parseFormatD_blocks(raw) {
   // 여러 줄에 걸쳐 이름+종족 수집 헬퍼
   // 종족 단독줄: T, Z, P, T선픽, P선픽, Z선픽, T후픽, 선픽, 후픽 등
   const isRaceLine = l => /^([TZP](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
-  const isResultLine = l => {
-    const s = l.trim().toUpperCase();
-    return s==='승리!'||s==='패배!'||s==='WIN'||s==='LOSE';
-  };
+  const isResultLine = l => l==='승리!'||l==='패배!';
   const isVsLine = l => /^VS$/i.test(l);
-  const isMapLine = l => l.startsWith('맵:') || l.startsWith('📍');
-  const isGameHeader = l => /^\d+경기|경기\s*\d+/.test(l);
+  const isMapLine = l => l.startsWith('맵:');
+  const isGameHeader = l => /^\d+경기/.test(l);
   const isStatLine = l => l.includes('상대전적')||l.includes('경기일');
 
   // 전처리: 연속된 이름+종족줄을 합치는 로직
@@ -448,16 +477,8 @@ function parseFormatD_blocks(raw) {
       name += arr[nextIdx];
       nextIdx++;
     }
-    // 이름에서 티어, 종족, 픽옵션 제거하여 순수 이름 추출
-    // 지원: 3티어Z, P3티어, T선픽 등
-    const cleaned = name
-      .replace(/\d+티어[TZP]/g, '')
-      .replace(/[TZP]\d+티어/g, '')
-      .replace(/[TZP](선픽|후픽)?$/, '')
-      .replace(/(선픽|후픽)$/, '')
-      .replace(/^\d+티어/, '')
-      .replace(/\d+티어$/, '')
-      .trim();
+    // 이름에서 종족+픽옵션 제거하여 순수 이름 추출
+    const cleaned = name.replace(/[TZP](선픽|후픽)?$/, '').replace(/(선픽|후픽)$/, '').trim();
     return { name: cleaned, consumed: nextIdx - startIdx };
   }
 
@@ -466,25 +487,23 @@ function parseFormatD_blocks(raw) {
     const line = nonEmpty[ni];
 
     // ── 패턴 A: N경기로 시작하는 헤더 방식 ──
+    // 지원: 헤더→result1→name1→VS→name2→result2→맵
+    //       헤더→result1→·→result2→name1→VS→name2→맵 (이미지 형태)
     if(isGameHeader(line)){
       ni++;
 
       let result1=null, result2=null, name1='', name2='', mapName='-';
-      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result1=nonEmpty[ni].toUpperCase();ni++;}
-      // result1이 없어도 진행 (이름 뒤에 있을 수도 있음)
+      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result1=nonEmpty[ni];ni++;}
+      else{ni++;continue;}
 
       // · 구분자 스킵
       while(ni<nonEmpty.length && /^[·•·\-–—~]+$/.test(nonEmpty[ni])) ni++;
 
       // result2가 바로 이어서 나오는 경우 (헤더→result1→·→result2→이름)
-      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){
-        const r2 = nonEmpty[ni].toUpperCase();
-        if(!result1) result1 = r2; else result2 = r2;
-        ni++;
-      }
+      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2=nonEmpty[ni];ni++;}
 
       // name1
-      if(ni<nonEmpty.length && !isVsLine(nonEmpty[ni]) && !isMapLine(nonEmpty[ni]) && !isGameHeader(nonEmpty[ni]) && !isResultLine(nonEmpty[ni])){
+      if(ni<nonEmpty.length && !isVsLine(nonEmpty[ni]) && !isMapLine(nonEmpty[ni]) && !isGameHeader(nonEmpty[ni])){
         const r = collectName(nonEmpty, ni);
         name1 = r.name;
         ni += r.consumed;
@@ -500,18 +519,14 @@ function parseFormatD_blocks(raw) {
         ni += r.consumed;
       }
 
-      // result (이름 뒤에 나오는 경우)
-      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){
-        const res = nonEmpty[ni].toUpperCase();
-        if(!result1) result1 = res; else if(!result2) result2 = res;
-        ni++;
-      }
+      // result2 (이름 뒤에 나오는 경우)
+      if(!result2 && ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2=nonEmpty[ni];ni++;}
 
       // 맵 + 통계줄 스킵
       while(ni<nonEmpty.length){
         const ml=nonEmpty[ni];
         if(isMapLine(ml)){
-          const rawMap=ml.replace('맵:','').replace('📍','').trim();
+          const rawMap=ml.replace('맵:','').trim();
           const alias=getMapAlias();
           mapName=alias[rawMap]||rawMap;
           ni++;break;
@@ -519,33 +534,30 @@ function parseFormatD_blocks(raw) {
         if(isGameHeader(ml)||isResultLine(ml))break;
         ni++;
       }
-      // 통계줄 스킵
-      while(ni<nonEmpty.length && (/최근\s*\d+일|^\d+년|^\d+경기\s*[-—]|\d+\s*:\s*\d+/.test(nonEmpty[ni])||isStatLine(nonEmpty[ni])||nonEmpty[ni]==='✏️')){ni++;}
+      // 통계줄 스킵 (최근 N일, 25년 이후, N:N, 상대전적)
+      while(ni<nonEmpty.length && (/최근\s*\d+일|^\d+년|^\d+경기\s*[-—]|\d+\s*:\s*\d+/.test(nonEmpty[ni])||isStatLine(nonEmpty[ni]))){ni++;}
 
-      if(name1 && name2 && (result1 || result2)){
-        let winName='', loseName='';
-        const r1 = result1 || ''; const r2 = result2 || '';
-        const isW = s => s==='승리!' || s==='WIN';
-        const isL = s => s==='패배!' || s==='LOSE';
-
-        if(isW(r1)) { winName=name1; loseName=name2; }
-        else if(isL(r1)) { winName=name2; loseName=name1; }
-        else if(isW(r2)) { winName=name2; loseName=name1; }
-        else if(isL(r2)) { winName=name1; loseName=name2; }
-        
-        if(winName && loseName) results.push({winName, loseName, map:mapName});
+      if(name1&&name2&&result1&&result2){
+        let winName='',loseName='';
+        if(result1==='승리!'&&result2==='패배!'){winName=name1;loseName=name2;}
+        else if(result1==='패배!'&&result2==='승리!'){winName=name2;loseName=name1;}
+        // result2 early (result1·result2→name1→name2): result1=승리!=name1승, result2=패배!=name2패
+        else if(result2&&result1==='승리!'&&result2==='패배!'){winName=name1;loseName=name2;}
+        else if(result2&&result1==='패배!'&&result2==='승리!'){winName=name2;loseName=name1;}
+        if(winName&&loseName) results.push({winName,loseName,map:mapName});
       }
       continue;
     }
 
     // ── 패턴 B: 승리!/패배! → (·구분자) → 이름 → VS → 이름 → 승리!/패배! → 맵 ──
+    // 예: 승리!\n·\n패배!\n비재희\nZ\nVS\n엄보리\nP\n맵: 실피드\n최근 90일...\n6경기-2티어
     if(isResultLine(line)){
-      let result1=line.toUpperCase(); ni++;
+      let result1=line; ni++;
       // '·' 같은 구분자 스킵
       while(ni<nonEmpty.length && /^[·•·\-–—~]+$/.test(nonEmpty[ni])) ni++;
       // result2 (바로 이어서 나오는 승리!/패배!)
       let result2_early=null;
-      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2_early=nonEmpty[ni].toUpperCase();ni++;}
+      if(ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2_early=nonEmpty[ni];ni++;}
       // 이름1 수집
       let name1='', name2='', mapName='-', result2=result2_early;
       if(ni<nonEmpty.length && !isResultLine(nonEmpty[ni]) && !isVsLine(nonEmpty[ni]) && !isMapLine(nonEmpty[ni])){
@@ -558,34 +570,35 @@ function parseFormatD_blocks(raw) {
         const r=collectName(nonEmpty,ni); name2=r.name; ni+=r.consumed;
       }
       // result2 (이름 뒤에 나오는 경우)
-      if(!result2 && ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2=nonEmpty[ni].toUpperCase();ni++;}
+      if(!result2 && ni<nonEmpty.length && isResultLine(nonEmpty[ni])){result2=nonEmpty[ni];ni++;}
       // 맵
       while(ni<nonEmpty.length){
         const ml=nonEmpty[ni];
         if(isMapLine(ml)){
-          const rawMap=ml.replace('맵:','').replace('📍','').trim();
+          const rawMap=ml.replace('맵:','').trim();
           const alias=getMapAlias();
           mapName=alias[rawMap]||rawMap;
           ni++;break;
         }
+        // 통계줄 스킵: '최근 N일', '25년 이후', 'N경기 - N티어' 형태
         if(/최근\s*\d+일|^\d+년|^\d+경기\s*[-—]|\d+\s*:\s*\d+/.test(ml)){ni++;continue;}
         if(isResultLine(ml)||isVsLine(ml)||isGameHeader(ml))break;
         ni++;
       }
-      while(ni<nonEmpty.length && (/최근\s*\d+일|^\d+년|^\d+경기\s*[-—]|\d+\s*:\s*\d+/.test(nonEmpty[ni])||isStatLine(nonEmpty[ni])||nonEmpty[ni]==='✏️')){ni++;}
+      // 통계/부가정보 줄 추가 스킵
+      while(ni<nonEmpty.length && (/최근\s*\d+일|^\d+년|^\d+경기\s*[-—]|\d+\s*:\s*\d+/.test(nonEmpty[ni])||isStatLine(nonEmpty[ni]))){ni++;}
 
-      if(name1 && name2 && (result1 || result2)){
-        let winName='', loseName='';
-        const r1 = result1 || ''; const r2 = result2 || '';
-        const isW = s => s==='승리!' || s==='WIN';
-        const isL = s => s==='패배!' || s==='LOSE';
-
-        if(isW(r1)) { winName=name1; loseName=name2; }
-        else if(isL(r1)) { winName=name2; loseName=name1; }
-        else if(isW(r2)) { winName=name2; loseName=name1; }
-        else if(isL(r2)) { winName=name1; loseName=name2; }
-
-        if(winName && loseName) results.push({winName, loseName, map:mapName});
+      if(name1&&name2&&result1&&result2){
+        let winName='',loseName='';
+        if(result1==='승리!'&&result2==='패배!'){winName=name1;loseName=name2;}
+        else if(result1==='패배!'&&result2==='승리!'){winName=name2;loseName=name1;}
+        // result2_early: 승/패가 첫 블록에 몰린 경우 (승리!·패배! → 이름1 VS 이름2 → 맵)
+        // 이 경우엔 result1=첫결과, result2=두번째결과, name1이 result1에 해당, name2가 result2에 해당
+        if(!winName&&!loseName&&result2_early&&name1&&name2){
+          if(result1==='승리!'&&result2_early==='패배!'){winName=name1;loseName=name2;}
+          else if(result1==='패배!'&&result2_early==='승리!'){winName=name2;loseName=name1;}
+        }
+        if(winName&&loseName) results.push({winName,loseName,map:mapName});
       }
       continue;
     }
@@ -702,21 +715,26 @@ function parsePasteLine(line) {
     let rightClean = rightPart;
 
     // 맵 추출: 🌐맵 / 🌍맵 이모지 방식 또는 [맵약자] 브라켓 방식 모두 지원
+    // ※ [🌐🌍] 문자클래스는 서로게이트 쌍을 개별 코드유닛으로 처리해 오작동 → alternation 사용
     const mapEmoji = rightPart.match(/(?:🌐|🌍)\s*(\S+)/);
     const mapBracket = rightPart.match(/\[([^\]]+)\]\s*$/);
 
     if (mapEmoji) {
+      // 이모지 방식: 선수명🌐맵
       const alias = mapEmoji[1].trim();
       map = resolveMapName(alias);
       rightClean = rightPart.slice(0, mapEmoji.index).trim();
     } else if (mapBracket) {
+      // 브라켓 방식 (우측 끝): 선수명 [맵약자]
       const alias = mapBracket[1].trim();
       map = resolveMapName(alias);
       rightClean = rightPart.slice(0, mapBracket.index).trim();
     } else {
+      // (맵약자) 소괄호 방식 (우측 끝): 선수명 P (라데)
       const mapParen = rightPart.match(/\(([^)]+)\)\s*$/);
       if (mapParen) {
         const alias = mapParen[1].trim();
+        // 마크 이모지가 아닌 경우만 맵으로 처리
         const isMarkEmoji = ALL_MARKS.includes(alias);
         if (!isMarkEmoji) {
           map = resolveMapName(alias);
@@ -725,6 +743,7 @@ function parsePasteLine(line) {
       }
     }
 
+    // 좌측 앞 [맵약자] 방식: [폴리] 이지다⬜🆚✅경콩이
     if (map === '-') {
       const leftBracket = leftPart.match(/^\[([^\]]+)\]\s*/);
       if (leftBracket) {
@@ -734,35 +753,30 @@ function parsePasteLine(line) {
     }
 
     const splitNR = (s) => {
-      // 다인전(콤마/슬래시) 처리: "선수1,선수2" 또는 "선수1/선수2"
-      const names = s.split(/[,，/／\s]+/).filter(Boolean).map(n => {
-        // [Z]이름, 이름[Z], 이름Z 등 종족 정보 제거
-        return n.replace(/^\[[TZPN]\]/, '')
-                .replace(/\[\d*[TZPN]\]$/, '')
-                .replace(/[TZPN]$/, '')
-                .trim();
-      });
-      return names;
+      // [Z]이름 형식 (종족 브라켓이 앞에, 앞에 장식 있어도 허용)
+      const frontBracketM = s.match(/^[^\[]*\[([TZPN])\](.+)$/);
+      if (frontBracketM && frontBracketM[2].trim()) return { name: frontBracketM[2].trim(), race: frontBracketM[1] };
+      // 앞 종족 접두사 제거: Z조이, P마토, T주양 → 조이, 마토, 주양
+      const prefixM = s.match(/^([TZPN])(.+)$/);
+      if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
+      const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
+      if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
+      const simpleM = s.match(/^(.+?)([TZP])$/);
+      if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
+      return { name: s.trim(), race: '' };
     };
-    
-    const leftNames = splitNR(leftPart);
-    const rightNames = splitNR(rightClean);
-    if (!leftNames.length || !rightNames.length) return null;
+    const left  = splitNR(leftPart);
+    const right = splitNR(rightClean);
+    if (!left.name || !right.name) return null;
 
+    // rawMapStr for format B (from emoji/bracket extraction)
     const _bRawMap = mapEmoji ? mapEmoji[1].trim() : (mapBracket ? mapBracket[1].trim() : '');
-    
-    // 다인전 결과 반환 (배열 형태 이름 지원)
-    const res = {
-      winName:  leftWin  ? leftNames : rightNames,
-      loseName: leftWin  ? rightNames : leftNames,
+    return {
+      winName:  leftWin  ? left.name  : right.name,
+      loseName: leftWin  ? right.name : left.name,
       map, _rawMapStr: _bRawMap,
-      leftName: leftNames, rightName: rightNames,
-      isMulti: leftNames.length > 1 || rightNames.length > 1
+      leftName: left.name, rightName: right.name
     };
-    // 호환성을 위해 단일 이름 필드 유지 (첫 번째 선수)
-    res.winNameStr = Array.isArray(res.winName) ? res.winName[0] : res.winName;
-    res.loseNameStr = Array.isArray(res.loseName) ? res.loseName[0] : res.loseName;
-    return res;
   }
 
   // ── 형식 E: 맵약자 선수A[WIN][LOSE]선수B (🆚 없음, 마크 인접) ──
@@ -2085,38 +2099,28 @@ function pasteApply() {
   const _applyInRA = (nm) => _applyRA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
   const _applyInRB = (nm) => _applyRB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
   const resolveAB = (r) => {
-    const isMulti = r.isMulti || Array.isArray(r.leftName) || Array.isArray(r.winName);
-    
     if (_applyRA && _applyRB) {
-      const wName = Array.isArray(r.winName) ? r.winName[0] : r.winName;
-      const wInA = _applyInRA(wName), wInB = _applyInRB(wName);
-      const winnerIsA = wInA ? true : wInB ? false : ((Array.isArray(r.leftName) ? r.leftName[0] : (r.leftName||r.winName)) === wName);
-      
-      if (isMulti) {
-        const leftIsA = winnerIsA ? (r.winName === r.leftName) : (r.loseName === r.leftName);
-        return {
-          playerA: leftIsA ? r.leftName : r.rightName,
-          playerB: leftIsA ? r.rightName : r.leftName,
-          winner: winnerIsA ? (leftIsA ? 'A' : 'B') : (leftIsA ? 'B' : 'A')
-        };
-      }
+      const wInA = _applyInRA(r.winName), wInB = _applyInRB(r.winName);
+      const winnerIsA = wInA ? true : wInB ? false : ((r.leftName||r.winName) === r.winName);
       return winnerIsA
         ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
         : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
     }
-
-    // leftName 기준: 좌측이 승자면 playerA=wPlayer, 패자면 playerA=lPlayer
-    const leftIsWin = r.isMulti 
-      ? (JSON.stringify(r.leftName) === JSON.stringify(r.winName))
-      : ((r.leftName||r.winName) === r.winName);
-
-    if (isMulti) {
-      return {
-        playerA: r.leftName,
-        playerB: r.rightName,
-        winner: leftIsWin ? 'A' : 'B'
-      };
+    // 선수 DB 소속 기반 배정 시도 (미리보기에서 인식된 팀명 사용)
+    const _paTA = window._previewTeamA, _paTB = window._previewTeamB;
+    if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
+        r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
+        _paTA && _paTA !== 'A팀' && _paTB && _paTB !== 'B팀') {
+      const _wInA = r.wPlayer.univ === _paTA;
+      const _lInA = r.lPlayer.univ === _paTA;
+      if (_wInA || _lInA) {
+        return _wInA
+          ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
+          : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
+      }
     }
+    // leftName 기준: 좌측이 승자면 playerA=wPlayer, 패자면 playerA=lPlayer
+    const leftIsWin = (r.leftName||r.winName) === r.winName;
     return {
       playerA: leftIsWin ? r.wPlayer : r.lPlayer,
       playerB: leftIsWin ? r.lPlayer : r.wPlayer,
@@ -2128,8 +2132,7 @@ function pasteApply() {
   const _univA = {}, _univB = {};
   savable.forEach(r => {
     const ab = resolveAB(r);
-    const ua = Array.isArray(ab.playerA) ? (_findPlayer(ab.playerA[0])?.univ||'') : (ab.playerA?.univ||'');
-    const ub = Array.isArray(ab.playerB) ? (_findPlayer(ab.playerB[0])?.univ||'') : (ab.playerB?.univ||'');
+    const ua = ab.playerA?.univ||''; const ub = ab.playerB?.univ||'';
     if (ua && ua !== '무소속') _univA[ua] = (_univA[ua]||0)+1;
     if (ub && ub !== '무소속') _univB[ub] = (_univB[ub]||0)+1;
   });
@@ -2159,10 +2162,7 @@ function pasteApply() {
     const rows = setMap[sn];
     const games = rows.map(r => {
       const ab = resolveAB(r);
-      // playerA, playerB가 배열일 수 있음 (다인전)
-      const pANames = Array.isArray(ab.playerA) ? ab.playerA : (ab.playerA?.name || '');
-      const pBNames = Array.isArray(ab.playerB) ? ab.playerB : (ab.playerB?.name || '');
-      return { playerA: pANames, playerB: pBNames, map: r.map && r.map !== '-' ? r.map : '', winner: ab.winner };
+      return { playerA: ab.playerA?.name||'', playerB: ab.playerB?.name||'', map: r.map && r.map !== '-' ? r.map : '', winner: ab.winner };
     });
     const scoreA = games.filter(g=>g.winner==='A').length;
     const scoreB = games.filter(g=>g.winner==='B').length;

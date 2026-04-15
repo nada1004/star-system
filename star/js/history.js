@@ -87,11 +87,11 @@ function rHist(C,T){
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='tiertour'||histSub==='tiertour-gen'||histSub==='tiertour-league'||histSub==='tiertour-bkt'){
-    const _ttSubBar=`<div class="stabs no-export" style="margin-bottom:10px">
-      <button class="stab ${histSub==='tiertour'?'on':''}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
-      <button class="stab ${histSub==='tiertour-gen'?'on':''}" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
-      <button class="stab ${histSub==='tiertour-league'?'on':''}" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
-      <button class="stab ${histSub==='tiertour-bkt'?'on':''}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
+    const _ttSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+      <button class="pill ${histSub==='tiertour'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
+      <button class="pill ${histSub==='tiertour-gen'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
+      <button class="pill ${histSub==='tiertour-league'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
+      <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
     const _ttAll=ttM.filter(m=>!m._proKey);
@@ -1473,11 +1473,11 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
 ══════════════════════════════════════ */
 function histProCompHTML() {
   // 프로리그 대회 서브탭 바
-  const _pcSubBar=`<div class="stabs no-export" style="margin-bottom:10px">
-    <button class="stab ${histSub==='procomp'?'on':''}" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
-    <button class="stab ${histSub==='procomptn'?'on':''}" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
-    <button class="stab ${histSub==='procompteam'?'on':''}" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="stab ${histSub==='procompgj'?'on':''}" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+  const _pcSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill ${histSub==='procomp'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="pill ${histSub==='procomptn'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
+    <button class="pill ${histSub==='procompteam'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="pill ${histSub==='procompgj'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
   </div>`;
   // proTourneys에서 완료된 경기만 추출 (조별리그)
   const allItems = [];
@@ -1570,11 +1570,11 @@ function histProCompHTML() {
    대전 기록 > 프로리그 토너먼트 탭 (대진표 + 3위전)
 ══════════════════════════════════════ */
 function histProCompTourneyHTML() {
-  const _pcSubBar2=`<div class="stabs no-export" style="margin-bottom:10px">
-    <button class="stab" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
-    <button class="stab on">🗂️ 토너먼트</button>
-    <button class="stab" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="stab" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+  const _pcSubBar2=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="pill on" style="flex-shrink:0;white-space:nowrap">🗂️ 토너먼트</button>
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
   </div>`;
   const allItems = [];
   (proTourneys||[]).forEach(tn => {
@@ -1732,11 +1732,11 @@ function histProCompTeamHTML() {
    ⚔️ 프로리그 대회 끝장전 기록
 ══════════════════════════════════════ */
 function histProCompGJHTML(){
-  const _pcGjBar=`<div class="stabs no-export" style="margin-bottom:10px">
-    <button class="stab" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
-    <button class="stab" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
-    <button class="stab" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="stab on">⚔️ 끝장전</button>
+  const _pcGjBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
+    <button class="pill on" style="flex-shrink:0;white-space:nowrap">⚔️ 끝장전</button>
   </div>`;
   const allSess=[];
   (proTourneys||[]).forEach(tn=>{
