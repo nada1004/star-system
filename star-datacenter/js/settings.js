@@ -10,7 +10,12 @@
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
 function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
-function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
+const _catSecs={'게임 운영':['notice','tier','season','teammatch','acct'],'콘텐츠 관리':['univ','maps','mAlias','si'],'시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],'데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']};
+function _cfgD(id,title,extra){
+  const _vis=(_catSecs[window._cfgCat]||[]).includes(id);
+  const isOpen=_cfgOpen(id)&&_vis;
+  return `<details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''} style="display:${_vis?'':'none'}"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;
+}
 
 /* ══════════════════════════════════════
    설정 카테고리 필터
@@ -25,29 +30,7 @@ function _cfgGo(secId){
 }
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
-  const catSecs={
-    '게임 운영':['notice','tier','season','teammatch','acct'],
-    '콘텐츠 관리':['univ','maps','mAlias','si'],
-    '시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
-    '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
-  };
-  const show=catSecs[cat]||null;
-  document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
-    var id=el.getAttribute('data-cfg-sec');
-    var visible=show===null||show.includes(id);
-    el.style.display=visible?'':'none';
-    if(el.tagName==='DETAILS') {
-      el.open=false;
-      try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent='▾ 펼치기';}catch(e){}
-    }
-  });
-  document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
-    btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
-  });
-  // pd 섹션 내용 렌더링 (항상)
-  if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
-  const first=(catSecs[cat]||[])[0];
-  if(first) setTimeout(()=>_cfgGo(first), 0);
+  render();
 }
 
 /* ══════════════════════════════════════
@@ -75,24 +58,14 @@ function rCfg(C,T){
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  const _curSecs={
-    '게임 운영':['notice','tier','season','teammatch','acct'],
-    '콘텐츠 관리':['univ','maps','mAlias','si'],
-    '시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
-    '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
-  }[window._cfgCat]||[];
-  let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px;margin-bottom:8px">
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:8px">
+  const _curSecs=_catSecs[window._cfgCat]||[];
+  let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:6px">
       ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}"
-        style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border:2px solid ${on?'var(--blue)':'var(--border)'};border-radius:12px;background:${on?'var(--blue-ll)':'var(--surface)'};cursor:pointer;transition:all .15s;text-align:left;width:100%">
-        <div style="display:flex;align-items:center;gap:7px">
-          <span style="font-size:20px;line-height:1">${_cfgCatIcons[c]}</span>
-          <span style="font-size:13px;font-weight:${on?900:700};color:${on?'var(--blue)':'var(--text)'}">${c}</span>
-        </div>
-        <span style="font-size:10px;color:${on?'var(--blue)':'var(--gray-l)'};font-weight:400;line-height:1.3">${_cfgCatDesc[c]}</span>
-      </button>`;}).join('')}
+        style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1.5px solid ${on?'var(--blue)':'var(--border)'};border-radius:20px;background:${on?'var(--blue)':'var(--surface)'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:12px;font-weight:${on?800:600};color:${on?'#fff':'var(--text)'};transition:all .15s">
+        <span style="font-size:15px;line-height:1">${_cfgCatIcons[c]}</span>${c}</button>`;}).join('')}
     </div>
-    <div class="fbar no-export" style="gap:5px;flex-wrap:wrap;padding:4px 0 2px;border-top:1px solid var(--border);padding-top:6px">
+    <div class="fbar no-export" style="gap:4px;flex-wrap:wrap;padding:5px 0 4px">
       <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">바로가기</span>
       ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
     </div>
@@ -722,7 +695,7 @@ ${_cfgD('notice','📢 공지 관리')}
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 이미지 모양</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()}" onclick="boardChipPhotoShape='circle';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-b';document.getElementById('cfg-bcp-square').className='btn btn-w';render()">⭕ 원형 (기본)</button>
-          <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})()" onclick="boardChipPhotoShape='square';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-w';document.getElementById('cfg-bcp-square').className='btn btn-b';render()">⬛ 네모형</button>
+          <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})}" onclick="boardChipPhotoShape='square';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-w';document.getElementById('cfg-bcp-square').className='btn btn-b';render()">⬛ 네모형</button>
         </div>
       </div>
       <div>

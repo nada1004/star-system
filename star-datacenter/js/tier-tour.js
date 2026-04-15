@@ -936,7 +936,7 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
-function rCfg(C,T){
+function rTierTourCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
