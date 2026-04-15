@@ -2075,7 +2075,7 @@ function pasteApply() {
   if (window._grpPasteMode) {
     const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
     if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
-    const ok = _grpPasteApplyLogic(savable);
+    const ok = window._grpPasteApplyLogic(savable);
     if (ok) {
       window._grpPasteMode = false;
       cm('pasteModal');

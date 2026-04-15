@@ -211,6 +211,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  window._grpPasteApplyLogic = _grpPasteApplyLogic;
   if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
@@ -2305,6 +2306,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
+  window._grpPasteApplyLogic = _grpPasteApplyLogic;
   if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
