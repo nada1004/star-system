@@ -124,12 +124,10 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
     const d = m.d || new Date().toISOString().slice(0,10);
     const mode = tn.type === 'tier' ? '티어대회' : '프로리그대회';
     if (Array.isArray(m._games) && m._games.length > 0) {
-      m._games.forEach((g, gIdx) => {
+      m._games.forEach(g => {
         const win = g.winner === 'A' ? m.a : m.b;
         const loss = g.winner === 'A' ? m.b : m.a;
-        // 세트 내 각 게임에 고유 ID 부여 (_s0_g0 형식)
-        const gid = `${matchId}_s0_g${gIdx}`;
-        applyGameResult(win, loss, d, g.map || '', gid, '', '', mode);
+        applyGameResult(win, loss, d, g.map || '', matchId, '', '', mode);
       });
     } else {
       applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
@@ -213,7 +211,7 @@ function rProComp(C, T) {
       ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
     ];
     if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
-    h += `<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${proCompSub===o.id?'on':''}" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+    h += `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
 
     if (!tn && proCompSub !== 'grpedit') {
       h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
@@ -2425,17 +2423,12 @@ function _revertProMatch(matchId) {
   if (!matchId) return;
   players.forEach(p => {
     if (!p.history) return;
-    // 해당 matchId와 정확히 일치하거나, 해당 ID로 시작하는 하위 게임들(_s0_g0 등) 모두 찾기
-    const targets = p.history.filter(h => h.matchId === matchId || (h.matchId && h.matchId.startsWith(matchId + '_s')));
-    if (targets.length === 0) return;
-
-    targets.forEach(h => {
-      if (h.result === '승') { p.win = Math.max(0, (p.win || 0) - 1); p.points = (p.points || 0) - 3; }
-      else { p.loss = Math.max(0, (p.loss || 0) - 1); p.points = (p.points || 0) + 3; }
-      if (h.eloDelta != null) p.elo = (p.elo || 1200) - h.eloDelta;
-    });
-
-    p.history = p.history.filter(h => h.matchId !== matchId && !(h.matchId && h.matchId.startsWith(matchId + '_s')));
+    const h = p.history.find(x => x.matchId === matchId);
+    if (!h) return;
+    if (h.result === '승') { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
+    else { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
+    p.elo = (p.elo||1200) - h.eloDelta;
+    p.history = p.history.filter(x => x.matchId !== matchId);
   });
 }
 
