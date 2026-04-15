@@ -605,12 +605,21 @@ function calcElo(winnerElo, loserElo){
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
+    // 종족 접미사 제거: "김명운Z", "샤이니T" 같이 이름 뒤에 종족이 붙은 입력도 허용
+    // (붙여넣기/자동인식에서 자주 등장)
+    const raw = (name||'').trim();
+    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
     let p=players.find(x=>x.name===name);
     if(p)return p;
-    const low=name.toLowerCase();
+    // cleanedRace 우선으로도 재시도
+    if (cleanedRace && cleanedRace !== name) {
+      p = players.find(x => x.name === cleanedRace);
+      if (p) return p;
+    }
+    const low=cleanedRace.toLowerCase();
     p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
     if(p)return p;
-    const ns=name.replace(/\s+/g,'');
+    const ns=cleanedRace.replace(/\s+/g,'');
     return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
   }
   const w=_findPlayer(winName);
