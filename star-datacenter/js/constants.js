@@ -92,38 +92,6 @@ function getRoleBadgeHTML(role, size='11px'){
   return `<span style="font-size:${size};padding:1px 6px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
 }
 
-// 맵 약자 → 전체 이름 매핑 (시스템 maps 배열에도 없으면 그대로 사용)
-const PASTE_MAP_ALIAS_DEFAULT = {
-  // ── 전체 이름 ──
-  '투혼':'투혼','라데온':'라데온','라데리안':'라데온','녹아웃':'녹아웃','리트리트':'리트리트',
-  '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
-  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
-  '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
-  '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
-  '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
-  // ── 약자 ──
-  '라데':'라데온','라':'라데온','라데리안':'라데온',
-  '녹아':'녹아웃','녹':'녹아웃',
-  '리트':'리트리트','리':'리트리트',
-  '폴':'폴리포이드','폴리':'폴리포이드','폴스':'폴리포이드',   // 폴스 추가
-  '플스':'플스타','플립':'플스타',                             // 플립 추가
-  '옥':'옥타곤','옥타':'옥타곤',                               // 옥타 추가
-  '에티':'에티튜드','에':'에티튜드',
-  '매':'매치포인트','매치':'매치포인트',
-  '도미':'도미네이터','도':'도미네이터',
-  '실':'실피드','실피':'실피드',
-  '블리':'블리츠','블':'블리츠',
-  '서':'서킷',
-  '투':'투혼',
-  '메트':'메트로폴리스','메':'메트로폴리스',
-  '개마':'신 개마고원','신개마':'신 개마고원','개':'신 개마고원',
-  '아이':'아이언포리스트','포리':'아이언포리스트','아이언':'아이언포리스트',
-  '파이':'파이썬','파':'파이썬',
-  '화':'화랑',
-  '지옥':'지옥섬','지':'지옥섬',
-  '네오':'네오리게이트','리게':'네오리게이트',
-};
-
 /* ══════════════════════════════════════
    DATA LOAD
 ══════════════════════════════════════ */
@@ -327,34 +295,22 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
-let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
-
-// 스트리머 프로필 전역 스타일 설정
-let profileShape = J('su_profile_shape') || 'circle'; // 'circle' | 'square'
-let profileSize  = J('su_profile_size')  || 32;       // px 단위
-
 function getPlayerPhotoHTML(playerName, size, extraStyle){
-  const shape = profileShape || 'circle';
-  const radius = shape === 'square' ? '8px' : '50%';
-  const globalSize = profileSize ? profileSize + 'px' : '32px';
-  
-  size = size || globalSize; 
-  extraStyle = extraStyle || '';
-  const p = players.find(x => x.name === playerName);
-  const hasBorder = extraStyle.includes('border');
-  const bdr = hasBorder ? '' : 'border:1.5px solid var(--border);';
-  const base = 'display:inline-block;width:' + size + ';height:' + size + ';border-radius:' + radius + ';flex-shrink:0;vertical-align:middle;' + extraStyle;
-  const safeName = (playerName || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  const clickStyle = 'cursor:pointer;';
-  const clickAttr = 'onclick="openPlayerModal(\'' + safeName + '\')" title="스트리머 상세"';
-  
-  if (!p || !p.photo) {
-    const RMAP = { T: { bg: '#dbeafe', col: '#1e40af' }, Z: { bg: '#ede9fe', col: '#5b21b6' }, P: { bg: '#fef3c7', col: '#92400e' } };
-    const rm = RMAP[p?.race] || { bg: '#e2e8f0', col: '#64748b' };
-    const txt = p?.race || '?';
-    return '<span ' + clickAttr + ' style="' + base + ';' + bdr + 'background:' + rm.bg + ';color:' + rm.col + ';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(' + size + ' * 0.42);' + clickStyle + '">' + txt + '</span>';
+  size=size||'32px'; extraStyle=extraStyle||'';
+  const p=players.find(x=>x.name===playerName);
+  const hasBorder=extraStyle.includes('border');
+  const bdr=hasBorder?'':'border:1.5px solid var(--border);';
+  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const clickStyle='cursor:pointer;';
+  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
+  if(!p||!p.photo){
+    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
+    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
+    const txt=p?.race||'?';
+    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  return '<img ' + clickAttr + ' src="' + p.photo + '" style="' + base + ';object-fit:contain;' + bdr + clickStyle + '" onerror="this.style.display=\'none\'">';
+  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
@@ -646,18 +602,17 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
-function _findPlayer(name){
-  if(!name) return null;
-  let p=players.find(x=>x.name===name);
-  if(p)return p;
-  const low=name.toLowerCase();
-  p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-  if(p)return p;
-  const ns=name.replace(/\s+/g,'');
-  return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
-}
-
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
+  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
+  function _findPlayer(name){
+    let p=players.find(x=>x.name===name);
+    if(p)return p;
+    const low=name.toLowerCase();
+    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+    if(p)return p;
+    const ns=name.replace(/\s+/g,'');
+    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+  }
   const w=_findPlayer(winName);
   const l=_findPlayer(loseName);
   if(!w||!l||w===l)return;
@@ -668,24 +623,20 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
   const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
-  const parentId=isGameId?matchId.split('_s')[0]:matchId;
-  
-  // matchId 기반 체크 강화
+  // matchId 기반 체크
   const wDupMatch=matchId
     ?(isGameId
-      ?(w.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId) // 고유ID나 부모ID가 있으면 중복
+      ?(w.history||[]).find(h=>h.matchId===matchId)
       :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
     :null;
   const lDupMatch=matchId
     ?(isGameId
-      ?(l.history||[]).find(h=>h.matchId===matchId || h.matchId===parentId)
+      ?(l.history||[]).find(h=>h.matchId===matchId)
       :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
     :null;
-
   // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
-  // 고유 matchId(_sN_gN)가 있는 경우, 부모 ID가 겹치지 않는 한 날짜/맵 중복은 허용 (재경기 등 대응)
-  const wDupFallback=(!isGameId && (w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name));
-  const lDupFallback=(!isGameId && (l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name));
+  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
   // 둘 중 하나라도 중복이면 중단
   if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
@@ -701,33 +652,6 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
-}
-
-function applyMultiGameResult(winNames, loseNames, date, map, matchId, univW, univL, mode){
-  const wins = (Array.isArray(winNames) ? winNames : [winNames]).map(n=>_findPlayer(n)).filter(Boolean);
-  const loss = (Array.isArray(loseNames) ? loseNames : [loseNames]).map(n=>_findPlayer(n)).filter(Boolean);
-  if(!wins.length || !loss.length) return;
-
-  const d=date||new Date().toISOString().slice(0,10);
-  const m=map||'-';
-  const t=Date.now();
-
-  wins.forEach(w=>{
-    if(!w.history) w.history=[];
-    if(matchId && w.history.find(h=>h.matchId===matchId)) return;
-    w.win++; w.points+=3;
-    const opps = loss.map(x=>x.name);
-    const team = wins.filter(x=>x!==w).map(x=>x.name);
-    w.history.unshift({date:d,time:t,result:'승',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univW||w.univ||'',mode:mode||'',isMulti:true});
-  });
-  loss.forEach(l=>{
-    if(!l.history) l.history=[];
-    if(matchId && l.history.find(h=>h.matchId===matchId)) return;
-    l.loss++; l.points-=3;
-    const opps = wins.map(x=>x.name);
-    const team = loss.filter(x=>x!==l).map(x=>x.name);
-    l.history.unshift({date:d,time:t,result:'패',opp:opps[0],opps,team,map:m,matchId:matchId||'',univ:univL||l.univ||'',mode:mode||'',isMulti:true});
-  });
 }
 
 function rebuildAllPlayerHistory() {

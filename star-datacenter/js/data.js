@@ -64,37 +64,32 @@ function revertMatchRecord(matchObj){
       const l=players.find(p=>p.name===lName);
       // 게임 레벨 ID (새 포맷) 및 매치 레벨 ID (구 데이터) 모두 지원
       const gameMatchId=mid?`${mid}_s${si}_g${gi}`:null;
-      
+
       if(w){
         if(!w.history)w.history=[];
         let idx=-1;
-        // 1순위: 정확한 게임 레벨 ID 매칭
-        if(gameMatchId) idx=w.history.findIndex(h=>h.matchId===gameMatchId);
-        // 2순위: 부모 매치 ID + 맵 매칭 (안전성 강화)
-        if(idx<0 && mid) idx=w.history.findIndex(h=>h.matchId===mid && h.map===g.map);
-        // 3순위: 부모 매치 ID만 매칭 (구 데이터 호환)
-        if(idx<0 && mid) idx=w.history.findIndex(h=>h.matchId===mid);
-
+        if(gameMatchId) idx=w.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='승'&&h.opp===lName);
+        if(idx<0&&mid) idx=w.history.findIndex(h=>h.matchId===mid&&h.result==='승'&&h.opp===lName);
+        if(idx<0) idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&h.date===mdate);
+        if(idx<0){ idx=w.history.findIndex(h=>h.result==='승'&&h.opp===lName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', wName,'vs',lName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){
-          const h=w.history[idx];
-          if(h.result==='승'){ w.win=Math.max(0,(w.win||0)-1); w.points=(w.points||0)-3; }
-          else { w.loss=Math.max(0,(w.loss||0)-1); w.points=(w.points||0)+3; }
-          if(h.eloDelta!=null) w.elo=(w.elo||ELO_DEFAULT)-h.eloDelta;
+          const hr=w.history[idx];
+          w.win=Math.max(0,(w.win||0)-1);w.points=(w.points||0)-3;
+          if(hr.eloDelta!=null){w.elo=(w.elo||ELO_DEFAULT)-hr.eloDelta;}
           w.history.splice(idx,1);
         }
       }
       if(l){
         if(!l.history)l.history=[];
         let idx=-1;
-        if(gameMatchId) idx=l.history.findIndex(h=>h.matchId===gameMatchId);
-        if(idx<0 && mid) idx=l.history.findIndex(h=>h.matchId===mid && h.map===g.map);
-        if(idx<0 && mid) idx=l.history.findIndex(h=>h.matchId===mid);
-
+        if(gameMatchId) idx=l.history.findIndex(h=>h.matchId===gameMatchId&&h.result==='패'&&h.opp===wName);
+        if(idx<0&&mid) idx=l.history.findIndex(h=>h.matchId===mid&&h.result==='패'&&h.opp===wName);
+        if(idx<0) idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&h.date===mdate);
+        if(idx<0){ idx=l.history.findIndex(h=>h.result==='패'&&h.opp===wName); if(idx>=0)console.warn('[revert] matchId/날짜 없이 상대명으로만 기록 삭제:', lName,'vs',wName,'— 여러 기록이 있으면 오래된 것부터 삭제됨'); }
         if(idx>=0){
-          const h=l.history[idx];
-          if(h.result==='승'){ l.win=Math.max(0,(l.win||0)-1); l.points=(l.points||0)-3; }
-          else { l.loss=Math.max(0,(l.loss||0)-1); l.points=(l.points||0)+3; }
-          if(h.eloDelta!=null) l.elo=(l.elo||ELO_DEFAULT)-h.eloDelta;
+          const hr=l.history[idx];
+          l.loss=Math.max(0,(l.loss||0)-1);l.points=(l.points||0)+3;
+          if(hr.eloDelta!=null){l.elo=(l.elo||ELO_DEFAULT)-hr.eloDelta;}
           l.history.splice(idx,1);
         }
       }
@@ -230,13 +225,7 @@ function syncMiniM(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
-        const wUniv=g.winner==='A'?(m.a||''):(m.b||'');
-        const lUniv=g.winner==='A'?(m.b||''):(m.a||'');
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,label);
-        } else {
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,label);
-        }
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',label);
         existingIds.add(gameMatchId);
         added++;
       });
@@ -260,11 +249,7 @@ function syncUnivM(){
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const wUniv=g.winner==='A'?m.a:m.b;
         const lUniv=g.winner==='A'?m.b:m.a;
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
-        } else {
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
-        }
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wUniv,lUniv,'대학대전');
         existingIds.add(gameMatchId);
         added++;
       });
@@ -287,13 +272,9 @@ function syncCkM(){
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
-        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===(Array.isArray(wn)?wn[0]:wn));
-        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===(Array.isArray(ln)?ln[0]:ln));
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
-        } else {
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
-        }
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','대학CK');
         existingIds.add(gameMatchId);
         added++;
       });
@@ -316,13 +297,9 @@ function syncProM(){
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
         const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
-        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===(Array.isArray(wn)?wn[0]:wn));
-        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===(Array.isArray(ln)?ln[0]:ln));
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
-        } else {
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
-        }
+        const wM=(g.winner==='A'?mA:mB).find(x=>x.name===wn);
+        const lM=(g.winner==='A'?mB:mA).find(x=>x.name===ln);
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,wM?wM.univ||'':'',lM?lM.univ||'':'','프로리그');
         existingIds.add(gameMatchId);
         added++;
       });
@@ -344,11 +321,7 @@ function syncTtM(){
         if(existingIds.has(gameMatchId))return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
         const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
-        } else {
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
-        }
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','티어대회');
         existingIds.add(gameMatchId);
         added++;
       });
@@ -373,11 +346,7 @@ function syncTourneys(){
             const wn=g.winner==='A'?g.playerA:g.playerB;
             const ln=g.winner==='A'?g.playerB:g.playerA;
             const mode=tn.type==='tier'?'티어대회':'조별리그';
-            if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-              applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
-            } else {
-              applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
-            }
+            applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'',mode);
             existingIds.add(gameMatchId);
             added++;
           });
@@ -393,11 +362,7 @@ function syncTourneys(){
           if(existingIds.has(gameMatchId))return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
           const ln=g.winner==='A'?g.playerB:g.playerA;
-          if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-            applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
-          } else {
-            applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
-          }
+          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,m.a||'',m.b||'','대회');
           existingIds.add(gameMatchId);
           added++;
         });
@@ -468,17 +433,11 @@ function syncAllHistory(){
         // 각 게임에 고유 matchId 부여 (matchId_setIndex_gameIndex)
         const gameMatchId = `${m._id}_s${setIdx}_g${gameIdx}`;
         if(existingIds.has(gameMatchId))return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
         const uW=g.winner==='A'?(univAName||m.a||''):(univBName||m.b||'');
         const uL=g.winner==='A'?(univBName||m.b||''):(univAName||m.a||'');
-        if(Array.isArray(g.playerA) || Array.isArray(g.playerB)){
-          const wn = g.winner==='A'?g.playerA:g.playerB;
-          const ln = g.winner==='A'?g.playerB:g.playerA;
-          applyMultiGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
-        } else {
-          const wn=g.winner==='A'?g.playerA:g.playerB;
-          const ln=g.winner==='A'?g.playerB:g.playerA;
-          applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
-        }
+        applyGameResult(wn,ln,m.d||'',g.map||'',gameMatchId,uW,uL,modeLabel);
         existingIds.add(gameMatchId);
         added++;
       });
@@ -726,71 +685,6 @@ function syncAllHistoryBtn(){
   const n=syncAllHistory();
   if(n>0){alert('✅ '+n+'건의 경기가 스트리머 최근 경기에 소급 반영되었습니다.\n스트리머 상세 페이지에서 확인하세요.');render();}
   else{alert('✅ 이미 모든 기록이 반영되어 있습니다.');}
-}
-
-/**
- * 모든 탭의 데이터(ttM, tourneys 등)를 기반으로 선수들의 p.history를 재구축합니다.
- * ID 누락이나 잘못된 삭제로 인해 사라진 기록을 복구하는 용도입니다.
- */
-function rebuildAllPlayerHistory(){
-  if(!confirm('모든 선수의 전적을 원본 데이터 기반으로 재구축하시겠습니까?\n(승/패/ELO/포인트가 다시 계산됩니다.)')) return;
-  
-  // 1. 모든 선수 전적 초기화
-  players.forEach(p=>{
-    p.win=0; p.loss=0; p.points=0; p.elo=ELO_DEFAULT; p.history=[];
-  });
-
-  // 2. ttM(티어대회 기록)에서 복구
-  (ttM || []).forEach(m=>{
-    if(!m._id) m._id = genId();
-    const mode = m.stage === 'bkt' ? '티어대회 토너먼트' : (m.stage === 'league' ? '티어대회 조별리그' : '티어대회');
-    (m.sets || []).forEach((s, si)=>{
-      (s.games || []).forEach((g, gi)=>{
-        if(!g.playerA || !g.playerB || !g.winner) return;
-        const wn = g.winner === 'A' ? g.playerA : g.playerB;
-        const ln = g.winner === 'A' ? g.playerB : g.playerA;
-        const gid = `${m._id}_s${si}_g${gi}`;
-        applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', mode);
-      });
-    });
-  });
-
-  // 3. tourneys에서 복구 (조별리그 + 브라켓)
-  (tourneys || []).forEach(tn => {
-    const modeLabel = tn.type === 'tier' ? '티어대회' : '대회';
-    (tn.groups || []).forEach(grp => {
-      (grp.matches || []).forEach(m => {
-        if(!m._id) m._id = genId();
-        (m.sets || []).forEach((s, si)=>{
-          (s.games || []).forEach((g, gi)=>{
-            if(!g.playerA || !g.playerB || !g.winner) return;
-            const wn = g.winner === 'A' ? g.playerA : g.playerB;
-            const ln = g.winner === 'A' ? g.playerB : g.playerA;
-            const gid = `${m._id}_s${si}_g${gi}`;
-            applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', modeLabel);
-          });
-        });
-      });
-    });
-    // 브라켓
-    const br = tn.bracket || {};
-    Object.values(br.matchDetails || {}).forEach(m => {
-      if(!m._id) m._id = genId();
-      (m.sets || []).forEach((s, si)=>{
-        (s.games || []).forEach((g, gi)=>{
-          if(!g.playerA || !g.playerB || !g.winner) return;
-          const wn = g.winner === 'A' ? g.playerA : g.playerB;
-          const ln = g.winner === 'A' ? g.playerB : g.playerA;
-          const gid = `${m._id}_s${si}_g${gi}`;
-          applyGameResult(wn, ln, m.d, g.map||'', gid, '', '', modeLabel);
-        });
-      });
-    });
-  });
-
-  save();
-  render();
-  alert('전적 재구축이 완료되었습니다.');
 }
 
 /* ══════════════════════════════════════
