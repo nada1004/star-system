@@ -15,7 +15,7 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined') window._cfgCat='전체';
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체') window._cfgCat='기본';
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
   const catSecs={

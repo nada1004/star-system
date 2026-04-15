@@ -1708,7 +1708,6 @@ function proCompGrpEdit() {
           </div>`).join('')}
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <button class="btn btn-b btn-sm" onclick="proCompAddMatch('${tn.id}',${gi})">+ 경기 추가</button>
-            <button class="btn btn-w btn-sm" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 일괄 입력</button>
             ${(grp.players||[]).length>=2?`<button class="btn btn-w btn-sm" onclick="proCompGenRoundRobin('${tn.id}',${gi})" title="선수 목록 기반 라운드로빈 경기 자동 생성">🔄 라운드로빈 생성</button>`:''}
           </div>
         </div>
@@ -2330,9 +2329,23 @@ function proCompAddMatch(tnId, gi, preDate) {
   const defDate = preDate || new Date().toISOString().slice(0,10);
   const modal = document.createElement('div');
   modal.id = 'proMatchModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:16px">📝 경기 추가</div>
+  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;box-sizing:border-box';
+  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3);margin:auto">
+    <div style="font-weight:900;font-size:15px;margin-bottom:12px">📝 경기 추가</div>
+    <!-- 자동 입력 섹션 -->
+    <div style="background:var(--surface);border:1.5px dashed var(--border2);border-radius:10px;padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">⚡ 자동 입력 (여러 경기 한번에)</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px;line-height:1.6">
+        한 줄에 한 경기: <code style="background:var(--card);padding:1px 5px;border-radius:3px">선수A 승 선수B [맵]</code> 또는 <code style="background:var(--card);padding:1px 5px;border-radius:3px">선수A 선수B [맵]</code>
+      </div>
+      <textarea id="pm_auto_txt" rows="4" placeholder="예) 홍길동 승 임꺽정 투혼&#10;김영희 이철수" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box" oninput="proCompParseAutoInput('${tnId}',${gi})"></textarea>
+      <div id="pm_auto_preview" style="margin-top:6px;font-size:11px;color:var(--text3)"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-b btn-sm" style="flex:1" onclick="proCompApplyAutoInput('${tnId}',${gi})">⚡ 자동 추가</button>
+        <button class="btn btn-w btn-sm" onclick="document.getElementById('pm_auto_txt').value='';document.getElementById('pm_auto_preview').innerHTML=''">지우기</button>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="flex:1;height:1px;background:var(--border)"></span>또는 직접 입력<span style="flex:1;height:1px;background:var(--border)"></span></div>
     <div style="margin-bottom:10px">
       <label style="font-size:12px;font-weight:700;color:var(--text3)">A 선수</label>
       <select id="pm_a" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
@@ -2367,6 +2380,74 @@ function proCompAddMatch(tnId, gi, preDate) {
     </div>
   </div>`;
   document.body.appendChild(modal);
+}
+
+// 자동 입력 파싱 함수
+function proCompParseAutoInput(tnId, gi) {
+  const tn = _findTourneyById(tnId);
+  if (!tn||!tn.groups[gi]) return;
+  const pList = tn.groups[gi].players||[];
+  const txt = (document.getElementById('pm_auto_txt')||{}).value||'';
+  const prev = document.getElementById('pm_auto_preview');
+  if (!prev) return;
+  const lines = txt.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) { prev.innerHTML=''; return; }
+  const parsed = _pcAutoParseLines(lines, pList);
+  if (!parsed.length) { prev.innerHTML='<span style="color:#dc2626">인식된 경기 없음</span>'; return; }
+  prev.innerHTML = parsed.map(r=>{
+    if (r.err) return `<div style="color:#f59e0b">⚠️ ${r.raw}</div>`;
+    const winTxt = r.winner==='A'?`<b style="color:#16a34a">${r.a} 승</b>`:r.winner==='B'?`<b style="color:#dc2626">${r.b} 승</b>`:'미정';
+    return `<div style="color:var(--text3)">✅ ${r.a} vs ${r.b}${r.map?' ['+r.map+']':''} — ${winTxt}</div>`;
+  }).join('');
+}
+
+function _pcAutoParseLines(lines, pList) {
+  return lines.map(line=>{
+    // 형식1: "A 승 B [맵]" 또는 "A > B [맵]" 또는 "A 패 B [맵]"
+    let m = line.match(/^(.+?)\s+(?:승|>|▶)\s+(.+?)(?:\s+(\S+))?$/) ||
+            line.match(/^(.+?)\s+패\s+(.+?)(?:\s+(\S+))?$/);
+    if (m) {
+      const isLose = /패/.test(line.slice(m[1].length, m[1].length+4));
+      const rawA = m[1].trim(), rawB = m[2].trim(), rawMap = m[3]||'';
+      const pA = pList.find(p=>p===rawA||p.includes(rawA)||rawA.includes(p));
+      const pB = pList.find(p=>p===rawB||p.includes(rawB)||rawB.includes(p));
+      if (!pA||!pB||pA===pB) return {err:true,raw:line};
+      return {a:pA,b:pB,winner:isLose?'B':'A',map:rawMap,raw:line};
+    }
+    // 형식2: "A B [맵]" — 승패 없음
+    const parts = line.split(/\s+/);
+    if (parts.length >= 2) {
+      const rawA=parts[0], rawB=parts[1], rawMap=parts[2]||'';
+      const pA = pList.find(p=>p===rawA||p.includes(rawA)||rawA.includes(p));
+      const pB = pList.find(p=>p===rawB||p.includes(rawB)||rawB.includes(p));
+      if (pA&&pB&&pA!==pB) return {a:pA,b:pB,winner:'',map:rawMap,raw:line};
+    }
+    return {err:true,raw:line};
+  });
+}
+
+function proCompApplyAutoInput(tnId, gi) {
+  const tn = _findTourneyById(tnId);
+  if (!tn||!tn.groups[gi]) return;
+  const grp = tn.groups[gi];
+  const pList = grp.players||[];
+  const txt = (document.getElementById('pm_auto_txt')||{}).value||'';
+  const defDate = (document.getElementById('pm_d')||{}).value||new Date().toISOString().slice(0,10);
+  const lines = txt.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  const parsed = _pcAutoParseLines(lines, pList).filter(r=>!r.err);
+  if (!parsed.length) return alert('인식된 경기가 없습니다.\n형식: 선수A 승 선수B [맵] 또는 선수A 선수B [맵]');
+  if (!grp.matches) grp.matches=[];
+  let added=0;
+  parsed.forEach(r=>{
+    const newMid='pco_'+(Date.now()+added).toString(36)+Math.random().toString(36).slice(2,5);
+    grp.matches.push({a:r.a,b:r.b,winner:r.winner,d:defDate,map:r.map&&r.map!=='-'?r.map:'',_id:newMid});
+    if(r.winner) applyGameResult(r.winner==='A'?r.a:r.b,r.winner==='A'?r.b:r.a,defDate,r.map||'',newMid,'','','프로리그대회');
+    added++;
+  });
+  save();
+  document.getElementById('proMatchModal').remove();
+  render();
+  setTimeout(()=>alert(`${added}건의 경기가 추가되었습니다.`),100);
 }
 
 function proCompEditMatch(tnId, gi, mi) {
