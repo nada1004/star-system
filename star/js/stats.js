@@ -186,7 +186,8 @@ function statsOverviewHTML(){
   });
   const univRank=Object.entries(univStats)
     .map(([name,s])=>({name,w:s.w,l:s.l,color:s.color,rate:s.w+s.l===0?0:Math.round(s.w/(s.w+s.l)*100)}))
-    .sort((a,b)=>b.rate-a.rate||b.w-a.w);
+    .filter(u=>u.w+u.l>=10)
+    .sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
   const rv={T:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},Z:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},P:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}}};
   players.forEach(p=>{

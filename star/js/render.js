@@ -67,6 +67,7 @@ function render(){
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
     case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
+    case 'elboard': if(typeof rElboard==='function') rElboard(C,T); break;
     default: break;
   }
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
@@ -1789,8 +1790,13 @@ function rMergedComp(C, T) {
     _mergedCompSub, '_mergedCompSub'
   );
   const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  if(_mergedCompSub==='comp') {
+    if(typeof rComp==='function') rComp(sub,T);
+    else sub.innerHTML=`<div style="padding:30px;text-align:center;color:var(--gray-l)">대회 모듈 로딩 중...</div>`;
+  } else {
+    if(typeof rTierTourTab==='function') rTierTourTab(sub,T);
+    else sub.innerHTML=`<div style="padding:30px;text-align:center;color:var(--gray-l)">티어대회 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.</div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
