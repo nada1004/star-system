@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>최근전적 미리보기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080d18;
+  --bg2:#0c1220;
+  --surface:#111827;
+  --surface2:#1a2236;
+  --border:rgba(99,120,180,0.18);
+  --border2:rgba(99,120,180,0.30);
+  --text:#e8eaf0;
+  --muted:#6b7a9a;
+  --muted2:#8896b4;
+  --accent:#7c6fee;
+  --accent2:#38bdf8;
+  --win:#34d399;
+  --lose:#f87171;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Noto Sans KR',system-ui,sans-serif;
+  --radius:14px;
+  --radius-sm:9px;
+}
+[data-theme="light"]{
+  --bg:#f0f2f8;
+  --bg2:#e8eaf2;
+  --surface:#ffffff;
+  --surface2:#f5f6fa;
+  --border:rgba(30,40,80,0.12);
+  --border2:rgba(30,40,80,0.22);
+  --text:#111827;
+  --muted:#6b7280;
+  --muted2:#9ca3af;
+  --accent:#5b4de8;
+  --accent2:#0284c7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;font-family:var(--sans)}
+body{
+  background:var(--bg);
+  color:var(--text);
+  padding:20px;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 0% 0%,rgba(124,111,238,.13),transparent 60%),
+    radial-gradient(ellipse 700px 400px at 100% 0%,rgba(56,189,248,.10),transparent 55%);
+  transition:background .25s,color .25s;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 18px;margin-bottom:16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  position:sticky;top:16px;z-index:20;
+  backdrop-filter:blur(12px);
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;letter-spacing:-.03em}
+.logo-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 5px rgba(124,111,238,.18);
+}
+.logo-badge{
+  font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:999px;
+  background:rgba(124,111,238,.18);color:var(--accent);
+  border:1px solid rgba(124,111,238,.30);
+}
+.topbar-actions{display:flex;gap:6px}
+.btn{
+  appearance:none;cursor:pointer;
+  padding:8px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);
+  font-family:var(--sans);font-weight:700;font-size:13px;
+  transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{border-color:var(--border2);background:var(--surface);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+}
+.card-head{
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  background:var(--surface2);
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+}
+
+/* ── FIELD ── */
+.field{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg2);
+}
+.field-label{font-size:12px;font-weight:700;color:var(--muted2);white-space:nowrap}
+.field input{
+  border:none;outline:none;background:transparent;
+  color:var(--text);font-family:var(--sans);font-size:14px;
+  min-width:180px;
+}
+.field input[type="number"]{min-width:60px;width:60px}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent2) 50%,var(--accent)));
+  border-color:transparent;color:#fff;
+  font-weight:700;
+}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+
+/* ── META ── */
+.meta{
+  padding:14px 18px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.meta-name{font-weight:900;font-size:19px;letter-spacing:-.03em}
+.meta-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.meta-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;
+  border:1px solid var(--border);color:var(--muted);background:var(--surface2);
+}
+.pill-win{border-color:rgba(52,211,153,.30);color:var(--win);background:rgba(52,211,153,.08)}
+.pill-lose{border-color:rgba(248,113,113,.30);color:var(--lose);background:rgba(248,113,113,.08)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{
+  padding:11px 13px;text-align:left;
+  background:var(--surface2);
+  font-size:11.5px;font-weight:700;color:var(--muted2);
+  letter-spacing:.05em;text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody td{
+  padding:11px 13px;border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover{background:var(--surface2)}
+.nowrap{white-space:nowrap}
+
+/* ── RESULT ── */
+.res{font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px}
+.res-w{color:var(--win);background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.25)}
+.res-l{color:var(--lose);background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.25)}
+
+/* ── RACE BADGE ── */
+.rb{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px}
+.rb-t{background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.25)}
+.rb-z{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.25)}
+.rb-p{background:rgba(196,167,255,.12);color:#c4a7ff;border:1px solid rgba(196,167,255,.25)}
+
+/* ── MATCHUP ── */
+.mm{font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+/* ── NOTICE ── */
+.notice{
+  padding:11px 16px;font-size:12px;color:var(--muted2);
+  border-top:1px solid var(--border);background:var(--surface2);
+  display:flex;gap:6px;align-items:center;
+}
+.notice code{font-family:var(--mono);font-size:11px;background:var(--bg2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+
+/* ── ERR ── */
+#err{padding:14px 18px;color:var(--lose);font-family:var(--mono);font-size:12px;white-space:pre-wrap;display:none}
+
+/* ── EMPTY ── */
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+/* ── STATS ── */
+.stats-row{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+
+@media(max-width:640px){
+  body{padding:12px}
+  .topbar{position:static}
+  .field input{min-width:120px}
+  thead th,tbody td{padding:9px 10px}
+  .meta-name{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <span class="logo-dot"></span>
+    <span>최근전적</span>
+    <span class="logo-badge">PREVIEW</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn" id="themeBtn">🌙 테마</button>
+    <button class="btn" id="refreshBtn">↺ 새로고침</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <div class="field">
+      <span class="field-label">🔎 스트리머</span>
+      <input id="name" placeholder="스트리머명 (예: 박상현)" value="박상현"/>
+    </div>
+    <div class="field">
+      <span class="field-label">📌 개수</span>
+      <input id="limit" type="number" min="1" max="200" value="20"/>
+    </div>
+    <button class="btn btn-primary" id="searchBtn">조회</button>
+    <button class="btn" id="dlCsv">⬇ CSV</button>
+    <button class="btn" id="dlJson">⬇ JSON</button>
+  </div>
+
+  <div id="meta" class="meta">
+    <div>
+      <div class="meta-name" id="metaName">박상현</div>
+      <div class="meta-sub" id="metaSub">갱신 시각: —</div>
+    </div>
+    <div class="meta-right">
+      <span class="pill" id="pillTotal">0건</span>
+      <span class="pill pill-win" id="pillWin">승 0</span>
+      <span class="pill pill-lose" id="pillLose">패 0</span>
+      <span class="pill" id="pillRate">승률 —</span>
+    </div>
+  </div>
+
+  <div id="err"></div>
+  <div class="tbl-wrap" id="out"></div>
+  <div class="notice">
+    ⚠ 샘플 데이터 미리보기입니다. 실제 서비스 시 <code>/api/recent</code> Python 백엔드 연동이 필요합니다.
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ─── 테마 ─── */
+function setTheme(t){ document.documentElement.setAttribute("data-theme",t); localStorage.setItem("theme",t); }
+(function(){ setTheme(localStorage.getItem("theme")||"dark"); })();
+$("themeBtn").addEventListener("click",()=>{
+  setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
+});
+
+/* ─── 샘플 데이터 ─── */
+const MAPS = ["폴리포이드","아크로폴리스","레드시프트","라데리안 협곡","도미네이터","베가","녹아웃","퀘이사","고르고나","잔달 부족촌","네오 아딜 1.1","블루스톰"];
+const RACES = ["테란","저그","프로토스"];
+const RACECODE = {테란:"T",저그:"Z",프로토스:"P"};
+const GAME_TYPES = ["개인전","대학대전","미니대전","대회","프로리그"];
+const STREAMER_DB = {
+  "박상현":{race:"테란",opps:["김동현","이재호","변현제","소주양","재혁","한별","나성혁","민철","성구","혜은"]},
+  "김동현":{race:"저그", opps:["박상현","이재호","변현제","소주양","재혁","한별","나성혁"]},
+  "이재호":{race:"프로토스",opps:["박상현","김동현","변현제","소주양","재혁","한별"]},
+  "변현제":{race:"테란",opps:["박상현","김동현","이재호","소주양","재혁","한별","나성혁"]},
+  "소주양":{race:"저그", opps:["박상현","김동현","이재호","변현제","재혁","한별"]},
+};
+const DEF = {race:"테란",opps:["김동현","이재호","변현제","소주양","재혁","한별","나성혁"]};
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function nowStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function dateStr(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function generate(name, limit){
+  const info = STREAMER_DB[name]||DEF;
+  const rows=[];
+  let d=new Date();
+  for(let i=0;i<limit;i++){
+    const win=Math.random()>0.45;
+    const opp=rnd(info.opps);
+    const oppInfo=STREAMER_DB[opp]||DEF;
+    const or=oppInfo.race;
+    const map=rnd(MAPS);
+    const gt=rnd(GAME_TYPES);
+    const mm=RACECODE[info.race]+"v"+RACECODE[or];
+    rows.push({
+      날짜:dateStr(d), 나:name, 내종족:info.race, 상대:opp, 상대종족:or,
+      종족전:mm, 맵:map, 결과:win?"승":"패", 게임종류:gt, 비고:""
+    });
+    d=new Date(d.getTime()-Math.random()*2.5*86400000);
+  }
+  return rows;
+}
+
+let currentData=[];
+
+/* ─── 렌더 ─── */
+function render(){
+  const name=($("name").value.trim())||"박상현";
+  const limit=Math.min(Math.max(parseInt($("limit").value)||20,1),200);
+  $("err").style.display="none";
+
+  currentData=generate(name,limit);
+  const wins=currentData.filter(r=>r.결과==="승").length;
+  const loses=currentData.length-wins;
+  const rate=currentData.length?Math.round(wins/currentData.length*100):0;
+
+  $("metaName").textContent=name;
+  $("metaSub").textContent="갱신 시각: "+nowStr()+" (샘플)";
+  $("pillTotal").textContent=`총 ${currentData.length}건`;
+  $("pillWin").textContent=`승 ${wins}`;
+  $("pillLose").textContent=`패 ${loses}`;
+  $("pillRate").textContent=`승률 ${rate}%`;
+
+  const HEADERS=["날짜","나","상대","종족전","맵","결과","게임종류","비고"];
+  const RACE_CLASS={테란:"rb rb-t",저그:"rb rb-z",프로토스:"rb rb-p"};
+
+  const table=document.createElement("table");
+  table.innerHTML=`<thead><tr>${HEADERS.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody></tbody>`;
+  const tbody=table.querySelector("tbody");
+
+  currentData.forEach(g=>{
+    const tr=document.createElement("tr");
+    const rcW=g.결과==="승"?"res res-w":"res res-l";
+    tr.innerHTML=`
+      <td class="nowrap" style="font-family:var(--mono);font-size:12px">${g.날짜}</td>
+      <td class="nowrap">${g.나} <span class="${RACE_CLASS[g.내종족]}">${RACECODE[g.내종족]}</span></td>
+      <td class="nowrap">${g.상대} <span class="${RACE_CLASS[g.상대종족]}">${RACECODE[g.상대종족]}</span></td>
+      <td><span class="mm">${g.종족전}</span></td>
+      <td>${g.맵}</td>
+      <td><span class="${rcW}">${g.결과}</span></td>
+      <td class="nowrap" style="color:var(--muted);font-size:12px">${g.게임종류}</td>
+      <td style="color:var(--muted);font-size:12px">${g.비고}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  $("out").innerHTML="";
+  $("out").appendChild(table);
+}
+
+/* ─── 다운로드 ─── */
+function dlFile(content, filename, mime){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([content],{type:mime}));
+  a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+$("dlCsv").addEventListener("click",()=>{
+  if(!currentData.length)return;
+  const name=$("name").value.trim()||"player";
+  const keys=Object.keys(currentData[0]);
+  const csv=[keys.join(","),...currentData.map(r=>keys.map(k=>`"${String(r[k]).replace(/"/g,'""')}"`).join(","))].join("\n");
+  dlFile("\uFEFF"+csv,`${name}_전적.csv`,"text/csv;charset=utf-8");
+});
+
+$("dlJson").addEventListener("click",()=>{
+  if(!currentData.length)return;
+  const name=$("name").value.trim()||"player";
+  dlFile(JSON.stringify({player:name,update_time:nowStr(),games:currentData},null,2),`${name}_전적.json`,"application/json");
+});
+
+$("searchBtn").addEventListener("click",render);
+$("refreshBtn").addEventListener("click",render);
+$("name").addEventListener("keydown",e=>{if(e.key==="Enter")render();});
+
+render();
+</script>
+</body>
+</html>
