@@ -16,6 +16,13 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
    설정 카테고리 필터
 ══════════════════════════════════════ */
 if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
+function _cfgGo(secId){
+  const el=document.querySelector(`[data-cfg-sec="${secId}"]`);
+  if(!el) return;
+  if(el.tagName==='DETAILS') el.open=true;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
+}
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
   const catSecs={
@@ -29,14 +36,18 @@ function _cfgApplyCat(cat){
     var id=el.getAttribute('data-cfg-sec');
     var visible=show===null||show.includes(id);
     el.style.display=visible?'':'none';
-    // 카테고리 클릭 시 해당 섹션 모두 펼치기
-    if(visible && el.tagName==='DETAILS') el.open=true;
+    if(el.tagName==='DETAILS') {
+      el.open=false;
+      try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent='▾ 펼치기';}catch(e){}
+    }
   });
   document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
     btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
   });
   // pd 섹션 내용 렌더링 (항상)
   if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
+  const first=(catSecs[cat]||[])[0];
+  if(first) setTimeout(()=>_cfgGo(first), 0);
 }
 
 /* ══════════════════════════════════════
@@ -51,10 +62,41 @@ function rCfg(C,T){
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
   const _cfgCats=['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'];
   const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','시스템 설정':'⚙️','데이터 관리':'💾'};
+  const _cfgCatDesc={
+    '게임 운영':'공지/티어/시즌/경기 운영',
+    '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
+    '시스템 설정':'UI/현황판/모달/저장소',
+    '데이터 관리':'동기화/백업/일괄 작업'
+  };
+  const _cfgSecTitle={
+    notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
+    univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
+    b2layout:'🖼️ 현황판', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
+  };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:12px">
-  ${_cfgCats.map(c=>`<button class="pill cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${_cfgCatIcons[c]} ${c}</button>`).join('')}
-</div>
+  const _curSecs={
+    '게임 운영':['notice','tier','season','teammatch','acct'],
+    '콘텐츠 관리':['univ','maps','mAlias','si'],
+    '시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+    '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
+  }[window._cfgCat]||[];
+  let h=`<div class="no-export" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px">
+    ${_cfgCats.map(c=>`
+      <button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}"
+        style="text-align:left;padding:12px 12px;border-radius:12px;border:1.5px solid ${window._cfgCat===c?'var(--blue)':'var(--border2)'};background:${window._cfgCat===c?'var(--blue-ll)':'var(--white)'};cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:18px">${_cfgCatIcons[c]}</span>
+          <span style="font-weight:900;color:var(--text)">${c}</span>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);font-weight:600">${_cfgCatDesc[c]||''}</div>
+      </button>
+    `).join('')}
+  </div>
+  <div class="fbar no-export" style="gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    <span style="font-size:11px;font-weight:800;color:var(--text3)">바로가기</span>
+    ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
+  </div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
