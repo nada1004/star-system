@@ -24,6 +24,7 @@ if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!['게임 운
 function _cfgGo(secId){
   const el=document.querySelector(`[data-cfg-sec="${secId}"]`);
   if(!el) return;
+  el.style.display='block';
   if(el.tagName==='DETAILS') el.open=true;
   el.scrollIntoView({behavior:'smooth',block:'start'});
   try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
