@@ -527,7 +527,7 @@ function rTierTourTab(C, T){
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -930,7 +930,9 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
-function rCfg(C,T){
+// (legacy) 예전 버전에서 tier-tour.js에 포함되어 있던 설정탭 렌더 함수.
+// settings.js의 rCfg(설정탭 전용)가 최종적으로 사용되어야 하므로 이름을 변경해 덮어쓰기 버그를 방지합니다.
+function rCfg_legacy(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
@@ -1745,7 +1747,7 @@ function rCfg(C,T){
     if(document.getElementById('cfg-fab-hide-pc'))document.getElementById('cfg-fab-hide-pc').checked = hidePC;
   };
   setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
-} // end first rCfg
+} // end rCfg_legacy
 
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -1866,19 +1868,16 @@ function saveImageSettings(){
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
-// settings.js에서도 동일한 전역 식별자(_imgContextMenuEl)를 사용하고 있어
-// 중복 선언 시 tier-tour.js 전체가 SyntaxError로 로드 실패함.
-// 티어대회 전용으로 별도 변수명을 사용한다.
-let _ttImgContextMenuEl = null;
-let _ttCurrentImageTarget = null;
+let _imgContextMenuEl = null;
+let _currentImageTarget = null;
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _ttCurrentImageTarget = imgElement;
+  _currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -1917,14 +1916,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _ttImgContextMenuEl = menu;
+  _imgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _ttImgContextMenuEl = null;
+        _imgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -1933,24 +1932,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_ttCurrentImageTarget) return;
+  if(!_currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _ttCurrentImageTarget.style.transform = `scale(${scale})`;
-  _ttCurrentImageTarget.style.filter = `brightness(${brightness})`;
-  _ttCurrentImageTarget.dataset.scale = scale;
-  _ttCurrentImageTarget.dataset.brightness = brightness;
+  _currentImageTarget.style.transform = `scale(${scale})`;
+  _currentImageTarget.style.filter = `brightness(${brightness})`;
+  _currentImageTarget.dataset.scale = scale;
+  _currentImageTarget.dataset.brightness = brightness;
   
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
-    _ttImgContextMenuEl = null;
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
+    _imgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _ttRandomRotationTimer = null;
+let _randomRotationTimer = null;
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -1959,15 +1958,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _ttRandomRotationTimer = setInterval(()=>{
+  _randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_ttRandomRotationTimer){
-    clearInterval(_ttRandomRotationTimer);
-    _ttRandomRotationTimer = null;
+  if(_randomRotationTimer){
+    clearInterval(_randomRotationTimer);
+    _randomRotationTimer = null;
   }
 }
 
@@ -1980,7 +1979,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if(_ttCurrentTab === 'total'){
+    if(currentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = randomPlayer.photo;
@@ -1995,14 +1994,14 @@ function rotateRandomImage(){
   }
 }
 
-// 현재 탭 추적 (settings.js에도 동일 식별자가 있어 충돌 방지)
-let _ttCurrentTab = 'total';
+// 현재 탭 추적
+let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
-const _ttOriginalSw = window.sw;
+const originalSw = window.sw;
 window.sw = function(tab, el){
-  _ttCurrentTab = tab;
-  if(_ttOriginalSw) _ttOriginalSw(tab, el);
+  currentTab = tab;
+  if(originalSw) originalSw(tab, el);
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(imgSettings.randomRotation){
@@ -3784,24 +3783,22 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-// settings.js와 전역 변수명이 충돌 방지
-let _ttUnivDragSrc=-1;
-function _univDragStart(e,i){_ttUnivDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+let _univDragSrc=-1;
+function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if(_ttUnivDragSrc===i)return false;
-  const moved=univCfg.splice(_ttUnivDragSrc,1)[0];
+  if(_univDragSrc===i)return false;
+  const moved=univCfg.splice(_univDragSrc,1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-// settings.js와 전역 변수 충돌 방지
-let _ttDissolveIdx = -1;
+let _dissolveIdx = -1;
 function openDissolveModal(i){
-  _ttDissolveIdx = i;
+  _dissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -3812,8 +3809,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  if(_ttDissolveIdx < 0) return;
-  const u = univCfg[_ttDissolveIdx];
+  if(_dissolveIdx < 0) return;
+  const u = univCfg[_dissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;
@@ -4172,9 +4169,14 @@ function _setPdUnivDarken(univ,val,idx){
 
 
 
-// (주의) 통계 탭 구현은 stats.js에서 담당한다.
-// 과거 임시 코드가 tier-tour.js에도 포함돼 있었는데, settings.js / stats.js와 전역 변수 충돌로
-// tier-tour.js 자체가 로드 실패하는 문제가 생겨 제거함.
+/* ==========================================
+   STATISTICS TAB
+========================================== */
+let statsSub='overview';
+function rStats(C,T){
+  T.innerText='Statistics';
+  C.innerHTML='<div style=`"padding:40px;text-align:center`">Statistics feature coming soon.</div>';
+}
 
 // 토너먼트 버튼 우클릭 메뉴
 function showTournamentContext(e){
