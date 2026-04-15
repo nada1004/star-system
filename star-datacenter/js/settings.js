@@ -15,14 +15,14 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체') window._cfgCat='기본';
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체') window._cfgCat='게임 운영';
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
   const catSecs={
-    '기본':['notice','univ','maps','mAlias','si','tier','acct','season','teammatch'],
-    '데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
-    '외형':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg'],
-    '시스템':['fab','storage'],
+    '게임 운영':['notice','tier','season','teammatch','acct'],
+    '콘텐츠 관리':['univ','maps','mAlias','si'],
+    '시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+    '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
   };
   const show=catSecs[cat]||null;
   document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
@@ -48,12 +48,12 @@ function rCfg(C,T){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
     return;
   }
-  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='기본';
-  const _cfgCats=['기본','데이터','외형','시스템'];
-  const _cfgCatIcons={'기본':'📋','데이터':'💾','외형':'🎨','시스템':'⚙️'};
+  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
+  const _cfgCats=['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'];
+  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','시스템 설정':'⚙️','데이터 관리':'💾'};
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="stabs no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:12px">
-  ${_cfgCats.map(c=>`<button class="stab cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${_cfgCatIcons[c]} ${c}</button>`).join('')}
+  let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:12px">
+  ${_cfgCats.map(c=>`<button class="pill cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${_cfgCatIcons[c]} ${c}</button>`).join('')}
 </div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
@@ -337,7 +337,7 @@ ${_cfgD('notice','📢 공지 관리')}
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="stab ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${t}전</button>`).join('')}
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${t}전</button>`).join('')}
         </div>
         <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
       </div>
