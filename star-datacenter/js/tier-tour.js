@@ -225,6 +225,13 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
+  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
+  }
+  if(_grpPasteState.mode==='procomp-team'){
+    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
@@ -2277,6 +2284,13 @@ function _grpPasteApplyLogic(savable){
   }
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
+  }
+  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
+  }
+  if(_grpPasteState.mode==='procomp-team'){
+    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
   }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){

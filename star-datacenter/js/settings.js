@@ -19,9 +19,9 @@ if(typeof window._cfgCat==='undefined') window._cfgCat='전체';
 function _cfgApplyCat(cat){
   window._cfgCat=cat;
   const catSecs={
-    '기본':['notice','univ','maps','mAlias','si','tier','acct','season'],
+    '기본':['notice','univ','maps','mAlias','si','tier','acct','season','teammatch'],
     '데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
-    '외형':['b2layout','imgsettings','imgmodalsettings','pd','oldbright','boardbg'],
+    '외형':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg'],
     '시스템':['fab','storage'],
   };
   const show=catSecs[cat]||null;
@@ -29,8 +29,8 @@ function _cfgApplyCat(cat){
     var id=el.getAttribute('data-cfg-sec');
     var visible=show===null||show.includes(id);
     el.style.display=visible?'':'none';
-    // 특정 카테고리 클릭 시 해당 섹션 모두 펼치기
-    if(visible && cat!=='전체' && el.tagName==='DETAILS') el.open=true;
+    // 카테고리 클릭 시 해당 섹션 모두 펼치기
+    if(visible && el.tagName==='DETAILS') el.open=true;
   });
   document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
     btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
@@ -48,11 +48,12 @@ function rCfg(C,T){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
     return;
   }
-  if(!window._cfgCat) window._cfgCat='전체';
-  const _cfgCats=['전체','기본','데이터','외형','시스템'];
+  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='기본';
+  const _cfgCats=['기본','데이터','외형','시스템'];
+  const _cfgCatIcons={'기본':'📋','데이터':'💾','외형':'🎨','시스템':'⚙️'};
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="fbar no-export" style="margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none">
-  ${_cfgCats.map(c=>`<button class="pill cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${c}</button>`).join('')}
+  let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:12px">
+  ${_cfgCats.map(c=>`<button class="pill cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${_cfgCatIcons[c]} ${c}</button>`).join('')}
 </div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
@@ -328,6 +329,27 @@ ${_cfgD('notice','📢 공지 관리')}
         <input type="date" id="cfg-season-to" style="font-size:12px">
       </div>
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
+    </div>
+  </details>
+  ${_cfgD('teammatch','👥 팀 매치 설정 (2:2 / 3:3 / 4:4전)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">붙여넣기 자동 인식 및 경기 입력에서 팀 매치(2:2·3:3·4:4전)를 지원합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${t}전</button>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">📋 자동인식 형식 안내</div>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:2">
+          <div>• <code>선수A+선수B 승 선수C+선수D</code> → 2:2전 승리</div>
+          <div>• <code>선수A+선수B+선수C 승 선수D+선수E+선수F</code> → 3:3전</div>
+          <div>• <code>선수A+선수B > 선수C+선수D [맵명]</code> → 맵 포함</div>
+          <div style="color:var(--gray-l);margin-top:4px">※ 붙여넣기 모달에서 "+" 기호로 팀원을 연결하면 자동 인식됩니다.</div>
+        </div>
+      </div>
     </div>
   </details>
     ${_cfgD('bulkdate','📅 날짜 일괄 변경')}
@@ -651,6 +673,24 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
+  ${_cfgD('boardchip','🖼️ 현황판 칩 프로필 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판(현재 현황판) 스트리머 칩의 프로필 이미지 모양과 크기를 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 이미지 모양</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()" onclick="boardChipPhotoShape='circle';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-b';document.getElementById('cfg-bcp-square').className='btn btn-w';render()">⭕ 원형 (기본)</button>
+          <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})()" onclick="boardChipPhotoShape='square';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-w';document.getElementById('cfg-bcp-square').className='btn btn-b';render()">⬛ 네모형</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 이미지 크기 <span id="cfg-bcp-size-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}px</span></div>
+        <input type="range" min="16" max="48" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}" style="width:100%;accent-color:var(--blue)"
+          oninput="boardChipPhotoSize=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-size-val').textContent=this.value+'px';render()">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-top:2px"><span>16px (작게)</span><span>48px (크게)</span></div>
+      </div>
+    </div>
+  </details>
   ${_cfgD('oldbright','🎨 구현황판 카드 배경/라벨 밝기 조절')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -769,7 +809,7 @@ ${_cfgD('notice','📢 공지 관리')}
       if(el)el.addEventListener('change',saveImageSettings);
     });
     // 카테고리 필터 적용
-    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'전체');
+    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'기본');
     // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
     if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);

@@ -455,6 +455,13 @@ let boardGridCols=1; // 1열/2열 보기
 let boardCardView=false; // 포토카드 뷰
 let boardCardShape='circle'; // 포토카드 이미지 모양: 'circle' | 'square'
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
+// 칩 프로필 이미지 설정 (localStorage에서 복원)
+let boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
+let boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26'); // px
+function saveBoardChipPhotoSettings(){
+  localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
+  localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
+}
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
 
@@ -566,8 +573,8 @@ function rBoard(C,T){
     .brd-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
     .brd-row-btn{cursor:pointer;flex:1;display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;font-family:'Noto Sans KR',sans-serif;min-width:0;}
-    .brd-photo{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
-    .brd-photo-placeholder{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(0,0,0,.35);}
+    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:${boardChipPhotoShape==='square'?'5px':'50%'};object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
+    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:${boardChipPhotoShape==='square'?'5px':'50%'};flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(0,0,0,.35);}
     .brd-race{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px;}
     .brd-name{font-weight:700;font-size:12px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
     .brd-role-main{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
