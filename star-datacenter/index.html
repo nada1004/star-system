@@ -138,7 +138,6 @@
   <button class="tab" onclick="sw('stats',this)">📊 통계</button>
   <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
   <button class="tab" onclick="sw('roulette',this)">🎰 룰렛</button>
-  <button class="tab" onclick="sw('elboard',this)">📡 엘보드</button>
   <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
 </div>
 
@@ -492,23 +491,37 @@
         <span style="color:#7c3aed;font-size:11px">💡 이름/맵 인식 실패 시 직접 수정 · ⇄ 버튼으로 A/B조 전체 교체 · 승패도 행별 변경 가능</span>
       </div>
     </details>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
-      <input type="date" id="pro-paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-      <div style="display:flex;gap:6px;align-items:center;margin-left:8px">
-        <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
-        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1" id="pro-mode-game-lbl" onclick="setProPasteMode('game')">🎮 경기 방식</label>
-        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)" id="pro-mode-set-lbl" onclick="setProPasteMode('set')">📋 세트제</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
+        <input type="date" id="pro-paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+        <div style="display:flex;gap:6px;align-items:center;margin-left:4px">
+          <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1" id="pro-mode-game-lbl" onclick="setProPasteMode('game')">🎮 경기 방식</label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)" id="pro-mode-set-lbl" onclick="setProPasteMode('set')">📋 세트제</label>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#7c3aed">🏟️ 팀전 포맷</span>
+        <button id="pro-fmt-0-btn" onclick="setProFormat(0)" style="padding:4px 11px;border-radius:20px;border:1.5px solid #7c3aed;background:#f5f3ff;color:#7c3aed;font-size:12px;font-weight:700;cursor:pointer">자유</button>
+        <button id="pro-fmt-2-btn" onclick="setProFormat(2)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">2:2</button>
+        <button id="pro-fmt-3-btn" onclick="setProFormat(3)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">3:3</button>
+        <button id="pro-fmt-4-btn" onclick="setProFormat(4)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">4:4</button>
+        <span id="pro-fmt-hint" style="font-size:11px;color:var(--gray-l)">포맷 선택 시 경기당 게임 수가 자동 그룹화됩니다</span>
       </div>
     </div>
     <div style="position:relative">
-      <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z"
+      <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z&#10;&#10;여러 경기: ===경기구분=== 으로 구분 입력 가능"
         style="width:100%;min-height:120px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
         oninput="proPreview()" onpaste="setTimeout(proPreview,0)"></textarea>
       <button onclick="document.getElementById('pro-paste-input').value='';proPreview();"
         style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center"
         onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
         onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+      <button onclick="insertProMatchSep()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;border:1.5px dashed #7c3aed;background:#f5f3ff;color:#7c3aed;font-size:11px;font-weight:700;cursor:pointer">➕ 경기 구분선 추가</button>
+      <span style="font-size:11px;color:var(--gray-l)">여러 경기를 한 번에 입력할 때 사용</span>
     </div>
     <div id="pro-paste-preview" style="margin-top:12px"></div>
     <div id="pro-swap-row" style="display:none;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;align-items:center;gap:10px;flex-wrap:wrap">
@@ -522,6 +535,7 @@
       <span id="pro-paste-warn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
       <button class="btn btn-w" onclick="closeProPasteModal()">취소</button>
       <button class="btn btn-g" onclick="proApply()" id="pro-apply-btn" style="display:none">✅ 프로리그에 저장</button>
+      <span id="pro-multi-badge" style="display:none;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe"></span>
     </div>
   </div>
 </div>
