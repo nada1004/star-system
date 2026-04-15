@@ -756,19 +756,29 @@ function rTier(C,T){
   if(!tierRankMode||!allModeIds.has(tierRankMode)) tierRankMode='tier';
   const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
   if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
+  if(window._tierFilterOpen===undefined) window._tierFilterOpen=false;
   if(!window._tierRaceFilter) window._tierRaceFilter='전체';
   if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
   const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
+  // 활성 필터 수 계산 (뱃지용)
+  const _activeFilters=[
+    fUniv!=='전체', fTier!=='전체',
+    window._tierRaceFilter!=='전체',
+    window._tierHideNoRecord, window._tierExcludeMale,
+    _hasTypeFilter
+  ].filter(Boolean).length;
 
-  // ── 1행: 보기 모드 ──
+  // ── 1행: 보기 모드 + 필터 토글 ──
   let fh=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">
     <span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">보기</span>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
+  fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap;margin-left:auto" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   fh+=`</div>`;
 
+  if(window._tierFilterOpen||_activeFilters>0){
   {
     // ── 2행: 대학 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
@@ -824,6 +834,7 @@ function rTier(C,T){
   }
   fh+=`</div>`;
   fh+=`<div style="font-size:10px;color:var(--gray-l);margin:-2px 0 10px">유형별 승/패는 기본적으로 세트 내 게임 수 기준으로 집계됩니다.</div>`;
+  } // end filter open block
   F.innerHTML=fh;
 
   if(false&&tierRankMode==='recent'){

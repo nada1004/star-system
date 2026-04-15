@@ -594,28 +594,10 @@ function rBoard(C,T){
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
     .brd-move-popup-btn:disabled{opacity:.35;cursor:default;background:none;}
     .brd-move-popup-sep{height:1px;background:var(--border);margin:4px 0;}
-    /* 현황판 툴바 버튼 */
-    .brd-tbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;line-height:1.4;}
-    .brd-tbtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.12);}
-    .brd-tbtn:active{transform:translateY(0);box-shadow:none;}
-    .brd-tbtn-img{border-color:#3b82f6;color:#2563eb;background:linear-gradient(135deg,#eff6ff,#dbeafe);}
-    .brd-tbtn-img:hover{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#2563eb;}
-    .brd-tbtn-share{border-color:#8b5cf6;color:#6d28d9;background:linear-gradient(135deg,#f5f3ff,#ede9fe);}
-    .brd-tbtn-share:hover{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#6d28d9;}
-    body.dark .brd-tbtn-img{background:linear-gradient(135deg,#1e3a5f,#1e3a8a);color:#93c5fd;border-color:#3b82f6;}
-    body.dark .brd-tbtn-share{background:linear-gradient(135deg,#2e1f5e,#3b2080);color:#c4b5fd;border-color:#7c3aed;}
-    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;}
-    .brd-tbtn-grid{border-color:#6366f1;color:#4338ca;background:linear-gradient(135deg,#eef2ff,#e0e7ff);}
-    .brd-tbtn-grid:hover{background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-color:#4338ca;}
-    body.dark .brd-tbtn-grid{background:linear-gradient(135deg,#1e1b4b,#312e81);color:#a5b4fc;border-color:#6366f1;}
+    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;padding-bottom:6px;}
     @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
   </style>
-  <div class="no-export brd-toolbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-    <div style="display:flex;align-items:center;gap:8px;margin-right:2px">
-      <span style="font-size:18px;line-height:1">📊</span>
-      <span style="font-weight:900;font-size:15px;color:var(--text);letter-spacing:-.3px">현황판</span>
-    </div>
-    <div style="width:1px;height:22px;background:var(--border);opacity:.6"></div>
+  <div class="no-export brd-toolbar fbar" style="gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative">
         <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
