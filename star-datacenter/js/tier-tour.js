@@ -1,4 +1,4 @@
-﻿﻿/* ══════════════════════════════════════
+﻿﻿﻿/* ══════════════════════════════════════
    🔧 구버전 티어대회 데이터 1회 마이그레이션
 ══════════════════════════════════════ */
 let _ttMigrated = false;
@@ -4278,4 +4278,8 @@ function goToTournamentRecords(){
   window.histPage['tiertour-bkt'] = 0;
   render();
 }
+
+try{
+  window._grpPasteApplyLogic = _grpPasteApplyLogic;
+}catch(e){}
 
