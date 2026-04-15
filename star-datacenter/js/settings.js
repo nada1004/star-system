@@ -28,6 +28,27 @@ function _cfgToggle(id,el){
 }
 const _catSecs={'게임 운영':['notice','tier','season','teammatch','acct'],'콘텐츠 관리':['univ','maps','mAlias','si'],'시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],'데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']};
 const _cfgAllSecs=[...new Set(Object.values(_catSecs).flat())];
+
+// 설정 탭 버튼이 "반응 없음"처럼 보일 때를 대비한 이벤트 바인딩(인라인 onclick 불발 대비)
+function _bindCfgHandlers(root){
+  if(!root || root._cfgBound) return;
+  root._cfgBound = true;
+  root.addEventListener('click', function(e){
+    const t = e.target;
+    const catBtn = t && t.closest ? t.closest('[data-cfg-cat]') : null;
+    if(catBtn){
+      const cat = catBtn.getAttribute('data-cfg-cat');
+      if(cat){ _cfgApplyCat(cat, true); }
+      return;
+    }
+    const goBtn = t && t.closest ? t.closest('[data-cfg-go]') : null;
+    if(goBtn){
+      const sec = goBtn.getAttribute('data-cfg-go');
+      if(sec){ _cfgGo(sec); }
+      return;
+    }
+  }, {capture:true});
+}
 function _cfgD(id,title,extra){
   const isOpen=_cfgOpen(id);
   // cfg-anchor: 바로가기 클릭 시 원래 위치로 되돌릴 기준점
@@ -136,15 +157,15 @@ function rCfg(C,T){
   const _curSecs=_catSecs[window._cfgCat]||[];
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:6px">
-      ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}"
+      ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
         style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1.5px solid ${on?'var(--blue)':'var(--border)'};border-radius:20px;background:${on?'var(--blue)':'var(--surface)'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:12px;font-weight:${on?800:600};color:${on?'#fff':'var(--text)'};transition:all .15s">
         <span style="font-size:15px;line-height:1">${_cfgCatIcons[c]}</span>${c}</button>`;}).join('')}
     </div>
     <div class="fbar no-export" style="gap:4px;flex-wrap:wrap;padding:5px 0 4px">
       <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">전체 바로가기</span>
-      ${_cfgAllSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
+      ${_cfgAllSecs.map(id=>`<button class="pill" data-cfg-go="${id}" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
     </div>
-    <div style="padding:0 0 6px;font-size:10px;color:var(--gray-l);font-weight:700">설정 UI: QV-1</div>
+    <div style="padding:0 0 6px;font-size:10px;color:var(--gray-l);font-weight:700">설정 UI: QV-2</div>
   </div>
   <div id="cfg-quick-view" class="cfg-quick-view">
     <div style="padding:12px 14px;background:var(--surface);border:1px dashed var(--border2);border-radius:12px;font-size:12px;color:var(--gray-l)">
@@ -911,6 +932,8 @@ ${_cfgD('notice','📢 공지 관리')}
     if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);
   C.innerHTML=h;
+  // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
+  _bindCfgHandlers(C);
   setTimeout(_refreshAliasList, 10);
   // FAB 탭 설정 초기화
   window.saveFabTabSetting = function(btnKey, tabId){
