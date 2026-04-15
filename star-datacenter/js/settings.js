@@ -144,8 +144,13 @@ function rCfg(C,T){
       <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">전체 바로가기</span>
       ${_cfgAllSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
     </div>
+    <div style="padding:0 0 6px;font-size:10px;color:var(--gray-l);font-weight:700">설정 UI: QV-1</div>
   </div>
-  <div id="cfg-quick-view" class="cfg-quick-view"></div>
+  <div id="cfg-quick-view" class="cfg-quick-view">
+    <div style="padding:12px 14px;background:var(--surface);border:1px dashed var(--border2);border-radius:12px;font-size:12px;color:var(--gray-l)">
+      위의 <b>전체 바로가기</b> 버튼을 누르면 선택한 설정이 여기에 표시됩니다.
+    </div>
+  </div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
