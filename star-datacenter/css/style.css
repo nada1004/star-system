@@ -173,6 +173,10 @@ tr:last-child td{border-bottom:none;}
 .pill:active{transform:scale(.96);}
 .pill.on{background:var(--blue);color:#fff;font-weight:600;}
 .pill:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+
+/* 설정: 바로가기 아래 퀵뷰 영역 */
+.cfg-quick-view{display:block;margin:10px 0 14px;}
+.cfg-quick-view .ssec{margin:0;}
 .swrap{position:relative;display:inline-block;}
 .sdrop{display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;width:200px;z-index:500;max-height:190px;overflow-y:auto;box-shadow:var(--sh2);}
 .sitem{padding:7px 12px;cursor:pointer;font-size:12px;transition:.1s;}
