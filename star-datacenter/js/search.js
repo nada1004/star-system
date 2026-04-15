@@ -649,6 +649,7 @@ function parsePasteLine(line) {
   line = line
     .replace(/^\(\d+티어\)\s*/i, '')              // (N티어) 괄호 제거
     .replace(/^\[\d+티어\]\s*/i, '')              // [N티어] 제거
+    .replace(/^\[매치\]\s*/i, '')                 // [매치] 제거
     .replace(/^[\d]+\s*경기[\.\)·\s]*/i, '')      // N경기
     .replace(/^경기\s*[\d]+[\:\.\)·\s]*/i, '')    // 경기N:
     .replace(/^[\d]+[R라r][\.\)·\s]*/i, '')       // NR, N라운드
