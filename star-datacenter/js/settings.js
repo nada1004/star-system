@@ -10,105 +10,28 @@
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
 function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
+const _catSecs={'게임 운영':['notice','tier','season','teammatch','acct'],'콘텐츠 관리':['univ','maps','mAlias','si'],'시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],'데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']};
 function _cfgD(id,title,extra){
-  const isOpen=_cfgOpen(id);
-  // data-cfg-anchor: 바로가기 클릭 시 섹션을 상단(바로가기 아래)로 이동했다가 되돌리기 위한 앵커
-  return `<div class="cfg-anchor" data-cfg-anchor="${id}"></div><details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
+  const _vis=(_catSecs[window._cfgCat]||[]).includes(id);
+  const isOpen=_cfgOpen(id)&&_vis;
+  return `<details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''} style="display:${_vis?'':'none'}"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;
+}
 
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined'||!['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
-window._cfgCatSecs={
-  '게임 운영':['notice','tier','season','acct'],
-  '콘텐츠 관리':['univ','maps','mAlias','si'],
-  '시스템 설정':['b2layout','imgsettings','imgmodalsettings','fab'],
-  '데이터 관리':['sync'],
-};
-window._cfgAllSecs=[...new Set(Object.values(window._cfgCatSecs).flat())];
-window._cfgSecTitle={
-  notice:'📢 공지', univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🏷️ 상태 아이콘',
-  tier:'🎭 티어', acct:'👤 계정', season:'🏆 시즌',
-  sync:'🔄 동기화',
-  b2layout:'📐 레이아웃', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', fab:'📱 FAB',
-};
-
-function _cfgApplyCat(cat, autoGo=true){
-  window._cfgCat=cat;
-  const catSecs=window._cfgCatSecs||{};
-  const show=catSecs[cat]||null;
-  document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
-    // 퀵뷰에 올라간 섹션은 카테고리 필터로 숨기지 않음 (항상 보이게)
-    if(el.closest && el.closest('#cfg-quick-view')) return;
-    var id=el.getAttribute('data-cfg-sec');
-    var visible=(show===null||show.includes(id));
-    el.style.display=visible?'':'none';
-    if(el.tagName==='DETAILS') el.open=false;
-  });
-  document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
-    btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
-  });
-  // 카테고리를 직접 눌렀을 때만 첫 섹션으로 자동 이동
-  if(autoGo){
-    const first=(catSecs[cat]||[])[0];
-    if(first) setTimeout(()=>_cfgGo(first), 0);
-  }
-}
-
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
 function _cfgGo(secId){
-  // 섹션이 현재 카테고리에서 숨겨져 있다면 해당 카테고리로 자동 전환
-  try{
-    const catSecs = window._cfgCatSecs || null;
-    if(catSecs){
-      const targetCat = Object.keys(catSecs).find(cat => (catSecs[cat]||[]).includes(secId));
-      if(targetCat && window._cfgCat !== targetCat){
-        _cfgApplyCat(targetCat, false);
-      }
-    }
-  }catch(e){}
-
   const el=document.querySelector(`[data-cfg-sec="${secId}"]`);
   if(!el) return;
-
-  // 기존에 열려 있는 섹션은 닫기(아코디언)
-  try{
-    document.querySelectorAll('[data-cfg-sec]').forEach(d=>{
-      if(d!==el && d.tagName==='DETAILS') d.open=false;
-    });
-  }catch(e){}
-
-  // 바로가기 아래에 보이도록 퀵뷰 영역으로 이동
-  let qv=document.getElementById('cfg-quick-view');
-  if(!qv){
-    try{
-      qv=document.createElement('div');
-      qv.id='cfg-quick-view';
-      qv.className='cfg-quick-view';
-      const c=document.getElementById('rcont');
-      if(c) c.insertBefore(qv, c.firstChild);
-    }catch(e){}
-  }
-  try{
-    if(qv){
-      const prevId=window._cfgQuickSecId;
-      if(prevId && prevId!==secId){
-        const prev=document.querySelector(`[data-cfg-sec="${prevId}"]`);
-        const anchor=document.querySelector(`[data-cfg-anchor="${prevId}"]`);
-        if(prev && anchor){
-          anchor.parentNode.insertBefore(prev, anchor.nextSibling);
-          prev.style.display='';
-        }
-      }
-      window._cfgQuickSecId=secId;
-      el.style.display='';
-      qv.innerHTML='';
-      qv.appendChild(el);
-      qv.style.display='block';
-    }
-  }catch(e){}
-
-  // 펼치기
+  el.style.display='block';
   if(el.tagName==='DETAILS') el.open=true;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
+}
+function _cfgApplyCat(cat){
+  window._cfgCat=cat;
+  render();
 }
 
 /* ══════════════════════════════════════
@@ -120,20 +43,34 @@ function rCfg(C,T){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
     return;
   }
-  if(!window._cfgCat || !['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
+  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
   const _cfgCats=['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'];
   const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','시스템 설정':'⚙️','데이터 관리':'💾'};
+  const _cfgCatDesc={
+    '게임 운영':'공지/티어/시즌/경기 운영',
+    '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
+    '시스템 설정':'UI/현황판/모달/저장소',
+    '데이터 관리':'동기화/백업/일괄 작업'
+  };
+  const _cfgSecTitle={
+    notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
+    univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
+    b2layout:'🖼️ 현황판', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
+  };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px;margin-bottom:10px">
-    <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:8px">
-      ${_cfgCats.map(c=>`<button class="pill cfg-cat-pill ${window._cfgCat===c?'on':''}" data-cat="${c}" style="flex-shrink:0;white-space:nowrap" onclick="_cfgApplyCat('${c}')">${_cfgCatIcons[c]||''} ${c}</button>`).join('')}
+  const _curSecs=_catSecs[window._cfgCat]||[];
+  let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:6px">
+      ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button onclick="_cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}"
+        style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1.5px solid ${on?'var(--blue)':'var(--border)'};border-radius:20px;background:${on?'var(--blue)':'var(--surface)'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:12px;font-weight:${on?800:600};color:${on?'#fff':'var(--text)'};transition:all .15s">
+        <span style="font-size:15px;line-height:1">${_cfgCatIcons[c]}</span>${c}</button>`;}).join('')}
     </div>
-    <div class="fbar no-export" style="gap:5px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:6px">
-      <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">전체 바로가기</span>
-      ${(window._cfgAllSecs||[]).map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="_cfgGo('${id}')">${(window._cfgSecTitle&&window._cfgSecTitle[id])||id}</button>`).join('')}
+    <div class="fbar no-export" style="gap:4px;flex-wrap:wrap;padding:5px 0 4px">
+      <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">바로가기</span>
+      ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
     </div>
   </div>
-  <div id="cfg-quick-view" class="cfg-quick-view"></div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
@@ -352,22 +289,14 @@ ${_cfgD('notice','📢 공지 관리')}
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
   </details>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">💾 로컬 저장소 사용량</h4>
-      <button id="cfg-storage-toggle2" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-storage-wrap2');const btn=document.getElementById('cfg-storage-toggle2');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';renderStorageInfo();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-storage-wrap2" style="display:none">
+  ${_cfgD('storage','💾 로컬 저장소 사용량')}
+    <div id="cfg-storage-wrap2">
       <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
-      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-fb-body" style="display:none">
+  </details>
+  ${_cfgD('firebase','☁️ Firebase 실시간 동기화')}
+    <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -398,7 +327,7 @@ ${_cfgD('notice','📢 공지 관리')}
       <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
     </div>
     </div>
-  </div>
+  </details>
   ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
@@ -418,12 +347,28 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
     </div>
   </details>
-    <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">📅 날짜 일괄 변경</h4>
-      <button id="cfg-bulk-date-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-date-body');const btn=document.getElementById('cfg-bulk-date-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+  ${_cfgD('teammatch','👥 팀 매치 설정 (2:2 / 3:3 / 4:4전)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">붙여넣기 자동 인식 및 경기 입력에서 팀 매치(2:2·3:3·4:4전)를 지원합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${t}전</button>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">📋 자동인식 형식 안내</div>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:2">
+          <div>• <code>선수A+선수B 승 선수C+선수D</code> → 2:2전 승리</div>
+          <div>• <code>선수A+선수B+선수C 승 선수D+선수E+선수F</code> → 3:3전</div>
+          <div>• <code>선수A+선수B > 선수C+선수D [맵명]</code> → 맵 포함</div>
+          <div style="color:var(--gray-l);margin-top:4px">※ 붙여넣기 모달에서 "+" 기호로 팀원을 연결하면 자동 인식됩니다.</div>
+        </div>
+      </div>
     </div>
-    <div id="cfg-bulk-date-body" style="display:none">
+  </details>
+    ${_cfgD('bulkdate','📅 날짜 일괄 변경')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">변경 전 날짜</label>
@@ -442,14 +387,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeDate()">📅 날짜 일괄 변경</button>
       <span id="bulk-date-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗺️ 맵 이름 일괄 교체</h4>
-      <button id="cfg-bulk-map-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-map-body');const btn=document.getElementById('cfg-bulk-map-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-map-body" style="display:none">
+  </details>
+  ${_cfgD('bulkmap','🗺️ 맵 이름 일괄 교체')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
@@ -460,14 +399,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
       <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎖️ 선수 일괄 티어 변경</h4>
-      <button id="cfg-bulk-tier-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-tier-body');const btn=document.getElementById('cfg-bulk-tier-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-tier-body" style="display:none">
+  </details>
+  ${_cfgD('bulktier','🎖️ 선수 일괄 티어 변경')}
     <div style="padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">현재 티어</label>
@@ -493,14 +426,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkChangeTier()">🎖️ 티어 일괄 변경</button>
       <span id="bulk-tier-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🗑️ 날짜 범위 일괄 삭제</h4>
-      <button id="cfg-bulk-del-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-del-body');const btn=document.getElementById('cfg-bulk-del-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-del-body" style="display:none">
+  </details>
+  ${_cfgD('bulkdel','🗑️ 날짜 범위 일괄 삭제')}
     <div style="padding:14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">시작일</label>
@@ -519,14 +446,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-r btn-sm" onclick="bulkDeleteByDate()">🗑️ 범위 삭제 (되돌릴 수 없음)</button>
       <span id="bulk-del-result" style="font-size:12px;margin-left:8px;color:var(--red)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🔄 세트제 → 게임수 합산 일괄 변환</h4>
-      <button id="cfg-bulk-conv-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-bulk-conv-body');const btn=document.getElementById('cfg-bulk-conv-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-bulk-conv-body" style="display:none">
+  </details>
+  ${_cfgD('bulkconv','🔄 세트제 → 게임수 합산 일괄 변환')}
     <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
@@ -540,14 +461,8 @@ ${_cfgD('notice','📢 공지 관리')}
       <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
       <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
     </div>
-    </div>
-  </div>
-  <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🖼️ 현황판 라벨 배경 이미지별 설정</h4>
-      <button id="cfg-board-bg-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-board-bg-body');const btn=document.getElementById('cfg-board-bg-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
-    </div>
-    <div id="cfg-board-bg-body" style="display:none">
+  </details>
+  ${_cfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
     <div style="margin-bottom:14px;padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
       <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px">📋 일괄 설정 (전체 대학)</div>
@@ -581,8 +496,7 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
     </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
-    </div>
-  </div>
+  </details>
   ${_cfgD('sync','🔄 데이터 동기화')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 기록을 각 탭 기록 및 스트리머 최근 경기에 반영합니다.</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -775,12 +689,25 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
-  <div class="ssec" data-cfg-sec="oldbright">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">🎨 구현황판 카드 배경/라벨 밝기 조절</h4>
-      <button id="cfg-old-bright-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-old-bright-body');const btn=document.getElementById('cfg-old-bright-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+  ${_cfgD('boardchip','🖼️ 현황판 칩 프로필 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판(현재 현황판) 스트리머 칩의 프로필 이미지 모양과 크기를 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 이미지 모양</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()}" onclick="boardChipPhotoShape='circle';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-b';document.getElementById('cfg-bcp-square').className='btn btn-w';render()">⭕ 원형 (기본)</button>
+          <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})}" onclick="boardChipPhotoShape='square';saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-circle').className='btn btn-w';document.getElementById('cfg-bcp-square').className='btn btn-b';render()">⬛ 네모형</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 이미지 크기 <span id="cfg-bcp-size-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}px</span></div>
+        <input type="range" min="16" max="48" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}" style="width:100%;accent-color:var(--blue)"
+          oninput="boardChipPhotoSize=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-size-val').textContent=this.value+'px';render()">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-top:2px"><span>16px (작게)</span><span>48px (크게)</span></div>
+      </div>
     </div>
-    <div id="cfg-old-bright-body" style="display:none">
+  </details>
+  ${_cfgD('oldbright','🎨 구현황판 카드 배경/라벨 밝기 조절')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
@@ -795,8 +722,7 @@ ${_cfgD('notice','📢 공지 관리')}
       </div>
       <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>
     </div>
-    </div>
-  </div>
+  </details>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링
@@ -899,9 +825,9 @@ ${_cfgD('notice','📢 공지 관리')}
       if(el)el.addEventListener('change',saveImageSettings);
     });
     // 카테고리 필터 적용
-    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false);
-    // 스트리머 상세 스타일 섹션이 열려있으면 내용 렌더링
-    if(_cfgOpen('pd')&&typeof _renderCfgPdSection==='function') _renderCfgPdSection();
+    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'기본');
+    // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
+    if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);

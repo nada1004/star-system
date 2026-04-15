@@ -225,6 +225,13 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
+  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
+  }
+  if(_grpPasteState.mode==='procomp-team'){
+    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
@@ -519,7 +526,7 @@ function rTierTourTab(C, T){
   const subOpts=[
     ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
     {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
-    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
+    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
@@ -527,7 +534,7 @@ function rTierTourTab(C, T){
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -642,10 +649,9 @@ function ttPlayerRankHTML(compName){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['tt']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['tt']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['tt']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['tt']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  if(!entries.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
   if(!window._rankPage)window._rankPage={};
   const _PK='tt_rank';
   const _PAGE=20;
@@ -655,7 +661,7 @@ function ttPlayerRankHTML(compName){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
-  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
+  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const col=gc(p.univ);
@@ -930,9 +936,7 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
-// (legacy) 예전 버전에서 tier-tour.js에 포함되어 있던 설정탭 렌더 함수.
-// settings.js의 rCfg(설정탭 전용)가 최종적으로 사용되어야 하므로 이름을 변경해 덮어쓰기 버그를 방지합니다.
-function rCfg_legacy(C,T){
+function rTierTourCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
@@ -1747,7 +1751,7 @@ function rCfg_legacy(C,T){
     if(document.getElementById('cfg-fab-hide-pc'))document.getElementById('cfg-fab-hide-pc').checked = hidePC;
   };
   setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
-} // end rCfg_legacy
+} // end first rCfg
 
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
@@ -1868,16 +1872,19 @@ function saveImageSettings(){
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
-let _imgContextMenuEl = null;
-let _currentImageTarget = null;
+// settings.js에서도 동일한 전역 식별자(_imgContextMenuEl)를 사용하고 있어
+// 중복 선언 시 tier-tour.js 전체가 SyntaxError로 로드 실패함.
+// 티어대회 전용으로 별도 변수명을 사용한다.
+let _ttImgContextMenuEl = null;
+let _ttCurrentImageTarget = null;
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _currentImageTarget = imgElement;
+  _ttCurrentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_imgContextMenuEl){
-    _imgContextMenuEl.remove();
+  if(_ttImgContextMenuEl){
+    _ttImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -1916,14 +1923,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _imgContextMenuEl = menu;
+  _ttImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _imgContextMenuEl = null;
+        _ttImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -1932,24 +1939,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_currentImageTarget) return;
+  if(!_ttCurrentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _currentImageTarget.style.transform = `scale(${scale})`;
-  _currentImageTarget.style.filter = `brightness(${brightness})`;
-  _currentImageTarget.dataset.scale = scale;
-  _currentImageTarget.dataset.brightness = brightness;
+  _ttCurrentImageTarget.style.transform = `scale(${scale})`;
+  _ttCurrentImageTarget.style.filter = `brightness(${brightness})`;
+  _ttCurrentImageTarget.dataset.scale = scale;
+  _ttCurrentImageTarget.dataset.brightness = brightness;
   
-  if(_imgContextMenuEl){
-    _imgContextMenuEl.remove();
-    _imgContextMenuEl = null;
+  if(_ttImgContextMenuEl){
+    _ttImgContextMenuEl.remove();
+    _ttImgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _randomRotationTimer = null;
+let _ttRandomRotationTimer = null;
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -1958,15 +1965,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _randomRotationTimer = setInterval(()=>{
+  _ttRandomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_randomRotationTimer){
-    clearInterval(_randomRotationTimer);
-    _randomRotationTimer = null;
+  if(_ttRandomRotationTimer){
+    clearInterval(_ttRandomRotationTimer);
+    _ttRandomRotationTimer = null;
   }
 }
 
@@ -1979,7 +1986,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if(currentTab === 'total'){
+    if(_ttCurrentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = randomPlayer.photo;
@@ -1994,14 +2001,14 @@ function rotateRandomImage(){
   }
 }
 
-// 현재 탭 추적
-let currentTab = 'total';
+// 현재 탭 추적 (settings.js에도 동일 식별자가 있어 충돌 방지)
+let _ttCurrentTab = 'total';
 
 // 탭 변경 시 회전 제어
-const originalSw = window.sw;
+const _ttOriginalSw = window.sw;
 window.sw = function(tab, el){
-  currentTab = tab;
-  if(originalSw) originalSw(tab, el);
+  _ttCurrentTab = tab;
+  if(_ttOriginalSw) _ttOriginalSw(tab, el);
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(imgSettings.randomRotation){
@@ -2276,6 +2283,13 @@ function _grpPasteApplyLogic(savable){
   }
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
+  }
+  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
+  if(_grpPasteState.mode==='procomp-league'){
+    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
+  }
+  if(_grpPasteState.mode==='procomp-team'){
+    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
   }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
@@ -2603,10 +2617,9 @@ function ttPlayerRankHTML(compName){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['tt']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['tt']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['tt']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['tt']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  if(!entries.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
   if(!window._rankPage)window._rankPage={};
   const _PK='tt_rank';
   const _PAGE=20;
@@ -2616,7 +2629,7 @@ function ttPlayerRankHTML(compName){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
-  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
+  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const col=gc(p.univ);
@@ -3783,22 +3796,24 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-let _univDragSrc=-1;
-function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+// settings.js와 전역 변수명이 충돌 방지
+let _ttUnivDragSrc=-1;
+function _univDragStart(e,i){_ttUnivDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if(_univDragSrc===i)return false;
-  const moved=univCfg.splice(_univDragSrc,1)[0];
+  if(_ttUnivDragSrc===i)return false;
+  const moved=univCfg.splice(_ttUnivDragSrc,1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-let _dissolveIdx = -1;
+// settings.js와 전역 변수 충돌 방지
+let _ttDissolveIdx = -1;
 function openDissolveModal(i){
-  _dissolveIdx = i;
+  _ttDissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -3809,8 +3824,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  if(_dissolveIdx < 0) return;
-  const u = univCfg[_dissolveIdx];
+  if(_ttDissolveIdx < 0) return;
+  const u = univCfg[_ttDissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;
@@ -4169,13 +4184,69 @@ function _setPdUnivDarken(univ,val,idx){
 
 
 
-/* ==========================================
-   STATISTICS TAB
-========================================== */
-let statsSub='overview';
-function rStats(C,T){
-  T.innerText='Statistics';
-  C.innerHTML='<div style=`"padding:40px;text-align:center`">Statistics feature coming soon.</div>';
+// (주의) 통계 탭 구현은 stats.js에서 담당한다.
+// 과거 임시 코드가 tier-tour.js에도 포함돼 있었는데, settings.js / stats.js와 전역 변수 충돌로
+// tier-tour.js 자체가 로드 실패하는 문제가 생겨 제거함.
+
+// 개인 순위 버튼 우클릭 메뉴
+function showRankContext(e){
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const existingMenu = document.getElementById('rank-context-menu');
+  if(existingMenu) existingMenu.remove();
+  
+  if(!window._rankSort)window._rankSort={};
+  const sk=window._rankSort['tt']||'rate';
+  
+  const menu = document.createElement('div');
+  menu.id = 'rank-context-menu';
+  menu.style.cssText = `
+    position: fixed;
+    left: ${e.clientX}px;
+    top: ${e.clientY}px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 99999;
+    min-width: 160px;
+    padding: 4px 0;
+  `;
+  
+  menu.innerHTML = `
+    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f9fafb'" 
+         onmouseout="this.style.background='white'"
+         onclick="window._rankSort['tt']='rate';render();document.getElementById('rank-context-menu').remove();">
+      <span style="font-size: 14px">📊</span>
+      <span>승률순</span>
+    </div>
+    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f9fafb'" 
+         onmouseout="this.style.background='white'"
+         onclick="window._rankSort['tt']='w';render();document.getElementById('rank-context-menu').remove();">
+      <span style="font-size: 14px">🏆</span>
+      <span>승순</span>
+    </div>
+    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f9fafb'" 
+         onmouseout="this.style.background='white'"
+         onclick="window._rankSort['tt']='l';render();document.getElementById('rank-context-menu').remove();">
+      <span style="font-size: 14px">📉</span>
+      <span>패순</span>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  const closeMenu = (ev) => {
+    if(!menu.contains(ev.target)){
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 10);
 }
 
 // 토너먼트 버튼 우클릭 메뉴

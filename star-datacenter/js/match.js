@@ -120,9 +120,9 @@ function raceSummaryHTML(){
    공통 세트 빌더
 ══════════════════════════════════════ */
 function stabs(current, opts){
-  return `<div class="stabs no-export">${opts.map(o=>{
+  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
-    return `<button class="stab ${current===o.id?'on':''}" onclick="${o.fn}">${o.lbl}</button>`;
+    return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('')}</div>`;
 }
 

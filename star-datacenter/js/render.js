@@ -67,6 +67,7 @@ function render(){
     case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
     case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
+    case 'elboard': if(typeof rElboard==='function') rElboard(C,T); break;
     default: break;
   }
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
@@ -898,15 +899,16 @@ function buildPlayerDetailHTML(p){
   const _otherMatches=[];
   if(typeof miniM!=='undefined'&&miniM.length){
     miniM.forEach(m=>{
-      (m.sets||[]).forEach(s=>{
-        (s.games||[]).forEach(g=>{
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:m.type==='civil'?'시빌워':'미니대전',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:m.type==='civil'?'시빌워':'미니대전',
+              _dupKey:`mid:${gameId}`
             });
           }
         });
@@ -915,15 +917,16 @@ function buildPlayerDetailHTML(p){
   }
   if(typeof univM!=='undefined'&&univM.length){
     univM.forEach(m=>{
-      (m.sets||[]).forEach(s=>{
-        (s.games||[]).forEach(g=>{
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:'대학대전',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학대전',
+              _dupKey:`mid:${gameId}`
             });
           }
         });
@@ -932,15 +935,16 @@ function buildPlayerDetailHTML(p){
   }
   if(typeof ckM!=='undefined'&&ckM.length){
     ckM.forEach(m=>{
-      (m.sets||[]).forEach(s=>{
-        (s.games||[]).forEach(g=>{
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:'대학CK',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학CK',
+              _dupKey:`mid:${gameId}`
             });
           }
         });
@@ -949,15 +953,16 @@ function buildPlayerDetailHTML(p){
   }
   if(typeof proM!=='undefined'&&proM.length){
     proM.forEach(m=>{
-      (m.sets||[]).forEach(s=>{
-        (s.games||[]).forEach(g=>{
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id||'',mode:'프로리그',
-              _dupKey:`${m.d||''}|${g.map||''}|${[g.playerA,g.playerB].sort().join('|')}`
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'프로리그',
+              _dupKey:`mid:${gameId}`
             });
           }
         });
@@ -1785,8 +1790,13 @@ function rMergedComp(C, T) {
     _mergedCompSub, '_mergedCompSub'
   );
   const sub = document.createElement('div');
-  if(_mergedCompSub==='comp') { if(typeof rComp==='function')        rComp(sub,T); }
-  else                         { if(typeof rTierTourTab==='function') rTierTourTab(sub,T); }
+  if(_mergedCompSub==='comp') {
+    if(typeof rComp==='function') rComp(sub,T);
+    else sub.innerHTML=`<div style="padding:30px;text-align:center;color:var(--gray-l)">대회 모듈 로딩 중...</div>`;
+  } else {
+    if(typeof rTierTourTab==='function') rTierTourTab(sub,T);
+    else sub.innerHTML=`<div style="padding:30px;text-align:center;color:var(--gray-l)">티어대회 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.</div>`;
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }

@@ -186,7 +186,8 @@ function statsOverviewHTML(){
   });
   const univRank=Object.entries(univStats)
     .map(([name,s])=>({name,w:s.w,l:s.l,color:s.color,rate:s.w+s.l===0?0:Math.round(s.w/(s.w+s.l)*100)}))
-    .sort((a,b)=>b.rate-a.rate||b.w-a.w);
+    .filter(u=>u.w+u.l>=10)
+    .sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
   const rv={T:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},Z:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},P:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}}};
   players.forEach(p=>{
@@ -1007,10 +1008,10 @@ function statsShareCardHTML(){
       <h4 style="margin:0;font-size:16px">🎴 공유 카드 생성</h4>
     </div>
     <!-- 모드 탭 -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" class="no-export">
-      <button class="stab ${_shareMode==='player'?'on':''}" onclick="_shareMode='player';_sharePlayerSearch='';render()">👤 스트리머 카드</button>
-      <button class="stab ${_shareMode==='univ'?'on':''}" onclick="_shareMode='univ';render()">🏛️ 대학 카드</button>
-      <button class="stab ${_shareMode==='match'?'on':''}" onclick="_shareMode='match';window._shareMatchObj=null;render()">⚔️ 경기 결과</button>
+    <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:16px">
+      <button class="pill ${_shareMode==='player'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_shareMode='player';_sharePlayerSearch='';render()">👤 스트리머 카드</button>
+      <button class="pill ${_shareMode==='univ'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_shareMode='univ';render()">🏛️ 대학 카드</button>
+      <button class="pill ${_shareMode==='match'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_shareMode='match';window._shareMatchObj=null;render()">⚔️ 경기 결과</button>
     </div>
 
     ${_shareMode==='player'?`
