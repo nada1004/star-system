@@ -759,6 +759,7 @@ function rTier(C,T){
   if(window._tierFilterOpen===undefined) window._tierFilterOpen=false;
   if(!window._tierRaceFilter) window._tierRaceFilter='전체';
   if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
+  if(window._tierModeBarOpen===undefined) window._tierModeBarOpen=true;
   const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
   // 활성 필터 수 계산 (뱃지용)
   const _activeFilters=[
@@ -769,12 +770,18 @@ function rTier(C,T){
   ].filter(Boolean).length;
 
   // ── 1행: 보기 모드 + 필터 토글 ──
+  // 현재 활성 모드 레이블 찾기
+  const _activeModeObj=modes.find(m=>m.id===tierRankMode&&_curModeNoFilter)||modeSortBtns.find(m=>m.id===tierRankMode);
   let fh=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">
-    <span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">보기</span>`;
-  modes.forEach(m=>{
-    const on=tierRankMode===m.id&&_curModeNoFilter;
-    fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
-  });
+    <button class="pill ${window._tierModeBarOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierModeBarOpen=!window._tierModeBarOpen;render()" title="${window._tierModeBarOpen?'모드 버튼 접기':'모드 버튼 펼치기'}">${window._tierModeBarOpen?'▼ 접기':'▶ 펼치기'}</button>`;
+  if(window._tierModeBarOpen){
+    modes.forEach(m=>{
+      const on=tierRankMode===m.id&&_curModeNoFilter;
+      fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
+    });
+  } else if(_activeModeObj) {
+    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center;padding:0 4px">${_activeModeObj.lbl}</span>`;
+  }
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap;margin-left:auto" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   fh+=`</div>`;
 

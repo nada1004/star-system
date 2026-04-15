@@ -597,6 +597,12 @@ function rBoard(C,T){
     .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;padding-bottom:6px;}
     @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
   </style>
+  <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill ${boardGridCols===2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
+    <button class="pill ${boardCardView?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
+    <button class="pill ${boardCompactMode?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
+    <button class="pill ${_brdAllCollapsed?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
+  </div>
   <div class="no-export brd-toolbar fbar" style="gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative">
@@ -609,10 +615,6 @@ function rBoard(C,T){
       <button class="pill" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
-      <button class="pill ${boardGridCols===2?'on':''}" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
-      <button class="pill ${boardCardView?'on':''}" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
-      <button class="pill ${boardCompactMode?'on':''}" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
-      <button class="pill ${_brdAllCollapsed?'on':''}" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
         <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>

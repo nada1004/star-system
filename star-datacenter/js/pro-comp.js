@@ -2284,11 +2284,6 @@ function _proCompLeaguePasteApplyLogic(savable) {
   return true;
 }
 
-// _grpPasteApplyLogic에서 호출하는 별칭 함수
-function _pcLeaguePasteApplyLogic(savable, tn) {
-  return _proCompLeaguePasteApplyLogic(savable);
-}
-
 function proCompSavePaste(tnId, gi) {
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return;

@@ -27,11 +27,16 @@ function _cfgApplyCat(cat){
   const show=catSecs[cat]||null;
   document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
     var id=el.getAttribute('data-cfg-sec');
-    el.style.display=(show===null||show.includes(id))?'':'none';
+    var visible=show===null||show.includes(id);
+    el.style.display=visible?'':'none';
+    // 특정 카테고리 클릭 시 해당 섹션 모두 펼치기
+    if(visible && cat!=='전체' && el.tagName==='DETAILS') el.open=true;
   });
   document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
     btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
   });
+  // pd 섹션 내용 렌더링 (항상)
+  if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
 }
 
 /* ══════════════════════════════════════
@@ -765,8 +770,8 @@ ${_cfgD('notice','📢 공지 관리')}
     });
     // 카테고리 필터 적용
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'전체');
-    // 스트리머 상세 스타일 섹션이 열려있으면 내용 렌더링
-    if(_cfgOpen('pd')&&typeof _renderCfgPdSection==='function') _renderCfgPdSection();
+    // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
+    if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
