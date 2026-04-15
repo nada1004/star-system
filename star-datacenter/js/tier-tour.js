@@ -930,6 +930,9 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
+// 설정 탭 상태 관리
+let _cfgTab = localStorage.getItem('su_cfg_tab') || 'comm';
+
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
@@ -937,7 +940,27 @@ function rCfg(C,T){
     return;
   }
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
-  let h=`${_cfgD('notice','📢 공지 관리')}
+  
+  // 4가지 카테고리 탭 정의
+  const cfgTabs = [
+    {id:'comm',lbl:'📢 커뮤니케이션'},
+    {id:'data',lbl:'📊 기본 데이터'},
+    {id:'user',lbl:'👤 사용자 관리'},
+    {id:'system',lbl:'💾 데이터 관리'}
+  ];
+  
+  // 탭 버튼 HTML
+  let tabHtml = `<div class="fbar" style="margin-bottom:16px;gap:6px">`;
+  cfgTabs.forEach(t => {
+    tabHtml += `<button class="pill ${_cfgTab===t.id?'on':''}" onclick="_cfgTab='${t.id}';localStorage.setItem('su_cfg_tab','${t.id}');render()">${t.lbl}</button>`;
+  });
+  tabHtml += `</div>`;
+  
+  let h = tabHtml;
+  
+  // 📢 커뮤니케이션 탭
+  h += `<div style="display:${_cfgTab==='comm'?'block':'none'}">`;
+  h += `${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
     ${notices.length===0?`<div style="padding:18px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px;font-size:13px">등록된 공지 없음</div>`:
@@ -982,8 +1005,13 @@ function rCfg(C,T){
           save();render();">📢 공지 등록</button>
       </div>
     </div>
-  </details>
-  ${(()=>{
+  </details>`;
+  h += `</div>`;
+  
+  // 📊 기본 데이터 탭
+  h += `<div style="display:${_cfgTab==='data'?'block':'none'}">`;
+  // 동명이인 감지
+  h += (()=>{
     const seen={};const dupNames=[];
     players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
     const uniq=[...new Set(dupNames)];
@@ -1028,8 +1056,9 @@ function rCfg(C,T){
         </div>`;
       }).join('')}
     </div>`;
-  })()}
-  ${_cfgD('univ','🏛️ 대학 관리')}
+  })();
+  // 대학 관리
+  h += `${_cfgD('univ','🏛️ 대학 관리')
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>`;
   univCfg.forEach((u,i)=>{
     const isHidden = !!u.hidden;
@@ -1135,7 +1164,30 @@ function rCfg(C,T){
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 기본 티어(G/K/JA/J/S/0티어)는 삭제할 수 없습니다.</div>
   </details>
-  ${_cfgD('acct','👤 관리자 계정 관리')}
+  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
+    <div id="cfg-season-list" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시즌 이름</label>
+        <input type="text" id="cfg-season-name" placeholder="예: 2025 스프링" style="width:140px;font-size:12px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시작일</label>
+        <input type="date" id="cfg-season-from" style="font-size:12px">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">종료일</label>
+        <input type="date" id="cfg-season-to" style="font-size:12px">
+      </div>
+      <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
+    </div>
+  </details>
+  h += `</div>`;
+  
+  // 👤 사용자 관리 탭
+  h += `<div style="display:${_cfgTab==='user'?'block':'none'}">`;
+  h += `${_cfgD('acct','👤 관리자 계정 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>관리자</b>: 모든 기능 + 설정 접근 가능</div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">• <b>부관리자</b>: 경기 기록 입력만 가능 (설정/회원관리 불가)</div>
     <div style="margin-bottom:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -1154,8 +1206,12 @@ function rCfg(C,T){
       <button class="btn btn-p" onclick="addAdminAccount()">+ 추가</button>
     </div>
     <div id="adm-msg" style="font-size:12px;min-height:18px"></div>
-  </details>
-  <div class="ssec">
+  </details>`;
+  h += `</div>`;
+  
+  // 💾 데이터 관리 탭
+  h += `<div style="display:${_cfgTab==='system'?'block':'none'}">`;
+  h += `<div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">💾 로컬 저장소 사용량</h4>
       <button id="cfg-storage-toggle2" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-storage-wrap2');const btn=document.getElementById('cfg-storage-toggle2');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';renderStorageInfo();}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
@@ -1202,25 +1258,6 @@ function rCfg(C,T){
     </div>
     </div>
   </div>
-  ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
-    <div id="cfg-season-list" style="margin-bottom:12px"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시즌 이름</label>
-        <input type="text" id="cfg-season-name" placeholder="예: 2025 스프링" style="width:140px;font-size:12px">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">시작일</label>
-        <input type="date" id="cfg-season-from" style="font-size:12px">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">종료일</label>
-        <input type="date" id="cfg-season-to" style="font-size:12px">
-      </div>
-      <button class="btn btn-b btn-sm" onclick="addSeason()">+ 시즌 추가</button>
-    </div>
-  </details>
     <div class="ssec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <h4 style="margin:0">📅 날짜 일괄 변경</h4>
@@ -1607,6 +1644,7 @@ function rCfg(C,T){
     </div>
   </div>
   `;
+  h += `</div>`; // end of system tab
 
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
