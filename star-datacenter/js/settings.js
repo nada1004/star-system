@@ -9,12 +9,29 @@
    ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
-function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
+function _cfgToggle(id,el){
+  try{
+    // 아코디언: 하나 열리면 나머지는 닫기
+    if(el && el.open){
+      document.querySelectorAll('[data-cfg-sec]').forEach(d=>{
+        if(d!==el && d.tagName==='DETAILS') d.open=false;
+      });
+    }
+  }catch(e){}
+  try{
+    const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');
+    o[id]=el.open;
+    localStorage.setItem('su_cfg_open',JSON.stringify(o));
+    const sp=el.querySelector('summary .cfg-toggle-txt');
+    if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';
+  }catch(e){}
+}
 const _catSecs={'게임 운영':['notice','tier','season','teammatch','acct'],'콘텐츠 관리':['univ','maps','mAlias','si'],'시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],'데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']};
+const _cfgAllSecs=[...new Set(Object.values(_catSecs).flat())];
 function _cfgD(id,title,extra){
-  const _vis=(_catSecs[window._cfgCat]||[]).includes(id);
-  const isOpen=_cfgOpen(id)&&_vis;
-  return `<details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''} style="display:${_vis?'':'none'}"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;
+  const isOpen=_cfgOpen(id);
+  // cfg-anchor: 바로가기 클릭 시 원래 위치로 되돌릴 기준점
+  return `<div class="cfg-anchor" data-cfg-anchor="${id}"></div><details class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;
 }
 
 /* ══════════════════════════════════════
@@ -22,16 +39,73 @@ function _cfgD(id,title,extra){
 ══════════════════════════════════════ */
 if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
 function _cfgGo(secId){
+  // 섹션이 다른 카테고리에 속하면 카테고리 자동 전환
+  try{
+    const targetCat=Object.keys(_catSecs).find(cat=>(_catSecs[cat]||[]).includes(secId));
+    if(targetCat && window._cfgCat!==targetCat) _cfgApplyCat(targetCat,false);
+  }catch(e){}
+
   const el=document.querySelector(`[data-cfg-sec="${secId}"]`);
   if(!el) return;
-  el.style.display='block';
+
+  // 기존 열림 닫기 (아코디언)
+  try{
+    document.querySelectorAll('[data-cfg-sec]').forEach(d=>{
+      if(d!==el && d.tagName==='DETAILS') d.open=false;
+    });
+  }catch(e){}
+
+  // 바로가기 아래에 보이도록 퀵뷰 영역으로 이동
+  let qv=document.getElementById('cfg-quick-view');
+  if(!qv){
+    try{
+      qv=document.createElement('div');
+      qv.id='cfg-quick-view';
+      qv.className='cfg-quick-view';
+      const c=document.getElementById('rcont');
+      if(c) c.insertBefore(qv, c.firstChild);
+    }catch(e){}
+  }
+  try{
+    if(qv){
+      const prevId=window._cfgQuickSecId;
+      if(prevId && prevId!==secId){
+        const prev=document.querySelector(`[data-cfg-sec="${prevId}"]`);
+        const anchor=document.querySelector(`[data-cfg-anchor="${prevId}"]`);
+        if(prev && anchor){
+          anchor.parentNode.insertBefore(prev, anchor.nextSibling);
+          prev.style.display='';
+        }
+      }
+      window._cfgQuickSecId=secId;
+      el.style.display='';
+      qv.innerHTML='';
+      qv.appendChild(el);
+      qv.style.display='block';
+    }
+  }catch(e){}
+
   if(el.tagName==='DETAILS') el.open=true;
-  el.scrollIntoView({behavior:'smooth',block:'start'});
   try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
 }
-function _cfgApplyCat(cat){
+function _cfgApplyCat(cat, autoGo=true){
   window._cfgCat=cat;
-  render();
+  const show=_catSecs[cat]||[];
+  document.querySelectorAll('[data-cfg-sec]').forEach(function(el){
+    // 퀵뷰에 올라간 섹션은 숨기지 않음
+    if(el.closest && el.closest('#cfg-quick-view')) return;
+    const id=el.getAttribute('data-cfg-sec');
+    const vis=show.includes(id);
+    el.style.display=vis?'':'none';
+    if(el.tagName==='DETAILS') el.open=false;
+  });
+  document.querySelectorAll('.cfg-cat-pill').forEach(function(btn){
+    btn.classList.toggle('on',btn.getAttribute('data-cat')===cat);
+  });
+  if(autoGo){
+    const first=show[0];
+    if(first) setTimeout(()=>_cfgGo(first),0);
+  }
 }
 
 /* ══════════════════════════════════════
@@ -67,10 +141,11 @@ function rCfg(C,T){
         <span style="font-size:15px;line-height:1">${_cfgCatIcons[c]}</span>${c}</button>`;}).join('')}
     </div>
     <div class="fbar no-export" style="gap:4px;flex-wrap:wrap;padding:5px 0 4px">
-      <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">바로가기</span>
-      ${_curSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
+      <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap;align-self:center">전체 바로가기</span>
+      ${_cfgAllSecs.map(id=>`<button class="pill" style="flex-shrink:0;white-space:nowrap;font-size:11px" onclick="_cfgGo('${id}')">${_cfgSecTitle[id]||id}</button>`).join('')}
     </div>
   </div>
+  <div id="cfg-quick-view" class="cfg-quick-view"></div>
 ${_cfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
@@ -824,8 +899,9 @@ ${_cfgD('notice','📢 공지 관리')}
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
-    // 카테고리 필터 적용
-    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'기본');
+    // 카테고리 필터 적용 + 퀵뷰 복원
+    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false);
+    if(window._cfgQuickSecId && typeof _cfgGo==='function') _cfgGo(window._cfgQuickSecId);
     // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
     if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);
