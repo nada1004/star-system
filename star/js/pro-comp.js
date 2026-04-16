@@ -356,8 +356,8 @@ function proCompLeague(tn) {
       const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 4px">${p.race}</span>`:'';
       const _univ = p => p&&p.univ?`<span style="font-size:9px;color:var(--gray-l);font-weight:600">${p.univ}</span>`:'';
       const _pcard = (p, isWin) => {
-        const photo = p&&p.photo?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
-          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
+        const photo = p&&p.photo?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
+          : `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
         return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'var(--surface)':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px">
           ${photo}
           <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${escJS(p.name)}')`:''}">${p?p.name:'미정'}</span>
@@ -446,7 +446,7 @@ function proCompGrpRank(tn) {
       const wr = total ? Math.round(r.w/total*100) : 0;
       const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
       const p = players.find(x=>x.name===r.name);
-      const _photo = p&&p.photo?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin-right:6px;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`:'<span style="width:28px;height:28px;border-radius:50%;background:var(--border);display:inline-flex;align-items:center;justify-content:center;margin-right:6px;font-size:13px;flex-shrink:0">👤</span>';
+      const _photo = p&&p.photo?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);object-fit:cover;margin-right:6px;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`:'<span style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:inline-flex;align-items:center;justify-content:center;margin-right:6px;font-size:13px;flex-shrink:0">👤</span>';
       const _tb = p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
       const _rb = p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
       const _univ = p&&p.univ?`<span style="font-size:10px;color:var(--gray-l)">${p.univ}</span>`:'';
@@ -1009,11 +1009,11 @@ function proCompBracket(tn) {
   const isTierTourney = tn.type === 'tier';
   const _photo = (name, isWin, col) => {
     const p=_pc(name);
-    if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:50%;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
+    if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     return p&&p.photo
-      ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;${ring}" onerror="this.style.display='none'">`
-      :`<div style="width:36px;height:36px;border-radius:50%;background:${col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
+      ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring}" onerror="this.style.display='none'">`
+      :`<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
@@ -1044,8 +1044,8 @@ function proCompBracket(tn) {
   const champion = finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
   if (champion) {
     const cp = _pc(champion);
-    const cpPhoto = cp?.photo?`<img src="${cp.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
-      `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
+    const cpPhoto = cp?.photo?`<img src="${cp.photo}" style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
+      `<div style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
     h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
       ${cpPhoto}
       <div>
@@ -1746,7 +1746,7 @@ function proCompSearchPlayerSug(tnId, gi) {
   const matched = players.filter(p=>p.name.includes(q)&&!already.includes(p.name)).slice(0,8);
   sug.innerHTML = matched.map(p=>`<button onclick="proCompAddPlayer('${tnId}',${gi},'${p.name.replace(/'/g,"\\'")}',document.getElementById('proAddP_${gi}'))"
     style="padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
-    ${p.photo?`<img src="${p.photo}" style="width:18px;height:18px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`:''}
+    ${p.photo?`<img src="${p.photo}" style="width:18px;height:18px;border-radius:var(--su_profile_radius,50%);object-fit:cover" onerror="this.style.display='none'">`:''}
     ${p.name}
     ${p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;padding:1px 4px;border-radius:3px">${p.tier}</span>`:''}
   </button>`).join('');
@@ -2901,7 +2901,7 @@ function proCompTourneyStats(tn) {
   pArr.slice(0,10).forEach((r,idx)=>{
     const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
     const p = players.find(x=>x.name===r.name);
-    const photo = p&&p.photo?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;margin-right:6px;vertical-align:middle" onerror="this.style.display='none'">`:'';
+    const photo = p&&p.photo?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);object-fit:cover;margin-right:6px;vertical-align:middle" onerror="this.style.display='none'">`:'';
     const rb = p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
     const tb = p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
     h += `<tr style="border-top:1px solid var(--border);${idx===0?'background:#2563eb08':''}">
@@ -3096,7 +3096,7 @@ function rProAll(C, T) {
     pArr.slice(0,15).forEach((r,idx)=>{
       const medal=idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
       const p=players.find(x=>x.name===r.name);
-      const photo=p&&p.photo?`<img src="${p.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;margin-right:5px;vertical-align:middle" onerror="this.style.display='none'">`:'';
+      const photo=p&&p.photo?`<img src="${p.photo}" style="width:26px;height:26px;border-radius:var(--su_profile_radius,50%);object-fit:cover;margin-right:5px;vertical-align:middle" onerror="this.style.display='none'">`:'';
       const rb=p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
       const srcBadges=r.src.map(s=>`<span style="font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;${s==='일반'?'background:#dbeafe;color:#2563eb':'background:#f3e8ff;color:#7c3aed'}">${s}</span>`).join(' ');
       h+=`<tr style="border-top:1px solid var(--border)">
@@ -3257,8 +3257,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
   const avatarRow = ranks.map(r => {
     const p = players.find(x=>x.name===r.name);
     const photo = p&&p.photo
-      ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${col}66" onerror="this.style.display='none'">`
-      : `<span style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col}44;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${col}">${(r.name||'?').slice(0,1)}</span>`;
+      ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}66" onerror="this.style.display='none'">`
+      : `<span style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${col}22;border:2px solid ${col}44;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${col}">${(r.name||'?').slice(0,1)}</span>`;
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px">
       ${photo}
       <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap;max-width:46px;overflow:hidden;text-overflow:ellipsis">${r.name}</span>
@@ -3272,8 +3272,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
     const medal = idx===0?'?��':idx===1?'?��':idx===2?'?��':'';
     const p = players.find(x=>x.name===r.name);
     const photoCell = p&&p.photo
-      ? `<img src="${p.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid ${idx===0?col+'aa':'#ddd'}" onerror="this.outerHTML=''">`
-      : `<span style="width:26px;height:26px;border-radius:50%;background:${col}18;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${(r.name||'?').slice(0,1)}</span>`;
+      ? `<img src="${p.photo}" style="width:26px;height:26px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:1.5px solid ${idx===0?col+'aa':'#ddd'}" onerror="this.outerHTML=''">`
+      : `<span style="width:26px;height:26px;border-radius:var(--su_profile_radius,50%);background:${col}18;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${(r.name||'?').slice(0,1)}</span>`;
     const raceBadge = p&&p.race?`<span style="font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;background:${p.race==='T'?'#dbeafe':p.race==='Z'?'#ede9fe':'#fef3c7'};color:${p.race==='T'?'#1e40af':p.race==='Z'?'#5b21b6':'#92400e'}">${p.race}</span>`:'';
     return `<tr style="border-top:1px solid ${col}18;${idx===0?'background:'+col+'0a':''}">
       <td style="padding:6px 8px;text-align:center;font-size:14px;width:28px">${medal||String(idx+1)}</td>
@@ -3297,11 +3297,11 @@ function _renderProCompGrpShareCard(tnId, gi) {
     const wp = players.find(x=>x.name===winner);
     const lp = players.find(x=>x.name===loser);
     const wPhoto = wp&&wp.photo
-      ? `<img src="${wp.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`
-      : `<span style="width:20px;height:20px;border-radius:50%;background:${col}22;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${col}">${(winner||'?').slice(0,1)}</span>`;
+      ? `<img src="${wp.photo}" style="width:20px;height:20px;border-radius:var(--su_profile_radius,50%);object-fit:cover" onerror="this.style.display='none'">`
+      : `<span style="width:20px;height:20px;border-radius:var(--su_profile_radius,50%);background:${col}22;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${col}">${(winner||'?').slice(0,1)}</span>`;
     const lPhoto = lp&&lp.photo
-      ? `<img src="${lp.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;opacity:.55" onerror="this.style.display='none'">`
-      : `<span style="width:20px;height:20px;border-radius:50%;background:#94a3b822;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8">${(loser||'?').slice(0,1)}</span>`;
+      ? `<img src="${lp.photo}" style="width:20px;height:20px;border-radius:var(--su_profile_radius,50%);object-fit:cover;opacity:.55" onerror="this.style.display='none'">`
+      : `<span style="width:20px;height:20px;border-radius:var(--su_profile_radius,50%);background:#94a3b822;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8">${(loser||'?').slice(0,1)}</span>`;
     return `<div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid ${col}12">
       <div style="display:flex;align-items:center;gap:3px;flex:1;min-width:0">
         ${wPhoto}

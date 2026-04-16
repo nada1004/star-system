@@ -1514,7 +1514,7 @@ function histProCompHTML() {
 
   const _tb = p => p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo = p => p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo = p => p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
 
   h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
@@ -1608,7 +1608,7 @@ function histProCompTourneyHTML() {
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
   let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div style="background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border:1.5px solid #ddd6fe;border-left:4px solid #7c3aed;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1674,7 +1674,7 @@ function histProCompTeamHTML() {
   if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
   const colA='#2563eb', colB='#dc2626';
   let h=sortBar;
   // 대회명별 그룹

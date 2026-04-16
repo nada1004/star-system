@@ -456,11 +456,16 @@ let boardCardView=false; // 포토카드 뷰
 let boardCardShape='circle'; // 포토카드 이미지 모양: 'circle' | 'square'
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
 // 칩 프로필 이미지 설정 (localStorage에서 복원)
-let boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
-let boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26'); // px
+// NOTE: 전역(인라인 onclick) 접근 호환을 위해 var 사용 (window 프로퍼티로 노출)
+var boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
+var boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26', 10); // px
+var boardChipLayoutScale = parseInt(localStorage.getItem('su_bcp_layout') || '100', 10); // percent
 function saveBoardChipPhotoSettings(){
   localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
   localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
+  localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
+  // 스트리머 프로필 이미지 공통 CSS 변수 동기화
+  try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
@@ -550,6 +555,13 @@ function rBoard(C,T){
   const univs=_getBoardUnivs();
   const visUnivs=(isLoggedIn?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
   if(!univs.length){C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">등록된 선수가 없습니다.</div>';return;}
+  // 칩 이미지 크기에 따라 행 레이아웃도 함께 스케일 (이미지만 커지고 레이아웃은 고정되는 현상 방지)
+  const _bcpScale = Math.max(0.7, Math.min(1.8, (boardChipLayoutScale||100) / 100));
+  const _bcpGap = Math.round(7 * _bcpScale);
+  const _bcpPadY = Math.round(5 * _bcpScale);
+  const _bcpPadX = Math.round(10 * _bcpScale);
+  const _bcpNameFs = Math.round(12 * _bcpScale);
+  const _bcpRoleFs = Math.round(9 * _bcpScale);
   // 통계 계산
   const _brdAllVis = visUnivs.flatMap(u => _getBoardPlayers(u.name));
   const _brdTierCts = {}; _brdAllVis.forEach(p=>{ const t=p.tier||'?'; _brdTierCts[t]=(_brdTierCts[t]||0)+1; });
@@ -570,15 +582,15 @@ function rBoard(C,T){
     .brd-hdr:active{cursor:grabbing;}
     .brd-hdr::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 55%);pointer-events:none;z-index:0;}
     .brd-circle{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);pointer-events:none;}
-    .brd-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
+    .brd-row{display:flex;align-items:center;gap:${_bcpGap}px;padding:${_bcpPadY}px ${_bcpPadX}px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
     .brd-row-btn{cursor:pointer;flex:1;display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;font-family:'Noto Sans KR',sans-serif;min-width:0;}
-    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:${boardChipPhotoShape==='square'?'5px':'50%'};object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
-    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:${boardChipPhotoShape==='square'?'5px':'50%'};flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(0,0,0,.35);}
+    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
+    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
     .brd-race{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px;}
-    .brd-name{font-weight:700;font-size:12px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
-    .brd-role-main{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
-    .brd-role-sub{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap;flex-shrink:0;background:rgba(100,116,139,.1);color:#475569;border:1px solid rgba(100,116,139,.2);}
+    .brd-name{font-weight:700;font-size:${_bcpNameFs}px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
+    .brd-role-main{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
+    .brd-role-sub{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap;flex-shrink:0;background:rgba(100,116,139,.1);color:#475569;border:1px solid rgba(100,116,139,.2);}
     .brd-move-btn{display:flex;flex-direction:column;gap:1px;flex-shrink:0;opacity:.55;}
     .brd-move-btn button{background:none;border:none;cursor:pointer;font-size:9px;padding:0 2px;line-height:1;color:#1e293b;transition:opacity .12s;}
     .brd-move-btn button:hover{opacity:.5;}
@@ -662,7 +674,7 @@ function buildUnivBoardCard(u, forExport){
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
-      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
@@ -874,8 +886,8 @@ function buildUnivBoardCard(u, forExport){
     return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
+          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
+            ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
