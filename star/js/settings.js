@@ -28,8 +28,132 @@ function _scfgToggle(id,el){
     if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';
   }catch(e){}
 }
-const _catSecs={'게임 운영':['notice','tier','season','teammatch','acct'],'콘텐츠 관리':['univ','maps','mAlias','si'],'시스템 설정':['b2layout','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],'데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']};
-const _cfgAllSecs=[...new Set(Object.values(_catSecs).flat())];
+// ─────────────────────────────────────────────────────────────
+// 설정 메뉴 구성(사용자 정리 지원)
+// - 카테고리 이동 + 순서 변경을 localStorage로 저장
+// ─────────────────────────────────────────────────────────────
+const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
+
+const _DEFAULT_CATSECS = {
+  '게임 운영':['notice','tier','season','teammatch','acct'],
+  '콘텐츠 관리':['univ','maps','mAlias','si'],
+  // (요청사항) 설정탭 카테고리명 변경: "현황판 관리" → "이미지 관리"
+  '이미지 관리':['b2layout','b2femco'],
+  // "설정 메뉴 정리"는 기본으로 시스템 설정에 둠
+  '시스템 설정':['cfgmenu','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+  '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
+};
+const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
+
+function _cfgMenuLoad(){
+  try{ return JSON.parse(localStorage.getItem(_CFG_MENU_KEY) || 'null'); }catch(e){ return null; }
+}
+function _cfgMenuSave(v){
+  try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
+}
+function _cfgMenuNormalize(layout){
+  const all = _cfgAllSecs.slice();
+  const defCats = Object.keys(_DEFAULT_CATSECS);
+  let catOrder = Array.isArray(layout?.catOrder) ? layout.catOrder.filter(c=>typeof c==='string' && c.trim()) : defCats.slice();
+  // 구버전 호환: "현황판 관리" → "이미지 관리"
+  catOrder = catOrder.map(c => c === '현황판 관리' ? '이미지 관리' : c);
+  // 기본 카테고리 누락 시 추가
+  defCats.forEach(c=>{ if(!catOrder.includes(c)) catOrder.push(c); });
+
+  const catSecs = {};
+  const legacyCatSecs = layout?.catSecs && typeof layout.catSecs === 'object' ? layout.catSecs : {};
+  const aliasCatSecs = {...legacyCatSecs};
+  if (legacyCatSecs['현황판 관리'] && !legacyCatSecs['이미지 관리']) {
+    aliasCatSecs['이미지 관리'] = legacyCatSecs['현황판 관리'];
+  }
+  // 사용자 레이아웃 반영
+  catOrder.forEach(c=>{
+    const arr = (aliasCatSecs && Array.isArray(aliasCatSecs[c])) ? aliasCatSecs[c] : (_DEFAULT_CATSECS[c] || []);
+    catSecs[c] = arr.filter(sec => all.includes(sec));
+  });
+  // 누락된 섹션은 기본 위치에 추가
+  const used = new Set(Object.values(catSecs).flat());
+  all.forEach(sec=>{
+    if(used.has(sec)) return;
+    const defCat = Object.keys(_DEFAULT_CATSECS).find(c => (_DEFAULT_CATSECS[c]||[]).includes(sec)) || defCats[0];
+    if(!catSecs[defCat]) catSecs[defCat] = [];
+    catSecs[defCat].push(sec);
+    used.add(sec);
+  });
+  // 빈 카테고리 제거(단, 기본 카테고리는 유지)
+  catOrder.forEach(c=>{ if(!catSecs[c]) catSecs[c] = []; });
+  return {catOrder, catSecs};
+}
+
+let _catSecs = (() => {
+  const raw = _cfgMenuLoad();
+  const norm = _cfgMenuNormalize(raw || {});
+  try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
+  // catSecs만 rCfg/_cfgApplyCat에서 사용
+  return norm.catSecs;
+})();
+
+function _cfgMenuApplyAndRerender(layout){
+  const norm = _cfgMenuNormalize(layout || {});
+  _cfgMenuSave(norm);
+  _catSecs = norm.catSecs;
+  try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
+  try{
+    if(!Object.keys(_catSecs).includes(window._cfgCat)){
+      window._cfgCat = (window._cfgCatOrder && window._cfgCatOrder[0]) || '게임 운영';
+    }
+  }catch(e){}
+  try{ render(); }catch(e){}
+}
+
+// 섹션을 다른 카테고리로 이동
+window.cfgMenuSetCat = function(secId, targetCat){
+  const cur = _cfgMenuNormalize(_cfgMenuLoad() || {});
+  const cats = cur.catOrder.slice();
+  if(!cats.includes(targetCat)) cats.push(targetCat);
+  // 제거
+  cats.forEach(c=>{
+    cur.catSecs[c] = (cur.catSecs[c]||[]).filter(x=>x!==secId);
+  });
+  cur.catSecs[targetCat] = cur.catSecs[targetCat] || [];
+  cur.catSecs[targetCat].push(secId);
+  _cfgMenuApplyAndRerender(cur);
+};
+
+// 섹션 순서 이동(같은 카테고리 내)
+window.cfgMenuMoveSec = function(secId, dir){
+  const cur = _cfgMenuNormalize(_cfgMenuLoad() || {});
+  const cats = cur.catOrder.slice();
+  let foundCat = null;
+  cats.forEach(c=>{
+    if((cur.catSecs[c]||[]).includes(secId)) foundCat = c;
+  });
+  if(!foundCat) return;
+  const arr = cur.catSecs[foundCat] || [];
+  const i = arr.indexOf(secId);
+  const j = i + (dir==='up'?-1:1);
+  if(i<0 || j<0 || j>=arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  cur.catSecs[foundCat] = arr;
+  _cfgMenuApplyAndRerender(cur);
+};
+
+// 카테고리 순서 이동
+window.cfgMenuMoveCat = function(cat, dir){
+  const cur = _cfgMenuNormalize(_cfgMenuLoad() || {});
+  const arr = cur.catOrder.slice();
+  const i = arr.indexOf(cat);
+  const j = i + (dir==='up'?-1:1);
+  if(i<0 || j<0 || j>=arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  cur.catOrder = arr;
+  _cfgMenuApplyAndRerender(cur);
+};
+
+window.cfgMenuReset = function(){
+  try{ localStorage.removeItem(_CFG_MENU_KEY); }catch(e){}
+  _cfgMenuApplyAndRerender({});
+};
 
 // (요청사항) 설정 상단 "바로가기" UI 제거됨.
 
@@ -45,6 +169,153 @@ function _cfgFindUpAttr(el, attrName, maxDepth){
   }
   return null;
 }
+
+/* ══════════════════════════════════════
+   🧩 펨코현황 설정 (이미지 관리)
+   - localStorage: b2_femco_settings_v1
+══════════════════════════════════════ */
+const _FEMCO_CFG_KEY = 'b2_femco_settings_v1';
+function _cfgFemcoDefaults(){
+  return {
+    logoSize: 150,
+    logoPos: 'top',
+    logoAttachTitle: 1, // 1: 로고+대학명 같이 이동, 0: 로고만 이동
+    titleSize: 28,
+    titleFont: 'system',
+    playerImgSize: 46,
+    playerImgShape: 'square',
+    rowsPerCol: 5,
+    colWidth: 170,
+    colGap: 10,
+    univGap: 18,
+    countFontSize: 12,
+    contentPadX: 16,
+    contentAlign: 'center', // left | center
+    univSubtitles: {},
+    subtitleSize: 12,
+    subtitleWeight: 800,
+    subtitleColor: '',
+    nameFontSize: 12,
+    roleFontSize: 10,
+    tierBadgeSize: 10,
+    tierBadgePadX: 6,
+    starSize: 15,
+    univColorOverrides: {}
+  };
+}
+function _cfgFemcoLoad(){
+  try{
+    const raw = localStorage.getItem(_FEMCO_CFG_KEY);
+    if(!raw) return _cfgFemcoDefaults();
+    const obj = JSON.parse(raw) || {};
+    return {..._cfgFemcoDefaults(), ...obj,
+      univSubtitles:{...((_cfgFemcoDefaults().univSubtitles)||{}), ...(obj.univSubtitles||{})},
+      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})}
+    };
+  }catch(e){ return _cfgFemcoDefaults(); }
+}
+function _cfgFemcoSave(obj){
+  try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
+}
+
+window.cfgFemcoUpd = function(k, v){
+  const cur = _cfgFemcoLoad();
+  const next = {...cur};
+  const numKeys = ['logoSize','logoAttachTitle','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','starSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX'];
+  next[k] = numKeys.includes(k) ? parseInt(v, 10) : v;
+  _cfgFemcoSave(next);
+};
+
+window.cfgFemcoInit = function(){
+  const s = _cfgFemcoLoad();
+  const setVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
+  setVal('cfg-femco-logoSize', s.logoSize); setVal('cfg-femco-logoSizeNum', s.logoSize);
+  setVal('cfg-femco-logoPos', s.logoPos);
+  try{ const chk=document.getElementById('cfg-femco-logoAttachTitle'); if(chk) chk.checked = (s.logoAttachTitle ?? 1) ? true : false; }catch(e){}
+  setVal('cfg-femco-titleSize', s.titleSize); setVal('cfg-femco-titleSizeNum', s.titleSize);
+  setVal('cfg-femco-titleFont', s.titleFont);
+  setVal('cfg-femco-playerImgSize', s.playerImgSize); setVal('cfg-femco-playerImgSizeNum', s.playerImgSize);
+  setVal('cfg-femco-playerImgShape', s.playerImgShape);
+  setVal('cfg-femco-rowsPerCol', s.rowsPerCol); setVal('cfg-femco-rowsPerColNum', s.rowsPerCol);
+  setVal('cfg-femco-colWidth', s.colWidth); setVal('cfg-femco-colWidthNum', s.colWidth);
+  setVal('cfg-femco-colGap', s.colGap); setVal('cfg-femco-colGapNum', s.colGap);
+  setVal('cfg-femco-univGap', s.univGap || 18); setVal('cfg-femco-univGapNum', s.univGap || 18);
+  setVal('cfg-femco-countFontSize', s.countFontSize || 12); setVal('cfg-femco-countFontSizeNum', s.countFontSize || 12);
+  setVal('cfg-femco-contentPadX', s.contentPadX || 16); setVal('cfg-femco-contentPadXNum', s.contentPadX || 16);
+  setVal('cfg-femco-contentAlign', s.contentAlign || 'center');
+  setVal('cfg-femco-nameFontSize', s.nameFontSize || 12); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 12);
+  setVal('cfg-femco-roleFontSize', s.roleFontSize || 10); setVal('cfg-femco-roleFontSizeNum', s.roleFontSize || 10);
+  setVal('cfg-femco-tierBadgeSize', s.tierBadgeSize || 10); setVal('cfg-femco-tierBadgeSizeNum', s.tierBadgeSize || 10);
+  setVal('cfg-femco-starSize', s.starSize || 15); setVal('cfg-femco-starSizeNum', s.starSize || 15);
+  setVal('cfg-femco-subtitleSize', s.subtitleSize); setVal('cfg-femco-subtitleSizeNum', s.subtitleSize);
+  setVal('cfg-femco-subtitleWeight', s.subtitleWeight);
+  setVal('cfg-femco-subtitleColor', (s.subtitleColor && s.subtitleColor.startsWith('#')) ? s.subtitleColor : '#ffffff');
+
+  // 대학 셀렉트 채우기
+  const sel = document.getElementById('cfg-femco-univ');
+  if (sel) {
+    const names = (typeof univCfg !== 'undefined' ? univCfg : []).map(u=>u.name).filter(Boolean);
+    const curUniv = localStorage.getItem('cfg_femco_univ') || names[0] || '';
+    sel.innerHTML = names.map(n=>`<option value="${n}"${n===curUniv?' selected':''}>${n}</option>`).join('');
+    localStorage.setItem('cfg_femco_univ', curUniv);
+  }
+  if (typeof window.cfgFemcoRefreshUnivFields === 'function') window.cfgFemcoRefreshUnivFields();
+};
+
+window.cfgFemcoRefreshUnivFields = function(){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
+  const c = (s.univColorOverrides||{})[u] || '#000000';
+  const sub = (s.univSubtitles||{})[u] || '';
+  const colorEl = document.getElementById('cfg-femco-univColor');
+  const subEl = document.getElementById('cfg-femco-subtitle');
+  if (colorEl) colorEl.value = c;
+  if (subEl) subEl.value = sub;
+};
+
+window.cfgFemcoSetUnivColor = function(color){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univColorOverrides = s.univColorOverrides || {};
+  s.univColorOverrides[u] = color;
+  _cfgFemcoSave(s);
+};
+window.cfgFemcoClearUnivColor = function(){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univColorOverrides = s.univColorOverrides || {};
+  delete s.univColorOverrides[u];
+  _cfgFemcoSave(s);
+  window.cfgFemcoRefreshUnivFields();
+};
+window.cfgFemcoSetSubtitle = function(text){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univSubtitles = s.univSubtitles || {};
+  s.univSubtitles[u] = (text || '').trim();
+  _cfgFemcoSave(s);
+};
+window.cfgFemcoClearSubtitle = function(){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univSubtitles = s.univSubtitles || {};
+  delete s.univSubtitles[u];
+  _cfgFemcoSave(s);
+  window.cfgFemcoRefreshUnivFields();
+};
+window.cfgFemcoReset = function(){
+  _cfgFemcoSave(_cfgFemcoDefaults());
+  window.cfgFemcoInit();
+};
 
 // 설정 탭 버튼이 "반응 없음"처럼 보일 때를 대비한 이벤트 바인딩(인라인 onclick 불발 대비)
 function _cfgHandleCfgClick(e){
@@ -162,7 +433,7 @@ function _cfgEnsureModal(){
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'].includes(window._cfgCat)) window._cfgCat='게임 운영';
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!Object.keys(_catSecs||{}).includes(window._cfgCat)) window._cfgCat=(window._cfgCatOrder&&window._cfgCatOrder[0])||'게임 운영';
 function _cfgGo(secId){
   // 섹션이 다른 카테고리에 속하면 카테고리 자동 전환
   try{
@@ -292,29 +563,36 @@ function rCfg(C,T){
     return;
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
-  const _cfgCats=['게임 운영','콘텐츠 관리','시스템 설정','데이터 관리'];
-  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','시스템 설정':'⚙️','데이터 관리':'💾'};
+  const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
+  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','이미지 관리':'🖼️','시스템 설정':'⚙️','데이터 관리':'💾','기타':'🗂️'};
   const _cfgCatDesc={
     '게임 운영':'공지/티어/시즌/경기 운영',
     '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
+    '이미지 관리':'현황판/이미지(펨코현황 포함) 설정',
     '시스템 설정':'UI/현황판/모달/저장소',
     '데이터 관리':'동기화/백업/일괄 작업'
   };
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
-    b2layout:'🖼️ 현황판', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
   const _curSecs=_catSecs[window._cfgCat]||[];
   // 다른 함수에서도 참조할 수 있게 title 맵을 window에 노출
   window._cfgSecTitle = _cfgSecTitle;
+  const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
+
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
-    <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:6px">
-      ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
-        style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid ${on?'var(--blue)':'var(--border)'};border-radius:14px;background:${on?'var(--blue)':'transparent'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};color:${on?'#fff':'var(--text)'};transition:all .12s;touch-action:manipulation;line-height:1.1">
-        <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]}</span>${c}</button>`;}).join('')}
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px">
+      <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
+        ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
+          style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid ${on?'var(--blue)':'var(--border)'};border-radius:14px;background:${on?'var(--blue)':'transparent'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};color:${on?'#fff':'var(--text)'};transition:all .12s;touch-action:manipulation;line-height:1.1">
+          <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${c}</button>`;}).join('')}
+      </div>
+      <span style="flex:1"></span>
+      ${_regBtn}
     </div>
   </div>
 ${_scfgD('notice','📢 공지 관리')}
@@ -823,6 +1101,206 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
     </div>
   </details>
+  ${_scfgD('b2femco','🧩 펨코현황 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 &gt; 펨코현황판에서 사용하는 전용 설정입니다. 저장 즉시 반영됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">대학 로고 크기</div>
+        <input type="range" id="cfg-femco-logoSize" min="60" max="340" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-logoSizeNum').value=this.value;cfgFemcoUpd('logoSize',this.value)">
+        <input type="number" id="cfg-femco-logoSizeNum" min="60" max="340" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-logoSize').value=this.value;cfgFemcoUpd('logoSize',this.value)">
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:800;color:var(--text2)">
+        <input type="checkbox" id="cfg-femco-logoAttachTitle" style="width:14px;height:14px" onchange="cfgFemcoUpd('logoAttachTitle', this.checked?1:0)">
+        로고를 대학명과 같이 이동(체크 해제 시 ‘로고만’ 위치 이동)
+      </label>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학 로고 위치</div>
+        <select id="cfg-femco-logoPos" onchange="cfgFemcoUpd('logoPos',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="left">좌측</option>
+          <option value="right">우측</option>
+          <option value="top">상단</option>
+          <option value="bottom">하단</option>
+          <option value="center">가운데</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">대학명 폰트 크기</div>
+        <input type="range" id="cfg-femco-titleSize" min="16" max="44" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-titleSizeNum').value=this.value;cfgFemcoUpd('titleSize',this.value)">
+        <input type="number" id="cfg-femco-titleSizeNum" min="16" max="44" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-titleSize').value=this.value;cfgFemcoUpd('titleSize',this.value)">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학명 폰트</div>
+        <select id="cfg-femco-titleFont" onchange="cfgFemcoUpd('titleFont',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="system">기본(시스템)</option>
+          <option value="noto">Noto Sans KR</option>
+          <option value="pretendard">Pretendard</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">스트리머 이미지 크기</div>
+        <input type="range" id="cfg-femco-playerImgSize" min="28" max="90" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-playerImgSizeNum').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
+        <input type="number" id="cfg-femco-playerImgSizeNum" min="28" max="90" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-playerImgSize').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">이미지 모양</div>
+        <select id="cfg-femco-playerImgShape" onchange="cfgFemcoUpd('playerImgShape',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="square">네모</option>
+          <option value="circle">원</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">이름 폰트 크기</div>
+        <input type="range" id="cfg-femco-nameFontSize" min="10" max="20" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-nameFontSizeNum').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
+        <input type="number" id="cfg-femco-nameFontSizeNum" min="10" max="20" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-nameFontSize').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">직급 폰트 크기</div>
+        <input type="range" id="cfg-femco-roleFontSize" min="9" max="16" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-roleFontSizeNum').value=this.value;cfgFemcoUpd('roleFontSize',this.value)">
+        <input type="number" id="cfg-femco-roleFontSizeNum" min="9" max="16" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-roleFontSize').value=this.value;cfgFemcoUpd('roleFontSize',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">티어 아이콘 크기</div>
+        <input type="range" id="cfg-femco-tierBadgeSize" min="9" max="16" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-tierBadgeSizeNum').value=this.value;cfgFemcoUpd('tierBadgeSize',this.value)">
+        <input type="number" id="cfg-femco-tierBadgeSizeNum" min="9" max="16" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-tierBadgeSize').value=this.value;cfgFemcoUpd('tierBadgeSize',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">⭐ 아이콘 크기</div>
+        <input type="range" id="cfg-femco-starSize" min="10" max="28" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-starSizeNum').value=this.value;cfgFemcoUpd('starSize',this.value)">
+        <input type="number" id="cfg-femco-starSizeNum" min="10" max="28" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-starSize').value=this.value;cfgFemcoUpd('starSize',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">세로 인원(줄)</div>
+        <input type="range" id="cfg-femco-rowsPerCol" min="2" max="12" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-rowsPerColNum').value=this.value;cfgFemcoUpd('rowsPerCol',this.value)">
+        <input type="number" id="cfg-femco-rowsPerColNum" min="2" max="12" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-rowsPerCol').value=this.value;cfgFemcoUpd('rowsPerCol',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">스트리머 폭</div>
+        <input type="range" id="cfg-femco-colWidth" min="80" max="360" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-colWidthNum').value=this.value;cfgFemcoUpd('colWidth',this.value)">
+        <input type="number" id="cfg-femco-colWidthNum" min="80" max="360" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-colWidth').value=this.value;cfgFemcoUpd('colWidth',this.value)">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">내용 정렬</div>
+        <select id="cfg-femco-contentAlign" onchange="cfgFemcoUpd('contentAlign', this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="left">왼쪽</option>
+          <option value="center">가운데</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ ‘너무 좌측’ 느낌이면 가운데 + 좌우 여백을 키워보세요</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">좌우 여백</div>
+        <input type="range" id="cfg-femco-contentPadX" min="0" max="40" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-contentPadXNum').value=this.value;cfgFemcoUpd('contentPadX',this.value)">
+        <input type="number" id="cfg-femco-contentPadXNum" min="0" max="40" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-contentPadX').value=this.value;cfgFemcoUpd('contentPadX',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">상하(행) 간격</div>
+        <input type="range" id="cfg-femco-colGap" min="0" max="28" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-colGapNum').value=this.value;cfgFemcoUpd('colGap',this.value)">
+        <input type="number" id="cfg-femco-colGapNum" min="0" max="28" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-colGap').value=this.value;cfgFemcoUpd('colGap',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">대학 간 여백</div>
+        <input type="range" id="cfg-femco-univGap" min="0" max="40" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-univGapNum').value=this.value;cfgFemcoUpd('univGap',this.value)">
+        <input type="number" id="cfg-femco-univGapNum" min="0" max="40" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-univGap').value=this.value;cfgFemcoUpd('univGap',this.value)">
+      </div>
+
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">인원수 폰트 크기</div>
+        <input type="range" id="cfg-femco-countFontSize" min="10" max="18" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-countFontSizeNum').value=this.value;cfgFemcoUpd('countFontSize',this.value)">
+        <input type="number" id="cfg-femco-countFontSizeNum" min="10" max="18" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-countFontSize').value=this.value;cfgFemcoUpd('countFontSize',this.value)">
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">대학별 설정</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학 선택</div>
+        <select id="cfg-femco-univ" onchange="localStorage.setItem('cfg_femco_univ',this.value);cfgFemcoRefreshUnivFields()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;min-width:160px"></select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학 색상</div>
+        <input type="color" id="cfg-femco-univColor" onchange="cfgFemcoSetUnivColor(this.value)">
+        <button class="btn btn-xs" onclick="cfgFemcoClearUnivColor()">해제</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학명 아래 문구</div>
+        <input type="text" id="cfg-femco-subtitle" placeholder="대학명 아래 문구" style="flex:1;min-width:240px" onchange="cfgFemcoSetSubtitle(this.value)">
+        <button class="btn btn-xs" onclick="cfgFemcoClearSubtitle()">삭제</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">문구 스타일</div>
+        <span style="font-size:11px;color:var(--gray-l)">크기</span>
+        <input type="range" id="cfg-femco-subtitleSize" min="10" max="24" step="1" style="width:180px;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-subtitleSizeNum').value=this.value;cfgFemcoUpd('subtitleSize',this.value)">
+        <input type="number" id="cfg-femco-subtitleSizeNum" min="10" max="24" step="1" style="width:80px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-subtitleSize').value=this.value;cfgFemcoUpd('subtitleSize',this.value)">
+        <span style="font-size:11px;color:var(--gray-l)">굵기</span>
+        <select id="cfg-femco-subtitleWeight" onchange="cfgFemcoUpd('subtitleWeight',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="400">400</option><option value="500">500</option><option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="900">900</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">색</span>
+        <input type="color" id="cfg-femco-subtitleColor" onchange="cfgFemcoUpd('subtitleColor',this.value)">
+        <button class="btn btn-xs" onclick="cfgFemcoUpd('subtitleColor','')">자동</button>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-b" onclick="cfgFemcoReset()">초기화</button>
+      </div>
+    </div>
+  </details>
+  ${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">카테고리 이동 + 섹션 순서 변경을 직접 정리할 수 있습니다. 변경 즉시 저장되며 새로고침 없이 반영됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      ${(()=>{
+        const cats = (window._cfgCatOrder && Array.isArray(window._cfgCatOrder)) ? window._cfgCatOrder : Object.keys(_catSecs||{});
+        const secTitle = window._cfgSecTitle || {};
+        return cats.map((cat, catIdx)=>{
+          const secs = (_catSecs[cat]||[]);
+          return `
+            <div style="border:1px solid var(--border);border-radius:10px;background:var(--white);padding:12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <div style="font-weight:900">${cat}</div>
+                <span style="font-size:11px;color:var(--gray-l)">${secs.length}개</span>
+                <span style="flex:1"></span>
+                <button class="btn btn-xs" onclick="cfgMenuMoveCat('${cat.replace(/'/g,"\\'")}','up')" ${catIdx===0?'disabled':''}>▲</button>
+                <button class="btn btn-xs" onclick="cfgMenuMoveCat('${cat.replace(/'/g,"\\'")}','down')" ${catIdx===cats.length-1?'disabled':''}>▼</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                ${secs.map((secId, i)=>{
+                  const title = secTitle[secId] || secId;
+                  return `
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border2);border-radius:10px;padding:8px 10px;background:var(--surface)">
+                      <div style="font-size:12px;font-weight:800;min-width:160px">${title}</div>
+                      <select onchange="cfgMenuSetCat('${secId}', this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+                        ${cats.map(c=>`<option value="${c}"${c===cat?' selected':''}>${c}</option>`).join('')}
+                      </select>
+                      <span style="flex:1"></span>
+                      <button class="btn btn-xs" onclick="cfgMenuMoveSec('${secId}','up')" ${i===0?'disabled':''}>▲</button>
+                      <button class="btn btn-xs" onclick="cfgMenuMoveSec('${secId}','down')" ${i===secs.length-1?'disabled':''}>▼</button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      })()}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-b" onclick="cfgMenuReset()">기본 메뉴로 초기화</button>
+      </div>
+    </div>
+  </details>
   ${_scfgD('imgsettings','🖼️ 이미지탭 이미지 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭 ⚙️ 버튼과 동일한 설정입니다. 크기·밝기·배치·위치를 조절하면 즉시 반영됩니다.</div>
     <div id="cfg-b2-img-settings-wrap" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -1098,6 +1576,8 @@ ${_scfgD('notice','📢 공지 관리')}
     });
     // 카테고리 필터 적용
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false);
+    // 펨코현황 설정 초기화
+    try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
     // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
     if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);
