@@ -80,6 +80,70 @@ function init(){
 init();
 initDark();
 
+// ─────────────────────────────────────────────────────────────
+// 반응형 UI 스케일(자동): 브라우저/기기 폭에 따라 글자/아이콘 크기 자동 조절
+// - CSS 변수 --uiS 로 제어 (style.css에서 적용)
+// ─────────────────────────────────────────────────────────────
+function _applyUiScale(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    // 모바일은 살짝 작게(정보 밀도↑), 태블릿/PC는 기본
+    let s = 1;
+    if (w <= 360) s = 0.92;
+    else if (w <= 430) s = 0.96;
+    else if (w <= 520) s = 0.98;
+    else if (w <= 768) s = 1.00;
+    else if (w <= 1024) s = 1.02;
+    else s = 1.00;
+    document.documentElement.style.setProperty('--uiS', String(s));
+  }catch(e){}
+}
+window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
+_applyUiScale();
+
+// ─────────────────────────────────────────────────────────────
+// 상단 탭/필터바: 스와이프/드래그로 가로 스크롤 가능하게(이동 버튼 없이도)
+// - 대상: .tabs, .fbar (overflow-x:auto 영역)
+// ─────────────────────────────────────────────────────────────
+window.enableDragScroll = function(){
+  try{
+    document.querySelectorAll('.tabs, .fbar').forEach(el=>{
+      if (el.dataset.dragScrollBound === '1') return;
+      el.dataset.dragScrollBound = '1';
+      el.style.cursor = 'grab';
+      let down = false, startX = 0, startLeft = 0, moved = false;
+      const onDown = (e) => {
+        // 버튼/인풋 위에서는 드래그 시작 안 함
+        const t = e.target;
+        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea'))) return;
+        down = true; moved = false;
+        startX = (e.touches ? e.touches[0].clientX : e.clientX);
+        startLeft = el.scrollLeft;
+        el.style.cursor = 'grabbing';
+      };
+      const onMove = (e) => {
+        if (!down) return;
+        const x = (e.touches ? e.touches[0].clientX : e.clientX);
+        const dx = x - startX;
+        if (Math.abs(dx) > 4) moved = true;
+        el.scrollLeft = startLeft - dx;
+        if (moved) e.preventDefault && e.preventDefault();
+      };
+      const onUp = () => { down = false; el.style.cursor = 'grab'; };
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      el.addEventListener('touchstart', onDown, {passive:true});
+      el.addEventListener('touchmove', onMove, {passive:false});
+      el.addEventListener('touchend', onUp, {passive:true});
+      // 드래그 후 클릭 오동작 방지
+      el.addEventListener('click', (e)=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } }, true);
+    });
+  }catch(e){}
+};
+// 초기 1회
+setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){} }, 400);
+
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{

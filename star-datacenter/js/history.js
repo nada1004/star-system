@@ -23,6 +23,12 @@ function rHist(C,T){
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
+  // (요청사항) 관리자 전용 외부 자료 탭
+  try{
+    if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      tabDefs.push({id:'ext', grp:'외부', lbl:'📎 외부 자료'});
+    }
+  }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
   // 상단: 그룹 pill 바 (티어 순위표 스타일)
@@ -76,6 +82,11 @@ function rHist(C,T){
     rUniv(C,T);
     return;
   }
+  if(histSub==='ext'){
+    h+=histExternalHTML();
+    C.innerHTML=h;
+    return;
+  }
   if(histSub==='all') h+=histAllHTML();
   else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
@@ -110,6 +121,369 @@ function rHist(C,T){
   else if(histSub==='procompgj') h+=histProCompGJHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 관리자 전용: 외부 자료(붙여넣기 파싱)
+// - eloboard 페이지를 자동 수집하는 대신, 표를 복사→붙여넣기 해서 파싱
+// - 날짜/승자/패자/맵/ELO/경기방식 컬럼으로 정규화
+// ─────────────────────────────────────────────────────────────
+const _HIST_EXT_KEY='su_hist_ext_data_v1';
+const _HIST_EXT_PROXY_KEY='su_hist_ext_proxy_v1';
+function _histExtLoad(){
+  try{ return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''}; }catch(e){ return {items:[],raw:'',mode:'today',today:''}; }
+}
+function _histExtSave(v){ try{ localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v)); }catch(e){} }
+function _histExtProxyLoad(){
+  try{ return localStorage.getItem(_HIST_EXT_PROXY_KEY)||''; }catch(e){ return ''; }
+}
+function _histExtProxySave(v){ try{ localStorage.setItem(_HIST_EXT_PROXY_KEY, String(v||'')); }catch(e){} }
+function _histExtNormDate(s){
+  if(!s) return '';
+  let t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-').replace(/\s+/g,' ');
+  const m=t.match(/(\d{2,4})-(\d{1,2})-(\d{1,2})/);
+  if(!m) return '';
+  let y=parseInt(m[1],10); if(y<100) y+=2000;
+  const mo=String(parseInt(m[2],10)).padStart(2,'0');
+  const da=String(parseInt(m[3],10)).padStart(2,'0');
+  return `${y}-${mo}-${da}`;
+}
+function _histExtParseHTMLTable(html){
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const table=doc.querySelector('table');
+    if(!table) return null;
+    const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
+    return rows.length?rows:null;
+  }catch(e){ return null; }
+}
+function _histExtParseTextTable(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return null;
+  const byTab=lines.map(line=>line.split(/\t+/).map(x=>x.trim()).filter(Boolean));
+  if(byTab.some(r=>r.length>=5)) return byTab;
+  const bySpace=lines.map(line=>line.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean));
+  return bySpace.some(r=>r.length>=5) ? bySpace : null;
+}
+function _histExtFindHeaderIdx(rows){
+  const hdr = rows && rows.length ? rows[0] : null;
+  if(!hdr) return null;
+  const idx = {};
+  const norm = (s)=>String(s||'').replace(/\s+/g,'').toLowerCase();
+  hdr.forEach((c,i)=>{
+    const t = norm(c);
+    if(!t) return;
+    if(t.includes('날짜')||t.includes('date')) idx.date=i;
+    else if(t.includes('승자')||t.includes('winner')) idx.winner=i;
+    else if(t.includes('패자')||t.includes('loser')) idx.loser=i;
+    else if(t==='맵'||t.includes('map')) idx.map=i;
+    else if(t.includes('elo')) idx.elo=i;
+    else if(t.includes('경기방식')||t.includes('방식')||t.includes('type')) idx.type=i;
+    else if(t.includes('메모')||t.includes('비고')||t.includes('memo')) idx.memo=i;
+  });
+  return (idx.date!=null && idx.winner!=null && idx.loser!=null) ? idx : null;
+}
+function _histExtMapRows(rows){
+  const header=(rows[0]||[]).join(' ');
+  const hasHeader=/날짜|승자|패자|맵|ELO|경기방식/i.test(header);
+  const hdrIdx = hasHeader ? _histExtFindHeaderIdx(rows) : null;
+  const body=hasHeader?rows.slice(1):rows.slice();
+  const out=[];
+  body.forEach(r=>{
+    if(!r || r.length<5) return;
+    const d=_histExtNormDate(hdrIdx ? r[hdrIdx.date] : r[0]);
+    if(!d) return;
+    out.push({
+      date:d,
+      winner:(hdrIdx ? r[hdrIdx.winner] : r[1])||'',
+      loser:(hdrIdx ? r[hdrIdx.loser] : r[2])||'',
+      map:(hdrIdx && hdrIdx.map!=null ? r[hdrIdx.map] : r[3])||'',
+      elo:(hdrIdx && hdrIdx.elo!=null ? r[hdrIdx.elo] : r[4])||'',
+      type:(hdrIdx && hdrIdx.type!=null ? r[hdrIdx.type] : r[5])||'',
+      memo:(hdrIdx && hdrIdx.memo!=null ? r[hdrIdx.memo] : r[6])||'',
+    });
+  });
+  return out;
+}
+function _histExtDedup(items){
+  const seen=new Set();
+  const out=[];
+  items.forEach(x=>{
+    const k=[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('|');
+    if(seen.has(k)) return;
+    seen.add(k); out.push(x);
+  });
+  // 날짜 내림차순
+  out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  return out;
+}
+window.histExtParseAndRender = function(opts){
+  const st=_histExtLoad();
+  const raw=document.getElementById('hist-ext-raw')?.value||'';
+  const mode=document.getElementById('hist-ext-mode')?.value||'today';
+  const today=document.getElementById('hist-ext-today')?.value||'';
+  const merge=(document.getElementById('hist-ext-merge')?.checked)||false;
+  let rows=null, fmt='-';
+  if(/<table[\s>]/i.test(raw)){ rows=_histExtParseHTMLTable(raw); if(rows) fmt='HTML 표'; }
+  if(!rows){ rows=_histExtParseTextTable(raw); if(rows) fmt='텍스트 표'; }
+  let items=rows?_histExtMapRows(rows):[];
+  const todayItems=today?items.filter(x=>x.date===today):items;
+  const show=(mode==='today')?todayItems:items;
+  // 누적 저장(merge)이면 stored.items에 합치기
+  let stored = st.items || [];
+  if(merge){
+    stored=_histExtDedup(stored.concat(items));
+  }else{
+    stored=_histExtDedup(items);
+  }
+  const next={...st, items:stored, raw, mode, today};
+  _histExtSave(next);
+  // 출력은 "show" 기준, but merge 모드에서도 화면은 show 기준으로 보이게
+  try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(items.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-today').textContent=String(todayItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(stored.length); }catch(e){}
+  try{ _histExtRenderTable(show); }catch(e){}
+};
+
+// 프록시 URL(Cloudflare Worker)로 페이지 자동 가져오기
+window.histExtFetchFromProxy = async function(){
+  const proxy=(document.getElementById('hist-ext-proxy')?.value||'').trim();
+  const bo=(document.getElementById('hist-ext-bo')?.value||'bj_board').trim();
+  const pFrom=parseInt(document.getElementById('hist-ext-pageFrom')?.value||'1',10)||1;
+  const pTo=parseInt(document.getElementById('hist-ext-pageTo')?.value||String(pFrom),10)||pFrom;
+  const stopWhenDone = !!document.getElementById('hist-ext-stop')?.checked;
+  const mode=document.getElementById('hist-ext-mode')?.value||'today';
+  const today=document.getElementById('hist-ext-today')?.value||'';
+  const merge=(document.getElementById('hist-ext-merge')?.checked)||false;
+  if(!proxy){
+    alert('프록시 URL을 입력해주세요');
+    return;
+  }
+  _histExtProxySave(proxy);
+  const prog=document.getElementById('hist-ext-prog');
+  const setProg=(s)=>{ if(prog) prog.textContent=s; };
+  setProg('가져오는 중...');
+
+  let allItems=[];
+  let fmt='프록시';
+  let foundTodayAny=false;
+  const start=Math.min(pFrom,pTo), end=Math.max(pFrom,pTo);
+
+  for(let p=start; p<=end; p++){
+    setProg(`페이지 ${p}/${end} 불러오는 중...`);
+    let html='';
+    try{
+      const u = `${proxy.replace(/\/$/,'')}/?bo_table=${encodeURIComponent(bo)}&page=${encodeURIComponent(String(p))}`;
+      const res = await fetch(u, {method:'GET'});
+      html = await res.text();
+    }catch(e){
+      console.error('proxy fetch error', e);
+      continue;
+    }
+    let rows=_histExtParseHTMLTable(html);
+    if(!rows){
+      // 첫번째 table이 아닐 수도 있어 가장 큰 테이블을 추정
+      try{
+        const doc=new DOMParser().parseFromString(html,'text/html');
+        const tables=[...doc.querySelectorAll('table')];
+        let best=null, bestN=0;
+        tables.forEach(t=>{
+          const rs=[...t.querySelectorAll('tr')];
+          if(rs.length>bestN){ bestN=rs.length; best=t; }
+        });
+        if(best){
+          rows=[...best.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
+        }
+      }catch(e){}
+    }
+    const items=_histExtMapRows(rows||[]);
+    if(items.length) allItems = allItems.concat(items);
+
+    if(mode==='today' && today){
+      const todayCount = items.filter(x=>x.date===today).length;
+      if(todayCount>0) foundTodayAny=true;
+      if(stopWhenDone && foundTodayAny && todayCount===0){
+        setProg(`오늘(${today}) 자료가 더 이상 없어 중단(페이지 ${p})`);
+        break;
+      }
+    }
+  }
+
+  allItems=_histExtDedup(allItems);
+  const todayItems=today?allItems.filter(x=>x.date===today):allItems;
+  const show=(mode==='today')?todayItems:allItems;
+
+  // 저장
+  const st=_histExtLoad();
+  let stored = st.items || [];
+  if(merge) stored=_histExtDedup(stored.concat(allItems));
+  else stored=_histExtDedup(allItems);
+  const next={...st, items:stored, raw:st.raw||'', mode, today};
+  _histExtSave(next);
+
+  try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(allItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-today').textContent=String(todayItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(stored.length); }catch(e){}
+  try{ _histExtRenderTable(show); }catch(e){}
+  setProg(`완료: ${show.length}행 출력`);
+};
+window.histExtClear = function(){
+  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.histExtCopy = async function(){
+  const st=_histExtLoad();
+  const mode=document.getElementById('hist-ext-mode')?.value||'today';
+  const today=document.getElementById('hist-ext-today')?.value||'';
+  const base=st.items||[];
+  const items=(mode==='today' && today)?base.filter(x=>x.date===today):base;
+  const tsv=items.map(x=>[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('\t')).join('\n');
+  try{
+    await navigator.clipboard.writeText(tsv);
+    alert('복사됨');
+  }catch(e){
+    alert('복사 실패: 브라우저 권한 문제일 수 있어요.');
+  }
+};
+function _histExtRenderTable(items){
+  const out=document.getElementById('hist-ext-out');
+  if(!out) return;
+  if(!items.length){
+    out.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📎</div><div class="empty-state-title">출력할 데이터가 없습니다</div><div class="empty-state-desc">표를 붙여넣고 ‘파싱/출력’을 눌러주세요</div></div>`;
+    return;
+  }
+  out.innerHTML=`
+    <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--surface);color:var(--text3);font-weight:900">
+            <th style="padding:10px;text-align:left;white-space:nowrap">날짜</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">승자</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">패자</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">맵</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">ELO</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">경기방식</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">메모</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(x=>`
+            <tr style="border-top:1px solid var(--border)">
+              <td style="padding:10px;white-space:nowrap;font-weight:900">${x.date}</td>
+              <td style="padding:10px">${x.winner||''}</td>
+              <td style="padding:10px">${x.loser||''}</td>
+              <td style="padding:10px;color:var(--gray-l)">${x.map||''}</td>
+              <td style="padding:10px;white-space:nowrap">${x.elo||''}</td>
+              <td style="padding:10px;color:var(--gray-l)">${x.type||''}</td>
+              <td style="padding:10px;color:var(--gray-l)">${x.memo||''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function histExternalHTML(){
+  // 권한 재확인(수동 변경 대비)
+  try{
+    if(!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      return `<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">관리자 전용</div><div class="empty-state-desc">관리자 로그인 시 이용 가능합니다</div></div>`;
+    }
+  }catch(e){}
+  const st=_histExtLoad();
+  const proxy = _histExtProxyLoad();
+  const today=st.today||(()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const da=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${da}`;})();
+  // 출력은 저장된 items를 기반으로 초기 렌더(모드 따라 필터는 버튼에서)
+  const initItems = (st.mode==='today' && today) ? (st.items||[]).filter(x=>x.date===today) : (st.items||[]);
+  setTimeout(()=>{ try{ _histExtRenderTable(initItems); }catch(e){} }, 0);
+  return `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:10px 0 8px">
+      <div style="font-weight:1000">📎 외부 자료 (붙여넣기 파싱)</div>
+      <div style="font-size:11px;color:var(--gray-l)">표를 복사→붙여넣기 후 ‘파싱/출력’</div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
+        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)">대기</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="flabel">프록시</div>
+        <input id="hist-ext-proxy" value="${(proxy||'').replace(/"/g,'&quot;')}" placeholder="예) https://elo-proxy1.kpoppd.workers.dev" style="flex:1;min-width:240px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <div class="flabel">bo_table</div>
+        <input id="hist-ext-bo" value="bj_board" style="width:120px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <div class="flabel">페이지</div>
+        <input id="hist-ext-pageFrom" type="number" value="1" min="1" style="width:78px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <span style="color:var(--gray-l);font-weight:900">~</span>
+        <input id="hist-ext-pageTo" type="number" value="6" min="1" style="width:78px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:800">
+          <input type="checkbox" id="hist-ext-stop" checked />
+          오늘만이면 중단
+        </label>
+        <button class="btn btn-b" onclick="histExtFetchFromProxy()">URL로 가져오기</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--gray-l)">
+        ※ Cloudflare Worker 프록시가 필요합니다(예: https://elo-proxy1.kpoppd.workers.dev/). “오늘만이면 중단”을 켜면 오늘 날짜 행이 더 이상 없는 페이지에서 자동 중단합니다.
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:10px">
+      <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
+          <div style="font-weight:900">1) 자료 붙여넣기</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-w btn-xs" onclick="document.getElementById('hist-ext-raw').value='날짜\\t승자\\t패자\\t맵\\tELO\\t경기방식\\t메모\\n26.04.16\\t선수A\\t선수B\\tPolypoid\\t+12\\tBO3\\t결승\\n26.04.16\\t선수C\\t선수D\\tCircuit Breaker\\t-8\\tBO1\\t역전\\n26.04.15\\t선수E\\t선수F\\tFighting Spirit\\t+4\\tBO3\\t\\n';histExtParseAndRender();">샘플</button>
+            <button class="btn btn-w btn-xs" onclick="histExtClear()">초기화</button>
+          </div>
+        </div>
+        <textarea id="hist-ext-raw" style="width:100%;min-height:220px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="여기에 eloboard 표 내용을 복사해서 붙여넣기...">${(st.raw||'').replace(/</g,'&lt;')}</textarea>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          <div class="flabel">보기</div>
+          <select id="hist-ext-mode" onchange="histExtParseAndRender()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+            <option value="today" ${st.mode==='today'?'selected':''}>오늘 자료만</option>
+            <option value="all" ${st.mode==='all'?'selected':''}>전체(붙여넣은 것 전부)</option>
+          </select>
+          <div class="flabel">오늘</div>
+          <input id="hist-ext-today" type="date" value="${today}" onchange="histExtParseAndRender()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:800">
+            <input type="checkbox" id="hist-ext-merge" ${st.items&&st.items.length?'checked':''} />
+            누적 저장
+          </label>
+          <button class="btn btn-b" onclick="histExtParseAndRender()">파싱/출력</button>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--gray-l)">
+          ※ ‘누적 저장’을 켜면 여러 페이지를 붙여넣어도 기존 데이터와 합쳐 저장합니다(중복 자동 제거).
+        </div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
+          <div style="font-weight:900">2) 출력</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-w btn-xs" onclick="histExtCopy()">내용 복사</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:6px;margin-bottom:8px">
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+            <div style="font-size:11px;color:var(--gray-l);font-weight:900">형식</div>
+            <div style="font-size:13px;font-weight:1000" id="hist-ext-fmt">-</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+            <div style="font-size:11px;color:var(--gray-l);font-weight:900">총 행(이번)</div>
+            <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt">0</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+            <div style="font-size:11px;color:var(--gray-l);font-weight:900">오늘 행</div>
+            <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-today">0</div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+            <div style="font-size:11px;color:var(--gray-l);font-weight:900">저장됨</div>
+            <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-store">${(st.items||[]).length}</div>
+          </div>
+        </div>
+        <div id="hist-ext-out"></div>
+      </div>
+    </div>
+  `;
 }
 
 

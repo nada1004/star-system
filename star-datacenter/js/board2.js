@@ -437,6 +437,12 @@ function rBoard2(C, T) {
   } else if (_b2View === 'femco') {
     sub.innerHTML = _b2FemcoView();
     injectUnivIcons(sub);
+    // 모바일/태블릿에서 인원이 많은 대학도 "좌측부터" 항상 보이게 (스크롤 초기값 0)
+    setTimeout(()=>{
+      try{
+        sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
+      }catch(e){}
+    }, 0);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
@@ -575,12 +581,12 @@ function _b2FemcoView() {
   const colWidth = Math.max(80, Math.min(360, parseInt(femcoSettings.colWidth || 170, 10) || 170));
   const rowGap = Math.max(0, Math.min(28, parseInt(femcoSettings.colGap || 10, 10) || 10)); // UI에서 '상하 간격'
   const colGap = 10; // 가로(컬럼) 간격은 고정(너무 벌어지지 않게)
-  const univGap = Math.max(0, Math.min(40, parseInt(femcoSettings.univGap || 18, 10) || 18));
+  const univGap = Math.max(0, Math.min(120, parseInt(femcoSettings.univGap || 18, 10) || 18));
   const countFontSize = Math.max(10, Math.min(18, parseInt(femcoSettings.countFontSize || 12, 10) || 12));
   const contentPadX = Math.max(0, Math.min(40, parseInt(femcoSettings.contentPadX || 16, 10) || 16));
   const contentAlign = (femcoSettings.contentAlign === 'left' || femcoSettings.contentAlign === 'center') ? femcoSettings.contentAlign : 'center';
   const contentOffsetX = Math.max(-40, Math.min(40, parseInt(femcoSettings.contentOffsetX || 0, 10) || 0));
-  const headGap = Math.max(0, Math.min(30, parseInt(femcoSettings.headGap || 10, 10) || 10));
+  const headGap = Math.max(0, Math.min(80, parseInt(femcoSettings.headGap || 10, 10) || 10));
 
   const _padL = Math.max(0, Math.min(80, contentPadX + contentOffsetX));
   const _padR = Math.max(0, Math.min(80, contentPadX - contentOffsetX));
@@ -697,6 +703,10 @@ function _b2FemcoView() {
         justify-content:${contentAlign==='center'?'center':'start'};
       }
       .b2-femco-grid::-webkit-scrollbar{height:0}
+      /* 모바일/태블릿: 좌측이 무조건 보이도록(중앙정렬 무시) */
+      @media(max-width:1024px){
+        .b2-femco-grid{justify-content:flex-start!important;}
+      }
 
       /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 4줄 */
       /* 카드 느낌 제거: 배경/테두리 최소화 */
@@ -2433,6 +2443,15 @@ function _b2PlayersView() {
         object-position: center;
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
+      }
+      /* 모바일/태블릿: 이미지 설정(줌/이동) 때문에 잘리는 문제 방지 → 자동 맞춤 */
+      @media (max-width: 1024px) {
+        .b2-players-main-image{
+          object-fit: contain !important;
+          object-position: center !important;
+          transform: translate(0,0) scale(1) !important;
+          filter: brightness(1) !important;
+        }
       }
       .b2-players-img-controls {
         position: absolute;
