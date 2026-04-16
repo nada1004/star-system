@@ -545,28 +545,14 @@ function gcHex8Hover(n,alpha){
   const a=Math.round((alpha||0.12)*255).toString(16).padStart(2,'0');
   return c+a;
 }
-// 스타대학 아이콘 URL 매핑
-const UNIV_ICONS={
-  '엠비대':'https://i.ibb.co/6cfNW2Nt/image.png',
-  '와플대':'https://i.ibb.co/Zp8f2w8c/image.png',
-  '정선대':'https://i.ibb.co/QFc22RMp/image.png',
-  '츠캄몬스타즈':'https://i.ibb.co/ZpRrMWMt/image.png',
-  '수술대':'https://i.ibb.co/Q7CGzwck/image.png',
-  'JSA':'https://i.ibb.co/tpdY6Z6T/jsa.png',
-  '늪지대':'https://i.ibb.co/1YhTgzdS/image.png',
-  '뉴캣슬':'https://i.ibb.co/qM7NQVMr/image.png',
-  '씨나인':'https://i.ibb.co/8nyMJyWh/image.png',
-  'HM':'https://i.ibb.co/ksZY7Ksq/hm-1.png',
-  'BGM':'https://i.ibb.co/PGL06DJb/bgm-1.png',
-  '흑카데미':'https://i.ibb.co/VW7Rw0G7/image.png',
-  '케이대':'https://i.ibb.co/8n196Hq8/image.png',
-  '이노대':'https://i.ibb.co/pjK8Hb1Z/image.png'
-};
+// ⚠️ 대학 아이콘(로고)은 코드에 하드코딩하지 않습니다.
+// - 저작권/출처 이슈가 발생할 수 있어, 로고 URL은 data.json(univCfg.icon / univCfg.img)로만 관리합니다.
+const UNIV_ICONS = {};
 // 기본 대학 아이콘 SVG (아이콘이 없는 대학에 사용)
 const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="flex-shrink:0;opacity:0.75;vertical-align:middle"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 // 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
 function gUI(n,size='1em'){
-  const url=(univCfg.find(x=>x.name===n)||{}).icon||UNIV_ICONS[n]||'';
+  const url=(univCfg.find(x=>x.name===n)||{}).icon || (univCfg.find(x=>x.name===n)||{}).img || '';
   if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
@@ -587,7 +573,7 @@ function injectUnivIcons(container){
     if(!el.style.display||el.style.display==='inline-block')el.style.display='inline-flex';
     el.style.alignItems='center';
     el.style.gap='3px';
-    const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
+    const url=(univCfg.find(x=>x.name===name)||{}).icon || (univCfg.find(x=>x.name===name)||{}).img || '';
     if(url){
       const img=document.createElement('img');
       img.src=url; img.setAttribute('data-univ-icon','1');

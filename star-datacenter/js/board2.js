@@ -357,7 +357,7 @@ function rBoard2(C, T) {
   // 저장/초기화 바
   let saveBar = '';
   if (_b2View === 'univ') {
-    saveBar = `<div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
       <div style="position:relative">
         <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체">🏫 전체</option>
@@ -368,7 +368,7 @@ function rBoard2(C, T) {
       <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'free') {
-    saveBar = `<div style="margin-left:auto;flex-shrink:0">
+    saveBar = `<div style="flex-shrink:0">
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>`;
   }
@@ -410,9 +410,11 @@ function rBoard2(C, T) {
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
+      ${_b2TabBtn('femco','var(--blue)','🧩 펨코현황')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
       ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
       ${playerFilters}
+      <span style="flex:1"></span>
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -424,11 +426,23 @@ function rBoard2(C, T) {
   if (_b2View === 'univ') {
     sub.innerHTML = _b2UnivView();
     injectUnivIcons(sub);
+  } else if (_b2View === 'femco') {
+    sub.innerHTML = _b2FemcoView();
+    injectUnivIcons(sub);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
   } else if (_b2View === 'players') {
     sub.innerHTML = _b2PlayersView();
+    // 이미지별 탭: 최초 진입 시에도 저장된 이미지 설정(크기/밝기/배치/오프셋)이 바로 적용되도록
+    setTimeout(() => {
+      try{
+        if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+        }
+      }catch(e){}
+    }, 0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -465,6 +479,190 @@ function _b2UnivView() {
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
+  h += `</div>`;
+  return h;
+}
+
+/* ── 🧩 펨코현황 뷰 ──
+   첨부 이미지처럼 "대학별 컬러 섹션 + 촘촘한 프로필 그리드" 형태로 렌더링
+*/
+function _b2FemcoView() {
+  const univList = _b2VisUnivs().filter(u => u.name && u.name !== '무소속');
+  if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
+
+  // univCfg 순서로 정렬 (없으면 이름순)
+  if (typeof univCfg !== 'undefined' && univCfg.length) {
+    univList.sort((a, b) => {
+      const ia = univCfg.findIndex(u => u.name === a.name);
+      const ib = univCfg.findIndex(u => u.name === b.name);
+      return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
+    });
+  } else {
+    univList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
+
+  // 표시 대상 선수(현황판 기준과 동일하게 숨김/은퇴/현황판숨김 제외)
+  const membersByUniv = {};
+  univList.forEach(u => {
+    membersByUniv[u.name] = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
+  });
+
+  const LOGO = 150; // 대학 로고 (텍스트 가림 방지용 상한)
+
+  const tierRank = (p) => {
+    const t = p.tier || '';
+    const i = (typeof TIERS !== 'undefined' && TIERS.includes(t)) ? TIERS.indexOf(t) : 999;
+    return i >= 0 ? i : 999;
+  };
+
+  const rolePri = (p) => {
+    const r = (p.role || '').trim();
+    const order = ['이사장', '총장', '교수', '코치'];
+    const i = order.indexOf(r);
+    return i >= 0 ? i : 99;
+  };
+
+  const raceLabel = (p) => p.race === 'P' ? '프로토스' : p.race === 'T' ? '테란' : p.race === 'Z' ? '저그' : '종족미정';
+  const raceColor = (p) => p.race === 'P' ? '#c084fc' : p.race === 'T' ? '#38bdf8' : p.race === 'Z' ? '#34d399' : '#94a3b8';
+
+  function femcoAvatarSquare(p, accent) {
+    const img = (p && p.photo) ? String(p.photo) : '';
+    const letter = (p && p.name) ? String(p.name).slice(0, 1) : '?';
+    const border = `${accent}55`;
+    if (img) {
+      return `<img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.outerHTML='<div style=&quot;width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">`;
+    }
+    return `<div style="width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}</div>`;
+  }
+
+  let h = `
+    <style>
+      .b2-femco-wrap{display:flex;flex-direction:column;gap:18px}
+      .b2-femco-univ{border-radius:16px;overflow:hidden;box-shadow:0 2px 22px rgba(0,0,0,.12)}
+      .b2-femco-head{padding:16px 16px 12px;text-align:center}
+      .b2-femco-logo{display:flex;justify-content:center;margin-bottom:10px}
+      .b2-femco-title{font-weight:1000;font-size:28px;letter-spacing:-.04em;line-height:1.1}
+      .b2-femco-meta{margin-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+      .b2-femco-pill{font-size:12px;font-weight:1000;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
+      .b2-femco-body{padding:12px 12px 16px}
+      .b2-femco-group{margin-top:10px}
+      .b2-femco-group:first-child{margin-top:0}
+      .b2-femco-ghead{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+      .b2-femco-glabel{font-size:12px;font-weight:1000;background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.10);padding:3px 10px;border-radius:999px}
+      .b2-femco-gcount{font-size:11px;font-weight:900;opacity:.85}
+
+      /* ✅ 배치 규칙(요구사항)
+         - 1번(첫 컬럼) 위→아래로 5명 채움
+         - 5명 되면 우측(다음 컬럼) 1번으로 다시 위→아래로 5명
+      */
+      .b2-femco-grid{
+        display:grid;
+        gap:10px;
+        grid-auto-flow:column;
+        grid-template-rows:repeat(5, minmax(0, auto));
+        grid-auto-columns:minmax(190px, 1fr);
+        overflow-x:auto;
+        padding-bottom:6px;
+      }
+
+      /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 4줄 */
+      /* 카드 느낌 제거: 배경/테두리 최소화 */
+      .b2-femco-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:10px;cursor:pointer;min-width:0;transition:background .1s}
+      .b2-femco-item:hover{background:rgba(255,255,255,.12)}
+      .b2-femco-avatar{width:46px;height:46px;border-radius:10px;overflow:hidden;flex-shrink:0}
+      .b2-femco-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+      .b2-femco-tier{font-size:10px;font-weight:1000;display:inline-flex;align-items:center;gap:4px}
+      .b2-femco-role{font-size:10px;font-weight:1000;opacity:.9}
+      .b2-femco-name{font-size:12px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .b2-femco-race-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:1000;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.10)}
+
+      /* 컬럼 수는 데이터에 따라 자동 증가(가로 스크롤). 작은 화면에서는 컬럼 폭을 줄여 가독성 유지 */
+      @media(max-width:900px){  .b2-femco-grid{grid-auto-columns:minmax(170px, 1fr);} }
+      @media(max-width:520px){
+        .b2-femco-title{font-size:20px}
+        .b2-femco-grid{grid-auto-columns:minmax(160px, 1fr);}
+      }
+    </style>
+    <div class="b2-femco-wrap">
+  `;
+
+  univList.forEach(u => {
+    const univName = u.name;
+    const all = (membersByUniv[univName] || []);
+    if (!all.length) return;
+
+    const col = gc(univName);
+    const textCol = _b2ContrastColor(col);
+    const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x => x.name === univName) : null) || {};
+    const iconUrl = uCfg.icon || uCfg.img || '';
+    const logoHtml = iconUrl
+      ? `<img src="${iconUrl}" style="width:${LOGO}px;height:${LOGO}px;object-fit:contain" onerror="this.style.display='none'">`
+      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(LOGO*0.62)}px;height:${Math.round(LOGO*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
+
+    // 인원 카운트 규칙:
+    // - 이사장 인원
+    // - 교수 + 코치 인원
+    // - 나머지 학생(=전체 - 위 2개)
+    const bossCnt = all.filter(p => (p.role || '').trim() === '이사장').length;
+    const profCoachCnt = all.filter(p => ['교수','코치'].includes((p.role || '').trim())).length;
+    const studentCnt = Math.max(0, all.length - bossCnt - profCoachCnt);
+
+    // 요구사항: 같은 급끼리 섹션으로 나누지 않고, 단일 리스트에서
+    // 이사장 → 총장 → 교수 → 코치 우선순위로 정렬 후 5열 배치
+    const list = [...all].sort((a, b) => {
+      const ra = rolePri(a), rb = rolePri(b);
+      if (ra !== rb) return ra - rb;
+      // 같은 직급 내에서는 티어→이름
+      const ta = tierRank(a), tb = tierRank(b);
+      if (ta !== tb) return ta - tb;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    h += `
+      <section class="b2-femco-univ" style="background:${col}">
+        <div class="b2-femco-head" style="color:${textCol}">
+          <div class="b2-femco-logo">
+            ${logoHtml}
+          </div>
+          <div class="b2-femco-title">${univName}</div>
+          ${(uCfg.championships || 0) > 0 ? `<div style="display:flex;gap:2px;align-items:center;justify-content:center;margin-top:6px">${'⭐'.repeat(uCfg.championships)}</div>` : ''}
+          <div class="b2-femco-meta">
+            <span class="b2-femco-pill">총 ${all.length}</span>
+            <span class="b2-femco-pill">이사장 ${bossCnt}</span>
+            <span class="b2-femco-pill">교수+코치 ${profCoachCnt}</span>
+            <span class="b2-femco-pill">학생 ${studentCnt}</span>
+          </div>
+        </div>
+
+        <div class="b2-femco-body" style="background:${col}18">
+          <div class="b2-femco-grid">
+            ${list.map(p => {
+              const safeName = (p.name || '').replace(/'/g, "\\'");
+              const tier = p.tier || '?';
+              const tierBg = tier && tier !== '?' ? (typeof getTierBtnColor === 'function' ? getTierBtnColor(tier) : '#64748b') : '#64748b';
+              const tierFg = tier && tier !== '?' ? ((typeof getTierBtnTextColor === 'function' ? getTierBtnTextColor(tier) : '#fff') || '#fff') : '#fff';
+              const roleLabel = (p.role || '').trim();
+              const rcol = raceColor(p);
+              return `
+                <div class="b2-femco-item" onclick="openPlayerModal('${safeName}');event.stopPropagation();">
+                  <div class="b2-femco-avatar">${femcoAvatarSquare(p, rcol)}</div>
+                  <div class="b2-femco-text" style="${p.inactive ? 'opacity:.65' : ''};color:${textCol}">
+                    <div class="b2-femco-tier">
+                      <span style="background:${tierBg};color:${tierFg};padding:1px 6px;border-radius:999px;border:1px solid rgba(0,0,0,.12)">${tier}</span>
+                    </div>
+                    <div class="b2-femco-role">${roleLabel || ''}</div>
+                    <div class="b2-femco-name">${p.name || ''}</div>
+                    <div><span class="b2-femco-race-pill" style="color:${rcol};border-color:${rcol}55">${raceLabel(p)}</span></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+  });
+
   h += `</div>`;
   return h;
 }
@@ -1755,8 +1953,12 @@ function _b2PlayersView() {
     </div>`;
   }
 
-  // 기본 선택 선수 (필터 변경 시에만 첫 번째 선수 선택, 초기 로드 시 localStorage 유지)
-  if (_b2SelectedPlayer && !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+  // 기본 선택 선수
+  // - _b2SelectedPlayer가 null이면 첫 번째 선수로 초기화
+  // - 필터 변경으로 현재 선택 선수가 목록에서 사라지면 첫 번째 선수로 대체
+  if (!_b2SelectedPlayer) {
+    _b2SelectedPlayer = tierFilteredPlayers[0];
+  } else if (!tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
     _b2SelectedPlayer = tierFilteredPlayers[0];
   }
 
