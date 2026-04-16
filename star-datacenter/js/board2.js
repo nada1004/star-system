@@ -501,14 +501,19 @@ function _b2FemcoView() {
   const FEMCO_STORE_KEY = 'b2_femco_settings_v1';
   const femcoDefaultSettings = () => ({
     logoSize: 150,            // 대학 로고(px)
-    logoPos: 'top',           // top | left | right
+    logoPos: 'top',           // top | bottom | left | right | center
+    logoAttachTitle: 1,       // 1: 로고+대학명 같이 이동, 0: 로고만 이동
     titleSize: 28,            // 대학명 폰트(px)
     titleFont: 'system',      // system | noto | pretendard
     playerImgSize: 46,        // 스트리머 이미지(px)
     playerImgShape: 'square', // square | circle
     rowsPerCol: 5,            // 한 컬럼(세로) 당 표시 인원(=줄 수)
     colWidth: 170,            // 컬럼(좌우) 너비(px)
-    colGap: 10,               // 컬럼 간격(px)
+    colGap: 10,               // (legacy) 간격(px) - UI에서는 '상하 간격'으로 사용
+    univGap: 18,              // 대학 섹션 간격(px)
+    countFontSize: 12,        // 인원수 폰트(px)
+    contentPadX: 16,          // 좌우 여백(px)
+    contentAlign: 'center',   // left | center
     univSubtitles: {},        // { [univName]: "대학명 아래 문구" }
     subtitleSize: 12,         // 서브문구 폰트(px)
     subtitleWeight: 800,      // 서브문구 굵기
@@ -518,6 +523,7 @@ function _b2FemcoView() {
     roleFontSize: 10,
     tierBadgeSize: 10,
     tierBadgePadX: 6,
+    starSize: 15,            // ⭐ 크기(px)
     univColorOverrides: {},   // { [univName]: "#RRGGBB" }
   });
   function femcoLoad(){
@@ -558,13 +564,18 @@ function _b2FemcoView() {
     membersByUniv[u.name] = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
   });
 
-  const LOGO = Math.max(60, Math.min(260, parseInt(femcoSettings.logoSize || 150, 10) || 150));
+  const LOGO = Math.max(60, Math.min(340, parseInt(femcoSettings.logoSize || 150, 10) || 150));
   const titleSize = Math.max(16, Math.min(44, parseInt(femcoSettings.titleSize || 28, 10) || 28));
   const playerImgSize = Math.max(28, Math.min(90, parseInt(femcoSettings.playerImgSize || 46, 10) || 46));
   const playerRadius = femcoSettings.playerImgShape === 'circle' ? '50%' : '10px';
   const rowsPerCol = Math.max(2, Math.min(12, parseInt(femcoSettings.rowsPerCol || 5, 10) || 5));
   const colWidth = Math.max(80, Math.min(360, parseInt(femcoSettings.colWidth || 170, 10) || 170));
-  const colGap = Math.max(0, Math.min(28, parseInt(femcoSettings.colGap || 10, 10) || 10));
+  const rowGap = Math.max(0, Math.min(28, parseInt(femcoSettings.colGap || 10, 10) || 10)); // UI에서 '상하 간격'
+  const colGap = 10; // 가로(컬럼) 간격은 고정(너무 벌어지지 않게)
+  const univGap = Math.max(0, Math.min(40, parseInt(femcoSettings.univGap || 18, 10) || 18));
+  const countFontSize = Math.max(10, Math.min(18, parseInt(femcoSettings.countFontSize || 12, 10) || 12));
+  const contentPadX = Math.max(0, Math.min(40, parseInt(femcoSettings.contentPadX || 16, 10) || 16));
+  const contentAlign = (femcoSettings.contentAlign === 'left' || femcoSettings.contentAlign === 'center') ? femcoSettings.contentAlign : 'center';
   const subtitleSize = Math.max(10, Math.min(24, parseInt(femcoSettings.subtitleSize || 12, 10) || 12));
   const subtitleWeight = [400,500,600,700,800,900].includes(parseInt(femcoSettings.subtitleWeight||800,10)) ? parseInt(femcoSettings.subtitleWeight||800,10) : 800;
   const subtitleColor = (typeof femcoSettings.subtitleColor === 'string') ? femcoSettings.subtitleColor : '';
@@ -572,6 +583,7 @@ function _b2FemcoView() {
   const roleFontSize = Math.max(9, Math.min(16, parseInt(femcoSettings.roleFontSize || 10, 10) || 10));
   const tierBadgeSize = Math.max(9, Math.min(16, parseInt(femcoSettings.tierBadgeSize || 10, 10) || 10));
   const tierBadgePadX = Math.max(4, Math.min(12, parseInt(femcoSettings.tierBadgePadX || 6, 10) || 6));
+  const starSize = Math.max(10, Math.min(28, parseInt(femcoSettings.starSize || 15, 10) || 15));
   const titleFontFamily = (() => {
     switch (femcoSettings.titleFont) {
       case 'noto': return `'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
@@ -600,20 +612,48 @@ function _b2FemcoView() {
     const img = (p && p.photo) ? String(p.photo) : '';
     const letter = (p && p.name) ? String(p.name).slice(0, 1) : '?';
     const border = `${accent}55`;
+    // 상태 아이콘(10시 방향) — 기존 상태 아이콘 시스템 재사용
+    let badge = '';
+    try{
+      const _rawIcon = getStatusIcon(p.name);
+      const statusHtml = getStatusIconHTML(p.name);
+      const s = playerImgSize;
+      const badgeSize = Math.max(12, Math.round(s * 0.38));
+      const _isImgIcon = _rawIcon && (typeof _siIsImg === 'function' ? _siIsImg(_rawIcon) : false);
+      const _badgeInner = _isImgIcon
+        ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.86" onerror="this.style.display='none'">`
+        : (statusHtml ? statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'') : '');
+      const _badgeBg = _isImgIcon ? 'rgba(255,255,255,.72)' : 'transparent';
+      // 10시 방향(좌상단)
+      const _bTop = -Math.round(badgeSize * 0.26);
+      const _bLeft = -Math.round(badgeSize * 0.26);
+      badge = statusHtml
+        ? `<span style="position:absolute;top:${_bTop}px;left:${_bLeft}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:${_badgeBg};overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${_badgeInner}</span>`
+        : '';
+    }catch(e){}
+
     if (img) {
-      return `<img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.outerHTML='<div style=&quot;width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">`;
+      return `<span style="position:relative;display:block;width:100%;height:100%">
+        <img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">
+        ${badge}
+      </span>`;
     }
-    return `<div style="width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}</div>`;
+    return `<div style="position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}${badge}</div>`;
   }
 
   let h = `
     <style>
-      .b2-femco-wrap{display:flex;flex-direction:column;gap:18px}
+      .b2-femco-wrap{display:flex;flex-direction:column;gap:${univGap}px}
       .b2-femco-univ{border-radius:16px;overflow:hidden;box-shadow:0 2px 22px rgba(0,0,0,.12);transition:background-color .35s ease, box-shadow .35s ease, transform .2s ease}
       .b2-femco-univ:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(0,0,0,.18)}
       .b2-femco-head{padding:16px 16px 12px;text-align:center;position:relative}
-      .b2-femco-logo{display:flex;justify-content:center;margin-bottom:10px}
+      .b2-femco-headrow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+      .b2-femco-headcol{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+      .b2-femco-logo{display:flex;justify-content:center;margin-bottom:0}
+      .b2-femco-title-row{display:flex;align-items:center;gap:6px;justify-content:center}
       .b2-femco-title{font-weight:1000;font-size:${titleSize}px;letter-spacing:-.04em;line-height:1.1;font-family:${titleFontFamily}}
+      .b2-femco-stars{display:inline-flex;gap:1px;align-items:center;opacity:.95}
+      .b2-femco-stars span{font-size:${starSize}px;line-height:1}
       .b2-femco-subtitle{margin-top:6px;font-size:${subtitleSize}px;font-weight:${subtitleWeight};line-height:1.2;opacity:.95}
       /* 인원수: 좌측 상단 고정 (배경 없음) */
       .b2-femco-countbox{
@@ -622,7 +662,7 @@ function _b2FemcoView() {
         padding:0;border-radius:0;background:transparent;border:none;color:inherit;
         max-width:45%;
       }
-      .b2-femco-countbox div{font-size:12px;font-weight:1000;line-height:1.15;white-space:nowrap}
+      .b2-femco-countbox div{font-size:${countFontSize}px;font-weight:1000;line-height:1.15;white-space:nowrap}
       .b2-femco-meta{margin-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
       .b2-femco-pill{font-size:12px;font-weight:1000;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
       .b2-femco-body{padding:12px 12px 16px}
@@ -638,19 +678,23 @@ function _b2FemcoView() {
       */
       .b2-femco-grid{
         display:grid;
-        gap:${colGap}px;
+        column-gap:${colGap}px;
+        row-gap:${rowGap}px;
         grid-auto-flow:column;
         grid-template-rows:repeat(${rowsPerCol}, minmax(0, auto));
         grid-auto-columns:${colWidth}px;
         overflow-x:auto;
         padding-bottom:6px;
+        scrollbar-width:none;
+        justify-content:${contentAlign==='center'?'center':'start'};
       }
+      .b2-femco-grid::-webkit-scrollbar{height:0}
 
       /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 4줄 */
       /* 카드 느낌 제거: 배경/테두리 최소화 */
       .b2-femco-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:10px;cursor:pointer;min-width:0;transition:background .1s;justify-self:start;width:fit-content;max-width:100%}
       .b2-femco-item:hover{background:rgba(255,255,255,.12)}
-      .b2-femco-avatar{width:${playerImgSize}px;height:${playerImgSize}px;border-radius:${playerRadius};overflow:hidden;flex-shrink:0}
+      .b2-femco-avatar{width:${playerImgSize}px;height:${playerImgSize}px;border-radius:${playerRadius};overflow:hidden;flex-shrink:0;position:relative}
       .b2-femco-text{display:flex;flex-direction:column;gap:2px;min-width:0}
       .b2-femco-tier{font-size:10px;font-weight:1000;display:inline-flex;align-items:center;gap:4px}
       .b2-femco-tierbadge{font-size:${tierBadgeSize}px;padding:2px ${tierBadgePadX}px;border-radius:999px;border:1px solid rgba(0,0,0,.12);display:inline-flex;align-items:center;line-height:1}
@@ -706,37 +750,66 @@ function _b2FemcoView() {
     const _subColor = (subtitleColor && subtitleColor.trim()) ? subtitleColor : textCol;
 
     const _pos = femcoSettings.logoPos || 'top';
-    const headLayout = (_pos === 'left' || _pos === 'right')
-      ? `
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
-          ${_pos==='left'?`<div class="b2-femco-logo" style="margin-bottom:0">${logoHtml}</div>`:''}
-          <div style="min-width:220px">
-            <div class="b2-femco-title">${univName}</div>
-            ${_subTxt?`<div class="b2-femco-subtitle" style="color:${_subColor}">${_subTxt}</div>`:''}
-          </div>
-          ${_pos==='right'?`<div class="b2-femco-logo" style="margin-bottom:0">${logoHtml}</div>`:''}
+    const _posNorm = (['left','right','top','bottom','center'].includes(_pos) ? _pos : 'top');
+    const _attach = (femcoSettings.logoAttachTitle ?? 1) ? true : false;
+    const starsHtml = (uCfg.championships || 0) > 0
+      ? `<span class="b2-femco-stars">${'<span>⭐</span>'.repeat(uCfg.championships)}</span>`
+      : '';
+    const titleBlock = `
+      <div style="min-width:220px">
+        <div class="b2-femco-title-row">
+          <div class="b2-femco-title">${univName}</div>
+          ${starsHtml}
         </div>
-      `
-      : `
-        <div class="b2-femco-logo">${logoHtml}</div>
-        <div class="b2-femco-title">${univName}</div>
         ${_subTxt?`<div class="b2-femco-subtitle" style="color:${_subColor}">${_subTxt}</div>`:''}
-      `;
+      </div>
+    `;
+    const logoOnlyStyle = (() => {
+      if (_attach) return '';
+      const pad = contentPadX;
+      if (_posNorm === 'left') return `position:absolute;left:${pad}px;top:50%;transform:translateY(-50%);`;
+      if (_posNorm === 'right') return `position:absolute;right:${pad}px;top:50%;transform:translateY(-50%);`;
+      if (_posNorm === 'bottom') return `position:absolute;left:50%;bottom:10px;transform:translateX(-50%);`;
+      // top / center
+      return `position:absolute;left:50%;top:10px;transform:translateX(-50%);`;
+    })();
+
+    const headLayout = (() => {
+      if (!_attach) {
+        return `
+          <div class="b2-femco-headrow">
+            <div class="b2-femco-logo" style="${logoOnlyStyle}">${logoHtml}</div>
+            ${titleBlock}
+          </div>
+        `;
+      }
+      // 로고 + 대학명이 같이 이동
+      if (_posNorm === 'left') {
+        return `<div class="b2-femco-headrow"><div class="b2-femco-logo">${logoHtml}</div>${titleBlock}</div>`;
+      }
+      if (_posNorm === 'right') {
+        return `<div class="b2-femco-headrow">${titleBlock}<div class="b2-femco-logo">${logoHtml}</div></div>`;
+      }
+      if (_posNorm === 'bottom') {
+        return `<div class="b2-femco-headcol">${titleBlock}<div class="b2-femco-logo">${logoHtml}</div></div>`;
+      }
+      // top / center
+      return `<div class="b2-femco-headcol"><div class="b2-femco-logo">${logoHtml}</div>${titleBlock}</div>`;
+    })();
 
     h += `
       <section class="b2-femco-univ" style="background:${col}">
-        <div class="b2-femco-head" style="color:${textCol}">
-          <div class="b2-femco-countbox" style="color:${textCol};${textCol==='#ffffff'?'text-shadow:0 1px 2px rgba(0,0,0,.45);':''}">
+        <div class="b2-femco-head" style="color:${textCol};padding-left:${contentPadX}px;padding-right:${contentPadX}px">
+          <div class="b2-femco-countbox" style="color:${textCol};left:${contentPadX}px;${textCol==='#ffffff'?'text-shadow:0 1px 2px rgba(0,0,0,.45);':''}">
             <div>총 ${all.length}</div>
             <div>이사장 ${bossCnt}</div>
             <div>교수+코치 ${profCoachCnt}</div>
             <div>학생 ${studentCnt}</div>
           </div>
           ${headLayout}
-          ${(uCfg.championships || 0) > 0 ? `<div style="display:flex;gap:2px;align-items:center;justify-content:center;margin-top:6px">${'⭐'.repeat(uCfg.championships)}</div>` : ''}
         </div>
 
-        <div class="b2-femco-body" style="background:${col}18">
+        <div class="b2-femco-body" style="background:${col}18;padding-left:${contentPadX}px;padding-right:${contentPadX}px">
           <div class="b2-femco-grid">
             ${list.map(p => {
               const safeName = (p.name || '').replace(/'/g, "\\'");
