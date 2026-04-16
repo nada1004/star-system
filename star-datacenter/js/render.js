@@ -672,6 +672,8 @@ async function captureDetail(id, filename){
 
 function openUnivModal(univName){
   if(!univName)return;
+  // 대학 로고 크기/모양 설정값 즉시 반영
+  try{ if(typeof applyUnivLogoVars==='function') applyUnivLogoVars(); }catch(e){}
   document.getElementById('univModalTitle').innerText=`${univName} 대학 상세`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
   injectUnivIcons(document.getElementById('univModalBody'));
@@ -706,7 +708,7 @@ function toggleUnivEdit(){
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
         <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=v;img.style.display='block';}else img.style.display='none'">
-        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
+        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="display:flex;gap:6px">
@@ -1530,8 +1532,8 @@ function buildPlayerDetailHTML(p){
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
-          :`<div style="width:32px;height:32px;border-radius:50%;background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
         return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
           ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
         </button>`;
@@ -1593,8 +1595,8 @@ function buildUnivDetailHTML(univName){
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="width:72px;height:72px;border-radius:18px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0">
-        ${gUI(univName,'46px')}
+      <div style="width:var(--su_univ_logo_box_detail,72px);height:var(--su_univ_logo_box_detail,72px);border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
+        ${gUI(univName,'var(--su_univ_logo_size_detail,46px)')}
       </div>
       <div>
         <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
@@ -1721,8 +1723,8 @@ function buildUnivDetailHTML(univName){
           const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
           const safeName=escJS(ap.name);
           const photoEl=ap.photo
-            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
-            :`<div style="width:30px;height:30px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
+            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            :`<div style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
           return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
             <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
             <div style="display:flex;align-items:center;gap:6px">

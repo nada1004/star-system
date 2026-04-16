@@ -631,7 +631,7 @@ function statsAwardHTML(){
     return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        ${p.photo?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:50%;background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
+        ${p.photo?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
         <div style="min-width:0">
           <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
           <div style="display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap">
@@ -2912,7 +2912,7 @@ function statsPlayerSearchHTML(){
       ${list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
         return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
-          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
@@ -2943,7 +2943,7 @@ function _statsPlayerSearchUpdate(){
     : list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
         return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
-          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:50%;background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>

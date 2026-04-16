@@ -487,7 +487,7 @@ function _gcSpin() {
       let icon = '';
       if (p) {
         if (p.photo) {
-          icon = `<img src="${p.photo}" style="width:${iconSz}px;height:${iconSz}px;border-radius:50%;object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
+          icon = `<img src="${p.photo}" style="width:${iconSz}px;height:${iconSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
         } else {
           icon = p.race==='T'?'🤖':p.race==='Z'?'🐛':p.race==='P'?'💎':'🎮';
         }

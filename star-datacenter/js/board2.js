@@ -487,7 +487,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 멤버 없을 때 빈 블록
   if (!members.length) {
     return `<div style="border-radius:14px;border:2px dashed ${col}55;padding:16px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
-      ${iconUrl?`<img src="${iconUrl}" style="width:36px;height:36px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
@@ -578,7 +578,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<img src="${iconUrl}" style="width:36px;height:36px;object-fit:contain;border-radius:8px;flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
@@ -693,7 +693,14 @@ function _b2Chip(p, accentCol) {
 /* ── 아바타 ── */
 function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
-  const s = size || 28;
+  // 설정(현황판 칩 프로필 이미지 크기) 값을 board2에도 반영
+  const base = size || 28;
+  let mult = 1;
+  try{
+    const chipPx = parseInt(localStorage.getItem('su_bcp_size') || '26', 10);
+    mult = Math.max(0.6, Math.min(2.4, chipPx / 26));
+  }catch(e){}
+  const s = Math.round(base * mult);
   const badgeSize = Math.round(s * 0.38);
   const _rawIcon = getStatusIcon(p.name);
   const statusHtml = getStatusIconHTML(p.name);
@@ -711,16 +718,16 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
       ${badge}
     </span>`;
   }
-  return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
 }
 
 function _b2AvatarFallback(letter, col, size) {
   const s = size || 28;
-  return `<span style="width:${s}px;height:${s}px;border-radius:50%;background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
 
@@ -2559,7 +2566,7 @@ function openB2ProfileEditModal(playerName) {
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" id="b2-ed-photo" value="${player.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
+          <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
             <img id="b2-ed-photo-preview" src="${player.photo&&!player.photo.startsWith('data:')?player.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
           </span>
         </div>
