@@ -528,8 +528,48 @@ function statCard(label,w,l,d,col){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
+  const _dayMs=86400000;
+  const _today0=new Date(); _today0.setHours(0,0,0,0);
+  function _parseYmd(s){
+    if(!s) return null;
+    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
+    // YYYY-MM-DD or YY-MM-DD
+    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
+    if(!m) return null;
+    let y=parseInt(m[1],10); if(y<100) y+=2000;
+    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
+    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
+    dt.setHours(0,0,0,0);
+    return dt;
+  }
+  function _bucketLabel(dt){
+    if(!dt) return '이전';
+    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
+    if(diff===0) return '오늘';
+    if(diff===1) return '어제';
+    if(diff>=2 && diff<=6) return '이번주';
+    return '이전';
+  }
+  const _bucketOrder=['오늘','어제','이번주','이전'];
+
+  function _grpHeader(lbl, w,l,d){
+    const tot=w+l+d;
+    const wr=tot?Math.round(w/tot*100):0;
+    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-weight:900">${lbl}</span>
+      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
+      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
+      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
+      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
+      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
+    </div>`;
+  }
+
   let h='';
   let _filtered=false;
+  // 1) 먼저 유효 경기만 모아서 버킷으로 분류
+  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
   arr.forEach(m=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
@@ -537,6 +577,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
+    const dt=_parseYmd(m.d||'');
+    const b=_bucketLabel(dt);
+    grouped[b].push(m);
+  });
+
+  function _renderItem(m){
     const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:mode==='tt'?ttM:ckM;
     const i=srcArr.indexOf(m);
     const isCK=isCKmode;
@@ -576,6 +622,33 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
       </div>
     </div>`;
+  }
+
+  // 2) 버킷 순서대로 렌더 + 버킷별 승/패/무 소계
+  _bucketOrder.forEach(lbl=>{
+    const list=grouped[lbl]||[];
+    if(!list.length) return;
+    let w=0,l=0,d=0;
+    list.forEach(m=>{
+      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
+      if(aWin||bWin) w++; else d++;
+    });
+    // filtered(univ) 컨텍스트에서는 승/패는 "해당 대학 기준"이 더 직관적
+    // - 팀전(CK/pro/tt)은 소속 대학으로 판단
+    try{
+      w=0; l=0; d=0;
+      list.forEach(m=>{
+        const isCK=isCKmode;
+        const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
+        if(!aWin && !bWin){ d++; return; }
+        const isA=(!isCK&&m.a===filterUniv)||(isCK&&(m.teamAMembers||[]).some(x=>x.univ===filterUniv));
+        const isB=(!isCK&&m.b===filterUniv)||(isCK&&(m.teamBMembers||[]).some(x=>x.univ===filterUniv));
+        const myWin=(isA&&aWin)||(isB&&bWin);
+        if(myWin) w++; else l++;
+      });
+    }catch(e){}
+    h+=_grpHeader(lbl,w,l,d);
+    list.forEach(_renderItem);
   });
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
@@ -662,8 +735,44 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
   }
 
-  let h=sortBar+`<div id="rec-list-${mode}">`;
-  paged.forEach(({m,i})=>{
+  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
+  const _dayMs=86400000;
+  const _today0=new Date(); _today0.setHours(0,0,0,0);
+  function _parseYmd(s){
+    if(!s) return null;
+    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
+    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
+    if(!m) return null;
+    let y=parseInt(m[1],10); if(y<100) y+=2000;
+    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
+    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
+    dt.setHours(0,0,0,0);
+    return dt;
+  }
+  function _bucketLabel(dt){
+    if(!dt) return '이전';
+    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
+    if(diff===0) return '오늘';
+    if(diff===1) return '어제';
+    if(diff>=2 && diff<=6) return '이번주';
+    return '이전';
+  }
+  const _bucketOrder=['오늘','어제','이번주','이전'];
+  function _grpHeader(lbl, w,l,d){
+    const tot=w+l+d;
+    const wr=tot?Math.round(w/tot*100):0;
+    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-weight:900">${lbl}</span>
+      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
+      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
+      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
+      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
+      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
+    </div>`;
+  }
+
+  // 기존 렌더 블록을 함수로 감싸서 그룹 출력에 재사용
+  function _recItemHTML(m,i){
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
     const ca=isCK?'#2563eb':gc(m.a);
     const cb=isCK?'#dc2626':gc(m.b);
@@ -679,7 +788,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
-    h+=`<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
+    return `<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
       <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
@@ -717,6 +826,36 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         </div>
       </div>
     </div>`;
+  }
+
+  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
+  paged.forEach(({m,i})=>{
+    const dt=_parseYmd(m.d||'');
+    const b=_bucketLabel(dt);
+    grouped[b].push({m,i});
+  });
+
+  let h=sortBar+`<div id="rec-list-${mode}">`;
+  _bucketOrder.forEach(lbl=>{
+    const list=grouped[lbl]||[];
+    if(!list.length) return;
+    let w=0,l=0,d=0;
+    list.forEach(({m})=>{
+      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
+      if(!aWin && !bWin){ d++; return; }
+      w++;
+    });
+    // 일반 리스트에서는 승/패는 "A/B" 기준이 아니라 그냥 결과(승부 있음=승)로 잡으면 무의미하므로,
+    // 팀전 기준으로 '승부 있음'을 승으로 두는 대신, 승/패를 균형 있게 표시하도록 A팀 기준으로 계산.
+    w=0; l=0; d=0;
+    list.forEach(({m})=>{
+      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
+      if(!aWin && !bWin){ d++; return; }
+      // A가 이기면 승, 지면 패(표준 표기)
+      if(aWin) w++; else l++;
+    });
+    h+=_grpHeader(lbl,w,l,d);
+    list.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
   });
 
   // ── 페이지 컨트롤 ──
@@ -1388,22 +1527,54 @@ function delRec(mode,i){
 }
 
 
-function toggleDetail(key){
-  const area=document.getElementById('det-'+key);
-  const btn=document.getElementById('detbtn-'+key);
-  if(!area)return;
-  const isTR=area.tagName==='TR';
-  if(isTR){
-    const open=area.style.display==='none'||area.style.display==='';
-    area.style.display=open?'table-row':'none';
-    if(btn)btn.textContent=open?'▲':'▼';
-  } else {
-    openDetails[key]=!openDetails[key];
-    area.classList.toggle('open',!!openDetails[key]);
-    if(btn){btn.classList.toggle('open',!!openDetails[key]);btn.textContent=openDetails[key]?'🔼 닫기':'📂 상세';}
-    const card=area.closest('.rec-summary');
-    if(card) card.classList.toggle('detail-open',!!openDetails[key]);
+function _ensureHistDetailModal(){
+  let m=document.getElementById('histDetModal');
+  if(m) return m;
+  m=document.createElement('div');
+  m.id='histDetModal';
+  m.className='modal no-export';
+  m.style.cssText='z-index:5600;display:none';
+  m.innerHTML=`
+    <div class="mbox" style="width:760px;max-width:92vw;max-height:88vh;overflow-y:auto">
+      <div class="mtitle" id="histDetTitle">📅 경기 상세</div>
+      <div id="histDetBody"></div>
+      <div class="mbtns" style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('histDetModal').style.display='none'">닫기</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  return m;
+}
+
+function openHistDetailModal(key){
+  const reg=(window._detReg||{})[key];
+  if(!reg || !reg.m) return;
+  const m=_ensureHistDetailModal();
+  const titleEl=document.getElementById('histDetTitle');
+  const bodyEl=document.getElementById('histDetBody');
+  const match=reg.m;
+  const labelA=reg.lA || match.a || 'A';
+  const labelB=reg.lB || match.b || 'B';
+  const score=(match.sa!=null && match.sb!=null) ? `${match.sa}:${match.sb}` : '';
+  if(titleEl) titleEl.textContent = `📅 ${labelA} vs ${labelB} (${score})`;
+  if(bodyEl){
+    const head=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--gray-l)">${match.d||''}</span>
+      ${match.t?`<span style="font-size:12px;color:var(--text3);font-weight:700">${match.t}</span>`:''}
+      ${(match.n)?`<span style="font-size:12px;color:var(--text3);font-weight:700">${match.n}</span>`:''}
+      ${match.memo?`<span style="font-size:11px;color:var(--gray-l)">📝 ${match.memo}</span>`:''}
+    </div>`;
+    bodyEl.innerHTML = head + (typeof buildDetailHTML==='function'
+      ? buildDetailHTML(match, reg.mode, labelA, labelB, reg.ca, reg.cb, reg.aW, reg.bW)
+      : '<div style="padding:10px;color:var(--gray-l)">상세 렌더 함수를 찾을 수 없습니다.</div>');
+    try{ injectUnivIcons(bodyEl); }catch(e){}
   }
+  m.style.display='block';
+}
+
+function toggleDetail(key){
+  // (요청사항) 상세는 인라인 펼치기 대신 팝업으로 표시
+  openHistDetailModal(key);
 }
 
 function savePlayerMemo(name, del=false){
