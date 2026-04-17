@@ -508,13 +508,16 @@ function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
   const femcoFallback = () => ({
     autoLayout: 1, logoSize: 150, logoPos: 'top', logoAttachTitle: 1, headGap: 10,
-    titleSize: 28, titleFont: 'system',
+    logoOffsetX: 0, logoOffsetY: 0,
+    titleSize: 28, titleFont: 'system', titlePos: 'top',
+    titleOffsetX: 0, titleOffsetY: 0,
     playerImgSize: 46, playerImgShape: 'square',
     rowsPerCol: 5, colWidth: 170, colGap: 10, univGap: 18,
     countFontSize: 12, contentPadX: 16, contentAlign: 'left', contentOffsetX: 0,
     univSubtitles: {}, subtitleSize: 12, subtitleWeight: 800, subtitleColor: '',
     nameFontSize: 12, roleFontSize: 10, tierBadgeSize: 10, tierBadgePadX: 6,
     starSize: 15, statusIconSize: 18,
+    bgOverlay: 0,
     univColorOverrides: {}, univBgMedia: {}
   });
   let femcoSettings = (typeof window._cfgFemcoLoad === 'function')
