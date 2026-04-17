@@ -276,13 +276,14 @@ window.cfgRunSettingsSelfCheck = function(){
   const out = document.getElementById('cfg-selfcheck-out');
   if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">검사 중...</div>';
   try{
+    const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
     const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
     const html = secs.map(el=>el.outerHTML).join('\n');
     const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
     const called = new Set();
     let m;
     while((m=re.exec(html))) called.add(m[1]);
-    const missing = Array.from(called).filter(fn => typeof window[fn] !== 'function').sort();
+    const missing = Array.from(called).filter(fn => !JS_KEYWORDS.has(fn) && typeof window[fn] !== 'function').sort();
     if(out){
       out.innerHTML = missing.length
         ? `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:6px">⚠️ 누락된 함수 ${missing.length}개</div>
