@@ -3474,34 +3474,23 @@ function openPcGJPasteModal(tnId) {
   const tn = _findTourneyById(tnId); if (!tn) return;
   window._grpPasteState = {tnId, mode: 'pcgj'};
   window._grpPasteMode = true;
-  const textarea = document.getElementById('paste-input');
-  const previewEl = document.getElementById('paste-preview');
-  const applyBtn = document.getElementById('paste-apply-btn');
-  const badge = document.getElementById('paste-summary-badge');
-  const pendWarn = document.getElementById('paste-pending-warn');
-  if (textarea) textarea.value = '';
-  if (previewEl) previewEl.innerHTML = '';
-  if (applyBtn) { applyBtn.style.display='none'; applyBtn.textContent='✅ 경기 결과 적용'; }
-  if (badge) badge.style.display = 'none';
-  if (pendWarn) pendWarn.style.display = 'none';
-  window._pasteResults = null; window._pasteErrors = null;
-  const dateInput = document.getElementById('paste-date');
-  if (dateInput) dateInput.value = document.getElementById('pcgj-date')?.value || new Date().toISOString().slice(0,10);
-  const modeSel = document.getElementById('paste-mode');
-  if (modeSel) { modeSel.value='comp'; modeSel.style.display='none'; }
-  const modeLabel = document.getElementById('paste-mode-label');
-  if (modeLabel) modeLabel.style.display = 'none';
-  const hintEl = document.getElementById('paste-mode-hint');
-  if (hintEl) {
+  openPasteModal();
+  window._forcedPasteMode = 'gj';
+  const sel = document.getElementById('paste-mode');
+  const lbl = document.getElementById('paste-mode-label');
+  if (sel) { sel.value = 'ind'; sel.style.display = 'none'; onPasteModeChange('ind'); }
+  if (lbl) lbl.style.display = 'none';
+  const hint = document.getElementById('paste-mode-hint');
+  if (hint) {
     const _a = _pcgjA, _b = _pcgjB;
-    hintEl.innerHTML = _a && _b
+    hint.innerHTML = _a && _b
       ? `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📢 끝장전 결과 입력</span> — <b>${_a}</b> vs <b>${_b}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${_a} ${_b} [맵]</code> / <code>${_b} ${_a} [맵]</code> — 여러 줄 입력 가능</span></div>`
       : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#16a34a;font-weight:700">🤖 자동인식</span> — 선수 선택 없이 입력하면, 붙여넣기 내용에서 <b>두 선수(A/B)</b>를 자동으로 확정합니다.<br><span style="font-size:11px;color:#6b7280">형식: <code>승자이름 패자이름 [맵]</code> — 여러 줄 입력 가능 (두 선수만 등장해야 저장 가능)</span></div>`;
   }
+  const dateInput = document.getElementById('paste-date');
+  if (dateInput) dateInput.value = document.getElementById('pcgj-date')?.value || new Date().toISOString().slice(0,10);
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) compWrap.style.display = 'none';
-  const _pd = document.querySelector('#pasteModal details');
-  if (_pd) _pd.style.display = 'none';
   const _pt = document.querySelector('#pasteModal .mtitle');
   if (_pt) _pt.textContent = '📋 끝장전 결과 붙여넣기';
   if (typeof om === 'function') om('pasteModal');
