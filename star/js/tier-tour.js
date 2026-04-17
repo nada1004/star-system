@@ -2018,6 +2018,133 @@ window.sw = function(tab, el){
   }
 };
 
+/* ══════════════════════════════════════
+   (버그픽스) 설정탭 버튼 누락 함수들
+   - settings.js / tier-tour.js UI에서 호출하지만 정의가 없던 함수들을 추가
+   - 안전한 범위에서만 일괄 수정/삭제 수행
+══════════════════════════════════════ */
+function _bulkArrMapAll(){
+  // 존재하는 배열만 포함
+  const m = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind: (typeof indM!=='undefined'?indM:[]), gj:(typeof gjM!=='undefined'?gjM:[]), comp:comps };
+  return m;
+}
+function _bulkSelected(keys, prefix, defaultChecked=true){
+  return keys.filter(k=>{
+    const el=document.getElementById(prefix+k);
+    return el ? !!el.checked : defaultChecked;
+  });
+}
+function bulkChangeDate(){
+  if(!isLoggedIn) return;
+  const from=document.getElementById('bulk-date-from')?.value||'';
+  const to=document.getElementById('bulk-date-to')?.value||'';
+  if(!from||!to){ alert('변경 전/후 날짜를 입력하세요.'); return; }
+  const keys=_bulkSelected(['mini','univm','ck','pro','tt','ind','gj','comp'],'bulk-date-chk-');
+  if(!keys.length){ alert('대상을 선택하세요.'); return; }
+  const arrMap=_bulkArrMapAll();
+  let changed=0;
+  keys.forEach(k=>{
+    const arr=arrMap[k]||[];
+    arr.forEach(m=>{ if(m && m.d===from){ m.d=to; changed++; } });
+  });
+  if(changed){ save(); render(); }
+  const el=document.getElementById('bulk-date-result');
+  if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
+}
+function bulkChangeMap(){
+  if(!isLoggedIn) return;
+  const from=(document.getElementById('bulk-map-from')?.value||'').trim();
+  const to=(document.getElementById('bulk-map-to')?.value||'').trim();
+  if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
+  const arrMap=_bulkArrMapAll();
+  const keys=Object.keys(arrMap); // 맵 교체는 전체 적용
+  let changed=0;
+  const rep=(obj)=>{
+    if(!obj||typeof obj!=='object') return;
+    if(typeof obj.map==='string' && obj.map.trim()===from){ obj.map=to; changed++; }
+    // 세트/게임 내부도 체크
+    (obj.sets||[]).forEach(st=>{
+      if(typeof st.map==='string' && st.map.trim()===from){ st.map=to; changed++; }
+      (st.games||[]).forEach(g=>{
+        if(typeof g.map==='string' && g.map.trim()===from){ g.map=to; changed++; }
+      });
+    });
+  };
+  keys.forEach(k=>{ (arrMap[k]||[]).forEach(rep); });
+  // 대회(tourneys) 내부의 games(map)도 교체
+  (tourneys||[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=> (grp.matches||[]).forEach(rep));
+    const br=tn.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(rep);
+    (br.manualMatches||[]).forEach(rep);
+  });
+  // 맵 목록 자체도 교체(선택지 통일)
+  try{
+    if(Array.isArray(maps)){
+      maps = maps.map(m=> (m===from?to:m));
+    }
+  }catch(e){}
+  if(changed){ save(); render(); }
+  const el=document.getElementById('bulk-map-result');
+  if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
+}
+function bulkDeleteByDate(){
+  if(!isLoggedIn) return;
+  const from=document.getElementById('bulk-del-from')?.value||'';
+  const to=document.getElementById('bulk-del-to')?.value||'';
+  if(!from||!to){ alert('시작/종료 날짜를 입력하세요.'); return; }
+  if(!confirm(`⚠️ ${from} ~ ${to} 범위의 기록을 삭제합니다. 되돌릴 수 없습니다.\n계속할까요?`)) return;
+  const keys=_bulkSelected(['mini','univm','ck','pro','tt','ind','gj','comp'],'bulk-del-chk-', false);
+  // bulk-del 체크박스는 기본 미체크라서, element 없으면 false가 자연스러움
+  const arrMap=_bulkArrMapAll();
+  let removed=0;
+  const inRange=(d)=> d && d>=from && d<=to;
+  keys.forEach(k=>{
+    const arr=arrMap[k]||[];
+    const before=arr.length;
+    const next=arr.filter(m=> !(m && inRange(m.d)) );
+    removed += (before-next.length);
+    arrMap[k].length = 0;
+    arrMap[k].push(...next);
+  });
+  if(removed){ save(); render(); }
+  const el=document.getElementById('bulk-del-result');
+  if(el){ el.textContent = removed?`✅ ${removed}건 삭제 완료!`:'삭제할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
+}
+
+function addSeason(){
+  if(!isLoggedIn) return;
+  const name=(document.getElementById('cfg-season-name')?.value||'').trim();
+  const from=(document.getElementById('cfg-season-from')?.value||'').trim();
+  const to=(document.getElementById('cfg-season-to')?.value||'').trim();
+  if(!name||!from||!to){ alert('시즌 이름/시작일/종료일을 입력하세요.'); return; }
+  seasons = Array.isArray(seasons) ? seasons : [];
+  seasons.push({name, from, to});
+  // 정렬
+  try{ seasons.sort((a,b)=>(a.from||'').localeCompare(b.from||'')); }catch(e){}
+  save(); render();
+  try{ renderSeasonList(); }catch(e){}
+}
+function editSeason(i){
+  if(!isLoggedIn) return;
+  const s = (seasons||[])[i]; if(!s) return;
+  const name = prompt('시즌 이름', s.name||''); if(name===null) return;
+  const from = prompt('시작일(YYYY-MM-DD)', s.from||''); if(from===null) return;
+  const to   = prompt('종료일(YYYY-MM-DD)', s.to||''); if(to===null) return;
+  seasons[i] = {name:String(name).trim(), from:String(from).trim(), to:String(to).trim()};
+  try{ seasons.sort((a,b)=>(a.from||'').localeCompare(b.from||'')); }catch(e){}
+  save(); render();
+  try{ renderSeasonList(); }catch(e){}
+}
+function deleteSeason(i){
+  if(!isLoggedIn) return;
+  const s=(seasons||[])[i]; if(!s) return;
+  if(!confirm(`시즌 '${s.name}'을(를) 삭제할까요?`)) return;
+  seasons.splice(i,1);
+  save(); render();
+  try{ renderSeasonList(); }catch(e){}
+}
+
 function bulkChangeTier(){
   if(!isLoggedIn) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';

@@ -1078,8 +1078,8 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general'||p.gameType==='?? ???')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName} ??? ??? ???????\\n\\n?? ??? ???? ???? ??????.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('?? ??? ????.');}}">?? ??</button>`:''}
-    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">?? ????? ???? ?</button>
+    ${(p.gameType==='general'||p.gameType==='보라크루')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 
   document.body.appendChild(popup);

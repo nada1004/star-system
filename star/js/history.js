@@ -1479,8 +1479,9 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const winBorderA=ca+'88'; const winBorderB=cb+'88';
         const _pASafe=(g.playerA||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         const _pBSafe=(g.playerB||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        const clickA=g.playerA?`onclick="openPlayerModal('${_pASafe}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
-        const clickB=g.playerB?`onclick="openPlayerModal('${_pBSafe}')" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        // (요청) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫고 상세 열기
+        const clickA=g.playerA?`onclick="document.getElementById('histDetModal').style.display='none';setTimeout(()=>openPlayerModal('${_pASafe}'),80)" style="cursor:pointer;text-decoration:underline dotted;"`:''
+        const clickB=g.playerB?`onclick="document.getElementById('histDetModal').style.display='none';setTimeout(()=>openPlayerModal('${_pBSafe}'),80)" style="cursor:pointer;text-decoration:underline dotted;"`:''
         const raceA=pA?`<span class="rbadge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
         const raceB=pB?`<span class="rbadge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
         const photoA=pA?getPlayerPhotoHTML(pA.name,'38px','flex-shrink:0;border:2px solid '+ca+';box-shadow:0 1px 6px '+ca+'44'):'';

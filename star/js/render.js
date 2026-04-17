@@ -911,9 +911,10 @@ function buildPlayerDetailHTML(p){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            const isCivil = (m.type==='civil') || (m.a==='A팀' && m.b==='B팀');
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:m.type==='civil'?'시빌워':'미니대전',
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:isCivil?'시빌워':'미니대전',
               _dupKey:`mid:${gameId}`
             });
           }
@@ -1945,6 +1946,76 @@ async function _saveCanvasImage(canvas, filename, fmt){
     }
   }
 }
+
+/* ══════════════════════════════════════
+   📘 티어표/산정기준 안내 팝업 (Star System 설명)
+   - stats 탭/티어순위표 등에서 공통으로 호출
+══════════════════════════════════════ */
+window.openStarSystemInfo = function(){
+  try{
+    const titleEl=document.getElementById('reTitle');
+    const bodyEl=document.getElementById('reBody');
+    if(titleEl) titleEl.textContent='📘 티어표 · 산정기준 안내';
+    if(bodyEl){
+      bodyEl.innerHTML=`
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-weight:1000;color:var(--text2)">1) 포함 데이터(출처)</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.65">
+              <ul style="margin:0;padding-left:18px">
+                <li>앱에 <b>등록된 경기 기록</b>(개인전/대학대전/CK/프로리그/대회/티어대회/토너먼트 등)</li>
+                <li><b>펨코 스타 게시판 → 경기결과탭</b>에서 가져와 <b>“기록으로 등록된 항목”</b>도 포함됩니다(등록되어 있는 경우)</li>
+                <li><b>여성 스트리머 간 끝장전</b>의 경우, 펨코 스타크래프트 게시판 <b>경기 결과탭</b>에 글이 등록되고 → 그 결과가 <b>우리 앱 기록으로 등록된 경우</b> 반영됩니다</li>
+                <li>즉, “외부 사이트를 지금 실시간으로 긁는” 게 아니라 <b>우리 DB(현재 저장된 기록)</b>를 기준으로 계산합니다</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-weight:1000;color:var(--text2)">2) 공식전 인정 기준</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">
+              통계 → ⭐ 스타시스템에서 설정한 <b>“공식전 모드 키워드”</b>가 경기 기록의 <code>mode</code>에 포함되면 공식전으로 처리합니다.
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 3점 체제)</div>
+            <div style="overflow:auto;border:1px solid var(--border);border-radius:10px;background:#fff">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="background:var(--surface);color:var(--gray-l)">
+                    <th style="padding:8px;border-bottom:1px solid var(--border)">대전 상대</th>
+                    <th style="padding:8px;border-bottom:1px solid var(--border)">승리(Win)</th>
+                    <th style="padding:8px;border-bottom:1px solid var(--border)">패배(Loss)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">동일 티어 (0)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+3</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-3</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">상위 티어 (+1)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#16a34a;font-weight:900">+5</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:900">-5</td></tr>
+                  <tr><td style="padding:8px">하위 티어 (-1)</td><td style="padding:8px;color:#16a34a;font-weight:900">+2</td><td style="padding:8px;color:#dc2626;font-weight:900">-2</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="font-size:11px;color:var(--gray-l);line-height:1.55">
+              ※ 제로섬(Zero-sum): 승자 +X / 패자 -X (경기 단위로 총점 보존)<br>
+              ※ 현재 버전은 “현재 티어 기준”으로 상대 티어 차이를 계산합니다. (경기 당시 티어까지 정확히 하려면 기록에 tierAtMatch 저장이 필요)
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-weight:1000;color:var(--text2)">4) 승강급 기준</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">
+              시작점수 100점. <b>130점</b> 도달 시 <b>승급 검증</b>, <b>70점 미만</b>이면 <b>강등 위기</b>.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    if(typeof om==='function') om('reModal');
+  }catch(e){
+    alert('설명 팝업을 여는 중 오류가 발생했습니다.');
+  }
+};
 
 /* ══════════════════════════════════════
    보라크루 / 종합게임 스트리머 상세 UI

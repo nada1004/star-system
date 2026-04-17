@@ -172,7 +172,7 @@ function rTotal(C,T){
       totalShown+=crewMembers.length;
       const crewGroups = {};
       crewMembers.forEach(p => {
-        const crewName = p.crewName || '??';
+        const crewName = p.crewName || '기타';
         if(!crewGroups[crewName]) crewGroups[crewName] = [];
         crewGroups[crewName].push(p);
       });
@@ -186,10 +186,10 @@ function rTotal(C,T){
           <td colspan="${_ncols}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
               <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-                <span class="clickable-univ" onclick="if(typeof openCrewModal==='function')openCrewModal('${crewName}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">? ${crewDisplayName}</span>
-                <span style="font-size:10px;background:rgba(124,58,237,.2);color:#7c3aed;border-radius:4px;padding:1px 6px;font-weight:700">??. ??</span>
+                <span class="clickable-univ" onclick="if(typeof openCrewModal==='function')openCrewModal('${crewName}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">👥 ${crewDisplayName}</span>
+                <span style="font-size:10px;background:rgba(124,58,237,.2);color:#7c3aed;border-radius:4px;padding:1px 6px;font-weight:700">종합 게임</span>
               </div>
-              <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${members.length}?</span>
+              <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${members.length}명</span>
             </div>
           </td>
         </tr>`;
@@ -201,12 +201,12 @@ function rTotal(C,T){
         const displayList = rolePl.length ? [...rolePl, null, ...normalPl] : normalPl;
         let inRoleSection = rolePl.length > 0;
         
-        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="background:${crewColor}22;color:${crewColor}">?? ?? (${rolePl.length}?)</td></tr>`;
+        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="background:${crewColor}22;color:${crewColor}">주요 직책 (${rolePl.length}명)</td></tr>`;
         
         displayList.forEach(p => {
           if(p===null){
             inRoleSection=false;
-            if(normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}">?? ?? (${normalPl.length}?)</td></tr>`;
+            if(normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}">일반 스트리머 (${normalPl.length}명)</td></tr>`;
             return;
           }
           const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
@@ -225,14 +225,14 @@ function rTotal(C,T){
             <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
             <td style="text-align:left;padding:6px 12px;white-space:nowrap">
               <span style="display:inline-flex;align-items:center;gap:8px">
-                ${p.photo?`<span onclick="openPlayerModal('${pSafe}')" title="?? ???" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid ${crewColor};background:${crewColor}22;font-size:11px;font-weight:900;color:${crewColor};position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:${crewColor}22;border:2px solid ${crewColor};flex-shrink:0"></span>`}
-                <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">?? ??</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">??</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+                ${p.photo?`<span onclick="openPlayerModal('${pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid ${crewColor};background:${crewColor}22;font-size:11px;font-weight:900;color:${crewColor};position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:${crewColor}22;border:2px solid ${crewColor};flex-shrink:0"></span>`}
+                <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
               </span>
             </td>
             <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
             <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
             <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-              ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}?</span>`:''}
+              ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}판</span>`:''}
             </td>
             <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
             <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
@@ -241,10 +241,10 @@ function rTotal(C,T){
               const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
               const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
               const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-              if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="?? ??">-</span>';
-              if(lastD>=_7ago2) return `<span style="font-size:9px;font-weight:800;color:#16a34a" title="??? ?? (7? ??)">?</span>`;
-              if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="?? ?? (30? ??)">?</span>`;
-              return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="??? (30? ??)">?</span>';
+              if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="기록 없음">-</span>';
+              if(lastD>=_7ago2) return `<span style="font-size:11px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
+              if(lastD>=_30ago2) return `<span style="font-size:11px;font-weight:800;color:#f59e0b" title="최근 활동 (30일 이내)">🟡</span>`;
+              return '<span style="font-size:11px;font-weight:800;color:#9ca3af" title="비활동 (30일 초과)">⚪</span>';
             })()}</td>
             ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
 
@@ -768,13 +768,18 @@ function rTier(C,T){
     _hasTypeFilter
   ].filter(Boolean).length;
 
-  // ── 1행: 필터(좌측) + 보기 모드 ──
-  let fh=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
+  // ── 1행: 필터(좌측) + 보기 모드 + (우측) 티어표 ──
+  let fh=`<div style="display:flex;gap:8px;align-items:center">`;
+  fh+=`<div class="fbar" style="flex:1;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
+  fh+=`</div>`;
+  fh+=`<div style="display:flex;gap:6px;flex-shrink:0" class="no-export">`;
+  fh+=`<button class="btn btn-w btn-xs" onclick="openStarSystemInfo()">📘 티어표</button>`;
+  fh+=`</div>`;
   fh+=`</div>`;
 
   if(window._tierFilterOpen||_activeFilters>0){
