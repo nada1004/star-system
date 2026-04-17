@@ -151,10 +151,27 @@ function _histExtNormDate(s){
 function _histExtParseHTMLTable(html){
   try{
     const doc=new DOMParser().parseFromString(html,'text/html');
-    const table=doc.querySelector('table');
-    if(!table) return null;
-    const rows=[...table.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
-    return rows.length?rows:null;
+    const tables=[...doc.querySelectorAll('table')];
+    if(!tables.length) return null;
+    let bestRows=null, bestScore=-1;
+    const norm = (s)=>String(s||'').replace(/\s+/g,'').toLowerCase();
+    tables.forEach(t=>{
+      const rows=[...t.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
+      if(!rows.length) return;
+      const header = rows[0] ? rows[0].map(norm).join('|') : '';
+      let score = rows.length; // 기본은 행이 많은 테이블 선호
+      // 전적 테이블 헤더가 있으면 크게 가산
+      if(header.includes('날짜') && header.includes('승자') && header.includes('패자')) score += 1000;
+      if(header.includes('맵')) score += 200;
+      if(header.includes('elo')) score += 120;
+      if(header.includes('경기방식') || header.includes('방식')) score += 80;
+      if(header.includes('메모') || header.includes('비고')) score += 40;
+      if(score > bestScore){
+        bestScore = score;
+        bestRows = rows;
+      }
+    });
+    return bestRows;
   }catch(e){ return null; }
 }
 function _histExtParseTextTable(text){
@@ -270,6 +287,7 @@ window.histExtFetchFromProxy = async function(){
   let foundTodayAny=false;
   const start=Math.min(pFrom,pTo), end=Math.max(pFrom,pTo);
 
+  let lastHtmlPreview='';
   for(let p=start; p<=end; p++){
     setProg(`페이지 ${p}/${end} 불러오는 중...`);
     let html='';
@@ -277,27 +295,13 @@ window.histExtFetchFromProxy = async function(){
       const u = `${proxy.replace(/\/$/,'')}/?bo_table=${encodeURIComponent(bo)}&page=${encodeURIComponent(String(p))}`;
       const res = await fetch(u, {method:'GET'});
       html = await res.text();
+      if(!lastHtmlPreview && html) lastHtmlPreview = html.slice(0, 2500);
     }catch(e){
       console.error('proxy fetch error', e);
       continue;
     }
-    let rows=_histExtParseHTMLTable(html);
-    if(!rows){
-      // 첫번째 table이 아닐 수도 있어 가장 큰 테이블을 추정
-      try{
-        const doc=new DOMParser().parseFromString(html,'text/html');
-        const tables=[...doc.querySelectorAll('table')];
-        let best=null, bestN=0;
-        tables.forEach(t=>{
-          const rs=[...t.querySelectorAll('tr')];
-          if(rs.length>bestN){ bestN=rs.length; best=t; }
-        });
-        if(best){
-          rows=[...best.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
-        }
-      }catch(e){}
-    }
-    const items=_histExtMapRows(rows||[]);
+    const rows=_histExtParseHTMLTable(html) || [];
+    const items=_histExtMapRows(rows);
     if(items.length) allItems = allItems.concat(items);
 
     if(mode==='today' && today){
@@ -327,6 +331,24 @@ window.histExtFetchFromProxy = async function(){
   try{ document.getElementById('hist-ext-cnt-today').textContent=String(todayItems.length); }catch(e){}
   try{ document.getElementById('hist-ext-cnt-store').textContent=String(stored.length); }catch(e){}
   try{ _histExtRenderTable(show); }catch(e){}
+  // 결과가 0이면 원인 파악용 안내를 출력 영역에 같이 표시
+  if(!show.length){
+    const out=document.getElementById('hist-ext-out');
+    if(out){
+      const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      out.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🕵️</div>
+          <div class="empty-state-title">가져온 데이터가 0행입니다</div>
+          <div class="empty-state-desc">가져온 페이지에 전적 표가 없거나, 테이블 구조가 예상과 다를 수 있습니다.</div>
+        </div>
+        <details style="margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px">
+          <summary style="cursor:pointer;font-weight:900">디버그: 가져온 HTML 일부 보기</summary>
+          <pre style="white-space:pre-wrap;font-size:11px;color:var(--gray-l);margin-top:8px">${esc(lastHtmlPreview)}</pre>
+        </details>
+      `;
+    }
+  }
   setProg(`완료: ${show.length}행 출력`);
 };
 window.histExtClear = function(){
