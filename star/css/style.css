@@ -12,11 +12,51 @@
   --sh3:0 8px 32px rgba(0,0,0,.13);
   /* 전환 기본값 */
   --tr:.15s ease;
+  /* 반응형 UI 스케일(자동) */
+  --uiS:1;
+  /* 모바일 주소창 변동 대응(vh) + 전체 탭 자동 맞춤 변수 */
+  --vh: 1vh;
+  --af-body-pad:16px;
+  --af-main-pad:18px;
+  --af-gap:12px;
+  --af-card-min:120px;
+  --af-card-pad:14px;
+  --af-tdx:12px;
+  --af-tdy:8px;
+  /* 기록 카드 테마(승리 대학색) */
+  --rc-bg-a: .12;     /* 카드 배경에 들어가는 승리색 강도(0~.30) */
+  --rc-hd-a: .14;     /* 카드 헤더에 들어가는 승리색 강도(0~.30) */
+  --rc-uicon: 18px;   /* 대학 아이콘 크기 */
+  --rc-memo-on: 0;    /* 1이면 메모 입력 표시 */
+  /* 대회 카드(조별리그 일정 등) */
+  --tc-hd-a: .12;
+  --tc-bw: 4px;
+  --tc-uicon: 34px;
+  --tc-line-w: 2px;        /* 브라켓 연결선 두께 */
+  --tc-line-a: .70;        /* 브라켓 연결선 진하기 */
+  --tc-line-rgb: 147,197,253; /* 기본 연결선 색 */
+  /* 전역 폰트(설정에서 변경) */
+  --app-font: 'Noto Sans KR', sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--text);font-size:13px;padding:16px;line-height:1.5;font-weight:400;}
-button{font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
-input,select,textarea{font-family:'Noto Sans KR',sans-serif;font-weight:400;}
+body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
+/* (요청사항) 전체 탭 자동 맞춤 ON */
+body.af-on{padding:var(--af-body-pad);}
+body.af-on .main{padding:var(--af-main-pad);}
+body.af-on .fstrip{padding:calc(var(--af-gap) + 2px) calc(var(--af-main-pad)) 0;}
+body.af-on .form-row{gap:var(--af-gap);}
+body.af-on .ipanel{padding:calc(var(--af-main-pad) + 2px) calc(var(--af-main-pad) + 2px);}
+body.af-on .scards{gap:var(--af-gap);}
+body.af-on .scard{min-width:var(--af-card-min);padding:var(--af-card-pad);}
+body.af-on .ocard{padding:calc(var(--af-card-pad) - 4px) calc(var(--af-card-pad) - 2px);}
+body.af-on .match-builder{padding:calc(var(--af-main-pad) - 2px);}
+body.af-on th{padding:var(--af-tdy) var(--af-tdx);}
+body.af-on td{padding:var(--af-tdy) var(--af-tdx);}
+button{font-family:var(--app-font);cursor:pointer;}
+input,select,textarea{font-family:var(--app-font);font-weight:400;}
+/* 전역 폰트 강제(기존 CSS에 폰트가 하드코딩된 곳이 많아서) */
+body *{font-family:var(--app-font) !important;}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace !important;}
 b,strong{font-weight:600;}
 .app{max-width:1480px;margin:auto;background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh2);overflow:hidden;}
 .hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#1e40af 100%);padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
@@ -72,13 +112,14 @@ b,strong{font-weight:600;}
 
 .tabs-scroll-wrap{position:relative;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;}
 .tabs{flex:1;min-width:0;display:flex;gap:2px;padding:6px 8px;background:transparent;border-bottom:none;overflow-x:auto;scrollbar-width:none;}
+.tabs{touch-action:pan-x;-webkit-overflow-scrolling:touch;}
 .tabs::-webkit-scrollbar{display:none;}
 .tabs-arrow{flex-shrink:0;background:var(--surface);border:none;border-left:1px solid var(--border);padding:0 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:opacity .2s,background .15s;opacity:0;pointer-events:none;}
 .tabs-arrow:first-child{border-left:none;border-right:1px solid var(--border);}
 .tabs-arrow:hover{background:var(--blue-l);color:var(--blue);}
 .tabs-arrow.visible{opacity:1;pointer-events:auto;}
 @media(max-width:768px){.tabs-arrow{display:none!important;}.tabs{padding:4px 6px;}}
-.tab{padding:6px 13px;border:none;background:transparent;color:var(--text3);border-radius:7px;font-size:12px;font-weight:500;white-space:nowrap;transition:.12s;}
+.tab{padding:6px 13px;border:none;background:transparent;color:var(--text3);border-radius:7px;font-size:calc(12px * var(--uiS));font-weight:500;white-space:nowrap;transition:.12s;}
 .tab:hover{background:rgba(37,99,235,.07);color:var(--blue);}
 .tab.on{background:var(--blue);color:#fff;font-weight:600;}
 .tab.cfg{background:transparent;}
@@ -97,11 +138,11 @@ body.dark .subtab-btn.is-active{background:linear-gradient(135deg,#FF4B6E,#FF89A
 body.dark .subtab-btn.is-special.is-active{background:linear-gradient(135deg,#0ea5e9,#38bdf8);}
 .fstrip{padding:10px 18px 0;background:var(--surface);border-bottom:1px solid var(--border);}
 .form-row{display:flex;gap:8px;margin-bottom:10px;padding:10px 14px;background:var(--white);border-radius:var(--r);flex-wrap:wrap;align-items:center;border:1px solid var(--border);box-shadow:var(--sh);}
-.flabel{font-weight:600;font-size:12px;color:var(--blue);white-space:nowrap;}
-input,select{padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--white);color:var(--text);font-size:12px;transition:.15s;}
+.flabel{font-weight:600;font-size:calc(12px * var(--uiS));color:var(--blue);white-space:nowrap;}
+input,select{padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--white);color:var(--text);font-size:calc(12px * var(--uiS));transition:.15s;}
 input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
 input::placeholder{color:var(--gray-l);}
-.btn{padding:7px 14px;border-radius:var(--r);border:none;font-size:12px;font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;justify-content:center;gap:4px;}
+.btn{padding:7px 14px;border-radius:var(--r);border:none;font-size:calc(12px * var(--uiS));font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;justify-content:center;gap:4px;}
 .btn:active{filter:brightness(.88);transform:scale(.97);}
 .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
 .btn-b{background:var(--blue);color:#fff;}.btn-b:hover{background:var(--blue-d);}
@@ -110,9 +151,9 @@ input::placeholder{color:var(--gray-l);}
 .btn-r{background:#dc2626;color:#fff;}.btn-r:hover{background:#b91c1c;}
 .btn-w{background:var(--white);color:var(--text2);border:1px solid var(--border2);}.btn-w:hover{background:var(--surface);}
 .btn-p{background:#7c3aed;color:#fff;}.btn-p:hover{background:#6d28d9;}
-.btn-xs{padding:3px 9px;font-size:11px;border-radius:6px;}
+.btn-xs{padding:3px 9px;font-size:calc(11px * var(--uiS));border-radius:6px;}
 .btn-sm{padding:5px 11px;font-size:12px;border-radius:6px;}
-.btn-detail{padding:4px 11px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);}
+.btn-detail{padding:4px 11px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:calc(11px * var(--uiS));font-weight:500;cursor:pointer;transition:var(--tr);}
 .btn-detail:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
 .btn-detail:active{transform:scale(.96);}
 .btn-detail.open{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -218,6 +259,44 @@ tr:last-child td{border-bottom:none;}
 .rec-summary:hover{box-shadow:var(--sh);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
 .rec-sum-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* (요청사항) 승리 대학색 테마(기록 카드) */
+/* 디자인 모드: 헤더만 포인트 */
+body.rc-theme-on.rc-accent-header .rec-summary.rc-theme{
+  border-color: rgba(var(--rc-win-rgb, 100,116,139), .16);
+}
+body.rc-theme-on.rc-accent-header .rec-summary.rc-theme .rec-sum-header{
+  background: rgba(var(--rc-win-rgb, 100,116,139), var(--rc-hd-a));
+}
+body.rc-theme-on.rc-accent-header .rec-summary.rc-theme.detail-open{
+  box-shadow:0 2px 14px rgba(var(--rc-win-rgb, 100,116,139), .18)!important;
+}
+
+/* 디자인 모드: 테두리만 포인트 */
+body.rc-theme-on.rc-accent-border .rec-summary.rc-theme{
+  border-left: 4px solid rgba(var(--rc-win-rgb, 100,116,139), .85) !important;
+  border-color: rgba(var(--rc-win-rgb, 100,116,139), .14);
+}
+body.rc-theme-on.rc-accent-border .rec-summary.rc-theme.detail-open{
+  box-shadow:0 2px 14px rgba(var(--rc-win-rgb, 100,116,139), .14)!important;
+}
+body.dark.rc-theme-on.rc-accent-header .rec-summary.rc-theme{
+  border-color: rgba(var(--rc-win-rgb, 148,163,184), .20);
+}
+body.dark.rc-theme-on.rc-accent-header .rec-summary.rc-theme .rec-sum-header{
+  background: rgba(var(--rc-win-rgb, 148,163,184), calc(var(--rc-hd-a) + .06));
+}
+
+body.dark.rc-theme-on.rc-accent-border .rec-summary.rc-theme{
+  border-left: 4px solid rgba(var(--rc-win-rgb, 148,163,184), .85) !important;
+  border-color: rgba(var(--rc-win-rgb, 148,163,184), .22);
+}
+
+/* 대학 아이콘 크기(기록 카드 내) */
+body.rc-theme-on .rec-summary img.rec-uicon{
+  width: var(--rc-uicon) !important;
+  height: var(--rc-uicon) !important;
+}
 /* 액션 버튼: 호버·열림 시에만 표시 */
 .rec-actions{display:flex;gap:3px;align-items:center;opacity:0;pointer-events:none;transition:opacity .15s;}
 .rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
@@ -830,6 +909,35 @@ body.dark .rec-detail-area.open{border-top-color:#1e3a5f;}
 body.dark .rec-sum-header{background:#1e293b;}
 body.dark .ck-panel{background:#1e293b;border-color:#2d3f55;}
 body.dark .grp-match-card{background:#1e293b;border-color:#2d3f55;}
+
+/* (요청사항) 대회탭 카드 디자인 모드(무색/상단바/테두리)
+   - 조별리그 일정 카드(.grp-match-card) 뿐 아니라 브라켓 매치 카드에도 적용하기 위해 .tc-card로 통일 */
+body.tc-theme-on .tc-card{
+  background: var(--white) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06) !important;
+  position: relative;
+}
+body.tc-theme-on .tc-card img.tc-uicon{
+  width: var(--tc-uicon) !important;
+  height: var(--tc-uicon) !important;
+}
+body.tc-theme-on.tc-accent-header .tc-card::before{
+  content:'';
+  position:absolute;
+  left:0; right:0; top:0;
+  height:8px;
+  background: rgba(var(--tc-win-rgb, 100,116,139), var(--tc-hd-a));
+}
+body.tc-theme-on.tc-accent-border .tc-card{
+  border-left: var(--tc-bw) solid rgba(var(--tc-win-rgb, 100,116,139), .85) !important;
+  border-color: rgba(var(--tc-win-rgb, 100,116,139), .12) !important;
+}
+body.dark.tc-theme-on .tc-card{
+  background:#1e293b !important;
+  border-color:#2d3f55 !important;
+}
 body.dark .grp-match-score{background:#162032!important;border-color:#2d3f55!important;color:#e2e8f0!important;}
 body.dark .set-result-row{background:#162032;border-color:#2d3f55;}
 body.dark .ck-panel{background:#1e293b;border-color:#2d3f55;}
