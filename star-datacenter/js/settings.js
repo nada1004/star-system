@@ -1336,6 +1336,9 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="pretendard" ${p==='pretendard'?'selected':''}>Pretendard</option>
           <option value="nanum" ${p==='nanum'?'selected':''}>나눔고딕</option>
           <option value="gmarket" ${p==='gmarket'?'selected':''}>GmarketSans</option>
+          <option value="dohyeon" ${p==='dohyeon'?'selected':''}>Do Hyeon (개성있는 한글)</option>
+          <option value="blackhansans" ${p==='blackhansans'?'selected':''}>Black Han Sans (굵은 헤드라인)</option>
+          <option value="ibmplexsans" ${p==='ibmplexsans'?'selected':''}>IBM Plex Sans KR (정갈함)</option>
         </select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">

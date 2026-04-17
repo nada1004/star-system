@@ -118,6 +118,9 @@ window._applyAppFont = function(){
     pretendard: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css',
     nanum: 'https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap',
     gmarket: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSans.css',
+    dohyeon: 'https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap',
+    blackhansans: 'https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap',
+    ibmplexsans: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap',
   };
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
@@ -129,6 +132,9 @@ window._applyAppFont = function(){
     pretendard: '"Pretendard Variable", Pretendard, "Noto Sans KR", sans-serif',
     nanum: '"Nanum Gothic", "Noto Sans KR", sans-serif',
     gmarket: '"GmarketSans", "Noto Sans KR", sans-serif',
+    dohyeon: '"Do Hyeon", "Noto Sans KR", sans-serif',
+    blackhansans: '"Black Han Sans", "Noto Sans KR", sans-serif',
+    ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
   try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
