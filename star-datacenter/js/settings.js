@@ -222,6 +222,8 @@ window.cfgApplyBracketPreset = function(preset){
     '월드컵':    {on:true, accent:'header',hd:18, bw:5, ic:42, lw:3, la:85},
     '프로리그':  {on:true, accent:'border',hd:10, bw:6, ic:38, lw:2, la:78},
     '컴팩트':    {on:true, accent:'none',  hd:8,  bw:3, ic:30, lw:1, la:65},
+    '미니멀':    {on:true, accent:'none',  hd:0,  bw:1, ic:32, lw:1, la:40},
+    '다크리그':  {on:true, accent:'border',hd:16, bw:6, ic:40, lw:3, la:90},
   };
   const v = presets[p] || presets['기본'];
   const set = (id, val) => { const el=document.getElementById(id); if(el){ el.value = String(val); el.dispatchEvent(new Event('input')); } };
@@ -1256,6 +1258,8 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="월드컵" ${_tcPreset==='월드컵'?'selected':''}>월드컵</option>
           <option value="프로리그" ${_tcPreset==='프로리그'?'selected':''}>프로리그</option>
           <option value="컴팩트" ${_tcPreset==='컴팩트'?'selected':''}>컴팩트</option>
+          <option value="미니멀" ${_tcPreset==='미니멀'?'selected':''}>미니멀 (깔끔함)</option>
+          <option value="다크리그" ${_tcPreset==='다크리그'?'selected':''}>다크리그 (강한 포인트)</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">※ 아래 슬라이더 값도 같이 변경됩니다</span>
       </div>
