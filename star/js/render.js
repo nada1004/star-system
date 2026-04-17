@@ -99,7 +99,11 @@ function render(){
     };
     _restoreFocus();
     // 모바일: 첫 rAF 후 한 프레임 더 (포커스 복원만, 아이콘은 앞에서 완료)
-    requestAnimationFrame(()=>{_restoreFocus();});
+    requestAnimationFrame(()=>{
+      _restoreFocus();
+      // 탭/필터 바 가로 스크롤 드래그 활성화(렌더링 후 생성된 요소 포함)
+      try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
+    });
   });
 }
 

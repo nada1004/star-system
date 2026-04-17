@@ -332,6 +332,20 @@ function saveCustomStatusIcon(slot, emoji){
 }
 function getPlayerPhotoHTML(playerName, size, extraStyle){
   size=size||'32px'; extraStyle=extraStyle||'';
+  // (요청사항) 프로필 이미지 크기 배율(전역) — 설정에서 조절
+  // - 기존 코드가 size 문자열(예: "22px")을 넘기므로, 숫자만 뽑아 배율 적용
+  let _scale=1;
+  try{
+    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
+    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
+  }catch(e){}
+  try{
+    const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
+    if(m && _scale!==1){
+      const n=parseFloat(m[1]);
+      size=(n*_scale).toFixed(2).replace(/\.00$/,'')+'px';
+    }
+  }catch(e){}
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';

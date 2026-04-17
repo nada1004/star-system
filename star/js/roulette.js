@@ -60,6 +60,8 @@ function rRoulette(C, T) {
   } else {
     setTimeout(_gcSetup, 60);
   }
+  // 확률 박스 초기 1회 갱신
+  setTimeout(()=>{ try{ _gcRenderProbBox(); }catch(e){} }, 80);
 }
 
 (function _gcInjectCSS(){
@@ -88,6 +90,43 @@ let _gcAudioCtx = null;
 window._GC_DOME = 220;
 window._GC_CAP_R = 17;
 
+// ─────────────────────────────────────────────────────────────
+// (추가) 가중치/확률 파서
+// 형식: "이름" 또는 "이름*2.5" (쉼표로 구분)
+// - 같은 이름이 여러 번 나오면 가중치를 합산
+// ─────────────────────────────────────────────────────────────
+function _gcParseWeightedCSV(text){
+  const raw = String(text||'');
+  const tokens = raw.split(',').map(v=>v.trim()).filter(Boolean);
+  const map = new Map();
+  tokens.forEach(t=>{
+    let name=t, w=1;
+    const m=t.match(/^(.*?)(?:\*(\d+(?:\.\d+)?))$/);
+    if(m){
+      name=(m[1]||'').trim();
+      const n=parseFloat(m[2]);
+      if(!isNaN(n) && isFinite(n)) w=n;
+    }
+    if(!name) return;
+    w=Math.max(0.01, Math.min(1000, w));
+    map.set(name, (map.get(name)||0) + w);
+  });
+  const items=[...map.entries()].map(([name,weight])=>({name,weight}));
+  const total=items.reduce((s,x)=>s+x.weight,0)||0;
+  return {items,total};
+}
+
+function _gcPickWeighted(items,total){
+  if(!items||!items.length) return null;
+  if(!(total>0)) total = items.reduce((s,x)=>s+x.weight,0);
+  let r=Math.random()*total;
+  for(const it of items){
+    r -= it.weight;
+    if(r<=0) return it;
+  }
+  return items[items.length-1];
+}
+
 const _GC_COLORS = [
   ['#FF80AB','#FF4081'],['#81D4FA','#29B6F6'],['#FFF176','#FFD600'],
   ['#B9F6CA','#00E676'],['#CE93D8','#AB47BC'],['#FFCC80','#FFA726'],
@@ -113,7 +152,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isDuck   = _gcTab === 'duck';
   const isWheel   = _gcTab === 'wheel';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
-  const activeItems = savedText.split(',').map(v=>v.trim()).filter(v=>v);
+  const _w = _gcParseWeightedCSV(savedText);
+  const activeItems = _w.items.map(x=>x.name);
 
   const ldNamesText = isLadder ? (localStorage.getItem('su_ld_names') || '') : '';
   const ldItemsText = isLadder ? (localStorage.getItem('su_ld_items') || '') : '';
@@ -205,6 +245,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
       <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
+      <div style="margin-top:8px;font-size:${Math.max(11,fs-1)}px;color:var(--gray-l);line-height:1.5">
+        ✅ 가중치: <b>이름*2</b> (2배) · 예) <span style="font-family:${'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace'}">폴리포이드*2, 라데온*1</span>
+      </div>
+      <div id="gc-prob-box">${_w.items.length?'':'<!-- empty -->'}</div>
       <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
     </div>
     ${(!isPlayer && mapBadges) ? `
@@ -219,7 +263,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <div id="gc-result-card" style="display:none;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:${pad*1.2}px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
       <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>
       <div id="gc-pop-icon" style="font-size:${resIconSz}px;display:block;margin-bottom:8px;line-height:1.1"></div>
-      <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:16px;word-break:keep-all"></div>
+      <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:6px;word-break:keep-all"></div>
+      <div id="gc-res-prob" style="font-size:${Math.max(12,fs)}px;font-weight:900;color:#FF4B6E;margin-bottom:14px"></div>
       <button onclick="_gcReset()" style="background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:white;border:none;border-radius:14px;padding:${Math.round(pad*0.7)}px ${pad*1.5}px;font-size:${fsLg}px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #C0274A"
         onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #C0274A'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #C0274A'">🎰 다시 뽑기!</button>
@@ -337,13 +382,43 @@ function _gcToggleInput() {
 
 function _gcSaveText(val) {
   localStorage.setItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', val);
+  try{ _gcRenderProbBox && _gcRenderProbBox(); }catch(e){}
+}
+
+// 입력값 기준 확률 박스 갱신 (리렌더 없이)
+function _gcRenderProbBox(){
+  const box=document.getElementById('gc-prob-box');
+  const inp=document.getElementById('gc-items-input');
+  if(!box||!inp) return;
+  const parsed=_gcParseWeightedCSV(inp.value);
+  if(!parsed.items.length){ box.innerHTML=''; return; }
+  const fs=12;
+  const rows=parsed.items.slice().sort((a,b)=>b.weight-a.weight).map(it=>{
+    const p=parsed.total?(it.weight/parsed.total*100):0;
+    return `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">
+      <span style="flex:1;font-weight:700;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.name}</span>
+      <span style="font-size:11px;color:var(--text3)">w=${it.weight.toFixed(2).replace(/\\.00$/,'')}</span>
+      <span style="min-width:62px;text-align:right;font-size:11px;font-weight:900;color:#FF4B6E">${p.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div style="margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;max-height:180px;overflow:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:${fs}px;font-weight:900;color:var(--text2)">📊 확률(가중치) (${parsed.items.length})</span>
+      <span style="font-size:11px;color:var(--gray-l)">합=${parsed.total.toFixed(2).replace(/\\.00$/,'')}</span>
+    </div>
+    ${rows}
+  </div>`;
 }
 
 function _gcToggleMap(mapName, el) {
   const inp = document.getElementById('gc-items-input');
   if (!inp) return;
   let items = inp.value.split(',').map(v=>v.trim()).filter(v=>v);
-  const idx = items.indexOf(mapName);
+  const idx = items.findIndex(x=>{
+    const m=String(x).match(/^(.*?)(?:\*(\d+(?:\.\d+)?))?$/);
+    const n=(m?m[1]:x).trim();
+    return n===mapName;
+  });
   if (idx >= 0) {
     items.splice(idx, 1);
     el.style.background = 'var(--surface)';
@@ -368,6 +443,7 @@ function _gcClearItems() {
     el.style.borderColor = 'var(--border)';
     el.style.color = 'var(--text2)';
   });
+  try{ _gcRenderProbBox && _gcRenderProbBox(); }catch(e){}
 }
 
 function _gcSetup() {
@@ -426,8 +502,8 @@ function _gcSpin() {
   if (_gcSpinning) return;
   const inp = document.getElementById('gc-items-input');
   if (!inp) return;
-  const items = inp.value.split(',').map(v=>v.trim()).filter(v=>v);
-  if (!items.length) { alert('항목을 먼저 입력해주세요!'); return; }
+  const parsed = _gcParseWeightedCSV(inp.value);
+  if (!parsed.items.length) { alert('항목을 먼저 입력해주세요!'); return; }
 
   const card = document.getElementById('gc-result-card');
   if (card) card.style.display = 'none';
@@ -479,7 +555,8 @@ function _gcSpin() {
     });
 
     setTimeout(() => {
-      const keyword = items[Math.floor(Math.random()*items.length)];
+      const picked = _gcPickWeighted(parsed.items, parsed.total) || parsed.items[0];
+      const keyword = picked.name;
       const p = _gcFindPlayer(keyword);
       const displayName = p ? p.name : keyword;
       const iconSz = Math.round(window._GC_DOME * 0.36);
@@ -501,6 +578,11 @@ function _gcSpin() {
       if (iconEl) iconEl.innerHTML = icon.startsWith('<img') ? icon : `<span style="animation:gcBounceIcon 0.65s ease 0.1s both;display:inline-block">${icon}</span>`;
       const resEl = document.getElementById('gc-res-text');
       if (resEl) resEl.textContent = displayName;
+      const probEl = document.getElementById('gc-res-prob');
+      if (probEl) {
+        const prob = parsed.total ? (picked.weight/parsed.total*100) : 0;
+        probEl.textContent = parsed.total ? `확률 ${prob.toFixed(1)}% (w=${picked.weight.toFixed(2).replace(/\\.00$/,'')})` : '';
+      }
 
       const histKey = _gcTab === 'player' ? 'player' : 'map';
       const now = new Date();

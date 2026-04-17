@@ -23,6 +23,12 @@ function rHist(C,T){
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
+  // (요청사항) 관리자 전용 외부 자료 탭
+  try{
+    if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      tabDefs.push({id:'ext', grp:'외부', lbl:'📎 외부 자료'});
+    }
+  }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
   // 상단: 그룹 pill 바 (티어 순위표 스타일)
@@ -76,6 +82,11 @@ function rHist(C,T){
     rUniv(C,T);
     return;
   }
+  if(histSub==='ext'){
+    h+=histExternalHTML();
+    C.innerHTML=h;
+    return;
+  }
   if(histSub==='all') h+=histAllHTML();
   else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
@@ -110,6 +121,637 @@ function rHist(C,T){
   else if(histSub==='procompgj') h+=histProCompGJHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 관리자 전용: 외부 자료(붙여넣기 파싱)
+// - eloboard 페이지를 자동 수집하는 대신, 표를 복사→붙여넣기 해서 파싱
+// - 날짜/승자/패자/맵/ELO/경기방식 컬럼으로 정규화
+// ─────────────────────────────────────────────────────────────
+const _HIST_EXT_KEY='su_hist_ext_data_v1';
+const _HIST_EXT_PROXY_KEY='su_hist_ext_proxy_v1';
+const _HIST_EXT_PROXY_CFG_KEY='su_hist_ext_proxy_cfg_v1';
+const _HIST_EXT_TARGET_KEY='su_hist_ext_target_v1';
+// 선택/페이지 상태(탭 내 UI용 — localStorage 저장은 데이터만)
+window._histExtSel = window._histExtSel || new Set();
+window._histExtPage = window._histExtPage || 1;
+const _HIST_EXT_PAGE_SIZE = 30; // 요청: 30경기씩
+function _histExtLoad(){
+  try{ return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''}; }catch(e){ return {items:[],raw:'',mode:'today',today:''}; }
+}
+function _histExtSave(v){ try{ localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v)); }catch(e){} }
+function _histExtProxyLoad(){
+  try{ return localStorage.getItem(_HIST_EXT_PROXY_KEY)||''; }catch(e){ return ''; }
+}
+function _histExtProxySave(v){ try{ localStorage.setItem(_HIST_EXT_PROXY_KEY, String(v||'')); }catch(e){} }
+function _histExtProxyCfgLoad(){
+  try{ return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{}; }catch(e){ return {}; }
+}
+function _histExtProxyCfgSave(obj){
+  try{ localStorage.setItem(_HIST_EXT_PROXY_CFG_KEY, JSON.stringify(obj||{})); }catch(e){}
+}
+function _histExtTargetLoad(){
+  try{ return localStorage.getItem(_HIST_EXT_TARGET_KEY)||''; }catch(e){ return ''; }
+}
+function _histExtTargetSave(v){
+  try{ localStorage.setItem(_HIST_EXT_TARGET_KEY, String(v||'')); }catch(e){}
+}
+function _histExtNormDate(s){
+  if(!s) return '';
+  let t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-').replace(/\s+/g,' ');
+  const m=t.match(/(\d{2,4})-(\d{1,2})-(\d{1,2})/);
+  if(!m) return '';
+  let y=parseInt(m[1],10); if(y<100) y+=2000;
+  const mo=String(parseInt(m[2],10)).padStart(2,'0');
+  const da=String(parseInt(m[3],10)).padStart(2,'0');
+  return `${y}-${mo}-${da}`;
+}
+function _histExtParseHTMLTable(html){
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const tables=[...doc.querySelectorAll('table')];
+    if(!tables.length) return null;
+    let bestRows=null, bestScore=-1;
+    const norm = (s)=>String(s||'').replace(/\s+/g,'').toLowerCase();
+    tables.forEach(t=>{
+      const rows=[...t.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(td=>td.textContent.trim())).filter(r=>r.length);
+      if(!rows.length) return;
+      const header = rows[0] ? rows[0].map(norm).join('|') : '';
+      let score = rows.length; // 기본은 행이 많은 테이블 선호
+      // 전적 테이블 헤더가 있으면 크게 가산
+      if(header.includes('날짜') && header.includes('승자') && header.includes('패자')) score += 1000;
+      if(header.includes('맵')) score += 200;
+      if(header.includes('elo')) score += 120;
+      if(header.includes('경기방식') || header.includes('방식')) score += 80;
+      if(header.includes('메모') || header.includes('비고')) score += 40;
+      if(score > bestScore){
+        bestScore = score;
+        bestRows = rows;
+      }
+    });
+    return bestRows;
+  }catch(e){ return null; }
+}
+function _histExtParseTextTable(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return null;
+  const byTab=lines.map(line=>line.split(/\t+/).map(x=>x.trim()).filter(Boolean));
+  if(byTab.some(r=>r.length>=5)) return byTab;
+  const bySpace=lines.map(line=>line.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean));
+  return bySpace.some(r=>r.length>=5) ? bySpace : null;
+}
+function _histExtFindHeaderIdx(rows){
+  const hdr = rows && rows.length ? rows[0] : null;
+  if(!hdr) return null;
+  const idx = {};
+  const norm = (s)=>String(s||'').replace(/\s+/g,'').toLowerCase();
+  hdr.forEach((c,i)=>{
+    const t = norm(c);
+    if(!t) return;
+    if(t.includes('날짜')||t.includes('date')) idx.date=i;
+    else if(t.includes('승자')||t.includes('winner')) idx.winner=i;
+    else if(t.includes('패자')||t.includes('loser')) idx.loser=i;
+    else if(t==='맵'||t.includes('map')) idx.map=i;
+    else if(t.includes('elo')) idx.elo=i;
+    else if(t.includes('경기방식')||t.includes('방식')||t.includes('type')) idx.type=i;
+    else if(t.includes('메모')||t.includes('비고')||t.includes('memo')) idx.memo=i;
+  });
+  return (idx.date!=null && idx.winner!=null && idx.loser!=null) ? idx : null;
+}
+function _histExtMapRows(rows){
+  const header=(rows[0]||[]).join(' ');
+  const hasHeader=/날짜|승자|패자|맵|ELO|경기방식/i.test(header);
+  const hdrIdx = hasHeader ? _histExtFindHeaderIdx(rows) : null;
+  const body=hasHeader?rows.slice(1):rows.slice();
+  const out=[];
+  body.forEach(r=>{
+    if(!r || r.length<5) return;
+    const d=_histExtNormDate(hdrIdx ? r[hdrIdx.date] : r[0]);
+    if(!d) return;
+    out.push({
+      date:d,
+      winner:(hdrIdx ? r[hdrIdx.winner] : r[1])||'',
+      loser:(hdrIdx ? r[hdrIdx.loser] : r[2])||'',
+      map:(hdrIdx && hdrIdx.map!=null ? r[hdrIdx.map] : r[3])||'',
+      elo:(hdrIdx && hdrIdx.elo!=null ? r[hdrIdx.elo] : r[4])||'',
+      type:(hdrIdx && hdrIdx.type!=null ? r[hdrIdx.type] : r[5])||'',
+      memo:(hdrIdx && hdrIdx.memo!=null ? r[hdrIdx.memo] : r[6])||'',
+    });
+  });
+  return out;
+}
+function _histExtDedup(items){
+  const seen=new Set();
+  const out=[];
+  items.forEach(x=>{
+    const k=[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('|');
+    if(seen.has(k)) return;
+    seen.add(k); out.push(x);
+  });
+  // 날짜 내림차순
+  out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  return out;
+}
+
+function _histExtKey(x){
+  return [x.date||'',x.winner||'',x.loser||'',x.map||'',x.elo||'',x.type||'',x.memo||''].join('|');
+}
+function _histExtGetViewItems(){
+  const st=_histExtLoad();
+  // 최소 구성: 외부탭은 필터 없이 "저장된 items 전체"를 뷰로 사용
+  return st.items || [];
+}
+window.histExtResetUI = function(){
+  try{ window._histExtSel = new Set(); }catch(e){}
+  window._histExtPage = 1;
+};
+window.histExtToggleSel = function(key){
+  const sel = window._histExtSel || (window._histExtSel=new Set());
+  if(sel.has(key)) sel.delete(key); else sel.add(key);
+  try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
+};
+window.histExtSelPage = function(on){
+  const items = _histExtGetViewItems();
+  const page = window._histExtPage || 1;
+  const start = (page-1)*_HIST_EXT_PAGE_SIZE;
+  const slice = items.slice(start, start+_HIST_EXT_PAGE_SIZE);
+  const sel = window._histExtSel || (window._histExtSel=new Set());
+  slice.forEach(x=>{
+    const k=_histExtKey(x);
+    if(on) sel.add(k); else sel.delete(k);
+  });
+  try{ _histExtRenderTable(items); }catch(e){}
+};
+window.histExtPageTo = function(p){
+  const items = _histExtGetViewItems();
+  const total = Math.max(1, Math.ceil(items.length/_HIST_EXT_PAGE_SIZE));
+  const np = Math.max(1, Math.min(total, parseInt(p,10)||1));
+  window._histExtPage = np;
+  try{ _histExtRenderTable(items); }catch(e){}
+};
+window.histExtCopySelected = async function(){
+  const items = _histExtGetViewItems();
+  const sel = window._histExtSel || new Set();
+  const picked = items.filter(x=>sel.has(_histExtKey(x)));
+  if(!picked.length){
+    alert('선택된 행이 없습니다');
+    return;
+  }
+  const tsv=picked.map(x=>[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('\t')).join('\n');
+  try{ await navigator.clipboard.writeText(tsv); alert('선택 복사됨'); }catch(e){ alert('복사 실패: 브라우저 권한 문제일 수 있어요.'); }
+};
+window.histExtPasteFromClipboard = async function(){
+  try{
+    const t = await navigator.clipboard.readText();
+    const ta = document.getElementById('hist-ext-raw');
+    if(ta) ta.value = t || '';
+    histExtParseAndRender();
+  }catch(e){
+    alert('클립보드 읽기 실패: 브라우저 권한(HTTPS/사용자 허용) 문제일 수 있어요.');
+  }
+};
+
+// 붙여넣기 입력칸(외부탭) 내용을 선택한 저장대상 자동인식 모달로 전송
+window.histExtInputToPasteModal = function(){
+  const raw = (document.getElementById('hist-ext-raw')?.value || '').trim();
+  if(!raw){
+    alert('붙여넣기 내용이 없습니다');
+    return;
+  }
+  const target = (document.getElementById('hist-ext-target')?.value || '').trim();
+  if(!target){
+    alert('저장 대상(미니/개인전 등)을 먼저 선택해주세요');
+    return;
+  }
+  _histExtTargetSave(target);
+  try{
+    if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
+    else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
+    else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
+    else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
+    else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
+    else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
+    else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
+  }catch(e){}
+  setTimeout(()=>{
+    try{
+      const ta = document.getElementById('paste-input');
+      if(ta) ta.value = raw;
+      if(typeof pastePreview==='function') pastePreview();
+    }catch(e){}
+  }, 60);
+};
+
+// 선택 결과를 "경기 결과 붙여넣기(자동인식)" 모달로 전송
+function _histExtToPasteName(s){
+  let t = String(s||'').trim();
+  // "승 xxx", "패 xxx" 같은 접두 제거
+  t = t.replace(/^(승|패)\s+/,'').trim();
+  // "이름 P" → "이름 (P)" (자동인식기 TSV 규칙)
+  const m = t.match(/^(.+?)\s+([PTZN])$/i);
+  if(m) t = `${m[1].trim()} (${m[2].toUpperCase()})`;
+  return t;
+}
+window.histExtSendToPasteModal = function(){
+  const items = _histExtGetViewItems();
+  const sel = window._histExtSel || new Set();
+  const picked = items.filter(x=>sel.has(_histExtKey(x)));
+  if(!picked.length){
+    alert('선택된 행이 없습니다');
+    return;
+  }
+  const target = (document.getElementById('hist-ext-target')?.value || '').trim();
+  if(!target){
+    alert('저장 대상(미니/개인전 등)을 먼저 선택해주세요');
+    return;
+  }
+  _histExtTargetSave(target);
+  const lines = picked.map(x=>{
+    const d = (x.date||'').trim();
+    const w = _histExtToPasteName(x.winner);
+    const l = _histExtToPasteName(x.loser);
+    const mp = (x.map||'-').trim();
+    // TSV(2인칭): 선수1\t선수2\t맵\t승/패(ELO)\t[타입]
+    // 날짜는 "YYYY-MM-DD " 접두로 포함(파서가 날짜를 먼저 인식)
+    return `${d} ${w}\t${l}\t${mp}\t승\t${target}`;
+  }).join('\n');
+
+  // 해당 모드의 붙여넣기 모달 열기
+  try{
+    if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
+    else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
+    else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
+    else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
+    else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
+    else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
+    else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
+  }catch(e){}
+
+  // 모달 textarea 채우고 미리보기 실행
+  setTimeout(()=>{
+    try{
+      const ta = document.getElementById('paste-input');
+      if(ta) ta.value = lines;
+      if(typeof pastePreview==='function') pastePreview();
+    }catch(e){}
+  }, 60);
+};
+
+// 프록시 URL 빠른 입력: 전체 URL을 붙여넣으면 proxy/bo/page 범위를 자동 세팅
+window.histExtApplyQuickUrl = function(){
+  const raw = (document.getElementById('hist-ext-quickurl')?.value || '').trim();
+  if(!raw) return;
+  try{
+    const u = new URL(raw);
+    const base = u.origin + '/';
+    const bo = u.searchParams.get('bo_table') || 'bj_board';
+    const pages = u.searchParams.getAll('page').map(x=>parseInt(x,10)).filter(n=>!isNaN(n));
+    const pFrom = pages.length ? Math.min(...pages) : (parseInt(u.searchParams.get('pageFrom')||'1',10)||1);
+    const pTo   = pages.length ? Math.max(...pages) : (parseInt(u.searchParams.get('pageTo')||String(pFrom),10)||pFrom);
+    const proxyEl = document.getElementById('hist-ext-proxy');
+    const boEl = document.getElementById('hist-ext-bo');
+    const pfEl = document.getElementById('hist-ext-pageFrom');
+    const ptEl = document.getElementById('hist-ext-pageTo');
+    if(proxyEl) proxyEl.value = base;
+    if(boEl) boEl.value = bo;
+    if(pfEl) pfEl.value = pFrom;
+    if(ptEl) ptEl.value = pTo;
+    _histExtProxySave(base);
+    const pCfg=_histExtProxyCfgLoad();
+    _histExtProxyCfgSave({...pCfg, bo, pFrom, pTo});
+    alert('✅ URL 자동 입력 완료');
+  }catch(e){
+    alert('URL 형식이 올바르지 않습니다');
+  }
+};
+window.histExtParseAndRender = function(opts){
+  const st=_histExtLoad();
+  const raw=document.getElementById('hist-ext-raw')?.value||'';
+  // UI 리셋
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  let rows=null, fmt='-';
+  if(/<table[\s>]/i.test(raw)){ rows=_histExtParseHTMLTable(raw); if(rows) fmt='HTML 표'; }
+  if(!rows){ rows=_histExtParseTextTable(raw); if(rows) fmt='텍스트 표'; }
+  const items=_histExtDedup(rows?_histExtMapRows(rows):[]);
+  const next={...st, items, raw, mode:'all', today:''};
+  _histExtSave(next);
+  // 출력
+  try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-raw').textContent=String(items.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(items.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(items.length); }catch(e){}
+  try{ _histExtRenderTable(items); }catch(e){}
+};
+
+// 프록시 URL(Cloudflare Worker)로 페이지 자동 가져오기
+window.histExtFetchFromProxy = async function(){
+  const proxy=(document.getElementById('hist-ext-proxy')?.value||'').trim();
+  const bo=(document.getElementById('hist-ext-bo')?.value||'bj_board').trim();
+  const pFrom=parseInt(document.getElementById('hist-ext-pageFrom')?.value||'1',10)||1;
+  const pTo=parseInt(document.getElementById('hist-ext-pageTo')?.value||String(pFrom),10)||pFrom;
+  if(!proxy){
+    alert('프록시 URL을 입력해주세요');
+    return;
+  }
+  _histExtProxySave(proxy);
+  _histExtProxyCfgSave({bo, pFrom, pTo});
+  // UI 리셋
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  const prog=document.getElementById('hist-ext-prog');
+  const setProg=(s)=>{ if(prog) prog.textContent=s; };
+  setProg('가져오는 중...');
+
+  let rawItems=[];
+  let fmt='프록시';
+  const start=Math.min(pFrom,pTo), end=Math.max(pFrom,pTo);
+  const pageLog=[];
+  const logEl=document.getElementById('hist-ext-log');
+  const setLog=(html)=>{ if(logEl) logEl.innerHTML=html; };
+  setLog(`<div style="font-size:11px;color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>`);
+
+  let lastHtmlPreview='';
+  for(let p=start; p<=end; p++){
+    setProg(`페이지 ${p}/${end} 불러오는 중...`);
+    let html='';
+    try{
+      const u = `${proxy.replace(/\/$/,'')}/?bo_table=${encodeURIComponent(bo)}&page=${encodeURIComponent(String(p))}`;
+      const res = await fetch(u, {method:'GET'});
+      html = await res.text();
+      if(!lastHtmlPreview && html) lastHtmlPreview = html.slice(0, 2500);
+    }catch(e){
+      console.error('proxy fetch error', e);
+      pageLog.push({p, ok:false, rows:0, msg:'fetch 실패'});
+      continue;
+    }
+    const rows=_histExtParseHTMLTable(html) || [];
+    const items=_histExtMapRows(rows);
+    if(items.length) rawItems = rawItems.concat(items);
+    const sample = items[0] ? `${items[0].date} ${items[0].winner} vs ${items[0].loser}` : '';
+    let minD='', maxD='';
+    try{
+      if(items.length){
+        const ds = items.map(x=>x.date).filter(Boolean).sort();
+        minD = ds[0] || '';
+        maxD = ds[ds.length-1] || '';
+      }
+    }catch(e){}
+    pageLog.push({p, ok:true, rows:items.length, sample, minD, maxD});
+
+    // 진행 로그 표시(가벼운 텍스트)
+    setLog(`
+      <div style="font-size:11px;color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">가져온 페이지: ${pageLog.length} / ${end-start+1}</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+        ${pageLog.map(x=>`<span style="border:1px solid var(--border);background:var(--surface);padding:3px 8px;border-radius:999px;font-size:11px">
+          p${x.p}: ${x.ok ? (x.rows+'행') : '실패'}${x.minD&&x.maxD?` · ${x.minD}~${x.maxD}`:''}${x.sample ? ` · ${x.sample}`:''}
+        </span>`).join('')}
+      </div>
+    `);
+  }
+
+  const allItems=_histExtDedup(rawItems);
+
+  // 저장
+  const st=_histExtLoad();
+  const next={...st, items:allItems, raw:st.raw||'', mode:'all', today:''};
+  _histExtSave(next);
+
+  try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-raw').textContent=String(rawItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(allItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(allItems.length); }catch(e){}
+  try{ _histExtRenderTable(allItems); }catch(e){}
+
+  // "오늘만"일 때도 전체 수집 결과를 안내(사용자가 1페이지만 가져왔다고 착각 방지)
+  try{
+    const hint=document.getElementById('hist-ext-hint');
+    if(hint){
+      let minAll='', maxAll='';
+      try{
+        const ds = (allItems||[]).map(x=>x.date).filter(Boolean).sort();
+        minAll = ds[0] || '';
+        maxAll = ds[ds.length-1] || '';
+      }catch(e){}
+      hint.textContent = `전체 ${allItems.length}행 표시 중 (기간 ${minAll}~${maxAll})`;
+    }
+  }catch(e){}
+
+  // 결과가 0이면 원인 파악용 안내를 출력 영역에 같이 표시
+  if(!allItems.length){
+    const out=document.getElementById('hist-ext-out');
+    if(out){
+      const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      out.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🕵️</div>
+          <div class="empty-state-title">가져온 데이터가 0행입니다</div>
+          <div class="empty-state-desc">가져온 페이지에 전적 표가 없거나, 테이블 구조가 예상과 다를 수 있습니다.</div>
+        </div>
+        <details style="margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px">
+          <summary style="cursor:pointer;font-weight:900">디버그: 가져온 HTML 일부 보기</summary>
+          <pre style="white-space:pre-wrap;font-size:11px;color:var(--gray-l);margin-top:8px">${esc(lastHtmlPreview)}</pre>
+        </details>
+      `;
+    }
+  }
+  setProg(`완료: ${allItems.length}행 출력`);
+};
+window.histExtClear = function(){
+  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.histExtCopy = async function(){
+  const st=_histExtLoad();
+  const items=st.items||[];
+  const tsv=items.map(x=>[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('\t')).join('\n');
+  try{
+    await navigator.clipboard.writeText(tsv);
+    alert('복사됨');
+  }catch(e){
+    alert('복사 실패: 브라우저 권한 문제일 수 있어요.');
+  }
+};
+function _histExtRenderTable(items){
+  const out=document.getElementById('hist-ext-out');
+  if(!out) return;
+  if(!items.length){
+    out.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📎</div><div class="empty-state-title">출력할 데이터가 없습니다</div><div class="empty-state-desc">표를 붙여넣고 ‘파싱/출력’을 눌러주세요</div></div>`;
+    return;
+  }
+  const sel = window._histExtSel || (window._histExtSel=new Set());
+  const totalPages = Math.max(1, Math.ceil(items.length/_HIST_EXT_PAGE_SIZE));
+  const page = Math.max(1, Math.min(totalPages, window._histExtPage||1));
+  window._histExtPage = page;
+  const start = (page-1)*_HIST_EXT_PAGE_SIZE;
+  const slice = items.slice(start, start+_HIST_EXT_PAGE_SIZE);
+  const allOnPage = slice.length>0 && slice.every(x=>sel.has(_histExtKey(x)));
+
+  const pager = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--gray-l);font-weight:900">
+        ${items.length}경기 · ${page}/${totalPages} 페이지 · (페이지당 ${_HIST_EXT_PAGE_SIZE})
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-w btn-xs" onclick="histExtSelPage(${allOnPage?'false':'true'})">${allOnPage?'현재페이지 선택해제':'현재페이지 전체선택'}</button>
+        <button class="btn btn-w btn-xs" onclick="histExtCopySelected()">선택 복사</button>
+        <button class="btn btn-w btn-xs" onclick="histExtPageTo(${page-1})" ${page<=1?'disabled':''}>◀</button>
+        <button class="btn btn-w btn-xs" onclick="histExtPageTo(${page+1})" ${page>=totalPages?'disabled':''}>▶</button>
+      </div>
+    </div>
+  `;
+
+  out.innerHTML= pager + `
+    <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--surface);color:var(--text3);font-weight:900">
+            <th style="padding:10px;text-align:left;white-space:nowrap;width:34px">
+              <input type="checkbox" ${allOnPage?'checked':''} onchange="histExtSelPage(this.checked)" />
+            </th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">날짜</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">승자</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">패자</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">맵</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">ELO</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">경기방식</th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">메모</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${slice.map(x=>{
+            const k=_histExtKey(x);
+            const on=sel.has(k);
+            const w = x.winner||'';
+            const l = x.loser||'';
+            return `
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:10px;white-space:nowrap">
+                  <input type="checkbox" ${on?'checked':''} onchange="histExtToggleSel('${k.replace(/'/g,"\\'")}')" />
+                </td>
+                <td style="padding:10px;white-space:nowrap;font-weight:900">${x.date}</td>
+                <td style="padding:10px">
+                  <span style="display:inline-flex;align-items:center;gap:6px">
+                    <span style="font-size:11px;font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.28);color:#166534">승</span>
+                    <span style="font-weight:1000">${w}</span>
+                  </span>
+                </td>
+                <td style="padding:10px">
+                  <span style="display:inline-flex;align-items:center;gap:6px">
+                    <span style="font-size:11px;font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.25);color:#7f1d1d">패</span>
+                    <span style="font-weight:900;color:var(--text2)">${l}</span>
+                  </span>
+                </td>
+                <td style="padding:10px;color:var(--gray-l)">${x.map||''}</td>
+                <td style="padding:10px;white-space:nowrap">${x.elo||''}</td>
+                <td style="padding:10px;color:var(--gray-l)">${x.type||''}</td>
+                <td style="padding:10px;color:var(--gray-l)">${x.memo||''}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function histExternalHTML(){
+  // 권한 재확인(수동 변경 대비)
+  try{
+    if(!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      return `<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">관리자 전용</div><div class="empty-state-desc">관리자 로그인 시 이용 가능합니다</div></div>`;
+    }
+  }catch(e){}
+  const st=_histExtLoad();
+  const proxy = _histExtProxyLoad();
+  const pCfg = _histExtProxyCfgLoad();
+  const tSel = _histExtTargetLoad();
+  const today=st.today||(()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const da=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${da}`;})();
+  // 초기 렌더
+  const initItems = (st.items||[]);
+  setTimeout(()=>{ try{ _histExtRenderTable(initItems); }catch(e){} }, 0);
+  return `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:10px 0 8px">
+      <div style="font-weight:1000">📎 외부 자료</div>
+      <div style="font-size:11px;color:var(--gray-l)">프록시로 자동 수집 + 필요 시 TSV/CSV 붙여넣기</div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
+        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)">대기</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <div class="flabel">빠른 URL</div>
+        <input id="hist-ext-quickurl" placeholder="예: https://elo-proxy1.kpoppd.workers.dev/board.php?bo_table=bj_board&page=1&page=2" style="flex:1;min-width:260px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <button class="btn btn-w btn-xs" onclick="histExtApplyQuickUrl()">자동 입력</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 한 번 붙여넣고 ‘자동 입력’ 누르면 아래 프록시/페이지가 채워집니다</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="flabel">프록시</div>
+        <input id="hist-ext-proxy" value="${(proxy||'').replace(/"/g,'&quot;')}" placeholder="예) https://elo-proxy1.kpoppd.workers.dev" style="flex:1;min-width:240px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <div class="flabel">bo_table</div>
+        <input id="hist-ext-bo" value="${(pCfg.bo||'bj_board')}" style="width:120px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <div class="flabel">페이지</div>
+        <input id="hist-ext-pageFrom" type="number" value="${(pCfg.pFrom||1)}" min="1" style="width:78px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <span style="color:var(--gray-l);font-weight:900">~</span>
+        <input id="hist-ext-pageTo" type="number" value="${(pCfg.pTo||6)}" min="1" style="width:78px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+        <button class="btn btn-b" onclick="histExtFetchFromProxy()">URL로 가져오기</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--gray-l)">
+        ※ Cloudflare Worker 프록시가 필요합니다(예: https://elo-proxy1.kpoppd.workers.dev/).
+      </div>
+      <div id="hist-ext-log" style="margin-top:8px"></div>
+
+      <details style="margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px">
+        <summary style="cursor:pointer;font-weight:1000">1) 경기 결과 붙여넣기 (TSV/CSV 자동 인식)</summary>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-w btn-xs" onclick="histExtPasteFromClipboard()">📋 클립보드 붙여넣기</button>
+          <button class="btn btn-w btn-xs" onclick="histExtParseAndRender()">🔎 외부탭으로 인식/추가</button>
+          <button class="btn btn-p btn-xs" onclick="histExtInputToPasteModal()">➡️ 선택한 저장대상으로 자동인식</button>
+          <button class="btn btn-w btn-xs" onclick="histExtClear()">🗑️ 데이터 초기화</button>
+          <span style="font-size:11px;color:var(--gray-l)">형식: 날짜\t승자\t패자\t맵\tELO\t경기방식\t메모</span>
+        </div>
+        <textarea id="hist-ext-raw" style="width:100%;min-height:140px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;margin-top:8px" placeholder="여기에 TSV/CSV를 붙여넣으면 자동으로 인식해서 표에 추가합니다.">${(st.raw||'').replace(/</g,'&lt;')}</textarea>
+      </details>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-weight:900">2) 출력</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-w btn-xs" onclick="histExtCopy()">전체 복사(현재 보기)</button>
+          <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
+            <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
+            <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
+            <option value="gj" ${tSel==='gj'?'selected':''}>끝장전</option>
+            <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
+            <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
+            <option value="tt" ${tSel==='tt'?'selected':''}>티어대회</option>
+            <option value="comp" ${tSel==='comp'?'selected':''}>대회</option>
+          </select>
+          <button class="btn btn-p btn-xs" onclick="histExtSendToPasteModal()">선택 → 자동인식 열기</button>
+        </div>
+      </div>
+      <div id="hist-ext-hint" style="font-size:11px;color:var(--gray-l);margin:-2px 0 8px"></div>
+      <div style="display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:6px;margin-bottom:8px">
+        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900">형식</div>
+          <div style="font-size:13px;font-weight:1000" id="hist-ext-fmt">-</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900">가져온 행(원본)</div>
+          <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-raw">0</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900">중복 제거 후</div>
+          <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt">0</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900">저장됨(누적)</div>
+          <div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-store">${(st.items||[]).length}</div>
+        </div>
+      </div>
+      <div id="hist-ext-out"></div>
+    </div>
+  `;
 }
 
 
@@ -389,7 +1031,7 @@ function histTourneyHTML(context){
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
             ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
               ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
               <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
               ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
@@ -528,48 +1170,10 @@ function statCard(label,w,l,d,col){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
-  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
-  const _dayMs=86400000;
-  const _today0=new Date(); _today0.setHours(0,0,0,0);
-  function _parseYmd(s){
-    if(!s) return null;
-    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
-    // YYYY-MM-DD or YY-MM-DD
-    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
-    if(!m) return null;
-    let y=parseInt(m[1],10); if(y<100) y+=2000;
-    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
-    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
-    dt.setHours(0,0,0,0);
-    return dt;
-  }
-  function _bucketLabel(dt){
-    if(!dt) return '이전';
-    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
-    if(diff===0) return '오늘';
-    if(diff===1) return '어제';
-    if(diff>=2 && diff<=6) return '이번주';
-    return '이전';
-  }
-  const _bucketOrder=['오늘','어제','이번주','이전'];
-
-  function _grpHeader(lbl, w,l,d){
-    const tot=w+l+d;
-    const wr=tot?Math.round(w/tot*100):0;
-    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-weight:900">${lbl}</span>
-      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
-      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
-      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
-      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
-      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
-    </div>`;
-  }
-
   let h='';
   let _filtered=false;
-  // 1) 먼저 유효 경기만 모아서 버킷으로 분류
-  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
+  // 유효 경기만 모아 렌더(그룹 요약 제거 요청)
+  const list=[];
   arr.forEach(m=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
@@ -577,9 +1181,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
-    const dt=_parseYmd(m.d||'');
-    const b=_bucketLabel(dt);
-    grouped[b].push(m);
+    list.push(m);
   });
 
   function _renderItem(m){
@@ -617,45 +1219,40 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
+            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:'';})()}
           </div>
         </div>
       </div>
     </div>`;
   }
 
-  // 2) 버킷 순서대로 렌더 + 버킷별 승/패/무 소계
-  _bucketOrder.forEach(lbl=>{
-    const list=grouped[lbl]||[];
-    if(!list.length) return;
-    let w=0,l=0,d=0;
-    list.forEach(m=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(aWin||bWin) w++; else d++;
-    });
-    // filtered(univ) 컨텍스트에서는 승/패는 "해당 대학 기준"이 더 직관적
-    // - 팀전(CK/pro/tt)은 소속 대학으로 판단
-    try{
-      w=0; l=0; d=0;
-      list.forEach(m=>{
-        const isCK=isCKmode;
-        const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-        if(!aWin && !bWin){ d++; return; }
-        const isA=(!isCK&&m.a===filterUniv)||(isCK&&(m.teamAMembers||[]).some(x=>x.univ===filterUniv));
-        const isB=(!isCK&&m.b===filterUniv)||(isCK&&(m.teamBMembers||[]).some(x=>x.univ===filterUniv));
-        const myWin=(isA&&aWin)||(isB&&bWin);
-        if(myWin) w++; else l++;
-      });
-    }catch(e){}
-    h+=_grpHeader(lbl,w,l,d);
-    list.forEach(_renderItem);
-  });
+  list.forEach(_renderItem);
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // 기록 카드 스타일 설정 (localStorage 기반)
+  function _rcGet(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } }
+  const _rcThemeOn = _rcGet('su_rc_theme_on','1')==='1';
+  const _rcAccent  = (_rcGet('su_rc_accent_mode','none')||'none').trim();
+  const _rcMemoOn  = _rcGet('su_rc_memo_on','0')==='1';
+  const _uiconPx   = Math.max(12, Math.min(28, parseInt(_rcGet('su_rc_uicon','18'),10)||18));
+  function _hexToRgbStr(hex){
+    const h=String(hex||'').replace('#','').trim();
+    if(h.length===3){
+      const r=parseInt(h[0]+h[0],16), g=parseInt(h[1]+h[1],16), b=parseInt(h[2]+h[2],16);
+      if([r,g,b].some(x=>isNaN(x))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+    if(h.length>=6){
+      const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+      if([r,g,b].some(x=>isNaN(x))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+    return '100,116,139';
+  }
   if(!window._recQ)window._recQ={};
   if(!arr.length){
     const emptyBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
@@ -735,42 +1332,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
   }
 
-  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
-  const _dayMs=86400000;
-  const _today0=new Date(); _today0.setHours(0,0,0,0);
-  function _parseYmd(s){
-    if(!s) return null;
-    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
-    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
-    if(!m) return null;
-    let y=parseInt(m[1],10); if(y<100) y+=2000;
-    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
-    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
-    dt.setHours(0,0,0,0);
-    return dt;
-  }
-  function _bucketLabel(dt){
-    if(!dt) return '이전';
-    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
-    if(diff===0) return '오늘';
-    if(diff===1) return '어제';
-    if(diff>=2 && diff<=6) return '이번주';
-    return '이전';
-  }
-  const _bucketOrder=['오늘','어제','이번주','이전'];
-  function _grpHeader(lbl, w,l,d){
-    const tot=w+l+d;
-    const wr=tot?Math.round(w/tot*100):0;
-    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-weight:900">${lbl}</span>
-      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
-      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
-      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
-      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
-      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
-    </div>`;
-  }
-
   // 기존 렌더 블록을 함수로 감싸서 그룹 출력에 재사용
   function _recItemHTML(m,i){
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
@@ -787,8 +1348,15 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
     const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
-    return `<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
+    // 기본(무색)에서는 승리색 테두리도 사용하지 않음
+    const _wBorderCol = (_rcThemeOn && _rcAccent==='border' && (aWin||bWin)) ? (aWin?ca:bWin?cb:'var(--border)') : 'var(--border)';
+    // 승리 색 테마(대학 색) — 켜져있을 때만 적용
+    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '';
+    const _rgb = _hexToRgbStr(_winCol);
+    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ' rc-theme' : '';
+    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};` : '';
+
+    return `<div class="rec-summary${_themeCls}" style="${_themeStyle}border-left:3px solid ${_wBorderCol}">
       <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
@@ -796,6 +1364,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
+          ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드" style="padding:3px 8px;font-size:14px">🎴</button>`:'';})()}
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
           ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
@@ -804,13 +1373,13 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
       <div class="rec-sum-header" style="padding:6px 12px 10px">
         <div class="rec-sum-vs">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
+          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
             <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
             <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
             <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
           </div>
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
+          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
@@ -818,8 +1387,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
-            ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
+            ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}`:''}
           </div>
@@ -828,35 +1396,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     </div>`;
   }
 
-  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
-  paged.forEach(({m,i})=>{
-    const dt=_parseYmd(m.d||'');
-    const b=_bucketLabel(dt);
-    grouped[b].push({m,i});
-  });
-
+  // (요청사항) 기록탭 상단 ‘이전/승패 요약’ 제거 → 그냥 리스트로만 출력
   let h=sortBar+`<div id="rec-list-${mode}">`;
-  _bucketOrder.forEach(lbl=>{
-    const list=grouped[lbl]||[];
-    if(!list.length) return;
-    let w=0,l=0,d=0;
-    list.forEach(({m})=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(!aWin && !bWin){ d++; return; }
-      w++;
-    });
-    // 일반 리스트에서는 승/패는 "A/B" 기준이 아니라 그냥 결과(승부 있음=승)로 잡으면 무의미하므로,
-    // 팀전 기준으로 '승부 있음'을 승으로 두는 대신, 승/패를 균형 있게 표시하도록 A팀 기준으로 계산.
-    w=0; l=0; d=0;
-    list.forEach(({m})=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(!aWin && !bWin){ d++; return; }
-      // A가 이기면 승, 지면 패(표준 표기)
-      if(aWin) w++; else l++;
-    });
-    h+=_grpHeader(lbl,w,l,d);
-    list.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
-  });
+  paged.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
 
   // ── 페이지 컨트롤 ──
   if(totalItems>getHistPageSize()){
@@ -1341,7 +1883,7 @@ function compSummaryListHTML(context){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
             ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
@@ -1927,9 +2469,9 @@ function histProCompGJHTML(){
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-size:11px;background:#0891b2;color:#fff;padding:1px 8px;border-radius:4px;font-weight:700">🎖️ ${sess.tnName||''}</span>
-        <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\'")}'">${sess.a||'?'}</span>
+        <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.a||'')}'))">${sess.a||'?'}</span>
         <span style="font-weight:900;color:var(--blue)">${p1w} - ${p2w}</span>
-        <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\'")}'">${sess.b||'?'}</span>
+        <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.b||'')}'))">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
       </div>
