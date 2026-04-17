@@ -870,7 +870,12 @@ function buildPlayerDetailHTML(p){
   const _year=window._playerModalYear||'';
   const _histDupKey=h=>{
     if(h?.matchId) return `mid:${h.matchId}`;
-    return `${h?.date||''}|${h?.map||'-'}|${[p.name,h?.opp||''].sort().join('|')}|${h?.mode||''}`;
+    const date = (h?.date||'').trim();
+    const map = (h?.map||'-').trim();
+    const opp = (h?.opp||'').trim();
+    const mode = (h?.mode||'').trim();
+    const result = (h?.result||'').trim();
+    return `${date}|${map}|${[p.name,opp].filter(x=>x).sort().join('|')}|${mode}|${result}`;
   };
   // p.history 중복 제거
   const _historySet=new Set();
@@ -1015,6 +1020,31 @@ function buildPlayerDetailHTML(p){
 
   // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
   const _tourMatches=[];
+  // proTourneys 조별리그/끝장전에서 직접 추출 (p.history 미반영분)
+  (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id||_existingMatchIds.has(m._id))return;
+        if(m.a!==p.name&&m.b!==p.name)return;
+        const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
+        if(!wn)return;
+        const ln=wn===m.a?m.b:m.a;
+        const opp=wn===p.name?ln:wn;
+        const oppP=players.find(x=>x.name===opp);
+        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:m._id,mode:'프로리그대회',_readOnly:true});
+      });
+    });
+    (tn.gjMatches||[]).forEach(m=>{
+      if(!m._id||_existingMatchIds.has(m._id))return;
+      if(m.a!==p.name&&m.b!==p.name)return;
+      const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
+      if(!wn)return;
+      const ln=wn===m.a?m.b:m.a;
+      const opp=wn===p.name?ln:wn;
+      const oppP=players.find(x=>x.name===opp);
+      _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:m._id,mode:'프로리그끝장전',_readOnly:true});
+    });
+  });
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{
       (grp.matches||[]).forEach(m=>{
