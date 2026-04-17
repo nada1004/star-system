@@ -1194,6 +1194,8 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="none" ${_rcAccent==='none'?'selected':''}>무색</option>
           <option value="header" ${_rcAccent==='header'?'selected':''}>헤더만 포인트</option>
           <option value="border" ${_rcAccent==='border'?'selected':''}>테두리만 포인트</option>
+          <option value="full" ${_rcAccent==='full'?'selected':''}>전체 배경 포인트</option>
+          <option value="gradient" ${_rcAccent==='gradient'?'selected':''}>그라디언트 헤더</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
       </div>

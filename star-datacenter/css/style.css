@@ -292,6 +292,42 @@ body.dark.rc-theme-on.rc-accent-border .rec-summary.rc-theme{
   border-color: rgba(var(--rc-win-rgb, 148,163,184), .22);
 }
 
+/* 디자인 모드: 전체 배경 포인트 */
+body.rc-theme-on.rc-accent-full .rec-summary.rc-theme{
+  background: rgba(var(--rc-win-rgb, 100,116,139), var(--rc-bg-a));
+  border-color: rgba(var(--rc-win-rgb, 100,116,139), .24);
+  border-left: 4px solid rgba(var(--rc-win-rgb, 100,116,139), .85) !important;
+}
+body.rc-theme-on.rc-accent-full .rec-summary.rc-theme .rec-sum-header{
+  background: rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-hd-a) + .08));
+}
+body.rc-theme-on.rc-accent-full .rec-summary.rc-theme.detail-open{
+  box-shadow:0 2px 14px rgba(var(--rc-win-rgb, 100,116,139), .22)!important;
+}
+
+/* 디자인 모드: 그라디언트 헤더 */
+body.rc-theme-on.rc-accent-gradient .rec-summary.rc-theme{
+  border-color: rgba(var(--rc-win-rgb, 100,116,139), .16);
+}
+body.rc-theme-on.rc-accent-gradient .rec-summary.rc-theme .rec-sum-header{
+  background: linear-gradient(135deg, rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-hd-a) + .06)), rgba(var(--rc-win-rgb, 100,116,139), var(--rc-hd-a)));
+}
+body.rc-theme-on.rc-accent-gradient .rec-summary.rc-theme.detail-open{
+  box-shadow:0 2px 14px rgba(var(--rc-win-rgb, 100,116,139), .20)!important;
+}
+
+body.dark.rc-theme-on.rc-accent-full .rec-summary.rc-theme{
+  background: rgba(var(--rc-win-rgb, 148,163,184), var(--rc-bg-a));
+  border-left: 4px solid rgba(var(--rc-win-rgb, 148,163,184), .85) !important;
+}
+body.dark.rc-theme-on.rc-accent-full .rec-summary.rc-theme .rec-sum-header{
+  background: rgba(var(--rc-win-rgb, 148,163,184), calc(var(--rc-hd-a) + .10));
+}
+
+body.dark.rc-theme-on.rc-accent-gradient .rec-summary.rc-theme .rec-sum-header{
+  background: linear-gradient(135deg, rgba(var(--rc-win-rgb, 148,163,184), calc(var(--rc-hd-a) + .08)), rgba(var(--rc-win-rgb, 148,163,184), var(--rc-hd-a)));
+}
+
 /* 대학 아이콘 크기(기록 카드 내) */
 body.rc-theme-on .rec-summary img.rec-uicon{
   width: var(--rc-uicon) !important;

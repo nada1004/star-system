@@ -1353,8 +1353,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     // 승리 색 테마(대학 색) — 켜져있을 때만 적용
     const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '';
     const _rgb = _hexToRgbStr(_winCol);
-    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ' rc-theme' : '';
-    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};` : '';
+    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ` rc-theme rc-accent-${_rcAccent}` : '';
+    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
 
     return `<div class="rec-summary${_themeCls}" style="${_themeStyle}border-left:3px solid ${_wBorderCol}">
       <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
