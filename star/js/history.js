@@ -1429,6 +1429,61 @@ function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW){
   return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
 }
 
+// ─────────────────────────────────────────────────────────────
+// 스트리머 상세 "최근 경기"에서 종목(배지) 클릭 → 경기 상세 팝업
+// - matchId가 게임ID(_sN_gN)일 수 있어 세션ID로 정규화 후 찾음
+// - 찾은 match를 histDetModal(경기 상세)로 표시
+// ─────────────────────────────────────────────────────────────
+window.openMatchDetailByMatchId = function(matchId, modeLabel){
+  try{
+    const mid = String(matchId||'').trim();
+    if(!mid) return;
+    // 게임ID면 세션ID로 변환
+    const sessId = (mid.includes('_s') && mid.includes('_g')) ? mid.split('_s')[0] : mid;
+    const lbl = String(modeLabel||'').trim();
+
+    // modeLabel 기반으로 우선 탐색 배열을 좁히되, 못 찾으면 전체에서 탐색
+    const pools = [];
+    const pushPool = (arr, modeKey) => { if(arr && Array.isArray(arr)) pools.push({arr, modeKey}); };
+    if(lbl==='미니대전' || lbl==='시빌워') pushPool(typeof miniM!=='undefined'?miniM:[], 'mini');
+    else if(lbl==='대학대전') pushPool(typeof univM!=='undefined'?univM:[], 'univm');
+    else if(lbl==='대학CK') pushPool(typeof ckM!=='undefined'?ckM:[], 'ck');
+    else if(lbl==='프로리그') pushPool(typeof proM!=='undefined'?proM:[], 'pro');
+    else if(lbl==='티어대회' || lbl==='티어대회 토너먼트') pushPool(typeof ttM!=='undefined'?ttM:[], 'tt');
+    else if(lbl==='조별리그' || lbl==='대회' || lbl==='토너먼트' || lbl==='프로리그대회') pushPool(typeof comps!=='undefined'?comps:[], 'comp');
+
+    // fallback 전체
+    pushPool(typeof miniM!=='undefined'?miniM:[], 'mini');
+    pushPool(typeof univM!=='undefined'?univM:[], 'univm');
+    pushPool(typeof ckM!=='undefined'?ckM:[], 'ck');
+    pushPool(typeof proM!=='undefined'?proM:[], 'pro');
+    pushPool(typeof ttM!=='undefined'?ttM:[], 'tt');
+    pushPool(typeof comps!=='undefined'?comps:[], 'comp');
+
+    let found=null, foundMode='comp';
+    for(const p of pools){
+      const m = (p.arr||[]).find(x=>x && x._id===sessId);
+      if(m){ found=m; foundMode=p.modeKey; break; }
+    }
+    if(!found){
+      alert('해당 경기 상세 데이터를 찾을 수 없습니다.');
+      return;
+    }
+    const lA = found.teamALabel || found.a || 'A';
+    const lB = found.teamBLabel || found.b || 'B';
+    const ca = (typeof gc==='function' ? (gc(lA)||'#3b82f6') : '#3b82f6');
+    const cb = (typeof gc==='function' ? (gc(lB)||'#ef4444') : '#ef4444');
+    const aW = (found.sa||0)>(found.sb||0);
+    const bW = (found.sb||0)>(found.sa||0);
+    const key = 'mid:'+sessId;
+    _regDet(key, found, foundMode, lA, lB, ca, cb, aW, bW);
+    openHistDetailModal(key);
+  }catch(e){
+    alert('경기 상세를 여는 중 오류가 발생했습니다.');
+    try{ console.error(e); }catch(_){}
+  }
+};
+
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
   // ind/gj: sets 없이 wName/lName/map 구조
   if(mode==='ind'||mode==='gj'){

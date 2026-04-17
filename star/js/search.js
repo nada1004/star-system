@@ -659,6 +659,71 @@ function parsePasteLine(line) {
 
   if (!line) return null;
 
+  // ── 형식 A-1: 일반 텍스트 VS + (⭕/❌) 마크 ──
+  // 예: "[라데] 면추가 Z (⭕) vs 김말랑 T (❌)"
+  // - ⭕ = 승 / ❌ = 패 (반대도 지원)
+  // - 앞쪽 [맵] 표기 지원, 뒤쪽 [맵] 표기도 지원
+  // - 종족(T/Z/P/N) 표기는 입력에 있어도 applyGameResult에서 처리 가능하지만, 여기서도 일부 정규화
+  if (/\bvs\b/i.test(line) && !line.includes('🆚')) {
+    const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦', '○'];
+    const LOSE_MARKS = ['❌', '✖', '⬜', '🔴', '🟥', '●'];
+    const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
+
+    let map = '-';
+    // 앞쪽 [맵] 추출
+    const headMap = line.match(/^\[([^\]]+)\]\s*/);
+    if (headMap) {
+      map = resolveMapName(headMap[1].trim());
+      line = line.slice(headMap[0].length).trim();
+    }
+
+    // 좌/우 분리
+    const parts = line.split(/\s+vs\s+/i);
+    if (parts.length === 2) {
+      let leftPart = parts[0].trim();
+      let rightPart = parts[1].trim();
+
+      // 우측 끝 [맵] 추출 (맵이 아직 없을 때만)
+      if (map === '-') {
+        const tailMap = rightPart.match(/\[([^\]]+)\]\s*$/);
+        if (tailMap) {
+          map = resolveMapName(tailMap[1].trim());
+          rightPart = rightPart.slice(0, tailMap.index).trim();
+        }
+      }
+
+      // 마크 추출: (⭕) / (❌) 또는 끝에 ⭕/❌
+      const pickMarkEnd = (s) => {
+        for (const mk of ALL_MARKS) {
+          if (s.endsWith('(' + mk + ')')) return {mark: mk, text: s.slice(0, -(mk.length + 2)).trim()};
+          if (s.endsWith(mk)) return {mark: mk, text: s.slice(0, -mk.length).trim()};
+        }
+        // (승)/(패) 텍스트도 지원
+        const m = s.match(/\((승|패)\)\s*$/);
+        if (m) return {mark: m[1] === '승' ? '✅' : '❌', text: s.slice(0, s.lastIndexOf('(' + m[1] + ')')).trim()};
+        return {mark: null, text: s.trim()};
+      };
+      const L = pickMarkEnd(leftPart);
+      const R = pickMarkEnd(rightPart);
+      if (!L.mark || !R.mark) {
+        // 마크가 없으면 이 분기에서는 처리하지 않음 (다른 파서로 넘김)
+      } else {
+        const leftWin = WIN_MARKS.includes(L.mark);
+        const rightWin = WIN_MARKS.includes(R.mark);
+        if (leftWin === rightWin) return null;
+
+        const stripRaceSuffix = (s) => String(s || '').trim().replace(/\s*[TZPN]$/i, '').trim();
+        const leftName = stripRaceSuffix(L.text);
+        const rightName = stripRaceSuffix(R.text);
+
+        const winName = leftWin ? leftName : rightName;
+        const loseName = leftWin ? rightName : leftName;
+
+        if (winName && loseName) return { winName, loseName, map };
+      }
+    }
+  }
+
   // ── 형식 B: 이모지 형식 (🆚) ──
   if (line.includes('🆚')) {
     const vsIdx = line.indexOf('🆚');
