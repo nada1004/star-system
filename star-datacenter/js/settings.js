@@ -430,6 +430,14 @@ function _cfgFemcoSave(obj){
   try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
 }
 
+// (리팩터) 펨코 설정 단일 소스(SSOT): 다른 모듈(board2.js 등)에서 재사용할 수 있도록 노출
+// - 기존 동작은 그대로 유지하며, 중복 defaults/load/save를 제거하기 위한 목적
+try{
+  window._cfgFemcoDefaults = _cfgFemcoDefaults;
+  window._cfgFemcoLoad = _cfgFemcoLoad;
+  window._cfgFemcoSave = _cfgFemcoSave;
+}catch(e){}
+
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
   const next = {...cur};

@@ -502,59 +502,25 @@ function _b2UnivView() {
 */
 function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
-  // 펨코현황 전용 설정(로컬 저장)
+  // 펨코현황 설정(단일 소스)
+  // - settings.js의 _cfgFemcoDefaults/_cfgFemcoLoad/_cfgFemcoSave를 사용
+  // - board2.js 내부 중복 defaults/load/save 제거(불일치 버그 방지)
   // ─────────────────────────────────────────────────────────────
-  const FEMCO_STORE_KEY = 'b2_femco_settings_v1';
-  const femcoDefaultSettings = () => ({
-    autoLayout: 1,            // 1: 인원수/화면폭에 맞춰 자동 레이아웃, 0: 수동 설정값 사용
-    logoSize: 150,            // 대학 로고(px)
-    logoPos: 'top',           // top | bottom | left | right | center
-    logoAttachTitle: 1,       // 1: 로고+대학명 같이 이동, 0: 로고만 이동
-    headGap: 10,              // 로고-대학명(세로) 간격
-    titleSize: 28,            // 대학명 폰트(px)
-    titleFont: 'system',      // system | noto | pretendard
-    playerImgSize: 46,        // 스트리머 이미지(px)
-    playerImgShape: 'square', // square | circle
-    rowsPerCol: 5,            // 한 컬럼(세로) 당 표시 인원(=줄 수)
-    colWidth: 170,            // 컬럼(좌우) 너비(px)
-    colGap: 10,               // (legacy) 간격(px) - UI에서는 '상하 간격'으로 사용
-    univGap: 18,              // 대학 섹션 간격(px)
-    countFontSize: 12,        // 인원수 폰트(px)
-    contentPadX: 16,          // 좌우 여백(px)
-    contentAlign: 'left',     // left | center (기본 좌측)
-    contentOffsetX: 0,        // 좌우 미세 이동(-40~40)
-    univSubtitles: {},        // { [univName]: "대학명 아래 문구" }
-    subtitleSize: 12,         // 서브문구 폰트(px)
-    subtitleWeight: 800,      // 서브문구 굵기
-    subtitleColor: '',        // ''이면 자동(대학 글자색), 아니면 CSS 색
-    // 스트리머 표시 스타일
-    nameFontSize: 12,
-    roleFontSize: 10,
-    tierBadgeSize: 10,
-    tierBadgePadX: 6,
-    starSize: 15,            // ⭐ 크기(px)
-    statusIconSize: 18,      // 상태 아이콘 크기(px)
-    univColorOverrides: {},   // { [univName]: "#RRGGBB" }
-    univBgMedia: {},          // { [univName]: "https://...jpg/gif/mp4/yt/twitch" }
+  const femcoFallback = () => ({
+    autoLayout: 1, logoSize: 150, logoPos: 'top', logoAttachTitle: 1, headGap: 10,
+    titleSize: 28, titleFont: 'system',
+    playerImgSize: 46, playerImgShape: 'square',
+    rowsPerCol: 5, colWidth: 170, colGap: 10, univGap: 18,
+    countFontSize: 12, contentPadX: 16, contentAlign: 'left', contentOffsetX: 0,
+    univSubtitles: {}, subtitleSize: 12, subtitleWeight: 800, subtitleColor: '',
+    nameFontSize: 12, roleFontSize: 10, tierBadgeSize: 10, tierBadgePadX: 6,
+    starSize: 15, statusIconSize: 18,
+    univColorOverrides: {}, univBgMedia: {}
   });
-  function femcoLoad(){
-    try{
-      const raw = localStorage.getItem(FEMCO_STORE_KEY);
-      if (!raw) return femcoDefaultSettings();
-      const obj = JSON.parse(raw) || {};
-      return {
-        ...femcoDefaultSettings(),
-        ...obj,
-        univColorOverrides: { ...(femcoDefaultSettings().univColorOverrides||{}), ...(obj.univColorOverrides||{}) },
-        univBgMedia: { ...(femcoDefaultSettings().univBgMedia||{}), ...(obj.univBgMedia||{}) },
-      };
-    }catch(e){ return femcoDefaultSettings(); }
-  }
-  function femcoSave(next){
-    try{ localStorage.setItem(FEMCO_STORE_KEY, JSON.stringify(next)); }catch(e){}
-  }
-  let femcoSettings = femcoLoad();
-  // 펨코현황 관련 설정 UI는 "설정 탭 > 현황판 관리 > 펨코현황"에서만 제공합니다.
+  let femcoSettings = (typeof window._cfgFemcoLoad === 'function')
+    ? window._cfgFemcoLoad()
+    : (function(){ try{ return JSON.parse(localStorage.getItem('b2_femco_settings_v1')||'null') || femcoFallback(); }catch(e){ return femcoFallback(); } })();
+  // 펨코현황 관련 설정 UI는 "설정 탭 > 이미지 관리 > 펨코현황"에서만 제공합니다.
 
   // 배경 미디어 열기(영상은 모달, 유튜브/트위치는 새창)
   if (typeof window._b2FemcoOpenBgMedia !== 'function') {
