@@ -35,9 +35,11 @@
   --tc-line-w: 2px;        /* 브라켓 연결선 두께 */
   --tc-line-a: .70;        /* 브라켓 연결선 진하기 */
   --tc-line-rgb: 147,197,253; /* 기본 연결선 색 */
+  /* 전역 폰트(설정에서 변경) */
+  --app-font: 'Noto Sans KR', sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
+body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
 /* (요청사항) 전체 탭 자동 맞춤 ON */
 body.af-on{padding:var(--af-body-pad);}
 body.af-on .main{padding:var(--af-main-pad);}
@@ -50,8 +52,11 @@ body.af-on .ocard{padding:calc(var(--af-card-pad) - 4px) calc(var(--af-card-pad)
 body.af-on .match-builder{padding:calc(var(--af-main-pad) - 2px);}
 body.af-on th{padding:var(--af-tdy) var(--af-tdx);}
 body.af-on td{padding:var(--af-tdy) var(--af-tdx);}
-button{font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
-input,select,textarea{font-family:'Noto Sans KR',sans-serif;font-weight:400;}
+button{font-family:var(--app-font);cursor:pointer;}
+input,select,textarea{font-family:var(--app-font);font-weight:400;}
+/* 전역 폰트 강제(기존 CSS에 폰트가 하드코딩된 곳이 많아서) */
+body *{font-family:var(--app-font) !important;}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace !important;}
 b,strong{font-weight:600;}
 .app{max-width:1480px;margin:auto;background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh2);overflow:hidden;}
 .hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#1e40af 100%);padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
