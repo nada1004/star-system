@@ -879,6 +879,8 @@ function _b2FemcoView() {
     const _pos = femcoSettings.logoPos || 'top';
     const _posNorm = (['left','right','top','bottom','center'].includes(_pos) ? _pos : 'top');
     const _attach = (femcoSettings.logoAttachTitle ?? 1) ? true : false;
+    const _tpos = femcoSettings.titlePos || 'bottom';
+    const _tposNorm = (['left','right','top','bottom'].includes(_tpos) ? _tpos : 'bottom');
     const starsHtml = (uCfg.championships || 0) > 0
       ? `<span class="b2-femco-stars">${'<span>⭐</span>'.repeat(uCfg.championships)}</span>`
       : '';
@@ -916,17 +918,21 @@ function _b2FemcoView() {
         `;
       }
       // 로고 + 대학명이 같이 이동
-      if (_posNorm === 'left') {
-        return `<div class="b2-femco-headrow"><div class="b2-femco-logo" style="transform:translate(${LOGO_OFF_X}px,${LOGO_OFF_Y}px)">${logoHtml}</div>${titleBlock}</div>`;
+      const _alignStyle = (_posNorm === 'left')
+        ? 'justify-content:flex-start'
+        : (_posNorm === 'right') ? 'justify-content:flex-end' : 'justify-content:center';
+      const _logoEl = `<div class="b2-femco-logo" style="transform:translate(${LOGO_OFF_X}px,${LOGO_OFF_Y}px)">${logoHtml}</div>`;
+      if (_tposNorm === 'left') {
+        return `<div class="b2-femco-headrow" style="${_alignStyle}">${titleBlock}${_logoEl}</div>`;
       }
-      if (_posNorm === 'right') {
-        return `<div class="b2-femco-headrow">${titleBlock}<div class="b2-femco-logo" style="transform:translate(${LOGO_OFF_X}px,${LOGO_OFF_Y}px)">${logoHtml}</div></div>`;
+      if (_tposNorm === 'right') {
+        return `<div class="b2-femco-headrow" style="${_alignStyle}">${_logoEl}${titleBlock}</div>`;
       }
-      if (_posNorm === 'bottom') {
-        return `<div class="b2-femco-headcol">${titleBlock}<div class="b2-femco-logo" style="transform:translate(${LOGO_OFF_X}px,${LOGO_OFF_Y}px)">${logoHtml}</div></div>`;
+      if (_tposNorm === 'top') {
+        return `<div class="b2-femco-headcol" style="${_alignStyle}">${titleBlock}${_logoEl}</div>`;
       }
-      // top / center
-      return `<div class="b2-femco-headcol"><div class="b2-femco-logo" style="transform:translate(${LOGO_OFF_X}px,${LOGO_OFF_Y}px)">${logoHtml}</div>${titleBlock}</div>`;
+      // bottom (default)
+      return `<div class="b2-femco-headcol" style="${_alignStyle}">${_logoEl}${titleBlock}</div>`;
     })();
 
     // 자동 레이아웃(인원수/화면폭)에 따라 대학별로 rows/colWidth를 다르게 적용

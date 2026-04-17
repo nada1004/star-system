@@ -720,8 +720,11 @@ function rebuildAllPlayerHistory() {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
-        const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
+        // (요청/수정) 시빌워(내전)는 팀 라벨(A/B)과 무관하게 "선수 실제 소속 대학"을 기록
+        // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
+        const isCivil = (m.type === 'civil') || (m.a === 'A팀' && m.b === 'B팀');
+        const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
+        const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
         count++;

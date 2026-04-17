@@ -398,12 +398,15 @@ function saveMatch(mode){
 
     // 각 게임에 _id 부여 (rebuildAllPlayerHistory와 ID 일치를 위해, setsSnap spread에 포함됨)
     freeGames.forEach((g,gi)=>{g._id=`${matchId}_s0_g${gi}`;});
+    const _isCivil = (mode==='mini' && (typeof miniType!=='undefined') && miniType==='civil');
     freeGames.forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
-      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
+      // (요청/수정) 시빌워(내전)는 팀 라벨(A/B)과 무관하게 "선수 실제 소속 대학"을 기록해야 함
+      // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
+      const univW=_isCivil?'':(g.winner==='A'?(bld.teamA||''):(bld.teamB||''));
+      const univL=_isCivil?'':(g.winner==='A'?(bld.teamB||''):(bld.teamA||''));
       applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
     });
 
@@ -492,13 +495,14 @@ function saveMatch(mode){
     return;
   }
   // pro 모드도 선수 개인 history에 반영 (여자 선수 포함 혼성 지원)
+  const _isCivil2 = (mode==='mini' && (typeof miniType!=='undefined') && miniType==='civil');
   bld.sets.forEach((set, setIdx)=>{
     set.games.forEach((g, gameIdx)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const wName=g.winner==='A'?g.playerA:g.playerB;
       const lName=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(bld.teamA||''):(bld.teamB||'');
-      const univL=g.winner==='A'?(bld.teamB||''):(bld.teamA||'');
+      const univW=_isCivil2?'':(g.winner==='A'?(bld.teamA||''):(bld.teamB||''));
+      const univL=_isCivil2?'':(g.winner==='A'?(bld.teamB||''):(bld.teamA||''));
       applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
     });
   });

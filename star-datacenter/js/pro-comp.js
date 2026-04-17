@@ -3471,7 +3471,6 @@ function pcgjAddGame() {
   _pcgjRender();
 }
 function openPcGJPasteModal(tnId) {
-  if (!_pcgjA || !_pcgjB) return alert('A, B 선수를 먼저 선택하세요.');
   const tn = _findTourneyById(tnId); if (!tn) return;
   window._grpPasteState = {tnId, mode: 'pcgj'};
   window._grpPasteMode = true;
@@ -3493,7 +3492,12 @@ function openPcGJPasteModal(tnId) {
   const modeLabel = document.getElementById('paste-mode-label');
   if (modeLabel) modeLabel.style.display = 'none';
   const hintEl = document.getElementById('paste-mode-hint');
-  if (hintEl) hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📢 끝장전 결과 입력</span> — <b>${_pcgjA}</b> vs <b>${_pcgjB}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${_pcgjA} ${_pcgjB} [맵]</code> / <code>${_pcgjB} ${_pcgjA} [맵]</code> — 여러 줄 입력 가능</span></div>`;
+  if (hintEl) {
+    const _a = _pcgjA, _b = _pcgjB;
+    hintEl.innerHTML = _a && _b
+      ? `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📢 끝장전 결과 입력</span> — <b>${_a}</b> vs <b>${_b}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${_a} ${_b} [맵]</code> / <code>${_b} ${_a} [맵]</code> — 여러 줄 입력 가능</span></div>`
+      : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#16a34a;font-weight:700">🤖 자동인식</span> — 선수 선택 없이 입력하면, 붙여넣기 내용에서 <b>두 선수(A/B)</b>를 자동으로 확정합니다.<br><span style="font-size:11px;color:#6b7280">형식: <code>승자이름 패자이름 [맵]</code> — 여러 줄 입력 가능 (두 선수만 등장해야 저장 가능)</span></div>`;
+  }
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) compWrap.style.display = 'none';
   const _pd = document.querySelector('#pasteModal details');
@@ -3504,8 +3508,23 @@ function openPcGJPasteModal(tnId) {
 }
 
 function _pcGJPasteApplyLogic(savable, tn) {
-  const a = _pcgjA, b = _pcgjB;
-  if (!a || !b) { alert('선수를 먼저 선택하세요.'); return false; }
+  // (요청) 선수 선택 없이도 자동인식 결과로 A/B를 확정해서 저장
+  let a = _pcgjA, b = _pcgjB;
+  if (!a || !b) {
+    const uniq = [];
+    const seen = new Set();
+    for (const r of savable) {
+      if (!r.wPlayer || !r.lPlayer) continue;
+      const w = r.wPlayer.name, l = r.lPlayer.name;
+      [w, l].forEach(n => { if(n && !seen.has(n)){ seen.add(n); uniq.push(n); } });
+    }
+    if (uniq.length !== 2) {
+      alert(`끝장전 자동인식은 "두 선수(A/B)만" 등장해야 저장 가능합니다.\n현재 인식된 선수: ${uniq.join(', ') || '없음'}`);
+      return false;
+    }
+    a = uniq[0];
+    b = uniq[1];
+  }
   const games = [];
   for (const r of savable) {
     if (!r.wPlayer || !r.lPlayer) continue;
@@ -3526,7 +3545,8 @@ function _pcGJPasteApplyLogic(savable, tn) {
   games.forEach(g => {
     if (!g.winner) return;
     const win = g.winner, loss = g.winner===a ? b : a;
-    applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회');
+    // (정확한 모드 라벨) 프로리그 대회 끝장전
+    applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
   });
   _pcgjGames = []; _pcgjA = ''; _pcgjB = '';
   save();
@@ -3562,7 +3582,7 @@ function proCompGJSave(tnId) {
   sess.games.forEach(g => {
     if (!g.winner) return;
     const win = g.winner, loss = g.winner===a?b:a;
-    applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회');
+    applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
   });
   _pcgjGames=[]; _pcgjA=''; _pcgjB='';
   save(); render();

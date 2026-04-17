@@ -37,11 +37,12 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '게임 운영':['notice','tier','season','teammatch','acct'],
   '콘텐츠 관리':['univ','maps','mAlias','si'],
-  // (요청사항) 설정탭 카테고리명 변경: "현황판 관리" → "이미지 관리"
-  '이미지 관리':['b2layout','b2femco','imgsettings','imgmodalsettings'],
+  // (요청사항) 현황판 관리 메뉴 분리
+  '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
+  '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','boardchip','oldbright','boardbg'],
-  '🧪 고급/실험실':['cfgmenu','autofitall','pd','fab','storage'],
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui'],
+  '🧪 고급/실험실':['cfgmenu','autofitall','pd','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
@@ -210,6 +211,39 @@ window.cfgSetTourneyCardSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 토너먼트 대진표/브라켓 디자인 프리셋
+// - 기존 슬라이더(선두께/진하기/테두리/로고크기 등)에 값을 "한 번에" 채워줌
+// - 실제 저장/적용은 cfgSetTourneyCardSettings()가 수행
+// ─────────────────────────────────────────────────────────────
+window.cfgApplyBracketPreset = function(preset){
+  const p = (preset || '').trim();
+  const presets = {
+    '기본':      {on:true, accent:'none',  hd:12, bw:4, ic:34, lw:2, la:70},
+    '월드컵':    {on:true, accent:'header',hd:18, bw:5, ic:42, lw:3, la:85},
+    '프로리그':  {on:true, accent:'border',hd:10, bw:6, ic:38, lw:2, la:78},
+    '컴팩트':    {on:true, accent:'none',  hd:8,  bw:3, ic:30, lw:1, la:65},
+  };
+  const v = presets[p] || presets['기본'];
+  const set = (id, val) => { const el=document.getElementById(id); if(el){ el.value = String(val); el.dispatchEvent(new Event('input')); } };
+  try{
+    const chk=document.getElementById('cfg-tc-theme-on'); if(chk) chk.checked = !!v.on;
+    const sel=document.getElementById('cfg-tc-accent'); if(sel) sel.value = v.accent;
+    set('cfg-tc-hd', v.hd); set('cfg-tc-bw', v.bw); set('cfg-tc-uicon', v.ic); set('cfg-tc-line-w', v.lw); set('cfg-tc-line-a', v.la);
+    // 숫자 박스 동기화(있는 경우)
+    const syncNum = (rangeId, numSpanId, suf='') => {
+      const r=document.getElementById(rangeId); const s=document.getElementById(numSpanId);
+      if(r && s) s.textContent = r.value + suf;
+    };
+    syncNum('cfg-tc-hd','cfg-tc-hd-v','%');
+    syncNum('cfg-tc-bw','cfg-tc-bw-v','px');
+    syncNum('cfg-tc-uicon','cfg-tc-ic-v','px');
+    syncNum('cfg-tc-line-w','cfg-tc-lw-v','px');
+    syncNum('cfg-tc-line-a','cfg-tc-la-v','%');
+  }catch(e){}
+  try{ window.cfgSetTourneyCardSettings && window.cfgSetTourneyCardSettings(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 캘린더 요약칩/공유 버튼 구성
 // ─────────────────────────────────────────────────────────────
 window.cfgSetCalendarUiSettings = function(){
@@ -233,6 +267,32 @@ window.cfgSetAppFontSettings = function(){
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
+
+// ─────────────────────────────────────────────────────────────
+// (점검) 설정탭 핸들러 누락 체크(“눌러도 안 되는 버튼” 빠르게 찾기)
+// - settings 화면에 렌더된 data-cfg-sec 영역에서 onclick/onchange/oninput 을 스캔
+// ─────────────────────────────────────────────────────────────
+window.cfgRunSettingsSelfCheck = function(){
+  const out = document.getElementById('cfg-selfcheck-out');
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">검사 중...</div>';
+  try{
+    const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
+    const html = secs.map(el=>el.outerHTML).join('\n');
+    const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+    const called = new Set();
+    let m;
+    while((m=re.exec(html))) called.add(m[1]);
+    const missing = Array.from(called).filter(fn => typeof window[fn] !== 'function').sort();
+    if(out){
+      out.innerHTML = missing.length
+        ? `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:6px">⚠️ 누락된 함수 ${missing.length}개</div>
+           <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5">${missing.join('\\n')}</div>`
+        : `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ settings.js 기준 핸들러 누락 없음</div>`;
+    }
+  }catch(e){
+    if(out) out.innerHTML = `<div style="font-size:12px;color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
+  }
+};
 function _cfgMenuSave(v){
   try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
 }
@@ -240,8 +300,6 @@ function _cfgMenuNormalize(layout){
   const all = _cfgAllSecs.slice();
   const defCats = Object.keys(_DEFAULT_CATSECS);
   let catOrder = Array.isArray(layout?.catOrder) ? layout.catOrder.filter(c=>typeof c==='string' && c.trim()) : defCats.slice();
-  // 구버전 호환: "현황판 관리" → "이미지 관리"
-  catOrder = catOrder.map(c => c === '현황판 관리' ? '이미지 관리' : c);
   // 구버전 호환: "시스템 설정" → 신규 2카테고리(스타일/테마, 고급/실험실)
   catOrder = catOrder.filter(c => c !== '시스템 설정');
   // 기본 카테고리 누락 시 추가
@@ -250,18 +308,30 @@ function _cfgMenuNormalize(layout){
   const catSecs = {};
   const legacyCatSecs = layout?.catSecs && typeof layout.catSecs === 'object' ? layout.catSecs : {};
   const aliasCatSecs = {...legacyCatSecs};
-  if (legacyCatSecs['현황판 관리'] && !legacyCatSecs['이미지 관리']) {
-    aliasCatSecs['이미지 관리'] = legacyCatSecs['현황판 관리'];
-  }
+  // 구버전 호환(이전 버전에서 현황판/이미지가 하나의 카테고리로 합쳐져 있던 경우) 자동 분리
+  try{
+    const legacyImg = Array.isArray(legacyCatSecs['이미지 관리']) ? legacyCatSecs['이미지 관리'] : [];
+    const hasBoardCat = Array.isArray(legacyCatSecs['현황판 관리']);
+    if(legacyImg.length && !hasBoardCat){
+      const boardSet = new Set(['b2layout','b2femco','boardchip','oldbright','boardbg']);
+      const imgSet = new Set(['imgsettings','imgmodalsettings']);
+      const board = legacyImg.filter(s=>boardSet.has(s));
+      const imgs  = legacyImg.filter(s=>imgSet.has(s));
+      if(board.length) aliasCatSecs['현황판 관리'] = board;
+      aliasCatSecs['이미지 관리'] = imgs.length ? imgs : legacyImg.filter(s=>imgSet.has(s));
+    }
+  }catch(e){}
 
   // 시스템 설정 섹션이 기존 레이아웃에 있으면, 섹션별로 신규 카테고리에 자동 분배
   try{
     const legacySys = Array.isArray(legacyCatSecs['시스템 설정']) ? legacyCatSecs['시스템 설정'] : [];
     if(legacySys.length){
       const secToCat = {
-        appfont:'🎨 스타일/테마', reccard:'🎨 스타일/테마', tourneycard:'🎨 스타일/테마', calui:'🎨 스타일/테마', boardchip:'🎨 스타일/테마', oldbright:'🎨 스타일/테마', boardbg:'🎨 스타일/테마',
+        appfont:'🎨 스타일/테마', reccard:'🎨 스타일/테마', tourneycard:'🎨 스타일/테마', calui:'🎨 스타일/테마',
+        boardchip:'현황판 관리', oldbright:'현황판 관리', boardbg:'현황판 관리',
         cfgmenu:'🧪 고급/실험실', autofitall:'🧪 고급/실험실', pd:'🧪 고급/실험실', fab:'🧪 고급/실험실', storage:'🧪 고급/실험실',
         imgsettings:'이미지 관리', imgmodalsettings:'이미지 관리',
+        b2layout:'현황판 관리', b2femco:'현황판 관리',
       };
       legacySys.forEach(sec=>{
         const t = secToCat[sec] || (Object.keys(_DEFAULT_CATSECS).find(c => (_DEFAULT_CATSECS[c]||[]).includes(sec)) || defCats[0]);
@@ -418,7 +488,9 @@ function _cfgFemcoDefaults(){
     logoOffsetX: 0,
     logoOffsetY: 0,
     titleOffsetX: 0,
-    titleOffsetY: 0
+    titleOffsetY: 0,
+    // (요청) 대학명 위치(로고 기준) — left/right/top/bottom
+    titlePos: 'bottom'
   };
 }
 function _cfgFemcoLoad(){
@@ -452,7 +524,7 @@ window.cfgFemcoUpd = function(k, v){
   next[k] = numKeys.includes(k) ? parseInt(v, 10) : v;
 
   // 수동 조절을 건드리면 자동 레이아웃 OFF (원클릭 자동화 요구사항: 사용자가 바꾸면 유지)
-  const manualKeys = ['rowsPerCol','colWidth','colGap','univGap','playerImgSize','contentPadX','contentOffsetX','nameFontSize','roleFontSize','countFontSize','headGap','logoSize','statusIconSize','starSize','bgOverlay','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY'];
+  const manualKeys = ['rowsPerCol','colWidth','colGap','univGap','playerImgSize','contentPadX','contentOffsetX','nameFontSize','roleFontSize','countFontSize','headGap','logoSize','statusIconSize','starSize','bgOverlay','logoOffsetX','logoOffsetY','titleOffsetX','titleOffsetY','logoPos','titlePos','logoAttachTitle'];
   if (k !== 'autoLayout' && manualKeys.includes(k)) {
     next.autoLayout = 0;
   }
@@ -467,6 +539,7 @@ window.cfgFemcoInit = function(){
   try{ const chk=document.getElementById('cfg-femco-autoLayout'); if(chk) chk.checked = (s.autoLayout ?? 1) ? true : false; }catch(e){}
   setVal('cfg-femco-logoSize', s.logoSize); setVal('cfg-femco-logoSizeNum', s.logoSize);
   setVal('cfg-femco-logoPos', s.logoPos);
+  setVal('cfg-femco-titlePos', s.titlePos || 'bottom');
   try{ const chk=document.getElementById('cfg-femco-logoAttachTitle'); if(chk) chk.checked = (s.logoAttachTitle ?? 1) ? true : false; }catch(e){}
   setVal('cfg-femco-headGap', s.headGap || 10); setVal('cfg-femco-headGapNum', s.headGap || 10);
   setVal('cfg-femco-titleSize', s.titleSize); setVal('cfg-femco-titleSizeNum', s.titleSize);
@@ -827,18 +900,20 @@ function rCfg(C,T){
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
-  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','이미지 관리':'🖼️','시스템 설정':'⚙️','데이터 관리':'💾','기타':'🗂️'};
+  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','현황판 관리':'🧩','이미지 관리':'🖼️','🎨 스타일/테마':'🎨','🧪 고급/실험실':'🧪','데이터 관리':'💾','기타':'🗂️'};
   const _cfgCatDesc={
     '게임 운영':'공지/티어/시즌/경기 운영',
     '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
-    '이미지 관리':'현황판/이미지(펨코현황 포함) 설정',
-    '시스템 설정':'UI/현황판/모달/저장소',
+    '현황판 관리':'현황판/펨코현황/칩/밝기/배경',
+    '이미지 관리':'이미지별/이미지 모달/리소스',
+    '🎨 스타일/테마':'폰트/카드/캘린더/브라켓 디자인',
+    '🧪 고급/실험실':'메뉴정리/자동맞춤/저장소/점검',
     '데이터 관리':'동기화/백업/일괄 작업'
   };
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
@@ -1088,6 +1163,11 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
   </details>
+  ${_scfgD('selfcheck','🧪 설정 기능 점검')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">설정 화면에서 버튼/토글이 “눌러도 안되는” 경우, 핸들러(함수) 누락이 원인일 수 있습니다.</div>
+    <button class="btn btn-b btn-sm" onclick="cfgRunSettingsSelfCheck()">🔎 설정 핸들러 점검</button>
+    <div id="cfg-selfcheck-out" style="margin-top:10px"></div>
+  </details>
   ${_scfgD('autofitall','📱 전역 자동 맞춤 (모든 탭)')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 <b>간격·패딩·카드/그리드 밀도·테이블</b>을 화면에 맞춰 자동 조절합니다. (전 탭 공통)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
@@ -1158,6 +1238,7 @@ ${_scfgD('notice','📢 공지 관리')}
     const _tcIc = parseInt(localStorage.getItem('su_tc_uicon') ?? '34',10) || 34;
     const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
     const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
+    const _tcPreset = (localStorage.getItem('su_tc_preset') ?? '기본');
     return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -1165,6 +1246,16 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${_tcOn?'checked':''} onchange="cfgSetTourneyCardSettings()">
         대회 카드 디자인 모드 사용
       </label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">토너먼트/대진표 프리셋</div>
+        <select id="cfg-tc-preset" onchange="localStorage.setItem('su_tc_preset',this.value);cfgApplyBracketPreset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="기본" ${_tcPreset==='기본'?'selected':''}>기본</option>
+          <option value="월드컵" ${_tcPreset==='월드컵'?'selected':''}>월드컵</option>
+          <option value="프로리그" ${_tcPreset==='프로리그'?'selected':''}>프로리그</option>
+          <option value="컴팩트" ${_tcPreset==='컴팩트'?'selected':''}>컴팩트</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ 아래 슬라이더 값도 같이 변경됩니다</span>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
         <select id="cfg-tc-accent" onchange="cfgSetTourneyCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
@@ -1590,6 +1681,17 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="bottom">하단</option>
           <option value="center">가운데</option>
         </select>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학명 위치(로고 기준)</div>
+        <select id="cfg-femco-titlePos" onchange="cfgFemcoUpd('titlePos',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="right">로고 우측</option>
+          <option value="left">로고 좌측</option>
+          <option value="bottom">로고 아래</option>
+          <option value="top">로고 위</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ ‘로고를 대학명과 같이 이동’ 켠 상태에서 적용</span>
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">

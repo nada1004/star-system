@@ -8,8 +8,30 @@ function _scGet(sub){
 }
 function _scSet(sub,html){ _sCache[sub]=html; return html; }
 
+// ─────────────────────────────────────────────────────────────
+// (안전) HTML escape 헬퍼
+// - 일부 화면(스타시스템/랭킹)에서 escHTML 사용
+// - 기존 전역 escHTML이 없을 때 ReferenceError 방지
+// ─────────────────────────────────────────────────────────────
+if (typeof window.escHTML !== 'function') {
+  window.escHTML = function(s){
+    return String(s ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  };
+}
+// ⚠️ top-level function escHTML()는 window에 바인딩되어 무한재귀가 날 수 있으므로 const로만 참조
+const escHTML = (s) => window.escHTML(s);
+
 /* ─── 전역 필터 상태 ─── */
 let _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
+// 🚀 티어 랭킹(선수) 상태
+let _statsRankTier = (function(){
+  try{ return (localStorage.getItem('su_statsRankTier') || '4티어').trim() || '4티어'; }catch(e){ return '4티어'; }
+})();
 
 function rStats(C,T){
   T.textContent='📊 통계';
@@ -22,6 +44,8 @@ function rStats(C,T){
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
       {id:'overview',lbl:'🏛️ 종합'},
+      {id:'tierRank',lbl:'🚀 티어 랭킹'},
+      {id:'starsystem',lbl:'⭐ 스타시스템'},
       {id:'elo',lbl:'📈 ELO 그래프'},
       {id:'growth',lbl:'📊 성장 곡선'},
       {id:'award',lbl:'🏆 이달의 스트리머'},
@@ -125,6 +149,14 @@ function rStats(C,T){
   const _CACHEABLE=['overview','records','killer','clutch','streakhist','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
   function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
   if(window.statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
+  else if(window.statsSub==='tierRank')h+=statsTierRankHTML();   // 티어 선택/상세 열림 상태 있음
+  else if(window.statsSub==='starsystem'){
+    try{ h+=statsStarSystemHTML(); }
+    catch(e){
+      h+=`<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">스타시스템 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;color:var(--gray-l)">${String(e)}</div></div>`;
+      try{ console.error(e); }catch(_){}
+    }
+  }
   else if(window.statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
   else if(window.statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
   else if(window.statsSub==='award')  h+=_cached('award', statsAwardHTML);
@@ -199,6 +231,502 @@ function statsPMap(){
   return _sPMap || new Map();
 }
 function statsP(name){ return statsPMap().get(name) || null; }
+
+/* ══════════════════════════════════════
+   🚀 티어 랭킹(선수) — 첨부 TXT 레이아웃 참고
+   - 동일 티어 상대전만 집계
+   - "일반(스폰)" + "중요경기" + "실전보너스" 형태로 분해 표시
+══════════════════════════════════════ */
+function _srSafeId(s){
+  try{ return encodeURIComponent(String(s||'')).replace(/%/g,'_'); }catch(e){ return String(s||'').replace(/[^a-z0-9_\\-]/gi,'_'); }
+}
+function _srDaysAgo(dateStr){
+  const d=(dateStr||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 9999;
+  const t = new Date(d+'T00:00:00').getTime();
+  if(!t) return 9999;
+  const now = Date.now();
+  return Math.max(0, Math.floor((now - t) / 86400000));
+}
+function _srTimeW(dateStr){
+  // TXT 로그의 ×0.97 ~ ×0.72 느낌에 맞춘 선형 가중치(최근우대)
+  const days=_srDaysAgo(dateStr);
+  const w = 1 - (days * 0.0035);
+  return Math.max(0.70, Math.min(1.00, +w.toFixed(2)));
+}
+function _srIsImportant(mode){
+  const m=(mode||'');
+  // 대회/티어대회/조별리그/프로리그/끝장전/CK 등을 중요경기로 취급(초기 버전)
+  return /(대회|티어대회|조별리그|프로리그|끝장전|CK)/.test(m);
+}
+window.statsSetRankTier = function(t){
+  _statsRankTier = (t||'').trim() || '4티어';
+  try{ localStorage.setItem('su_statsRankTier', _statsRankTier); }catch(e){}
+  render();
+};
+window.statsRankToggle = function(safeId){
+  const row=document.getElementById('sr-det-'+safeId);
+  if(!row) return;
+  row.classList.toggle('open');
+  const btn=document.getElementById('sr-btn-'+safeId);
+  if(btn) btn.textContent = row.classList.contains('open') ? '🔼 상세닫기' : '🔽 상세보기';
+};
+
+function statsTierRankHTML(){
+  const tier = _statsRankTier;
+  const tierBtns = (TIERS||[]).filter(t=>t && t!=='미정');
+
+  // 선수 리스트(티어)
+  const tierPlayers = (players||[]).filter(p=>(p.tier||'미정')===tier);
+  if(!tierPlayers.length){
+    return `<div class="ssec"><h3 style="margin:0 0 10px">🚀 티어 랭킹</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${tierBtns.map(t=>`<button class="pill ${t===tier?'on':''}" onclick="statsSetRankTier('${escJS(t)}')">${t}</button>`).join('')}</div>
+      <div style="color:var(--gray-l);font-size:13px">선택한 티어(${tier})에 선수가 없습니다.</div>
+    </div>`;
+  }
+
+  // 동일 티어 상대전만 추출
+  const rows = tierPlayers.map(p=>{
+    const all = statsNonProHist(p)
+      .filter(h=>{
+        if(!h||!h.opp) return false;
+        const opp=statsP(h.opp);
+        return opp && (opp.tier||'미정')===tier;
+      })
+      .sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||'')));
+
+    const practice = [];
+    const important = [];
+    all.forEach(h=>{ (_srIsImportant(h.mode) ? important : practice).push(h); });
+
+    // practice: 시간가중치 + 승패
+    let pW=0, pL=0, pWW=0, pWL=0;
+    practice.forEach(h=>{
+      const w=_srTimeW(h.date||'');
+      if(h.result==='승'){ pW++; pWW+=w; }
+      else if(h.result==='패'){ pL++; pWL+=w; }
+    });
+    const pTot=pW+pL, pWTot=pWW+pWL;
+    const pWR = pWTot>0 ? (pWW/pWTot) : 0;
+
+    // important: (초기) 가중치 없이 raw 승률
+    let iW=0, iL=0;
+    important.forEach(h=>{ if(h.result==='승') iW++; else if(h.result==='패') iL++; });
+    const iTot=iW+iL;
+    const iWR=iTot>0 ? (iW/iTot) : 0;
+
+    // 경험치(경기 수): 너무 과하게 튀지 않게 log
+    const exp = Math.min(12, Math.log10(Math.max(1,pTot)) * 8);
+    const practiceScore = (pWR*70) + exp;                 // 0~82 정도
+    const importantScore = (iWR*30) * Math.min(1, iTot/6); // 0~30
+    const bonus = (iTot>=3 && iWR>pWR) ? Math.min(25, (iWR-pWR)*200*(Math.min(1,iTot/8))) : 0;
+    const total = practiceScore + importantScore + bonus;
+
+    // 활동 여부(최근 30일 내 동일티어 경기)
+    const lastDate = (all[0]?.date||'');
+    const dormant = lastDate ? (_srDaysAgo(lastDate) > 30) : true;
+
+    return {
+      p,
+      total:+total.toFixed(1),
+      practiceScore:+practiceScore.toFixed(1),
+      importantScore:+importantScore.toFixed(1),
+      bonus:+bonus.toFixed(1),
+      pW,pL,pWR,
+      iW,iL,iWR,
+      practice, important,
+      lastDate,
+      dormant,
+      safeId:_srSafeId(p.name),
+    };
+  })
+  .filter(r=> (r.pW+r.pL+r.iW+r.iL) >= _statsMinGames)
+  .sort((a,b)=> b.total-a.total || (b.iW+b.iL)-(a.iW+a.iL) || (b.pW+b.pL)-(a.pW+a.pL));
+
+  const css = `
+    <style>
+      .sr-table{width:100%;border-collapse:collapse}
+      .sr-table th,.sr-table td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle}
+      .sr-table thead th{background:linear-gradient(135deg,#5c67e3,#a252e8);color:#fff;font-weight:900}
+      .sr-row{background:var(--white)}
+      .sr-row:nth-child(even){background:var(--surface)}
+      .sr-row:hover{background:#eef2ff}
+      .sr-player{display:flex;gap:8px;align-items:center;justify-content:flex-start}
+      .sr-name{font-weight:1000;color:var(--text2);cursor:pointer}
+      .sr-univ{font-size:11px;font-weight:900;opacity:.85}
+      .sr-score{font-weight:1000;color:#7c3aed}
+      .sr-mini{font-size:11px;color:var(--gray-l);line-height:1.35}
+      .sr-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:1000;padding:2px 8px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:rgba(255,255,255,.85)}
+      .sr-tag.p{border-color:rgba(37,99,235,.25);color:#1d4ed8}
+      .sr-tag.i{border-color:rgba(22,163,74,.25);color:#15803d}
+      .sr-tag.b{border-color:rgba(245,158,11,.25);color:#b45309}
+      .sr-det{display:none}
+      .sr-det.open{display:table-row}
+      .sr-det td{padding:14px 12px;background:linear-gradient(175deg,#f5f7fa,#e9eef5)}
+      .sr-box{background:#fff;border:1px solid #dce1e9;border-radius:12px;padding:12px}
+      .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      @media(max-width:820px){.sr-grid{grid-template-columns:1fr}}
+      .sr-log{max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.75)}
+      .sr-log table{width:100%;border-collapse:collapse;font-size:12px}
+      .sr-log th,.sr-log td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center}
+      .sr-muted{opacity:.65}
+    </style>`;
+
+  const header = `<div class="ssec">
+    ${css}
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <h3 style="margin:0">🚀 티어 랭킹 (동일 티어 기준)</h3>
+        <div style="font-size:12px;color:var(--gray-l);margin-top:4px">일반(시간가중치) + 중요(대회/프로/끝장전/CK) + 실전보너스</div>
+      </div>
+      <div style="font-size:12px;color:var(--gray-l)">최소경기: ${_statsMinGames}</div>
+    </div>
+    <div class="fbar no-export" style="gap:6px;flex-wrap:wrap;margin:10px 0">
+      ${tierBtns.map(t=>`<button class="pill ${t===tier?'on':''}" onclick="statsSetRankTier('${escJS(t)}')">${t}</button>`).join('')}
+    </div>
+  </div>`;
+
+  const table = `<div class="ssec" style="padding:0;overflow:hidden">
+    <table class="sr-table">
+      <thead><tr>
+        <th style="width:70px">순위</th>
+        <th style="text-align:left">선수</th>
+        <th style="width:150px">종합 점수</th>
+        <th style="width:260px">요약</th>
+      </tr></thead>
+      <tbody>
+      ${rows.map((r,idx)=>{
+        const p=r.p;
+        const race=(p.race||'');
+        const safe=r.safeId;
+        const dormClass=r.dormant?'sr-muted':'';
+        const pWR=(r.pWR*100)||0, iWR=(r.iWR*100)||0;
+        return `
+          <tr class="sr-row ${dormClass}" onclick="statsRankToggle('${safe}')">
+            <td><div class="sr-score" style="color:${idx<3?'#111827':'#4f46e5'}">${idx+1}</div></td>
+            <td style="text-align:left">
+              <div class="sr-player">
+                ${getPlayerPhotoHTML(p.name,'34px')}
+                <div style="min-width:0">
+                  <div class="sr-name" onclick="event.stopPropagation();openPlayerModal('${escJS(p.name)}')">${p.name}${race?`<span style="font-size:12px;color:var(--gray-l);font-weight:900;margin-left:6px">(${race})</span>`:''}</div>
+                  <div class="sr-univ" style="color:${gc(p.univ)}">${p.univ||'-'} · 최근 ${r.lastDate||'-'}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="sr-score">${r.total}</div>
+              <div class="sr-mini">
+                <span class="sr-tag p" title="일반 점수">일반 ${r.practiceScore}</span>
+                <span class="sr-tag i" title="중요 점수">중요 ${r.importantScore}</span>
+                ${r.bonus>0?`<span class="sr-tag b" title="실전 보너스">보너스 +${r.bonus}</span>`:''}
+              </div>
+            </td>
+            <td>
+              <div class="sr-mini" style="display:flex;flex-direction:column;gap:2px">
+                <div><b>동일티어</b> ${r.pW}승 ${r.pL}패 · 일반(보정) <b>${pWR.toFixed(1)}%</b></div>
+                <div><b>중요경기</b> ${r.iW}승 ${r.iL}패 · 중요 <b>${iWR.toFixed(1)}%</b></div>
+                <div style="margin-top:3px"><button id="sr-btn-${safe}" class="btn btn-w btn-xs" style="border-radius:999px" onclick="event.stopPropagation();statsRankToggle('${safe}')">🔽 상세보기</button></div>
+              </div>
+            </td>
+          </tr>
+          <tr class="sr-det" id="sr-det-${safe}">
+            <td colspan="4">
+              <div class="sr-box">
+                <div class="sr-grid">
+                  <div>
+                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2)">1) 일반(스폰) — 시간가중치</div>
+                    <div class="sr-mini" style="margin-bottom:8px">Raw ${r.pW}승 ${r.pL}패 · 보정승 ${r.practiceScore.toFixed(1)}점</div>
+                    <div class="sr-log">
+                      <table>
+                        <thead><tr><th>날짜</th><th>상대</th><th>결과</th><th>가중치</th><th>모드</th></tr></thead>
+                        <tbody>
+                          ${r.practice.slice(0,25).map(h=>{
+                            const w=_srTimeW(h.date||'');
+                            const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
+                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escAttr(h.opp||'')}</td><td>${res}</td><td style="color:#b45309;font-weight:900">×${w.toFixed(2)}</td><td style="color:var(--gray-l)">${escAttr(h.mode||'')}</td></tr>`;
+                          }).join('')}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2)">2) 중요 경기</div>
+                    <div class="sr-mini" style="margin-bottom:8px">Raw ${r.iW}승 ${r.iL}패 · 중요점수 ${r.importantScore.toFixed(1)}점</div>
+                    <div class="sr-log">
+                      <table>
+                        <thead><tr><th>날짜</th><th>상대</th><th>결과</th><th>모드</th><th>맵</th></tr></thead>
+                        <tbody>
+                          ${(r.important.slice(0,25)).map(h=>{
+                            const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
+                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escAttr(h.opp||'')}${h.oppRace?`(${escAttr(h.oppRace)})`:''}</td><td>${res}</td><td style="color:var(--gray-l)">${escAttr(h.mode||'')}</td><td style="color:var(--gray-l)">${escAttr((h.map&&h.map!=='-')?h.map:'')}</td></tr>`;
+                          }).join('') || `<tr><td colspan="5" style="color:var(--gray-l)">중요 경기 기록이 없습니다.</td></tr>`}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style="margin-top:10px">
+                      <div style="font-weight:1000;margin-bottom:6px;color:var(--text2)">🏆 실전 보너스</div>
+                      <div class="sr-mini">
+                        ${((r.iW+r.iL)>=3)
+                          ? (r.bonus>0
+                              ? `✅ 적용됨: 중요 승률(${iWR.toFixed(1)}%)이 일반 승률(${pWR.toFixed(1)}%)보다 높아 +${r.bonus}점`
+                              : `❌ 미적용: 중요 승률(${iWR.toFixed(1)}%) ≤ 일반 승률(${pWR.toFixed(1)}%)`)
+                          : `❌ 미적용: 중요 경기 판수 부족(최소 3경기)`}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  return header + table;
+}
+
+/* ══════════════════════════════════════
+   ⭐ Project Star System (통계 탭 UI)
+   - (요청) 기존 데이터(p.history) 기반으로 계산 (서버/크롤러 없이도 가능)
+   - "사용 시작"을 눌러야 계산 결과가 표시됨
+══════════════════════════════════════ */
+window.starSystemSetEnabled = function(on){
+  const v = on ? '1' : '0';
+  try{ localStorage.setItem('su_starSystem_enabled', v); }catch(e){}
+  render();
+};
+window.starSystemSetKeywords = function(v){
+  try{ localStorage.setItem('su_starSystem_keywords', String(v||'')); }catch(e){}
+  render();
+};
+function _ssKeywords(){
+  const dflt = '대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트';
+  try{
+    const raw = (localStorage.getItem('su_starSystem_keywords') || dflt).trim();
+    return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  }catch(e){ return dflt.split(','); }
+}
+function _ssTierToNum(t){
+  const s=String(t||'').trim();
+  if(!s) return null;
+  if(s==='G' || s==='갓' || s==='K') return 0;
+  const m = s.match(/^(\d+)/);
+  if(m) return parseInt(m[1],10);
+  if(s.includes('0티어')) return 0;
+  if(s.includes('1티어')) return 1;
+  if(s.includes('2티어')) return 2;
+  if(s.includes('3티어')) return 3;
+  if(s.includes('4티어')) return 4;
+  if(s.includes('5티어')) return 5;
+  if(s.includes('6티어')) return 6;
+  if(s.includes('7티어')) return 7;
+  if(s.includes('8티어')) return 8;
+  return null;
+}
+function _ssCalcFairPoints(tierDiff, result){
+  const td = Number.isFinite(tierDiff) ? Math.max(-99, Math.min(99, Math.trunc(tierDiff))) : 0;
+  const r = String(result||'').toUpperCase();
+  const isWin = (r==='WIN');
+  // (최선책) 제로섬(Zero-sum): 승자 +X / 패자 -X
+  // - 동일 티어: ±3
+  // - 상위 티어 상대(업셋): ±5
+  // - 하위 티어 상대(기대승): ±2
+  if(td===0) return isWin ? 3 : -3;
+  if(td>0) return isWin ? 5 : -5;
+  return isWin ? 2 : -2;
+}
+function _ssDaysAgo(dateStr){
+  const d=(dateStr||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 99999;
+  const t = new Date(d+'T00:00:00').getTime();
+  if(!t) return 99999;
+  return Math.max(0, Math.floor((Date.now()-t)/86400000));
+}
+function _ssStatus(points){
+  if(points>=130) return '승급 검증';
+  if(points<70) return '강등 위기';
+  return '정상';
+}
+let _ssCacheTime='', _ssCacheKey='', _ssCache=null;
+function _ssComputeAll(){
+  const t=localStorage.getItem('su_last_save_time')||'0';
+  const kw=_ssKeywords().join('|');
+  const fk=`${_statsDateFrom}|${_statsDateTo}|${_statsMinGames}|${_statsLastN}`;
+  const key=`${t}|${kw}|${fk}`;
+  if(_ssCache && _ssCacheTime===t && _ssCacheKey===key) return _ssCache;
+  _ssCacheTime=t; _ssCacheKey=key;
+
+  const kws=_ssKeywords();
+  const matchOfficial = (mode) => {
+    const m=String(mode||'');
+    if(!m) return false;
+    return kws.some(k=>k && m.includes(k));
+  };
+
+  const out = [];
+  (players||[]).forEach(p=>{
+    const myTierNum=_ssTierToNum(p.tier);
+    if(myTierNum==null) return;
+    let pts=100;
+    let games=0;
+    let last='';
+    const hist = statsNonProHist(p).filter(h=>matchOfficial(h.mode||h.type||''));
+    const sorted=[...hist].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
+    sorted.forEach(h=>{
+      const opp = statsP(h.opp);
+      const oppTierNum = _ssTierToNum(opp?.tier);
+      if(oppTierNum==null) return;
+      const tierDiff = oppTierNum - myTierNum;
+      const res = (h.result==='승') ? 'WIN' : (h.result==='패') ? 'LOSS' : '';
+      if(!res) return;
+      pts += _ssCalcFairPoints(tierDiff, res);
+      games++;
+      if(h.date && h.date>last) last=h.date;
+    });
+
+    const days=_ssDaysAgo(last);
+    let inactiveNote='';
+    if(myTierNum<=1){
+      if(days>=365){ inactiveNote='비활성(1년+)'; }
+    }else if(myTierNum===2){
+      if(days>=183 && days<365){
+        const months = Math.min(6, Math.max(1, Math.floor((days-183)/30)+1));
+        pts -= (months*3);
+        inactiveNote=`미활동 감쇄 -${months*3}점`;
+      }
+    }else{
+      if(days>=183){
+        inactiveNote='미활동(6개월+) → 강등/말소 대상';
+      }
+    }
+
+    out.push({
+      name:p.name, univ:p.univ, race:p.race,
+      tier:p.tier, tierNum:myTierNum,
+      points:Math.round(pts),
+      status:_ssStatus(pts),
+      inactiveNote,
+      games,
+      last,
+    });
+  });
+  out.sort((a,b)=> a.tierNum-b.tierNum || b.points-a.points || b.games-a.games);
+  _ssCache = out;
+  return out;
+}
+function statsStarSystemHTML(){
+  const enabled = (localStorage.getItem('su_starSystem_enabled') ?? '0') === '1';
+  const kwsRaw = (localStorage.getItem('su_starSystem_keywords') || '').trim();
+  const spec = `프로젝트 개요
+목적: 스타크래프트 스트리머의 실력을 가장 정직하게 반영하는 티어 산정 및 관리 시스템.
+핵심 원칙:
+1. 개인 스폰빵 배제, 공식전(대학대전, CK, 교수/코치 주관 경기)만 인정.
+2. 승급은 어렵고, 강등과 복귀 검증은 엄격하게 처리.
+3. 데이터의 공신력을 위해 수치 기반의 제로섬(Zero-sum) 로직 적용.
+
+티어 유지 및 점수 로직 (제로섬 3점 체제)
+모든 사용자는 각 티어별 기본 100점에서 시작하며, 경기 결과에 따라 점수를 가감한다.
+[포인트 계산]
+동일 티어(0): 승 +3 / 패 -3
+상위 티어(+1): 승 +5 / 패 -5
+하위 티어(-1): 승 +2 / 패 -2
+[승강급 기준]
+승급: 130점 도달 시 ‘승급 검증’
+강등: 70점 미만 시 ‘강등 위기’
+
+활동/강등 예외
+0~1티어: 강등 없음(명예) — 1년 미참여 시 비활성
+2티어: 6개월~1년 미활동 시 매월 -3점
+3티어 이하: 6개월 이상 공식 기록 없으면 즉시 강등 또는 티어 말소
+
+복귀자 연쇄 검증(Recursive Validation)
+6개월 이상 휴식 후 복귀:
+1차 관문(필수): 동일 티어 & 동일 종족 + 교수/코치 주관 공식전
+패배 페널티: 즉시 -10점, 상태 VERIFY_DOWNGRADE
+한 단계 낮은 티어의 상~중위권과 다음 검증전을 배치 (승리할 때까지 하향 반복)
+`;
+
+  const css = `<style>
+    .ss-tier{margin-top:10px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--white)}
+    .ss-tier-h{padding:10px 12px;background:linear-gradient(135deg,#111827,#334155);color:#fff;font-weight:1000;display:flex;align-items:center;gap:8px}
+    .ss-tier-b{padding:10px 12px}
+    .ss-table{width:100%;border-collapse:collapse}
+    .ss-table th,.ss-table td{padding:8px 6px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center;font-size:12px}
+    .ss-table th{text-align:center;color:var(--gray-l);font-weight:900;background:var(--surface)}
+    .ss-name{font-weight:1000;color:var(--text2);text-align:left}
+    .ss-pts{font-weight:1000;color:#7c3aed}
+    .ss-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:1000;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.85);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ss-badge.ok{color:#16a34a;border-color:rgba(22,163,74,.25)}
+    .ss-badge.promo{color:#7c3aed;border-color:rgba(124,58,237,.25)}
+    .ss-badge.danger{color:#dc2626;border-color:rgba(220,38,38,.25)}
+  </style>`;
+
+  const header = `<div class="ssec">
+    ${css}
+    <h3 style="margin:0 0 8px">⭐ Project Star System</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <span class="ubadge" style="background:${enabled?'#16a34a':'#6b7280'}">${enabled?'사용중':'사용중지'}</span>
+      <button class="btn btn-b btn-sm" ${enabled?'disabled':''} onclick="starSystemSetEnabled(true)">✅ 사용 시작</button>
+      <button class="btn btn-w btn-sm" ${!enabled?'disabled':''} onclick="starSystemSetEnabled(false)">⛔ 사용 중지</button>
+      <button class="btn btn-w btn-sm" onclick="openStarSystemInfo()">📘 산정기준</button>
+      <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
+    </div>
+
+    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="text" value="${escAttr(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
+        <button class="btn btn-w btn-sm" onclick="starSystemSetKeywords('대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트')">기본값</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
+    </div>
+
+    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">사양서</div>
+      <pre style="white-space:pre-wrap;line-height:1.55;font-size:12px;color:var(--text3);max-height:300px;overflow:auto;margin:0">${escHTML(spec)}</pre>
+    </div>
+  </div>`;
+
+  if(!enabled){
+    return header + `<div class="ssec" style="margin-top:10px"><div style="font-size:12px;color:var(--gray-l);line-height:1.6">‘사용 시작’을 누르면 아래에 티어별 점수/랭킹이 표시됩니다.</div></div>`;
+  }
+
+  const all=_ssComputeAll();
+  const byTier={};
+  all.forEach(r=>{ if(!byTier[r.tier]) byTier[r.tier]=[]; byTier[r.tier].push(r); });
+  const tierOrder = Object.keys(byTier).sort((a,b)=> (_ssTierToNum(a)??99)-(_ssTierToNum(b)??99));
+  const tiersHTML = tierOrder.map(t=>{
+    const arr = byTier[t].slice().sort((a,b)=> b.points-a.points || b.games-a.games);
+    const tnum=_ssTierToNum(t);
+    return `<div class="ss-tier">
+      <div class="ss-tier-h">🏷️ ${escHTML(t)} <span style="opacity:.8;font-size:12px">(${tnum!=null?tnum:'?'})</span><span style="margin-left:auto;opacity:.85;font-size:12px">인원 ${arr.length}</span></div>
+      <div class="ss-tier-b">
+        <table class="ss-table">
+          <thead><tr><th style="width:60px">순위</th><th style="text-align:left">선수</th><th style="width:90px">점수</th><th style="width:150px">상태</th><th style="width:110px">최근 공식전</th><th style="width:70px">경기수</th></tr></thead>
+          <tbody>
+            ${arr.map((r,i)=>{
+              const bcls = r.status==='승급 검증'?'promo':(r.status==='강등 위기'?'danger':'ok');
+              return `<tr>
+                <td>${i+1}</td>
+                <td class="ss-name"><span class="clickable-name" onclick="openPlayerModal('${escJS(r.name)}')">${escHTML(r.name)}</span> <span style="color:${gc(r.univ)};font-size:11px;font-weight:900">${escHTML(r.univ||'')}</span></td>
+                <td class="ss-pts">${r.points}</td>
+                <td><span class="ss-badge ${bcls}">${escHTML(r.status)}${r.inactiveNote?` · ${escHTML(r.inactiveNote)}`:''}</span></td>
+                <td style="color:var(--gray-l)">${escHTML(r.last||'-')}</td>
+                <td>${r.games}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  return header + `<div class="ssec" style="margin-top:10px">
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">※ 현재는 “현재 티어 기준”으로 상대 티어 차이를 계산합니다(과거 티어 변동까지 반영하려면 기록에 tierAtMatch 저장이 필요).</div>
+  </div>` + tiersHTML;
+}
 
 /* ══════════════════════════════════════
    1. 종합 (기존 내용 유지)
