@@ -1456,7 +1456,7 @@ function buildPlayerDetailHTML(p){
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
       const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
       const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}')" title="해당 경기로 이동">${modeLbl}</span>`
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="cm('playerModal');setTimeout(()=>{ if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); else navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">

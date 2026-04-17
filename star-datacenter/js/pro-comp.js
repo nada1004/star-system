@@ -3508,48 +3508,79 @@ function openPcGJPasteModal(tnId) {
 }
 
 function _pcGJPasteApplyLogic(savable, tn) {
-  // (요청) 선수 선택 없이도 자동인식 결과로 A/B를 확정해서 저장
-  let a = _pcgjA, b = _pcgjB;
-  if (!a || !b) {
-    const uniq = [];
-    const seen = new Set();
-    for (const r of savable) {
-      if (!r.wPlayer || !r.lPlayer) continue;
-      const w = r.wPlayer.name, l = r.lPlayer.name;
-      [w, l].forEach(n => { if(n && !seen.has(n)){ seen.add(n); uniq.push(n); } });
-    }
-    if (uniq.length !== 2) {
-      alert(`끝장전 자동인식은 "두 선수(A/B)만" 등장해야 저장 가능합니다.\n현재 인식된 선수: ${uniq.join(', ') || '없음'}`);
-      return false;
-    }
-    a = uniq[0];
-    b = uniq[1];
-  }
-  const games = [];
-  for (const r of savable) {
-    if (!r.wPlayer || !r.lPlayer) continue;
-    const wn = r.wPlayer.name;
-    let winner = '';
-    if (wn === a) winner = a;
-    else if (wn === b) winner = b;
-    else { alert(`"${wn}"은(는) 해당 경기 선수가 아닙니다.\n${a} vs ${b}`); return false; }
-    games.push({ winner, map: r.map || '' });
-  }
-  if (!games.length) { alert('저장 가능한 경기가 없습니다.'); return false; }
+  // (요청) 자동인식 붙여넣기:
+  // 1) A/B를 이미 선택했으면 해당 1매치로 저장
+  // 2) A/B 미선택이면, 입력된 결과를 "선수 페어"별로 자동 분리하여 여러 매치로 저장
   const dateEl = document.getElementById('paste-date');
   const d = dateEl?.value || new Date().toISOString().slice(0,10);
-  const matchId = genId();
   if (!tn.gjMatches) tn.gjMatches = [];
-  const sess = {_id: matchId, d, a, b, games};
-  tn.gjMatches.unshift(sess);
-  games.forEach(g => {
-    if (!g.winner) return;
-    const win = g.winner, loss = g.winner===a ? b : a;
-    // (정확한 모드 라벨) 프로리그 대회 끝장전
-    applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
+
+  const selA = _pcgjA, selB = _pcgjB;
+  if (selA && selB) {
+    const a = selA, b = selB;
+    const games = [];
+    for (const r of savable) {
+      if (!r.wPlayer || !r.lPlayer) continue;
+      const wn = r.wPlayer.name;
+      let winner = '';
+      if (wn === a) winner = a;
+      else if (wn === b) winner = b;
+      else { alert(`"${wn}"은(는) 해당 경기 선수가 아닙니다.\n${a} vs ${b}`); return false; }
+      games.push({ winner, map: r.map || '' });
+    }
+    if (!games.length) { alert('저장 가능한 경기가 없습니다.'); return false; }
+    const matchId = genId();
+    tn.gjMatches.unshift({_id: matchId, d, a, b, games});
+    games.forEach(g => {
+      if (!g.winner) return;
+      const win = g.winner, loss = g.winner===a ? b : a;
+      applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
+    });
+    _pcgjGames = []; _pcgjA = ''; _pcgjB = '';
+    save();
+    return true;
+  }
+
+  // A/B 미선택: 페어별 자동 저장
+  const pairMap = {}; // key -> {a,b,games:[]}
+  let totalGames = 0;
+  for (const r of savable) {
+    if (!r.wPlayer || !r.lPlayer) continue;
+    const a = r.wPlayer.name;
+    const b = r.lPlayer.name;
+    if (!a || !b || a === b) continue;
+    const key = [a, b].sort().join('||');
+    if (!pairMap[key]) {
+      const [x, y] = key.split('||');
+      pairMap[key] = {a: x, b: y, games: []};
+    }
+    const sess = pairMap[key];
+    // winner는 원문 winName 기준
+    const winner = r.wPlayer.name;
+    sess.games.push({winner, map: r.map || ''});
+    totalGames++;
+  }
+
+  const pairs = Object.values(pairMap).filter(s => s.games && s.games.length);
+  if (!pairs.length) { alert('저장 가능한 경기가 없습니다.'); return false; }
+
+  pairs.forEach(sess => {
+    const matchId = genId();
+    const a = sess.a, b = sess.b;
+    // winner 이름이 a/b 이외면 스킵 (이론상 발생X 방어)
+    const games = (sess.games||[]).filter(g => g.winner === a || g.winner === b)
+      .map(g => ({winner: g.winner, map: g.map || ''}));
+    if (!games.length) return;
+    tn.gjMatches.unshift({_id: matchId, d, a, b, games});
+    games.forEach(g => {
+      const win = g.winner, loss = (g.winner === a) ? b : a;
+      applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
+    });
   });
+
   _pcgjGames = []; _pcgjA = ''; _pcgjB = '';
   save();
+  alert(`끝장전 저장 완료: ${pairs.length}매치 / ${totalGames}게임`);
   return true;
 }
 function _pcgjRender() {
