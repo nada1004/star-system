@@ -1438,8 +1438,12 @@ window.openMatchDetailByMatchId = function(matchId, modeLabel){
   try{
     const mid = String(matchId||'').trim();
     if(!mid) return;
-    // 게임ID면 세션ID로 변환
-    const sessId = (mid.includes('_s') && mid.includes('_g')) ? mid.split('_s')[0] : mid;
+    // 게임ID면 세션ID로 변환 (형식: matchId_s{setIdx}_g{gameIdx})
+    let sessId = mid;
+    if(mid.includes('_s') && mid.includes('_g')){
+      const parts = mid.split('_s');
+      sessId = parts[0];
+    }
     const lbl = String(modeLabel||'').trim();
 
     // modeLabel 기반으로 우선 탐색 배열을 좁히되, 못 찾으면 전체에서 탐색

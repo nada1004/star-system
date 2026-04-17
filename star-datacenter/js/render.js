@@ -1044,7 +1044,12 @@ function buildPlayerDetailHTML(p){
     });
   });
   // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
-  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>!h.matchId||!_existingMatchIds.has(h.matchId)||!_existingKeys.has(_histDupKey(h)));
+  const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>{
+    if(!h.matchId) return true;
+    if(_existingMatchIds.has(h.matchId)) return false;
+    if(_existingKeys.has(_histDupKey(h))) return false;
+    return true;
+  });
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   // 연도 필터링 (단일 또는 멀티)
   const _hist=_year?_histAll.filter(h=>{
