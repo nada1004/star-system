@@ -286,11 +286,43 @@ window.cfgRunSettingsSelfCheck = function(){
     let m;
     while((m=re.exec(html))) called.add(m[1]);
     const missing = Array.from(called).filter(fn => !JS_KEYWORDS.has(fn) && typeof window[fn] !== 'function').sort();
+
+    // 각 탭 함수 확인
+    const tabFuncs = {
+      '기록탭': ['rHist'],
+      '미니탭': ['rMini'],
+      '대회탭': ['rComp'],
+      '현황판탭': ['rBoard2'],
+      '티어토너먼트': ['rTierTourTab'],
+      '프로리그': ['rPro'],
+      '캘린더': ['rCal'],
+      '통계': ['rStats'],
+      '붙여넣기': ['pastePreview', 'openGrpPasteModal'],
+    };
+    const tabMissing = {};
+    for(const [tab, funcs] of Object.entries(tabFuncs)){
+      const missing = funcs.filter(f => typeof window[f] !== 'function');
+      if(missing.length > 0) tabMissing[tab] = missing;
+    }
+
     if(out){
-      out.innerHTML = missing.length
-        ? `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:6px">⚠️ 누락된 함수 ${missing.length}개</div>
-           <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5">${missing.join('\\n')}</div>`
-        : `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ settings.js 기준 핸들러 누락 없음</div>`;
+      let html = '';
+      if(missing.length > 0){
+        html += `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:8px">⚠️ settings.js 핸들러 누락 ${missing.length}개</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\\n')}</div>`;
+      }
+      if(Object.keys(tabMissing).length > 0){
+        html += `<div style="font-size:12px;color:#ea580c;font-weight:1000;margin-bottom:6px">⚠️ 탭 렌더러 누락</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:11px;white-space:pre-wrap;line-height:1.6">`;
+        for(const [tab, funcs] of Object.entries(tabMissing)){
+          html += `${tab}: ${funcs.join(', ')}\\n`;
+        }
+        html += `</div>`;
+      }
+      if(missing.length === 0 && Object.keys(tabMissing).length === 0){
+        html = `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ 모든 핸들러 및 탭 함수 정상</div>`;
+      }
+      out.innerHTML = html;
     }
   }catch(e){
     if(out) out.innerHTML = `<div style="font-size:12px;color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
