@@ -38,9 +38,10 @@ const _DEFAULT_CATSECS = {
   '게임 운영':['notice','tier','season','teammatch','acct'],
   '콘텐츠 관리':['univ','maps','mAlias','si'],
   // (요청사항) 설정탭 카테고리명 변경: "현황판 관리" → "이미지 관리"
-  '이미지 관리':['b2layout','b2femco'],
-  // "설정 메뉴 정리"는 기본으로 시스템 설정에 둠
-  '시스템 설정':['cfgmenu','autofitall','reccard','tourneycard','calui','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+  '이미지 관리':['b2layout','b2femco','imgsettings','imgmodalsettings'],
+  // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','boardchip','oldbright','boardbg'],
+  '🧪 고급/실험실':['cfgmenu','autofitall','pd','fab','storage'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
@@ -218,6 +219,20 @@ window.cfgSetCalendarUiSettings = function(){
   try{ localStorage.setItem('su_share_admin_only', shareAdminOnly ? '1' : '0'); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 전역 폰트 설정(프리셋 + 커스텀 URL)
+// ─────────────────────────────────────────────────────────────
+window.cfgSetAppFontSettings = function(){
+  const preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
+  const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
+  const fam    = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+  try{ localStorage.setItem('su_app_font_preset', preset); }catch(e){}
+  try{ localStorage.setItem('su_app_font_css', cssUrl); }catch(e){}
+  try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
 function _cfgMenuSave(v){
   try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
 }
@@ -227,6 +242,8 @@ function _cfgMenuNormalize(layout){
   let catOrder = Array.isArray(layout?.catOrder) ? layout.catOrder.filter(c=>typeof c==='string' && c.trim()) : defCats.slice();
   // 구버전 호환: "현황판 관리" → "이미지 관리"
   catOrder = catOrder.map(c => c === '현황판 관리' ? '이미지 관리' : c);
+  // 구버전 호환: "시스템 설정" → 신규 2카테고리(스타일/테마, 고급/실험실)
+  catOrder = catOrder.filter(c => c !== '시스템 설정');
   // 기본 카테고리 누락 시 추가
   defCats.forEach(c=>{ if(!catOrder.includes(c)) catOrder.push(c); });
 
@@ -236,6 +253,24 @@ function _cfgMenuNormalize(layout){
   if (legacyCatSecs['현황판 관리'] && !legacyCatSecs['이미지 관리']) {
     aliasCatSecs['이미지 관리'] = legacyCatSecs['현황판 관리'];
   }
+
+  // 시스템 설정 섹션이 기존 레이아웃에 있으면, 섹션별로 신규 카테고리에 자동 분배
+  try{
+    const legacySys = Array.isArray(legacyCatSecs['시스템 설정']) ? legacyCatSecs['시스템 설정'] : [];
+    if(legacySys.length){
+      const secToCat = {
+        appfont:'🎨 스타일/테마', reccard:'🎨 스타일/테마', tourneycard:'🎨 스타일/테마', calui:'🎨 스타일/테마', boardchip:'🎨 스타일/테마', oldbright:'🎨 스타일/테마', boardbg:'🎨 스타일/테마',
+        cfgmenu:'🧪 고급/실험실', autofitall:'🧪 고급/실험실', pd:'🧪 고급/실험실', fab:'🧪 고급/실험실', storage:'🧪 고급/실험실',
+        imgsettings:'이미지 관리', imgmodalsettings:'이미지 관리',
+      };
+      legacySys.forEach(sec=>{
+        const t = secToCat[sec] || (Object.keys(_DEFAULT_CATSECS).find(c => (_DEFAULT_CATSECS[c]||[]).includes(sec)) || defCats[0]);
+        if(!aliasCatSecs[t]) aliasCatSecs[t] = [];
+        if(!aliasCatSecs[t].includes(sec)) aliasCatSecs[t].push(sec);
+      });
+      delete aliasCatSecs['시스템 설정'];
+    }
+  }catch(e){}
   // 사용자 레이아웃 반영
   catOrder.forEach(c=>{
     const arr = (aliasCatSecs && Array.isArray(aliasCatSecs[c])) ? aliasCatSecs[c] : (_DEFAULT_CATSECS[c] || []);
@@ -374,7 +409,9 @@ function _cfgFemcoDefaults(){
     tierBadgePadX: 6,
     starSize: 15,
     statusIconSize: 18,
-    univColorOverrides: {}
+    univColorOverrides: {},
+    // 대학별 배경 미디어 URL (이미지/GIF: 배경, MP4/WEBM: 버튼으로 재생, YouTube/Twitch: 새창)
+    univBgMedia: {}
   };
 }
 function _cfgFemcoLoad(){
@@ -384,7 +421,8 @@ function _cfgFemcoLoad(){
     const obj = JSON.parse(raw) || {};
     return {..._cfgFemcoDefaults(), ...obj,
       univSubtitles:{...((_cfgFemcoDefaults().univSubtitles)||{}), ...(obj.univSubtitles||{})},
-      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})}
+      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})},
+      univBgMedia:{...((_cfgFemcoDefaults().univBgMedia)||{}), ...(obj.univBgMedia||{})}
     };
   }catch(e){ return _cfgFemcoDefaults(); }
 }
@@ -452,10 +490,29 @@ window.cfgFemcoRefreshUnivFields = function(){
   const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
   const c = (s.univColorOverrides||{})[u] || '#000000';
   const sub = (s.univSubtitles||{})[u] || '';
+  const bg = (s.univBgMedia||{})[u] || '';
   const colorEl = document.getElementById('cfg-femco-univColor');
   const subEl = document.getElementById('cfg-femco-subtitle');
+  const bgEl = document.getElementById('cfg-femco-bgMediaUrl');
+  const bgHint = document.getElementById('cfg-femco-bgMediaHint');
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
+  if (bgEl) bgEl.value = bg;
+  if (bgHint) bgHint.textContent = bg ? '설정됨' : '미설정';
+};
+
+window.cfgFemcoSetBgMedia = function(url){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univBgMedia = s.univBgMedia || {};
+  const v = (url || '').trim();
+  if(!v) delete s.univBgMedia[u];
+  else s.univBgMedia[u] = v;
+  _cfgFemcoSave(s);
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
 };
 
 window.cfgFemcoSetUnivColor = function(color){
@@ -759,7 +816,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
@@ -1148,6 +1205,38 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
+  ${(()=>{ 
+    const p = (localStorage.getItem('su_app_font_preset') ?? 'noto');
+    const css = (localStorage.getItem('su_app_font_css') ?? '');
+    const fam = (localStorage.getItem('su_app_font_family') ?? '');
+    return _scfgD('appfont','🅰️ 전역 폰트') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">앱 전체 폰트를 변경합니다. (프리셋 + 사용자 CSS URL 지원)</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">프리셋</div>
+        <select id="cfg-appfont-preset" onchange="cfgSetAppFontSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="system" ${p==='system'?'selected':''}>시스템</option>
+          <option value="noto" ${p==='noto'?'selected':''}>Noto Sans KR</option>
+          <option value="pretendard" ${p==='pretendard'?'selected':''}>Pretendard</option>
+          <option value="nanum" ${p==='nanum'?'selected':''}>나눔고딕</option>
+          <option value="gmarket" ${p==='gmarket'?'selected':''}>GmarketSans</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">추가 CSS URL</div>
+        <input type="text" id="cfg-appfont-css" value="${css.replace(/\"/g,'&quot;')}" placeholder="예) https://.../font.css" style="flex:1;min-width:260px" onchange="cfgSetAppFontSettings()">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">font-family</div>
+        <input type="text" id="cfg-appfont-family" value="${fam.replace(/\"/g,'&quot;')}" placeholder="비우면 프리셋 기본값 사용" style="flex:1;min-width:260px" onchange="cfgSetAppFontSettings()">
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.5">
+        • 예: <span style="font-family:ui-monospace,monospace">Pretendard Variable, Pretendard, Noto Sans KR, sans-serif</span><br>
+        • 유튜브/트위치 같은 외부 사이트 폰트는 적용되지 않을 수 있습니다.
+      </div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
@@ -1490,8 +1579,11 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학명 폰트</div>
         <select id="cfg-femco-titleFont" onchange="cfgFemcoUpd('titleFont',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
           <option value="system">기본(시스템)</option>
+          <option value="app">전역 폰트</option>
           <option value="noto">Noto Sans KR</option>
           <option value="pretendard">Pretendard</option>
+          <option value="nanum">나눔고딕</option>
+          <option value="gmarket">GmarketSans</option>
         </select>
       </div>
 
@@ -1605,6 +1697,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학명 아래 문구</div>
         <input type="text" id="cfg-femco-subtitle" placeholder="대학명 아래 문구" style="flex:1;min-width:240px" onchange="cfgFemcoSetSubtitle(this.value)">
         <button class="btn btn-xs" onclick="cfgFemcoClearSubtitle()">삭제</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">대학 배경 미디어</div>
+        <input type="text" id="cfg-femco-bgMediaUrl" placeholder="https://... (jpg/png/gif/webp/mp4/유튜브/트위치)" style="flex:1;min-width:260px" onchange="cfgFemcoSetBgMedia(this.value)">
+        <button class="btn btn-xs" onclick="cfgFemcoSetBgMedia('')">삭제</button>
+        <span id="cfg-femco-bgMediaHint" style="font-size:11px;color:var(--gray-l)">미설정</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.45;margin-top:-6px">
+        • 이미지/GIF: 대학 카드 배경으로 적용<br>
+        • MP4/WEBM: 대학 카드에 “배경영상” 버튼 표시(클릭 재생)<br>
+        • 유튜브/트위치: “배경링크” 버튼 표시(새창)
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">문구 스타일</div>

@@ -33,6 +33,8 @@ function closeNoticePopup(){
 
 function init(){
   fixPoints();
+  // 전역 폰트 설정 적용
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -79,6 +81,60 @@ function init(){
 }
 init();
 initDark();
+
+// ─────────────────────────────────────────────────────────────
+// 전역 폰트 설정
+// - localStorage:
+//   su_app_font_preset: system | noto | pretendard | nanum | gmarket | custom
+//   su_app_font_css:    (옵션) 폰트 CSS URL
+//   su_app_font_family: (옵션) font-family 문자열
+// ─────────────────────────────────────────────────────────────
+window._applyAppFont = function(){
+  let preset='noto', cssUrl='', fam='';
+  try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}
+  try{ cssUrl = (localStorage.getItem('su_app_font_css') || '').trim(); }catch(e){}
+  try{ fam = (localStorage.getItem('su_app_font_family') || '').trim(); }catch(e){}
+
+  const ensureLink = (id, href) => {
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if(!head) return;
+    let el = document.getElementById(id);
+    if(!href){
+      if(el) el.remove();
+      return;
+    }
+    if(!el){
+      el = document.createElement('link');
+      el.id = id;
+      el.rel = 'stylesheet';
+      head.appendChild(el);
+    }
+    el.href = href;
+  };
+
+  // 프리셋별 권장 CSS(없어도 동작하지만, 있으면 품질↑)
+  const presetCss = {
+    noto: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap',
+    pretendard: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css',
+    nanum: 'https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap',
+    gmarket: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSans.css',
+  };
+  ensureLink('app-font-preset-css', presetCss[preset] || '');
+  ensureLink('app-font-custom-css', cssUrl);
+
+  // preset → font-family
+  const presetFam = {
+    system: 'system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif',
+    noto: '"Noto Sans KR", sans-serif',
+    pretendard: '"Pretendard Variable", Pretendard, "Noto Sans KR", sans-serif',
+    nanum: '"Nanum Gothic", "Noto Sans KR", sans-serif',
+    gmarket: '"GmarketSans", "Noto Sans KR", sans-serif',
+  };
+  const finalFam = fam || presetFam[preset] || presetFam.noto;
+  try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
+};
+// 초기 1회 적용(렌더 전후 모두 대응)
+try{ window._applyAppFont(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // 반응형 UI 스케일(자동): 브라우저/기기 폭에 따라 글자/아이콘 크기 자동 조절

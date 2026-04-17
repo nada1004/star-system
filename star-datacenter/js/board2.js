@@ -535,6 +535,7 @@ function _b2FemcoView() {
     starSize: 15,            // ⭐ 크기(px)
     statusIconSize: 18,      // 상태 아이콘 크기(px)
     univColorOverrides: {},   // { [univName]: "#RRGGBB" }
+    univBgMedia: {},          // { [univName]: "https://...jpg/gif/mp4/yt/twitch" }
   });
   function femcoLoad(){
     try{
@@ -544,7 +545,8 @@ function _b2FemcoView() {
       return {
         ...femcoDefaultSettings(),
         ...obj,
-        univColorOverrides: { ...(femcoDefaultSettings().univColorOverrides||{}), ...(obj.univColorOverrides||{}) }
+        univColorOverrides: { ...(femcoDefaultSettings().univColorOverrides||{}), ...(obj.univColorOverrides||{}) },
+        univBgMedia: { ...(femcoDefaultSettings().univBgMedia||{}), ...(obj.univBgMedia||{}) },
       };
     }catch(e){ return femcoDefaultSettings(); }
   }
@@ -553,6 +555,48 @@ function _b2FemcoView() {
   }
   let femcoSettings = femcoLoad();
   // 펨코현황 관련 설정 UI는 "설정 탭 > 현황판 관리 > 펨코현황"에서만 제공합니다.
+
+  // 배경 미디어 열기(영상은 모달, 유튜브/트위치는 새창)
+  if (typeof window._b2FemcoOpenBgMedia !== 'function') {
+    window._b2FemcoOpenBgMedia = function(univName, url){
+      const u = String(univName||'');
+      const link = String(url||'').trim();
+      if(!link) return;
+      const low = link.toLowerCase();
+      const isVideo = /\.(mp4|webm|ogg)(\?|#|$)/i.test(low);
+      const isEmbed = /(youtube\.com|youtu\.be|twitch\.tv)/i.test(low);
+      if(isEmbed){
+        try{ window.open(link, '_blank', 'noopener'); }catch(e){ location.href = link; }
+        return;
+      }
+      if(!isVideo){
+        // 이미지/GIF는 새창
+        try{ window.open(link, '_blank', 'noopener'); }catch(e){ location.href = link; }
+        return;
+      }
+      // video modal (클릭 재생 정책)
+      const existing = document.getElementById('b2-femco-bg-modal');
+      if (existing) existing.remove();
+      const ov = document.createElement('div');
+      ov.id = 'b2-femco-bg-modal';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.60);z-index:12000;display:flex;align-items:center;justify-content:center;padding:16px';
+      const safeTitle = (u||'영상').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      ov.innerHTML = `
+        <div style="width:min(980px,96vw);background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 60px rgba(0,0,0,.35)">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(to bottom, rgba(255,255,255,.95), rgba(255,255,255,.85));border-bottom:1px solid var(--border)">
+            <div style="font-weight:1000;color:var(--text2)">🎞️ ${safeTitle} 배경 영상</div>
+            <span style="color:var(--gray-l);font-size:12px">클릭해서 재생됩니다</span>
+            <button style="margin-left:auto;border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;font-weight:1000" onclick="document.getElementById('b2-femco-bg-modal')?.remove()">닫기</button>
+          </div>
+          <div style="padding:12px 14px">
+            <video src="${link}" controls playsinline style="width:100%;max-height:72vh;border-radius:12px;background:#000"></video>
+          </div>
+        </div>
+      `;
+      ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+    };
+  }
 
   const univList = _b2VisUnivs().filter(u => u.name && u.name !== '무소속');
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
@@ -623,10 +667,33 @@ function _b2FemcoView() {
   const starSize = Math.max(10, Math.min(28, parseInt(femcoSettings.starSize || 15, 10) || 15));
   const titleFontFamily = (() => {
     switch (femcoSettings.titleFont) {
+      case 'app': return `var(--app-font)`;
       case 'noto': return `'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
-      case 'pretendard': return `'Pretendard', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+      case 'pretendard': return `'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+      case 'nanum': return `'Nanum Gothic', 'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+      case 'gmarket': return `'GmarketSans', 'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
       default: return `system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
     }
+  })();
+
+  // 타이틀 폰트가 CDN 폰트인 경우, 필요한 CSS를 1회 주입(전역 폰트와 별개)
+  (function(){
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if(!head) return;
+    const ensure = (id, href) => {
+      if(!href){ const el=document.getElementById(id); if(el) el.remove(); return; }
+      let el=document.getElementById(id);
+      if(!el){ el=document.createElement('link'); el.id=id; el.rel='stylesheet'; head.appendChild(el); }
+      el.href=href;
+    };
+    const cssMap = {
+      noto: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap',
+      pretendard: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css',
+      nanum: 'https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap',
+      gmarket: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSans.css',
+    };
+    const key = femcoSettings.titleFont;
+    ensure('femco-titlefont-css', cssMap[key] || '');
   })();
 
   const tierRank = (p) => {
@@ -783,6 +850,16 @@ function _b2FemcoView() {
     const _subTxt = ((femcoSettings.univSubtitles||{})[univName] || '').trim();
     const _subColor = (subtitleColor && subtitleColor.trim()) ? subtitleColor : textCol;
 
+    // 대학별 배경 미디어 URL
+    const _bgUrl = (((femcoSettings.univBgMedia||{})[univName]) || '').trim();
+    const _bgLower = _bgUrl.toLowerCase();
+    const _bgIsImage = _bgUrl && /\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(_bgLower);
+    const _bgIsVideo = _bgUrl && /\.(mp4|webm|ogg)(\?|#|$)/i.test(_bgLower);
+    const _bgIsEmbed = _bgUrl && /(youtube\.com|youtu\.be|twitch\.tv)/i.test(_bgLower);
+    const _bgBtn = (_bgIsVideo || _bgIsEmbed || (_bgUrl && !_bgIsImage))
+      ? `<button class="b2-femco-pill no-export" style="cursor:pointer" onclick="_b2FemcoOpenBgMedia('${univName.replace(/'/g,"\\'")}', '${_bgUrl.replace(/'/g,"\\'")}');event.stopPropagation();">${_bgIsVideo?'🎞️ 배경영상':_bgIsEmbed?'🔗 배경링크':'🖼️ 배경링크'}</button>`
+      : '';
+
     const _pos = femcoSettings.logoPos || 'top';
     const _posNorm = (['left','right','top','bottom','center'].includes(_pos) ? _pos : 'top');
     const _attach = (femcoSettings.logoAttachTitle ?? 1) ? true : false;
@@ -796,6 +873,7 @@ function _b2FemcoView() {
           ${starsHtml}
         </div>
         ${_subTxt?`<div class="b2-femco-subtitle" style="color:${_subColor}">${_subTxt}</div>`:''}
+        ${_bgBtn?`<div class="b2-femco-meta">${_bgBtn}</div>`:''}
       </div>
     `;
     const logoOnlyStyle = (() => {
@@ -838,8 +916,12 @@ function _b2FemcoView() {
     // 자동 레이아웃(인원수/화면폭)에 따라 대학별로 rows/colWidth를 다르게 적용
     const _lay = autoLayout ? _autoLayoutForCount(all.length) : {rowsPerCol, colWidth};
 
+    const _bgStyle = _bgIsImage
+      ? `background-color:${col};background-image:linear-gradient(180deg, rgba(2,6,23,.08), rgba(2,6,23,.22)), url('${_bgUrl.replace(/'/g,"%27")}');background-size:cover;background-position:center;background-repeat:no-repeat;`
+      : `background:${col};`;
+
     h += `
-      <section class="b2-femco-univ" style="background:${col}">
+      <section class="b2-femco-univ" style="${_bgStyle}">
         <div class="b2-femco-head" style="color:${textCol};padding-left:${_padL}px;padding-right:${_padR}px">
           <div class="b2-femco-countbox" style="color:${textCol};left:${_padL}px;${textCol==='#ffffff'?'text-shadow:0 1px 2px rgba(0,0,0,.45);':''}">
             <div>총 ${all.length}</div>

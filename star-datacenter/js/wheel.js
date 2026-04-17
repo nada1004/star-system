@@ -8,6 +8,8 @@
     '#wh-root{font-family:inherit;width:100%}',
     '.wh-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}',
     '.wh-input-row{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.wh-menu-btn{padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;flex-shrink:0}',
+    '.wh-spin-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}',
     '.wh-textarea{flex:1;min-width:0;border:2px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;font-family:inherit;resize:none;height:64px;color:var(--text1);background:var(--white);line-height:1.6;outline:none;transition:border-color .18s}',
     '.wh-textarea:focus{border-color:#FF4B6E;box-shadow:0 0 0 3px rgba(255,75,110,.12)}',
     '.wh-speed-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:5px 10px}',
@@ -126,7 +128,7 @@ function _whRender(root) {
     + '<div class="wh-pointer">▼</div>'
     + '<canvas id="wh-canvas"></canvas>'
     + '</div>'
-    + '<button class="wh-btn-spin" id="wh-btn-spin" onclick="_whSpin()">🎡 돌려라!</button>'
+    + '<div class="wh-spin-row"><button class="wh-btn-spin" id="wh-btn-spin" onclick="_whSpin()">🎡 돌려라!</button></div>'
     // 결과 카드 (hidden 초기)
     + '<div id="wh-result-card" style="display:none;width:100%;max-width:480px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:20px;text-align:center;box-sizing:border-box;animation:whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">'
     + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
