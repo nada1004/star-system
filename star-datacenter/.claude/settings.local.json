@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start index.html)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Fix match deduplication & detail retrieval; add external resources tab *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(git merge *)",
+      "Bash(git reset *)",
+      "Bash(sed 's/onclick=\"//g')",
+      "Bash(read fn *)",
+      "Bash(git commit -m 'Fix duplicate match filtering and matchId conversion *)",
+      "Bash(python -c \"import graphify; print\\('graphify already installed'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python -c \"import sys; open\\('.graphify_python', 'w'\\).write\\(sys.executable\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

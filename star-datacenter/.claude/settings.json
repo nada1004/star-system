@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node)",
+      "Bash(python3 -)",
+      "Bash(python -)",
+      "Bash('\\){depth=1;results.push\\(OPEN@+\\(li+1\\)\\);}:*)",
+      "Bash('\\)depth++;:*)",
+      "Bash(node -p ':*)",
+      "Bash(node trace_cfg.js)",
+      "Bash(node ../trace_cfg.js)",
+      "Bash(grep -n '`' js/cfg.js)",
+      "Bash(node trace2.js)",
+      "Bash(node ../trace2.js)",
+      "Bash(node /d/projects/star/trace2.js)",
+      "Bash(node /d/projects/star/test_tmpl.js)",
+      "Bash(node /d/projects/star/test_tmpl2.js)",
+      "Bash(node /d/projects/star/test_tmpl3.js)",
+      "Bash(node /d/projects/star/test_tmpl4.js)",
+      "Bash(node /d/projects/star/test_tmpl6.js)",
+      "Bash(node /d/projects/star/test_tmpl7.js)",
+      "Bash(node /d/projects/star/test_tmpl8.js)",
+      "Bash(node /d/projects/star/test_tmpl9.js)",
+      "Bash(node /d/projects/star/test_tmpl10.js)",
+      "Bash(node /d/projects/star/test_tmpl11.js)",
+      "Bash(node /d/projects/star/test_tmpl12.js)",
+      "Bash(node /d/projects/star/test_final.js)",
+      "Bash(node /d/projects/star/test_bytes.js)",
+      "Bash(node /d/projects/star/find_bug.js)",
+      "Bash(ls d:/projects/star/*.json d:/projects/star/*.js)",
+      "Bash(grep -n \"getTourneyMatches\\\\|function getTourneyMatches\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"passDateFilter\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -n \"function passDateFilter\\\\|passDateFilter=\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(grep -rn \"GITHUB_JSON_URL\" d:/projects/star/star-datacenter/js/*.js)",
+      "Bash(git fetch:*)"
+    ],
+    "additionalDirectories": [
+      "d:\\projects\\star"
+    ]
+  }
+}
