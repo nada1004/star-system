@@ -40,7 +40,7 @@ const _DEFAULT_CATSECS = {
   // (요청사항) 설정탭 카테고리명 변경: "현황판 관리" → "이미지 관리"
   '이미지 관리':['b2layout','b2femco'],
   // "설정 메뉴 정리"는 기본으로 시스템 설정에 둠
-  '시스템 설정':['cfgmenu','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+  '시스템 설정':['cfgmenu','autofitall','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
@@ -48,6 +48,116 @@ const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
 function _cfgMenuLoad(){
   try{ return JSON.parse(localStorage.getItem(_CFG_MENU_KEY) || 'null'); }catch(e){ return null; }
 }
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 현황판/이미지별(프로필)/펨코현황: 모바일·태블릿 원클릭 자동 맞춤
+// - 사용자가 기존 설정을 덮어써도 OK(원클릭 자동화)
+// ─────────────────────────────────────────────────────────────
+window.cfgAutoFitBoard = function(){
+  const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+  const isMobile = w <= 768;
+  const isTablet = w > 768 && w <= 1024;
+
+  // 1) UI 스케일(글자/아이콘) — init.js 자동 스케일이 있으나, 즉시 반영을 위해 한 번 더 적용
+  try{
+    let s = 1;
+    if (w <= 360) s = 0.92;
+    else if (w <= 430) s = 0.96;
+    else if (w <= 520) s = 0.98;
+    else if (w <= 768) s = 1.00;
+    else if (w <= 1024) s = 1.02;
+    else s = 1.00;
+    document.documentElement.style.setProperty('--uiS', String(s));
+  }catch(e){}
+
+  // 2) 이미지별(프로필) 레이아웃(su_b2_layout)
+  try{
+    const settings = {
+      autoResize: true,
+      autoHeight: true,
+      leftSize: 55,
+      rightSize: 45,
+      pcHeight: 600,
+      tabletHeight: isTablet ? 420 : 400,
+      mobileHeight: isMobile ? 380 : 320
+    };
+    localStorage.setItem('su_b2_layout', JSON.stringify(settings));
+    // 설정 UI 반영
+    const setVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
+    setVal('cfg-b2-left-size', settings.leftSize);
+    setVal('cfg-b2-right-size', settings.rightSize);
+    setVal('cfg-b2-pc-height', settings.pcHeight);
+    setVal('cfg-b2-tablet-height', settings.tabletHeight);
+    setVal('cfg-b2-mobile-height', settings.mobileHeight);
+    try{ document.getElementById('cfg-b2-left-size-val').textContent = settings.leftSize+'%'; }catch(e){}
+    try{ document.getElementById('cfg-b2-right-size-val').textContent = settings.rightSize+'%'; }catch(e){}
+    try{ const chk=document.getElementById('cfg-b2-auto-resize'); if(chk) chk.checked = true; }catch(e){}
+  }catch(e){}
+
+  // 3) 이미지별(프로필) 이미지 잘림 방지: 전역 이미지 설정(su_b2_global_img_settings)
+  // - 모바일/태블릿에서는 contain + 100% + 중심으로 초기화
+  try{
+    const fit = (w <= 1024) ? 'contain' : 'cover';
+    const cfg = {
+      primary: {scale:100, brightness:100, fit, offsetX:0, offsetY:0, zoom:100, fill:fit, posX:0, posY:0},
+      secondary: {scale:100, brightness:100, fit, offsetX:0, offsetY:0, zoom:100, fill:fit, posX:0, posY:0},
+    };
+    localStorage.setItem('su_b2_global_img_settings', JSON.stringify(cfg));
+  }catch(e){}
+
+  // 4) 펨코현황: 모바일/태블릿 프리셋
+  try{
+    const cur = _cfgFemcoLoad();
+    const next = {...cur};
+    if (w <= 1024){
+      next.contentAlign = 'left';
+      next.contentPadX = isMobile ? 10 : 12;
+      next.contentOffsetX = 0;
+      next.colWidth = isMobile ? 150 : 160;
+      next.rowsPerCol = isMobile ? 8 : 7;      // 세로 줄 수 ↑ → 가로 스크롤 ↓
+      next.playerImgSize = isMobile ? 40 : 44;
+      next.colGap = isMobile ? 8 : 10;         // 상하 간격
+      next.univGap = isMobile ? 12 : 16;        // 대학 간 여백
+      next.countFontSize = isMobile ? 11 : 12;
+      next.nameFontSize = isMobile ? 11 : 12;
+      next.roleFontSize = isMobile ? 9 : 10;
+      next.statusIconSize = isMobile ? 16 : 18;
+      next.starSize = isMobile ? 14 : 15;
+      next.headGap = isMobile ? 6 : 10;
+    }
+    _cfgFemcoSave(next);
+    try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
+  }catch(e){}
+
+  // 5) 즉시 반영
+  try{ if(typeof save==='function') save(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{
+    // board2 탭이 열려있으면 다시 렌더링
+    if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')) {
+      if(_b2View==='players') {
+        document.getElementById('b2-content').innerHTML = _b2PlayersView();
+        if(typeof _b2UpdateMainDisplay==='function' && typeof _b2SelectedPlayer !== 'undefined' && _b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
+      } else if(_b2View==='femco'){
+        document.getElementById('b2-content').innerHTML = _b2FemcoView();
+        try{ injectUnivIcons(document.getElementById('b2-content')); }catch(e){}
+      }
+    }
+  }catch(e){}
+
+  alert('✅ 브라우저 맞춤 자동 적용 완료');
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 모든 탭 공통: 모바일/태블릿 레이아웃 자동 맞춤(전역)
+// - B 옵션: 화면 크기 + 레이아웃(그리드/간격)까지 자동
+// ─────────────────────────────────────────────────────────────
+const _AF_ALLTABS_KEY = 'su_af_alltabs_v1';
+window.cfgSetAutoFitAllTabs = function(on){
+  try{ localStorage.setItem(_AF_ALLTABS_KEY, on ? '1' : '0'); }catch(e){}
+  try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
 function _cfgMenuSave(v){
   try{ localStorage.setItem(_CFG_MENU_KEY, JSON.stringify(v)); }catch(e){}
 }
@@ -177,6 +287,7 @@ function _cfgFindUpAttr(el, attrName, maxDepth){
 const _FEMCO_CFG_KEY = 'b2_femco_settings_v1';
 function _cfgFemcoDefaults(){
   return {
+    autoLayout: 1,     // 1: 인원수/화면폭에 맞춰 자동 레이아웃, 0: 수동 설정값 사용
     logoSize: 150,
     logoPos: 'top',
     logoAttachTitle: 1, // 1: 로고+대학명 같이 이동, 0: 로고만 이동
@@ -191,7 +302,7 @@ function _cfgFemcoDefaults(){
     univGap: 18,
     countFontSize: 12,
     contentPadX: 16,
-    contentAlign: 'center', // left | center
+    contentAlign: 'left', // left | center (기본은 좌측)
     contentOffsetX: 0,      // 좌우 미세 이동(-40~40)
     univSubtitles: {},
     subtitleSize: 12,
@@ -224,14 +335,21 @@ function _cfgFemcoSave(obj){
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
   const next = {...cur};
-  const numKeys = ['logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX'];
+  const numKeys = ['autoLayout','logoSize','logoAttachTitle','logoPos','headGap','titleSize','playerImgSize','rowsPerCol','colWidth','colGap','univGap','countFontSize','contentPadX','contentOffsetX','starSize','statusIconSize','subtitleSize','subtitleWeight','nameFontSize','roleFontSize','tierBadgeSize','tierBadgePadX'];
   next[k] = numKeys.includes(k) ? parseInt(v, 10) : v;
+
+  // 수동 조절을 건드리면 자동 레이아웃 OFF (원클릭 자동화 요구사항: 사용자가 바꾸면 유지)
+  const manualKeys = ['rowsPerCol','colWidth','colGap','univGap','playerImgSize','contentPadX','contentOffsetX','nameFontSize','roleFontSize','countFontSize','headGap','logoSize','statusIconSize','starSize'];
+  if (k !== 'autoLayout' && manualKeys.includes(k)) {
+    next.autoLayout = 0;
+  }
   _cfgFemcoSave(next);
 };
 
 window.cfgFemcoInit = function(){
   const s = _cfgFemcoLoad();
   const setVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
+  try{ const chk=document.getElementById('cfg-femco-autoLayout'); if(chk) chk.checked = (s.autoLayout ?? 1) ? true : false; }catch(e){}
   setVal('cfg-femco-logoSize', s.logoSize); setVal('cfg-femco-logoSizeNum', s.logoSize);
   setVal('cfg-femco-logoPos', s.logoPos);
   try{ const chk=document.getElementById('cfg-femco-logoAttachTitle'); if(chk) chk.checked = (s.logoAttachTitle ?? 1) ? true : false; }catch(e){}
@@ -246,7 +364,7 @@ window.cfgFemcoInit = function(){
   setVal('cfg-femco-univGap', s.univGap || 18); setVal('cfg-femco-univGapNum', s.univGap || 18);
   setVal('cfg-femco-countFontSize', s.countFontSize || 12); setVal('cfg-femco-countFontSizeNum', s.countFontSize || 12);
   setVal('cfg-femco-contentPadX', s.contentPadX || 16); setVal('cfg-femco-contentPadXNum', s.contentPadX || 16);
-  setVal('cfg-femco-contentAlign', s.contentAlign || 'center');
+  setVal('cfg-femco-contentAlign', s.contentAlign || 'left');
   setVal('cfg-femco-contentOffsetX', s.contentOffsetX || 0); setVal('cfg-femco-contentOffsetXNum', s.contentOffsetX || 0);
   setVal('cfg-femco-nameFontSize', s.nameFontSize || 12); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 12);
   setVal('cfg-femco-roleFontSize', s.roleFontSize || 10); setVal('cfg-femco-roleFontSizeNum', s.roleFontSize || 10);
@@ -581,7 +699,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 자동 맞춤', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
@@ -589,6 +707,7 @@ function rCfg(C,T){
   // 다른 함수에서도 참조할 수 있게 title 맵을 window에 노출
   window._cfgSecTitle = _cfgSecTitle;
   const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
+  const _afOn = (localStorage.getItem('su_af_alltabs_v1') === '1');
 
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px">
@@ -821,6 +940,17 @@ ${_scfgD('notice','📢 공지 관리')}
     <div id="cfg-storage-wrap2">
       <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
+    </div>
+  </details>
+  ${_scfgD('autofitall','📱 전체 탭 자동 맞춤 (모바일/태블릿)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 <b>간격·패딩·카드/그리드 밀도·테이블</b>을 화면에 맞춰 자동 조절합니다. (모든 탭 공통)</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-autofitall-on" style="width:15px;height:15px" ${_afOn?'checked':''}
+          onchange="cfgSetAutoFitAllTabs(this.checked)">
+        전체 탭 자동 맞춤 사용
+      </label>
+      <div style="font-size:11px;color:var(--gray-l)">※ 켜면 화면 크기 변화(가로/세로 전환 포함)에 따라 자동 적용됩니다.</div>
     </div>
   </details>
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
@@ -1067,6 +1197,10 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('b2layout','📐 이미지탭 레이아웃')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b" onclick="cfgAutoFitBoard()">📱 브라우저에 맞추기 (원클릭)</button>
+        <span style="font-size:11px;color:var(--gray-l)">모바일/태블릿에서 글자·아이콘·이미지 맞춤/펨코현황 가독성/이미지별(프로필) 잘림 방지 프리셋을 자동 적용합니다.</span>
+      </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(이미지) 너비</label>
@@ -1099,9 +1233,14 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
         </div>
         <div style="display:flex;align-items:flex-end;padding-bottom:4px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
-            <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절
-          </label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
+              <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절(좌우 비율)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
+              <input type="checkbox" id="cfg-b2-auto-height" checked style="width:15px;height:15px"> 모바일/태블릿 높이 자동 맞춤(추천)
+            </label>
+          </div>
         </div>
       </div>
       <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
@@ -1110,6 +1249,14 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('b2femco','🧩 펨코현황 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 &gt; 펨코현황판에서 사용하는 전용 설정입니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-femco-autoLayout" style="width:15px;height:15px" onchange="cfgFemcoUpd('autoLayout', this.checked?1:0)">
+          인원수/화면폭에 맞춰 자동 레이아웃(추천)
+        </label>
+        <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="(function(){cfgFemcoUpd('autoLayout',1);try{document.getElementById('cfg-femco-autoLayout').checked=true;}catch(e){};alert('✅ 자동 레이아웃으로 되돌렸습니다');render();})()">🔄 자동으로 되돌리기</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 아래 수동 값을 조절하면 자동 레이아웃이 자동으로 꺼집니다</span>
+      </div>
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2)">대학 로고 크기</div>
         <input type="range" id="cfg-femco-logoSize" min="60" max="340" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-logoSizeNum').value=this.value;cfgFemcoUpd('logoSize',this.value)">
@@ -1561,6 +1708,7 @@ ${_scfgD('notice','📢 공지 관리')}
     if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
     if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
+    if(document.getElementById('cfg-b2-auto-height'))document.getElementById('cfg-b2-auto-height').checked=b2Layout.autoHeight!==false;
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
     const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
     if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
@@ -1593,6 +1741,8 @@ ${_scfgD('notice','📢 공지 관리')}
     });
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
+    const autoHeightEl=document.getElementById('cfg-b2-auto-height');
+    if(autoHeightEl)autoHeightEl.addEventListener('change',saveB2LayoutSettings);
     // 스트리머 상세 이미지 설정 자동 저장 이벤트 리스너
     ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
@@ -1694,6 +1844,7 @@ function renderStorageInfo(){
 function saveB2LayoutSettings(){
   const settings = {
     autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
+    autoHeight: document.getElementById('cfg-b2-auto-height')?.checked !== false,
     leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
     rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
     pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,

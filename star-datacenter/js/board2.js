@@ -506,6 +506,7 @@ function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
   const FEMCO_STORE_KEY = 'b2_femco_settings_v1';
   const femcoDefaultSettings = () => ({
+    autoLayout: 1,            // 1: 인원수/화면폭에 맞춰 자동 레이아웃, 0: 수동 설정값 사용
     logoSize: 150,            // 대학 로고(px)
     logoPos: 'top',           // top | bottom | left | right | center
     logoAttachTitle: 1,       // 1: 로고+대학명 같이 이동, 0: 로고만 이동
@@ -520,7 +521,7 @@ function _b2FemcoView() {
     univGap: 18,              // 대학 섹션 간격(px)
     countFontSize: 12,        // 인원수 폰트(px)
     contentPadX: 16,          // 좌우 여백(px)
-    contentAlign: 'center',   // left | center
+    contentAlign: 'left',     // left | center (기본 좌측)
     contentOffsetX: 0,        // 좌우 미세 이동(-40~40)
     univSubtitles: {},        // { [univName]: "대학명 아래 문구" }
     subtitleSize: 12,         // 서브문구 폰트(px)
@@ -584,12 +585,34 @@ function _b2FemcoView() {
   const univGap = Math.max(0, Math.min(120, parseInt(femcoSettings.univGap || 18, 10) || 18));
   const countFontSize = Math.max(10, Math.min(18, parseInt(femcoSettings.countFontSize || 12, 10) || 12));
   const contentPadX = Math.max(0, Math.min(40, parseInt(femcoSettings.contentPadX || 16, 10) || 16));
-  const contentAlign = (femcoSettings.contentAlign === 'left' || femcoSettings.contentAlign === 'center') ? femcoSettings.contentAlign : 'center';
+  const contentAlign = (femcoSettings.contentAlign === 'left' || femcoSettings.contentAlign === 'center') ? femcoSettings.contentAlign : 'left';
   const contentOffsetX = Math.max(-40, Math.min(40, parseInt(femcoSettings.contentOffsetX || 0, 10) || 0));
   const headGap = Math.max(0, Math.min(80, parseInt(femcoSettings.headGap || 10, 10) || 10));
+  const autoLayout = !(femcoSettings.autoLayout === 0 || femcoSettings.autoLayout === false);
+  const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1200;
 
   const _padL = Math.max(0, Math.min(80, contentPadX + contentOffsetX));
   const _padR = Math.max(0, Math.min(80, contentPadX - contentOffsetX));
+
+  function _autoLayoutForCount(cnt){
+    // 인원수 + 화면폭 기준으로 "좌측부터 보기 좋은" 기본값 산출
+    let rows = 5;
+    if (cnt >= 55) rows = 9;
+    else if (cnt >= 45) rows = 8;
+    else if (cnt >= 35) rows = 7;
+    else if (cnt >= 25) rows = 6;
+    else rows = 5;
+
+    let cw = 175;
+    if (vw <= 520) { rows = Math.max(rows, 8); cw = 150; }
+    else if (vw <= 768) { rows = Math.max(rows, 7); cw = 160; }
+    else if (vw <= 1024) { rows = Math.max(rows, 6); cw = 170; }
+    else { cw = (cnt >= 45) ? 160 : 175; }
+
+    rows = Math.max(4, Math.min(12, rows));
+    cw = Math.max(130, Math.min(220, cw));
+    return {rowsPerCol: rows, colWidth: cw};
+  }
   const subtitleSize = Math.max(10, Math.min(24, parseInt(femcoSettings.subtitleSize || 12, 10) || 12));
   const subtitleWeight = [400,500,600,700,800,900].includes(parseInt(femcoSettings.subtitleWeight||800,10)) ? parseInt(femcoSettings.subtitleWeight||800,10) : 800;
   const subtitleColor = (typeof femcoSettings.subtitleColor === 'string') ? femcoSettings.subtitleColor : '';
@@ -692,21 +715,19 @@ function _b2FemcoView() {
       */
       .b2-femco-grid{
         display:grid;
+        --rowsPerCol:${rowsPerCol};
+        --colWidth:${colWidth}px;
         column-gap:${colGap}px;
         row-gap:${rowGap}px;
         grid-auto-flow:column;
-        grid-template-rows:repeat(${rowsPerCol}, minmax(0, auto));
-        grid-auto-columns:${colWidth}px;
+        grid-template-rows:repeat(var(--rowsPerCol), minmax(0, auto));
+        grid-auto-columns:var(--colWidth);
         overflow-x:auto;
         padding-bottom:6px;
         scrollbar-width:none;
-        justify-content:${contentAlign==='center'?'center':'start'};
+        justify-content:flex-start;
       }
       .b2-femco-grid::-webkit-scrollbar{height:0}
-      /* 모바일/태블릿: 좌측이 무조건 보이도록(중앙정렬 무시) */
-      @media(max-width:1024px){
-        .b2-femco-grid{justify-content:flex-start!important;}
-      }
 
       /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 4줄 */
       /* 카드 느낌 제거: 배경/테두리 최소화 */
@@ -720,12 +741,7 @@ function _b2FemcoView() {
       .b2-femco-name{font-size:${nameFontSize}px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .b2-femco-race-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:1000;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.10)}
 
-      /* 컬럼 수는 데이터에 따라 자동 증가(가로 스크롤). 작은 화면에서는 컬럼 폭을 줄여 가독성 유지 */
-      @media(max-width:900px){  .b2-femco-grid{grid-auto-columns:${Math.max(150, colWidth-20)}px;} }
-      @media(max-width:520px){
-        .b2-femco-title{font-size:20px}
-        .b2-femco-grid{grid-auto-columns:${Math.max(140, colWidth-30)}px;}
-      }
+      @media(max-width:520px){ .b2-femco-title{font-size:20px} }
     </style>
     <div class="b2-femco-wrap">
   `;
@@ -819,6 +835,9 @@ function _b2FemcoView() {
       return `<div class="b2-femco-headcol"><div class="b2-femco-logo">${logoHtml}</div>${titleBlock}</div>`;
     })();
 
+    // 자동 레이아웃(인원수/화면폭)에 따라 대학별로 rows/colWidth를 다르게 적용
+    const _lay = autoLayout ? _autoLayoutForCount(all.length) : {rowsPerCol, colWidth};
+
     h += `
       <section class="b2-femco-univ" style="background:${col}">
         <div class="b2-femco-head" style="color:${textCol};padding-left:${_padL}px;padding-right:${_padR}px">
@@ -832,7 +851,7 @@ function _b2FemcoView() {
         </div>
 
         <div class="b2-femco-body" style="background:${col}18;padding-left:${_padL}px;padding-right:${_padR}px">
-          <div class="b2-femco-grid">
+          <div class="b2-femco-grid" style="--rowsPerCol:${_lay.rowsPerCol};--colWidth:${_lay.colWidth}px">
             ${list.map(p => {
               const safeName = (p.name || '').replace(/'/g, "\\'");
               const tier = p.tier || '?';
@@ -2385,6 +2404,7 @@ function _b2PlayersView() {
 
   const layoutSettings = JSON.parse(localStorage.getItem('su_b2_layout') || '{}');
   const autoResize = layoutSettings.autoResize !== false;
+  const autoHeight = layoutSettings.autoHeight !== false;
   const leftSize = layoutSettings.rightSize || layoutSettings.leftSize || 55;
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
@@ -2446,6 +2466,15 @@ function _b2PlayersView() {
       }
       /* 모바일/태블릿: 이미지 설정(줌/이동) 때문에 잘리는 문제 방지 → 자동 맞춤 */
       @media (max-width: 1024px) {
+        .b2-players-main-image{
+          object-fit: contain !important;
+          object-position: center !important;
+          transform: translate(0,0) scale(1) !important;
+          filter: brightness(1) !important;
+        }
+      }
+      /* 태블릿(아이패드 프로 등) 대응: 폭이 1024를 넘더라도 터치 디바이스면 자동 맞춤 */
+      @media (max-width: 1366px) and (pointer: coarse) {
         .b2-players-main-image{
           object-fit: contain !important;
           object-position: center !important;
@@ -2638,8 +2667,8 @@ function _b2PlayersView() {
         .b2-players-main {
           flex: 0 0 auto;
           width: 100%;
-          height: 400px;
-          min-height: 400px;
+          min-height: ${tabletHeight}px;
+          height: ${autoHeight ? `clamp(${tabletHeight}px, 52vh, ${tabletHeight + 220}px)` : `${tabletHeight}px`};
         }
         .b2-players-grid-wrapper {
           flex: 1;
@@ -2648,8 +2677,8 @@ function _b2PlayersView() {
       }
       @media (max-width: 768px) {
         .b2-players-main {
-          height: 350px;
-          min-height: 350px;
+          min-height: ${mobileHeight}px;
+          height: ${autoHeight ? `clamp(${mobileHeight}px, 52vh, ${mobileHeight + 160}px)` : `${mobileHeight}px`};
         }
       }
       .b2-players-card {

@@ -102,6 +102,69 @@ window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
 _applyUiScale();
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 모든 탭 공통 자동 맞춤(모바일/태블릿)
+// - 간격/패딩/카드·그리드 밀도/테이블 패딩 등을 화면에 맞춰 조절
+// - 설정: localStorage su_af_alltabs_v1 = '1'
+// ─────────────────────────────────────────────────────────────
+function _applyAllTabsAutoFit(){
+  const key = 'su_af_alltabs_v1';
+  let on = false;
+  try{ on = (localStorage.getItem(key) === '1'); }catch(e){ on = false; }
+
+  try{
+    // 모바일 주소창 변동 대응용 CSS vh 변수
+    const vh = (window.innerHeight || 800) * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }catch(e){}
+
+  try{
+    if(document.body) document.body.classList.toggle('af-on', !!on);
+  }catch(e){}
+  if(!on) return;
+
+  const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+  const h = Math.max(480, Math.min(2160, window.innerHeight || 800));
+  const landscape = w > h;
+  const isMobile = w <= 768;
+  const isTablet = w > 768 && w <= 1024;
+
+  // 기본값(PC)
+  let bodyPad = 16, mainPad = 18, gap = 12, cardMin = 120, cardPad = 14;
+  let tdx = 12, tdy = 8;
+
+  if(isTablet){
+    bodyPad = 12; mainPad = 14; gap = 10; cardMin = 110; cardPad = 12;
+    tdx = 10; tdy = 7;
+  }
+  if(isMobile){
+    bodyPad = 10; mainPad = 12; gap = 8; cardMin = 92; cardPad = 10;
+    tdx = 8; tdy = 6;
+  }
+  // 가로모드(특히 모바일 가로)는 세로공간이 부족하니 더 촘촘하게
+  if(landscape && w <= 1024){
+    bodyPad = Math.max(6, bodyPad - 2);
+    mainPad = Math.max(8, mainPad - 2);
+    gap = Math.max(6, gap - 1);
+    tdy = Math.max(5, tdy - 1);
+  }
+
+  try{
+    const r = document.documentElement;
+    r.style.setProperty('--af-body-pad', bodyPad+'px');
+    r.style.setProperty('--af-main-pad', mainPad+'px');
+    r.style.setProperty('--af-gap', gap+'px');
+    r.style.setProperty('--af-card-min', cardMin+'px');
+    r.style.setProperty('--af-card-pad', cardPad+'px');
+    r.style.setProperty('--af-tdx', tdx+'px');
+    r.style.setProperty('--af-tdy', tdy+'px');
+  }catch(e){}
+}
+window._applyAllTabsAutoFit = _applyAllTabsAutoFit;
+window.addEventListener('resize', ()=>{ _applyAllTabsAutoFit(); }, {passive:true});
+window.addEventListener('orientationchange', ()=>{ setTimeout(_applyAllTabsAutoFit, 50); }, {passive:true});
+_applyAllTabsAutoFit();
+
+// ─────────────────────────────────────────────────────────────
 // 상단 탭/필터바: 스와이프/드래그로 가로 스크롤 가능하게(이동 버튼 없이도)
 // - 대상: .tabs, .fbar (overflow-x:auto 영역)
 // ─────────────────────────────────────────────────────────────
