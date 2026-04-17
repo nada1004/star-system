@@ -165,6 +165,91 @@ window.addEventListener('orientationchange', ()=>{ setTimeout(_applyAllTabsAutoF
 _applyAllTabsAutoFit();
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드(모든 기록 탭) 테마/밝기 설정
+// - 승리 대학색을 카드 배경/헤더에 연하게 적용
+// ─────────────────────────────────────────────────────────────
+function _applyRecCardTheme(){
+  const onKey='su_rc_theme_on';
+  const acKey='su_rc_accent_mode';
+  const bgKey='su_rc_bg_alpha';
+  const hdKey='su_rc_hd_alpha';
+  const iconKey='su_rc_uicon';
+  const memoKey='su_rc_memo_on';
+  let on=true, accent='none', bg=12, hd=14, uicon=18, memoOn=false;
+  try{
+    const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
+    const a=localStorage.getItem(acKey); if(a) accent=a;
+    const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
+    const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
+    const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
+    const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
+  }catch(e){}
+  bg=Math.max(0,Math.min(30,bg));
+  hd=Math.max(0,Math.min(30,hd));
+  uicon=Math.max(12,Math.min(28,uicon));
+  accent = ['none','header','border'].includes(accent) ? accent : 'none';
+
+  try{
+    if(document.body){
+      document.body.classList.toggle('rc-theme-on', !!on);
+      document.body.classList.toggle('rc-accent-header', !!on && accent==='header');
+      document.body.classList.toggle('rc-accent-border', !!on && accent==='border');
+    }
+    document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
+    document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
+    document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
+    document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
+  }catch(e){}
+}
+window._applyRecCardTheme=_applyRecCardTheme;
+_applyRecCardTheme();
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭 카드(조별리그 일정 등) 테마/디자인 모드
+// ─────────────────────────────────────────────────────────────
+function _applyTourneyCardTheme(){
+  const onKey='su_tc_theme_on';
+  const acKey='su_tc_accent_mode';
+  const hdKey='su_tc_hd_alpha';
+  const bwKey='su_tc_border_w';
+  const icKey='su_tc_uicon';
+  const lwKey='su_tc_line_w';
+  const laKey='su_tc_line_a';
+  let on=false, accent='none', hd=12, bw=4, ic=34;
+  let lw=2, la=70;
+  try{
+    const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
+    const a=localStorage.getItem(acKey); if(a) accent=a;
+    const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
+    const b=parseInt(localStorage.getItem(bwKey)||'',10); if(!isNaN(b)) bw=b;
+    const i=parseInt(localStorage.getItem(icKey)||'',10); if(!isNaN(i)) ic=i;
+    const w=parseInt(localStorage.getItem(lwKey)||'',10); if(!isNaN(w)) lw=w;
+    const o=parseInt(localStorage.getItem(laKey)||'',10); if(!isNaN(o)) la=o;
+  }catch(e){}
+  hd=Math.max(0,Math.min(30,hd));
+  bw=Math.max(2,Math.min(6,bw));
+  ic=Math.max(24,Math.min(48,ic));
+  lw=Math.max(1,Math.min(4,lw));
+  la=Math.max(25,Math.min(100,la));
+  accent = ['none','header','border'].includes(accent) ? accent : 'none';
+
+  try{
+    if(document.body){
+      document.body.classList.toggle('tc-theme-on', !!on);
+      document.body.classList.toggle('tc-accent-header', !!on && accent==='header');
+      document.body.classList.toggle('tc-accent-border', !!on && accent==='border');
+    }
+    document.documentElement.style.setProperty('--tc-hd-a', String(hd/100));
+    document.documentElement.style.setProperty('--tc-bw', bw+'px');
+    document.documentElement.style.setProperty('--tc-uicon', ic+'px');
+    document.documentElement.style.setProperty('--tc-line-w', lw+'px');
+    document.documentElement.style.setProperty('--tc-line-a', String(la/100));
+  }catch(e){}
+}
+window._applyTourneyCardTheme=_applyTourneyCardTheme;
+_applyTourneyCardTheme();
+
+// ─────────────────────────────────────────────────────────────
 // 상단 탭/필터바: 스와이프/드래그로 가로 스크롤 가능하게(이동 버튼 없이도)
 // - 대상: .tabs, .fbar (overflow-x:auto 영역)
 // ─────────────────────────────────────────────────────────────

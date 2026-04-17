@@ -1031,7 +1031,7 @@ function histTourneyHTML(context){
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
             ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
               ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
               <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
               ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
@@ -1170,48 +1170,10 @@ function statCard(label,w,l,d,col){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
-  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
-  const _dayMs=86400000;
-  const _today0=new Date(); _today0.setHours(0,0,0,0);
-  function _parseYmd(s){
-    if(!s) return null;
-    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
-    // YYYY-MM-DD or YY-MM-DD
-    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
-    if(!m) return null;
-    let y=parseInt(m[1],10); if(y<100) y+=2000;
-    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
-    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
-    dt.setHours(0,0,0,0);
-    return dt;
-  }
-  function _bucketLabel(dt){
-    if(!dt) return '이전';
-    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
-    if(diff===0) return '오늘';
-    if(diff===1) return '어제';
-    if(diff>=2 && diff<=6) return '이번주';
-    return '이전';
-  }
-  const _bucketOrder=['오늘','어제','이번주','이전'];
-
-  function _grpHeader(lbl, w,l,d){
-    const tot=w+l+d;
-    const wr=tot?Math.round(w/tot*100):0;
-    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-weight:900">${lbl}</span>
-      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
-      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
-      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
-      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
-      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
-    </div>`;
-  }
-
   let h='';
   let _filtered=false;
-  // 1) 먼저 유효 경기만 모아서 버킷으로 분류
-  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
+  // 유효 경기만 모아 렌더(그룹 요약 제거 요청)
+  const list=[];
   arr.forEach(m=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
@@ -1219,9 +1181,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
-    const dt=_parseYmd(m.d||'');
-    const b=_bucketLabel(dt);
-    grouped[b].push(m);
+    list.push(m);
   });
 
   function _renderItem(m){
@@ -1259,45 +1219,40 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
+            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:'';})()}
           </div>
         </div>
       </div>
     </div>`;
   }
 
-  // 2) 버킷 순서대로 렌더 + 버킷별 승/패/무 소계
-  _bucketOrder.forEach(lbl=>{
-    const list=grouped[lbl]||[];
-    if(!list.length) return;
-    let w=0,l=0,d=0;
-    list.forEach(m=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(aWin||bWin) w++; else d++;
-    });
-    // filtered(univ) 컨텍스트에서는 승/패는 "해당 대학 기준"이 더 직관적
-    // - 팀전(CK/pro/tt)은 소속 대학으로 판단
-    try{
-      w=0; l=0; d=0;
-      list.forEach(m=>{
-        const isCK=isCKmode;
-        const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-        if(!aWin && !bWin){ d++; return; }
-        const isA=(!isCK&&m.a===filterUniv)||(isCK&&(m.teamAMembers||[]).some(x=>x.univ===filterUniv));
-        const isB=(!isCK&&m.b===filterUniv)||(isCK&&(m.teamBMembers||[]).some(x=>x.univ===filterUniv));
-        const myWin=(isA&&aWin)||(isB&&bWin);
-        if(myWin) w++; else l++;
-      });
-    }catch(e){}
-    h+=_grpHeader(lbl,w,l,d);
-    list.forEach(_renderItem);
-  });
+  list.forEach(_renderItem);
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // 기록 카드 스타일 설정 (localStorage 기반)
+  function _rcGet(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } }
+  const _rcThemeOn = _rcGet('su_rc_theme_on','1')==='1';
+  const _rcAccent  = (_rcGet('su_rc_accent_mode','none')||'none').trim();
+  const _rcMemoOn  = _rcGet('su_rc_memo_on','0')==='1';
+  const _uiconPx   = Math.max(12, Math.min(28, parseInt(_rcGet('su_rc_uicon','18'),10)||18));
+  function _hexToRgbStr(hex){
+    const h=String(hex||'').replace('#','').trim();
+    if(h.length===3){
+      const r=parseInt(h[0]+h[0],16), g=parseInt(h[1]+h[1],16), b=parseInt(h[2]+h[2],16);
+      if([r,g,b].some(x=>isNaN(x))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+    if(h.length>=6){
+      const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+      if([r,g,b].some(x=>isNaN(x))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+    return '100,116,139';
+  }
   if(!window._recQ)window._recQ={};
   if(!arr.length){
     const emptyBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
@@ -1377,42 +1332,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">해당 기간에 기록이 없습니다</div><div class="empty-state-desc">다른 기간을 선택해보세요</div></div>`;
   }
 
-  // ── 타임라인 그룹(안 #2): 오늘/어제/이번주/이전 ──
-  const _dayMs=86400000;
-  const _today0=new Date(); _today0.setHours(0,0,0,0);
-  function _parseYmd(s){
-    if(!s) return null;
-    const t=String(s).trim().replace(/\./g,'-').replace(/\//g,'-');
-    const m=t.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})/);
-    if(!m) return null;
-    let y=parseInt(m[1],10); if(y<100) y+=2000;
-    const mo=parseInt(m[2],10)-1, d=parseInt(m[3],10);
-    const dt=new Date(y,mo,d); if(isNaN(dt.getTime())) return null;
-    dt.setHours(0,0,0,0);
-    return dt;
-  }
-  function _bucketLabel(dt){
-    if(!dt) return '이전';
-    const diff=Math.round((_today0.getTime()-dt.getTime())/_dayMs);
-    if(diff===0) return '오늘';
-    if(diff===1) return '어제';
-    if(diff>=2 && diff<=6) return '이번주';
-    return '이전';
-  }
-  const _bucketOrder=['오늘','어제','이번주','이전'];
-  function _grpHeader(lbl, w,l,d){
-    const tot=w+l+d;
-    const wr=tot?Math.round(w/tot*100):0;
-    return `<div class="rec-daygrp" style="margin:10px 0 8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-weight:900">${lbl}</span>
-      <span style="font-size:12px;color:var(--gray-l)">${tot}경기</span>
-      <span style="font-size:12px;font-weight:800;color:#16a34a">${w}승</span>
-      <span style="font-size:12px;font-weight:800;color:#dc2626">${l}패</span>
-      ${d?`<span style="font-size:12px;font-weight:800;color:var(--gray-l)">${d}무</span>`:''}
-      <span style="margin-left:auto;font-size:12px;font-weight:900;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</span>
-    </div>`;
-  }
-
   // 기존 렌더 블록을 함수로 감싸서 그룹 출력에 재사용
   function _recItemHTML(m,i){
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
@@ -1429,8 +1348,15 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
     const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const _wBorderCol=aWin?ca:bWin?cb:'var(--border)';
-    return `<div class="rec-summary" style="border-left:3px solid ${_wBorderCol}">
+    // 기본(무색)에서는 승리색 테두리도 사용하지 않음
+    const _wBorderCol = (_rcThemeOn && _rcAccent==='border' && (aWin||bWin)) ? (aWin?ca:bWin?cb:'var(--border)') : 'var(--border)';
+    // 승리 색 테마(대학 색) — 켜져있을 때만 적용
+    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '';
+    const _rgb = _hexToRgbStr(_winCol);
+    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ' rc-theme' : '';
+    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};` : '';
+
+    return `<div class="rec-summary${_themeCls}" style="${_themeStyle}border-left:3px solid ${_wBorderCol}">
       <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
@@ -1438,6 +1364,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
+          ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드" style="padding:3px 8px;font-size:14px">🎴</button>`:'';})()}
           <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
           ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
           ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
@@ -1446,13 +1373,13 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
       <div class="rec-sum-header" style="padding:6px 12px 10px">
         <div class="rec-sum-vs">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA}${labelA}</span>
+          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
             <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
             <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
             <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
           </div>
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB}${labelB}</span>
+          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
@@ -1460,8 +1387,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>
-            ${isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
+            ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}`:''}
           </div>
@@ -1470,35 +1396,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     </div>`;
   }
 
-  const grouped={'오늘':[], '어제':[], '이번주':[], '이전':[]};
-  paged.forEach(({m,i})=>{
-    const dt=_parseYmd(m.d||'');
-    const b=_bucketLabel(dt);
-    grouped[b].push({m,i});
-  });
-
+  // (요청사항) 기록탭 상단 ‘이전/승패 요약’ 제거 → 그냥 리스트로만 출력
   let h=sortBar+`<div id="rec-list-${mode}">`;
-  _bucketOrder.forEach(lbl=>{
-    const list=grouped[lbl]||[];
-    if(!list.length) return;
-    let w=0,l=0,d=0;
-    list.forEach(({m})=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(!aWin && !bWin){ d++; return; }
-      w++;
-    });
-    // 일반 리스트에서는 승/패는 "A/B" 기준이 아니라 그냥 결과(승부 있음=승)로 잡으면 무의미하므로,
-    // 팀전 기준으로 '승부 있음'을 승으로 두는 대신, 승/패를 균형 있게 표시하도록 A팀 기준으로 계산.
-    w=0; l=0; d=0;
-    list.forEach(({m})=>{
-      const aWin=(m.sa>m.sb), bWin=(m.sb>m.sa);
-      if(!aWin && !bWin){ d++; return; }
-      // A가 이기면 승, 지면 패(표준 표기)
-      if(aWin) w++; else l++;
-    });
-    h+=_grpHeader(lbl,w,l,d);
-    list.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
-  });
+  paged.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
 
   // ── 페이지 컨트롤 ──
   if(totalItems>getHistPageSize()){
@@ -1983,7 +1883,7 @@ function compSummaryListHTML(context){
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>
+            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
             ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
             ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}

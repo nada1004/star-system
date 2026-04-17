@@ -40,7 +40,7 @@ const _DEFAULT_CATSECS = {
   // (요청사항) 설정탭 카테고리명 변경: "현황판 관리" → "이미지 관리"
   '이미지 관리':['b2layout','b2femco'],
   // "설정 메뉴 정리"는 기본으로 시스템 설정에 둠
-  '시스템 설정':['cfgmenu','autofitall','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
+  '시스템 설정':['cfgmenu','autofitall','reccard','tourneycard','calui','imgsettings','imgmodalsettings','pd','boardchip','oldbright','boardbg','fab','storage'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
@@ -156,6 +156,66 @@ const _AF_ALLTABS_KEY = 'su_af_alltabs_v1';
 window.cfgSetAutoFitAllTabs = function(on){
   try{ localStorage.setItem(_AF_ALLTABS_KEY, on ? '1' : '0'); }catch(e){}
   try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드 테마/밝기/아이콘/메모 설정
+// ─────────────────────────────────────────────────────────────
+window.cfgSetRecCardSettings = function(){
+  const on = !!document.getElementById('cfg-rc-theme-on')?.checked;
+  const accent = (document.getElementById('cfg-rc-accent')?.value || 'none').trim();
+  const bg = parseInt(document.getElementById('cfg-rc-bg')?.value||'12',10);
+  const hd = parseInt(document.getElementById('cfg-rc-hd')?.value||'14',10);
+  const ic = parseInt(document.getElementById('cfg-rc-uicon')?.value||'18',10);
+  const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
+  const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
+
+  try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border'].includes(accent)?accent:'none'); }catch(e){}
+  try{ localStorage.setItem('su_rc_bg_alpha', String(Math.max(0,Math.min(30,bg)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_hd_alpha', String(Math.max(0,Math.min(30,hd)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_uicon', String(Math.max(12,Math.min(28,ic)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
+
+  // 즉시 반영
+  try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭 카드(조별리그 일정 등) 전용 디자인 3안
+// ─────────────────────────────────────────────────────────────
+window.cfgSetTourneyCardSettings = function(){
+  const on = !!document.getElementById('cfg-tc-theme-on')?.checked;
+  const accent = (document.getElementById('cfg-tc-accent')?.value || 'none').trim();
+  const hd = parseInt(document.getElementById('cfg-tc-hd')?.value||'12',10);
+  const bw = parseInt(document.getElementById('cfg-tc-bw')?.value||'4',10);
+  const ic = parseInt(document.getElementById('cfg-tc-uicon')?.value||'34',10);
+  const lw = parseInt(document.getElementById('cfg-tc-line-w')?.value||'2',10);
+  const la = parseInt(document.getElementById('cfg-tc-line-a')?.value||'70',10);
+
+  try{ localStorage.setItem('su_tc_theme_on', on ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_tc_accent_mode', ['none','header','border'].includes(accent)?accent:'none'); }catch(e){}
+  try{ localStorage.setItem('su_tc_hd_alpha', String(Math.max(0,Math.min(30,hd)))); }catch(e){}
+  try{ localStorage.setItem('su_tc_border_w', String(Math.max(2,Math.min(6,bw)))); }catch(e){}
+  try{ localStorage.setItem('su_tc_uicon', String(Math.max(24,Math.min(48,ic)))); }catch(e){}
+  try{ localStorage.setItem('su_tc_line_w', String(Math.max(1,Math.min(4,lw)))); }catch(e){}
+  try{ localStorage.setItem('su_tc_line_a', String(Math.max(25,Math.min(100,la)))); }catch(e){}
+
+  try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 캘린더 요약칩/공유 버튼 구성
+// ─────────────────────────────────────────────────────────────
+window.cfgSetCalendarUiSettings = function(){
+  const chipMode = (document.getElementById('cfg-cal-chip')?.value || 'types').trim(); // total | types
+  const shareAdminOnly = !!document.getElementById('cfg-share-adminonly')?.checked;
+  try{ localStorage.setItem('su_cal_chip_mode', (chipMode==='total'?'total':'types')); }catch(e){}
+  try{ localStorage.setItem('su_share_admin_only', shareAdminOnly ? '1' : '0'); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
 function _cfgMenuSave(v){
@@ -699,7 +759,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 자동 맞춤', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 보드 칩', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
@@ -708,6 +768,13 @@ function rCfg(C,T){
   window._cfgSecTitle = _cfgSecTitle;
   const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
   const _afOn = (localStorage.getItem('su_af_alltabs_v1') === '1');
+  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '1') === '1';
+  const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
+  const _rcBg = parseInt(localStorage.getItem('su_rc_bg_alpha') ?? '12',10) || 12;
+  const _rcHd = parseInt(localStorage.getItem('su_rc_hd_alpha') ?? '14',10) || 14;
+  const _rcIc = parseInt(localStorage.getItem('su_rc_uicon') ?? '18',10) || 18;
+  const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
+  const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
 
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px">
@@ -942,8 +1009,8 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
   </details>
-  ${_scfgD('autofitall','📱 전체 탭 자동 맞춤 (모바일/태블릿)')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 <b>간격·패딩·카드/그리드 밀도·테이블</b>을 화면에 맞춰 자동 조절합니다. (모든 탭 공통)</div>
+  ${_scfgD('autofitall','📱 전역 자동 맞춤 (모든 탭)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 <b>간격·패딩·카드/그리드 밀도·테이블</b>을 화면에 맞춰 자동 조절합니다. (전 탭 공통)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-autofitall-on" style="width:15px;height:15px" ${_afOn?'checked':''}
@@ -953,6 +1020,134 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="font-size:11px;color:var(--gray-l)">※ 켜면 화면 크기 변화(가로/세로 전환 포함)에 따라 자동 적용됩니다.</div>
     </div>
   </details>
+  ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
+        승리 대학색을 카드 배경/헤더에 연하게 적용
+      </label>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
+        <select id="cfg-rc-accent" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="none" ${_rcAccent==='none'?'selected':''}>무색</option>
+          <option value="header" ${_rcAccent==='header'?'selected':''}>헤더만 포인트</option>
+          <option value="border" ${_rcAccent==='border'?'selected':''}>테두리만 포인트</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
+          <input type="range" id="cfg-rc-bg" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcBg))}" oninput="document.getElementById('cfg-rc-bg-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-bg-v">${Math.max(0,Math.min(30,_rcBg))}%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 헤더 색상 강도</div>
+          <input type="range" id="cfg-rc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcHd))}" oninput="document.getElementById('cfg-rc-hd-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-hd-v">${Math.max(0,Math.min(30,_rcHd))}%</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 아이콘 크기(기록 카드)</div>
+          <input type="range" id="cfg-rc-uicon" min="12" max="28" step="1" value="${Math.max(12,Math.min(28,_rcIc))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(28,_rcIc))}px</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머 프로필 이미지 크기(전역 배율)</div>
+          <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,_avaScale))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-rc-memo-on" style="width:15px;height:15px" ${_rcMemoOn?'checked':''} onchange="cfgSetRecCardSettings()">
+        기록 카드에서 메모 입력 기능 사용(관리자)
+      </label>
+      <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+    </div>
+  </details>
+  ${(()=>{ 
+    const _tcOn = (localStorage.getItem('su_tc_theme_on') ?? '0') === '1';
+    const _tcAccent = (localStorage.getItem('su_tc_accent_mode') ?? 'none');
+    const _tcHd = parseInt(localStorage.getItem('su_tc_hd_alpha') ?? '12',10) || 12;
+    const _tcBw = parseInt(localStorage.getItem('su_tc_border_w') ?? '4',10) || 4;
+    const _tcIc = parseInt(localStorage.getItem('su_tc_uicon') ?? '34',10) || 34;
+    const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
+    const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
+    return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${_tcOn?'checked':''} onchange="cfgSetTourneyCardSettings()">
+        대회 카드 디자인 모드 사용
+      </label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
+        <select id="cfg-tc-accent" onchange="cfgSetTourneyCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="none" ${_tcAccent==='none'?'selected':''}>무색</option>
+          <option value="header" ${_tcAccent==='header'?'selected':''}>상단 바 포인트</option>
+          <option value="border" ${_tcAccent==='border'?'selected':''}>테두리 포인트</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">상단 바 색상 강도</div>
+          <input type="range" id="cfg-tc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_tcHd))}" oninput="document.getElementById('cfg-tc-hd-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-hd-v">${Math.max(0,Math.min(30,_tcHd))}%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">테두리 두께</div>
+          <input type="range" id="cfg-tc-bw" min="2" max="6" step="1" value="${Math.max(2,Math.min(6,_tcBw))}" oninput="document.getElementById('cfg-tc-bw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-bw-v">${Math.max(2,Math.min(6,_tcBw))}px</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 로고 크기(대회 카드)</div>
+        <input type="range" id="cfg-tc-uicon" min="24" max="48" step="2" value="${Math.max(24,Math.min(48,_tcIc))}" oninput="document.getElementById('cfg-tc-ic-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,_tcIc))}px</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 두께</div>
+          <input type="range" id="cfg-tc-line-w" min="1" max="4" step="1" value="${Math.max(1,Math.min(4,_tcLw))}" oninput="document.getElementById('cfg-tc-lw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-lw-v">${Math.max(1,Math.min(4,_tcLw))}px</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 진하기</div>
+          <input type="range" id="cfg-tc-line-a" min="25" max="100" step="5" value="${Math.max(25,Math.min(100,_tcLa))}" oninput="document.getElementById('cfg-tc-la-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
+        </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const _chip = (localStorage.getItem('su_cal_chip_mode') ?? 'types');
+    const _shareAdm = (localStorage.getItem('su_share_admin_only') ?? '0') === '1';
+    return _scfgD('calui','📅 캘린더 표시/버튼') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">캘린더 탭의 날짜 칸 표시와 카드 버튼 구성을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">월간/주간 날짜칸 요약</div>
+        <select id="cfg-cal-chip" onchange="cfgSetCalendarUiSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="total" ${_chip==='total'?'selected':''}>총 경기수만</option>
+          <option value="types" ${_chip!=='total'?'selected':''}>총 + 상위2종류</option>
+        </select>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-share-adminonly" style="width:15px;height:15px" ${_shareAdm?'checked':''} onchange="cfgSetCalendarUiSettings()">
+        공유 버튼 숨기기(관리자만 표시)
+      </label>
+      <div style="font-size:11px;color:var(--gray-l)">※ 관리자=로그인 상태. 기록/대회/캘린더 카드의 공유 버튼이 함께 적용됩니다.</div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
@@ -1198,8 +1393,8 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-b" onclick="cfgAutoFitBoard()">📱 브라우저에 맞추기 (원클릭)</button>
-        <span style="font-size:11px;color:var(--gray-l)">모바일/태블릿에서 글자·아이콘·이미지 맞춤/펨코현황 가독성/이미지별(프로필) 잘림 방지 프리셋을 자동 적용합니다.</span>
+        <button class="btn btn-b" onclick="cfgAutoFitBoard()">📱 이미지탭 자동 맞춤(원클릭)</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ “전역 자동 맞춤(모든 탭)”과 별개로, <b>이미지탭(프로필)</b> 전용 프리셋입니다.</span>
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -1582,8 +1777,8 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
-  ${_scfgD('boardchip','🖼️ 현황판 칩 프로필 이미지 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판(현재 현황판) 스트리머 칩의 프로필 이미지 모양과 크기를 설정합니다.</div>
+  ${_scfgD('boardchip','🏷️ 현황판 칩/대학로고 크기')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판 칩/대학 로고 관련 설정입니다. <b>스트리머 프로필 이미지 전역 배율</b>과는 별개로 동작합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양</div>

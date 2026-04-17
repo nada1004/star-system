@@ -56,6 +56,49 @@ try { _whHistory = JSON.parse(localStorage.getItem('su_wh_hist') || '[]'); } cat
 let _whStats      = {};
 try { _whStats    = JSON.parse(localStorage.getItem('su_wh_stats') || '{}'); } catch(e) {}
 
+// ─── 가중치 파서 ("이름*2" 지원) ─────────────────────────────────────────────
+function _whParseWeightedCSV(text){
+  const raw = String(text||'');
+  const tokens = raw.split(',').map(v=>v.trim()).filter(Boolean);
+  const map = new Map();
+  tokens.forEach(t=>{
+    let name=t, w=1;
+    const m=t.match(/^(.*?)(?:\*(\d+(?:\.\d+)?))$/);
+    if(m){
+      name=(m[1]||'').trim();
+      const n=parseFloat(m[2]);
+      if(!isNaN(n) && isFinite(n)) w=n;
+    }
+    if(!name) return;
+    w=Math.max(0.01, Math.min(1000, w));
+    map.set(name, (map.get(name)||0) + w);
+  });
+  const entries=[...map.entries()].map(([name,weight])=>({name,weight}));
+  const total=entries.reduce((s,x)=>s+x.weight,0)||0;
+  return {entries,total,tokens};
+}
+
+function _whProbHTML(){
+  const inp = document.getElementById('wh-input');
+  const raw = inp ? inp.value : (localStorage.getItem('su_wh_input') || '');
+  const p = _whParseWeightedCSV(raw);
+  if(!p.entries.length) return '';
+  const rows = p.entries.slice().sort((a,b)=>b.weight-a.weight).slice(0, 12).map(function(it){
+    const pr = p.total ? (it.weight/p.total*100) : 0;
+    return '<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">'
+      + '<span style="flex:1;font-weight:700;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + it.name + '</span>'
+      + '<span style="font-size:11px;color:var(--text3)">w=' + (''+it.weight.toFixed(2)).replace(/\\.00$/,'') + '</span>'
+      + '<span style="min-width:62px;text-align:right;font-size:11px;font-weight:900;color:#FF4B6E">' + pr.toFixed(1) + '%</span>'
+      + '</div>';
+  }).join('');
+  const more = p.entries.length>12 ? '<div style="margin-top:6px;font-size:11px;color:var(--text3)">… 외 ' + (p.entries.length-12) + '개</div>' : '';
+  return '<div id="wh-prob" style="width:100%;max-width:520px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 6px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+    + '<span style="font-size:12px;font-weight:900;color:var(--text2)">📊 확률(가중치) · 형식: 이름*2</span>'
+    + '<span style="font-size:11px;color:var(--text3)">합=' + (''+p.total.toFixed(2)).replace(/\\.00$/,'') + '</span>'
+    + '</div>' + rows + more + '</div>';
+}
+
 // ─── 공개 API ────────────────────────────────────────────────────────────────
 function _whInit() {
   const root = document.getElementById('wh-root');
@@ -73,10 +116,11 @@ function _whRender(root) {
     '<div class="wh-wrap">'
     // 입력 + 속도 행
     + '<div class="wh-input-row">'
-    + '<textarea class="wh-textarea" id="wh-input" placeholder="이름 입력... (쉼표로 구분)" oninput="_whOnInput(this.value)">' + savedInput + '</textarea>'
+    + '<textarea class="wh-textarea" id="wh-input" placeholder="이름 입력... (쉼표로 구분, 가중치: 이름*2)" oninput="_whOnInput(this.value)">' + savedInput + '</textarea>'
     + '<button onclick="_whShuffleInput()" style="padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">🔀 섞기</button>'
     + '<div class="wh-speed-wrap"><span style="font-size:12px;font-weight:700;color:var(--text3)">⚡</span><input type="range" id="wh-speed" min="1" max="5" value="' + (sIdx+1) + '" oninput="_whUpdateSpeed(this.value)" style="width:70px;accent-color:#FF4B6E"><span class="wh-speed-lbl" id="wh-speed-lbl">' + _WH_SPEED_LBLS[sIdx] + '</span></div>'
     + '</div>'
+    + _whProbHTML()
     // 캔버스 + 버튼
     + '<div class="wh-canvas-wrap" id="wh-canvas-wrap">'
     + '<div class="wh-pointer">▼</div>'
@@ -87,7 +131,8 @@ function _whRender(root) {
     + '<div id="wh-result-card" style="display:none;width:100%;max-width:480px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:20px;text-align:center;box-sizing:border-box;animation:whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">'
     + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
     + '<div id="wh-res-icon" style="font-size:52px;margin-bottom:6px;line-height:1.1">🏆</div>'
-    + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:14px"></div>'
+    + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:6px"></div>'
+    + '<div id="wh-res-prob" style="font-size:14px;font-weight:900;color:#FF4B6E;margin-bottom:14px"></div>'
     + '<button onclick="_whSpin()" style="font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#FF4B6E,#FF89AB);border:none;border-radius:22px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🎡 다시 돌리기</button>'
     + '</div>'
     // 히스토리
@@ -134,8 +179,11 @@ function _whDraw(angle) {
   const cv = document.getElementById('wh-canvas');
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const names = _whGetNames();
-  const n = names.length;
+  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const parsed = _whParseWeightedCSV(raw);
+  const entries = parsed.entries;
+  const totalW = parsed.total || 0;
+  const n = entries.length;
   ctx.clearRect(0, 0, cv.width, cv.height);
   if (!n) {
     ctx.fillStyle = 'var(--surface, #f8f9fa)';
@@ -146,10 +194,12 @@ function _whDraw(angle) {
     return;
   }
   const cx = cv.width/2, cy = cx, r = cx - 5;
-  const slice = Math.PI * 2 / n;
+  let cum = 0;
   for (var i = 0; i < n; i++) {
+    const w = entries[i].weight;
+    const slice = totalW ? (Math.PI * 2 * (w / totalW)) : (Math.PI * 2 / n);
     const col = _WH_COLORS[i % _WH_COLORS.length];
-    const s = angle + i * slice, e = s + slice;
+    const s = angle + cum, e = s + slice;
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, s, e); ctx.closePath();
     ctx.fillStyle = col[0]; ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.stroke();
@@ -159,8 +209,9 @@ function _whDraw(angle) {
     const fs = Math.min(18, Math.max(9, Math.round(r * 0.13 * (8 / Math.max(n, 4)))));
     ctx.font = 'bold ' + fs + 'px "Noto Sans KR",sans-serif';
     ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 3;
-    ctx.fillText(names[i], r - 12, 5, Math.round(r * 0.55));
+    ctx.fillText(entries[i].name, r - 12, 5, Math.round(r * 0.55));
     ctx.restore();
+    cum += slice;
   }
   // 테두리
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
@@ -176,8 +227,11 @@ function _whDraw(angle) {
 
 // ─── 스핀 ────────────────────────────────────────────────────────────────────
 function _whSpin() {
-  const names = _whGetNames();
-  if (names.length < 2) { alert('2명 이상 입력해 주세요.'); return; }
+  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const parsed = _whParseWeightedCSV(raw);
+  const entries = parsed.entries;
+  const totalW = parsed.total || 0;
+  if (entries.length < 2) { alert('2명 이상 입력해 주세요.'); return; }
   if (_whSpinning) return;
   _whSpinning = true;
   const btn = document.getElementById('wh-btn-spin');
@@ -185,16 +239,27 @@ function _whSpin() {
   const prevCard = document.getElementById('wh-result-card');
   if (prevCard) prevCard.style.display = 'none';
 
-  const winIdx  = Math.floor(Math.random() * names.length);
-  const slice   = Math.PI * 2 / names.length;
-  const target  = -Math.PI / 2 - (winIdx * slice + slice / 2);
+  // 가중치 기반 승자 선택
+  let r = Math.random() * (totalW || entries.length);
+  let winIdx = 0;
+  for (var i=0;i<entries.length;i++){
+    r -= (totalW ? entries[i].weight : 1);
+    if (r<=0){ winIdx=i; break; }
+  }
+  // 승자 세그먼트 중심각 계산(가중치 비율)
+  var cum=0;
+  for (var j=0;j<winIdx;j++){
+    cum += totalW ? (Math.PI*2*(entries[j].weight/totalW)) : (Math.PI*2/entries.length);
+  }
+  var winSlice = totalW ? (Math.PI*2*(entries[winIdx].weight/totalW)) : (Math.PI*2/entries.length);
+  const target  = -Math.PI / 2 - (cum + winSlice/2);
   let   diff    = (target - _whAngle) % (Math.PI * 2);
   if (diff > 0) diff -= Math.PI * 2;
   const totalRot = Math.PI * 2 * (8 + Math.floor(Math.random() * 8)) + diff;
   const dur      = _whSpinDur + Math.random() * 800;
   const startAng = _whAngle;
   let   t0 = null, lastTick = 0;
-  const tickStep = slice * 0.88;
+  const tickStep = (Math.PI * 2 / Math.max(entries.length, 8)) * 0.88;
 
   function ease(t) { return 1 - Math.pow(1 - t, 3.5); }
   function frame(ts) {
@@ -211,7 +276,7 @@ function _whSpin() {
       _whAngle = startAng + totalRot;
       _whSpinning = false;
       if (btn) { btn.disabled = false; btn.textContent = '🎡 돌려라!'; btn.classList.remove('spinning'); }
-      const winner = names[winIdx];
+      const winner = entries[winIdx].name;
       _whAddHistory(winner);
       setTimeout(function() { _whShowResult(winner); }, 250);
     }
@@ -226,6 +291,15 @@ function _whShowResult(name) {
   const iconEl = document.getElementById('wh-res-icon');
   if (!card || !nameEl) return;
   if (nameEl) nameEl.textContent = name;
+  // 확률 표시
+  const probEl = document.getElementById('wh-res-prob');
+  if (probEl) {
+    const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+    const parsed = _whParseWeightedCSV(raw);
+    const it = parsed.entries.find(e=>e.name===name);
+    const pr = (it && parsed.total) ? (it.weight/parsed.total*100) : 0;
+    probEl.textContent = (it && parsed.total) ? ('확률 ' + pr.toFixed(1) + '% (w=' + (''+it.weight.toFixed(2)).replace(/\\.00$/,'') + ')') : '';
+  }
   if (iconEl) {
     const icons = ['🏆','🥇','🎖️','👑','🌟'];
     iconEl.textContent = icons[Math.floor(Math.random() * icons.length)];
@@ -268,22 +342,21 @@ function _whClearHistory() {
 }
 
 // ─── 입력 관리 ────────────────────────────────────────────────────────────────
-function _whGetNames() {
-  const inp = document.getElementById('wh-input');
-  const raw = inp ? inp.value : (localStorage.getItem('su_wh_input') || '');
-  return raw.split(',').map(function(v){ return v.trim(); }).filter(Boolean);
-}
 function _whOnInput(val) {
   localStorage.setItem('su_wh_input', val);
-  _whDraw(_whAngle);
+  const root = document.getElementById('wh-root');
+  if (root) _whRender(root);
 }
 function _whShuffleInput() {
   if (_whSpinning) return;
-  const arr = _whGetNames();
-  for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
   const inp = document.getElementById('wh-input');
+  const raw = inp ? inp.value : (localStorage.getItem('su_wh_input') || '');
+  const tokens = raw.split(',').map(function(v){return v.trim();}).filter(Boolean);
+  const arr = tokens;
+  for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
   if (inp) { inp.value = arr.join(', '); localStorage.setItem('su_wh_input', inp.value); }
-  _whDraw(_whAngle);
+  const root = document.getElementById('wh-root');
+  if (root) _whRender(root);
 }
 function _whUpdateSpeed(val) {
   const idx = parseInt(val) - 1;
