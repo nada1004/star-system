@@ -1431,3 +1431,49 @@ tr:not(.ugrp):not(.tgrp):hover td{background:#f0f6ff;}
   .chat-content { font-size: 14px; }
   #chatInput { font-size: 14px; }
 }
+/* 이미지 설정 버튼 스타일 (pill 스타일, active 강조) */
+.b2-players-img-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.b2-players-img-btn {
+  padding: 8px 16px;
+  border: 1.5px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.3px;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.b2-players-img-btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+.b2-players-img-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  font-weight: 700;
+}
+.b2-players-img-btn.active:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+.b2-players-img-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.b2-players-img-btn.b2-players-img-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
