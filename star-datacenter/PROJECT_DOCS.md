@@ -1,7 +1,7 @@
 # 스타대학 데이터 센터 — 상세 프로젝트 문서
 
 > 이 문서는 Claude Code가 작업 시 참조하는 전체 기능 명세서입니다.
-> 최종 업데이트: 2026-03-02
+> 최종 업데이트: 2026-04-18
 
 ---
 
@@ -628,6 +628,50 @@ _proPasteResults      프로리그 파싱 결과
 #### 5. 엘보드(최근전적) 탭 — 관리자 전용 접근 제한 (elboard.js)
 - `rElboard()` 시작 부분에 `isLoggedIn` 체크 추가
 - 비로그인 시 설정 탭과 동일한 잠금 UI 표시
+
+---
+
+### 2026-04-18 — 스트리머 상세 중복 경기 제거 / 경기 상세 팝업 오류 수정 / 팝업 닫기 설정
+
+#### Task 9: 스트리머 상세에 중복 경기 제거 (render.js)
+- **문제**: `buildPlayerDetailHTML()` 에서 `p.history`와 `_otherMatches` 모두 렌더링 → 같은 경기가 2번 표시됨
+- **원인**: gjM/indM/tourneys/comps/proTourneys가 `_id` 필드를 갖지 않아 매치ID 검색이 실패하고, 중복 필터링이 작동 안 함
+- **수정**:
+  1. `buildPlayerDetailHTML()` 시작에 gjM/indM/tourneys/comps/proTourneys에 `_id` 미리 할당
+     - 각 데이터타입별 일관성 있는 key 포맷: `gj_`, `ind_`, `tour_`, `comp_`, `protour_` 접두사
+  2. `_gjMatches`/`_indMatches` 추출 시 매치ID 생성 강화 (기존 _id 없으면 생성)
+  3. `isDupInHist()` 함수로 `_otherMatches`와 `_extraMatches` 필터링 (p.history와 비교)
+  4. `_tourMatches` 추출 시 매치ID 없으면 일관된 형식으로 생성하고 반환 (조기 종료 제거)
+
+#### Task 10: 경기 상세 팝업 오류 수정 + 팝업 닫기 설정 (history.js, render.js, settings.js)
+- **문제**: 경기 상세 아이콘(종목 배지) 클릭 시 "해당 경기 상세 데이터를 찾을 수 없습니다" 오류 발생
+  - 끝장전, 프로리그 끝장전, 개인전, 조별리그, 대회, 토너먼트, 프로리그대회 등 모든 경기 타입 영향
+- **원인**: 
+  - `openMatchDetailByMatchId()` (history.js)에서 gjM, indM, proTourneys.gjMatches 검색 누락
+  - matchId 검색 풀이 불완전함
+- **수정**:
+  1. history.js `openMatchDetailByMatchId()` 수정
+     - `끝장전` 레이블 → gjM 검색
+     - `개인전` 레이블 → indM 검색  
+     - `프로리그끝장전` 레이블 → proTourneys[0].gjMatches 검색
+     - fallback 풀 확장: gjM, indM, 그리고 모든 proTourneys.gjMatches 추가
+  2. render.js match badge onclick 수정: 조건부 팝업 닫기 (아래 설정 참고)
+  3. settings.js 스트리머 상세 스타일 섹션에 새 토글 추가
+     - "종목 클릭 시 팝업 닫기" 체크박스 (기본값: true)
+     - 설정 저장: `su_pd_style.close_on_badge` 불린값
+
+#### 기술 상세
+- **중복 제거 핵심**: `_histDupKey` 기반 필터링
+  ```js
+  const _histDupKey = (m) => `${m.d||''}|${(m.a||m.wName||'').replace(/\s+/g,'')}|${(m.b||m.lName||'').replace(/\s+/g,'')}`;
+  const _dedupedHistory = [];
+  for(const h of p.history) {
+    const k = _histDupKey(h);
+    if(!_dedupedHistory.some(x => _histDupKey(x) === k)) _dedupedHistory.push(h);
+  }
+  ```
+- **matchID 생성 포맷**: `${prefix}_${date}${a_or_wName}${b_or_lName}${map_if_exists}`
+- **팝업 닫기 조건부 실행**: `close_on_badge !== false` 로 기본값 유지
 
 ---
 
