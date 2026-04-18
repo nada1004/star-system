@@ -434,7 +434,10 @@ function statsTierRankHTML(){
               <div class="sr-box">
                 <div class="sr-grid">
                   <div>
-                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2)">1) 일반(스폰) — 시간가중치</div>
+                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                      1) 일반(스폰) — 시간가중치
+                      <span title="최근 경기일수에 따라 승/패에 가중치를 곱해 ‘최근 경기’를 더 반영합니다.\n\n가중치 범위: ×1.00(최신) ~ ×0.70(오래됨)\n계산: w = max(0.70, 1 - (daysAgo × 0.0035))\n예: 30일 전≈×0.90, 60일 전≈×0.79" style="font-size:11px;color:var(--gray-l);font-weight:900;cursor:help;border:1px solid var(--border2);padding:0 6px;border-radius:999px;background:var(--surface)">?</span>
+                    </div>
                     <div class="sr-mini" style="margin-bottom:8px">Raw ${r.pW}승 ${r.pL}패 · 보정승 ${r.practiceScore.toFixed(1)}점</div>
                     <div class="sr-log">
                       <table>
@@ -671,6 +674,7 @@ function statsStarSystemHTML(){
       <button class="btn btn-b btn-sm" ${enabled?'disabled':''} onclick="starSystemSetEnabled(true)">✅ 사용 시작</button>
       <button class="btn btn-w btn-sm" ${!enabled?'disabled':''} onclick="starSystemSetEnabled(false)">⛔ 사용 중지</button>
       <button class="btn btn-w btn-sm" onclick="openStarSystemInfo()">📘 산정기준</button>
+      <button class="btn btn-w btn-sm" onclick="document.querySelector('.tab.cfg')?.click();setTimeout(()=>{ if(typeof cfgGo==='function') cfgGo('tier'); },120)">🎭 티어표 관리</button>
       <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
     </div>
 
@@ -1878,8 +1882,8 @@ function renderShareCardByMatchObj(m){
         const aW=g.winner==='A',bW=g.winner==='B';
         const loserA=!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
         const loserB=!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
-        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`border-radius:50%;flex-shrink:0${loserA}`):'';
-        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`border-radius:50%;flex-shrink:0${loserB}`):'';
+        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`flex-shrink:0${loserA}`):'';
+        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`flex-shrink:0${loserB}`):'';
         const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         const winB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         return`<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-bottom:1px solid ${theme.divider}">
@@ -1949,8 +1953,8 @@ function renderShareCardByMatchObj(m){
         <!-- A팀 -->
         <div style="text-align:center;flex:1;min-width:0">
           ${!m._noUnivIcon?(m._usePlayerPhoto
-            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
-              ${getPlayerPhotoHTML(a,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            ?`<div style="width:64px;height:64px;border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(a,'64px','width:100%;height:100%;object-fit:cover')}
             </div>`
             :`<div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
               ${univIconHTML(isCivil&&civUniv?civUniv:a,'40px')}
@@ -1972,8 +1976,8 @@ function renderShareCardByMatchObj(m){
         <!-- B팀 -->
         <div style="text-align:center;flex:1;min-width:0">
           ${!m._noUnivIcon?(m._usePlayerPhoto
-            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
-              ${getPlayerPhotoHTML(b,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            ?`<div style="width:64px;height:64px;border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(b,'64px','width:100%;height:100%;object-fit:cover')}
             </div>`
             :`<div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
               ${univIconHTML(isCivil&&civUniv?civUniv:b,'40px')}
