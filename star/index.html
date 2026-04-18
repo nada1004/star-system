@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260416-10">
+<link rel="stylesheet" href="css/style.css?v=20260416-12">
 </head>
 <body>
 
@@ -108,6 +108,8 @@
   <div class="hdr-title">스타대학 데이터 센터</div>
   <!-- 버전 표시는 화면에서 숨김(요청사항) -->
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
+    <!-- 헤더 우측 이미지(설정으로 표시) -->
+    <img id="hdrRightImg" alt="" style="display:none;object-fit:contain">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
       <input id="globalSearch" type="text" placeholder="🔍 스트리머 검색..." oninput="onGlobalSearch(this.value)"
@@ -542,18 +544,18 @@
 <script src="js/constants.js?v=20260416-03"></script>
 <script src="js/data.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/settings.js?v=20260416-25"></script>
+<script src="js/settings.js?v=20260416-37"></script>
 <script src="js/tier-tour.js?v=20260416-02"></script>
-<script src="js/competition.js?v=20260416-05"></script>
-<script src="js/render.js?v=20260416-07"></script>
+<script src="js/competition.js?v=20260416-07"></script>
+<script src="js/render.js?v=20260416-17"></script>
 <script src="js/players.js?v=20260416-05"></script>
-<script src="js/vs.js?v=20260416-01"></script>
-<script src="js/history.js?v=20260416-21"></script>
+<script src="js/vs.js?v=20260416-02"></script>
+<script src="js/history.js?v=20260416-34"></script>
 <script src="js/match.js?v=20260416-01"></script>
-<script src="js/match-builder.js"></script>
+<script src="js/match-builder.js?v=20260416-02"></script>
 <script src="js/search.js?v=20260416-01"></script>
-<script src="js/pro-comp.js?v=20260416-06"></script>
-<script src="js/stats.js?v=20260416-10"></script>
+<script src="js/pro-comp.js?v=20260416-08"></script>
+<script src="js/stats.js?v=20260416-11"></script>
 <script src="js/calendar.js?v=20260416-02"></script>
 <script src="js/roulette.js?v=20260416-04"></script>
 <script src="js/duck-race.js"></script>
@@ -561,7 +563,7 @@
 <script src="js/vote.js"></script>
 <script src="js/cloud-board.js?v=20260416-02"></script>
 <script src="js/elboard.js"></script>
-<script src="js/init.js?v=20260416-08"></script>
+<script src="js/init.js?v=20260416-11"></script>
 <script src="js/board2.js?v=20260416-19"></script>
 <script src="js/chatbot.js"></script>
 <script src="js/mobile-bar.js"></script>
@@ -678,7 +680,7 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
 </div>
 
 
-<script src="js/modal-drag.js"></script>
+<script src="js/modal-drag.js?v=20260416-01"></script>
 <script type="module" src="js/firebase-init.js"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 
