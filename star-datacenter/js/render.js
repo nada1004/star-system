@@ -836,6 +836,44 @@ function buildPlayerDetailHTML(p){
   if (_gt === '보라크루') return _buildCrewPlayerDetailHTML(p, '#7c3aed', '💜 보라크루');
   if (_gt === 'general') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
 
+  // gjM/indM/tourneys/comps/proTourneys에 _id 미리 할당 (matchId 검색용)
+  (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
+    if(!m._id) m._id=`gj_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+  });
+  (typeof indM!=='undefined'?indM:[]).forEach(m=>{
+    if(!m._id) m._id=`ind_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+  });
+  (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id) m._id=`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+      });
+    });
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id) m._id=`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+    });
+  });
+  (typeof comps!=='undefined'?comps:[]).forEach(comp=>{
+    (comp.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id) m._id=`comp_${comp.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+      });
+    });
+    Object.values((comp.bracket||{}).matchDetails||{}).forEach(m=>{
+      if(!m._id) m._id=`comp_${comp.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+    });
+  });
+  (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m._id) m._id=`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+      });
+    });
+    (tn.gjMatches||[]).forEach(m=>{
+      if(!m._id) m._id=`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+    });
+  });
+
   const col=gc(p.univ)||'#6366f1';
   const _winC ='#16a34a';
   const _lossC='#dc2626';
@@ -891,20 +929,28 @@ function buildPlayerDetailHTML(p){
   const _existingKeys=new Set(_dedupedHistory.map(h=>_histDupKey(h)));
 
   // indM/gjM에서 추출 (p.history 미반영분)
-  const _indMatches=(typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
-    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
-    opp:m.wName===p.name?m.lName:m.wName,
-    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그':'개인전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
-  }));
-  const _gjMatches=(typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>({
-    date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
-    opp:m.wName===p.name?m.lName:m.wName,
-    oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-    map:m.map||'-',matchId:m._id||'',mode:m._proLabel?'프로리그끝장전':'끝장전',
-    _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`
-  }));
+  const _indMatches=(typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>{
+    const matchId=m._id||`ind_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+    return {
+      date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
+      opp:m.wName===p.name?m.lName:m.wName,
+      oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
+      map:m.map||'-',matchId,mode:m._proLabel?'프로리그':'개인전',
+      _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
+      _id:matchId
+    };
+  });
+  const _gjMatches=(typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>{
+    const matchId=m._id||`gj_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+    return {
+      date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
+      opp:m.wName===p.name?m.lName:m.wName,
+      oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
+      map:m.map||'-',matchId,mode:m._proLabel?'프로리그끝장전':'끝장전',
+      _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
+      _id:matchId
+    };
+  });
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
   const _otherMatches=[];
@@ -915,13 +961,20 @@ function buildPlayerDetailHTML(p){
           if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
+            // gameId 일관성: g._id > 새 생성
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             const isCivil = (m.type==='civil') || (m.a==='A팀' && m.b==='B팀');
-            _otherMatches.push({
-              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:isCivil?'시빌워':'미니대전',
-              _dupKey:`mid:${gameId}`
-            });
+            // p.history 중복 체크: matchId + 날짜 + 맵 + 상대 조합으로 판단
+            const isDupInHist = _dedupedHistory.some(h =>
+              h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+            );
+            if(!isDupInHist){
+              _otherMatches.push({
+                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+                opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:isCivil?'시빌워':'미니대전',
+                _dupKey:`mid:${gameId}`
+              });
+            }
           }
         });
       });
@@ -935,11 +988,16 @@ function buildPlayerDetailHTML(p){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            _otherMatches.push({
-              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학대전',
-              _dupKey:`mid:${gameId}`
-            });
+            const isDupInHist = _dedupedHistory.some(h =>
+              h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+            );
+            if(!isDupInHist){
+              _otherMatches.push({
+                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+                opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학대전',
+                _dupKey:`mid:${gameId}`
+              });
+            }
           }
         });
       });
@@ -953,11 +1011,16 @@ function buildPlayerDetailHTML(p){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            _otherMatches.push({
-              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학CK',
-              _dupKey:`mid:${gameId}`
-            });
+            const isDupInHist = _dedupedHistory.some(h =>
+              h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+            );
+            if(!isDupInHist){
+              _otherMatches.push({
+                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+                opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'대학CK',
+                _dupKey:`mid:${gameId}`
+              });
+            }
           }
         });
       });
@@ -971,11 +1034,16 @@ function buildPlayerDetailHTML(p){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            _otherMatches.push({
-              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
-              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'프로리그',
-              _dupKey:`mid:${gameId}`
-            });
+            const isDupInHist = _dedupedHistory.some(h =>
+              h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+            );
+            if(!isDupInHist){
+              _otherMatches.push({
+                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+                opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'프로리그',
+                _dupKey:`mid:${gameId}`
+              });
+            }
           }
         });
       });
@@ -1024,31 +1092,34 @@ function buildPlayerDetailHTML(p){
   (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{
       (grp.matches||[]).forEach(m=>{
-        if(!m._id||_existingMatchIds.has(m._id))return;
+        const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+        if(_existingMatchIds.has(mid))return;
         if(m.a!==p.name&&m.b!==p.name)return;
         const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
         if(!wn)return;
         const ln=wn===m.a?m.b:m.a;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:m._id,mode:'프로리그대회',_readOnly:true});
+        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그대회',_readOnly:true});
       });
     });
     (tn.gjMatches||[]).forEach(m=>{
-      if(!m._id||_existingMatchIds.has(m._id))return;
+      const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+      if(_existingMatchIds.has(mid))return;
       if(m.a!==p.name&&m.b!==p.name)return;
       const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
       if(!wn)return;
       const ln=wn===m.a?m.b:m.a;
       const opp=wn===p.name?ln:wn;
       const oppP=players.find(x=>x.name===opp);
-      _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:m._id,mode:'프로리그끝장전',_readOnly:true});
+      _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그끝장전',_readOnly:true});
     });
   });
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{
       (grp.matches||[]).forEach(m=>{
-        if(!m._id||_existingMatchIds.has(m._id))return;
+        const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+        if(_existingMatchIds.has(mid))return;
         (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
           if(!g.playerA||!g.playerB||!g.winner)return;
           const wn=g.winner==='A'?g.playerA:g.playerB;
@@ -1056,12 +1127,18 @@ function buildPlayerDetailHTML(p){
           if(wn!==p.name&&ln!==p.name)return;
           const opp=wn===p.name?ln:wn;
           const oppP=players.find(x=>x.name===opp);
-          _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:tn.type==='tier'?'티어대회':'조별리그',_readOnly:true});
+          const isDupInHist = _dedupedHistory.some(h =>
+            h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+          );
+          if(!isDupInHist){
+            _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:mid,mode:tn.type==='tier'?'티어대회':'조별리그',_readOnly:true});
+          }
         });});
       });
     });
     Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-      if(!m._id||_existingMatchIds.has(m._id))return;
+      const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+      if(_existingMatchIds.has(mid))return;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wn=g.winner==='A'?g.playerA:g.playerB;
@@ -1069,15 +1146,23 @@ function buildPlayerDetailHTML(p){
         if(wn!==p.name&&ln!==p.name)return;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:m._id,mode:tn.type==='tier'?'티어대회':'대회',_readOnly:true});
+        const isDupInHist = _dedupedHistory.some(h =>
+          h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
+        );
+        if(!isDupInHist){
+          _tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:mid,mode:tn.type==='tier'?'티어대회':'대회',_readOnly:true});
+        }
       });});
     });
   });
   // indM/gjM/otherMatches/tourMatches 추가 (중복 제거)
   const _extraMatches=[..._indMatches,..._gjMatches,..._otherMatches,..._tourMatches].filter(h=>{
-    if(!h.matchId) return true;
-    if(_existingMatchIds.has(h.matchId)) return false;
+    // matchId 있으면 matchId로 비교
+    if(h.matchId && _existingMatchIds.has(h.matchId)) return false;
+    // _histDupKey로 비교
     if(_existingKeys.has(_histDupKey(h))) return false;
+    // matchId 없으면 날짜+맵+상대로 비교
+    if(!h.matchId && _dedupedHistory.some(dh => dh.date === h.date && dh.map === h.map && dh.opp === h.opp)) return false;
     return true;
   });
   const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
