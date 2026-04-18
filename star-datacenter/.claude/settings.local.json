@@ -16,7 +16,10 @@
       "Bash(pip install *)",
       "Bash(python -c \"import sys; open\\('.graphify_python', 'w'\\).write\\(sys.executable\\)\")",
       "Bash(python -c ' *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(claude model *)",
+      "Bash(claude --model sonnet --print \"Test model availability\")",
+      "Bash(claude --model sonnet --version)"
     ]
   }
 }

@@ -1453,6 +1453,9 @@ window.openMatchDetailByMatchId = function(matchId, modeLabel){
     else if(lbl==='대학대전') pushPool(typeof univM!=='undefined'?univM:[], 'univm');
     else if(lbl==='대학CK') pushPool(typeof ckM!=='undefined'?ckM:[], 'ck');
     else if(lbl==='프로리그') pushPool(typeof proM!=='undefined'?proM:[], 'pro');
+    else if(lbl==='끝장전') pushPool(typeof gjM!=='undefined'?gjM:[], 'gj');
+    else if(lbl==='개인전') pushPool(typeof indM!=='undefined'?indM:[], 'ind');
+    else if(lbl==='프로리그끝장전') pushPool(typeof proTourneys!=='undefined'?(proTourneys[0]?.gjMatches||[]):[], 'progj');
     else if(lbl==='티어대회' || lbl==='티어대회 토너먼트') pushPool(typeof ttM!=='undefined'?ttM:[], 'tt');
     else if(lbl==='조별리그' || lbl==='대회' || lbl==='토너먼트' || lbl==='프로리그대회') pushPool(typeof comps!=='undefined'?comps:[], 'comp');
 
@@ -1461,8 +1464,18 @@ window.openMatchDetailByMatchId = function(matchId, modeLabel){
     pushPool(typeof univM!=='undefined'?univM:[], 'univm');
     pushPool(typeof ckM!=='undefined'?ckM:[], 'ck');
     pushPool(typeof proM!=='undefined'?proM:[], 'pro');
+    pushPool(typeof gjM!=='undefined'?gjM:[], 'gj');
+    pushPool(typeof indM!=='undefined'?indM:[], 'ind');
     pushPool(typeof ttM!=='undefined'?ttM:[], 'tt');
     pushPool(typeof comps!=='undefined'?comps:[], 'comp');
+    // proTourneys gjMatches 추가
+    if(typeof proTourneys!=='undefined'){
+      (proTourneys||[]).forEach(tn=>{
+        if(tn.gjMatches && Array.isArray(tn.gjMatches)){
+          pools.push({arr:tn.gjMatches, modeKey:'progj'});
+        }
+      });
+    }
 
     let found=null, foundMode='comp';
     for(const p of pools){

@@ -3735,6 +3735,7 @@ function _renderCfgPdSection(){
   const st=s.stats_tint!==undefined?s.stats_tint:8;
   const mt=s.mode_tint!==undefined?s.mode_tint:10;
   const ps=s.profile_size!==undefined?s.profile_size:100;
+  const closeOnBadge=s.close_on_badge!==undefined?s.close_on_badge:true;
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
   const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
@@ -3784,6 +3785,16 @@ function _renderCfgPdSection(){
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
     </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작 설정</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" ${closeOnBadge?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnBadge(this.checked)">
+          <span style="font-size:12px;color:var(--text)">종목 클릭 시 팝업 닫기</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 종목 아이콘/배지 클릭 시 스트리머 상세 팝업이 닫힙니다</div>
+    </div>
     <div>
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
@@ -3824,6 +3835,12 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
+}
+
+function _setPdCloseOnBadge(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.close_on_badge=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
 }
 
 
