@@ -3,6 +3,15 @@
    tier-tour.js에서 분리됨. 이 파일의 버그가 티어대회 탭에 영향을 주지 않습니다.
 ══════════════════════════════════════ */
 
+// ─────────────────────────────────────────────────────────────
+// HTML escape (설정 화면 템플릿 문자열 안전 처리)
+// ─────────────────────────────────────────────────────────────
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
 /* ══════════════════════════════════════
 
 /* ══════════════════════════════════════
@@ -41,8 +50,8 @@ const _DEFAULT_CATSECS = {
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui'],
-  '🧪 고급/실험실':['cfgmenu','autofitall','pd','fab','storage','selfcheck'],
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd'],
+  '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
@@ -50,6 +59,31 @@ const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
 function _cfgMenuLoad(){
   try{ return JSON.parse(localStorage.getItem(_CFG_MENU_KEY) || 'null'); }catch(e){ return null; }
 }
+
+// (요청) 설정 하위 메뉴(섹션) 이름 변경
+function _cfgMenuLoadRenames(){
+  try{ return JSON.parse(localStorage.getItem('su_cfg_sec_renames')||'{}')||{}; }catch(e){ return {}; }
+}
+function _cfgMenuSaveRenames(v){
+  try{ localStorage.setItem('su_cfg_sec_renames', JSON.stringify(v||{})); }catch(e){}
+}
+window.cfgMenuRenameSec = function(secId){
+  const titles = window._cfgSecTitle || {};
+  const cur = _cfgMenuLoadRenames();
+  const curName = cur[secId] || titles[secId] || secId;
+  const nv = prompt('설정 메뉴 이름 변경', curName);
+  if(nv===null) return;
+  const s = String(nv||'').trim();
+  if(!s){ delete cur[secId]; }
+  else cur[secId]=s;
+  _cfgMenuSaveRenames(cur);
+  try{ render(); }catch(e){}
+};
+window.cfgMenuResetSecNames = function(){
+  if(!confirm('설정 하위 메뉴 이름 변경을 모두 초기화할까요?')) return;
+  _cfgMenuSaveRenames({});
+  try{ render(); }catch(e){}
+};
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 현황판/이미지별(프로필)/펨코현황: 모바일·태블릿 원클릭 자동 맞춤
@@ -172,14 +206,18 @@ window.cfgSetRecCardSettings = function(){
   const ic = parseInt(document.getElementById('cfg-rc-uicon')?.value||'18',10);
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
+  const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
+  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'100',10);
 
   try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
-  try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border'].includes(accent)?accent:'none'); }catch(e){}
+  try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border','full','gradient'].includes(accent)?accent:'none'); }catch(e){}
   try{ localStorage.setItem('su_rc_bg_alpha', String(Math.max(0,Math.min(30,bg)))); }catch(e){}
   try{ localStorage.setItem('su_rc_hd_alpha', String(Math.max(0,Math.min(30,hd)))); }catch(e){}
   try{ localStorage.setItem('su_rc_uicon', String(Math.max(12,Math.min(28,ic)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
+  try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
+  try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
 
   // 즉시 반영
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
@@ -222,6 +260,8 @@ window.cfgApplyBracketPreset = function(preset){
     '월드컵':    {on:true, accent:'header',hd:18, bw:5, ic:42, lw:3, la:85},
     '프로리그':  {on:true, accent:'border',hd:10, bw:6, ic:38, lw:2, la:78},
     '컴팩트':    {on:true, accent:'none',  hd:8,  bw:3, ic:30, lw:1, la:65},
+    '미니멀':    {on:true, accent:'none',  hd:0,  bw:1, ic:32, lw:1, la:40},
+    '다크리그':  {on:true, accent:'border',hd:16, bw:6, ic:40, lw:3, la:90},
   };
   const v = presets[p] || presets['기본'];
   const set = (id, val) => { const el=document.getElementById(id); if(el){ el.value = String(val); el.dispatchEvent(new Event('input')); } };
@@ -255,6 +295,38 @@ window.cfgSetCalendarUiSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 날짜 버튼 메뉴(대회/프로리그 일정) 디자인 모드
+// - ASL 스케줄 페이지처럼 날짜 탭 형태 + 미니 매치업 프리뷰
+// ─────────────────────────────────────────────────────────────
+window.cfgSetDateMenuStyle = function(){
+  const v = (document.getElementById('cfg-date-menu-style')?.value || 'pill').trim(); // pill | asl
+  try{ localStorage.setItem('su_date_menu_style', v==='asl' ? 'asl' : 'pill'); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 헤더 커스텀(제목/좌측 아이콘/우측 이미지/배경 이미지/높이)
+// ─────────────────────────────────────────────────────────────
+window.cfgSetHeaderSettings = function(){
+  const title = (document.getElementById('cfg-hdr-title')?.value || '').trim();
+  const lIco  = (document.getElementById('cfg-hdr-left')?.value || '').trim();
+  const lSz   = parseInt(document.getElementById('cfg-hdr-left-sz')?.value || '22',10) || 22;
+  const rImg  = (document.getElementById('cfg-hdr-right')?.value || '').trim();
+  const rSz   = parseInt(document.getElementById('cfg-hdr-right-sz')?.value || '32',10) || 32;
+  const bgImg = (document.getElementById('cfg-hdr-bg')?.value || '').trim();
+  const hH    = parseInt(document.getElementById('cfg-hdr-h')?.value || '0',10) || 0;
+  try{ localStorage.setItem('su_hdr_title', title); }catch(e){}
+  try{ localStorage.setItem('su_hdr_left_icon', lIco); }catch(e){}
+  try{ localStorage.setItem('su_hdr_left_size', String(Math.max(14,Math.min(44,lSz)))); }catch(e){}
+  try{ localStorage.setItem('su_hdr_right_img', rImg); }catch(e){}
+  try{ localStorage.setItem('su_hdr_right_size', String(Math.max(18,Math.min(70,rSz)))); }catch(e){}
+  try{ localStorage.setItem('su_hdr_bg_img', bgImg); }catch(e){}
+  try{ localStorage.setItem('su_hdr_height', String(Math.max(0,Math.min(140,hH)))); }catch(e){}
+  try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 전역 폰트 설정(프리셋 + 커스텀 URL)
 // ─────────────────────────────────────────────────────────────
 window.cfgSetAppFontSettings = function(){
@@ -276,18 +348,51 @@ window.cfgRunSettingsSelfCheck = function(){
   const out = document.getElementById('cfg-selfcheck-out');
   if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">검사 중...</div>';
   try{
+    const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
     const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
     const html = secs.map(el=>el.outerHTML).join('\n');
     const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
     const called = new Set();
     let m;
     while((m=re.exec(html))) called.add(m[1]);
-    const missing = Array.from(called).filter(fn => typeof window[fn] !== 'function').sort();
+    const missing = Array.from(called).filter(fn => !JS_KEYWORDS.has(fn) && typeof window[fn] !== 'function').sort();
+
+    // 각 탭 함수 확인
+    const tabFuncs = {
+      '기록탭': ['rHist'],
+      '미니탭': ['rMini'],
+      '대회탭': ['rComp'],
+      '현황판탭': ['rBoard2'],
+      '티어토너먼트': ['rTierTourTab'],
+      '프로리그': ['rPro'],
+      '캘린더': ['rCal'],
+      '통계': ['rStats'],
+      '붙여넣기': ['pastePreview', 'openGrpPasteModal'],
+    };
+    const tabMissing = {};
+    for(const [tab, funcs] of Object.entries(tabFuncs)){
+      const missing = funcs.filter(f => typeof window[f] !== 'function');
+      if(missing.length > 0) tabMissing[tab] = missing;
+    }
+
     if(out){
-      out.innerHTML = missing.length
-        ? `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:6px">⚠️ 누락된 함수 ${missing.length}개</div>
-           <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5">${missing.join('\\n')}</div>`
-        : `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ settings.js 기준 핸들러 누락 없음</div>`;
+      let html = '';
+      if(missing.length > 0){
+        html += `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:8px">⚠️ settings.js 핸들러 누락 ${missing.length}개</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\\n')}</div>`;
+      }
+      if(Object.keys(tabMissing).length > 0){
+        html += `<div style="font-size:12px;color:#ea580c;font-weight:1000;margin-bottom:6px">⚠️ 탭 렌더러 누락</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:11px;white-space:pre-wrap;line-height:1.6">`;
+        for(const [tab, funcs] of Object.entries(tabMissing)){
+          html += `${tab}: ${funcs.join(', ')}\\n`;
+        }
+        html += `</div>`;
+      }
+      if(missing.length === 0 && Object.keys(tabMissing).length === 0){
+        html = `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ 모든 핸들러 및 탭 함수 정상</div>`;
+      }
+      out.innerHTML = html;
     }
   }catch(e){
     if(out) out.innerHTML = `<div style="font-size:12px;color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
@@ -677,12 +782,11 @@ function _cfgHandleCfgClick(e){
     return;
   }
   // (요청사항) 섹션(summary) 클릭 시 "펼치기" 대신 팝업(모달)로 열기
-  // - 모달 안(#cfgModalBody)에서는 기존처럼 토글 허용
+  // - 모달 안(#cfgModalBody)에서는 토글 대신 '팝업 닫기'
   try{
     const secWrap = _cfgFindUpAttr(t, 'data-cfg-sec');
     if(secWrap && secWrap.tagName === 'DETAILS'){
-      // 모달 내부면 토글을 막지 않음
-      try{ if(secWrap.closest && secWrap.closest('#cfgModalBody')) return; }catch(_){}
+      const inModal = !!(secWrap.closest && secWrap.closest('#cfgModalBody'));
       // summary 영역 클릭인지 확인
       let cur = t, inSummary = false;
       for(let i=0;i<8 && cur && cur!==secWrap;i++){
@@ -690,6 +794,12 @@ function _cfgHandleCfgClick(e){
         cur = cur.parentNode;
       }
       if(inSummary){
+        if(inModal){
+          try{ if(e && e.preventDefault) e.preventDefault(); }catch(_){}
+          try{ if(e && e.stopPropagation) e.stopPropagation(); }catch(_){}
+          try{ if(typeof closeCfgModal==='function') closeCfgModal(); }catch(_){}
+          return;
+        }
         const secId = secWrap.getAttribute('data-cfg-sec');
         if(secId){
           try{ if(e && e.preventDefault) e.preventDefault(); }catch(_){}
@@ -735,7 +845,7 @@ function _cfgEnsureModal(){
     m.innerHTML=`
       <div class="mbox" style="width:min(860px,96vw);padding:0;border-radius:16px;overflow:hidden;max-height:92vh">
         <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:14px 16px;display:flex;align-items:center;gap:10px">
-          <div id="cfgModalTitle" style="font-size:14px;font-weight:900;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">⚙️ 설정</div>
+          <div id="cfgModalTitle" class="mtitle" style="font-size:14px;font-weight:900;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">⚙️ 설정</div>
           <button onclick="closeCfgModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
         </div>
         <div id="cfgModalBody" style="padding:14px 16px;background:var(--bg);overflow:auto;max-height:calc(92vh - 58px)"></div>
@@ -901,6 +1011,11 @@ function rCfg(C,T){
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
   const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','현황판 관리':'🧩','이미지 관리':'🖼️','🎨 스타일/테마':'🎨','🧪 고급/실험실':'🧪','데이터 관리':'💾','기타':'🗂️'};
+  // 카테고리명 자체에 이모지가 들어있는 경우(🎨 스타일/테마, 🧪 고급/실험실) 아이콘이 2번 보이는 문제 방지
+  const _catLabel = (c)=>{
+    const s=String(c||'');
+    return s.replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,'');
+  };
   const _cfgCatDesc={
     '게임 운영':'공지/티어/시즌/경기 운영',
     '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
@@ -916,11 +1031,20 @@ function rCfg(C,T){
     b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
+  // 사용자 지정 섹션명 적용
+  try{
+    const _ren=_cfgMenuLoadRenames();
+    for(const k in (_ren||{})){
+      if(!_ren[k]) continue;
+      _cfgSecTitle[k]=String(_ren[k]);
+    }
+  }catch(e){}
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
   const _curSecs=_catSecs[window._cfgCat]||[];
   // 다른 함수에서도 참조할 수 있게 title 맵을 window에 노출
   window._cfgSecTitle = _cfgSecTitle;
   const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
+  const _menuBtn = `<button class="btn btn-w no-export" onclick="cfgGo('cfgmenu')" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0" title="설정 하위 메뉴 이름 변경/정리">🧭 메뉴정리</button>`;
   const _afOn = (localStorage.getItem('su_af_alltabs_v1') === '1');
   const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '1') === '1';
   const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
@@ -935,9 +1059,10 @@ function rCfg(C,T){
       <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
         ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
           style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid ${on?'var(--blue)':'var(--border)'};border-radius:14px;background:${on?'var(--blue)':'transparent'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};color:${on?'#fff':'var(--text)'};transition:all .12s;touch-action:manipulation;line-height:1.1">
-          <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${c}</button>`;}).join('')}
+          <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${_catLabel(c)}</button>`;}).join('')}
       </div>
       <span style="flex:1"></span>
+      ${_menuBtn}
       ${_regBtn}
     </div>
   </div>
@@ -1095,6 +1220,48 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </details>
+  ${_scfgD('hdr','🖼️ 헤더(상단바) 커스텀')}
+    ${(()=>{ 
+      const _t = (localStorage.getItem('su_hdr_title')||'스타대학 데이터 센터');
+      const _li = (localStorage.getItem('su_hdr_left_icon')||'🏆');
+      const _ls = parseInt(localStorage.getItem('su_hdr_left_size')||'22',10)||22;
+      const _ri = (localStorage.getItem('su_hdr_right_img')||'');
+      const _rs = parseInt(localStorage.getItem('su_hdr_right_size')||'32',10)||32;
+      const _bg = (localStorage.getItem('su_hdr_bg_img')||'');
+      const _hh = parseInt(localStorage.getItem('su_hdr_height')||'0',10)||0;
+      return `
+        <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">상단 헤더의 제목/아이콘/이미지/배경을 커스텀합니다. (URL은 https:// 로 시작)</div>
+        <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">제목</div>
+            <input id="cfg-hdr-title" type="text" value="${esc(_t)}" placeholder="예: 스타대학 데이터 센터" style="flex:1;min-width:220px" onblur="cfgSetHeaderSettings()">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">좌측 아이콘</div>
+            <input id="cfg-hdr-left" type="text" value="${esc(_li)}" placeholder="이모지 또는 이미지 URL" style="flex:1;min-width:220px" onblur="cfgSetHeaderSettings()">
+            <span style="font-size:11px;color:var(--text3);font-weight:800">크기</span>
+            <input id="cfg-hdr-left-sz" type="range" min="14" max="44" step="2" value="${Math.max(14,Math.min(44,_ls))}" oninput="document.getElementById('cfg-hdr-left-sz-v').textContent=this.value+'px'" onchange="cfgSetHeaderSettings()" style="width:160px">
+            <span id="cfg-hdr-left-sz-v" style="font-size:11px;color:var(--gray-l);min-width:40px;font-weight:900">${Math.max(14,Math.min(44,_ls))}px</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">우측 이미지</div>
+            <input id="cfg-hdr-right" type="text" value="${esc(_ri)}" placeholder="이미지 URL (없으면 비움)" style="flex:1;min-width:220px" onblur="cfgSetHeaderSettings()">
+            <span style="font-size:11px;color:var(--text3);font-weight:800">크기</span>
+            <input id="cfg-hdr-right-sz" type="range" min="18" max="70" step="2" value="${Math.max(18,Math.min(70,_rs))}" oninput="document.getElementById('cfg-hdr-right-sz-v').textContent=this.value+'px'" onchange="cfgSetHeaderSettings()" style="width:160px">
+            <span id="cfg-hdr-right-sz-v" style="font-size:11px;color:var(--gray-l);min-width:40px;font-weight:900">${Math.max(18,Math.min(70,_rs))}px</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">배경 이미지</div>
+            <input id="cfg-hdr-bg" type="text" value="${esc(_bg)}" placeholder="배경 이미지 URL (없으면 비움)" style="flex:1;min-width:220px" onblur="cfgSetHeaderSettings()">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">헤더 높이</div>
+            <input id="cfg-hdr-h" type="range" min="0" max="120" step="4" value="${Math.max(0,Math.min(120,_hh))}" oninput="document.getElementById('cfg-hdr-h-v').textContent=(this.value==0?'자동':this.value+'px')" onchange="cfgSetHeaderSettings()" style="width:240px">
+            <span id="cfg-hdr-h-v" style="font-size:11px;color:var(--gray-l);min-width:56px;font-weight:900">${_hh?(_hh+'px'):'자동'}</span>
+          </div>
+        </div>
+      </details>`;
+    })()}
   ${_scfgD('si','🏷️ 스트리머 상태 아이콘 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
@@ -1193,8 +1360,24 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="none" ${_rcAccent==='none'?'selected':''}>무색</option>
           <option value="header" ${_rcAccent==='header'?'selected':''}>헤더만 포인트</option>
           <option value="border" ${_rcAccent==='border'?'selected':''}>테두리만 포인트</option>
+          <option value="full" ${_rcAccent==='full'?'selected':''}>전체 배경 포인트</option>
+          <option value="gradient" ${_rcAccent==='gradient'?'selected':''}>그라디언트 헤더</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
+        <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="left" ${(localStorage.getItem('su_rc_vs_align')||'left')==='left'?'selected':''}>좌측</option>
+          <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'left')==='center'?'selected':''}>가운데</option>
+          <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'left')==='right'?'selected':''}>우측</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기</span>
+          <input type="range" id="cfg-rc-score-scale" min="80" max="130" step="5" value="${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'100',10)||100))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'100',10)||100))}%</span>
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
@@ -1239,6 +1422,7 @@ ${_scfgD('notice','📢 공지 관리')}
     const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
     const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
     const _tcPreset = (localStorage.getItem('su_tc_preset') ?? '기본');
+    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill'); // pill | asl
     return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -1247,12 +1431,22 @@ ${_scfgD('notice','📢 공지 관리')}
         대회 카드 디자인 모드 사용
       </label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">날짜 버튼 메뉴</div>
+        <select id="cfg-date-menu-style" onchange="cfgSetDateMenuStyle()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="pill" ${_dateMenuStyle!=='asl'?'selected':''}>기본 (pill)</option>
+          <option value="asl" ${_dateMenuStyle==='asl'?'selected':''}>ASL 스타일 (날짜+미니매치업)</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">대회탭/프로리그 대회탭 상단 날짜 필터에 적용</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">토너먼트/대진표 프리셋</div>
         <select id="cfg-tc-preset" onchange="localStorage.setItem('su_tc_preset',this.value);cfgApplyBracketPreset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
           <option value="기본" ${_tcPreset==='기본'?'selected':''}>기본</option>
           <option value="월드컵" ${_tcPreset==='월드컵'?'selected':''}>월드컵</option>
           <option value="프로리그" ${_tcPreset==='프로리그'?'selected':''}>프로리그</option>
           <option value="컴팩트" ${_tcPreset==='컴팩트'?'selected':''}>컴팩트</option>
+          <option value="미니멀" ${_tcPreset==='미니멀'?'selected':''}>미니멀 (깔끔함)</option>
+          <option value="다크리그" ${_tcPreset==='다크리그'?'selected':''}>다크리그 (강한 포인트)</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">※ 아래 슬라이더 값도 같이 변경됩니다</span>
       </div>
@@ -1333,6 +1527,9 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="pretendard" ${p==='pretendard'?'selected':''}>Pretendard</option>
           <option value="nanum" ${p==='nanum'?'selected':''}>나눔고딕</option>
           <option value="gmarket" ${p==='gmarket'?'selected':''}>GmarketSans</option>
+          <option value="dohyeon" ${p==='dohyeon'?'selected':''}>Do Hyeon (개성있는 한글)</option>
+          <option value="blackhansans" ${p==='blackhansans'?'selected':''}>Black Han Sans (굵은 헤드라인)</option>
+          <option value="ibmplexsans" ${p==='ibmplexsans'?'selected':''}>IBM Plex Sans KR (정갈함)</option>
         </select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -1519,37 +1716,6 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">각 대학 라벨에 배경 이미지를 설정할 수 있습니다. 이미지 위치와 크기도 조절 가능합니다.</p>
-    <div style="margin-bottom:14px;padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px">
-      <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px">📋 일괄 설정 (전체 대학)</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">이미지 URL:</label>
-        <input type="text" id="bulk-bg-img-url" placeholder="https://..." style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">위치:</label>
-        <select id="bulk-bg-img-pos" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="top left">좌상단</option>
-          <option value="top center">중상단</option>
-          <option value="top right">우상단</option>
-          <option value="center left">좌중앙</option>
-          <option value="center center" selected>중앙</option>
-          <option value="center right">우중앙</option>
-          <option value="bottom left">좌하단</option>
-          <option value="bottom center">중하단</option>
-          <option value="bottom right">우하단</option>
-        </select>
-        <label style="font-size:12px;font-weight:600;color:var(--text2)">크기:</label>
-        <select id="bulk-bg-img-size" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="cover" selected>채우기 (cover)</option>
-          <option value="contain">맞춤 (contain)</option>
-          <option value="fill">늘리기 (fill)</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
-        <button class="btn btn-b btn-sm" onclick="bulkSetBoardBgImg()">📋 전체 적용</button>
-        <button class="btn btn-r btn-sm" onclick="bulkClearBoardBgImg()">🗑️ 전체 삭제</button>
-      </div>
-    </div>
     <div id="cfg-board-bg-list" style="max-height:400px;overflow-y:auto"></div>
   </details>
   ${_scfgD('sync','🔄 데이터 동기화')}
@@ -1903,6 +2069,7 @@ ${_scfgD('notice','📢 공지 관리')}
                   return `
                     <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border2);border-radius:10px;padding:8px 10px;background:var(--surface)">
                       <div style="font-size:12px;font-weight:800;min-width:160px">${title}</div>
+                      <button class="btn btn-xs" onclick="cfgMenuRenameSec('${secId}')" title="이름 변경">✏️</button>
                       <select onchange="cfgMenuSetCat('${secId}', this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
                         ${cats.map(c=>`<option value="${c}"${c===cat?' selected':''}>${c}</option>`).join('')}
                       </select>
@@ -1919,6 +2086,7 @@ ${_scfgD('notice','📢 공지 관리')}
       })()}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-b" onclick="cfgMenuReset()">기본 메뉴로 초기화</button>
+        <button class="btn btn-w" onclick="cfgMenuResetSecNames()">이름 변경 초기화</button>
       </div>
     </div>
   </details>
@@ -2701,98 +2869,6 @@ function promptBoardBgImgUrl(univName){
   const trimmed=url.trim();
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   setBoardBgImg(univName,trimmed);
-}
-function bulkSetBoardBgImg(){
-  const url=(document.getElementById('bulk-bg-img-url')?.value||'').trim();
-  const pos=document.getElementById('bulk-bg-img-pos')?.value||'center center';
-  const size=document.getElementById('bulk-bg-img-size')?.value||'cover';
-  if(!url){showToast('이미지 URL을 입력해주세요.');return;}
-  if(!confirm('모든 대학에 동일한 배경 이미지를 적용하시겠습니까?'))return;
-  univCfg.forEach(u=>{
-    u.bgImg=url;
-    u.bgImgPos=pos;
-    u.bgImgSize=size;
-  });
-  save();render();
-  showToast('전체 대학에 배경 이미지가 적용되었습니다.');
-  // 리스트 갱신
-  const bgListEl=document.getElementById('cfg-board-bg-list');
-  if(bgListEl){
-    bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="cdot" style="background:${u.color}"></div>
-        <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-        <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
-        ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
-      </div>
-      ${u.bgImg?`<div style="margin-top:8px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
-        <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
-          <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
-          <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
-          <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
-          <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
-          <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
-          <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
-          <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
-          <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
-        </select>
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
-        <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
-          <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
-          <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
-        </select>
-      </div>`:''}
-    </div>`).join('');
-  }
-}
-function bulkClearBoardBgImg(){
-  if(!confirm('모든 대학의 배경 이미지를 삭제하시겠습니까?'))return;
-  univCfg.forEach(u=>{
-    delete u.bgImg;
-    delete u.bgImgPos;
-    delete u.bgImgSize;
-  });
-  save();render();
-  showToast('전체 대학의 배경 이미지가 삭제되었습니다.');
-  // 리스트 갱신
-  const bgListEl=document.getElementById('cfg-board-bg-list');
-  if(bgListEl){
-    bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="cdot" style="background:${u.color}"></div>
-        <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-        <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
-        ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
-      </div>
-      ${u.bgImg?`<div style="margin-top:8px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
-        <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
-          <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
-          <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
-          <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
-          <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
-          <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
-          <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
-          <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
-          <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
-        </select>
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
-        <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
-          <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
-          <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
-        </select>
-      </div>`:''}
-    </div>`).join('');
-  }
 }
 function promptBoardMemoImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
@@ -3816,6 +3892,16 @@ function _renderCfgPdSection(){
   const st=s.stats_tint!==undefined?s.stats_tint:8;
   const mt=s.mode_tint!==undefined?s.mode_tint:10;
   const ps=s.profile_size!==undefined?s.profile_size:100;
+  const closeOnBadge=s.close_on_badge!==undefined?s.close_on_badge:true;
+  const closeOnMatchPlayer=s.close_on_match_player!==undefined?s.close_on_match_player:true;
+  const headerClickClose=s.header_click_close!==undefined?s.header_click_close:true;
+  const _shape = (()=>{
+    try{ return (localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
+  })(); // circle | square
+  const shapeBtns = `
+    <button class="btn btn-xs ${_shape==='circle'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('circle')">⭕ 원형</button>
+    <button class="btn btn-xs ${_shape==='square'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('square')">⬛ 네모</button>
+  `;
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
   const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
@@ -3845,6 +3931,11 @@ function _renderCfgPdSection(){
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
     </div>
     <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${shapeBtns}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세/통계(티어랭킹·이달의 스트리머·최다기록·킬러/피해자 등)·경기 상세의 프로필 이미지 모양에 공통 적용됩니다</div>
+    </div>
+    <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
       <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
@@ -3864,6 +3955,30 @@ function _renderCfgPdSection(){
         <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작 설정</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" ${closeOnBadge?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnBadge(this.checked)">
+          <span style="font-size:12px;color:var(--text)">종목 클릭 시 팝업 닫기</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 종목 아이콘/배지 클릭 시 스트리머 상세 팝업이 닫힙니다</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" ${closeOnMatchPlayer?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnMatchPlayer(this.checked)">
+          <span style="font-size:12px;color:var(--text)">경기 상세에서 선수 클릭 시 팝업 닫기</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 경기 상세 팝업에서 선수 이름을 누르면 경기 상세 팝업이 닫힙니다</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" ${headerClickClose?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdHeaderClickClose(this.checked)">
+          <span style="font-size:12px;color:var(--text)">팝업 헤더 클릭 시 닫기</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 각 팝업 상단 헤더(제목)를 클릭하면 팝업이 닫힙니다 (드래그 이동은 유지)</div>
     </div>
     <div>
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
@@ -3905,6 +4020,38 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
+}
+
+function _setPdCloseOnBadge(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.close_on_badge=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+function _setPdCloseOnMatchPlayer(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.close_on_match_player=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+function _setPdHeaderClickClose(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.header_click_close=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+}
+
+// 전역 프로필 이미지 모양(원/네모)
+function _setGlobalProfileShape(shape){
+  try{
+    const v = (shape==='square') ? 'square' : 'circle';
+    localStorage.setItem('su_bcp_shape', v);
+    // 현황판 칩 설정과 동일 키 사용
+    try{ if(typeof boardChipPhotoShape!=='undefined') boardChipPhotoShape=v; }catch(e){}
+    try{ if(typeof saveBoardChipPhotoSettings==='function') saveBoardChipPhotoSettings(); }catch(e){}
+    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
+  }catch(e){}
+  _renderCfgPdSection();
+  try{ if(typeof render==='function') render(); }catch(e){}
 }
 
 

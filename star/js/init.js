@@ -118,6 +118,9 @@ window._applyAppFont = function(){
     pretendard: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css',
     nanum: 'https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap',
     gmarket: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSans.css',
+    dohyeon: 'https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap',
+    blackhansans: 'https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap',
+    ibmplexsans: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap',
   };
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
@@ -129,12 +132,101 @@ window._applyAppFont = function(){
     pretendard: '"Pretendard Variable", Pretendard, "Noto Sans KR", sans-serif',
     nanum: '"Nanum Gothic", "Noto Sans KR", sans-serif',
     gmarket: '"GmarketSans", "Noto Sans KR", sans-serif',
+    dohyeon: '"Do Hyeon", "Noto Sans KR", sans-serif',
+    blackhansans: '"Black Han Sans", "Noto Sans KR", sans-serif',
+    ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
   try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
 };
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 헤더 커스텀(제목/좌측 아이콘/우측 이미지/배경 이미지/높이)
+// - localStorage:
+//   su_hdr_title
+//   su_hdr_left_icon   (URL 또는 이모지)
+//   su_hdr_left_size   (px)
+//   su_hdr_right_img   (URL)
+//   su_hdr_right_size  (px)
+//   su_hdr_bg_img      (URL)
+//   su_hdr_height      (px)
+// ─────────────────────────────────────────────────────────────
+window._applyHeaderSettings = function(){
+  let title='', leftIco='', leftSz=22, rightImg='', rightSz=32, bgImg='', hdrH=0;
+  try{ title=(localStorage.getItem('su_hdr_title')||'').trim(); }catch(e){}
+  try{ leftIco=(localStorage.getItem('su_hdr_left_icon')||'').trim(); }catch(e){}
+  try{ leftSz=parseInt(localStorage.getItem('su_hdr_left_size')||'22',10)||22; }catch(e){}
+  try{ rightImg=(localStorage.getItem('su_hdr_right_img')||'').trim(); }catch(e){}
+  try{ rightSz=parseInt(localStorage.getItem('su_hdr_right_size')||'32',10)||32; }catch(e){}
+  try{ bgImg=(localStorage.getItem('su_hdr_bg_img')||'').trim(); }catch(e){}
+  try{ hdrH=parseInt(localStorage.getItem('su_hdr_height')||'0',10)||0; }catch(e){}
+  leftSz=Math.max(14,Math.min(44,leftSz));
+  rightSz=Math.max(18,Math.min(70,rightSz));
+  hdrH=Math.max(0,Math.min(140,hdrH));
+
+  const hdr=document.querySelector('.hdr');
+  const tEl=document.querySelector('.hdr-title');
+  const iEl=document.querySelector('.hdr-ico');
+  const rEl=document.getElementById('hdrRightImg');
+  if(hdr){
+    try{
+      if(hdrH>0) document.documentElement.style.setProperty('--hdr-h', hdrH+'px');
+      else document.documentElement.style.removeProperty('--hdr-h');
+    }catch(e){}
+    try{
+      if(bgImg){
+        const dark = !!document.body?.classList?.contains('dark');
+        const g = dark
+          ? 'linear-gradient(135deg,rgba(15,23,42,.85) 0%,rgba(30,58,138,.72) 55%,rgba(15,23,42,.85) 100%)'
+          : 'linear-gradient(135deg,rgba(30,58,138,.78) 0%,rgba(37,99,235,.62) 55%,rgba(30,64,175,.78) 100%)';
+        hdr.style.backgroundImage = `${g}, url('${bgImg.replace(/'/g,"%27")}')`;
+        hdr.style.backgroundSize = 'cover';
+        hdr.style.backgroundPosition = 'center';
+        hdr.style.backgroundRepeat = 'no-repeat';
+      }else{
+        hdr.style.backgroundImage = '';
+        hdr.style.backgroundSize = '';
+        hdr.style.backgroundPosition = '';
+        hdr.style.backgroundRepeat = '';
+      }
+    }catch(e){}
+  }
+  if(tEl){
+    try{
+      if(title) tEl.textContent=title;
+      // 문서 타이틀도 함께 반영
+      if(title) document.title = `⭐ ${title}`;
+    }catch(e){}
+  }
+  if(iEl){
+    try{
+      const v = leftIco || '🏆';
+      // URL이면 이미지, 아니면 텍스트(이모지)로 처리
+      if(/^https?:\/\//i.test(v)){
+        iEl.innerHTML = `<img alt="" src="${v.replace(/"/g,'&quot;')}" style="width:${leftSz}px;height:${leftSz}px;object-fit:contain;display:block">`;
+      }else{
+        iEl.textContent = v;
+        iEl.style.fontSize = leftSz+'px';
+      }
+    }catch(e){}
+  }
+  if(rEl){
+    try{
+      if(rightImg){
+        rEl.src = rightImg;
+        rEl.style.display = '';
+        rEl.style.width = rightSz+'px';
+        rEl.style.height = rightSz+'px';
+      }else{
+        rEl.style.display = 'none';
+      }
+    }catch(e){}
+  }
+};
+// 초기 1회 적용(렌더 전후 대응)
+try{ window._applyHeaderSettings(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // 반응형 UI 스케일(자동): 브라우저/기기 폭에 따라 글자/아이콘 크기 자동 조절
@@ -231,7 +323,9 @@ function _applyRecCardTheme(){
   const hdKey='su_rc_hd_alpha';
   const iconKey='su_rc_uicon';
   const memoKey='su_rc_memo_on';
-  let on=true, accent='none', bg=12, hd=14, uicon=18, memoOn=false;
+  const vsKey='su_rc_vs_align';
+  const scKey='su_rc_score_scale';
+  let on=true, accent='none', bg=12, hd=14, uicon=18, memoOn=false, vsAlign='left', scScale=100;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
     const a=localStorage.getItem(acKey); if(a) accent=a;
@@ -239,22 +333,31 @@ function _applyRecCardTheme(){
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
     const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
     const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
+    const va=localStorage.getItem(vsKey); if(va) vsAlign=va;
+    const ss=parseInt(localStorage.getItem(scKey)||'',10); if(!isNaN(ss)) scScale=ss;
   }catch(e){}
   bg=Math.max(0,Math.min(30,bg));
   hd=Math.max(0,Math.min(30,hd));
   uicon=Math.max(12,Math.min(28,uicon));
-  accent = ['none','header','border'].includes(accent) ? accent : 'none';
+  accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
+  vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'left';
+  scScale = Math.max(80, Math.min(130, scScale||100));
+  const vsJust = (vsAlign==='center')?'center':(vsAlign==='right')?'flex-end':'flex-start';
 
   try{
     if(document.body){
       document.body.classList.toggle('rc-theme-on', !!on);
       document.body.classList.toggle('rc-accent-header', !!on && accent==='header');
       document.body.classList.toggle('rc-accent-border', !!on && accent==='border');
+      document.body.classList.toggle('rc-accent-full', !!on && accent==='full');
+      document.body.classList.toggle('rc-accent-gradient', !!on && accent==='gradient');
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
     document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
+    document.documentElement.style.setProperty('--rc-vs-justify', vsJust);
+    document.documentElement.style.setProperty('--rc-score-scale', String(scScale/100));
   }catch(e){}
 }
 window._applyRecCardTheme=_applyRecCardTheme;
