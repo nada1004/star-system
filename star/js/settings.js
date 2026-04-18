@@ -327,6 +327,72 @@ window.cfgSetHeaderSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 동기화: 다른 기기/모바일/태블릿에 적용할 수 있도록 내보내기/가져오기(코드)
+// - 데이터(경기 기록)는 포함하지 않고 "설정(localStorage)"만 대상
+// ─────────────────────────────────────────────────────────────
+window.cfgExportSettingsCode = function(){
+  const out = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k) continue;
+      if(/^su_/.test(k) || /^cfg_/.test(k)){
+        out[k] = localStorage.getItem(k);
+      }
+    }
+  }catch(e){}
+  try{
+    // LZString은 index.html에 포함되어 있음
+    return LZString.compressToBase64(JSON.stringify(out));
+  }catch(e){
+    return '';
+  }
+};
+window.cfgFillSettingsCode = function(){
+  const ta = document.getElementById('cfg-sync-code');
+  if(!ta) return;
+  const code = window.cfgExportSettingsCode();
+  ta.value = code || '';
+  try{ ta.focus(); ta.select(); }catch(e){}
+};
+window.cfgCopySettingsCode = async function(){
+  const ta = document.getElementById('cfg-sync-code');
+  if(!ta) return;
+  try{
+    await navigator.clipboard.writeText(ta.value||'');
+    alert('복사됨');
+  }catch(e){
+    alert('복사 실패: 브라우저 권한 문제일 수 있어요.');
+  }
+};
+window.cfgImportSettingsCode = function(){
+  const ta = document.getElementById('cfg-sync-code');
+  if(!ta) return;
+  const code = String(ta.value||'').trim();
+  if(!code) return alert('가져올 코드가 없습니다.');
+  let obj=null;
+  try{
+    const json = LZString.decompressFromBase64(code);
+    obj = JSON.parse(json||'{}');
+  }catch(e){
+    return alert('코드 해석 실패: 형식이 올바르지 않습니다.');
+  }
+  if(!obj || typeof obj!=='object') return alert('코드 해석 실패');
+  if(!confirm('이 코드를 현재 기기에 적용할까요?\n(현재 설정은 덮어씁니다)')) return;
+  try{
+    Object.keys(obj).forEach(k=>{
+      if(!( /^su_/.test(k) || /^cfg_/.test(k) )) return;
+      const v = obj[k];
+      if(v==null) localStorage.removeItem(k);
+      else localStorage.setItem(k, String(v));
+    });
+  }catch(e){}
+  try{ if(typeof window._applyHeaderSettings==='function') window._applyHeaderSettings(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  alert('✅ 적용 완료');
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 전역 폰트 설정(프리셋 + 커스텀 URL)
 // ─────────────────────────────────────────────────────────────
 window.cfgSetAppFontSettings = function(){
@@ -338,6 +404,36 @@ window.cfgSetAppFontSettings = function(){
   try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 버튼/필 스타일(크기/라운드)
+// ─────────────────────────────────────────────────────────────
+window.cfgSetUiBtnStyleSettings = function(){
+  const pct = parseInt(document.getElementById('cfg-btnscale')?.value || '100',10) || 100;
+  const br  = parseInt(document.getElementById('cfg-btnr')?.value || '8',10) || 8;
+  const pr  = parseInt(document.getElementById('cfg-pillr')?.value || '20',10) || 20;
+  try{ localStorage.setItem('su_btn_scale_pct', String(Math.max(70,Math.min(140,pct)))); }catch(e){}
+  try{ localStorage.setItem('su_btn_r', String(Math.max(0,Math.min(40,br)))); }catch(e){}
+  try{ localStorage.setItem('su_pill_r', String(Math.max(0,Math.min(60,pr)))); }catch(e){}
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{
+    const a=document.getElementById('cfg-btnscale-v'); if(a) a.textContent=pct+'%';
+    const b=document.getElementById('cfg-btnr-v'); if(b) b.textContent=br+'px';
+    const c=document.getElementById('cfg-pillr-v'); if(c) c.textContent=pr+'px';
+  }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+window.cfgResetUiBtnStyleSettings = function(){
+  try{ localStorage.removeItem('su_btn_scale_pct'); }catch(e){}
+  try{ localStorage.removeItem('su_btn_r'); }catch(e){}
+  try{ localStorage.removeItem('su_pill_r'); }catch(e){}
+  try{
+    const s=document.getElementById('cfg-btnscale'); if(s) s.value='100';
+    const r=document.getElementById('cfg-btnr'); if(r) r.value='8';
+    const p=document.getElementById('cfg-pillr'); if(p) p.value='20';
+  }catch(e){}
+  window.cfgSetUiBtnStyleSettings();
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1547,6 +1643,57 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
+  ${(()=>{ 
+    const pct = parseInt(localStorage.getItem('su_btn_scale_pct')||'100',10)||100;
+    const br  = parseInt(localStorage.getItem('su_btn_r')||'8',10)||8;
+    const pr  = parseInt(localStorage.getItem('su_pill_r')||'20',10)||20;
+    return _scfgD('uibtn','🎛️ 버튼 스타일') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">앱 전체 버튼/필(탭·필터) 크기와 라운드를 조절합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">버튼 크기</div>
+        <input type="range" id="cfg-btnscale" min="85" max="125" step="5" value="${Math.max(85,Math.min(125,pct))}"
+          oninput="document.getElementById('cfg-btnscale-v').textContent=this.value+'%'" onchange="cfgSetUiBtnStyleSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-btnscale-v">${Math.max(85,Math.min(125,pct))}%</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">버튼 라운드</div>
+          <input type="range" id="cfg-btnr" min="4" max="18" step="1" value="${Math.max(4,Math.min(18,br))}"
+            oninput="document.getElementById('cfg-btnr-v').textContent=this.value+'px'" onchange="cfgSetUiBtnStyleSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-btnr-v">${Math.max(4,Math.min(18,br))}px</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">필(탭/정렬) 라운드</div>
+          <input type="range" id="cfg-pillr" min="12" max="28" step="1" value="${Math.max(12,Math.min(28,pr))}"
+            oninput="document.getElementById('cfg-pillr-v').textContent=this.value+'px'" onchange="cfgSetUiBtnStyleSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-pillr-v">${Math.max(12,Math.min(28,pr))}px</span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-w btn-sm" onclick="cfgResetUiBtnStyleSettings()">초기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 모바일에서는 터치 편의 때문에 최소 높이가 유지될 수 있습니다.</span>
+      </div>
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;margin-bottom:8px">미리보기</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <button class="btn btn-b">기본</button>
+          <button class="btn btn-w">화이트</button>
+          <button class="btn btn-p">포인트</button>
+          <button class="btn btn-r">삭제</button>
+          <button class="btn btn-w btn-sm">SM</button>
+          <button class="btn btn-w btn-xs">XS</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="pill on">필 ON</button>
+          <button class="pill">필 OFF</button>
+          <button class="sort-btn on">정렬 ON</button>
+          <button class="sort-btn">정렬</button>
+        </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
@@ -1721,6 +1868,16 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('sync','🔄 데이터 동기화')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 기록을 각 탭 기록 및 스트리머 최근 경기에 반영합니다.</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:12px">
+        <div style="font-weight:1000;font-size:12px;margin-bottom:6px">📦 설정 내보내기/가져오기 (다른 기기 적용)</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">설정만 코드로 복사해 다른 기기(모바일/태블릿/PC)에 붙여넣어 적용할 수 있습니다. (경기 데이터는 포함 안됨)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn btn-w btn-sm" onclick="cfgFillSettingsCode()">코드 생성</button>
+          <button class="btn btn-w btn-sm" onclick="cfgCopySettingsCode()">복사</button>
+          <button class="btn btn-b btn-sm" onclick="cfgImportSettingsCode()">이 기기에 적용</button>
+        </div>
+        <textarea id="cfg-sync-code" placeholder="여기에 코드가 표시됩니다 (또는 다른 기기에서 복사한 코드를 붙여넣으세요)" style="width:100%;min-height:90px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;resize:vertical"></textarea>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-b btn-sm" onclick="
           _ttMigrated=false;_migrateTierTourneys();

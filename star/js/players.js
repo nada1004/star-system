@@ -777,9 +777,7 @@ function rTier(C,T){
     fh+=`<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="tierRankMode='${m.id}';window._tierTypeSet=new Set();render()">${m.lbl}</button>`;
   });
   fh+=`</div>`;
-  fh+=`<div style="display:flex;gap:6px;flex-shrink:0" class="no-export">`;
-  fh+=`<button class="btn btn-w btn-xs" onclick="openStarSystemInfo()">📘 티어표</button>`;
-  fh+=`</div>`;
+  // (요청사항) 티어순위표 하위 메뉴의 '티어표' 버튼 제거
   fh+=`</div>`;
 
   if(window._tierFilterOpen||_activeFilters>0){

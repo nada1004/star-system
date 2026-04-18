@@ -155,7 +155,7 @@ function miniRankHTML(data){
   // 개인 순위 (sets.games 집계 — wName/lName 및 playerA/playerB/winner 형식 모두 지원)
   if(!window._rankSort)window._rankSort={};
   const msk=window._rankSort['mini']||'rate';
-  const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
+  const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
   const psc={};
   data.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -244,7 +244,7 @@ function indRankHTML(){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ind']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ind']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ind']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ind']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ind']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ind']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ind']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
@@ -593,6 +593,7 @@ function indInputHTML(){
   return `<div class="match-builder"><h3>🎮 개인전 입력</h3>
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>
+      <button class="btn btn-w btn-sm" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>
       <span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
@@ -627,6 +628,130 @@ function indInputHTML(){
       ${setBuilderHTML(BLD['ind'],'ind')}
     </div>`:''}
   </div>`;
+}
+
+/* ══════════════════════════════════════
+   개인전 "여러 경기" 일괄 입력 (1:1 유지)
+══════════════════════════════════════ */
+window._indBulkRows = window._indBulkRows || null;
+function _indBulkDefaultRow(){
+  const today = new Date().toISOString().slice(0,10);
+  return {date:(_indInput?.date||today), winner:'', loser:'', map:'', memo:''};
+}
+function openIndBulkModal(){
+  if(!isLoggedIn) return alert('로그인이 필요합니다.');
+  if(!window._indBulkRows || !Array.isArray(window._indBulkRows) || window._indBulkRows.length===0){
+    window._indBulkRows = [_indBulkDefaultRow()];
+  }
+  _renderIndBulkModal();
+}
+function closeIndBulkModal(){
+  const el=document.getElementById('_indBulkModal');
+  if(el) el.remove();
+}
+function indBulkAddRow(){
+  window._indBulkRows = window._indBulkRows || [];
+  window._indBulkRows.push(_indBulkDefaultRow());
+  _renderIndBulkModal(true);
+}
+function indBulkDelRow(i){
+  window._indBulkRows = window._indBulkRows || [];
+  window._indBulkRows.splice(i,1);
+  if(window._indBulkRows.length===0) window._indBulkRows=[_indBulkDefaultRow()];
+  _renderIndBulkModal(true);
+}
+function indBulkSet(i, field, val){
+  window._indBulkRows = window._indBulkRows || [];
+  if(!window._indBulkRows[i]) window._indBulkRows[i]=_indBulkDefaultRow();
+  window._indBulkRows[i][field]=val;
+}
+function indBulkApply(){
+  const rows = (window._indBulkRows||[]).map(r=>({
+    date:String(r.date||'').trim(),
+    winner:String(r.winner||'').trim(),
+    loser:String(r.loser||'').trim(),
+    map:String(r.map||'').trim(),
+    memo:String(r.memo||'').trim(),
+  })).filter(r=>r.winner||r.loser||r.map||r.memo||r.date);
+  if(!rows.length) return alert('입력된 행이 없습니다.');
+  const bad = rows.find(r=>!r.date||!r.winner||!r.loser||r.winner===r.loser);
+  if(bad) return alert('날짜/승자/패자를 확인해주세요. (승자와 패자는 달라야 함)');
+  if(!confirm(`총 ${rows.length}경기를 개인전에 추가할까요?`)) return;
+  const newGames=[];
+  rows.forEach(r=>{
+    const id=genId();
+    const sid=genId();
+    const m={_id:id,sid,d:r.date,wName:r.winner,lName:r.loser,map:r.map||''};
+    // 메모는 있으면 보관
+    if(r.memo) m.memo = r.memo;
+    try{ applyGameResult(m.wName,m.lName,r.date,'',m._id,'','','개인전'); }catch(e){}
+    newGames.push(m);
+  });
+  indM.unshift(...newGames);
+  save();
+  window._indBulkRows = [_indBulkDefaultRow()];
+  closeIndBulkModal();
+  indSub='records';
+  render();
+}
+function _renderIndBulkModal(keepScroll){
+  let el=document.getElementById('_indBulkModal');
+  const rows = window._indBulkRows || [];
+  if(!el){
+    el=document.createElement('div');
+    el.id='_indBulkModal';
+    el.className='modal no-export';
+    el.style.cssText='display:flex;z-index:9999';
+    el.onclick=(e)=>{ if(e.target===el) closeIndBulkModal(); };
+    document.body.appendChild(el);
+  }
+  const listId='ind-bulk-player-list';
+  const dl = (typeof players!=='undefined' ? players.map(p=>`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`).join('') : '');
+  const body = `
+    <div class="mbox" style="width:min(760px,96vw);max-height:88vh;overflow:auto">
+      <div class="mtitle">➕ 개인전 여러 경기 입력</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">한 번에 여러 경기(1:1)를 추가합니다.</div>
+      <datalist id="${listId}">${dl}</datalist>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button class="btn btn-w btn-sm" onclick="indBulkAddRow()">+ 행 추가</button>
+        <button class="btn btn-b btn-sm" onclick="indBulkApply()">저장</button>
+        <button class="btn btn-w btn-sm" onclick="closeIndBulkModal()">닫기</button>
+      </div>
+      <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--surface);color:var(--text3);font-weight:900">
+              <th style="padding:10px;text-align:left;white-space:nowrap;width:34px">#</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">날짜</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">승자</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">패자</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">맵</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">메모</th>
+              <th style="padding:10px;text-align:right;white-space:nowrap">삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r,i)=>`
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:8px 10px;color:var(--gray-l);font-weight:900">${i+1}</td>
+                <td style="padding:8px 10px"><input type="date" value="${(r.date||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'date',this.value)" style="padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input list="${listId}" value="${(r.winner||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'winner',this.value)" placeholder="승자" style="width:140px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input list="${listId}" value="${(r.loser||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'loser',this.value)" placeholder="패자" style="width:140px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input value="${(r.map||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'map',this.value)" placeholder="맵" style="width:120px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input value="${(r.memo||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'memo',this.value)" placeholder="" style="width:220px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px;text-align:right"><button class="btn btn-w btn-xs" onclick="indBulkDelRow(${i})">🗑</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  const prevScroll = keepScroll ? el.querySelector('.mbox')?.scrollTop : 0;
+  el.innerHTML = body;
+  if(keepScroll){
+    try{ el.querySelector('.mbox').scrollTop = prevScroll; }catch(e){}
+  }
 }
 
 function indDirectSave(){
@@ -926,7 +1051,7 @@ function gjRankHTML(proOnly){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['gj']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['gj']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['gj']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['gj']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['gj']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['gj']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['gj']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
@@ -1273,7 +1398,7 @@ function ckAddMember(team){
 function ckRankHTML(){
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ck']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
   // 개인 순위
   const pS2={};
   ckM.forEach(m=>{
@@ -1361,7 +1486,7 @@ function univMRankHTML(){
   // 개인 순위
   if(!window._rankSort)window._rankSort={};
   const usk=window._rankSort['univm']||'rate';
-  const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
+  const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
   const upsc={};
   _univFiltered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -1742,7 +1867,7 @@ function proRankHTML(){
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?sorted.slice(_cp*_PAGE,(_cp+1)*_PAGE):sorted;
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 프로 순위</div>
-  <div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['pro']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['pro']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['pro']='l';render()">패순</button></div>
+  <div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['pro']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['pro']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['pro']='l';render()">패순</button></div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">선수</th><th style="text-align:left">대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
   if(!sorted.length)h+=`<tr><td colspan="7" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   _paged.forEach((p,i)=>{
