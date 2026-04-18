@@ -59,12 +59,11 @@ body *{font-family:var(--app-font) !important;}
 code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace !important;}
 b,strong{font-weight:600;}
 .app{max-width:1480px;margin:auto;background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh2);overflow:hidden;}
-.hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#1e40af 100%);padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
+.hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#1e40af 100%);padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;min-height:var(--hdr-h, auto);}
 .hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,transparent 1px,transparent 14px);}
 .hdr-ico{font-size:22px;z-index:1;transition:.15s;}
 .hdr-ico:hover{transform:scale(1.1);}
-.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;transition:opacity .15s;}
-.hdr-title:hover{opacity:.85;}
+.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;cursor:default;pointer-events:none;}
 .hdr-ver{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:.5px;border:1px solid rgba(255,255,255,.22);z-index:1;}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -342,6 +341,12 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
 .rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
 .rec-sum-score{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;padding:4px 14px;white-space:nowrap;flex-shrink:0;}
+
+/* (설정) 기록 카드 스코어/배치 (PC 전용) */
+@media (min-width: 769px){
+  .rec-sum-vs{justify-content: var(--rc-vs-justify, flex-start);}
+  .rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
+}
 .rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);display:none;}
 .rec-detail-area.open{display:block;}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
@@ -447,6 +452,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .hdr-title { font-size: 13px; }
   .hdr-ver { display: none; }
   .hdr-ico { font-size: 20px; }
+  #hdrRightImg{max-height:26px !important;max-width:92px !important;}
   #globalSearch { width: 0 !important; padding: 0 !important; opacity: 0; pointer-events: none; position: absolute; }
   .hdr-search-wrap { position: relative; }
   .hdr-search-icon {
@@ -672,6 +678,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   /* 스트리머 탭 테이블 */
   .total-tbl th, .total-tbl td { padding: 5px 4px !important; font-size: 11px !important; }
 }
+
+#hdrRightImg{max-height:40px;max-width:140px;}
 
 @media (max-width: 480px) {
   .hdr-title { font-size: 12px; letter-spacing: 0; }
