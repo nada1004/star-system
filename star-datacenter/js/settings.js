@@ -41,8 +41,8 @@ const _DEFAULT_CATSECS = {
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui'],
-  '🧪 고급/실험실':['cfgmenu','autofitall','pd','fab','storage','selfcheck'],
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd'],
+  '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
