@@ -1479,8 +1479,31 @@ window.openMatchDetailByMatchId = function(matchId, modeLabel){
 
     let found=null, foundMode='comp';
     for(const p of pools){
-      const m = (p.arr||[]).find(x=>x && x._id===sessId);
-      if(m){ found=m; foundMode=p.modeKey; break; }
+      // gjM/indM: matchId 형식 재구성해서 비교 (localStorage에는 _id가 없을 수 있음)
+      if(p.modeKey==='gj' || p.modeKey==='ind'){
+        const m = (p.arr||[]).find(x=>{
+          if(!x) return false;
+          const prefix = p.modeKey==='gj'?'gj_':'ind_';
+          const reconstructId = prefix + (x.d||'') + (x.map||'') + ((x.wName||'').replace(/\s+/g,'')) + ((x.lName||'').replace(/\s+/g,''));
+          return reconstructId === sessId || x._id === sessId;
+        });
+        if(m){ found=m; foundMode=p.modeKey; break; }
+      } else if(p.modeKey==='progj'){
+        // proTourneys.gjMatches: 여러 tournament를 순회하며 검색 (ID 포함)
+        for(const tn of (typeof proTourneys!=='undefined'?proTourneys:[])){
+          const m = (tn.gjMatches||[]).find(x=>{
+            if(!x) return false;
+            const reconstructId = `protour_${tn.id||''}_${x.d||''}${(x.a||'').replace(/\s+/g,'')}${(x.b||'').replace(/\s+/g,'')}`;
+            return reconstructId === sessId || x._id === sessId;
+          });
+          if(m){ found=m; foundMode=p.modeKey; break; }
+        }
+        if(found) break;
+      } else {
+        // 다른 모드: 직접 _id 비교
+        const m = (p.arr||[]).find(x=>x && (x._id===sessId || x.matchId===sessId));
+        if(m){ found=m; foundMode=p.modeKey; break; }
+      }
     }
     if(!found){
       alert('해당 경기 상세 데이터를 찾을 수 없습니다.');
