@@ -35,6 +35,8 @@ function init(){
   fixPoints();
   // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  // (요청사항) 버튼/필 스타일 설정 적용
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -141,6 +143,28 @@ window._applyAppFont = function(){
 };
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 버튼/필(탭/필터) 스타일 전역 설정
+// - localStorage:
+//   su_btn_scale_pct: 85~125 (기본 100)
+//   su_btn_r:         px (기본 8)
+//   su_pill_r:        px (기본 20)
+// ─────────────────────────────────────────────────────────────
+window._applyUiBtnStyle = function(){
+  let pct=100, br=8, pr=20;
+  try{ pct = parseInt(localStorage.getItem('su_btn_scale_pct')||'100',10) || 100; }catch(e){}
+  try{ br = parseInt(localStorage.getItem('su_btn_r')||'8',10) || 8; }catch(e){}
+  try{ pr = parseInt(localStorage.getItem('su_pill_r')||'20',10) || 20; }catch(e){}
+  pct = Math.max(70, Math.min(140, pct));
+  br = Math.max(0, Math.min(40, br));
+  pr = Math.max(0, Math.min(60, pr));
+  const scale = pct/100;
+  try{ document.documentElement.style.setProperty('--su_btn_scale', String(scale)); }catch(e){}
+  try{ document.documentElement.style.setProperty('--su_btn_r', br+'px'); }catch(e){}
+  try{ document.documentElement.style.setProperty('--su_pill_r', pr+'px'); }catch(e){}
+};
+try{ window._applyUiBtnStyle(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 헤더 커스텀(제목/좌측 아이콘/우측 이미지/배경 이미지/높이)
