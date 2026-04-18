@@ -37,6 +37,11 @@
   --tc-line-rgb: 147,197,253; /* 기본 연결선 색 */
   /* 전역 폰트(설정에서 변경) */
   --app-font: 'Noto Sans KR', sans-serif;
+
+  /* (요청사항) 버튼/필 전역 크기 조절 */
+  --su_btn_scale: 1;  /* 0.85 ~ 1.25 */
+  --su_btn_r: 8px;    /* 기본 버튼 라운드 */
+  --su_pill_r: 20px;  /* pill(탭/필터) 라운드 */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
@@ -92,7 +97,19 @@ b,strong{font-weight:600;}
 .grp-badge{display:inline-block;padding:4px 14px;border-radius:20px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;letter-spacing:.5px;}
 /* 티어 필터 */
 .tier-filter-bar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;margin-bottom:8px;align-items:center;}
-.tier-filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;transition:var(--tr);color:var(--text3);min-height:32px;display:inline-flex;align-items:center;}
+.tier-filter-btn{
+  padding:calc(5px * var(--su_btn_scale)) calc(14px * var(--su_btn_scale));
+  border-radius:var(--su_pill_r);
+  border:1.5px solid var(--border2);
+  background:var(--white);
+  font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
+  font-weight:600;
+  cursor:pointer;
+  transition:var(--tr);
+  color:var(--text3);
+  min-height:32px;
+  display:inline-flex;align-items:center;
+}
 .tier-filter-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
 .tier-filter-btn:active{transform:scale(.96);}
 .tier-filter-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -141,7 +158,16 @@ body.dark .subtab-btn.is-special.is-active{background:linear-gradient(135deg,#0e
 input,select{padding:6px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--white);color:var(--text);font-size:calc(12px * var(--uiS));transition:.15s;}
 input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
 input::placeholder{color:var(--gray-l);}
-.btn{padding:7px 14px;border-radius:var(--r);border:none;font-size:calc(12px * var(--uiS));font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;justify-content:center;gap:4px;}
+.btn{
+  padding:calc(7px * var(--su_btn_scale)) calc(14px * var(--su_btn_scale));
+  border-radius:var(--su_btn_r);
+  border:none;
+  font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
+  font-weight:600;
+  transition:var(--tr);
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:calc(4px * var(--su_btn_scale));
+}
 .btn:active{filter:brightness(.88);transform:scale(.97);}
 .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
 .btn-b{background:var(--blue);color:#fff;}.btn-b:hover{background:var(--blue-d);}
@@ -150,9 +176,27 @@ input::placeholder{color:var(--gray-l);}
 .btn-r{background:#dc2626;color:#fff;}.btn-r:hover{background:#b91c1c;}
 .btn-w{background:var(--white);color:var(--text2);border:1px solid var(--border2);}.btn-w:hover{background:var(--surface);}
 .btn-p{background:#7c3aed;color:#fff;}.btn-p:hover{background:#6d28d9;}
-.btn-xs{padding:3px 9px;font-size:calc(11px * var(--uiS));border-radius:6px;}
-.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px;}
-.btn-detail{padding:4px 11px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:calc(11px * var(--uiS));font-weight:500;cursor:pointer;transition:var(--tr);}
+.btn-xs{
+  padding:calc(3px * var(--su_btn_scale)) calc(9px * var(--su_btn_scale));
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  border-radius:calc(6px * var(--su_btn_scale));
+}
+.btn-sm{
+  padding:calc(5px * var(--su_btn_scale)) calc(11px * var(--su_btn_scale));
+  font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
+  border-radius:calc(6px * var(--su_btn_scale));
+}
+.btn-detail{
+  padding:calc(4px * var(--su_btn_scale)) calc(11px * var(--su_btn_scale));
+  border-radius:var(--su_btn_r);
+  border:1px solid var(--border2);
+  background:var(--surface);
+  color:var(--text3);
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  font-weight:500;
+  cursor:pointer;
+  transition:var(--tr);
+}
 .btn-detail:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
 .btn-detail:active{transform:scale(.96);}
 .btn-detail.open{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -208,7 +252,19 @@ tr:last-child td{border-bottom:none;}
 .pt-z{color:#94a3b8;font-weight:400;}
 .fbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .fbar strong{color:var(--gray-l);font-size:11px;font-weight:500;}
-.pill{padding:5px 13px;border-radius:20px;border:none;background:var(--surface);color:var(--text3);font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);min-height:30px;display:inline-flex;align-items:center;}
+.pill{
+  padding:calc(5px * var(--su_btn_scale)) calc(13px * var(--su_btn_scale));
+  border-radius:var(--su_pill_r);
+  border:none;
+  background:var(--surface);
+  color:var(--text3);
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  font-weight:500;
+  cursor:pointer;
+  transition:var(--tr);
+  min-height:calc(30px * var(--su_btn_scale));
+  display:inline-flex;align-items:center;
+}
 .pill:hover{background:rgba(37,99,235,.1);color:var(--blue);}
 .pill:active{transform:scale(.96);}
 .pill.on{background:var(--blue);color:#fff;font-weight:600;}
@@ -427,7 +483,21 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
 /* 날짜/순위 정렬 바 — pill 스타일과 통일 */
 .sort-bar{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.sort-btn{padding:5px 13px;border-radius:20px;border:none;background:var(--surface);color:var(--text3);font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);min-height:30px;display:inline-flex;align-items:center;flex-shrink:0;white-space:nowrap;}
+.sort-btn{
+  padding:calc(5px * var(--su_btn_scale)) calc(13px * var(--su_btn_scale));
+  border-radius:var(--su_pill_r);
+  border:none;
+  background:var(--surface);
+  color:var(--text3);
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  font-weight:500;
+  cursor:pointer;
+  transition:var(--tr);
+  min-height:calc(30px * var(--su_btn_scale));
+  display:inline-flex;align-items:center;
+  flex-shrink:0;
+  white-space:nowrap;
+}
 .sort-btn.on{background:var(--blue);color:#fff;font-weight:600;}
 .sort-btn:hover:not(.on){background:rgba(37,99,235,.1);color:var(--blue);}
 .sort-btn:active{transform:scale(.96);}
@@ -629,7 +699,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
   /* ── 필터/정렬 바 ── */
   .fbar { gap: 4px; }
-  .fbar .pill { padding: 5px 10px; min-height: 34px; font-size: 11px; touch-action: manipulation; }
+  .fbar .pill { padding: calc(5px * var(--su_btn_scale)) calc(10px * var(--su_btn_scale)); min-height: 34px; font-size: calc(11px * var(--uiS) * var(--su_btn_scale)); touch-action: manipulation; }
   .sort-bar { flex-wrap: wrap; gap: 4px; }
   .sort-btn { min-height: 34px; padding: 5px 10px; touch-action: manipulation; }
   .tier-filter-bar { flex-wrap: wrap; gap: 4px; }
@@ -694,7 +764,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .mbox, .umbox { max-height: 92vh !important; }
   table { font-size: 10px; }
   th, td { padding: 6px 3px; }
-  .fbar .pill, .sort-btn, .tier-filter-btn { font-size: 10px; padding: 4px 8px; }
+  .fbar .pill, .sort-btn, .tier-filter-btn { font-size: calc(10px * var(--uiS) * var(--su_btn_scale)); padding: calc(4px * var(--su_btn_scale)) calc(8px * var(--su_btn_scale)); }
   /* iOS 자동확대 방지: input/select font-size 16px 이상 */
   input, select, textarea { font-size: 16px !important; }
   .mbox input, .mbox select, .umbox input, .umbox select { font-size: 16px !important; }
