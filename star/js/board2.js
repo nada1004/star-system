@@ -344,10 +344,8 @@ function rBoard2(C, T) {
   // 탭 버튼 스타일 헬퍼
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
-    const c = color || 'var(--blue)';
-    // 활성 상태일 때 배경색을 직접 색상으로 설정 (모든 탭 파란색 통일)
-    const bgColor = on ? '#3b82f6' : '#fff';
-    return `<button onclick="_b2View='${view}';render()" style="padding:5px 16px;border-radius:20px;border:2px solid ${on?bgColor:'var(--border2)'};background:${bgColor};color:${on?'#fff':'#1e293b'};font-weight:700;font-size:12px;cursor:pointer">${label}</button>`;
+    // (요청사항) 티어 순위표 스타일(pill)로 통일
+    return `<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_b2View='${view}';render()">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
@@ -420,9 +418,9 @@ function rBoard2(C, T) {
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
       ${_b2TabBtn('femco','var(--blue)','🧩 펨코현황')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
-      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
       ${oldBtn}
       ${playerFilters}
+      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
       <span style="flex:1"></span>
       ${rightBtns}
     </div>
@@ -508,13 +506,16 @@ function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
   const femcoFallback = () => ({
     autoLayout: 1, logoSize: 150, logoPos: 'top', logoAttachTitle: 1, headGap: 10,
-    titleSize: 28, titleFont: 'system',
+    logoOffsetX: 0, logoOffsetY: 0,
+    titleSize: 28, titleFont: 'system', titlePos: 'top',
+    titleOffsetX: 0, titleOffsetY: 0,
     playerImgSize: 46, playerImgShape: 'square',
     rowsPerCol: 5, colWidth: 170, colGap: 10, univGap: 18,
     countFontSize: 12, contentPadX: 16, contentAlign: 'left', contentOffsetX: 0,
     univSubtitles: {}, subtitleSize: 12, subtitleWeight: 800, subtitleColor: '',
     nameFontSize: 12, roleFontSize: 10, tierBadgeSize: 10, tierBadgePadX: 6,
     starSize: 15, statusIconSize: 18,
+    bgOverlay: 0,
     univColorOverrides: {}, univBgMedia: {}
   });
   let femcoSettings = (typeof window._cfgFemcoLoad === 'function')

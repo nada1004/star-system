@@ -12,6 +12,11 @@
     const modal = box.closest('.modal');
     if(!modal) return;
 
+    // 드래그 여부 추적 (드래그 후 mouseup 직후 발생하는 click으로 닫히는 것 방지)
+    let moved = false;
+    const downX = e.clientX;
+    const downY = e.clientY;
+
     // 처음 드래그 시 absolute 위치로 전환
     if(box.style.position !== 'absolute'){
       const rect = box.getBoundingClientRect();
@@ -26,6 +31,7 @@
     const startX = e.clientX - box.offsetLeft;
     const startY = e.clientY - box.offsetTop;
     function onMove(ev){
+      if(Math.abs(ev.clientX-downX)>4 || Math.abs(ev.clientY-downY)>4) moved = true;
       const maxL = window.innerWidth - box.offsetWidth;
       const maxT = window.innerHeight - 40;
       box.style.left = Math.min(maxL, Math.max(0, ev.clientX - startX)) + 'px';
@@ -34,11 +40,45 @@
     function onUp(){
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      // click 이벤트에서 참조할 수 있도록 잠깐 남겨둠
+      try{
+        title.dataset.dragMoved = moved ? '1' : '0';
+        setTimeout(()=>{ try{ delete title.dataset.dragMoved; }catch(e){} }, 250);
+      }catch(e){}
     }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     e.preventDefault();
   });
+
+  // (설정) 팝업 헤더 클릭 시 닫기
+  document.addEventListener('click', function(e){
+    const title = e.target.closest && e.target.closest('.mtitle');
+    if(title){
+      // 드래그로 인한 click이면 무시
+      try{ if(title.dataset.dragMoved==='1') return; }catch(_){}
+      let s={};
+      try{ s=JSON.parse(localStorage.getItem('su_pd_style')||'{}')||{}; }catch(_){}
+      if(s.header_click_close===false) return;
+      const modal = title.closest('.modal');
+      if(modal && !modal.dataset.noClose){
+        if(typeof window.cm === 'function' && modal.id) window.cm(modal.id);
+        else modal.style.display='none';
+      }
+      // (중요) 일부 브라우저/구조에서 헤더 클릭이 다른 토글(접기/펼치기)을 유발할 수 있어 차단
+      try{ e.preventDefault(); }catch(_){}
+      try{ e.stopPropagation(); }catch(_){}
+      return;
+    }
+    // 모바일 경기 상세 시트 제목 클릭 시 닫기
+    const mTitle = e.target.closest && e.target.closest('.mobile-match-sheet-title');
+    if(mTitle){
+      let s={};
+      try{ s=JSON.parse(localStorage.getItem('su_pd_style')||'{}')||{}; }catch(_){}
+      if(s.header_click_close===false) return;
+      if(typeof window.closeMobileMatchOverlay==='function') window.closeMobileMatchOverlay();
+    }
+  }, true);
 
   // 모달 열릴 때 position 초기화
   const origOm = window.om;

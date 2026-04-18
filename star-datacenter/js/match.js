@@ -143,13 +143,13 @@ function getYearOptions(){
 // 공통 연도/월 필터 UI
 function buildYearMonthFilter(section){
   let h=`<div class="fbar no-export" style="margin-bottom:12px;flex-wrap:wrap">
-    <strong>기간</strong>`;
+    <strong></strong>`;
   ['전체',...getYearOptions()].forEach(y=>{
     const sel=(filterYear===y);
     const label=(y==='전체')?'전체':`${y}년`;
     h+=`<button class="pill ${sel?'on':''}" onclick="setFilterYear('${y}','${section}')">${label}</button>`;
   });
-  h+=`<span style="font-size:11px;color:var(--gray-l);margin-left:10px">월</span>`;
+  h+=`<span style="font-size:11px;color:var(--gray-l);margin-left:10px"></span>`;
   const months=['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
   months.forEach(m=>{
     const sel=(filterMonth===m);

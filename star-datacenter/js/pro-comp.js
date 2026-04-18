@@ -308,13 +308,52 @@ function proCompLeague(tn) {
     });
     h += `</div>`;
   }
-  h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-    <button class="pill ${!proCompFilterDate?'on':''}" onclick="proCompFilterDate='';render()">전체</button>`;
-  dates.forEach(d => {
-    const dt = new Date(d+'T00:00:00'); const days=['일','월','화','수','목','금','토'];
-    h += `<button class="pill ${proCompFilterDate===d?'on':''}" onclick="proCompFilterDate='${d}';render()">${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})</button>`;
-  });
-  h += `</div>`;
+  {
+    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+    if(_dateMenuStyle==='asl'){
+      const daysS=['일','월','화','수','목','금','토'];
+      const _mini = (m)=>{
+        const a=m.a||''; const b=m.b||'';
+        const ca=gc(a)||'#64748b'; const cb=gc(b)||'#64748b';
+        const icon = (u, col)=>{
+          const url=UNIV_ICONS[u]||(univCfg.find(x=>x.name===u)||{}).icon||'';
+          if(url) return `<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
+          return `<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0"></span>`;
+        };
+        return `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1">${icon(a,ca)}<span style="overflow:hidden;text-overflow:ellipsis">${a||'—'}</span></span>
+          <span style="color:var(--gray-l);font-weight:900;flex-shrink:0">vs</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1;justify-content:flex-end">${icon(b,cb)}<span style="overflow:hidden;text-overflow:ellipsis">${b||'—'}</span></span>
+        </div>`;
+      };
+      h+=`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+        <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+          <button class="pill ${!proCompFilterDate?'on':''}" style="flex-shrink:0" onclick="proCompFilterDate='';render()">전체</button>`;
+      dates.forEach(d=>{
+        const dt=new Date(d+'T00:00:00');
+        const label=`${daysS[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
+        const dayMs=allMatches.filter(m=>m.d===d).slice(0,2);
+        const prev=dayMs.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayMs.map(_mini).join('')}</div>`:'';
+        const on = (proCompFilterDate===d);
+        h+=`<button type="button" onclick="proCompFilterDate='${d}';render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:220px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--gold)':'var(--border)'};background:${on?'#fffbeb':'var(--surface)'};cursor:pointer">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:1000;font-size:12px;color:${on?'#b45309':'var(--text2)'}">${label}</span>
+            <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayMs.length?`매치 ${allMatches.filter(m=>m.d===d).length}`:''}</span>
+          </div>
+          ${prev}
+        </button>`;
+      });
+      h+=`</div></div>`;
+    } else {
+      h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+        <button class="pill ${!proCompFilterDate?'on':''}" onclick="proCompFilterDate='';render()">전체</button>`;
+      dates.forEach(d=>{
+        const dt=new Date(d+'T00:00:00'); const days=['일','월','화','수','목','금','토'];
+        h += `<button class="pill ${proCompFilterDate===d?'on':''}" onclick="proCompFilterDate='${d}';render()">${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})</button>`;
+      });
+      h += `</div>`;
+    }
+  }
   if (tn.groups.length > 1) {
     h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조 선택:</span>
       <button class="pill ${!proCompFilterGrp?'on':''}" onclick="proCompFilterGrp='';render()">전체</button>`;
@@ -1054,6 +1093,7 @@ function proCompBracket(tn) {
 
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
+    ${isLoggedIn?`<button class="btn btn-w btn-sm" onclick="proCompOpenSeedModal('${tn.id}')" title="상위시드(부전승/라운드 합류) 및 배치 지원">🎫 시드/부전승</button>`:''}
     ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
   </div>`;
 
@@ -1180,6 +1220,143 @@ function proCompBracket(tn) {
     <button class="btn btn-r btn-sm" onclick="proCompResetBracket('${tn.id}')">🔄 대진표 초기화</button>
   </div>`;
   return h;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   (요청사항) 시드/부전승(라운드 합류) + 자동 배치
+   - 예: 32강 대회에서 일부 선수가 16강/8강부터 합류
+   - 저장: tn.seedStarts = { "선수명": 16|8|4|2 ... } (숫자는 시작 라운드 강수)
+══════════════════════════════════════════════════════════════ */
+function _pcRoundLabelBySize(sz){
+  if(sz===2) return '결승';
+  if(sz===4) return '4강';
+  if(sz===8) return '8강';
+  if(sz===16) return '16강';
+  if(sz===32) return '32강';
+  if(sz===64) return '64강';
+  return `${sz}강`;
+}
+function _pcCollectSeedCandidates(tn){
+  const s=new Set();
+  // 1) 브라켓에 이미 들어간 선수
+  (tn.bracket||[]).forEach(rnd=>(rnd||[]).forEach(m=>{
+    if(m&&m.a&&m.a!=='TBD') s.add(m.a);
+    if(m&&m.b&&m.b!=='TBD') s.add(m.b);
+  }));
+  // 2) 조별리그가 있으면 1,2위 후보도 포함
+  try{
+    (tn.groups||[]).forEach(grp=>{
+      const ranks = (typeof _calcProGrpRank==='function') ? _calcProGrpRank(grp) : [];
+      if(ranks[0]?.name) s.add(ranks[0].name);
+      if(ranks[1]?.name) s.add(ranks[1].name);
+    });
+  }catch(e){}
+  return Array.from(s).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+}
+function proCompOpenSeedModal(tnId){
+  const tn=_findTourneyById(tnId);
+  if(!tn) return;
+  if(!tn.bracket || !tn.bracket.length) return alert('먼저 토너먼트 대진표를 생성/생성(직접 만들기) 해주세요.');
+  if(!tn.seedStarts) tn.seedStarts = {};
+  const firstSize = (tn.bracket[0]||[]).length*2;
+  if(!firstSize) return alert('대진표 크기를 확인할 수 없습니다.');
+  const sizes=[];
+  for(let s=firstSize; s>=2; s=Math.floor(s/2)) sizes.push(s);
+  const opts = sizes.map((s,i)=>`<option value="${s}">${i===0?`${_pcRoundLabelBySize(s)}(첫 라운드)`:`${_pcRoundLabelBySize(s)}부터`}</option>`).join('');
+  const cand=_pcCollectSeedCandidates(tn);
+  if(!cand.length) return alert('시드 후보를 찾을 수 없습니다.');
+
+  const modal=document.createElement('div');
+  modal.id='_pcSeedModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML=`<div style="background:var(--white);border-radius:14px;padding:18px;width:min(520px,100%);max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-weight:900;font-size:14px">🎫 시드/부전승(라운드 합류)</div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-b btn-sm" onclick="proCompApplySeedStarts('${tnId}')">✅ 적용(자동 배치)</button>
+        <button class="btn btn-w btn-sm" onclick="document.getElementById('_pcSeedModal')?.remove()">닫기</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">
+      32강 대회에서 일부 선수가 16강/8강부터 합류하는 케이스를 지원합니다. <b>적용</b>을 누르면 “시작 라운드가 첫 라운드가 아닌 선수”는 해당 라운드의 빈 슬롯에 자동 배치됩니다.<br>
+      <span style="font-size:11px">※ 정확한 위치 재배치는 각 경기의 <b>✏️ 경기수정</b>에서 선수(A/B)를 바꾸면 됩니다.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${cand.map(name=>{
+        const cur = parseInt(tn.seedStarts[name]||firstSize,10)||firstSize;
+        return `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
+          <div style="font-weight:900;font-size:12px;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <select data-seed-player="${name.replace(/\"/g,'&quot;')}" style="flex:1;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-weight:800;font-size:12px">
+            ${sizes.map((s,i)=>`<option value="${s}" ${s===cur?'selected':''}>${i===0?`${_pcRoundLabelBySize(s)}(첫 라운드)`:`${_pcRoundLabelBySize(s)}부터`}</option>`).join('')}
+          </select>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+function proCompApplySeedStarts(tnId){
+  const tn=_findTourneyById(tnId);
+  if(!tn||!tn.bracket||!tn.bracket.length) return;
+  const wrap=document.getElementById('_pcSeedModal');
+  if(!wrap) return;
+  const firstSize=(tn.bracket[0]||[]).length*2;
+  if(!tn.seedStarts) tn.seedStarts={};
+  // UI 값 저장
+  wrap.querySelectorAll('select[data-seed-player]').forEach(sel=>{
+    const name=sel.getAttribute('data-seed-player')||'';
+    const v=parseInt(sel.value,10)||firstSize;
+    if(!name) return;
+    tn.seedStarts[name]=v;
+  });
+  if(!confirm('선택한 “시작 라운드” 기준으로 자동 배치할까요?\n(첫 라운드가 아닌 선수는 기존 위치에서 제거 후, 해당 라운드의 빈 슬롯에 배치됩니다.)')) return;
+
+  const sizes=[];
+  for(let s=firstSize;s>=2;s=Math.floor(s/2)) sizes.push(s);
+  const sizeToRi=(sz)=>{
+    const ratio = firstSize / sz;
+    const ri = Math.round(Math.log2(ratio));
+    return Math.max(0, Math.min((tn.bracket.length-1), ri));
+  };
+  const normEmpty=v=>!v||v==='TBD'||v==='BYE';
+
+  // 1) 첫 라운드가 아닌 시드만 대상으로, 기존 위치 제거
+  Object.entries(tn.seedStarts||{}).forEach(([name,sz])=>{
+    const v=parseInt(sz,10)||firstSize;
+    if(v>=firstSize) return;
+    (tn.bracket||[]).forEach(rnd=>{
+      (rnd||[]).forEach(m=>{
+        if(!m) return;
+        if(m.a===name) m.a='TBD';
+        if(m.b===name) m.b='TBD';
+        if(m.winner && (m.winner==='A'&&m.a!=='TBD'&&m.a!==name)===false && (m.winner==='B'&&m.b!=='TBD'&&m.b!==name)===false){
+          // 참가자 제거로 승자 무효화될 수 있어 초기화
+          m.winner='';
+        }
+      });
+    });
+  });
+
+  // 2) 대상 시드들을 라운드별로 위에서 아래로 채움
+  const targets = Object.entries(tn.seedStarts||{})
+    .map(([name,sz])=>({name,sz:parseInt(sz,10)||firstSize}))
+    .filter(x=>x.name && x.sz<firstSize)
+    .sort((a,b)=>a.sz-b.sz||a.name.localeCompare(b.name)); // 더 늦게 합류(작은 강수) 먼저 채우면 자리 부족 방지
+
+  const failed=[];
+  targets.forEach(({name,sz})=>{
+    const ri=sizeToRi(sz);
+    const rnd = tn.bracket[ri]||[];
+    let placed=false;
+    for(let mi=0;mi<rnd.length&&!placed;mi++){
+      const m=rnd[mi]; if(!m) continue;
+      if(normEmpty(m.a)){ m.a=name; placed=true; break; }
+      if(normEmpty(m.b)){ m.b=name; placed=true; break; }
+    }
+    if(!placed) failed.push(`${name}(${_pcRoundLabelBySize(sz)})`);
+  });
+  save(); render();
+  if(failed.length) alert('빈 슬롯이 부족해 일부 시드를 배치하지 못했습니다:\n- '+failed.join('\n- '));
 }
 
 /* 대진표 초기화 (그룹 순위 기반) */

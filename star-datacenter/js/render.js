@@ -70,6 +70,10 @@ function render(){
     case 'elboard': if(typeof rElboard==='function') rElboard(C,T); break;
     default: break;
   }
+  // (설정 반영 보강) 일부 환경에서 body class/변수 적용이 누락되는 케이스가 있어 렌더 후 항상 재적용
+  try{ window._applyRecCardTheme && window._applyRecCardTheme(); }catch(e){}
+  try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
+  try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
   // 즉시 1차 inject (PC 포함 즉시 적용)
   injectUnivIcons(C);
@@ -150,7 +154,10 @@ function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
   // REQ4: 다른 선수로 변경 시 페이지 초기화
-  if(window._playerModalCurrentName!==name){ playerHistPage=0; window._oppPage=0; window._playerModalYear=''; }
+  if(window._playerModalCurrentName!==name){
+    playerHistPage=0; window._oppPage=0; window._playerModalYear='';
+    // (정리) 전체보기 기능 제거됨
+  }
   document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
   const _mbody=document.getElementById('playerModalBody');
   _mbody.innerHTML=buildPlayerDetailHTML(p);
@@ -906,10 +913,14 @@ function buildPlayerDetailHTML(p){
   const _cWin=_cp.win; const _cLoss=_cp.loss;
   // ── 연도 필터 (indM/gjM 포함) ──
   const _year=window._playerModalYear||'';
+  const _normMap = (v)=>{
+    const s=String(v||'-');
+    return s.replace(/^📍\s*/,'').trim() || '-';
+  };
   const _histDupKey=h=>{
     if(h?.matchId) return `mid:${h.matchId}`;
     const date = (h?.date||'').trim();
-    const map = (h?.map||'-').trim();
+    const map = _normMap(h?.map||'-');
     const opp = (h?.opp||'').trim();
     const mode = (h?.mode||'').trim();
     const result = (h?.result||'').trim();
@@ -923,34 +934,130 @@ function buildPlayerDetailHTML(p){
     _historySet.add(k);
     return true;
   });
+
+  // (중복 방지 보강) p.history 기준으로 “날짜+맵+선수쌍+종목(결과 무시)” 키를 만들어,
+  // indM/gjM에서 추출되는 기록(_indMatches/_gjMatches)이 결과가 뒤바뀐 ‘옛 기록’으로 섞여 들어오는 것을 차단
+  const _normHistMode = (m)=>{
+    const s=String(m||'').trim();
+    if(s==='끝장전') return 'gj';
+    if(s==='프로리그끝장전' || s==='프로리그대회끝장전') return 'gj_pro';
+    if(s==='개인전') return 'ind';
+    if(s==='프로리그') return 'ind_pro';
+    return s;
+  };
+  const _histNoResSet = new Set();
+  _dedupedHistory.forEach(h=>{
+    const d=String(h?.date||'').trim();
+    const map=_normMap(h?.map||'-');
+    const opp=String(h?.opp||'').trim();
+    const mm=_normHistMode(h?.mode||'');
+    if(!d || !opp) return;
+    const pair=[p.name, opp].filter(Boolean).sort().join('|');
+    _histNoResSet.add(`${d}|${map}|${pair}|${mm}`);
+  });
+  // (추가) 맵이 '-'(빈값)인 중복 레코드 제거:
+  // 같은 날짜+상대+종목+승패에 맵이 있는 기록이 있으면, 맵 '-' 기록은 표시/병합용 중복으로 간주
+  const _hasDetailedKey=new Set();
+  _dedupedHistory.forEach(h=>{
+    const mk=_normMap(h?.map||'-');
+    if(mk && mk!=='-'){
+      _hasDetailedKey.add(`${(h?.date||'').trim()}|${(h?.opp||'').trim()}|${(h?.mode||'').trim()}|${(h?.result||'').trim()}`);
+    }
+  });
+  const _prunedHistory=_dedupedHistory.filter(h=>{
+    const mk=_normMap(h?.map||'-');
+    if(mk && mk!=='-') return true;
+    const k=`${(h?.date||'').trim()}|${(h?.opp||'').trim()}|${(h?.mode||'').trim()}|${(h?.result||'').trim()}`;
+    return !_hasDetailedKey.has(k);
+  });
+
+  // (추가) 끝장전/개인전 쪽 ‘유령 기록(중복)’ 제거:
+  // - eloDelta가 없고(표에 '-'로 보임)
+  // - 실제 기록 배열(gjM/indM)에 존재하지 않는 항목은 최근경기에서 숨김
+  const _existsInGj = (h)=>{
+    const arr = (typeof gjM!=='undefined' ? (gjM||[]) : []);
+    const d=String(h?.date||'').trim();
+    const map=_normMap(h?.map||'-');
+    const opp=String(h?.opp||'').trim();
+    const res=String(h?.result||'').trim();
+    if(h?.matchId && arr.some(m=>m._id===h.matchId)) return true;
+    return arr.some(m=>{
+      if((m.d||'')!==d) return false;
+      if(_normMap(m.map||'-')!==map) return false;
+      const isWin = (res==='승');
+      return isWin ? (m.wName===p.name && m.lName===opp) : (m.lName===p.name && m.wName===opp);
+    });
+  };
+  const _existsInInd = (h)=>{
+    const arr = (typeof indM!=='undefined' ? (indM||[]) : []);
+    const d=String(h?.date||'').trim();
+    const map=_normMap(h?.map||'-');
+    const opp=String(h?.opp||'').trim();
+    const res=String(h?.result||'').trim();
+    const mode=String(h?.mode||'').trim();
+    if(h?.matchId && arr.some(m=>m._id===h.matchId)) return true;
+    return arr.some(m=>{
+      if((m.d||'')!==d) return false;
+      if(_normMap(m.map||'-')!==map) return false;
+      const isWin = (res==='승');
+      const okPair = isWin ? (m.wName===p.name && m.lName===opp) : (m.lName===p.name && m.wName===opp);
+      if(!okPair) return false;
+      // 프로리그/개인전 구분
+      if(mode==='프로리그') return !!m._proLabel;
+      if(mode==='개인전') return !m._proLabel;
+      return true;
+    });
+  };
+  const _prunedHistory2=_prunedHistory.filter(h=>{
+    const mode=String(h?.mode||'').trim();
+    const hasElo = h?.eloDelta!=null;
+    if(hasElo) return true;
+    if(mode==='끝장전' || mode==='프로리그끝장전') return _existsInGj(h);
+    if(mode==='개인전' || mode==='프로리그') return _existsInInd(h);
+    return true;
+  });
   // history에서 matchId Set 추출
-  const _existingMatchIds=new Set(_dedupedHistory.map(h=>h.matchId).filter(Boolean));
+  const _existingMatchIds=new Set(_prunedHistory2.map(h=>h.matchId).filter(Boolean));
   // history에서 중복 키 Set 추출
-  const _existingKeys=new Set(_dedupedHistory.map(h=>_histDupKey(h)));
+  const _existingKeys=new Set(_prunedHistory2.map(h=>_histDupKey(h)));
 
   // indM/gjM에서 추출 (p.history 미반영분)
   const _indMatches=(typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>{
     const matchId=m._id||`ind_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+    // p.history에 같은 날짜/맵/선수쌍/종목(ind/프로리그)이 이미 있으면(결과 무시) 스킵
+    const d=String(m.d||'').trim();
+    const map=_normMap(m.map||'-');
+    const opp=(m.wName===p.name?m.lName:m.wName);
+    const pair=[p.name, opp].filter(Boolean).sort().join('|');
+    const mm = m._proLabel ? 'ind_pro' : 'ind';
+    if(d && opp && _histNoResSet.has(`${d}|${map}|${pair}|${mm}`)) return null;
     return {
       date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
       opp:m.wName===p.name?m.lName:m.wName,
       oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-      map:m.map||'-',matchId,mode:m._proLabel?'프로리그':'개인전',
+      map:_normMap(m.map||'-'),matchId,mode:m._proLabel?'프로리그':'개인전',
       _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
       _id:matchId
     };
-  });
+  }).filter(Boolean);
   const _gjMatches=(typeof gjM!=='undefined'?gjM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>{
     const matchId=m._id||`gj_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
+    // p.history에 같은 날짜/맵/선수쌍/종목(끝장전/프로끝장전)이 이미 있으면(결과 무시) 스킵
+    const d=String(m.d||'').trim();
+    const map=_normMap(m.map||'-');
+    const opp=(m.wName===p.name?m.lName:m.wName);
+    const pair=[p.name, opp].filter(Boolean).sort().join('|');
+    const mm = m._proLabel ? 'gj_pro' : 'gj';
+    if(d && opp && _histNoResSet.has(`${d}|${map}|${pair}|${mm}`)) return null;
     return {
       date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
       opp:m.wName===p.name?m.lName:m.wName,
       oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
-      map:m.map||'-',matchId,mode:m._proLabel?'프로리그끝장전':'끝장전',
+      map:_normMap(m.map||'-'),matchId,mode:m._proLabel?'프로리그끝장전':'끝장전',
       _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
       _id:matchId
     };
-  });
+  }).filter(Boolean);
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
   const _otherMatches=[];
@@ -1127,7 +1234,7 @@ function buildPlayerDetailHTML(p){
           if(wn!==p.name&&ln!==p.name)return;
           const opp=wn===p.name?ln:wn;
           const oppP=players.find(x=>x.name===opp);
-          const isDupInHist = _dedupedHistory.some(h =>
+          const isDupInHist = _prunedHistory.some(h =>
             h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
           );
           if(!isDupInHist){
@@ -1146,7 +1253,7 @@ function buildPlayerDetailHTML(p){
         if(wn!==p.name&&ln!==p.name)return;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        const isDupInHist = _dedupedHistory.some(h =>
+        const isDupInHist = _prunedHistory.some(h =>
           h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
         );
         if(!isDupInHist){
@@ -1162,10 +1269,16 @@ function buildPlayerDetailHTML(p){
     // _histDupKey로 비교
     if(_existingKeys.has(_histDupKey(h))) return false;
     // matchId 없으면 날짜+맵+상대로 비교
-    if(!h.matchId && _dedupedHistory.some(dh => dh.date === h.date && dh.map === h.map && dh.opp === h.opp)) return false;
+    if(!h.matchId && _prunedHistory.some(dh => dh.date === h.date && dh.map === h.map && dh.opp === h.opp)) return false;
+    // (추가) 맵 '-' 레코드가 “임시/중복”으로 들어오는 경우 방지
+    const mk=_normMap(h.map||'-');
+    if(mk==='-'){
+      const k=`${String(h.date||'').trim()}|${String(h.opp||'').trim()}|${String(h.mode||'').trim()}|${String(h.result||'').trim()}`;
+      if(_hasDetailedKey.has(k)) return false;
+    }
     return true;
   });
-  const _histAll=[..._dedupedHistory,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
+  const _histAll=[..._prunedHistory2,..._extraMatches].sort((a,b)=>((b.date||'')+'').localeCompare((a.date||'')+'')||((b.time||0)-(a.time||0)));
   // 연도 필터링 (단일 또는 멀티)
   const _hist=_year?_histAll.filter(h=>{
     const y=(h.date||'').slice(0,4);
@@ -1311,56 +1424,56 @@ function buildPlayerDetailHTML(p){
     }
   }
 
-  // ── 소스별 필터 드롭다운 ──
+  // ── 종목/연도 UI는 ‘최근 경기 기록’ 섹션으로 이동 (요청사항) ──
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
-  // 멀티 선택 지원을 위한 배열 초기화
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
-  const filterBar=allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-    <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📂 종목</span>
+  const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
+    <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
-      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
-      style="padding:4px 10px;border:1.5px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
+      style="padding:3px 8px;border:1px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
       <option value="" ${!window._playerHistFilter?'selected':''}>전체</option>
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
     </select>`}
   </div>`:'';
-  h+=filterBar;
 
-  // ── 연도 필터 드롭다운 ──
-  if(_availYears.length>0){
+  const _yearBar = (()=>{
+    if(_availYears.length<=0) return '';
     const _pSafeY=escJS(p.name);
-    // 멀티 선택 지원을 위한 배열 초기화
     if(!window._playerModalYears) window._playerModalYears=[];
     if(!window._playerModalYear) window._playerModalYear='';
     const _yWin=_modeHist.filter(h=>h.result==='승').length;
     const _yLoss=_modeHist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
-    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <span style="font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0">📅 연도</span>
+    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
         </label>
-        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
-        style="padding:4px 10px;border:1.5px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:12px;font-weight:700;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
+        style="padding:3px 8px;border:1px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
       </select>`}
-      ${_year&&_yTot?`<span style="font-size:11px;font-weight:700;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot}경기)</span>`:''}
-      ${_year?`<button onclick="window._playerModalYear='';window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:3px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;font-weight:600;color:var(--text3)">✕ 초기화</button>`:''}
+      ${_year&&_yTot?`<span style="font-size:10px;font-weight:800;color:var(--text2)">${_yWin}승 ${_yLoss}패 <span style="color:${_yWr>=50?'#16a34a':'#dc2626'}">${_yWr}%</span> (${_yTot})</span>`:''}
+      ${_year?`<button onclick="window._playerModalYear='';window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',''),60)" style="margin-left:auto;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;cursor:pointer;font-weight:800;color:var(--text3)">초기화</button>`:''}
     </div>`;
-  }
+  })();
+
+  // ── 연도(요청: ELO 변화 추이 위) ──
+  h+=_yearBar;
 
   // ── ELO 추이 차트 (년도 필터 적용) ──
   const _eloChartPts=_modeHist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
@@ -1425,6 +1538,45 @@ function buildPlayerDetailHTML(p){
     </div>`;
   });
   h+=`</div></div>`;
+
+  // ── 상대 종족별 전적 (요청: ‘상대 전적’ 위로 이동) ──
+  {
+    const _raceAgg={Z:{w:0,l:0},T:{w:0,l:0},P:{w:0,l:0}};
+    _modeHist.forEach(hh=>{
+      const oppP=players.find(x=>x.name===hh.opp);
+      const r=String(hh.oppRace||oppP?.race||'').toUpperCase();
+      if(!_raceAgg[r]) return;
+      if(hh.result==='승') _raceAgg[r].w++;
+      else if(hh.result==='패') _raceAgg[r].l++;
+    });
+    const _raceBox=(r,label,barCol)=>{
+      const w=_raceAgg[r].w, l=_raceAgg[r].l, t=w+l;
+      const wr=t?Math.round(w/t*100):0;
+      return `<div style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <span style="font-weight:1000;font-size:12px;color:var(--text2)">${label}</span>
+          <span style="font-size:10px;color:var(--gray-l);font-weight:900">${t}게임</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-weight:1000;font-size:14px;color:${t?(wr>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${t?wr+'%':'-'}</span>
+          <span style="font-size:11px;color:var(--gray-l)">승 ${w} · 패 ${l}</span>
+        </div>
+        <div style="height:6px;border-radius:999px;background:var(--bg2);overflow:hidden;margin-top:8px">
+          <div style="height:100%;width:${t?wr:0}%;background:${barCol}"></div>
+        </div>
+      </div>`;
+    };
+    h+=`<div style="margin:10px 0 14px">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>상대 종족별 전적
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${_raceBox('Z','저그','#a855f7')}
+        ${_raceBox('T','테란','#3b82f6')}
+        ${_raceBox('P','프로토스','#f59e0b')}
+      </div>
+    </div>`;
+  }
 
   // ── 상대 전적 ──
   {
@@ -1498,6 +1650,8 @@ function buildPlayerDetailHTML(p){
 
   // ── 최근 기록 ──
   if(_modeHist.length){
+    // (요청) 종목/연도 필터 UI를 최근 경기 기록 섹션으로 이동
+    h+=_histFilterBar;
     // 시즌 필터 UI
     let seasonBar='';
     if(typeof seasons!=='undefined' && seasons && seasons.length){
@@ -1548,9 +1702,14 @@ function buildPlayerDetailHTML(p){
     // 날짜 최신순 정렬 (원본 인덱스 보존)
     const sortedHist=[...filteredHist.map((h,i)=>({...h,_origIdx:p.history.indexOf(h)}))]
       .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
-    const displayHist=sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
-    const fromN=curPage*pageSize+1, toN=Math.min((curPage+1)*pageSize,totalGames);
-    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>${isLoggedIn?`<button class="btn btn-w btn-xs no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;font-size:10px;border-color:var(--border2)">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}</div>`;
+    const displayHist = sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
+    const fromN = (curPage*pageSize+1);
+    const toN = Math.min((curPage+1)*pageSize,totalGames);
+    h+=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록
+      <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>
+      ${isLoggedIn?`<button class="no-export" onclick="togglePlayerHistBulkMode()" style="margin-left:auto;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:800;cursor:pointer;color:${_playerHistBulkMode?'#dc2626':'var(--text3)'}">${_playerHistBulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}
+    </div>`;
     h+=seasonBar;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
     const selectAllCheckbox = _playerHistBulkMode
@@ -1574,9 +1733,14 @@ function buildPlayerDetailHTML(p){
       const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
       const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
-      const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전'];
-      const modeCellHTML=modeLbl?(_hhMid&&_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); else navToMatch('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
+      const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전','티어대회 토너먼트'];
+      const _selfSafe=escJS(p.name);
+      const _oppSafe=escJS(hh.opp||'');
+      const _dSafe=escJS(hh.date||'');
+      const _mSafe=escJS(hh.map||'');
+      const _rSafe=escJS(hh.result||'');
+      const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
+        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
@@ -2218,7 +2382,7 @@ function _buildCrewPlayerDetailHTML(p, accentCol, typeLabel) {
       crewMembers.forEach(q => {
         const qSafe = escJS(q.name);
         h += `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),100)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${crewCol}44;background:${crewCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
-          ${getPlayerPhotoHTML(q.name,'22px','pointer-events:none;border-radius:50%')} ${q.name}${q.crewRole?` <span style="font-size:9px;color:${crewCol}">${q.crewRole}</span>`:''}
+          ${getPlayerPhotoHTML(q.name,'22px','pointer-events:none;')} ${q.name}${q.crewRole?` <span style="font-size:9px;color:${crewCol}">${q.crewRole}</span>`:''}
         </button>`;
       });
       h += `</div></div>`;

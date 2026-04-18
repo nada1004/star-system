@@ -155,7 +155,7 @@ function miniRankHTML(data){
   // 개인 순위 (sets.games 집계 — wName/lName 및 playerA/playerB/winner 형식 모두 지원)
   if(!window._rankSort)window._rankSort={};
   const msk=window._rankSort['mini']||'rate';
-  const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
+  const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
   const psc={};
   data.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -244,7 +244,7 @@ function indRankHTML(){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ind']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ind']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ind']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ind']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ind']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ind']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ind']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
@@ -314,8 +314,62 @@ function indRecordsHTML(){
   // 비연속 병합된 세션의 날짜를 가장 최신 게임 날짜로 업데이트
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   // 날짜 필터 적용
-  const filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
+  let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+
+  // 날짜(일자) 빠른 선택 메뉴(ASL 스타일) — 설정: su_date_menu_style
+  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+  const _datePickKey = 'su_rec_date_pick_hist_ind';
+  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
+  const _baseSess = filteredSess.slice();
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
+  if(_pickedDate && _allDates.includes(_pickedDate)){
+    filteredSess = filteredSess.filter(s => String(s.d||'').trim() === _pickedDate);
+  }
+  const _dateMenuHTML = (()=>{
+    if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
+    const daysS=['일','월','화','수','목','금','토'];
+    const _pLine = (pName)=>{
+      const pObj=players.find(x=>x.name===pName)||{};
+      const univ=pObj.univ||'';
+      const col=univ?gc(univ):'#64748b';
+      return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
+        ${getPlayerPhotoHTML(pName,'16px')}
+        <span style="font-weight:900;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88px">${pName}</span>
+        ${pObj.tier?`<span style="transform:scale(.85);transform-origin:left center">${getTierBadge(pObj.tier)}</span>`:''}
+        ${univ?`<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0" title="${univ}"></span>`:''}
+      </span>`;
+    };
+    const _mini = (s)=>`<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+      <span style="flex:1;min-width:0">${_pLine(s.p1)}</span>
+      <span style="color:var(--gray-l);font-weight:900;flex-shrink:0">vs</span>
+      <span style="flex:1;min-width:0;display:flex;justify-content:flex-end">${_pLine(s.p2)}</span>
+    </div>`;
+    let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+      <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
+    const _onAll = !_pickedDate;
+    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+      <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
+      <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
+    </button>`;
+    _allDates.forEach(d0=>{
+      const dt=new Date(d0+'T00:00:00');
+      const label=`${daysS[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
+      const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
+      const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
+      const on=(_pickedDate===d0);
+      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
+        </div>
+        ${prev}
+      </button>`;
+    });
+    h+=`</div></div>`;
+    return h;
+  })();
+
   const pageSize=getHistPageSize();
   const total=filteredSess.length;
   const totalPages=Math.ceil(total/pageSize)||1;
@@ -326,6 +380,7 @@ function indRecordsHTML(){
   let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
+  h+=_dateMenuHTML;
   if(_indBulkOn){
     h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
@@ -349,10 +404,10 @@ function indRecordsHTML(){
     const shareBtn=`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}','${_sIdsJson}')">📷 공유카드</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbInd}
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2);justify-content:var(--rc-vs-justify,flex-start)">${bulkCbInd}
         <span style="font-size:12px;font-weight:600;color:${s.d?'var(--text3)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
-        <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
+        <span style="font-size:13px;font-weight:900;color:var(--blue);display:inline-block;transform:scale(var(--rc-score-scale,1));transform-origin:center">${p1wins} - ${p2wins}</span>
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
@@ -538,6 +593,7 @@ function indInputHTML(){
   return `<div class="match-builder"><h3>🎮 개인전 입력</h3>
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>
+      <button class="btn btn-w btn-sm" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>
       <span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
@@ -572,6 +628,130 @@ function indInputHTML(){
       ${setBuilderHTML(BLD['ind'],'ind')}
     </div>`:''}
   </div>`;
+}
+
+/* ══════════════════════════════════════
+   개인전 "여러 경기" 일괄 입력 (1:1 유지)
+══════════════════════════════════════ */
+window._indBulkRows = window._indBulkRows || null;
+function _indBulkDefaultRow(){
+  const today = new Date().toISOString().slice(0,10);
+  return {date:(_indInput?.date||today), winner:'', loser:'', map:'', memo:''};
+}
+function openIndBulkModal(){
+  if(!isLoggedIn) return alert('로그인이 필요합니다.');
+  if(!window._indBulkRows || !Array.isArray(window._indBulkRows) || window._indBulkRows.length===0){
+    window._indBulkRows = [_indBulkDefaultRow()];
+  }
+  _renderIndBulkModal();
+}
+function closeIndBulkModal(){
+  const el=document.getElementById('_indBulkModal');
+  if(el) el.remove();
+}
+function indBulkAddRow(){
+  window._indBulkRows = window._indBulkRows || [];
+  window._indBulkRows.push(_indBulkDefaultRow());
+  _renderIndBulkModal(true);
+}
+function indBulkDelRow(i){
+  window._indBulkRows = window._indBulkRows || [];
+  window._indBulkRows.splice(i,1);
+  if(window._indBulkRows.length===0) window._indBulkRows=[_indBulkDefaultRow()];
+  _renderIndBulkModal(true);
+}
+function indBulkSet(i, field, val){
+  window._indBulkRows = window._indBulkRows || [];
+  if(!window._indBulkRows[i]) window._indBulkRows[i]=_indBulkDefaultRow();
+  window._indBulkRows[i][field]=val;
+}
+function indBulkApply(){
+  const rows = (window._indBulkRows||[]).map(r=>({
+    date:String(r.date||'').trim(),
+    winner:String(r.winner||'').trim(),
+    loser:String(r.loser||'').trim(),
+    map:String(r.map||'').trim(),
+    memo:String(r.memo||'').trim(),
+  })).filter(r=>r.winner||r.loser||r.map||r.memo||r.date);
+  if(!rows.length) return alert('입력된 행이 없습니다.');
+  const bad = rows.find(r=>!r.date||!r.winner||!r.loser||r.winner===r.loser);
+  if(bad) return alert('날짜/승자/패자를 확인해주세요. (승자와 패자는 달라야 함)');
+  if(!confirm(`총 ${rows.length}경기를 개인전에 추가할까요?`)) return;
+  const newGames=[];
+  rows.forEach(r=>{
+    const id=genId();
+    const sid=genId();
+    const m={_id:id,sid,d:r.date,wName:r.winner,lName:r.loser,map:r.map||''};
+    // 메모는 있으면 보관
+    if(r.memo) m.memo = r.memo;
+    try{ applyGameResult(m.wName,m.lName,r.date,'',m._id,'','','개인전'); }catch(e){}
+    newGames.push(m);
+  });
+  indM.unshift(...newGames);
+  save();
+  window._indBulkRows = [_indBulkDefaultRow()];
+  closeIndBulkModal();
+  indSub='records';
+  render();
+}
+function _renderIndBulkModal(keepScroll){
+  let el=document.getElementById('_indBulkModal');
+  const rows = window._indBulkRows || [];
+  if(!el){
+    el=document.createElement('div');
+    el.id='_indBulkModal';
+    el.className='modal no-export';
+    el.style.cssText='display:flex;z-index:9999';
+    el.onclick=(e)=>{ if(e.target===el) closeIndBulkModal(); };
+    document.body.appendChild(el);
+  }
+  const listId='ind-bulk-player-list';
+  const dl = (typeof players!=='undefined' ? players.map(p=>`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`).join('') : '');
+  const body = `
+    <div class="mbox" style="width:min(760px,96vw);max-height:88vh;overflow:auto">
+      <div class="mtitle">➕ 개인전 여러 경기 입력</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">한 번에 여러 경기(1:1)를 추가합니다.</div>
+      <datalist id="${listId}">${dl}</datalist>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button class="btn btn-w btn-sm" onclick="indBulkAddRow()">+ 행 추가</button>
+        <button class="btn btn-b btn-sm" onclick="indBulkApply()">저장</button>
+        <button class="btn btn-w btn-sm" onclick="closeIndBulkModal()">닫기</button>
+      </div>
+      <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--surface);color:var(--text3);font-weight:900">
+              <th style="padding:10px;text-align:left;white-space:nowrap;width:34px">#</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">날짜</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">승자</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">패자</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">맵</th>
+              <th style="padding:10px;text-align:left;white-space:nowrap">메모</th>
+              <th style="padding:10px;text-align:right;white-space:nowrap">삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r,i)=>`
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:8px 10px;color:var(--gray-l);font-weight:900">${i+1}</td>
+                <td style="padding:8px 10px"><input type="date" value="${(r.date||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'date',this.value)" style="padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input list="${listId}" value="${(r.winner||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'winner',this.value)" placeholder="승자" style="width:140px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input list="${listId}" value="${(r.loser||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'loser',this.value)" placeholder="패자" style="width:140px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input value="${(r.map||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'map',this.value)" placeholder="맵" style="width:120px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px"><input value="${(r.memo||'').replace(/"/g,'&quot;')}" onchange="indBulkSet(${i},'memo',this.value)" placeholder="" style="width:220px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px"></td>
+                <td style="padding:8px 10px;text-align:right"><button class="btn btn-w btn-xs" onclick="indBulkDelRow(${i})">🗑</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  const prevScroll = keepScroll ? el.querySelector('.mbox')?.scrollTop : 0;
+  el.innerHTML = body;
+  if(keepScroll){
+    try{ el.querySelector('.mbox').scrollTop = prevScroll; }catch(e){}
+  }
 }
 
 function indDirectSave(){
@@ -627,7 +807,7 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const ct = t => t ? t.replace(/티어$/,'') : '';
 
   const playerInfoBlock = (name, pObj, isWinner, side) => {
-    const photo = getPlayerPhotoHTML(name, '64px', `border-radius:50%;border:3px solid ${isWinner?'#0ea5e9':'#bae6fd'};box-shadow:${isWinner?'0 4px 16px rgba(14,165,233,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
+    const photo = getPlayerPhotoHTML(name, '64px', `border:3px solid ${isWinner?'#0ea5e9':'#bae6fd'};box-shadow:${isWinner?'0 4px 16px rgba(14,165,233,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
     const race = raceLabel(pObj.race||'');
     const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
     const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
@@ -647,8 +827,8 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
 
   const gameRows = games.map((m, gi) => {
     const p1win = m.wName === p1;
-    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;border-radius:50%;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
-    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;border-radius:50%;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
     const mapTxt = m.map && m.map !== '-' ? `<span style="color:#94a3b8;font-size:9px;margin-left:2px">📍${m.map}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;background:${p1win?'rgba(14,165,233,.08)':'rgba(255,255,255,.5)'};margin-bottom:3px">
       <span style="font-size:9px;color:#0ea5e9;min-width:26px;font-weight:700">${gi+1}G</span>
@@ -871,7 +1051,7 @@ function gjRankHTML(proOnly){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['gj']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['gj']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['gj']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['gj']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['gj']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['gj']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['gj']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return sortBar+`<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
@@ -940,11 +1120,65 @@ function gjRecordsHTML(proOnly){
     lastSess.games.push(m);lastSess.ids.push(m._id);
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
-  const filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
+  let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
   filteredSessGj.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+
+  // 날짜(일자) 빠른 선택 메뉴(ASL 스타일) — 설정: su_date_menu_style
+  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+  const _datePickKey = proOnly ? 'su_rec_date_pick_hist_progj' : 'su_rec_date_pick_hist_gj';
+  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
+  const _baseSess = filteredSessGj.slice();
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
+  if(_pickedDate && _allDates.includes(_pickedDate)){
+    filteredSessGj = filteredSessGj.filter(s => String(s.d||'').trim() === _pickedDate);
+  }
+  const _dateMenuHTML = (()=>{
+    if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
+    const daysS=['일','월','화','수','목','금','토'];
+    const _pLine = (pName)=>{
+      const pObj=players.find(x=>x.name===pName)||{};
+      const univ=pObj.univ||'';
+      const col=univ?gc(univ):'#64748b';
+      return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
+        ${getPlayerPhotoHTML(pName,'16px')}
+        <span style="font-weight:900;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88px">${pName}</span>
+        ${pObj.tier?`<span style="transform:scale(.85);transform-origin:left center">${getTierBadge(pObj.tier)}</span>`:''}
+        ${univ?`<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0" title="${univ}"></span>`:''}
+      </span>`;
+    };
+    const _mini = (s)=>`<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+      <span style="flex:1;min-width:0">${_pLine(s.p1)}</span>
+      <span style="color:var(--gray-l);font-weight:900;flex-shrink:0">vs</span>
+      <span style="flex:1;min-width:0;display:flex;justify-content:flex-end">${_pLine(s.p2)}</span>
+    </div>`;
+    let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+      <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
+    const _onAll = !_pickedDate;
+    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+      <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
+      <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
+    </button>`;
+    _allDates.forEach(d0=>{
+      const dt=new Date(d0+'T00:00:00');
+      const label=`${daysS[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
+      const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
+      const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
+      const on=(_pickedDate===d0);
+      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
+        </div>
+        ${prev}
+      </button>`;
+    });
+    h+=`</div></div>`;
+    return h;
+  })();
+
   const pageSize=getHistPageSize();
   const total=filteredSessGj.length;
-  const totalPages=Math.ceil(total/pageSize);
+  const totalPages=Math.ceil(total/pageSize)||1;
   if(histPage['gj']>=totalPages) histPage['gj']=Math.max(0,totalPages-1);
   const cur=histPage['gj'];
   const slice=total>pageSize?filteredSessGj.slice(cur*pageSize,(cur+1)*pageSize):filteredSessGj;
@@ -956,6 +1190,7 @@ function gjRecordsHTML(proOnly){
   let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
+  h+=_dateMenuHTML;
   if(_gjBulkOn){
     h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
@@ -979,10 +1214,10 @@ function gjRecordsHTML(proOnly){
     const bulkDateBtn=isLoggedIn?`<button class="btn btn-w btn-xs no-export" style="white-space:nowrap" onclick="event.stopPropagation();bulkEditGjDate('${idsJson}','${escJS(s.d)}')">📅 날짜</button>`:'';
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2)">${bulkCbGj}
+      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2);justify-content:var(--rc-vs-justify,flex-start)">${bulkCbGj}
         <span style="font-size:12px;font-weight:600;color:${s.d?'var(--text3)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
-        <span style="font-size:13px;font-weight:900;color:var(--blue)">${p1wins} - ${p2wins}</span>
+        <span style="font-size:13px;font-weight:900;color:var(--blue);display:inline-block;transform:scale(var(--rc-score-scale,1));transform-origin:center">${p1wins} - ${p2wins}</span>
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
@@ -1163,7 +1398,7 @@ function ckAddMember(team){
 function ckRankHTML(){
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ck']||'rate';
-  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
   // 개인 순위
   const pS2={};
   ckM.forEach(m=>{
@@ -1251,7 +1486,7 @@ function univMRankHTML(){
   // 개인 순위
   if(!window._rankSort)window._rankSort={};
   const usk=window._rankSort['univm']||'rate';
-  const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
+  const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
   const upsc={};
   _univFiltered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -1632,7 +1867,7 @@ function proRankHTML(){
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?sorted.slice(_cp*_PAGE,(_cp+1)*_PAGE):sorted;
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 프로 순위</div>
-  <div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['pro']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['pro']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['pro']='l';render()">패순</button></div>
+  <div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['pro']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['pro']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['pro']='l';render()">패순</button></div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">선수</th><th style="text-align:left">대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
   if(!sorted.length)h+=`<tr><td colspan="7" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   _paged.forEach((p,i)=>{
@@ -1693,7 +1928,7 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   const raceLabel = r => r==='T'?'테란':r==='Z'?'저그':r==='P'?'프로토스':'';
   const ct = t => t ? t.replace(/티어$/,'') : '';
   const playerInfoBlock = (name, pObj, isWinner, side) => {
-    const photo = getPlayerPhotoHTML(name, '64px', `border-radius:50%;border:3px solid ${isWinner?'#a855f7':'#e9d5ff'};box-shadow:${isWinner?'0 4px 16px rgba(168,85,247,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
+    const photo = getPlayerPhotoHTML(name, '64px', `border:3px solid ${isWinner?'#a855f7':'#e9d5ff'};box-shadow:${isWinner?'0 4px 16px rgba(168,85,247,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
     const race = raceLabel(pObj.race||'');
     const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
     const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
@@ -1713,8 +1948,8 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
 
   const gameRows = games.map((m, gi) => {
     const p1win = m.wName === p1;
-    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;border-radius:50%;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
-    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;border-radius:50%;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p1Photo = getPlayerPhotoHTML(p1, '16px', `flex-shrink:0;${!p1win?'opacity:.35;filter:grayscale(.5)':''}`);
+    const p2Photo = getPlayerPhotoHTML(p2, '16px', `flex-shrink:0;${p1win?'opacity:.35;filter:grayscale(.5)':''}`);
     const mapTxt = m.map && m.map !== '-' ? `<span style="color:#94a3b8;font-size:9px;margin-left:2px">📍${m.map}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;background:${p1win?'rgba(168,85,247,.08)':'rgba(255,255,255,.5)'};margin-bottom:3px">
       <span style="font-size:9px;color:#a78bfa;min-width:26px;font-weight:700">${gi+1}G</span>

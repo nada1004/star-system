@@ -35,6 +35,8 @@ let _statsRankTier = (function(){
 
 function rStats(C,T){
   T.textContent='📊 통계';
+  // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
+  if(window._statsFilterOpen===undefined) window._statsFilterOpen=false;
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
   window.statsSub = window.statsSub || 'overview';
@@ -87,17 +89,20 @@ function rStats(C,T){
   const _curGrp=_statsGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroups[0];
   let h=``;
   // 1행: 그룹 pill 바
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">`;
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">`;
   _statsGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
   });
+  // (요청사항) 필터 버튼은 그룹(개인/대학/경기/기록실) 우측에 배치
+  h+=`<span style="flex:1"></span>`;
+  h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
   h+=`</div>`;
-  // 2행: 선택 그룹 내 서브탭 pill 바
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px">`;
-  _curGrp.tabs.forEach(o=>{
-    h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
-  });
+  // (A안) 현재 탭 + 필터 토글(하위 탭/전역필터)
+  const _curSub = (window.statsSub||'overview');
+  const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:10px;align-items:center">`;
+  h+=`<button class="pill on" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">${_curSubObj?.lbl||'선택'}</button>`;
   h+=`</div>`;
   // 전역 필터 바
   const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==3||_statsLastN>0);
@@ -117,11 +122,19 @@ function rStats(C,T){
     const on=_statsLastN===n;
     return`<button onclick="_statsLastN=${n};render()" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid ${on?'#7c3aed':'var(--border2)'};background:${on?'#7c3aed':'var(--white)'};color:${on?'#fff':'var(--text3)'};cursor:pointer;white-space:nowrap;font-weight:${on?'700':'400'}">${n===0?'전체':n+'경기'}</button>`;
   }
+  // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
+  if(window._statsFilterOpen){
+  // 하위 탭 pill 바
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
+  _curGrp.tabs.forEach(o=>{
+    h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
+  });
+  h+=`</div>`;
+
   h+=`<div class="no-export" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;padding:8px 12px;background:${_isFiltered?'#eff6ff':'var(--surface)'};border:1px solid ${_isFiltered?'#93c5fd':'var(--border)'};border-radius:8px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:800;color:${_isFiltered?'var(--blue)':'var(--text3)'};white-space:nowrap">🔧 전역 필터</span>
+      <span style="font-size:11px;font-weight:800;color:${_isFiltered?'var(--blue)':'var(--text3)'};white-space:nowrap"></span>
       <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap">
-        📅 기간
         <input type="date" value="${_statsDateFrom}" onchange="_statsDateFrom=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
         ~
         <input type="date" value="${_statsDateTo}" onchange="_statsDateTo=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
@@ -134,7 +147,7 @@ function rStats(C,T){
       ${_isFiltered?`<button onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=3;_statsLastN=0;render()" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;cursor:pointer;color:#dc2626;font-weight:700">✕ 초기화</button>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-      <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">📅 빠른 선택:</span>
+      <span style="font-size:10px;color:var(--gray-l);white-space:nowrap"></span>
       ${_qBtn('올해',_thisYearStart,_today)}
       ${_qBtn('이번달',_thisMonthStart,_today)}
       ${_qBtn('최근3개월',_3mAgo,_today)}
@@ -142,9 +155,10 @@ function rStats(C,T){
       <span style="font-size:10px;color:var(--gray-l);white-space:nowrap;margin-left:8px">🎯 최근N경기:</span>
       ${_nBtn(0)}${_nBtn(10)}${_nBtn(20)}${_nBtn(30)}${_nBtn(50)}
     </div>
-    ${(_statsDateFrom||_statsDateTo)?`<span style="font-size:10px;color:var(--blue);font-weight:700">📅 기간 필터 적용 중 — 해당 기간 경기만 집계됩니다</span>`:''}
+    ${(_statsDateFrom||_statsDateTo)?``:''}
     ${_statsLastN>0?`<span style="font-size:10px;color:#7c3aed;font-weight:700">🎯 최근 ${_statsLastN}경기 기준 통계입니다</span>`:''}
   </div>`;
+  } // end if(_statsFilterOpen)
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
   const _CACHEABLE=['overview','records','killer','clutch','streakhist','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
   function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
@@ -434,7 +448,10 @@ function statsTierRankHTML(){
               <div class="sr-box">
                 <div class="sr-grid">
                   <div>
-                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2)">1) 일반(스폰) — 시간가중치</div>
+                    <div style="font-weight:1000;margin-bottom:6px;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                      1) 일반(스폰) — 시간가중치
+                      <span title="최근 경기일수에 따라 승/패에 가중치를 곱해 ‘최근 경기’를 더 반영합니다.\n\n가중치 범위: ×1.00(최신) ~ ×0.70(오래됨)\n계산: w = max(0.70, 1 - (daysAgo × 0.0035))\n예: 30일 전≈×0.90, 60일 전≈×0.79" style="font-size:11px;color:var(--gray-l);font-weight:900;cursor:help;border:1px solid var(--border2);padding:0 6px;border-radius:999px;background:var(--surface)">?</span>
+                    </div>
                     <div class="sr-mini" style="margin-bottom:8px">Raw ${r.pW}승 ${r.pL}패 · 보정승 ${r.practiceScore.toFixed(1)}점</div>
                     <div class="sr-log">
                       <table>
@@ -671,6 +688,7 @@ function statsStarSystemHTML(){
       <button class="btn btn-b btn-sm" ${enabled?'disabled':''} onclick="starSystemSetEnabled(true)">✅ 사용 시작</button>
       <button class="btn btn-w btn-sm" ${!enabled?'disabled':''} onclick="starSystemSetEnabled(false)">⛔ 사용 중지</button>
       <button class="btn btn-w btn-sm" onclick="openStarSystemInfo()">📘 산정기준</button>
+      <button class="btn btn-w btn-sm" onclick="document.querySelector('.tab.cfg')?.click();setTimeout(()=>{ if(typeof cfgGo==='function') cfgGo('tier'); },120)">🎭 티어표 관리</button>
       <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
     </div>
 
@@ -1878,8 +1896,8 @@ function renderShareCardByMatchObj(m){
         const aW=g.winner==='A',bW=g.winner==='B';
         const loserA=!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
         const loserB=!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
-        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`border-radius:50%;flex-shrink:0${loserA}`):'';
-        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`border-radius:50%;flex-shrink:0${loserB}`):'';
+        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'20px',`flex-shrink:0${loserA}`):'';
+        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'20px',`flex-shrink:0${loserB}`):'';
         const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         const winB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         return`<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-bottom:1px solid ${theme.divider}">
@@ -1949,8 +1967,8 @@ function renderShareCardByMatchObj(m){
         <!-- A팀 -->
         <div style="text-align:center;flex:1;min-width:0">
           ${!m._noUnivIcon?(m._usePlayerPhoto
-            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
-              ${getPlayerPhotoHTML(a,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            ?`<div style="width:64px;height:64px;border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${aWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(a,'64px','width:100%;height:100%;object-fit:cover')}
             </div>`
             :`<div style="width:58px;height:58px;border-radius:16px;background:${aWin?`rgba(${caRgb},.38)`:`rgba(${caRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${aWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
               ${univIconHTML(isCivil&&civUniv?civUniv:a,'40px')}
@@ -1972,8 +1990,8 @@ function renderShareCardByMatchObj(m){
         <!-- B팀 -->
         <div style="text-align:center;flex:1;min-width:0">
           ${!m._noUnivIcon?(m._usePlayerPhoto
-            ?`<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;overflow:hidden;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
-              ${getPlayerPhotoHTML(b,'64px','border-radius:50%;width:100%;height:100%;object-fit:cover')}
+            ?`<div style="width:64px;height:64px;border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${bWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 4px 18px rgba(0,0,0,.3)':'opacity:.5;box-shadow:0 0 0 2px rgba(255,255,255,.2)'}">
+              ${getPlayerPhotoHTML(b,'64px','width:100%;height:100%;object-fit:cover')}
             </div>`
             :`<div style="width:58px;height:58px;border-radius:16px;background:${bWin?`rgba(${cbRgb},.38)`:`rgba(${cbRgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${bWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.5;'}overflow:hidden">
               ${univIconHTML(isCivil&&civUniv?civUniv:b,'40px')}

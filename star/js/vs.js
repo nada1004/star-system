@@ -382,8 +382,8 @@ function openVsShareCard(){
   const ct=t=>t?t.replace(/티어$/,''):'';
   const tierBadgeVS=(tier,lead)=>tier?`<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(tier)}</span>`:'';
   const raceBadgeVS=race=>race?`<span style="font-size:10px;opacity:.8">${race}</span>`:'';
-  const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border-radius:50%;border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
-  const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border-radius:50%;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
+  const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
+  const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
 
   // 카드 HTML
   const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:min(380px,calc(100vw - 48px));font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">
