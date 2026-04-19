@@ -423,6 +423,56 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .mem-tag button{background:none;border:none;color:#fff;cursor:pointer;font-size:12px;line-height:1;padding:0 2px;}
 .ssec{background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;margin-bottom:14px;box-shadow:var(--sh);}
 .ssec h4{font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:800;color:var(--text2);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.ssec summary::-webkit-details-marker{display:none;}
+
+/* (요청사항) 설정 메뉴(섹션) 버튼 디자인 개선: "펼치기" 대신 "팝업 열기" UX */
+details.ssec{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  margin-bottom:10px;
+}
+details.ssec > summary.cfg-sec-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--white);
+  box-shadow:var(--sh);
+  cursor:pointer;
+  user-select:none;
+}
+details.ssec > summary.cfg-sec-summary:hover{
+  background:var(--blue-l);
+  border-color:var(--blue-ll);
+}
+details.ssec > summary.cfg-sec-summary:active{
+  transform:scale(.99);
+}
+details.ssec > summary.cfg-sec-summary h4{
+  margin:0;
+  padding:0;
+  border:none;
+  font-size:13px;
+  font-weight:900;
+  color:var(--text2);
+}
+details.ssec > summary.cfg-sec-summary .cfg-sec-right{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--gray-l);
+  font-size:12px;
+  font-weight:900;
+  flex-shrink:0;
+}
+/* 팝업 안에서는 summary를 숨기고 내용만 표시 */
+#cfgModalBody details.ssec{margin:0;}
+#cfgModalBody details.ssec > summary.cfg-sec-summary{display:none;}
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:4000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
