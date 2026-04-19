@@ -840,7 +840,9 @@ function _cfgFemcoDefaults(){
     starSize: 15,
     statusIconSize: 18,
     univColorOverrides: {},
-    // 대학별 배경 미디어 URL (이미지/GIF: 배경, MP4/WEBM: 버튼으로 재생, YouTube/Twitch: 새창)
+    // 대학별 배경 미디어
+    // - 기존 호환: 값이 string이면 URL로 처리
+    // - 신규: {url, alpha, sizeMode, sizeVal, pos, repeat, ox, oy}
     univBgMedia: {},
     // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
     bgOverlay: 22,
@@ -932,6 +934,7 @@ window.cfgFemcoInit = function(){
   const sel = document.getElementById('cfg-femco-univ');
   if (sel) {
     const names = (typeof univCfg !== 'undefined' ? univCfg : []).map(u=>u.name).filter(Boolean);
+    if (!names.includes('무소속')) names.push('무소속');
     const curUniv = localStorage.getItem('cfg_femco_univ') || names[0] || '';
     sel.innerHTML = names.map(n=>`<option value="${n}"${n===curUniv?' selected':''}>${n}</option>`).join('');
     localStorage.setItem('cfg_femco_univ', curUniv);
@@ -945,15 +948,34 @@ window.cfgFemcoRefreshUnivFields = function(){
   const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
   const c = (s.univColorOverrides||{})[u] || '#000000';
   const sub = (s.univSubtitles||{})[u] || '';
-  const bg = (s.univBgMedia||{})[u] || '';
+  const rawBg = (s.univBgMedia||{})[u] || '';
+  const bgObj = (function(){
+    const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
+    if(!rawBg) return d;
+    if(typeof rawBg==='string') return {...d,url:rawBg};
+    if(typeof rawBg==='object') return {...d,...rawBg,url:(rawBg.url||'')};
+    return d;
+  })();
   const colorEl = document.getElementById('cfg-femco-univColor');
   const subEl = document.getElementById('cfg-femco-subtitle');
   const bgEl = document.getElementById('cfg-femco-bgMediaUrl');
   const bgHint = document.getElementById('cfg-femco-bgMediaHint');
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
-  if (bgEl) bgEl.value = bg;
-  if (bgHint) bgHint.textContent = bg ? '설정됨' : '미설정';
+  if (bgEl) bgEl.value = bgObj.url || '';
+  if (bgHint) bgHint.textContent = bgObj.url ? '설정됨' : '미설정';
+  // 배경 옵션
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el!=null) el.value=v;};
+  setVal('cfg-femco-bgAlpha', bgObj.alpha);
+  setVal('cfg-femco-bgAlphaNum', bgObj.alpha);
+  setVal('cfg-femco-bgSizeMode', bgObj.sizeMode);
+  setVal('cfg-femco-bgSizeVal', bgObj.sizeVal);
+  setVal('cfg-femco-bgPos', bgObj.pos);
+  setVal('cfg-femco-bgRepeat', bgObj.repeat);
+  setVal('cfg-femco-bgOffX', bgObj.ox);
+  setVal('cfg-femco-bgOffXNum', bgObj.ox);
+  setVal('cfg-femco-bgOffY', bgObj.oy);
+  setVal('cfg-femco-bgOffYNum', bgObj.oy);
 };
 
 window.cfgFemcoSetBgMedia = function(url){
@@ -964,7 +986,29 @@ window.cfgFemcoSetBgMedia = function(url){
   s.univBgMedia = s.univBgMedia || {};
   const v = (url || '').trim();
   if(!v) delete s.univBgMedia[u];
-  else s.univBgMedia[u] = v;
+  else {
+    const prev = s.univBgMedia[u];
+    if(prev && typeof prev==='object') s.univBgMedia[u] = {...prev, url:v};
+    else s.univBgMedia[u] = {url:v, alpha:30, sizeMode:'cover', sizeVal:90, pos:'center', repeat:'no-repeat', ox:0, oy:0};
+  }
+  _cfgFemcoSave(s);
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgFemcoSetBgOpt = function(k, v){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univBgMedia = s.univBgMedia || {};
+  const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
+  const cur = s.univBgMedia[u];
+  const obj = (!cur ? {...d} : (typeof cur==='string' ? {...d,url:cur} : {...d,...cur}));
+  const numKeys=['alpha','sizeVal','ox','oy'];
+  obj[k] = numKeys.includes(k) ? parseInt(v,10) : v;
+  // URL이 없는 상태에서 옵션만 바뀌어도 저장은 허용(추후 URL 입력시 바로 적용)
+  s.univBgMedia[u]=obj;
   _cfgFemcoSave(s);
   try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -2408,6 +2452,52 @@ ${_scfgD('notice','📢 공지 관리')}
         • MP4/WEBM: 대학 카드에 “배경영상” 버튼 표시(클릭 재생)<br>
         • 유튜브/트위치: “배경링크” 버튼 표시(새창)
       </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 이미지 투명도</div>
+        <input type="range" id="cfg-femco-bgAlpha" min="0" max="100" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgAlphaNum').value=this.value;cfgFemcoSetBgOpt('alpha',this.value)">
+        <input type="number" id="cfg-femco-bgAlphaNum" min="0" max="100" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgAlpha').value=this.value;cfgFemcoSetBgOpt('alpha',this.value)">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">배경 위치/반복</div>
+        <select id="cfg-femco-bgPos" onchange="cfgFemcoSetBgOpt('pos',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="center">중앙</option>
+          <option value="top">상단</option>
+          <option value="bottom">하단</option>
+          <option value="left">좌측</option>
+          <option value="right">우측</option>
+          <option value="top left">좌상</option>
+          <option value="top right">우상</option>
+          <option value="bottom left">좌하</option>
+          <option value="bottom right">우하</option>
+        </select>
+        <select id="cfg-femco-bgRepeat" onchange="cfgFemcoSetBgOpt('repeat',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="no-repeat">반복 없음</option>
+          <option value="repeat">바둑판 반복(여러곳)</option>
+          <option value="repeat-x">가로 반복</option>
+          <option value="repeat-y">세로 반복</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">배경 크기</div>
+        <select id="cfg-femco-bgSizeMode" onchange="cfgFemcoSetBgOpt('sizeMode',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="cover">채우기(cover)</option>
+          <option value="contain">맞춤(contain)</option>
+          <option value="pct">퍼센트(여러개 추천)</option>
+          <option value="px">픽셀(여러개 추천)</option>
+        </select>
+        <input type="number" id="cfg-femco-bgSizeVal" min="30" max="600" step="1" style="width:120px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="cfgFemcoSetBgOpt('sizeVal',this.value)">
+        <span style="font-size:11px;color:var(--gray-l)">pct: % / px: px</span>
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 X 오프셋</div>
+        <input type="range" id="cfg-femco-bgOffX" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffXNum').value=this.value;cfgFemcoSetBgOpt('ox',this.value)">
+        <input type="number" id="cfg-femco-bgOffXNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgOffX').value=this.value;cfgFemcoSetBgOpt('ox',this.value)">
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 Y 오프셋</div>
+        <input type="range" id="cfg-femco-bgOffY" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffYNum').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
+        <input type="number" id="cfg-femco-bgOffYNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgOffY').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">문구 스타일</div>
         <span style="font-size:11px;color:var(--gray-l)">크기</span>
@@ -2713,11 +2803,18 @@ ${_scfgD('notice','📢 공지 관리')}
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
     const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
     if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
+      const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
       _cfgB2ImgWrap.innerHTML=`
         <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
         ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
         <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
         ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-b2-profile-shuffle" style="width:15px;height:15px" ${_shuffle?'checked':''} onchange="localStorage.setItem('su_b2_profile_shuffle',this.checked?'1':'0');render()">
+          이미지탭(프로필) 목록 랜덤(셔플)
+        </label>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
       `;
     }
     // 스트리머 상세 이미지 설정 초기화
