@@ -346,7 +346,7 @@ function rBoard2(C, T) {
   // 저장/초기화 바
   let saveBar = '';
   if (_b2View === 'univ') {
-    saveBar = `<div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
       <div style="position:relative">
         <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체">🏫 전체</option>
@@ -357,7 +357,7 @@ function rBoard2(C, T) {
       <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'free') {
-    saveBar = `<div style="margin-left:auto;flex-shrink:0">
+    saveBar = `<div style="flex-shrink:0">
       <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>`;
   }
@@ -389,9 +389,11 @@ function rBoard2(C, T) {
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
+      ${_b2TabBtn('femco','var(--blue)','🧩 펨코현황')}
       ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
       ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
       ${playerFilters}
+      <span style="flex:1"></span>
       ${isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):''}
       ${saveBar}
     </div>
@@ -403,11 +405,23 @@ function rBoard2(C, T) {
   if (_b2View === 'univ') {
     sub.innerHTML = _b2UnivView();
     injectUnivIcons(sub);
+  } else if (_b2View === 'femco') {
+    sub.innerHTML = _b2FemcoView();
+    injectUnivIcons(sub);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
   } else if (_b2View === 'players') {
     sub.innerHTML = _b2PlayersView();
+    // 이미지별 탭: 최초 진입 시에도 저장된 이미지 설정(크기/밝기/배치/오프셋)이 바로 적용되도록
+    setTimeout(() => {
+      try{
+        if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+        }
+      }catch(e){}
+    }, 0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -444,6 +458,356 @@ function _b2UnivView() {
     const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
+  h += `</div>`;
+  return h;
+}
+
+/* ── 🧩 펨코현황 뷰 ──
+   첨부 이미지처럼 "대학별 컬러 섹션 + 촘촘한 프로필 그리드" 형태로 렌더링
+*/
+function _b2FemcoView() {
+  // ─────────────────────────────────────────────────────────────
+  // 펨코현황 전용 설정(로컬 저장)
+  // ─────────────────────────────────────────────────────────────
+  const FEMCO_STORE_KEY = 'b2_femco_settings_v1';
+  const femcoDefaultSettings = () => ({
+    logoSize: 150,            // 대학 로고(px)
+    logoPos: 'top',           // top | left | right
+    titleSize: 28,            // 대학명 폰트(px)
+    titleFont: 'system',      // system | noto | pretendard
+    playerImgSize: 46,        // 스트리머 이미지(px)
+    playerImgShape: 'square', // square | circle
+    univColorOverrides: {},   // { [univName]: "#RRGGBB" }
+  });
+  function femcoLoad(){
+    try{
+      const raw = localStorage.getItem(FEMCO_STORE_KEY);
+      if (!raw) return femcoDefaultSettings();
+      const obj = JSON.parse(raw) || {};
+      return {
+        ...femcoDefaultSettings(),
+        ...obj,
+        univColorOverrides: { ...(femcoDefaultSettings().univColorOverrides||{}), ...(obj.univColorOverrides||{}) }
+      };
+    }catch(e){ return femcoDefaultSettings(); }
+  }
+  function femcoSave(next){
+    try{ localStorage.setItem(FEMCO_STORE_KEY, JSON.stringify(next)); }catch(e){}
+  }
+  let femcoSettings = femcoLoad();
+  let femcoSub = localStorage.getItem('b2_femco_sub') || 'view'; // view | settings
+  function femcoSetSub(v){
+    femcoSub = v;
+    try{ localStorage.setItem('b2_femco_sub', v); }catch(e){}
+    render();
+  }
+  // 버튼 onclick용 전역 함수
+  window._b2FemcoSetSub = femcoSetSub;
+  window._b2FemcoUpd = (k, v) => {
+    const cur = femcoLoad();
+    const next = {...cur};
+    next[k] = (k.endsWith('Size') || k.endsWith('ImgSize')) ? parseInt(v, 10) : v;
+    femcoSave(next);
+    render();
+  };
+  window._b2FemcoSetUnivColor = (univ, color) => {
+    const cur = femcoLoad();
+    cur.univColorOverrides = cur.univColorOverrides || {};
+    cur.univColorOverrides[univ] = color;
+    femcoSave(cur);
+    render();
+  };
+  window._b2FemcoClrUnivColor = (univ) => {
+    const cur = femcoLoad();
+    cur.univColorOverrides = cur.univColorOverrides || {};
+    delete cur.univColorOverrides[univ];
+    femcoSave(cur);
+    render();
+  };
+  window._b2FemcoReset = () => {
+    femcoSave(femcoDefaultSettings());
+    render();
+  };
+
+  const univList = _b2VisUnivs().filter(u => u.name && u.name !== '무소속');
+  if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
+
+  // univCfg 순서로 정렬 (없으면 이름순)
+  if (typeof univCfg !== 'undefined' && univCfg.length) {
+    univList.sort((a, b) => {
+      const ia = univCfg.findIndex(u => u.name === a.name);
+      const ib = univCfg.findIndex(u => u.name === b.name);
+      return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
+    });
+  } else {
+    univList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
+
+  // 표시 대상 선수(현황판 기준과 동일하게 숨김/은퇴/현황판숨김 제외)
+  const membersByUniv = {};
+  univList.forEach(u => {
+    membersByUniv[u.name] = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
+  });
+
+  const LOGO = Math.max(60, Math.min(260, parseInt(femcoSettings.logoSize || 150, 10) || 150));
+  const titleSize = Math.max(16, Math.min(44, parseInt(femcoSettings.titleSize || 28, 10) || 28));
+  const playerImgSize = Math.max(28, Math.min(90, parseInt(femcoSettings.playerImgSize || 46, 10) || 46));
+  const playerRadius = femcoSettings.playerImgShape === 'circle' ? '50%' : '10px';
+  const titleFontFamily = (() => {
+    switch (femcoSettings.titleFont) {
+      case 'noto': return `'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+      case 'pretendard': return `'Pretendard', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+      default: return `system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif`;
+    }
+  })();
+
+  const tierRank = (p) => {
+    const t = p.tier || '';
+    const i = (typeof TIERS !== 'undefined' && TIERS.includes(t)) ? TIERS.indexOf(t) : 999;
+    return i >= 0 ? i : 999;
+  };
+
+  const rolePri = (p) => {
+    const r = (p.role || '').trim();
+    const order = ['이사장', '총장', '교수', '코치'];
+    const i = order.indexOf(r);
+    return i >= 0 ? i : 99;
+  };
+
+  const raceLabel = (p) => p.race === 'P' ? '프로토스' : p.race === 'T' ? '테란' : p.race === 'Z' ? '저그' : '종족미정';
+  const raceColor = (p) => p.race === 'P' ? '#c084fc' : p.race === 'T' ? '#38bdf8' : p.race === 'Z' ? '#34d399' : '#94a3b8';
+
+  function femcoAvatarSquare(p, accent) {
+    const img = (p && p.photo) ? String(p.photo) : '';
+    const letter = (p && p.name) ? String(p.name).slice(0, 1) : '?';
+    const border = `${accent}55`;
+    if (img) {
+      return `<img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.outerHTML='<div style=&quot;width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">`;
+    }
+    return `<div style="width:100%;height:100%;border-radius:10px;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}</div>`;
+  }
+
+  let h = `
+    <style>
+      .b2-femco-wrap{display:flex;flex-direction:column;gap:18px}
+      .b2-femco-subnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+      .b2-femco-subbtn{padding:6px 10px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.06);color:var(--text);font-weight:900;cursor:pointer}
+      .b2-femco-subbtn.on{background:rgba(255,255,255,.16)}
+      .b2-femco-panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px}
+      .b2-femco-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+      .b2-femco-row label{font-size:12px;font-weight:900;opacity:.9;min-width:140px}
+      .b2-femco-row input[type="range"]{width:220px}
+      .b2-femco-row input, .b2-femco-row select{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.18);color:var(--text)}
+      .b2-femco-hint{font-size:11px;opacity:.75;margin-top:6px}
+      .b2-femco-univ{border-radius:16px;overflow:hidden;box-shadow:0 2px 22px rgba(0,0,0,.12)}
+      .b2-femco-head{padding:16px 16px 12px;text-align:center;position:relative}
+      .b2-femco-logo{display:flex;justify-content:center;margin-bottom:10px}
+      .b2-femco-title{font-weight:1000;font-size:${titleSize}px;letter-spacing:-.04em;line-height:1.1;font-family:${titleFontFamily}}
+      .b2-femco-countbox{position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-start;
+        padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.84);border:1px solid rgba(0,0,0,.10);color:#0f172a}
+      .b2-femco-countbox span{font-size:12px;font-weight:1000}
+      .b2-femco-meta{margin-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+      .b2-femco-pill{font-size:12px;font-weight:1000;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
+      .b2-femco-body{padding:12px 12px 16px}
+      /* ✅ 배치 규칙(요구사항)
+         - 1번(첫 컬럼) 위→아래로 5명 채움
+         - 5명 되면 우측(다음 컬럼) 1번으로 다시 위→아래로 5명
+      */
+      .b2-femco-grid{
+        display:grid;
+        gap:10px;
+        grid-auto-flow:column;
+        grid-template-rows:repeat(5, minmax(0, auto));
+        grid-auto-columns:minmax(190px, 1fr);
+        overflow-x:auto;
+        padding-bottom:6px;
+      }
+      /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 */
+      /* 카드 느낌 제거: 배경/테두리 최소화 */
+      .b2-femco-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:10px;cursor:pointer;min-width:0;transition:background .1s}
+      .b2-femco-item:hover{background:rgba(255,255,255,.12)}
+      .b2-femco-avatar{width:${playerImgSize}px;height:${playerImgSize}px;border-radius:${playerRadius};overflow:hidden;flex-shrink:0}
+      .b2-femco-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+      .b2-femco-tier{font-size:10px;font-weight:1000;display:inline-flex;align-items:center;gap:4px}
+      .b2-femco-role{font-size:10px;font-weight:1000;opacity:.9}
+      .b2-femco-name{font-size:12px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .b2-femco-race-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:1000;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.10)}
+      /* 컬럼 수는 데이터에 따라 자동 증가(가로 스크롤). 작은 화면에서는 컬럼 폭을 줄여 가독성 유지 */
+      @media(max-width:900px){  .b2-femco-grid{grid-auto-columns:minmax(170px, 1fr);} }
+      @media(max-width:520px){
+        .b2-femco-title{font-size:20px}
+        .b2-femco-grid{grid-auto-columns:minmax(160px, 1fr);}
+      }
+    </style>
+    <div class="b2-femco-wrap">
+      <div class="b2-femco-subnav">
+        <button class="b2-femco-subbtn ${femcoSub==='view'?'on':''}" onclick="_b2FemcoSetSub('view')">🧩 현황</button>
+        <button class="b2-femco-subbtn ${femcoSub==='settings'?'on':''}" onclick="_b2FemcoSetSub('settings')">⚙ 설정</button>
+      </div>
+  `;
+
+  // ── ⚙ 설정 화면 ──
+  if (femcoSub === 'settings') {
+    const univNames = univList.map(u => u.name);
+    const curUniv = localStorage.getItem('b2_femco_color_univ') || univNames[0] || '';
+    const curColor = (femcoSettings.univColorOverrides || {})[curUniv] || '';
+    h += `
+      <div class="b2-femco-panel">
+        <div style="font-weight:1000;margin-bottom:8px">펨코현황 전용 설정</div>
+
+        <div class="b2-femco-row">
+          <label>대학 로고 크기</label>
+          <input type="range" min="60" max="260" value="${LOGO}" oninput="_b2FemcoUpd('logoSize', this.value)">
+          <input type="number" min="60" max="260" value="${LOGO}" onchange="_b2FemcoUpd('logoSize', this.value)" style="width:90px">
+        </div>
+
+        <div class="b2-femco-row">
+          <label>대학 로고 위치</label>
+          <select onchange="_b2FemcoUpd('logoPos', this.value)">
+            <option value="top"${(femcoSettings.logoPos||'top')==='top'?' selected':''}>상단(가운데)</option>
+            <option value="left"${femcoSettings.logoPos==='left'?' selected':''}>좌측</option>
+            <option value="right"${femcoSettings.logoPos==='right'?' selected':''}>우측</option>
+          </select>
+        </div>
+
+        <div class="b2-femco-row">
+          <label>대학명 폰트 크기</label>
+          <input type="range" min="16" max="44" value="${titleSize}" oninput="_b2FemcoUpd('titleSize', this.value)">
+          <input type="number" min="16" max="44" value="${titleSize}" onchange="_b2FemcoUpd('titleSize', this.value)" style="width:90px">
+        </div>
+
+        <div class="b2-femco-row">
+          <label>대학명 폰트</label>
+          <select onchange="_b2FemcoUpd('titleFont', this.value)">
+            <option value="system"${(femcoSettings.titleFont||'system')==='system'?' selected':''}>기본(시스템)</option>
+            <option value="noto"${femcoSettings.titleFont==='noto'?' selected':''}>Noto Sans KR</option>
+            <option value="pretendard"${femcoSettings.titleFont==='pretendard'?' selected':''}>Pretendard</option>
+          </select>
+          <span style="font-size:11px;opacity:.8">※ 폰트 파일은 별도 로드하지 않고, 없으면 자동 대체됩니다.</span>
+        </div>
+
+        <div class="b2-femco-row">
+          <label>스트리머 이미지 크기</label>
+          <input type="range" min="28" max="90" value="${playerImgSize}" oninput="_b2FemcoUpd('playerImgSize', this.value)">
+          <input type="number" min="28" max="90" value="${playerImgSize}" onchange="_b2FemcoUpd('playerImgSize', this.value)" style="width:90px">
+        </div>
+
+        <div class="b2-femco-row">
+          <label>이미지 모양</label>
+          <select onchange="_b2FemcoUpd('playerImgShape', this.value)">
+            <option value="square"${(femcoSettings.playerImgShape||'square')==='square'?' selected':''}>네모</option>
+            <option value="circle"${femcoSettings.playerImgShape==='circle'?' selected':''}>원</option>
+          </select>
+        </div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,.14);margin:12px 0">
+        <div style="font-weight:1000;margin-bottom:8px">대학 색상(대학별)</div>
+        <div class="b2-femco-row">
+          <label>대학 선택</label>
+          <select onchange="localStorage.setItem('b2_femco_color_univ', this.value); render();">
+            ${univNames.map(n=>`<option value="${n}"${n===curUniv?' selected':''}>${n}</option>`).join('')}
+          </select>
+          <input type="color" value="${curColor || '#000000'}" onchange="_b2FemcoSetUnivColor('${curUniv}', this.value)">
+          <button class="b2-femco-subbtn" onclick="_b2FemcoClrUnivColor('${curUniv}')">해제</button>
+        </div>
+        <div class="b2-femco-hint">색상을 설정하면 해당 대학 섹션 배경색이 자동색상(gc) 대신 이 값으로 고정됩니다.</div>
+
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="b2-femco-subbtn" onclick="_b2FemcoReset()">초기화</button>
+          <button class="b2-femco-subbtn on" onclick="_b2FemcoSetSub('view')">현황으로</button>
+        </div>
+      </div>
+    `;
+    h += `</div>`;
+    return h;
+  }
+
+  univList.forEach(u => {
+    const univName = u.name;
+    const all = (membersByUniv[univName] || []);
+    if (!all.length) return;
+
+    const overrideCol = (femcoSettings.univColorOverrides || {})[univName];
+    const col = overrideCol || gc(univName);
+    const textCol = _b2ContrastColor(col);
+    const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x => x.name === univName) : null) || {};
+    const iconUrl = uCfg.icon || uCfg.img || '';
+    const logoHtml = iconUrl
+      ? `<img src="${iconUrl}" style="width:${LOGO}px;height:${LOGO}px;object-fit:contain" onerror="this.style.display='none'">`
+      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(LOGO*0.62)}px;height:${Math.round(LOGO*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
+
+    const bossCnt = all.filter(p => (p.role || '').trim() === '이사장').length;
+    const profCoachCnt = all.filter(p => ['교수','코치'].includes((p.role || '').trim())).length;
+    const studentCnt = Math.max(0, all.length - bossCnt - profCoachCnt);
+
+    // 요구사항: '일반 스트리머' 섹션 제거, 단일 리스트에서
+    // 이사장 → 총장 → 교수 → 코치 우선순위로 정렬 후 5열 배치
+    const list = [...all].sort((a, b) => {
+      const ra = rolePri(a), rb = rolePri(b);
+      if (ra !== rb) return ra - rb;
+      const ta = tierRank(a), tb = tierRank(b);
+      if (ta !== tb) return ta - tb;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const _pos = femcoSettings.logoPos || 'top';
+    const headLayout = (_pos === 'left' || _pos === 'right')
+      ? `
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
+          ${_pos==='left'?`<div class="b2-femco-logo" style="margin-bottom:0">${logoHtml}</div>`:''}
+          <div style="min-width:220px">
+            <div class="b2-femco-title">${univName}</div>
+          </div>
+          ${_pos==='right'?`<div class="b2-femco-logo" style="margin-bottom:0">${logoHtml}</div>`:''}
+        </div>
+      `
+      : `
+        <div class="b2-femco-logo">${logoHtml}</div>
+        <div class="b2-femco-title">${univName}</div>
+      `;
+
+    h += `
+      <section class="b2-femco-univ" style="background:${col}">
+        <div class="b2-femco-head" style="color:${textCol}">
+          <div class="b2-femco-countbox">
+            <span>총 ${all.length}</span>
+            <span>이사장 ${bossCnt}</span>
+            <span>교수+코치 ${profCoachCnt}</span>
+            <span>학생 ${studentCnt}</span>
+          </div>
+          ${headLayout}
+          ${(uCfg.championships || 0) > 0 ? `<div style="display:flex;gap:2px;align-items:center;justify-content:center;margin-top:6px">${'⭐'.repeat(uCfg.championships)}</div>` : ''}
+        </div>
+
+        <div class="b2-femco-body" style="background:${col}18">
+          <div class="b2-femco-grid">
+            ${list.map(p => {
+              const safeName = (p.name || '').replace(/'/g, "\\'");
+              const tier = p.tier || '?';
+              const tierBg = tier && tier !== '?' ? (typeof getTierBtnColor === 'function' ? getTierBtnColor(tier) : '#64748b') : '#64748b';
+              const tierFg = tier && tier !== '?' ? ((typeof getTierBtnTextColor === 'function' ? getTierBtnTextColor(tier) : '#fff') || '#fff') : '#fff';
+              const roleLabel = (p.role || '').trim();
+              const rcol = raceColor(p);
+              return `
+                <div class="b2-femco-item" onclick="openPlayerModal('${safeName}');event.stopPropagation();">
+                  <div class="b2-femco-avatar">${femcoAvatarSquare(p, rcol)}</div>
+                  <div class="b2-femco-text" style="${p.inactive ? 'opacity:.65' : ''};color:${textCol}">
+                    <div class="b2-femco-tier">
+                      <span style="background:${tierBg};color:${tierFg};padding:1px 6px;border-radius:999px;border:1px solid rgba(0,0,0,.12)">${tier}</span>
+                    </div>
+                    <div class="b2-femco-role">${roleLabel || ''}</div>
+                    <div class="b2-femco-name">${p.name || ''}</div>
+                    <div><span class="b2-femco-race-pill" style="color:${rcol};border-color:${rcol}55">${raceLabel(p)}</span></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+  });
+
   h += `</div>`;
   return h;
 }

@@ -1,7 +1,7 @@
 # 스타대학 데이터 센터 — 상세 프로젝트 문서
 
 > 이 문서는 Claude Code가 작업 시 참조하는 전체 기능 명세서입니다.
-> 최종 업데이트: 2026-03-02
+> 최종 업데이트: 2026-04-18
 
 ---
 
@@ -600,43 +600,78 @@ _proPasteResults      프로리그 파싱 결과
 
 ---
 
-### 2026-04-13 — 4개 버그 수정 및 조별리그 기록 탭 추가
+### 2026-04-15 — 설정탭 테마 메뉴 / 프로리그 자동인식 개선 / 엘보드 관리자 전용
 
-#### 1. cfg.js 설정 탭 복구 (cfg.js 906줄)
-- **문제**: `} // end first rCfg` 주석이 남아있어 설정 탭이 정상적으로 렌더링되지 않음
-- **수정**: 906줄의 `} // end first rCfg` 삭제
+#### 1. 설정탭 카테고리 → 2×2 테마 카드 메뉴 (settings.js)
+- **변경**: 기존 탭 pill 스타일 → 2×2 그리드 카드 스타일로 교체
+- **카드 구성**: 아이콘 + 카테고리명 + 설명 텍스트 (예: "공지/티어/시즌/경기 운영")
+- **활성 상태**: 선택된 카드에 파란 테두리 + 파란 배경 강조
+- **바로가기 줄**: 카드 아래 구분선 후 동일하게 유지
 
-#### 2. tier-tour.js + cfg.js UTF-8 인코딩 수정
-- **문제**: '??' 이모지가 깨져서 표시됨
-- **수정**: tier-tour.js와 cfg.js 전체 파일 UTF-8로 다시 저장
+#### 2. 프로리그 자동인식 — 여러 경기 별도 레코드로 저장 (search.js)
+- **변경**: `===경기구분===` 구분선이 세트 번호 증가 대신 새 **경기 그룹** 시작으로 동작
+- `proPreview()`: `/경기\s*구분/` 패턴 감지 시 `currentMatch++`, `currentSet` 리셋
+- 각 결과 객체에 `matchGroup` 필드 추가
+- 경기 그룹별 날짜: 블록 내 `일자: YYYY-MM-DD` 줄이 있으면 해당 그룹 날짜로 저장 (`window._proMatchDates[mg]`)
+- `proApply()`: matchGroup별로 반복 → **각 그룹을 별도 proM 레코드로 저장**
+- 저장 토스트: 여러 경기일 때 "N경기 (M게임) 저장 완료" 표시
 
-#### 3. 조별리그 기록·토너먼트 기록 탭 추가 (tier-tour.js)
-- **추가**: `_validSubs`에 `'leaguerecords'`, `'tourrecords'` 추가
-- **추가**: `subOpts`에 레이블 및 렌더링 블록 추가
-- **기능**: 조별리그 기록 탭, 토너먼트 기록 탭 새로 추가
+#### 3. 프로리그 자동인식 — 포맷(2:2/3:3/4:4) proM에 저장 (search.js, history.js)
+- `proApply()`: `window._proFormat > 0` 이면 proM 레코드에 `fmt: N` 필드 저장
+- `renderProPreview()`: 멀티매치 헤더 및 결과 요약에 포맷 배지 표시
+- `recSummaryListHTML()` (history.js): proM 목록에서 `m.fmt > 0` 이면 날짜 옆에 `N:N` 보라색 배지 표시
 
-#### 4. 스트리머 상세 최근 기록 중복 제거 버그 수정 (render.js)
-- **문제**: 조별리그/티어대회에서 같은 경기 내 SET1과 SET2에서 동일 선수 조합 + 동일 맵이 나오면 중복으로 차단돼서 스트리머 상세 최근 경기에 1개만 등록됨
-- **원인**: `_histDupKey` 함수가 matchId가 있으면 map을 무시하고 'mid:{matchId}' 하나의 키만 생성함
-- **수정**: `_histDupKey` 함수에서 map을 키에 포함하도록 수정
+#### 4. 프로리그 자동인식 — renderProPreview matchGroup별 분리 렌더링 (search.js)
+- 단일 경기: 기존과 동일한 단일 테이블
+- 여러 경기: 각 경기 그룹을 보라색 테두리 카드로 래핑, 헤더에 "경기 N" + 날짜 + 포맷 배지
+
+#### 5. 엘보드(최근전적) 탭 — 관리자 전용 접근 제한 (elboard.js)
+- `rElboard()` 시작 부분에 `isLoggedIn` 체크 추가
+- 비로그인 시 설정 탭과 동일한 잠금 UI 표시
+
+---
+
+### 2026-04-18 — 스트리머 상세 중복 경기 제거 / 경기 상세 팝업 오류 수정 / 팝업 닫기 설정
+
+#### Task 9: 스트리머 상세에 중복 경기 제거 (render.js)
+- **문제**: `buildPlayerDetailHTML()` 에서 `p.history`와 `_otherMatches` 모두 렌더링 → 같은 경기가 2번 표시됨
+- **원인**: gjM/indM/tourneys/comps/proTourneys가 `_id` 필드를 갖지 않아 매치ID 검색이 실패하고, 중복 필터링이 작동 안 함
+- **수정**:
+  1. `buildPlayerDetailHTML()` 시작에 gjM/indM/tourneys/comps/proTourneys에 `_id` 미리 할당
+     - 각 데이터타입별 일관성 있는 key 포맷: `gj_`, `ind_`, `tour_`, `comp_`, `protour_` 접두사
+  2. `_gjMatches`/`_indMatches` 추출 시 매치ID 생성 강화 (기존 _id 없으면 생성)
+  3. `isDupInHist()` 함수로 `_otherMatches`와 `_extraMatches` 필터링 (p.history와 비교)
+  4. `_tourMatches` 추출 시 매치ID 없으면 일관된 형식으로 생성하고 반환 (조기 종료 제거)
+
+#### Task 10: 경기 상세 팝업 오류 수정 + 팝업 닫기 설정 (history.js, render.js, settings.js)
+- **문제**: 경기 상세 아이콘(종목 배지) 클릭 시 "해당 경기 상세 데이터를 찾을 수 없습니다" 오류 발생
+  - 끝장전, 프로리그 끝장전, 개인전, 조별리그, 대회, 토너먼트, 프로리그대회 등 모든 경기 타입 영향
+- **원인**: 
+  - `openMatchDetailByMatchId()` (history.js)에서 gjM, indM, proTourneys.gjMatches 검색 누락
+  - matchId 검색 풀이 불완전함
+- **수정**:
+  1. history.js `openMatchDetailByMatchId()` 수정
+     - `끝장전` 레이블 → gjM 검색
+     - `개인전` 레이블 → indM 검색  
+     - `프로리그끝장전` 레이블 → proTourneys[0].gjMatches 검색
+     - fallback 풀 확장: gjM, indM, 그리고 모든 proTourneys.gjMatches 추가
+  2. render.js match badge onclick 수정: 조건부 팝업 닫기 (아래 설정 참고)
+  3. settings.js 스트리머 상세 스타일 섹션에 새 토글 추가
+     - "종목 클릭 시 팝업 닫기" 체크박스 (기본값: true)
+     - 설정 저장: `su_pd_style.close_on_badge` 불린값
+
+#### 기술 상세
+- **중복 제거 핵심**: `_histDupKey` 기반 필터링
   ```js
-  // 수정 전
-  if(h?.matchId) return `mid:${h.matchId}`;
-  // 수정 후
-  if(h?.matchId) return `mid:${h.matchId}|${h?.map||'-'}`;
+  const _histDupKey = (m) => `${m.d||''}|${(m.a||m.wName||'').replace(/\s+/g,'')}|${(m.b||m.lName||'').replace(/\s+/g,'')}`;
+  const _dedupedHistory = [];
+  for(const h of p.history) {
+    const k = _histDupKey(h);
+    if(!_dedupedHistory.some(x => _histDupKey(x) === k)) _dedupedHistory.push(h);
+  }
   ```
-
-#### 5. match.js 게임별 고유 ID 적용 (match.js)
-- **문제**: match.js에서 applyGameResult에 경기 전체 ID(matchId)를 넘겨서 같은 경기 내 게임들이 중복 제거됨
-- **수정**: 게임별 고유 ID 사용
-  - sets 루프: `${matchId}_s${si}_g${gi}` 형태
-  - freeGames 루프: `${matchId}_g${gi}` 형태
-- **수정 위치**:
-  - gj 모드 freeGames 루프 (366-373줄)
-  - ind 모드 freeGames 루프 (384-391줄)
-  - noSetMode freeGames 루프 (399-407줄)
-  - gj 모드 sets 루프 (476-485줄)
-  - 공통 sets 루프 (492-502줄)
+- **matchID 생성 포맷**: `${prefix}_${date}${a_or_wName}${b_or_lName}${map_if_exists}`
+- **팝업 닫기 조건부 실행**: `close_on_badge !== false` 로 기본값 유지
 
 ---
 

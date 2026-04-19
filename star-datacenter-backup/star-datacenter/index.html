@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>⭐ 스타대학 데이터 센터 V49.9</title>
+<title>⭐ 스타대학 데이터 센터</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>var _cbv='?v='+Date.now()+'&force='+Math.random();</script>
-<script>document.write('<link rel="stylesheet" href="css/style.css'+_cbv+'">')</script>
+<link rel="stylesheet" href="css/style.css?v=20260416-14">
 </head>
 <body>
 
@@ -107,8 +106,10 @@
 <div class="hdr">
   <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
   <div class="hdr-title">스타대학 데이터 센터</div>
-  <div class="hdr-ver">V49.9</div>
+  <!-- 버전 표시는 화면에서 숨김(요청사항) -->
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
+    <!-- 헤더 우측 이미지(설정으로 표시) -->
+    <img id="hdrRightImg" alt="" style="display:none;object-fit:contain">
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
       <input id="globalSearch" type="text" placeholder="🔍 스트리머 검색..." oninput="onGlobalSearch(this.value)"
@@ -117,8 +118,6 @@
       <div id="globalSearchDrop" style="display:none;position:fixed;top:50px;right:16px;background:var(--white);border:1px solid var(--border2);border-radius:10px;width:300px;max-height:360px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.22)"></div>
     </div>
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
-    <span id="fbLastSync" style="color:rgba(255,255,255,.45);font-size:10px" title="마지막 Firebase 수신 시각"></span>
-    <button onclick="(async()=>{const b=this;b.textContent='⏳';b.disabled=true;try{await window.fbForceSync();b.textContent='✅';}catch(e){b.textContent='❌';}setTimeout(()=>{b.textContent='🔄';b.disabled=false;},2000);})()" title="Firebase 강제 동기화" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;cursor:pointer">🔄</button>
 
     <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:1">🌙 다크</button>
     <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
@@ -491,23 +490,37 @@
         <span style="color:#7c3aed;font-size:11px">💡 이름/맵 인식 실패 시 직접 수정 · ⇄ 버튼으로 A/B조 전체 교체 · 승패도 행별 변경 가능</span>
       </div>
     </details>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
-      <input type="date" id="pro-paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-      <div style="display:flex;gap:6px;align-items:center;margin-left:8px">
-        <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
-        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1" id="pro-mode-game-lbl" onclick="setProPasteMode('game')">🎮 경기 방식</label>
-        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)" id="pro-mode-set-lbl" onclick="setProPasteMode('set')">📋 세트제</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 날짜</label>
+        <input type="date" id="pro-paste-date" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+        <div style="display:flex;gap:6px;align-items:center;margin-left:4px">
+          <span style="font-size:12px;font-weight:700;color:#0369a1">⚙️ 경기 방식</span>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1" id="pro-mode-game-lbl" onclick="setProPasteMode('game')">🎮 경기 방식</label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)" id="pro-mode-set-lbl" onclick="setProPasteMode('set')">📋 세트제</label>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#7c3aed">🏟️ 팀전 포맷</span>
+        <button id="pro-fmt-0-btn" onclick="setProFormat(0)" style="padding:4px 11px;border-radius:20px;border:1.5px solid #7c3aed;background:#f5f3ff;color:#7c3aed;font-size:12px;font-weight:700;cursor:pointer">자유</button>
+        <button id="pro-fmt-2-btn" onclick="setProFormat(2)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">2:2</button>
+        <button id="pro-fmt-3-btn" onclick="setProFormat(3)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">3:3</button>
+        <button id="pro-fmt-4-btn" onclick="setProFormat(4)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">4:4</button>
+        <span id="pro-fmt-hint" style="font-size:11px;color:var(--gray-l)">포맷 선택 시 경기당 게임 수가 자동 그룹화됩니다</span>
       </div>
     </div>
     <div style="position:relative">
-      <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z"
+      <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z&#10;&#10;여러 경기: ===경기구분=== 으로 구분 입력 가능"
         style="width:100%;min-height:120px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box"
         oninput="proPreview()" onpaste="setTimeout(proPreview,0)"></textarea>
       <button onclick="document.getElementById('pro-paste-input').value='';proPreview();"
         style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center"
         onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
         onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+      <button onclick="insertProMatchSep()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;border:1.5px dashed #7c3aed;background:#f5f3ff;color:#7c3aed;font-size:11px;font-weight:700;cursor:pointer">➕ 경기 구분선 추가</button>
+      <span style="font-size:11px;color:var(--gray-l)">여러 경기를 한 번에 입력할 때 사용</span>
     </div>
     <div id="pro-paste-preview" style="margin-top:12px"></div>
     <div id="pro-swap-row" style="display:none;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;align-items:center;gap:10px;flex-wrap:wrap">
@@ -521,11 +534,37 @@
       <span id="pro-paste-warn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
       <button class="btn btn-w" onclick="closeProPasteModal()">취소</button>
       <button class="btn btn-g" onclick="proApply()" id="pro-apply-btn" style="display:none">✅ 프로리그에 저장</button>
+      <span id="pro-multi-badge" style="display:none;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe"></span>
     </div>
   </div>
 </div>
 
-<script>['js/constants.js','js/data.js','js/auth.js','js/tier-tour.js','js/cfg.js','js/competition.js','js/render.js','js/players.js','js/vs.js','js/history.js','js/match.js','js/match-builder.js','js/search.js','js/pro-comp.js','js/stats.js','js/calendar.js','js/roulette.js','js/duck-race.js','js/wheel.js','js/vote.js','js/cloud-board.js','js/init.js','js/board2.js','js/chatbot.js','js/mobile-bar.js'].forEach(function(s){document.write('<sc'+'ript src="'+s+_cbv+'"><\/sc'+'ript>');});</script>
+<script src="js/constants.js?v=20260416-03"></script>
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/settings.js?v=20260416-49"></script>
+<script src="js/tier-tour.js?v=20260416-02"></script>
+<script src="js/competition.js?v=20260416-09"></script>
+<script src="js/render.js?v=20260416-17"></script>
+<script src="js/players.js?v=20260416-06"></script>
+<script src="js/vs.js?v=20260416-02"></script>
+<script src="js/history.js?v=20260416-42"></script>
+<script src="js/match.js?v=20260416-02"></script>
+<script src="js/match-builder.js?v=20260416-04"></script>
+<script src="js/search.js?v=20260416-07"></script>
+<script src="js/pro-comp.js?v=20260416-08"></script>
+<script src="js/stats.js?v=20260416-16"></script>
+<script src="js/calendar.js?v=20260416-02"></script>
+<script src="js/roulette.js?v=20260416-05"></script>
+<script src="js/duck-race.js?v=20260416-01"></script>
+<script src="js/wheel.js?v=20260416-08"></script>
+<script src="js/vote.js"></script>
+<script src="js/cloud-board.js?v=20260416-02"></script>
+<script src="js/elboard.js"></script>
+<script src="js/init.js?v=20260416-12"></script>
+<script src="js/board2.js?v=20260416-22"></script>
+<script src="js/chatbot.js"></script>
+<script src="js/mobile-bar.js"></script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
@@ -639,7 +678,7 @@ window.addEventListener('DOMContentLoaded',updateFabVisibility);
 </div>
 
 
-<script>document.write('<sc'+'ript src="js/modal-drag.js'+_cbv+'"><\/sc'+'ript>')</script>
+<script src="js/modal-drag.js?v=20260416-01"></script>
 <script type="module" src="js/firebase-init.js"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 
