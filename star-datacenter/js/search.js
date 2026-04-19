@@ -42,10 +42,14 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   // ── 전체 이름 ──
   '투혼':'투혼','라데온':'라데온','라데리안':'라데온','녹아웃':'녹아웃','리트리트':'리트리트',
   '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
-  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  // 애티튜드 표기 통일 (에티튜드도 호환)
+  '애티튜드':'애티튜드','에티튜드':'애티튜드',
+  '매치포인트':'매치포인트','도미네이터':'도미네이터',
   '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
   '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
   '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
+  // 제인스
+  '제인스':'제인스',
   // ── 약자 ──
   '라데':'라데온','라':'라데온','라데리안':'라데온',
   '녹아':'녹아웃','녹':'녹아웃',
@@ -53,7 +57,8 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   '폴':'폴리포이드','폴리':'폴리포이드','폴스':'폴리포이드',   // 폴스 추가
   '플스':'플스타','플립':'플스타',                             // 플립 추가
   '옥':'옥타곤','옥타':'옥타곤',                               // 옥타 추가
-  '에티':'에티튜드','에':'에티튜드',
+  // 애티튜드
+  '에티':'애티튜드','애티':'애티튜드','에':'애티튜드',
   '매':'매치포인트','매치':'매치포인트',
   '도미':'도미네이터','도':'도미네이터',
   '실':'실피드','실피':'실피드',
@@ -67,6 +72,8 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   '화':'화랑',
   '지옥':'지옥섬','지':'지옥섬',
   '네오':'네오리게이트','리게':'네오리게이트',
+  // 제인스
+  '제인':'제인스',
 };
 
 // 기본 약자 + 사용자 정의 약자를 합쳐 반환
@@ -249,7 +256,11 @@ function _findSimilarPlayers(namePart, maxResults=5) {
 function findPlayerByPartialName(namePart) {
   if (!namePart) return { player: null, candidates: [], similar: [] };
   // \u3164(한글 채움 문자), \u00A0(non-breaking), 기타 비표준 공백 → 일반 공백으로 정규화
-  const trimmed = namePart.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
+  const trimmed = namePart
+    .replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+    .replace(/^[\[\(\{<「『"“‘]+/, '')
+    .replace(/[\]\)\}>」』"”’]+$/, '')
+    .trim();
   if (!trimmed) return { player: null, candidates: [], similar: [] };
 
   // 공백 정규화 버전: "안    아" → "안아"
@@ -266,11 +277,18 @@ function findPlayerByPartialName(namePart) {
   const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
   const _trimmedLow = _nfc(trimmed).toLowerCase();
   const _noSpaceLow = _nfc(noSpace).toLowerCase();
+  // 메모 토큰 분리: 공백/쉼표뿐 아니라 ":" "/" "()" "[]" 등도 구분자로 처리
+  const _memoTokens = (memoNorm) => {
+    return String(memoNorm||'')
+      .split(/[\s,，;|\/\\\r\n:\(\)\[\]\{\}<>]+/)
+      .map(m=>m.trim())
+      .filter(Boolean);
+  };
   const memoExact = players.filter(p => {
     if (!p.memo) return false;
     const memoNorm = _nfc(p.memo);
     if (memoNorm.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
-    const memos = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.trim()).filter(Boolean);
+    const memos = _memoTokens(memoNorm);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
   if (memoExact.length === 1) {
@@ -291,7 +309,7 @@ function findPlayerByPartialName(namePart) {
     const memoNS = players.filter(p => {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
-      const tokens = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
+      const tokens = _memoTokens(memoNorm).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
       return tokens.some(t => t === _noSpaceLow);
     });
     if (memoNS.length === 1) return { player: memoNS[0], candidates: memoNS, similar: [] };
@@ -304,7 +322,9 @@ function findPlayerByPartialName(namePart) {
     const memoPartial = players.filter(p => {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
-      return memoNorm.includes(_trimmedLow) || memoNorm.toLowerCase().includes(_trimmedLow);
+      // 토큰 단위 포함(권장) + 원문 포함(호환)
+      const toks = _memoTokens(memoNorm).map(t=>t.toLowerCase());
+      return toks.some(t => t.includes(_trimmedLow)) || memoNorm.toLowerCase().includes(_trimmedLow);
     });
     if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
     if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
@@ -325,7 +345,7 @@ function findPlayerByPartialName(namePart) {
       if (!p.memo) return false;
       const mn = _nfc(p.memo);
       if (mn.trim().toLowerCase() === _rsLow) return true;
-      const toks = mn.split(/[\s,，\n]+/).map(m => m.trim()).filter(Boolean);
+      const toks = _memoTokens(mn);
       return toks.some(t => t.toLowerCase() === _rsLow) ||
              toks.some(t => t.replace(/\s+/g,'').toLowerCase() === _rsNS);
     });
@@ -336,7 +356,8 @@ function findPlayerByPartialName(namePart) {
       const rsMemoPartial = players.filter(p => {
         if (!p.memo) return false;
         const memoNorm = _nfc(p.memo);
-        return memoNorm.includes(_rsLow) || memoNorm.toLowerCase().includes(_rsLow);
+        const toks = _memoTokens(memoNorm).map(t=>t.toLowerCase());
+        return toks.some(t => t.includes(_rsLow)) || memoNorm.toLowerCase().includes(_rsLow);
       });
       if (rsMemoPartial.length === 1) return { player: rsMemoPartial[0], candidates: rsMemoPartial, similar: [] };
       if (rsMemoPartial.length > 1) return { player: null, candidates: rsMemoPartial, similar: [] };
@@ -398,7 +419,7 @@ function findPlayerByPartialName(namePart) {
   // 메모 기반 후보도 '혹시:' 목록에 추가 (Levenshtein으로 찾을 수 없는 별명 대비)
   if (trimmed.length >= 2) {
     players.filter(p => p.memo && (
-      p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean).some(t=>t===trimmed) ||
+      _memoTokens(p.memo).some(t=>t===trimmed) ||
       p.memo.includes(trimmed)
     )).forEach(p => { if (!similar.some(q => q.name === p.name)) similar.push(p); });
   }
@@ -621,6 +642,15 @@ function parsePasteLine(line) {
   // \u3164(한글 채움 문자) 등 비표준 공백 → 일반 공백으로 정규화
   line = line.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!line) return null;
+  // (호환) 전각 괄호/VS/🆚 등 정규화 (설정에서 끌 수 있음)
+  const _pasteCompat = (localStorage.getItem('su_paste_compat') ?? '1') === '1';
+  if (_pasteCompat) {
+    line = line
+      .replace(/[（]/g, '(').replace(/[）]/g, ')')
+      .replace(/🆚/g, 'vs')
+      .replace(/ＶＳ/g, 'vs')
+      .replace(/V\s*\.?\s*S\s*\.?/gi, 'vs');
+  }
   // 꼬리 장식 이모지 제거 (예: [라] 👈 → [라])
   line = line.replace(/\s*[\u{10000}-\u{10FFFF}]+\s*$/u, '').trimEnd();
 
@@ -678,7 +708,8 @@ function parsePasteLine(line) {
     }
 
     // 좌/우 분리
-    const parts = line.split(/\s+vs\s+/i);
+    // (호환) "vs" 주변 공백이 없어도 인식
+    const parts = line.split(/\s*vs\s*/i);
     if (parts.length === 2) {
       let leftPart = parts[0].trim();
       let rightPart = parts[1].trim();
@@ -1023,7 +1054,8 @@ function parsePasteLine(line) {
 
   // vs 구분자로 좌/우 분리
   // 지원: " vs ", " VS ", " v ", " Vs "
-  const vsSplit = line.split(/\s+vs\s+|\s+VS\s+|\s+Vs\s+/i);
+  // (호환) 공백 유무 상관없이 vs 인식
+  const vsSplit = line.split(/\s*(?:vs)\s*/i);
 
   // ── 형식 A-1: 종족 있음 "이름T(승/패)" ──
   const parsePartWithRace = (s) => {
