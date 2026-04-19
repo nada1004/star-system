@@ -60,8 +60,7 @@ function rRoulette(C, T) {
   } else {
     setTimeout(_gcSetup, 60);
   }
-  // 확률 박스 초기 1회 갱신
-  setTimeout(()=>{ try{ _gcRenderProbBox(); }catch(e){} }, 80);
+  // (요청사항) 확률(%) 표시는 제거
 }
 
 (function _gcInjectCSS(){
@@ -89,6 +88,39 @@ let _gcTotalRot = 0;
 let _gcAudioCtx = null;
 window._GC_DOME = 220;
 window._GC_CAP_R = 17;
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 룰렛 결과 팝업
+// ─────────────────────────────────────────────────────────────
+if (typeof window._rrShowPopup !== 'function') {
+  window._rrShowPopup = function(title, bodyHTML){
+    let m=document.getElementById('rrPopupModal');
+    if(!m){
+      m=document.createElement('div');
+      m.id='rrPopupModal';
+      m.className='modal no-export';
+      m.style.cssText='display:none;z-index:9100;align-items:center;justify-content:center';
+      m.addEventListener('click', (e)=>{ if(e && e.target===m) window._rrClosePopup(); });
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `
+      <div class="mbox" style="width:min(520px,94vw);max-height:86vh;overflow:auto">
+        <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>${title||'결과'}</span>
+          <button class="btn btn-w btn-xs" onclick="_rrClosePopup()">✕</button>
+        </div>
+        <div style="padding:10px 2px 4px">${bodyHTML||''}</div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+          <button class="btn btn-b btn-sm" onclick="_rrClosePopup()">확인</button>
+        </div>
+      </div>`;
+    m.style.display='flex';
+  };
+  window._rrClosePopup = function(){
+    const m=document.getElementById('rrPopupModal');
+    if(m) m.style.display='none';
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // (추가) 가중치/확률 파서
@@ -248,7 +280,6 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <div style="margin-top:8px;font-size:${Math.max(11,fs-1)}px;color:var(--gray-l);line-height:1.5">
         ✅ 가중치: <b>이름*2</b> (2배) · 예) <span style="font-family:${'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace'}">폴리포이드*2, 라데온*1</span>
       </div>
-      <div id="gc-prob-box">${_w.items.length?'':'<!-- empty -->'}</div>
       <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
     </div>
     ${(!isPlayer && mapBadges) ? `
@@ -264,7 +295,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>
       <div id="gc-pop-icon" style="font-size:${resIconSz}px;display:block;margin-bottom:8px;line-height:1.1"></div>
       <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:6px;word-break:keep-all"></div>
-      <div id="gc-res-prob" style="font-size:${Math.max(12,fs)}px;font-weight:900;color:#FF4B6E;margin-bottom:14px"></div>
+      <div id="gc-res-prob" style="display:none"></div>
       <button onclick="_gcReset()" style="background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:white;border:none;border-radius:14px;padding:${Math.round(pad*0.7)}px ${pad*1.5}px;font-size:${fsLg}px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #C0274A"
         onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #C0274A'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #C0274A'">🎰 다시 뽑기!</button>
@@ -382,33 +413,10 @@ function _gcToggleInput() {
 
 function _gcSaveText(val) {
   localStorage.setItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', val);
-  try{ _gcRenderProbBox && _gcRenderProbBox(); }catch(e){}
+  // (요청사항) 확률(%) 표시는 제거
 }
 
-// 입력값 기준 확률 박스 갱신 (리렌더 없이)
-function _gcRenderProbBox(){
-  const box=document.getElementById('gc-prob-box');
-  const inp=document.getElementById('gc-items-input');
-  if(!box||!inp) return;
-  const parsed=_gcParseWeightedCSV(inp.value);
-  if(!parsed.items.length){ box.innerHTML=''; return; }
-  const fs=12;
-  const rows=parsed.items.slice().sort((a,b)=>b.weight-a.weight).map(it=>{
-    const p=parsed.total?(it.weight/parsed.total*100):0;
-    return `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">
-      <span style="flex:1;font-weight:700;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.name}</span>
-      <span style="font-size:11px;color:var(--text3)">w=${it.weight.toFixed(2).replace(/\\.00$/,'')}</span>
-      <span style="min-width:62px;text-align:right;font-size:11px;font-weight:900;color:#FF4B6E">${p.toFixed(1)}%</span>
-    </div>`;
-  }).join('');
-  box.innerHTML = `<div style="margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;max-height:180px;overflow:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <span style="font-size:${fs}px;font-weight:900;color:var(--text2)">📊 확률(가중치) (${parsed.items.length})</span>
-      <span style="font-size:11px;color:var(--gray-l)">합=${parsed.total.toFixed(2).replace(/\\.00$/,'')}</span>
-    </div>
-    ${rows}
-  </div>`;
-}
+// (요청사항) 확률(%) 표시는 제거됨
 
 function _gcToggleMap(mapName, el) {
   const inp = document.getElementById('gc-items-input');
@@ -443,7 +451,7 @@ function _gcClearItems() {
     el.style.borderColor = 'var(--border)';
     el.style.color = 'var(--text2)';
   });
-  try{ _gcRenderProbBox && _gcRenderProbBox(); }catch(e){}
+  // (요청사항) 확률(%) 표시는 제거
 }
 
 function _gcSetup() {
@@ -580,8 +588,7 @@ function _gcSpin() {
       if (resEl) resEl.textContent = displayName;
       const probEl = document.getElementById('gc-res-prob');
       if (probEl) {
-        const prob = parsed.total ? (picked.weight/parsed.total*100) : 0;
-        probEl.textContent = parsed.total ? `확률 ${prob.toFixed(1)}% (w=${picked.weight.toFixed(2).replace(/\\.00$/,'')})` : '';
+        probEl.textContent = '';
       }
 
       const histKey = _gcTab === 'player' ? 'player' : 'map';
@@ -593,12 +600,17 @@ function _gcSpin() {
       _gcRefreshHistory();
 
       const resultCard = document.getElementById('gc-result-card');
-      if (resultCard) {
-        resultCard.style.display = 'block';
-        resultCard.style.animation = 'none';
-        void resultCard.offsetWidth;
-        resultCard.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
-      }
+      if (resultCard) resultCard.style.display = 'none';
+
+      // (요청사항) 결과는 팝업으로 표시
+      try{
+        if(typeof window._rrShowPopup==='function'){
+          window._rrShowPopup('🎉 결과', `<div style="text-align:center;padding:6px 4px">
+            <div style="font-size:46px;line-height:1;margin-bottom:10px">${(p && p.photo) ? '🎮' : (icon && !String(icon).startsWith('<') ? icon : '🎁')}</div>
+            <div style="font-size:22px;font-weight:1000;color:var(--text1)">${displayName}</div>
+          </div>`);
+        }
+      }catch(e){}
       _gcSpinning = false;
     }, 750);
   }, 950);
@@ -950,14 +962,18 @@ function _ldAnimate(nameIdx) {
       const resName = _ldLadder.names[nameIdx];
       const resItem = _ldLadder.items[resultCol];
 
-      if (rc) {
-        document.getElementById('ld-res-name').textContent = resName;
-        document.getElementById('ld-res-item').textContent = resItem;
-        rc.style.display = 'block';
-        rc.style.animation = 'none';
-        void rc.offsetWidth;
-        rc.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
-      }
+      if (rc) rc.style.display = 'none';
+
+      // (요청사항) 결과는 팝업으로 표시
+      try{
+        if(typeof window._rrShowPopup==='function'){
+          window._rrShowPopup('🪜 사다리 결과', `<div style="text-align:center;padding:6px 4px">
+            <div style="font-size:18px;font-weight:1000;color:var(--text1);margin-bottom:6px">${resName}</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:6px">▼</div>
+            <div style="font-size:20px;font-weight:1000;color:#2563eb">${resItem}</div>
+          </div>`);
+        }
+      }catch(e){}
 
       // 기록 저장
       const now2 = new Date();
