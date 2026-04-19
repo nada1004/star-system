@@ -2286,6 +2286,82 @@ function pasteApply() {
   const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
 
+  // ─────────────────────────────────────────────────────────────
+  // (요청사항) 저장 전 "중복 경기" 확인
+  // - 이미 저장된 경기(날짜/승자/패자/맵)가 존재하면 확인창 띄움
+  // - 확인: 그대로 저장 / 취소: 저장 중단
+  // ─────────────────────────────────────────────────────────────
+  const _normMode = (m) => (m === 'individual' ? 'ind' : m);
+  const _normMapDup = (s) => {
+    const t = (s || '').trim();
+    if (!t) return '';
+    try { return resolveMapName(t) || t; } catch (e) { return t; }
+  };
+  const _dupKey = (d, w, l, map) => `${d || ''}|${w || ''}|${l || ''}|${_normMapDup(map)}`;
+  const _buildExistingPasteKeySet = (m) => {
+    const mm = _normMode(m);
+    const set = new Set();
+    const addMatchArr = (arr) => {
+      (arr || []).forEach(mat => {
+        const d = mat?.d || '';
+        (mat?.sets || []).forEach(st => {
+          (st?.games || []).forEach(g => {
+            const a = g?.playerA || '';
+            const b = g?.playerB || '';
+            const win = g?.winner || 'A';
+            const w = win === 'A' ? a : b;
+            const l = win === 'A' ? b : a;
+            if (!w || !l) return;
+            set.add(_dupKey(d, w, l, g?.map || ''));
+          });
+        });
+      });
+    };
+    try {
+      if (mm === 'ind') {
+        (typeof indM !== 'undefined' ? indM : []).forEach(g => { if (g?.wName && g?.lName) set.add(_dupKey(g.d || '', g.wName, g.lName, g.map || '')); });
+      } else if (mm === 'gj') {
+        (typeof gjM !== 'undefined' ? gjM : []).forEach(g => { if (g?.wName && g?.lName) set.add(_dupKey(g.d || '', g.wName, g.lName, g.map || '')); });
+      } else if (mm === 'mini') {
+        addMatchArr(typeof miniM !== 'undefined' ? miniM : []);
+      } else if (mm === 'univm') {
+        addMatchArr(typeof univM !== 'undefined' ? univM : []);
+      } else if (mm === 'ck') {
+        addMatchArr(typeof ckM !== 'undefined' ? ckM : []);
+      } else if (mm === 'tt') {
+        addMatchArr(typeof ttM !== 'undefined' ? ttM : []);
+      } else if (mm === 'comp') {
+        addMatchArr(typeof comps !== 'undefined' ? comps : []);
+      } else if (mm === 'pro') {
+        addMatchArr(typeof proM !== 'undefined' ? proM : []);
+      }
+    } catch (e) {}
+    return set;
+  };
+  // 저장 예정 게임 목록(혼합 타입 포함)
+  const _toAdd = savable.map(r => ({
+    mode: _normMode(r._lineType || mode),
+    d: r._lineDate || dateVal,
+    w: r.wPlayer?.name || '',
+    l: r.lPlayer?.name || '',
+    map: r.map || ''
+  })).filter(x => x.mode && x.w && x.l);
+
+  const _dupByMode = {};
+  _toAdd.forEach(x => {
+    const keySet = (_dupByMode[x.mode]?.__set) || _buildExistingPasteKeySet(x.mode);
+    if (!_dupByMode[x.mode]) _dupByMode[x.mode] = { count: 0, __set: keySet };
+    if (keySet.has(_dupKey(x.d, x.w, x.l, x.map))) _dupByMode[x.mode].count++;
+  });
+  const _dupEntries = Object.entries(_dupByMode).map(([k,v])=>({k,count:v.count})).filter(x=>x.count>0);
+  const _dupTotal = _dupEntries.reduce((s,x)=>s+x.count,0);
+  if (_dupTotal > 0) {
+    const nm = (k) => ({ ind:'개인전', gj:'끝장전', mini:'미니대전', univm:'대학대전', ck:'대학CK', tt:'티어대회', comp:'대회', pro:'프로리그' }[k] || k);
+    const detail = _dupEntries.map(x => `- ${nm(x.k)}: ${x.count}건`).join('\n');
+    const ok = confirm(`⚠️ 이미 저장된 중복 경기가 ${_dupTotal}건 있습니다.\n${detail}\n\n그래도 저장할까요?\n(확인=저장 / 취소=중단)`);
+    if (!ok) return;
+  }
+
   const matchId = genId();
 
   // ── A팀/B팀 결정: 로스터 있으면 소속 기반, 없으면 leftName 위치 기반 ──
