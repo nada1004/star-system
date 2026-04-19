@@ -437,6 +437,40 @@ window.cfgResetUiBtnStyleSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 필터/하위메뉴(접기) 설정
+// - su_filter_lock_open:       '1'이면 필터 항상 펼침(접기 버튼 숨김)
+// - su_submenu_filter_enabled: '1'이면 하위메뉴를 "필터로 접기" 사용
+// ─────────────────────────────────────────────────────────────
+window.cfgSetUiFilterMenuSettings = function(){
+  const lock = document.getElementById('cfg-filter-lock')?.checked ? '1' : '0';
+  const enabled = document.getElementById('cfg-submenu-filter')?.checked ? '1' : '0';
+  try{ localStorage.setItem('su_filter_lock_open', lock); }catch(e){}
+  try{ localStorage.setItem('su_submenu_filter_enabled', enabled); }catch(e){}
+  // 잠금 ON이면 현재 열린 상태로 강제
+  if(lock==='1'){
+    try{ window._histFilterOpen=true; }catch(e){}
+    try{ window._statsFilterOpen=true; }catch(e){}
+    try{ window._miniFilterOpen=true; }catch(e){}
+    try{ window._indFilterOpen=true; }catch(e){}
+    try{ window._gjFilterOpen=true; }catch(e){}
+    try{ window._ckFilterOpen=true; }catch(e){}
+    try{ window._univmFilterOpen=true; }catch(e){}
+    try{ window._proFilterOpen=true; }catch(e){}
+    try{ window._compFilterOpen=true; }catch(e){}
+  }
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgResetUiFilterMenuSettings = function(){
+  try{ localStorage.removeItem('su_filter_lock_open'); }catch(e){}
+  try{ localStorage.removeItem('su_submenu_filter_enabled'); }catch(e){}
+  try{
+    const a=document.getElementById('cfg-filter-lock'); if(a) a.checked=true;
+    const b=document.getElementById('cfg-submenu-filter'); if(b) b.checked=true;
+  }catch(e){}
+  window.cfgSetUiFilterMenuSettings();
+};
+
+// ─────────────────────────────────────────────────────────────
 // (점검) 설정탭 핸들러 누락 체크(“눌러도 안 되는 버튼” 빠르게 찾기)
 // - settings 화면에 렌더된 data-cfg-sec 영역에서 onclick/onchange/oninput 을 스캔
 // ─────────────────────────────────────────────────────────────
@@ -900,6 +934,8 @@ function _cfgHandleCfgClick(e){
         if(secId){
           try{ if(e && e.preventDefault) e.preventDefault(); }catch(_){}
           try{ if(e && e.stopPropagation) e.stopPropagation(); }catch(_){}
+          // (요청사항) '펼치기' 동작은 하지 않고 팝업만 띄우기
+          try{ secWrap.open = false; }catch(_){}
           _cfgGo(secId);
           return;
         }
@@ -922,9 +958,10 @@ function _scfgD(id,title,extra){
   // (요청사항) 펼치기 UI 대신 "팝업으로 열기" UX: 기본은 항상 닫힘
   const isOpen=false;
   // cfg-anchor: 바로가기 클릭 시 원래 위치로 되돌릴 기준점
-  return `<div class="cfg-anchor" data-cfg-anchor="${id}"></div><details id="cfg-sec-${id}" class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_scfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;justify-content:space-between;gap:10px;-webkit-appearance:none">
-    <h4 style="margin:0;display:inline">${title}</h4>
-    <span style="font-size:11px;color:var(--gray-l);font-weight:700;border:1px solid var(--border2);padding:2px 8px;border-radius:999px;background:transparent">팝업</span>
+  return `<div class="cfg-anchor" data-cfg-anchor="${id}"></div><details id="cfg-sec-${id}" class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_scfgToggle('${id}',this)"${extra?' '+extra:''}>
+  <summary class="cfg-sec-summary" style="list-style:none;outline:none;-webkit-appearance:none">
+    <h4>${title}</h4>
+    <span class="cfg-sec-right">열기 ›</span>
   </summary>`;
 }
 
@@ -949,6 +986,14 @@ function _cfgEnsureModal(){
     `;
     document.body.appendChild(m);
   }catch(e){}
+  // (요청사항) 모달 바깥(배경) 클릭으로 닫아도 섹션이 원위치로 복구되도록
+  try{
+    m.addEventListener('click', (ev)=>{
+      try{
+        if(ev && ev.target===m && typeof window.closeCfgModal==='function') window.closeCfgModal();
+      }catch(_){}
+    }, {capture:true});
+  }catch(e){}
   // 닫기 핸들러 (섹션 원위치 복구)
   if(typeof window.closeCfgModal!=='function'){
     window.closeCfgModal=function(){
@@ -960,6 +1005,8 @@ function _cfgEnsureModal(){
           if(prev && anchor){
             anchor.parentNode.insertBefore(prev, anchor.nextSibling);
             prev.style.display='';
+            // 목록에서는 펼치지 않음
+            try{ if(prev.tagName==='DETAILS') prev.open=false; }catch(e){}
           }
           window._cfgModalSecId=null;
         }
@@ -1029,6 +1076,8 @@ function _cfgGo(secId){
       body.innerHTML='';
       el.style.display='';
       body.appendChild(el);
+      // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
+      try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
     }
     // om()/cm()가 "초기 로드 시점에 존재하던 모달만" 관리하는 구현일 수 있어,
     // 동적 생성 모달은 style.display로도 확실히 띄운 뒤 om()을 보조로 호출한다.
@@ -1039,9 +1088,9 @@ function _cfgGo(secId){
     // 기존엔 조용히 삼켜서 “버튼 반응 없음”처럼 보였음 → 콘솔에 노출
     try{ console.error('[cfgGo] failed:', secId, e); }catch(_){}
   }
-
-  if(el.tagName==='DETAILS') el.open=true;
-  try{const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}
+  // (요청사항) 목록에서는 펼치기 사용 안 함(팝업으로만 확인)
+  // - 팝업으로 옮겨진 경우는 위에서 open=true 처리
+  try{ if(el && el.tagName==='DETAILS' && !(el.closest && el.closest('#cfgModalBody'))) el.open=false; }catch(e){}
 }
 
 function _cfgApplyCat(cat, autoGo=true){
@@ -1690,6 +1739,27 @@ ${_scfgD('notice','📢 공지 관리')}
           <button class="sort-btn on">정렬 ON</button>
           <button class="sort-btn">정렬</button>
         </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const lock = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+    const enabled = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+    return _scfgD('uifilter','🔽 필터/하위메뉴') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록/통계/개인전/대학대전/대회/프로리그 등의 하위메뉴 표시 방식을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-filter-lock" style="width:15px;height:15px" ${lock?'checked':''} onchange="cfgSetUiFilterMenuSettings()">
+        필터 항상 펼치기(접기 비활성)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-submenu-filter" style="width:15px;height:15px" ${enabled?'checked':''} onchange="cfgSetUiFilterMenuSettings()">
+        하위메뉴를 ‘필터’로 접기/펼치기 사용
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <button class="btn btn-w btn-sm" onclick="cfgResetUiFilterMenuSettings()">초기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 체크 해제 시 하위 메뉴가 항상 보이게 됩니다.</span>
       </div>
     </div>
   </details>`;

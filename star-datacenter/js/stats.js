@@ -36,7 +36,9 @@ let _statsRankTier = (function(){
 function rStats(C,T){
   T.textContent='📊 통계';
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
-  if(window._statsFilterOpen===undefined) window._statsFilterOpen=false;
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._statsFilterOpen===undefined) window._statsFilterOpen=_lockOpen;
+  if(_lockOpen) window._statsFilterOpen = true;
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
   window.statsSub = window.statsSub || 'overview';
@@ -89,20 +91,19 @@ function rStats(C,T){
   const _curGrp=_statsGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroups[0];
   let h=``;
   // 1행: 그룹 pill 바
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">`;
+  const _curSub = (window.statsSub||'overview');
+  const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px;align-items:center">`;
+  // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
+  }
   _statsGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
   });
-  // (요청사항) 필터 버튼은 그룹(개인/대학/경기/기록실) 우측에 배치
-  h+=`<span style="flex:1"></span>`;
-  h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
-  h+=`</div>`;
-  // (A안) 현재 탭 + 필터 토글(하위 탭/전역필터)
-  const _curSub = (window.statsSub||'overview');
-  const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:10px;align-items:center">`;
-  h+=`<button class="pill on" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">${_curSubObj?.lbl||'선택'}</button>`;
+  // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;
   // 전역 필터 바
   const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==3||_statsLastN>0);
@@ -123,7 +124,7 @@ function rStats(C,T){
     return`<button onclick="_statsLastN=${n};render()" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid ${on?'#7c3aed':'var(--border2)'};background:${on?'#7c3aed':'var(--white)'};color:${on?'#fff':'var(--text3)'};cursor:pointer;white-space:nowrap;font-weight:${on?'700':'400'}">${n===0?'전체':n+'경기'}</button>`;
   }
   // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
-  if(window._statsFilterOpen){
+  if((_enableSubFilter?window._statsFilterOpen:true)){
   // 하위 탭 pill 바
   h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
   _curGrp.tabs.forEach(o=>{

@@ -1,7 +1,9 @@
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
-  if(window._histFilterOpen===undefined) window._histFilterOpen=false;
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
+  if(_lockOpen) window._histFilterOpen = true;
 
   const tabDefs=[
     {id:'all',      grp:'종합',   lbl:'📋 전체 통합'},
@@ -16,11 +18,12 @@ function rHist(C,T){
     {id:'civil',    grp:'팀경기',  lbl:'⚔️ 시빌워'},
     {id:'tourney',  grp:'대회',    lbl:'🎖️ 대회 (토너먼트)'},
     {id:'tiertour', grp:'대회',    lbl:'🎯 티어대회'},
-    {id:'progj',    grp:'일반', lbl:'⚔️ 끝장전'},
-    {id:'pro',      grp:'일반', lbl:'🏅 일반'},
-    {id:'procomp',  grp:'일반', lbl:'🏆 대회 기록'},
-    {id:'procomptn',  grp:'일반', lbl:'🗂️ 토너먼트'},
-    {id:'procompteam',grp:'일반', lbl:'🤝 팀전'},
+    // (요청사항) '일반' → '프로리그' 명칭 복구
+    {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전'},
+    {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그'},
+    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록'},
+    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트'},
+    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
@@ -35,24 +38,25 @@ function rHist(C,T){
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
   // 상단: 그룹 pill 바 (티어 순위표 스타일)
   let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">`;
+  // (요청사항) 필터는 '종합' 좌측(=그룹바 맨 좌측)에 배치
+  if((localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1' && !_lockOpen){
+    h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
+  }
   grps.forEach(g=>{
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${g}</button>`;
   });
-  // (요청사항) 필터 버튼은 그룹(종합 등) 우측에 배치
   h+=`<span style="flex:1"></span>`;
-  h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
+  // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;
 
-  // (A안) 현재 선택(아이콘 포함)은 별도 한 줄로 표시
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:6px;align-items:center">`;
-  h+=`<button class="pill on" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">${curTab.lbl}</button>`;
-  h+=`</div>`;
+  // (요청사항) 중복되는 하위 버튼(전체통합/개인전 등) 제거: 별도 '현재선택 버튼줄' 없음
 
   // 선택 그룹 내 탭 + 기간 필터는 필터가 열렸을 때만 표시
   const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
-  if(window._histFilterOpen && grpTabs.length>1){
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if((_enableSubFilter?window._histFilterOpen:true) && grpTabs.length>1){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">`;
     grpTabs.forEach(t=>{
       const isOn=histSub===t.id;
@@ -61,7 +65,7 @@ function rHist(C,T){
     h+=`</div>`;
   }
   const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
-  if(window._histFilterOpen && needDateFilter && typeof buildYearMonthFilter==='function'){
+  if((_enableSubFilter?window._histFilterOpen:true) && needDateFilter && typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist');
   }
   if(histSub==='vs'){
@@ -804,7 +808,7 @@ function histAllHTML(){
     mini:{lbl:'⚡ 미니대전',col:'#2563eb'},
     univm:{lbl:'🏟️ 대학대전',col:'#7c3aed'},
     ck:{lbl:'🤝 대학CK',col:'#dc2626'},
-    pro:{lbl:'🏅 일반',col:'#0891b2'},
+    pro:{lbl:'🏅 프로리그',col:'#0891b2'},
     ind:{lbl:'🎮 개인전',col:'#16a34a'},
     gj:{lbl:'⚔️ 끝장전',col:'#d97706'},
     tt:{lbl:'🎯 티어대회',col:'#7c3aed'},

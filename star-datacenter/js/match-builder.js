@@ -104,14 +104,26 @@ function _matchFilterAssignPool(searchId, poolId) {
 ══════════════════════════════════════ */
 function rMini(C,T){
   T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._miniFilterOpen===undefined) window._miniFilterOpen=_lockOpen;
+  if(_lockOpen) window._miniFilterOpen=true;
   if(!isLoggedIn && miniSub==='input') miniSub='records';
   if(miniType==='civil' && miniSub==='rank') miniSub='records';
   const subOpts = miniType==='civil'
     ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
-  let h=stabs(miniSub,subOpts);
-  if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('mini');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._miniFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._miniFilterOpen=!window._miniFilterOpen;render()">🔍 필터 ${window._miniFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._miniFilterOpen){
+    h+=stabs(miniSub,subOpts);
+    if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('mini');
+    }
   }
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
@@ -209,14 +221,26 @@ let _indInput={date:'',playerA:'',playerB:'',games:[]};
 
 function rInd(C,T){
   T.innerText='🎮 개인전';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._indFilterOpen===undefined) window._indFilterOpen=_lockOpen;
+  if(_lockOpen) window._indFilterOpen=true;
   if(!isLoggedIn && indSub==='input') indSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`indSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`indSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
-  let h=stabs(indSub,subOpts);
-  if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._indFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._indFilterOpen=!window._indFilterOpen;render()">🔍 필터 ${window._indFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._indFilterOpen){
+    h+=stabs(indSub,subOpts);
+    if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
+  }
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
   } else if(indSub==='rank'){
@@ -917,14 +941,26 @@ function rGJ(C,T,proOnly,proInput){
   if(_newProMode!==_gjProMode){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
   _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._gjFilterOpen===undefined) window._gjFilterOpen=_lockOpen;
+  if(_lockOpen) window._gjFilterOpen=true;
   if(!isLoggedIn && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;
   const subOpts=showInput
     ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
     :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
   if(!showInput&&gjSub==='input') gjSub='records';
-  let h=stabs(gjSub,subOpts);
-  if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._gjFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._gjFilterOpen=!window._gjFilterOpen;render()">🔍 필터 ${window._gjFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._gjFilterOpen){
+    h+=stabs(gjSub,subOpts);
+    if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
+  }
   if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
@@ -1266,11 +1302,23 @@ function bulkEditGjDate(idsJson, curDate){
 ══════════════════════════════════════ */
 function rCK(C,T){
   T.innerText='🤝 대학CK';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._ckFilterOpen===undefined) window._ckFilterOpen=_lockOpen;
+  if(_lockOpen) window._ckFilterOpen=true;
   if(!isLoggedIn && ckSub==='input') ckSub='records';
   const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
-  let h=stabs(ckSub,subOpts);
-  if(ckSub!=='input' && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('ck');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._ckFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._ckFilterOpen=!window._ckFilterOpen;render()">🔍 필터 ${window._ckFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._ckFilterOpen){
+    h+=stabs(ckSub,subOpts);
+    if(ckSub!=='input' && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('ck');
+    }
   }
   if(ckSub==='input'&&isLoggedIn){
     if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
@@ -1448,11 +1496,23 @@ function ckRankHTML(){
 ══════════════════════════════════════ */
 function rUnivM(C,T){
   T.innerText='🏟️ 대학대전';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._univmFilterOpen===undefined) window._univmFilterOpen=_lockOpen;
+  if(_lockOpen) window._univmFilterOpen=true;
   if(!isLoggedIn && univmSub==='input') univmSub='records';
   const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
-  let h=stabs(univmSub,subOpts);
-  if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('univm');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._univmFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._univmFilterOpen=!window._univmFilterOpen;render()">🔍 필터 ${window._univmFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._univmFilterOpen){
+    h+=stabs(univmSub,subOpts);
+    if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('univm');
+    }
   }
   if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
@@ -1539,15 +1599,27 @@ var proSub='records';
 
 function rPro(C,T){
   T.innerText='🏅 프로리그';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._proFilterOpen===undefined) window._proFilterOpen=_lockOpen;
+  if(_lockOpen) window._proFilterOpen=true;
   if(!isLoggedIn && proSub==='input') proSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
   ];
-  let h=stabs(proSub,subOpts);
-  if(proSub!=='input' && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('pro');
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window._proFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._proFilterOpen=!window._proFilterOpen;render()">🔍 필터 ${window._proFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._proFilterOpen){
+    h+=stabs(proSub,subOpts);
+    if(proSub!=='input' && typeof buildYearMonthFilter==='function'){
+      h+=buildYearMonthFilter('pro');
+    }
   }
   if(proSub==='input'&&isLoggedIn){
     if(!BLD['pro']){const _sv=J('su_bld_pro')||{};BLD['pro']={date:_sv.date||'',membersA:_sv.membersA||[],membersB:_sv.membersB||[],tierFilters:_sv.tierFilters||[],sets:_sv.sets||[]};}
