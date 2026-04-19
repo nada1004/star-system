@@ -36,6 +36,12 @@ function _scfgToggle(id,el){
     const sp=el.querySelector('summary .cfg-toggle-txt');
     if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';
   }catch(e){}
+  // (요청사항) 특정 섹션은 열릴 때 동적 렌더링
+  try{
+    if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
+      window._renderCfgPdSection();
+    }
+  }catch(e){}
 }
 // ─────────────────────────────────────────────────────────────
 // 설정 메뉴 구성(사용자 정리 지원)
@@ -45,7 +51,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 
 const _DEFAULT_CATSECS = {
   '게임 운영':['notice','tier','season','teammatch','acct'],
-  '콘텐츠 관리':['univ','maps','mAlias','si'],
+  '콘텐츠 관리':['univ','maps','mAlias','si','paste'],
   // (요청사항) 현황판 관리 메뉴 분리
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
@@ -471,6 +477,125 @@ window.cfgResetUiFilterMenuSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 경기 결과 '자동인식' 호환 옵션
+// - su_paste_compat: '1'이면 전각 괄호/🆚/VS 공백 없는 형태 등을 넓게 인식
+// ─────────────────────────────────────────────────────────────
+window.cfgSetPasteCompatSettings = function(){
+  const on = document.getElementById('cfg-paste-compat')?.checked ? '1' : '0';
+  try{ localStorage.setItem('su_paste_compat', on); }catch(e){}
+};
+try{ window.cfgSetPasteCompatSettings(); }catch(e){}
+window.cfgResetPasteCompatSettings = function(){
+  try{ localStorage.removeItem('su_paste_compat'); }catch(e){}
+  try{
+    const a=document.getElementById('cfg-paste-compat'); if(a) a.checked=true;
+  }catch(e){}
+  window.cfgSetPasteCompatSettings();
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 자동인식 변환툴: 가공되지 않은 텍스트 → 리포트 포맷
+// 규칙은 사용자 메시지의 [출력 가이드라인]을 따른다.
+// ─────────────────────────────────────────────────────────────
+window.cfgPasteConvertRun = function(){
+  const inp = document.getElementById('cfg-paste-conv-in');
+  const out = document.getElementById('cfg-paste-conv-out');
+  if(!inp || !out) return;
+  const raw = String(inp.value||'').trim();
+  if(!raw){ out.textContent=''; return; }
+  const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const mapFix = (m)=>{
+    const s = String(m||'').trim();
+    if(!s) return '-';
+    const t = s.replace(/[\[\]]/g,'').trim();
+    const d = {
+      '실피':'실피드','실피드':'실피드',
+      '폴':'폴리포이드','폴스':'폴리포이드','폴리':'폴리포이드','폴리포이드':'폴리포이드',
+      '제인':'제인스','제인스':'제인스',
+      '녹아':'녹아웃','녹아웃':'녹아웃',
+      '에티':'애티튜드','애티':'애티튜드','애티튜드':'애티튜드',
+      '매치':'매치포인트','매치포인트':'매치포인트'
+    };
+    return d[t] || t;
+  };
+  const raceOf = (name)=>{
+    try{
+      if(typeof players !== 'undefined' && Array.isArray(players)){
+        const p = players.find(x=>x && x.name===name);
+        const r = (p && p.race) ? String(p.race).trim().toUpperCase() : '';
+        if(r==='T'||r==='Z'||r==='P') return r;
+      }
+    }catch(e){}
+    return 'N';
+  };
+  const parsed = [];
+  lines.forEach(line=>{
+    // 순번/불필요 텍스트 제거
+    line = line.replace(/^[\d]+\s*(?:경기|세트)\s*/,'').trim();
+    // 맵 추출: [맵]
+    let map='-';
+    const mm = line.match(/\[([^\]]+)\]/);
+    if(mm){ map = mapFix(mm[1]); line = line.replace(mm[0],'').trim(); }
+    // 전각 괄호/VS 정규화
+    line = line.replace(/[（]/g,'(').replace(/[）]/g,')').replace(/🆚/g,'vs');
+    // '조기석(승) vs (패)변현제' / '(승)조기석 vs 변현제(패)' 등 대응
+    const vs = line.split(/\s*vs\s*/i);
+    if(vs.length<2) return;
+    const L = vs[0].trim();
+    const R = vs.slice(1).join('vs').trim();
+    const pick = (s)=>{
+      s = s.replace(/\s+/g,' ').trim();
+      // 불필요 점수/주석 제거
+      s = s.replace(/\b\d+\/\d+\b.*$/,'').trim();
+      // (승)/(패) + 이름
+      let m = s.match(/^\((승|패)\)\s*(.+)$/);
+      if(m) return {res:m[1], name:m[2].trim().replace(/\((승|패)\)/g,'').trim()};
+      // 이름 + (승)/(패)
+      m = s.match(/^(.+?)\s*\((승|패)\)\s*$/);
+      if(m) return {res:m[2], name:m[1].trim().replace(/\((승|패)\)/g,'').trim()};
+      return null;
+    };
+    const p1 = pick(L), p2 = pick(R);
+    if(!p1 || !p2 || !p1.name || !p2.name) return;
+    let win='', lose='';
+    if(p1.res==='승' && p2.res==='패'){ win=p1.name; lose=p2.name; }
+    else if(p1.res==='패' && p2.res==='승'){ win=p2.name; lose=p1.name; }
+    else return;
+    parsed.push({win,lose,map});
+  });
+  if(!parsed.length){
+    out.textContent = '인식된 경기 없음 (형식을 확인해주세요)';
+    return;
+  }
+  // 최종 스코어(첫 경기의 두 선수 기준)
+  const A = parsed[0].win;
+  const B = parsed[0].lose;
+  let aW=0,bW=0;
+  parsed.forEach(g=>{
+    if(g.win===A) aW++;
+    else if(g.win===B) bW++;
+  });
+  const body = parsed.map(g=>{
+    const wR = raceOf(g.win), lR = raceOf(g.lose);
+    return `* **${g.win}**(${wR}) ✅ 🆚️ ⬜ ${g.lose}(${lR}) [${g.map}]`;
+  }).join('\n');
+  const tail = `\n\n[최종 결과] ${A}(${raceOf(A)}) ${aW} : ${bW} ${B}(${raceOf(B)})`;
+  out.textContent = body + tail;
+};
+window.cfgPasteConvertCopy = function(){
+  const out = document.getElementById('cfg-paste-conv-out');
+  if(!out) return;
+  const txt = out.textContent || '';
+  if(!txt) return;
+  try{
+    navigator.clipboard.writeText(txt);
+    alert('✅ 복사 완료');
+  }catch(e){
+    prompt('아래 내용을 복사하세요:', txt);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
 // (점검) 설정탭 핸들러 누락 체크(“눌러도 안 되는 버튼” 빠르게 찾기)
 // - settings 화면에 렌더된 data-cfg-sec 영역에서 onclick/onchange/oninput 을 스캔
 // ─────────────────────────────────────────────────────────────
@@ -715,7 +840,9 @@ function _cfgFemcoDefaults(){
     starSize: 15,
     statusIconSize: 18,
     univColorOverrides: {},
-    // 대학별 배경 미디어 URL (이미지/GIF: 배경, MP4/WEBM: 버튼으로 재생, YouTube/Twitch: 새창)
+    // 대학별 배경 미디어
+    // - 기존 호환: 값이 string이면 URL로 처리
+    // - 신규: {url, alpha, sizeMode, sizeVal, pos, repeat, ox, oy}
     univBgMedia: {},
     // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
     bgOverlay: 22,
@@ -807,6 +934,7 @@ window.cfgFemcoInit = function(){
   const sel = document.getElementById('cfg-femco-univ');
   if (sel) {
     const names = (typeof univCfg !== 'undefined' ? univCfg : []).map(u=>u.name).filter(Boolean);
+    if (!names.includes('무소속')) names.push('무소속');
     const curUniv = localStorage.getItem('cfg_femco_univ') || names[0] || '';
     sel.innerHTML = names.map(n=>`<option value="${n}"${n===curUniv?' selected':''}>${n}</option>`).join('');
     localStorage.setItem('cfg_femco_univ', curUniv);
@@ -820,15 +948,34 @@ window.cfgFemcoRefreshUnivFields = function(){
   const u = sel ? sel.value : (localStorage.getItem('cfg_femco_univ') || '');
   const c = (s.univColorOverrides||{})[u] || '#000000';
   const sub = (s.univSubtitles||{})[u] || '';
-  const bg = (s.univBgMedia||{})[u] || '';
+  const rawBg = (s.univBgMedia||{})[u] || '';
+  const bgObj = (function(){
+    const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
+    if(!rawBg) return d;
+    if(typeof rawBg==='string') return {...d,url:rawBg};
+    if(typeof rawBg==='object') return {...d,...rawBg,url:(rawBg.url||'')};
+    return d;
+  })();
   const colorEl = document.getElementById('cfg-femco-univColor');
   const subEl = document.getElementById('cfg-femco-subtitle');
   const bgEl = document.getElementById('cfg-femco-bgMediaUrl');
   const bgHint = document.getElementById('cfg-femco-bgMediaHint');
   if (colorEl) colorEl.value = c;
   if (subEl) subEl.value = sub;
-  if (bgEl) bgEl.value = bg;
-  if (bgHint) bgHint.textContent = bg ? '설정됨' : '미설정';
+  if (bgEl) bgEl.value = bgObj.url || '';
+  if (bgHint) bgHint.textContent = bgObj.url ? '설정됨' : '미설정';
+  // 배경 옵션
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el!=null) el.value=v;};
+  setVal('cfg-femco-bgAlpha', bgObj.alpha);
+  setVal('cfg-femco-bgAlphaNum', bgObj.alpha);
+  setVal('cfg-femco-bgSizeMode', bgObj.sizeMode);
+  setVal('cfg-femco-bgSizeVal', bgObj.sizeVal);
+  setVal('cfg-femco-bgPos', bgObj.pos);
+  setVal('cfg-femco-bgRepeat', bgObj.repeat);
+  setVal('cfg-femco-bgOffX', bgObj.ox);
+  setVal('cfg-femco-bgOffXNum', bgObj.ox);
+  setVal('cfg-femco-bgOffY', bgObj.oy);
+  setVal('cfg-femco-bgOffYNum', bgObj.oy);
 };
 
 window.cfgFemcoSetBgMedia = function(url){
@@ -839,7 +986,29 @@ window.cfgFemcoSetBgMedia = function(url){
   s.univBgMedia = s.univBgMedia || {};
   const v = (url || '').trim();
   if(!v) delete s.univBgMedia[u];
-  else s.univBgMedia[u] = v;
+  else {
+    const prev = s.univBgMedia[u];
+    if(prev && typeof prev==='object') s.univBgMedia[u] = {...prev, url:v};
+    else s.univBgMedia[u] = {url:v, alpha:30, sizeMode:'cover', sizeVal:90, pos:'center', repeat:'no-repeat', ox:0, oy:0};
+  }
+  _cfgFemcoSave(s);
+  try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgFemcoSetBgOpt = function(k, v){
+  const s = _cfgFemcoLoad();
+  const sel = document.getElementById('cfg-femco-univ');
+  const u = sel ? sel.value : '';
+  if(!u) return;
+  s.univBgMedia = s.univBgMedia || {};
+  const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
+  const cur = s.univBgMedia[u];
+  const obj = (!cur ? {...d} : (typeof cur==='string' ? {...d,url:cur} : {...d,...cur}));
+  const numKeys=['alpha','sizeVal','ox','oy'];
+  obj[k] = numKeys.includes(k) ? parseInt(v,10) : v;
+  // URL이 없는 상태에서 옵션만 바뀌어도 저장은 허용(추후 URL 입력시 바로 적용)
+  s.univBgMedia[u]=obj;
   _cfgFemcoSave(s);
   try{ window.cfgFemcoRefreshUnivFields && window.cfgFemcoRefreshUnivFields(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -1172,7 +1341,7 @@ function rCfg(C,T){
   };
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
-    univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI',
+    univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
     b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
@@ -1764,6 +1933,35 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
+  ${(()=>{ 
+    const compat = (localStorage.getItem('su_paste_compat') ?? '1') === '1';
+    return _scfgD('paste','🤖 자동인식') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 결과 붙여넣기 ‘자동인식’이 잘 안 될 때 호환 옵션을 켜두면 인식률이 올라갑니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-paste-compat" style="width:15px;height:15px" ${compat?'checked':''} onchange="cfgSetPasteCompatSettings()">
+        호환 모드 (전각괄호/🆚/VS 공백 없음 등)
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <button class="btn btn-w btn-sm" onclick="cfgResetPasteCompatSettings()">초기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 기본값 ON 권장</span>
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">🔁 변환툴 (리포트 포맷)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        가공되지 않은 텍스트를 붙여넣으면 아래 규칙으로 변환합니다: <b>승자 굵게</b> · ✅/⬜ · 🆚️ · 맵 약어 교정 · 최종 스코어 출력
+      </div>
+      <textarea id="cfg-paste-conv-in" rows="7" placeholder="여기에 원본 경기 텍스트를 붙여넣기..." style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;resize:vertical;background:var(--surface);color:var(--text1);box-sizing:border-box"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-b btn-sm" onclick="cfgPasteConvertRun()">변환</button>
+        <button class="btn btn-w btn-sm" onclick="cfgPasteConvertCopy()">복사</button>
+      </div>
+      <pre id="cfg-paste-conv-out" style="margin-top:12px;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;line-height:1.6;min-height:70px"></pre>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
@@ -2254,6 +2452,52 @@ ${_scfgD('notice','📢 공지 관리')}
         • MP4/WEBM: 대학 카드에 “배경영상” 버튼 표시(클릭 재생)<br>
         • 유튜브/트위치: “배경링크” 버튼 표시(새창)
       </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 이미지 투명도</div>
+        <input type="range" id="cfg-femco-bgAlpha" min="0" max="100" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgAlphaNum').value=this.value;cfgFemcoSetBgOpt('alpha',this.value)">
+        <input type="number" id="cfg-femco-bgAlphaNum" min="0" max="100" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgAlpha').value=this.value;cfgFemcoSetBgOpt('alpha',this.value)">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">배경 위치/반복</div>
+        <select id="cfg-femco-bgPos" onchange="cfgFemcoSetBgOpt('pos',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="center">중앙</option>
+          <option value="top">상단</option>
+          <option value="bottom">하단</option>
+          <option value="left">좌측</option>
+          <option value="right">우측</option>
+          <option value="top left">좌상</option>
+          <option value="top right">우상</option>
+          <option value="bottom left">좌하</option>
+          <option value="bottom right">우하</option>
+        </select>
+        <select id="cfg-femco-bgRepeat" onchange="cfgFemcoSetBgOpt('repeat',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="no-repeat">반복 없음</option>
+          <option value="repeat">바둑판 반복(여러곳)</option>
+          <option value="repeat-x">가로 반복</option>
+          <option value="repeat-y">세로 반복</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">배경 크기</div>
+        <select id="cfg-femco-bgSizeMode" onchange="cfgFemcoSetBgOpt('sizeMode',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="cover">채우기(cover)</option>
+          <option value="contain">맞춤(contain)</option>
+          <option value="pct">퍼센트(여러개 추천)</option>
+          <option value="px">픽셀(여러개 추천)</option>
+        </select>
+        <input type="number" id="cfg-femco-bgSizeVal" min="30" max="600" step="1" style="width:120px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="cfgFemcoSetBgOpt('sizeVal',this.value)">
+        <span style="font-size:11px;color:var(--gray-l)">pct: % / px: px</span>
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 X 오프셋</div>
+        <input type="range" id="cfg-femco-bgOffX" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffXNum').value=this.value;cfgFemcoSetBgOpt('ox',this.value)">
+        <input type="number" id="cfg-femco-bgOffXNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgOffX').value=this.value;cfgFemcoSetBgOpt('ox',this.value)">
+      </div>
+      <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 Y 오프셋</div>
+        <input type="range" id="cfg-femco-bgOffY" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffYNum').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
+        <input type="number" id="cfg-femco-bgOffYNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-bgOffY').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">문구 스타일</div>
         <span style="font-size:11px;color:var(--gray-l)">크기</span>
@@ -2366,7 +2610,9 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
-  ${(()=>{const _pdOpen=false;return`<div class="cfg-anchor" data-cfg-anchor="pd"></div><details id="cfg-sec-pd" class="ssec" data-cfg-sec="pd" ${_pdOpen?'open':''} ontoggle="_scfgToggle('pd',this);if(this.open&&typeof _renderCfgPdSection==='function')_renderCfgPdSection()"><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;justify-content:space-between;gap:10px;-webkit-appearance:none"><h4 style="margin:0;display:inline">🎨 스트리머 상세 스타일 설정</h4><span style="font-size:11px;color:var(--gray-l);font-weight:700;border:1px solid var(--border2);padding:2px 8px;border-radius:999px;background:transparent">팝업</span></summary><div id="cfg-pd-body"></div></details>`;})()}
+  ${_scfgD('pd','🎨 스트리머 상세 스타일 설정')}
+    <div id="cfg-pd-body"></div>
+  </details>
   ${_scfgD('fab','🔘 FAB 버튼 탭 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">하단 FAB 버튼 클릭 시 이동할 탭을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -2557,11 +2803,18 @@ ${_scfgD('notice','📢 공지 관리')}
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
     const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
     if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
+      const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
       _cfgB2ImgWrap.innerHTML=`
         <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
         ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
         <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
         ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-b2-profile-shuffle" style="width:15px;height:15px" ${_shuffle?'checked':''} onchange="localStorage.setItem('su_b2_profile_shuffle',this.checked?'1':'0');render()">
+          이미지탭(프로필) 목록 랜덤(셔플)
+        </label>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
       `;
     }
     // 스트리머 상세 이미지 설정 초기화

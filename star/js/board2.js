@@ -565,7 +565,8 @@ function _b2FemcoView() {
     };
   }
 
-  const univList = _b2VisUnivs().filter(u => u.name && u.name !== '무소속');
+  // (요청사항) 무소속도 배경 설정/표시 가능
+  const univList = _b2VisUnivs().filter(u => u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
 
   // univCfg 순서로 정렬 (없으면 이름순)
@@ -867,8 +868,16 @@ function _b2FemcoView() {
     const _subTxt = ((femcoSettings.univSubtitles||{})[univName] || '').trim();
     const _subColor = (subtitleColor && subtitleColor.trim()) ? subtitleColor : textCol;
 
-    // 대학별 배경 미디어 URL
-    const _bgUrl = (((femcoSettings.univBgMedia||{})[univName]) || '').trim();
+    // 대학별 배경 미디어
+    const _bgRaw = ((femcoSettings.univBgMedia||{})[univName]) || '';
+    const _bgCfg = (function(){
+      const d={url:'',alpha:30,sizeMode:'cover',sizeVal:90,pos:'center',repeat:'no-repeat',ox:0,oy:0};
+      if(!_bgRaw) return d;
+      if(typeof _bgRaw==='string') return {...d,url:String(_bgRaw).trim()};
+      if(typeof _bgRaw==='object') return {...d,..._bgRaw,url:String(_bgRaw.url||'').trim()};
+      return d;
+    })();
+    const _bgUrl = (_bgCfg.url||'').trim();
     const _bgLower = _bgUrl.toLowerCase();
     const _bgIsImage = _bgUrl && /\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(_bgLower);
     const _bgIsVideo = _bgUrl && /\.(mp4|webm|ogg)(\?|#|$)/i.test(_bgLower);
@@ -939,13 +948,36 @@ function _b2FemcoView() {
     // 자동 레이아웃(인원수/화면폭)에 따라 대학별로 rows/colWidth를 다르게 적용
     const _lay = autoLayout ? _autoLayoutForCount(all.length) : {rowsPerCol, colWidth};
 
-    const _bgStyle = _bgIsImage
-      ? `background-color:${col};background-image:linear-gradient(180deg, rgba(2,6,23,${OV_TOP.toFixed(3)}), rgba(2,6,23,${OV_BOT.toFixed(3)})), url('${_bgUrl.replace(/'/g,"%27")}');background-size:cover;background-position:center;background-repeat:no-repeat;`
-      : `background:${col};`;
+    const _posToXY = (p)=>{
+      const t = String(p||'center');
+      const m = {
+        'center':[50,50],'top':[50,0],'bottom':[50,100],'left':[0,50],'right':[100,50],
+        'top left':[0,0],'top right':[100,0],'bottom left':[0,100],'bottom right':[100,100]
+      };
+      return m[t] || [50,50];
+    };
+    const [px,py]=_posToXY(_bgCfg.pos);
+    const ox = parseInt(_bgCfg.ox||0,10)||0;
+    const oy = parseInt(_bgCfg.oy||0,10)||0;
+    const _bgPos = `calc(${px}% + ${ox}px) calc(${py}% + ${oy}px)`;
+    let _bgSize = 'cover';
+    if(_bgCfg.sizeMode==='contain') _bgSize='contain';
+    else if(_bgCfg.sizeMode==='pct') _bgSize=`${Math.max(10,Math.min(220,parseInt(_bgCfg.sizeVal||90,10)||90))}%`;
+    else if(_bgCfg.sizeMode==='px') _bgSize=`${Math.max(30,Math.min(900,parseInt(_bgCfg.sizeVal||240,10)||240))}px`;
+    const _bgAlpha = Math.max(0, Math.min(100, parseInt(_bgCfg.alpha||30,10)||0)) / 100;
+    const _bgRepeat = ['no-repeat','repeat','repeat-x','repeat-y'].includes(_bgCfg.repeat) ? _bgCfg.repeat : 'no-repeat';
+
+    const _bgLayer = (_bgIsImage && _bgUrl)
+      ? `<div style="position:absolute;inset:0;background-image:url('${_bgUrl.replace(/'/g,"%27")}');background-repeat:${_bgRepeat};background-size:${_bgSize};background-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0"></div>`
+      : '';
+    const _ovLayer = (_bgIsImage && _bgUrl && BG_OVERLAY>0)
+      ? `<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,${OV_TOP.toFixed(3)}), rgba(2,6,23,${OV_BOT.toFixed(3)}));pointer-events:none;z-index:1"></div>`
+      : '';
 
     h += `
-      <section class="b2-femco-univ" style="${_bgStyle}">
-        <div class="b2-femco-head" style="color:${textCol};padding-left:${_padL}px;padding-right:${_padR}px">
+      <section class="b2-femco-univ" style="position:relative;overflow:hidden;background:${col};">
+        ${_bgLayer}${_ovLayer}
+        <div class="b2-femco-head" style="position:relative;z-index:2;color:${textCol};padding-left:${_padL}px;padding-right:${_padR}px">
           <div class="b2-femco-countbox" style="color:${textCol};left:${_padL}px;${textCol==='#ffffff'?'text-shadow:0 1px 2px rgba(0,0,0,.45);':''}">
             <div>총 ${all.length}</div>
             <div>이사장 ${bossCnt}</div>
@@ -955,7 +987,7 @@ function _b2FemcoView() {
           ${headLayout}
         </div>
 
-        <div class="b2-femco-body" style="background:transparent;padding-left:${_padL}px;padding-right:${_padR}px">
+        <div class="b2-femco-body" style="position:relative;z-index:2;background:transparent;padding-left:${_padL}px;padding-right:${_padR}px">
           <div class="b2-femco-grid" style="--rowsPerCol:${_lay.rowsPerCol};--colWidth:${_lay.colWidth}px">
             ${list.map(p => {
               const safeName = (p.name || '').replace(/'/g, "\\'");
@@ -2441,7 +2473,7 @@ function _b2PlayersView() {
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
 
   // 티어 미정(미확인) 필터링
-  const tierFilteredPlayers = filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인');
+  let tierFilteredPlayers = filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인');
 
   if (!tierFilteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
@@ -2472,37 +2504,46 @@ function _b2PlayersView() {
     univList.sort();
   }
   
-  // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
-  const roleOrder = ['이사장', '총장', '교수', '코치'];
-  const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
+  // (요청사항) 이미지탭 목록 랜덤(셔플) 옵션
+  const _shuffleOn = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
+  if (_shuffleOn) {
+    for (let i = tierFilteredPlayers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = tierFilteredPlayers[i]; tierFilteredPlayers[i] = tierFilteredPlayers[j]; tierFilteredPlayers[j] = t;
+    }
+  } else {
+    // 정렬: 직급 우선 (이사장, 총장, 교수, 코치), 티어 순서 (0,1,2,3,4,5,6,7,8,유스 마지막)
+    const roleOrder = ['이사장', '총장', '교수', '코치'];
+    const tierOrder = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '유스'];
 
-  tierFilteredPlayers.sort((a, b) => {
-    // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
-    const aRoleIdx = roleOrder.indexOf(a.role || '');
-    const bRoleIdx = roleOrder.indexOf(b.role || '');
-    const aHasRole = aRoleIdx >= 0;
-    const bHasRole = bRoleIdx >= 0;
+    tierFilteredPlayers.sort((a, b) => {
+      // 직급 우선 정렬 (이사장, 총장, 교수, 코치)
+      const aRoleIdx = roleOrder.indexOf(a.role || '');
+      const bRoleIdx = roleOrder.indexOf(b.role || '');
+      const aHasRole = aRoleIdx >= 0;
+      const bHasRole = bRoleIdx >= 0;
 
-    if (aHasRole && !bHasRole) return -1;
-    if (!aHasRole && bHasRole) return 1;
-    if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
+      if (aHasRole && !bHasRole) return -1;
+      if (!aHasRole && bHasRole) return 1;
+      if (aHasRole && bHasRole && aRoleIdx !== bRoleIdx) return aRoleIdx - bRoleIdx;
 
-    // 직급이 같거나 없는 경우 티어 순서 정렬 (숫자 추출)
-    const aTier = a.tier || '?';
-    const bTier = b.tier || '?';
-    const aTierIdx = tierOrder.indexOf(aTier);
-    const bTierIdx = tierOrder.indexOf(bTier);
+      // 직급이 같거나 없는 경우 티어 순서 정렬 (숫자 추출)
+      const aTier = a.tier || '?';
+      const bTier = b.tier || '?';
+      const aTierIdx = tierOrder.indexOf(aTier);
+      const bTierIdx = tierOrder.indexOf(bTier);
 
-    if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
+      if (aTierIdx >= 0 && bTierIdx >= 0 && aTierIdx !== bTierIdx) return aTierIdx - bTierIdx;
 
-    // tierOrder에 없는 경우 숫자로 비교
-    const aTierNum = parseInt(aTier) || 999;
-    const bTierNum = parseInt(bTier) || 999;
-    if (aTierNum !== bTierNum) return aTierNum - bTierNum;
+      // tierOrder에 없는 경우 숫자로 비교
+      const aTierNum = parseInt(aTier) || 999;
+      const bTierNum = parseInt(bTier) || 999;
+      if (aTierNum !== bTierNum) return aTierNum - bTierNum;
 
-    // 티어도 같은 경우 이름 순
-    return (a.name || '').localeCompare(b.name || '');
-  });
+      // 티어도 같은 경우 이름 순
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }
 
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(_b2SelectedPlayer.univ) || '#6366f1';
