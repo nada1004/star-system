@@ -531,7 +531,13 @@ window.cfgPasteConvertRun = function(){
   const parsed = [];
   lines.forEach(line=>{
     // 순번/불필요 텍스트 제거
-    line = line.replace(/^[\d]+\s*(?:경기|세트)\s*/,'').trim();
+    line = line
+      // [1SET] / [2SET] 같은 세트 표기 제거 (맵 []와 혼동 방지)
+      .replace(/^\[\s*\d+\s*set\s*\]\s*/i, '')
+      .replace(/^\d+\s*set\s*/i, '')
+      // "1경기", "1세트" 제거
+      .replace(/^[\d]+\s*(?:경기|세트)\s*/,'')
+      .trim();
     // 맵 추출: [맵]
     let map='-';
     const mm = line.match(/\[([^\]]+)\]/);
@@ -576,9 +582,13 @@ window.cfgPasteConvertRun = function(){
     else if(g.win===B) bW++;
   });
   const body = parsed.map(g=>{
+    // (요청사항) 전역 자동인식 출력 포맷을 따름
+    if(typeof window.autoFormatMatchLine === 'function'){
+      return window.autoFormatMatchLine(g.win, g.lose, g.map);
+    }
     const wR = raceOf(g.win), lR = raceOf(g.lose);
-    return `* **${g.win}**(${wR}) ✅ 🆚️ ⬜ ${g.lose}(${lR}) [${g.map}]`;
-  }).join('\n');
+    return `${g.win}(${wR}) ✅ 🆚️ ⬜ ${g.lose}(${lR}) [${g.map}]`;
+  }).filter(Boolean).join('\n');
   const tail = `\n\n[최종 결과] ${A}(${raceOf(A)}) ${aW} : ${bW} ${B}(${raceOf(B)})`;
   out.textContent = body + tail;
 };
@@ -593,6 +603,56 @@ window.cfgPasteConvertCopy = function(){
   }catch(e){
     prompt('아래 내용을 복사하세요:', txt);
   }
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 자동인식 출력 포맷(전역) 설정
+// - localStorage: su_auto_outfmt (JSON)
+// - search.js의 autoOutfmtLoad/autoOutfmtSave/autoFormatMatchLine와 연동
+// ─────────────────────────────────────────────────────────────
+function _cfgAutoOutfmtDefault(){
+  return { includeRace:true, includeMap:true, mapBrackets:true, winnerEmphasis:'none', hideUnknownRace:true };
+}
+function _cfgAutoOutfmtLoad(){
+  try{
+    const raw = localStorage.getItem('su_auto_outfmt');
+    if(!raw) return _cfgAutoOutfmtDefault();
+    const obj = JSON.parse(raw) || {};
+    return {..._cfgAutoOutfmtDefault(), ...obj};
+  }catch(e){ return _cfgAutoOutfmtDefault(); }
+}
+function _cfgAutoOutfmtSave(next){
+  try{ localStorage.setItem('su_auto_outfmt', JSON.stringify({..._cfgAutoOutfmtDefault(), ...(next||{})})); }catch(e){}
+}
+window.cfgAutoOutfmtUpd = function(k,v){
+  const cur = _cfgAutoOutfmtLoad();
+  const next = {...cur};
+  const boolKeys = ['includeRace','includeMap','mapBrackets','hideUnknownRace'];
+  next[k] = boolKeys.includes(k) ? (!!v) : v;
+  _cfgAutoOutfmtSave(next);
+  try{ window.cfgAutoOutfmtRefreshPreview && window.cfgAutoOutfmtRefreshPreview(); }catch(e){}
+};
+window.cfgAutoOutfmtReset = function(){
+  _cfgAutoOutfmtSave(_cfgAutoOutfmtDefault());
+  try{ window.cfgAutoOutfmtRefreshPreview && window.cfgAutoOutfmtRefreshPreview(); }catch(e){}
+};
+window.cfgAutoOutfmtRefreshPreview = function(){
+  const s = _cfgAutoOutfmtLoad();
+  const el = document.getElementById('cfg-auto-outfmt-preview');
+  if(!el) return;
+  try{
+    // search.js 포맷터가 있으면 그걸로 미리보기
+    if(typeof window.autoFormatMatchLine==='function'){
+      el.textContent = window.autoFormatMatchLine('조기석','변현제','실피드');
+      return;
+    }
+  }catch(e){}
+  // fallback
+  const emph = (n)=> s.winnerEmphasis==='md'?`**${n}**`:s.winnerEmphasis==='star'?`★${n}`:n;
+  const map = s.includeMap ? (s.mapBrackets?'[실피드]':'실피드') : '';
+  const raceW = s.includeRace ? '(T)' : '';
+  const raceL = s.includeRace ? '(P)' : '';
+  el.textContent = `${emph('조기석')}${raceW} ✅ 🆚️ ⬜ 변현제${raceL}${map?(' '+map):''}`.trim();
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1935,6 +1995,15 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${(()=>{ 
     const compat = (localStorage.getItem('su_paste_compat') ?? '1') === '1';
+    const fmt = (function(){
+      try{
+        const d={includeRace:true,includeMap:true,mapBrackets:true,winnerEmphasis:'none',hideUnknownRace:true};
+        const obj=JSON.parse(localStorage.getItem('su_auto_outfmt')||'{}')||{};
+        return {...d,...obj};
+      }catch(e){
+        return {includeRace:true,includeMap:true,mapBrackets:true,winnerEmphasis:'none',hideUnknownRace:true};
+      }
+    })();
     return _scfgD('paste','🤖 자동인식') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 결과 붙여넣기 ‘자동인식’이 잘 안 될 때 호환 옵션을 켜두면 인식률이 올라갑니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
@@ -1946,6 +2015,42 @@ ${_scfgD('notice','📢 공지 관리')}
         <button class="btn btn-w btn-sm" onclick="cfgResetPasteCompatSettings()">초기화</button>
         <span style="font-size:11px;color:var(--gray-l)">※ 기본값 ON 권장</span>
       </div>
+    </div>
+    <div style="height:12px"></div>
+    <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">🎛️ 출력 포맷(전역)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">붙여넣기 자동인식/변환툴 등에서 결과를 같은 형식으로 통일합니다.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-auto-outfmt-race" style="width:15px;height:15px" ${fmt.includeRace?'checked':''} onchange="cfgAutoOutfmtUpd('includeRace', this.checked)">
+          종족 포함 (선수(T))
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-auto-outfmt-hideN" style="width:15px;height:15px" ${fmt.hideUnknownRace?'checked':''} onchange="cfgAutoOutfmtUpd('hideUnknownRace', this.checked)">
+          미정(N) 숨김
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-auto-outfmt-map" style="width:15px;height:15px" ${fmt.includeMap?'checked':''} onchange="cfgAutoOutfmtUpd('includeMap', this.checked)">
+          맵 포함
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-auto-outfmt-mapb" style="width:15px;height:15px" ${fmt.mapBrackets?'checked':''} onchange="cfgAutoOutfmtUpd('mapBrackets', this.checked)">
+          맵을 [ ]로 표시
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);min-width:120px">승자 강조</div>
+        <select id="cfg-auto-outfmt-emph" onchange="cfgAutoOutfmtUpd('winnerEmphasis', this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+          <option value="none"${fmt.winnerEmphasis==='none'?' selected':''}>없음</option>
+          <option value="star"${fmt.winnerEmphasis==='star'?' selected':''}>★ 표시</option>
+          <option value="md"${fmt.winnerEmphasis==='md'?' selected':''}>굵게(마크다운)</option>
+        </select>
+        <button class="btn btn-w btn-xs" onclick="cfgAutoOutfmtReset()">초기화</button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">미리보기</div>
+      <pre id="cfg-auto-outfmt-preview" style="margin-top:6px;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;min-height:46px"></pre>
     </div>
     <div style="height:12px"></div>
     <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
@@ -2850,6 +2955,8 @@ ${_scfgD('notice','📢 공지 관리')}
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false);
     // 펨코현황 설정 초기화
     try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
+    // 자동인식 출력 포맷 미리보기 초기화
+    try{ if(typeof cfgAutoOutfmtRefreshPreview==='function') cfgAutoOutfmtRefreshPreview(); }catch(e){}
     // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
     if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
   },50);

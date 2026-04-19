@@ -107,6 +107,83 @@ function resolveMapName(alias) {
   return alias;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   (요청사항) 자동인식 출력 포맷(전역)
+   - 설정에서 어떤 입력이 와도 결과를 동일 포맷으로 출력할 수 있도록 통합
+   - 변환툴/자동인식(표시·복사·출력)에서 공용으로 사용
+───────────────────────────────────────────────────────────── */
+const _AUTO_OUTFMT_KEY = 'su_auto_outfmt';
+function _autoOutfmtDefault(){
+  return {
+    includeRace: true,      // 선수(종족)
+    includeMap: true,       // [맵]
+    mapBrackets: true,      // 맵을 [ ] 로 감쌈
+    winnerEmphasis: 'none', // none | star | md
+    winMark: '✅',
+    loseMark: '⬜',
+    vsMark: '🆚️',
+    hideUnknownRace: true   // 종족이 N/미정이면 표시 안 함
+  };
+}
+function autoOutfmtLoad(){
+  try{
+    const raw = localStorage.getItem(_AUTO_OUTFMT_KEY);
+    if(!raw) return _autoOutfmtDefault();
+    const obj = JSON.parse(raw) || {};
+    return {..._autoOutfmtDefault(), ...obj};
+  }catch(e){
+    return _autoOutfmtDefault();
+  }
+}
+function autoOutfmtSave(next){
+  try{ localStorage.setItem(_AUTO_OUTFMT_KEY, JSON.stringify({..._autoOutfmtDefault(), ...(next||{})})); }catch(e){}
+}
+function _autoGetRace(name){
+  try{
+    if(typeof players !== 'undefined' && Array.isArray(players)){
+      const p = players.find(x=>x && x.name===name);
+      const r = (p && p.race) ? String(p.race).trim().toUpperCase() : '';
+      if(r==='T'||r==='Z'||r==='P'||r==='N') return r;
+    }
+  }catch(e){}
+  return '';
+}
+function autoFormatMatchLine(winName, loseName, mapName){
+  const fmt = autoOutfmtLoad();
+  const w = String(winName||'').trim();
+  const l = String(loseName||'').trim();
+  const m = String(mapName||'').trim();
+  if(!w || !l) return '';
+
+  const racePart = (nm)=>{
+    if(!fmt.includeRace) return '';
+    const r = _autoGetRace(nm);
+    if(!r) return '';
+    if(fmt.hideUnknownRace && r==='N') return '';
+    return `(${r})`;
+  };
+  const emph = (nm)=>{
+    if(fmt.winnerEmphasis==='md') return `**${nm}**`;
+    if(fmt.winnerEmphasis==='star') return `★${nm}`;
+    return nm;
+  };
+  const mapPart = ()=>{
+    if(!fmt.includeMap) return '';
+    if(!m || m==='-') return '';
+    return fmt.mapBrackets ? `[${m}]` : m;
+  };
+
+  const mp = mapPart();
+  return `${emph(w)}${racePart(w)} ${fmt.winMark} ${fmt.vsMark} ${fmt.loseMark} ${l}${racePart(l)}${mp ? ' ' + mp : ''}`.trim();
+}
+
+// 전역 노출(다른 모듈/설정에서 재사용)
+try{
+  window.autoOutfmtLoad = autoOutfmtLoad;
+  window.autoOutfmtSave = autoOutfmtSave;
+  window.autoFormatMatchLine = autoFormatMatchLine;
+}catch(e){}
+
 /**
  * 형식 C 파싱: N세트 맵약자 선수A 누적A:누적B 선수B
  * 예) "1세트 실피 이재호 0:1 변현제"
