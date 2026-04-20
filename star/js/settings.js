@@ -41,6 +41,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
       window._renderCfgPdSection();
     }
+    if(el && el.open && id==='paste' && typeof window.cfgRenderPlayerAliasMap==='function'){
+      window.cfgRenderPlayerAliasMap();
+    }
   }catch(e){}
 }
 // ─────────────────────────────────────────────────────────────
@@ -56,7 +59,7 @@ const _DEFAULT_CATSECS = {
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd'],
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm'],
   '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -498,6 +501,64 @@ window.cfgResetPasteCompatSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 자동인식 보강: 선수 별명 → 실제 선수명 매핑
+// - localStorage: su_player_alias_map (JSON)
+// ─────────────────────────────────────────────────────────────
+const _PAL_KEY = 'su_player_alias_map';
+function _palLoad(){
+  try{ return JSON.parse(localStorage.getItem(_PAL_KEY)||'{}')||{}; }catch(e){ return {}; }
+}
+function _palSave(obj){
+  try{ localStorage.setItem(_PAL_KEY, JSON.stringify(obj||{})); }catch(e){}
+}
+window.cfgRenderPlayerAliasMap = function(){
+  const box = document.getElementById('cfg-pal-list');
+  if(!box) return;
+  const m = _palLoad();
+  const keys = Object.keys(m).sort((a,b)=>a.localeCompare(b));
+  if(!keys.length){
+    box.innerHTML = `<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:18px">등록된 별명 매핑 없음</div>`;
+    return;
+  }
+  box.innerHTML = keys.map(k=>{
+    const v = String(m[k]||'').trim();
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border)">
+      <span style="font-family:monospace;font-size:12px;font-weight:900;color:var(--text2);min-width:90px">${esc(k)}</span>
+      <span style="color:var(--gray-l)">→</span>
+      <span style="font-size:12px;font-weight:900;color:var(--blue);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v)}</span>
+      <button class="btn btn-r btn-xs" onclick="cfgDelPlayerAlias('${encodeURIComponent(k)}')">삭제</button>
+    </div>`;
+  }).join('');
+};
+window.cfgAddPlayerAlias = function(){
+  const a = document.getElementById('cfg-pal-alias');
+  const p = document.getElementById('cfg-pal-player');
+  const alias = String(a?.value||'').trim();
+  const player = String(p?.value||'').trim();
+  if(!alias){ if(typeof showToast==='function') showToast('별명을 입력해주세요.'); return; }
+  if(!player){ if(typeof showToast==='function') showToast('선수를 선택해주세요.'); return; }
+  const m = _palLoad();
+  m[alias] = player;
+  _palSave(m);
+  if(a) a.value='';
+  window.cfgRenderPlayerAliasMap();
+  if(typeof showToast==='function') showToast(`✅ 별명 등록: ${alias} → ${player}`);
+};
+window.cfgDelPlayerAlias = function(encKey){
+  const key = decodeURIComponent(encKey||'');
+  const m = _palLoad();
+  delete m[key];
+  _palSave(m);
+  window.cfgRenderPlayerAliasMap();
+};
+window.cfgResetPlayerAliasMap = function(){
+  if(!confirm('선수 별명 매핑을 모두 초기화할까요?')) return;
+  try{ localStorage.removeItem(_PAL_KEY); }catch(e){}
+  window.cfgRenderPlayerAliasMap();
+  if(typeof showToast==='function') showToast('초기화 완료');
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 자동인식 변환툴: 가공되지 않은 텍스트 → 리포트 포맷
 // 규칙은 사용자 메시지의 [출력 가이드라인]을 따른다.
 // ─────────────────────────────────────────────────────────────
@@ -595,6 +656,21 @@ window.cfgPasteConvertRun = function(){
   }).filter(Boolean).join('\n');
   const tail = `\n\n[최종 결과] ${A}(${raceOf(A)}) ${aW} : ${bW} ${B}(${raceOf(B)})`;
   out.textContent = body + tail;
+};
+
+// ─────────────────────────────────────────────────────────────
+// 🎵 유튜브 BGM 설정 저장
+// ─────────────────────────────────────────────────────────────
+window.cfgSaveBgmSettings = function(){
+  const on = document.getElementById('cfg-bgm-on')?.checked ? '1' : '0';
+  const sh = document.getElementById('cfg-bgm-shuffle')?.checked ? '1' : '0';
+  const vol = parseInt(document.getElementById('cfg-bgm-vol')?.value||'50',10) || 50;
+  const list = String(document.getElementById('cfg-bgm-list')?.value||'').trim();
+  try{ localStorage.setItem('su_bgm_enabled', on); }catch(e){}
+  try{ localStorage.setItem('su_bgm_shuffle', sh); }catch(e){}
+  try{ localStorage.setItem('su_bgm_volume', String(Math.max(0,Math.min(100,vol)))); }catch(e){}
+  try{ localStorage.setItem('su_bgm_list', list); }catch(e){}
+  try{ window.bgmApplySettings && window.bgmApplySettings(); }catch(e){}
 };
 window.cfgPasteConvertCopy = function(){
   const out = document.getElementById('cfg-paste-conv-out');
@@ -1406,7 +1482,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
@@ -1642,6 +1718,39 @@ ${_scfgD('notice','📢 공지 관리')}
         </div>
       </details>`;
     })()}
+  ${(()=>{ 
+    const on = (localStorage.getItem('su_bgm_enabled') ?? '1') === '1';
+    const vol = parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50;
+    const sh = (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1';
+    const list = (localStorage.getItem('su_bgm_list') || '').trim();
+    return _scfgD('bgm','🎵 유튜브 BGM') + `
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+        상단 검색바 왼쪽의 ▶/⏸ 버튼으로 재생/일시정지합니다. (모바일은 첫 재생 시 사용자 터치가 필요할 수 있습니다)
+      </div>
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-bgm-on" style="width:15px;height:15px" ${on?'checked':''} onchange="cfgSaveBgmSettings()">
+          BGM 기능 사용
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <input type="checkbox" id="cfg-bgm-shuffle" style="width:15px;height:15px" ${sh?'checked':''} onchange="cfgSaveBgmSettings()">
+          랜덤 재생(셔플)
+        </label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:12px;font-weight:900;color:var(--text2);min-width:84px">볼륨</div>
+          <input id="cfg-bgm-vol" type="range" min="0" max="100" step="5" value="${Math.max(0,Math.min(100,vol))}"
+            oninput="document.getElementById('cfg-bgm-vol-v').textContent=this.value" onchange="cfgSaveBgmSettings()" style="width:220px">
+          <span id="cfg-bgm-vol-v" style="font-size:11px;color:var(--gray-l);min-width:24px;font-weight:900">${Math.max(0,Math.min(100,vol))}</span>
+        </div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2)">유튜브 링크 목록 (한 줄에 1개)</div>
+        <textarea id="cfg-bgm-list" rows="6" placeholder="예) https://www.youtube.com/watch?v=xxxxxxxxxxx" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;resize:vertical;background:var(--white);color:var(--text1);box-sizing:border-box" onblur="cfgSaveBgmSettings()">${esc(list)}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-b btn-sm" onclick="cfgSaveBgmSettings();if(typeof showToast==='function')showToast('저장됨');">저장</button>
+          <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-bgm-list').value='';cfgSaveBgmSettings();">목록 비우기</button>
+        </div>
+      </div>
+    </details>`;
+  })()}
   ${_scfgD('si','🏷️ 스트리머 상태 아이콘 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
@@ -2076,6 +2185,21 @@ ${_scfgD('notice','📢 공지 관리')}
       <pre id="cfg-auto-outfmt-preview" style="margin-top:6px;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;min-height:46px"></pre>
     </div>
     <div style="height:12px"></div>
+    <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">🧩 선수 별명 매핑 (자동인식 보강)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        예: <b>샤이니</b> → <b>김재현</b> 처럼, 붙여넣기에서 들어오는 별명을 실제 스트리머로 강제 매핑합니다.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input id="cfg-pal-alias" type="text" placeholder="별명 입력 (예: 샤이니)" style="width:160px" onkeydown="if(event.key==='Enter')cfgAddPlayerAlias()">
+        <select id="cfg-pal-player" style="min-width:170px;border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:13px">
+          ${(players||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')}
+        </select>
+        <button class="btn btn-b btn-sm" onclick="cfgAddPlayerAlias()">+ 추가</button>
+        <button class="btn btn-w btn-sm" onclick="cfgResetPlayerAliasMap()">초기화</button>
+      </div>
+      <div id="cfg-pal-list" style="border:1px solid var(--border);border-radius:10px;max-height:220px;overflow:auto;background:var(--surface);padding:10px"></div>
+    </div>
     <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">🔁 변환툴 (리포트 포맷)</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
