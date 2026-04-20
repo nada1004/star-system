@@ -162,103 +162,10 @@ function rTotal(C,T){
 
   let totalShown=0;
   
-  // Add crew section for general/boracrew streamers
-  if(typeof crewCfg !== 'undefined' && crewCfg.length > 0) {
-    let crewMembers = players.filter(p => (p.gameType === 'general' || p.gameType === '보라크루') && !p.retired);
-    if(totalRaceFilter!=='전체') crewMembers = crewMembers.filter(p=>p.race===totalRaceFilter);
-    if(totalHideNoRecord) crewMembers = crewMembers.filter(p=>((p.win||0)+(p.loss||0))>0);
-    
-    if(crewMembers.length > 0) {
-      totalShown+=crewMembers.length;
-      const crewGroups = {};
-      crewMembers.forEach(p => {
-        const crewName = p.crewName || '기타';
-        if(!crewGroups[crewName]) crewGroups[crewName] = [];
-        crewGroups[crewName].push(p);
-      });
-      
-      Object.entries(crewGroups).forEach(([crewName, members]) => {
-        const crewConfig = crewCfg.find(c => c.name === crewName);
-        const crewColor = crewConfig?.color || '#7c3aed';
-        const crewDisplayName = crewConfig?.name || crewName;
-        
-        tableHTML+=`<tr class="ugrp" data-univ-header="${crewName}" style="--c:${crewColor}">
-          <td colspan="${_ncols}">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-                <span class="clickable-univ" onclick="if(typeof openCrewModal==='function')openCrewModal('${crewName}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">👥 ${crewDisplayName}</span>
-                <span style="font-size:10px;background:rgba(124,58,237,.2);color:#7c3aed;border-radius:4px;padding:1px 6px;font-weight:700">종합 게임</span>
-              </div>
-              <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${members.length}명</span>
-            </div>
-          </td>
-        </tr>`;
-        
-        // Sort crew members by tier then points
-        const sorted = [...members].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
-        const rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-        const normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
-        const displayList = rolePl.length ? [...rolePl, null, ...normalPl] : normalPl;
-        let inRoleSection = rolePl.length > 0;
-        
-        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="background:${crewColor}22;color:${crewColor}">주요 직책 (${rolePl.length}명)</td></tr>`;
-        
-        displayList.forEach(p => {
-          if(p===null){
-            inRoleSection=false;
-            if(normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}">일반 스트리머 (${normalPl.length}명)</td></tr>`;
-            return;
-          }
-          const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
-          const pRank = _rankMap[p.name];
-          const pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, pRank) : '';
-          const pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const q = `${p.name||''} ${crewName} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-          
-          tableHTML+=`<tr data-player-row="1" data-univ="${crewName}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-            ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
-            <td style="text-align:center;white-space:nowrap;padding:5px 4px">
-              <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${pRank||'-'}</div>
-              <div>${pChange}</div>
-            </td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
-            <td style="text-align:left;padding:6px 12px;white-space:nowrap">
-              <span style="display:inline-flex;align-items:center;gap:8px">
-                ${p.photo?`<span onclick="openPlayerModal('${pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid ${crewColor};background:${crewColor}22;font-size:11px;font-weight:900;color:${crewColor};position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:${crewColor}22;border:2px solid ${crewColor};flex-shrink:0"></span>`}
-                <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
-              </span>
-            </td>
-            <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
-            <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-              ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}판</span>`:''}
-            </td>
-            <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
-            <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
-            <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
-              const today2=new Date().toISOString().slice(0,10);
-              const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-              const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-              const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-              if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="기록 없음">-</span>';
-              if(lastD>=_7ago2) return `<span style="font-size:11px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
-              if(lastD>=_30ago2) return `<span style="font-size:11px;font-weight:800;color:#f59e0b" title="최근 활동 (30일 이내)">🟡</span>`;
-              return '<span style="font-size:11px;font-weight:800;color:#9ca3af" title="비활동 (30일 초과)">⚪</span>';
-            })()}</td>
-            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
-
-          </tr>`;
-        });
-      });
-    }
-  }
-
-
-  // University section for StarCraft streamers (exclude general/boracrew)
+  // University section for StarCraft streamers (exclude general)
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     const _isHiddenUniv=isLoggedIn&&u.hidden;
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루');
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general');
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length)return;
@@ -350,7 +257,7 @@ function _buildGalleryView(rankMap){
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루'&&!p.retired);
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&!p.retired);
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length) return;

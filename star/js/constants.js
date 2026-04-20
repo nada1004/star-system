@@ -180,10 +180,8 @@ let _ttSub     = 'records';
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
 let notices    = J('su_notices') || [];
-// 보라크루 멤버: [{name, photo, link, crewName}]
-let crew       = J('su_crew') || [];
-// 크루 목록: [{id, name, color, logo, bgImage, bgAlpha, labelAlpha}]
-let crewCfg    = J('su_crewcfg') || [];
+// (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
+try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
 
 let BLD = {};
 let openDetails = {};
@@ -429,8 +427,6 @@ function localSave(){
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     _lsSave('su_notices',notices);
-    _lsSave('su_crew',crew);
-    _lsSave('su_crewcfg',crewCfg);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
