@@ -678,7 +678,24 @@ window.cfgSaveBgmSettings = function(){
 // 📺 SOOP 멀티뷰 설정 저장
 // ─────────────────────────────────────────────────────────────
 window.cfgSaveSoopSettings = function(){
-  const list = String(document.getElementById('cfg-soop-list')?.value||'').trim();
+  let list = String(document.getElementById('cfg-soop-list')?.value||'');
+  // (버그픽스) 동일 SOOP 링크 중복 저장 방지 (공백/끝 슬래시 차이 포함)
+  const norm = (u)=>{
+    u = String(u||'').trim();
+    if(!u) return '';
+    // 끝 슬래시 제거
+    u = u.replace(/\/+$/,'');
+    // 해시 제거
+    u = u.replace(/#.*$/,'');
+    return u;
+  };
+  const lines = list.split(/\r?\n/).map(norm).filter(Boolean);
+  const uniq = [...new Set(lines)];
+  list = uniq.join('\n').trim();
+  try{
+    const ta = document.getElementById('cfg-soop-list');
+    if(ta) ta.value = list;
+  }catch(e){}
   try{ localStorage.setItem('su_soop_list', list); }catch(e){}
   try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}

@@ -219,6 +219,10 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbkt'){
     return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
   }
+  // (요청사항) 프로리그/티어대회 토너먼트 대진표 자동생성
+  if(_grpPasteState.mode==='pcbktbuild'){
+    return typeof _pcBktBuildFromPasteApplyLogic==='function' ? _pcBktBuildFromPasteApplyLogic(savable,tn) : false;
+  }
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
   }
@@ -531,6 +535,7 @@ function rTierTourTab(C, T){
     {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
     {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
+    {id:'tourmatch',lbl:'📝 토너경기',fn:`_ttSub='tourmatch';render()`},
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
@@ -547,6 +552,8 @@ function rTierTourTab(C, T){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
     h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
+  } else if(_ttSub==='tourmatch'){
+    h+=_curTierTn ? proCompTourMatchInput(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='bktrecords'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     const _bktRecs=ttM.filter(m=>m.compName===_ttCurComp&&m.stage==='bkt');

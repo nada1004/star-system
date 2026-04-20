@@ -1362,6 +1362,7 @@ function pastePreview() {
   const errors = [];
   let currentSet = 1;
   let currentLineDate = null; // "일자: YYYY-MM-DD" 줄로 설정되는 현재 날짜
+  let currentRoundLabel = null; // "64강/32강/16강/8강/4강/준결승/결승" 헤더 감지
   let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }
   let isFormatC    = false;  // 이번 블록이 형식 C인지
 
@@ -1375,6 +1376,14 @@ function pastePreview() {
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
+
+    // ── 토너먼트 라운드 헤더 감지 ──
+    // 예) "64강", "32강", "16강", "8강", "4강", "준결승", "결승"
+    const _rnd = trimmed.replace(/\s+/g,'');
+    if (/^(?:64강|32강|16강|8강|4강|준결승|결승)$/.test(_rnd)) {
+      currentRoundLabel = _rnd;
+      return;
+    }
 
     // ── 무시할 라인 패턴 ──
     // 팀 스코어: "(승) 수술대 3:1 늪지대 (패)" / "팀명 (승/패) N:M (승/패) 팀명" 등
@@ -1456,7 +1465,7 @@ function pastePreview() {
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
-            lineNum: idx+1, rawLine: trimmed, _lineDate: _id });
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _id, _rndLabel: currentRoundLabel });
         }
       }
       return;
@@ -1479,7 +1488,7 @@ function pastePreview() {
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
-            lineNum: idx+1, rawLine: trimmed, _lineDate: _kd });
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _kd, _rndLabel: currentRoundLabel });
         }
       }
       return;

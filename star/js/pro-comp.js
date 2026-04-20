@@ -1071,6 +1071,7 @@ function proCompBracket(tn) {
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
     ${isLoggedIn?`<button class="btn btn-w btn-sm" onclick="proCompOpenSeedModal('${tn.id}')" title="상위시드(부전승/라운드 합류) 및 배치 지원">🎫 시드/부전승</button>`:''}
     ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
+    ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcBktAutoBuildModal('${tn.id}')" title="결과 붙여넣기로 대진표를 자동 생성">🧠 대진표 자동인식</button>`:''}
     ${isLoggedIn?`<button class="btn btn-r btn-sm" onclick="proCompDeleteBracket('${tn.id}')" title="대진표(토너먼트) 삭제">🗑️ 대진표 삭제</button>`:''}
   </div>`;
 
@@ -1218,6 +1219,110 @@ function _pcRoundLabelBySize(sz){
   return `${sz}강`;
 }
 
+// (요청사항) 붙여넣기 결과로 대진표(토너먼트) 자동 생성
+// - 입력은 "승자 패자 [맵]" 여러 줄(게임 단위) 또는 세트 구분을 허용
+// - 동일한 두 선수 조합은 한 매치로 묶어서 점수 계산 후 winner 결정
+function _pcBktBuildFromPasteApplyLogic(savable, tn){
+  if(!tn) return false;
+  const dateEl = document.getElementById('paste-date');
+  const dateVal = dateEl ? (dateEl.value||'') : '';
+
+  // 1) 게임들을 매치(선수쌍)로 묶기
+  const matchMap = {}; // key => {a,b,games:[{w,l,map}]}
+  savable.forEach(r=>{
+    const w = r.wPlayer?.name; const l = r.lPlayer?.name;
+    if(!w || !l) return;
+    const k = [w,l].sort().join('|');
+    if(!matchMap[k]) matchMap[k] = { p1: w, p2: l, games: [], rnd: r._rndLabel || null };
+    // 라운드 정보는 첫 등장 라인 기준
+    if(!matchMap[k].rnd && r._rndLabel) matchMap[k].rnd = r._rndLabel;
+    matchMap[k].games.push({ w, l, map: r.map||'' });
+  });
+  const matches = Object.values(matchMap);
+  if(!matches.length){ alert('저장 가능한 경기가 없습니다.'); return false; }
+
+  // 2) 대진표 크기 추정: (라운드 라벨 우선) → 없으면 참가자 수 기준
+  const playersSet = new Set();
+  matches.forEach(m=>{ playersSet.add(m.p1); playersSet.add(m.p2); });
+  const nPlayers = playersSet.size;
+  const _lblToSize = (lbl)=>{
+    const s=String(lbl||'').replace(/\s+/g,'');
+    if(!s) return null;
+    if(s==='결승') return 2;
+    if(s==='준결승') return 4;
+    if(s==='4강') return 4;
+    const m=s.match(/^(\d{1,3})강$/);
+    if(m) return parseInt(m[1],10);
+    return null;
+  };
+  let firstSizeFromLabel = 0;
+  matches.forEach(m=>{ const sz=_lblToSize(m.rnd); if(sz) firstSizeFromLabel=Math.max(firstSizeFromLabel, sz); });
+  let firstSize = firstSizeFromLabel || 2;
+  while(firstSize < nPlayers) firstSize *= 2;
+  const totalRounds = Math.round(Math.log2(firstSize));
+  if(!totalRounds || totalRounds<1){ alert('대진표 크기를 계산할 수 없습니다.'); return false; }
+
+  // 3) 빈 브라켓 생성
+  const rounds = [];
+  for(let r=0;r<totalRounds;r++){
+    const len = Math.max(1, Math.floor(firstSize / Math.pow(2, r+1)));
+    const arr=[];
+    for(let i=0;i<len;i++) arr.push({a:'TBD', b:'TBD', winner:'', d:'', map:'', _games:[]});
+    rounds.push(arr);
+  }
+  tn.bracket = rounds;
+
+  // 4) 매치를 라운드 라벨 기준으로 배치 (없으면 1라운드로)
+  //    - winner를 A/B로 계산하고, 다음 라운드로 전파
+  const miCounter = {};
+  matches.forEach(m=>{
+    const sz = _lblToSize(m.rnd) || firstSize; // 라벨 없으면 최상위(예: 64강)로 처리
+    const ri = Math.max(0, Math.min(totalRounds-1, Math.round(Math.log2(firstSize / sz))));
+    miCounter[ri] = (miCounter[ri]||0);
+    const mi = miCounter[ri]++;
+    if(!tn.bracket[ri] || mi >= tn.bracket[ri].length) return;
+    const slot = tn.bracket[ri][mi];
+    // 참가자
+    const pA = m.p1;
+    const pB = m.p2;
+    slot.a = pA; slot.b = pB;
+    if(dateVal) slot.d = dateVal;
+    // 게임 목록
+    slot._games = m.games.map(g=>{
+      const winner = (g.w === pA) ? 'A' : (g.w === pB) ? 'B' : '';
+      return { winner, map: g.map||'' };
+    }).filter(g=>g.winner);
+    const scoreA = slot._games.filter(g=>g.winner==='A').length;
+    const scoreB = slot._games.filter(g=>g.winner==='B').length;
+    if(scoreA===scoreB){
+      // 동률이면 winner 비움
+      slot.winner = '';
+    } else {
+      slot.winner = scoreA>scoreB ? 'A' : 'B';
+    }
+    // 맵 필드: 단판이면 사용
+    if(slot._games.length===1 && slot._games[0].map) slot.map = slot._games[0].map;
+    else slot.map = '';
+
+    // 다음 라운드 전파
+    if(slot.winner && tn.bracket[ri+1] && tn.bracket[ri+1][Math.floor(mi/2)]){
+      const next = tn.bracket[ri+1][Math.floor(mi/2)];
+      const isA = (mi%2===0);
+      const wName = slot.winner==='A' ? slot.a : slot.b;
+      if(isA && (next.a==='TBD' || !next.a)) next.a = wName;
+      if(!isA && (next.b==='TBD' || !next.b)) next.b = wName;
+    }
+
+    // 개인 최근경기/대전기록 반영
+    if(slot.winner){
+      try{ _syncBktMatchToHistory(tn, slot, `pbn_${tn.id}_${ri}_${mi}`, ri, mi); }catch(e){}
+    }
+  });
+
+  save();
+  return true;
+}
+
 /* ─────────────────────────────────────────────
    (요청사항) 토너먼트 경기 입력 메뉴
    - 토너먼트(대진표) 결과를 붙여넣기 자동인식으로 입력
@@ -1235,13 +1340,65 @@ function proCompTourMatchInput(tn){
   const rounds = tn.bracket || [];
   const totalRounds = rounds.length;
   const rndLabel = ri => ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
+  const firstSize = (rounds[0]||[]).length*2;
+  const sizes=[];
+  for(let s=firstSize; s>=2; s=Math.floor(s/2)) sizes.push(s);
+  if(typeof window._pcTourMatchRoundSize==='undefined') window._pcTourMatchRoundSize = '전체';
+  const curSz = window._pcTourMatchRoundSize;
+  const szToRi = (sz)=>{
+    if(sz==='결승') return totalRounds-1;
+    if(sz==='준결승') return totalRounds-2;
+    const n=parseInt(sz,10);
+    if(!n) return null;
+    const ratio = firstSize / n;
+    const ri = Math.round(Math.log2(ratio));
+    return Math.max(0, Math.min(totalRounds-1, ri));
+  };
+
   const pending=[];
   rounds.forEach((rnd,ri)=>{
     (rnd||[]).forEach((m,mi)=>{
       if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
-      pending.push({ri,mi,a:m.a,b:m.b,done:!!m.winner, label:`${rndLabel(ri)} ${mi+1}경기`});
+      // 라운드 필터 적용
+      if(curSz!=='전체'){
+        const _riNeed = (curSz==='준결승'||curSz==='결승') ? szToRi(curSz) : szToRi(curSz);
+        if(_riNeed!==ri) return;
+      }
+      pending.push({ri,mi,a:m.a,b:m.b,done:!!m.winner, label:`${rndLabel(ri)} ${mi+1}경기`, rnd:rndLabel(ri)});
     });
   });
+  const roundBtns = (() => {
+    const btn = (lbl, val) => `<button class="pill ${curSz===val?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._pcTourMatchRoundSize='${val}';render()">${lbl}</button>`;
+    // 4강/준결승 표기 통일: 버튼은 4강/결승으로 표시하되 내부는 숫자 기반
+    const mapped = sizes.map(s=>{
+      if(s===2) return {lbl:'결승', val:'결승'};
+      if(s===4) return {lbl:'4강', val:'4'};
+      return {lbl:`${s}강`, val:String(s)};
+    });
+    return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:10px 0 0">${btn('전체','전체')}${mapped.map(o=>btn(o.lbl,o.val)).join('')}</div>`;
+  })();
+  const groupedHTML = (()=>{
+    if(!pending.length) return `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">확정된 경기가 없습니다. (선수 배치 후 사용)</div>`;
+    // ri 내림차순(결승→)으로 그룹 표시
+    const byRi={};
+    pending.forEach(p=>{ if(!byRi[p.ri]) byRi[p.ri]=[]; byRi[p.ri].push(p); });
+    const ris=Object.keys(byRi).map(n=>parseInt(n,10)).sort((a,b)=>b-a);
+    return `<div style="margin-top:10px">
+      ${ris.map(ri=>{
+        const lbl=rndLabel(ri);
+        return `<div style="margin-top:10px">
+          <div style="font-weight:900;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;margin:0 0 6px">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:var(--blue)"></span>
+            ${lbl}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${byRi[ri].map(p=>`<button class="btn btn-xs" style="border-color:${p.done?'#86efac':'#fde68a'};background:${p.done?'#f0fdf4':'#fffbeb'};color:${p.done?'#16a34a':'#92400e'}" onclick="openPcBktPasteModal('${tn.id}',${p.ri},${p.mi})">${p.label}: ${p.a} vs ${p.b}${p.done?' ✓':''}</button>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  })();
+
   return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="font-weight:900;color:#1d4ed8">📝 토너먼트 경기 입력</div>
@@ -1251,12 +1408,8 @@ function proCompTourMatchInput(tn){
         <button class="btn btn-w btn-sm" onclick="proCompSub='tour';render()">🗂️ 대진표 보기</button>
       </div>
     </div>
-    ${pending.length?`<div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.9">
-      <div style="font-weight:800;margin-bottom:6px;color:var(--gray-l)">진행 중인 경기</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${pending.slice(0,40).map(p=>`<button class="btn btn-xs" style="border-color:${p.done?'#86efac':'#fde68a'};background:${p.done?'#f0fdf4':'#fffbeb'};color:${p.done?'#16a34a':'#92400e'}" onclick="openPcBktPasteModal('${tn.id}',${p.ri},${p.mi})">${p.label}: ${p.a} vs ${p.b}${p.done?' ✓':''}</button>`).join('')}
-      </div>
-    </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">확정된 경기가 없습니다. (선수 배치 후 사용)</div>`}
+    ${roundBtns}
+    ${groupedHTML}
   </div>`;
 }
 function _pcCollectSeedCandidates(tn){
@@ -2276,6 +2429,35 @@ function openPcBktBulkPasteModal(tnId) {
   const _pt = document.querySelector('#pasteModal .mtitle');
   if (_pt) _pt.textContent = '📋 결과 붙여넣기 (여러 경기)';
   if (textarea) textarea.focus();
+}
+
+// (요청사항) 토너먼트 대진표 자동인식(자동 생성)
+function openPcBktAutoBuildModal(tnId){
+  const tn=_findTourneyById(tnId);
+  if(!tn) return;
+  if(typeof openPasteModal==='function') openPasteModal();
+  window._grpPasteState = { tnId, mode:'pcbktbuild' };
+  window._grpPasteMode = true;
+  const hintEl=document.getElementById('paste-mode-hint');
+  if(hintEl){
+    hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px">
+      <b style="color:#1d4ed8">🧠 토너먼트 대진표 자동생성</b><br>
+      <span style="font-size:11px;color:#6b7280">가능하면 라운드별로 붙여넣기 해주세요 (예: 64강 버튼 → 64강 결과 붙여넣기). 여러 라운드가 섞이면 정확도가 떨어질 수 있습니다.</span>
+    </div>`;
+  }
+  // 저장 형식 숨김
+  const modeSel = document.getElementById('paste-mode');
+  if (modeSel) { modeSel.value='comp'; modeSel.style.display='none'; }
+  const modeLabel = document.getElementById('paste-mode-label');
+  if (modeLabel) modeLabel.style.display = 'none';
+  const compWrap = document.getElementById('paste-comp-wrap');
+  if (compWrap) compWrap.style.display = 'none';
+  const _pd = document.querySelector('#pasteModal details');
+  if (_pd) _pd.style.display = 'none';
+  const _pt = document.querySelector('#pasteModal .mtitle');
+  if (_pt) _pt.textContent = '🧠 토너먼트 대진표 자동인식';
+  const textarea = document.getElementById('paste-input');
+  if(textarea) textarea.focus();
 }
 
 function openPcBktPasteModal(tnId, ri, mi) {
