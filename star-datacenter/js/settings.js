@@ -671,6 +671,7 @@ window.cfgSaveBgmSettings = function(){
   try{ localStorage.setItem('su_bgm_volume', String(Math.max(0,Math.min(100,vol)))); }catch(e){}
   try{ localStorage.setItem('su_bgm_list', list); }catch(e){}
   try{ window.bgmApplySettings && window.bgmApplySettings(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -680,6 +681,22 @@ window.cfgSaveSoopSettings = function(){
   const list = String(document.getElementById('cfg-soop-list')?.value||'').trim();
   try{ localStorage.setItem('su_soop_list', list); }catch(e){}
   try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 변경 시 다른 기기 반영: 관리자면 자동 Cloud Save(디바운스)
+// - 사용자가 "저장 버튼"을 누르지 않아도 일정 시간 후 fbCloudSave 실행
+// ─────────────────────────────────────────────────────────────
+window._scheduleCloudAppSettingsSave = function(){
+  try{
+    if(typeof isLoggedIn==='undefined' || !isLoggedIn) return;
+    if(typeof window.fbCloudSave!=='function') return;
+    clearTimeout(window._autoAppSettingsSaveT);
+    window._autoAppSettingsSaveT = setTimeout(()=>{
+      try{ window.fbCloudSave(); }catch(e){}
+    }, 1200);
+  }catch(e){}
 };
 window.cfgPasteConvertCopy = function(){
   const out = document.getElementById('cfg-paste-conv-out');
