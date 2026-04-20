@@ -343,6 +343,27 @@ function findPlayerByPartialName(namePart) {
   // 공백 정규화 버전: "안    아" → "안아"
   const noSpace = trimmed.replace(/\s+/g, '');
 
+  // 0) 사용자 별명 매핑 (설정탭에서 등록)
+  // - localStorage: su_player_alias_map = { "샤이니": "김재현", ... }
+  // - 키는 대소문자/공백 무시로 매칭
+  try{
+    const amap = JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{};
+    const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
+    const q1 = _nfc(trimmed).replace(/\s+/g,'').toLowerCase();
+    const q2 = _nfc(noSpace).replace(/\s+/g,'').toLowerCase();
+    const rs = _nfc(trimmed.replace(/\s*[TZPNtzpn]$/i,'')).replace(/\s+/g,'').toLowerCase();
+    let target = '';
+    for(const k in amap){
+      const nk = _nfc(k).replace(/\s+/g,'').toLowerCase();
+      if(!nk) continue;
+      if(nk===q1 || nk===q2 || (rs && nk===rs)){ target = String(amap[k]||'').trim(); break; }
+    }
+    if(target){
+      const p = (players||[]).find(p=>p && p.name===target);
+      if(p) return { player: p, candidates: [p], similar: [], aliasMatch: true };
+    }
+  }catch(e){}
+
   // 1) 정확 일치 (이름)
   const exact = players.filter(p => p.name === trimmed);
   if (exact.length === 1) return { player: exact[0], candidates: exact, similar: [] };
@@ -850,7 +871,7 @@ function parsePasteLine(line) {
         const winName = leftWin ? leftName : rightName;
         const loseName = leftWin ? rightName : leftName;
 
-        if (winName && loseName) return { winName, loseName, map, ...( _gameNum ? { gameNum: _gameNum } : {} ) };
+        if (winName && loseName) return { winName, loseName, map, leftName, rightName, ...( _gameNum ? { gameNum: _gameNum } : {} ) };
       }
     }
   }
@@ -2416,36 +2437,14 @@ function pasteApply() {
 
   const matchId = genId();
 
-  // ── A팀/B팀 결정: 로스터 있으면 소속 기반, 없으면 leftName 위치 기반 ──
-  const _applyRA = window._pasteRosterA, _applyRB = window._pasteRosterB;
-  const _applyInRA = (nm) => _applyRA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
-  const _applyInRB = (nm) => _applyRB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+  // ── A팀/B팀 결정: 입력(좌/우) 순서를 최우선으로 고정 ──
+  // (요청사항) 붙여넣기에서 "A팀 vs B팀"이 뒤집혀 인식되는 경우가 있어,
+  // 로스터/소속 기반으로 A/B를 재배치하지 않고 "좌측= A / 우측= B"로 고정합니다.
   const resolveAB = (r) => {
-    if (_applyRA && _applyRB) {
-      const wInA = _applyInRA(r.winName), wInB = _applyInRB(r.winName);
-      const winnerIsA = wInA ? true : wInB ? false : ((r.leftName||r.winName) === r.winName);
-      return winnerIsA
-        ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
-        : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
-    }
-    // 선수 DB 소속 기반 배정 시도 (미리보기에서 인식된 팀명 사용)
-    const _paTA = window._previewTeamA, _paTB = window._previewTeamB;
-    if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
-        r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
-        _paTA && _paTA !== 'A팀' && _paTB && _paTB !== 'B팀') {
-      const _wInA = r.wPlayer.univ === _paTA;
-      const _lInA = r.lPlayer.univ === _paTA;
-      if (_wInA || _lInA) {
-        return _wInA
-          ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
-          : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
-      }
-    }
-    // leftName 기준: 좌측이 승자면 playerA=wPlayer, 패자면 playerA=lPlayer
     const leftIsWin = (r.leftName||r.winName) === r.winName;
     return {
-      playerA: leftIsWin ? r.wPlayer : r.lPlayer,
-      playerB: leftIsWin ? r.lPlayer : r.wPlayer,
+      playerA: leftIsWin ? r.wPlayer : r.lPlayer, // 좌측 선수
+      playerB: leftIsWin ? r.lPlayer : r.wPlayer, // 우측 선수
       winner:  leftIsWin ? 'A' : 'B'
     };
   };
