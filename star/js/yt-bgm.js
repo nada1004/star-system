@@ -26,6 +26,17 @@
     const v = parseInt(localStorage.getItem(LS_VOL)||'50',10);
     return Math.max(0, Math.min(100, isNaN(v)?50:v));
   }
+  function applyVolNow(){
+    if(!player) return;
+    const v = getVol();
+    try{
+      if(v<=0){ player.mute && player.mute(); }
+      else { player.unMute && player.unMute(); }
+      player.setVolume(v);
+    }catch(e){}
+    // 일부 환경에서 즉시 반영이 안 되는 경우 1회 재시도
+    setTimeout(()=>{ try{ player.setVolume(getVol()); }catch(e){} }, 200);
+  }
   function isShuffle(){
     return (localStorage.getItem(LS_SHUFFLE) ?? '0') === '1';
   }
@@ -137,7 +148,7 @@
         events: {
           onReady: () => {
             playerReady = true;
-            try{ player.setVolume(getVol()); }catch(e){}
+            applyVolNow();
             // 첫 클릭 시 API/플레이어 준비가 늦으면 여기서 재생을 이어서 수행
             if(pendingPlay && pendingPlay.vid){
               const p = pendingPlay;
@@ -165,6 +176,8 @@
               setTimeout(()=>{ next(true); }, 200);
               return;
             } else state = 'stopped';
+            // 재생 시작 시 볼륨 재적용 (PC/모바일 일부 환경 보강)
+            if(e.data === 1) applyVolNow();
             updateBtn();
           }
         }
@@ -257,7 +270,7 @@
 
   // 외부에서 설정 변경 시 호출
   window.bgmApplySettings = function(){
-    try{ if(player) player.setVolume(getVol()); }catch(e){}
+    applyVolNow();
     updateBtn();
   };
   window.bgmToggle = toggle;
