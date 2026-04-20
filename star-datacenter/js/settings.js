@@ -59,7 +59,7 @@ const _DEFAULT_CATSECS = {
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm'],
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm','soopmv'],
   '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -671,6 +671,15 @@ window.cfgSaveBgmSettings = function(){
   try{ localStorage.setItem('su_bgm_volume', String(Math.max(0,Math.min(100,vol)))); }catch(e){}
   try{ localStorage.setItem('su_bgm_list', list); }catch(e){}
   try{ window.bgmApplySettings && window.bgmApplySettings(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// 📺 SOOP 멀티뷰 설정 저장
+// ─────────────────────────────────────────────────────────────
+window.cfgSaveSoopSettings = function(){
+  const list = String(document.getElementById('cfg-soop-list')?.value||'').trim();
+  try{ localStorage.setItem('su_soop_list', list); }catch(e){}
+  try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
 };
 window.cfgPasteConvertCopy = function(){
   const out = document.getElementById('cfg-paste-conv-out');
@@ -1482,7 +1491,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
@@ -1747,6 +1756,23 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-b btn-sm" onclick="cfgSaveBgmSettings();if(typeof showToast==='function')showToast('저장됨');">저장</button>
           <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-bgm-list').value='';cfgSaveBgmSettings();">목록 비우기</button>
+        </div>
+      </div>
+    </details>`;
+  })()}
+  ${(()=>{ 
+    const list = (localStorage.getItem('su_soop_list') || '').trim();
+    return _scfgD('soopmv','📺 SOOP 멀티뷰') + `
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+        상단에 <b>SOOP</b> 버튼이 생기며, 버튼을 누르면 <b>2분할 멀티뷰</b> 팝업이 열립니다.<br>
+        (주소가 1개도 없으면 버튼은 숨겨집니다)
+      </div>
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;font-weight:1000;color:var(--text2)">SOOP 주소 목록 (한 줄에 1개)</div>
+        <textarea id="cfg-soop-list" rows="7" placeholder="예) https://...." style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;resize:vertical;background:var(--white);color:var(--text1);box-sizing:border-box" onblur="cfgSaveSoopSettings()">${esc(list)}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-b btn-sm" onclick="cfgSaveSoopSettings();if(typeof showToast==='function')showToast('저장됨');">저장</button>
+          <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-soop-list').value='';cfgSaveSoopSettings();">목록 비우기</button>
         </div>
       </div>
     </details>`;

@@ -89,6 +89,8 @@
 
   // ── Player state ──
   let player = null;
+  let playerReady = false;
+  let pendingPlay = null; // {vid,index,userInitiated}
   let state = 'stopped'; // playing|paused|stopped|loading
 
   function btnEl(){ return $('hdrBgmBtn'); }
@@ -96,14 +98,16 @@
     const b = btnEl();
     if(!b) return;
     const enabled = isEnabled();
-    b.style.display = enabled ? '' : 'none';
-    if(!enabled) return;
     const list = getList();
-    b.disabled = list.length === 0;
-    b.style.opacity = list.length === 0 ? '0.5' : '1';
+    // (요청사항) 설정에 유튜브 주소가 있을 때만 버튼 표시
+    const visible = enabled && list.length > 0;
+    b.style.display = visible ? '' : 'none';
+    if(!visible) return;
+    b.disabled = false;
+    b.style.opacity = '1';
     const icon = state === 'playing' ? '⏸' : state === 'loading' ? '⏳' : '▶';
     b.textContent = icon;
-    b.title = list.length ? '🎵 BGM 재생/일시정지' : '설정에서 유튜브 링크를 추가하세요';
+    b.title = '🎵 BGM 재생/일시정지';
   }
 
   function ensurePlayer(){
@@ -132,7 +136,22 @@
         },
         events: {
           onReady: () => {
+            playerReady = true;
             try{ player.setVolume(getVol()); }catch(e){}
+            // 첫 클릭 시 API/플레이어 준비가 늦으면 여기서 재생을 이어서 수행
+            if(pendingPlay && pendingPlay.vid){
+              const p = pendingPlay;
+              pendingPlay = null;
+              try{
+                state = 'loading'; updateBtn();
+                player.loadVideoById(p.vid);
+                setIdx(p.index);
+                // 일부 모바일에서 load만 하고 재생이 안 붙는 경우가 있어 playVideo 한번 더 시도
+                setTimeout(()=>{ try{ player.playVideo(); }catch(e){} }, 120);
+              }catch(e){
+                state='paused'; updateBtn();
+              }
+            }
           },
           onStateChange: (e) => {
             // 0 ended, 1 playing, 2 paused, 3 buffering
@@ -175,11 +194,17 @@
     if(!vid){ toast('유튜브 링크/ID 형식이 올바르지 않습니다.'); return; }
     state = 'loading'; updateBtn();
     ensurePlayer().then(()=>{
+      if(!playerReady){
+        pendingPlay = { vid, index, userInitiated };
+        return;
+      }
       try{ player.setVolume(getVol()); }catch(e){}
       try{
         // loadVideoById는 즉시 전환. 모바일에서 막히면 재생이 안 될 수 있어 userInitiated 여부를 안내에 활용.
         player.loadVideoById(vid);
         setIdx(index);
+        // 일부 환경에서 load만 되고 재생이 안 되는 경우 보강
+        setTimeout(()=>{ try{ player.playVideo(); }catch(e){} }, 120);
       }catch(e){
         state='paused'; updateBtn();
         toast('재생 실패 — 다시 눌러주세요.');
@@ -251,4 +276,3 @@
   // DOM이 이미 준비된 상태(스크립트가 body 하단에 로드)라서 즉시 실행
   try{ window.initBgm(); }catch(e){}
 })();
-
