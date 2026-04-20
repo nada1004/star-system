@@ -285,10 +285,6 @@ function proCompLeague(tn) {
   }
   h += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
-    <div style="margin-left:auto;display:flex;gap:4px">
-      <button class="pill ${proCompSortDir==='desc'?'on':''}" onclick="proCompSortDir='desc';render()">최신순</button>
-      <button class="pill ${proCompSortDir==='asc'?'on':''}" onclick="proCompSortDir='asc';render()">오래된순</button>
-    </div>
   </div>`;
   if (isLoggedIn && tn.groups.length) {
     h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
@@ -309,59 +305,37 @@ function proCompLeague(tn) {
     h += `</div>`;
   }
   {
-    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
-    if(_dateMenuStyle==='asl'){
-      const daysS=['일','월','화','수','목','금','토'];
-      const _mini = (m)=>{
-        const a=m.a||''; const b=m.b||'';
-        const ca=gc(a)||'#64748b'; const cb=gc(b)||'#64748b';
-        const icon = (u, col)=>{
-          const url=UNIV_ICONS[u]||(univCfg.find(x=>x.name===u)||{}).icon||'';
-          if(url) return `<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
-          return `<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0"></span>`;
-        };
-        return `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1">${icon(a,ca)}<span style="overflow:hidden;text-overflow:ellipsis">${a||'—'}</span></span>
-          <span style="color:var(--gray-l);font-weight:900;flex-shrink:0">vs</span>
-          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1;justify-content:flex-end">${icon(b,cb)}<span style="overflow:hidden;text-overflow:ellipsis">${b||'—'}</span></span>
-        </div>`;
-      };
-      h+=`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-        <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-          <button class="pill ${!proCompFilterDate?'on':''}" style="flex-shrink:0" onclick="proCompFilterDate='';render()">전체</button>`;
-      dates.forEach(d=>{
-        const dt=new Date(d+'T00:00:00');
-        const label=`${daysS[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
-        const dayMs=allMatches.filter(m=>m.d===d).slice(0,2);
-        const prev=dayMs.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayMs.map(_mini).join('')}</div>`:'';
-        const on = (proCompFilterDate===d);
-        h+=`<button type="button" onclick="proCompFilterDate='${d}';render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:220px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--gold)':'var(--border)'};background:${on?'#fffbeb':'var(--surface)'};cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-weight:1000;font-size:12px;color:${on?'#b45309':'var(--text2)'}">${label}</span>
-            <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayMs.length?`매치 ${allMatches.filter(m=>m.d===d).length}`:''}</span>
-          </div>
-          ${prev}
-        </button>`;
-      });
-      h+=`</div></div>`;
-    } else {
-      h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-        <button class="pill ${!proCompFilterDate?'on':''}" onclick="proCompFilterDate='';render()">전체</button>`;
-      dates.forEach(d=>{
-        const dt=new Date(d+'T00:00:00'); const days=['일','월','화','수','목','금','토'];
-        h += `<button class="pill ${proCompFilterDate===d?'on':''}" onclick="proCompFilterDate='${d}';render()">${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})</button>`;
-      });
-      h += `</div>`;
-    }
+    // (요청사항) 날짜/조 선택을 "선택 메뉴(드롭다운)"로 변경 (버튼 나열 제거)
+    const days=['일','월','화','수','목','금','토'];
+    const fmt=(d)=>{
+      if(!d) return '전체';
+      const dt=new Date(d+'T00:00:00');
+      return `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`;
+    };
+    const grpOpts=(tn.groups||[]).map((grp,gi)=>({name:grp.name,label:`GROUP ${'ABCDEFGHIJ'[gi]||gi+1}`}));
+    h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+      <div class="ym-filter-controls compact">
+        <span class="ym-lbl">일자</span>
+        <select class="ym-sel" onchange="proCompFilterDate=this.value;render()">
+          <option value=""${!proCompFilterDate?' selected':''}>전체</option>
+          ${dates.map(d=>`<option value="${d}"${proCompFilterDate===d?' selected':''}>${fmt(d)}</option>`).join('')}
+        </select>
+      </div>
+      ${grpOpts.length>1?`<div class="ym-filter-controls compact">
+        <span class="ym-lbl">조</span>
+        <select class="ym-sel" onchange="proCompFilterGrp=this.value;render()">
+          <option value=""${!proCompFilterGrp?' selected':''}>전체</option>
+          ${grpOpts.map(o=>`<option value="${o.name}"${proCompFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
+        </select>
+      </div>`:''}
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:nowrap">
+        <button class="pill ${proCompSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='desc';render()">최신순</button>
+        <button class="pill ${proCompSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="proCompSortDir='asc';render()">오래된순</button>
+      </div>
+    </div>`;
   }
   if (tn.groups.length > 1) {
-    h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조 선택:</span>
-      <button class="pill ${!proCompFilterGrp?'on':''}" onclick="proCompFilterGrp='';render()">전체</button>`;
-    tn.groups.forEach((grp, gi) => {
-      const gl='ABCDEFGHIJ'[gi]; const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h += `<button class="pill ${proCompFilterGrp===grp.name?'on':''}" style="${proCompFilterGrp===grp.name?`background:${col};border-color:${col};color:#fff`:''}" onclick="proCompFilterGrp='${grp.name}';render()">GROUP ${gl}</button>`;
-    });
-    h += `</div>`;
+    // 조 선택은 "전체/일자" 메뉴 영역 우측으로 이동됨
     const grpsWithDone = tn.groups.filter(g=>(g.matches||[]).some(m=>m.winner));
     if (grpsWithDone.length) {
       h += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조별 공유카드:</span>`;
