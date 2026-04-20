@@ -132,9 +132,7 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // 보라크루
-  if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
-  if(d.crewCfg!==undefined&&typeof crewCfg!=='undefined') crewCfg=_fbArr(d.crewCfg,[]);
+  // (요청사항) 보라크루 기능 삭제: crew/crewCfg 수신 적용 제거
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
@@ -237,7 +235,7 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
+    curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
@@ -1097,7 +1095,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general'||p.gameType==='보라크루')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 

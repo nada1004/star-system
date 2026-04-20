@@ -3656,7 +3656,6 @@ function promptBoardNoteImgUrl(univName){
 function onRegTypeChange() {
   const type = document.getElementById('p-reg-type')?.value || 'starcraft';
   const scFields = ['p-univ','p-tier','p-race'];
-  const crewField = document.getElementById('p-crew');
   const genderField = document.getElementById('p-gender');
   const displayNameField = document.getElementById('p-display-name');
 
@@ -3664,23 +3663,12 @@ function onRegTypeChange() {
   scFields.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.style.display = (type === 'starcraft' || type === 'starcraft-crew') ? '' : 'none';
+    el.style.display = (type === 'starcraft') ? '' : 'none';
   });
 
-  // 크루 선택 (스타크루/종합게임/보라크루)
-  if (crewField) {
-    crewField.style.display = (type !== 'starcraft') ? '' : 'none';
-    if (type !== 'starcraft') {
-      // 크루 목록 채우기
-      const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
-      crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
-        cfg.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
-  }
-
-  // 성별/프로필이름 (종합게임/보라크루)
-  if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
-  if (displayNameField) displayNameField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
+  // 성별/프로필이름 (종합게임)
+  if (genderField) genderField.style.display = (type === 'general') ? '' : 'none';
+  if (displayNameField) displayNameField.style.display = (type === 'general') ? '' : 'none';
 }
 
 function addPlayer(){
@@ -3707,31 +3695,12 @@ function addPlayer(){
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
       gameType:'starcraft',win:0,loss:0,points:0,history:[]};
 
-  } else if(_pRegType==='starcraft-crew'){
-    // 스타크루 — 스타크래프트 + 크루 소속
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
-    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
-      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
-      gameType:'starcraft',crewName:crewName||undefined,isCrew:crewName?true:undefined,
-      win:0,loss:0,points:0,history:[]};
-
   } else if(_pRegType==='general'){
     // 종합게임 스트리머
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
       hideFromBoard:_pHideBoard||undefined,
-      gameType:'종합게임',crewName:crewName||undefined,isCrew:crewName?true:undefined,
-      win:0,loss:0,points:0,history:[]};
-
-  } else if(_pRegType==='boracrew'){
-    // 보라크루 스트리머
-    const crewName=(document.getElementById('p-crew')?.value||'').trim();
-    playerData={name:n,gender:_pGender,role:_pRole||undefined,
-      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
-      hideFromBoard:_pHideBoard||undefined,
-      gameType:'보라크루',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      gameType:'종합게임',
       win:0,loss:0,points:0,history:[]};
   } else {
     playerData={name:n,univ:'무소속',gender:_pGender,role:_pRole||undefined,
@@ -3886,14 +3855,7 @@ window.openEP=function(name){
         👁️ 현황판에서 숨기기 (스탯·기록은 유지, 구현황판·신현황판 모두 적용)
       </label>
     </div>
-    <div style="margin-top:10px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px">
-      <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
-      <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
-        <option value="">— 소속 없음 —</option>
-        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
-      </select>
-      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
-    </div>
+    <!-- (요청사항) 크루 소속 항목 제거 -->
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
@@ -4019,9 +3981,7 @@ function savePlayer(){
   if(!p.inactive)p.inactive=undefined;
   p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
   if(!p.hideFromBoard)p.hideFromBoard=undefined;
-  const _crewName=(document.getElementById('ed-crew-name')?.value||'').trim();
-  p.crewName=_crewName||undefined;
-  p.isCrew=_crewName?true:undefined; // 하위 호환
+  // (요청사항) 크루 소속 항목 제거 (기존 값 유지)
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
@@ -4029,14 +3989,7 @@ function savePlayer(){
   save();
   cm('emModal');
   
-  // Auto-switch to 보라크루 view if player was assigned to crew or has position
-  if(_crewName || (_rv && _rv.trim())){
-    // Check if current tab is board2 and switch to crew view
-    const currentTab = document.querySelector('.tab.on');
-    if(currentTab && currentTab.onclick && currentTab.onclick.toString().includes('board2')){
-      _b2View = 'crew';
-    }
-  }
+  // (요청사항) 크루 자동 전환 로직 제거
   
   render();
   if(typeof openPlayerModal==='function'){
