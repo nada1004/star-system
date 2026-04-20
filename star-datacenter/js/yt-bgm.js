@@ -103,6 +103,8 @@
   let playerReady = false;
   let pendingPlay = null; // {vid,index,userInitiated}
   let state = 'stopped'; // playing|paused|stopped|loading
+  let playToken = 0;
+  const PLAY_START_TIMEOUT_MS = 5000; // 재생 시작 타임아웃(요청사항)
 
   function btnEl(){ return $('hdrBgmBtn'); }
   function updateBtn(){
@@ -206,6 +208,7 @@
     const vid = extractVideoId(list[index]);
     if(!vid){ toast('유튜브 링크/ID 형식이 올바르지 않습니다.'); return; }
     state = 'loading'; updateBtn();
+    const myToken = ++playToken;
     ensurePlayer().then(()=>{
       if(!playerReady){
         pendingPlay = { vid, index, userInitiated };
@@ -222,6 +225,19 @@
         state='paused'; updateBtn();
         toast('재생 실패 — 다시 눌러주세요.');
       }
+      // (요청사항) 일정 시간 내 재생 시작(PLAY)이 안 되면 다음곡으로 넘어감
+      setTimeout(()=>{
+        if(myToken !== playToken) return; // 다른 재생이 시작됨
+        try{
+          const st = player.getPlayerState();
+          if(st !== 1){
+            try{ player.stopVideo(); }catch(e){}
+            state = 'paused'; updateBtn();
+            toast('재생 지연 → 다음 곡으로 넘깁니다');
+            next(true);
+          }
+        }catch(e){}
+      }, PLAY_START_TIMEOUT_MS);
       // 모바일 자동재생 제한 대응: 일정 시간 후에도 playing이 아니면 안내
       setTimeout(()=>{
         try{
@@ -241,16 +257,19 @@
     ensurePlayer().then(()=>{
       try{
         const st = player.getPlayerState();
-        if(st === 1){
-          player.pauseVideo();
+        // (요청사항) 광고가 재생중일 때 pauseVideo가 먹지 않는 경우가 있어
+        // 멈춤은 stopVideo로 강제 중지(오디오 포함) 처리
+        if(st === 1 || st === 3){
+          try{ player.stopVideo(); }catch(e){}
+          try{ player.mute && player.mute(); }catch(e){}
           state = 'paused';
           updateBtn();
           return;
         }
         if(st === 2){
-          player.playVideo();
-          state = 'loading';
-          updateBtn();
+          // stopVideo를 사용하므로 재개는 현재 인덱스 다시 로드
+          const idx = Math.max(0, Math.min(list.length-1, getIdx()));
+          playAt(idx, true);
           return;
         }
       }catch(e){}

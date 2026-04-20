@@ -167,6 +167,12 @@ function applyLoginState(){
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
   document.getElementById('hdrLoginStatus').style.display=isLoggedIn?'':'none';
+  try{
+    const st=document.getElementById('hdrLoginStatus');
+    if(st && isLoggedIn){
+      st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 관리자';
+    }
+  }catch(e){}
   const _mobileBar=document.getElementById('mobileActionBar');
   if(_mobileBar && !isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='none'; }
   if(_mobileBar && isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='flex'; }
@@ -176,21 +182,23 @@ function applyLoginState(){
   });
   // 관리자 전용 탭 (설정) - 로그인 필요
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=isLoggedIn?'':'none';
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
-  if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  if(exportHint)exportHint.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
-  if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
-  if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
+  if(exportVis)exportVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
+  if(importVis)importVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
   // 대학 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const univEditBtnEl=document.getElementById('univEditBtn');
   if(univEditBtnEl) univEditBtnEl.style.display=isLoggedIn?'inline-flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
-    if(!isLoggedIn){fstrip.style.display='none';}
+    // (요청사항) 부관리자는 스트리머 등록 불가 → 숨김
+    if(!isLoggedIn || isSubAdmin){fstrip.style.display='none';}
     else{fstrip.style.display=(curTab==='total')?'block':'none';}
   }
   render();
@@ -198,7 +206,8 @@ function applyLoginState(){
 
 // 수정/삭제 버튼 — 비로그인 시 숨김
 function adminBtn(html){
-  return isLoggedIn ? html : '';
+  // (요청사항) 부관리자는 설정/편집 등 관리자 버튼 숨김 (경기 수정은 별도 로직)
+  return (isLoggedIn && !isSubAdmin) ? html : '';
 }
 function doExport(){
   try{

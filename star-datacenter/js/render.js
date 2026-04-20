@@ -2,6 +2,13 @@
    TAB & RENDER
 ══════════════════════════════════════ */
 function sw(t,el){
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  try{
+    if(typeof isSubAdmin!=='undefined' && isSubAdmin && t==='cfg'){
+      if(typeof showToast==='function') showToast('부관리자는 설정탭에 접근할 수 없습니다.');
+      return;
+    }
+  }catch(e){}
   // 탭 변경 시 서브탭 초기화
   if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
   if(t==='mini') miniSub='records';
@@ -202,12 +209,32 @@ function openEPFromModal(nameArg) {
 let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
 
+// (요청사항) 부관리자: 최근 N일 경기만 수정/삭제 허용
+function _canEditByDate(dateStr){
+  if(typeof isLoggedIn==='undefined' || !isLoggedIn) return false;
+  if(typeof isSubAdmin==='undefined' || !isSubAdmin) return true; // 일반 관리자는 제한 없음
+  const s=String(dateStr||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  const d = new Date(s+'T00:00:00');
+  if(isNaN(d.getTime())) return false;
+  const diffDays = Math.floor((t.getTime() - d.getTime()) / (24*60*60*1000));
+  return diffDays >= 0 && diffDays <= 1; // 최근 2일(오늘/어제)
+}
+function _guardRecentEdit(dateStr){
+  if(_canEditByDate(dateStr)) return true;
+  alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+  return false;
+}
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   // ELO + 승/패 + 포인트 차감
   if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
   if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
@@ -267,9 +294,16 @@ function deletePlayerHistBulk(playerName){
     alert('선택된 경기 기록이 없습니다.');
     return;
   }
-  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  // 부관리자는 최근 2일만 가능
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   // 인덱스 내림차순 정렬 후 삭제 (인덱스 변동 방지)
   const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
   sortedIdx.forEach(idx=>{
@@ -318,10 +352,12 @@ function togglePlayerHistSelect(idx){
 }
 
 function togglePlayerHistSelectAll(playerName, allIndices){
-  if(_playerHistBulkSelected.size===allIndices.length){
+  const p=players.find(x=>x.name===playerName);
+  const allowed = (p&&p.history)?allIndices.filter(i=>p.history[i] && _canEditByDate(p.history[i].date)):allIndices;
+  if(_playerHistBulkSelected.size===allowed.length){
     _playerHistBulkSelected.clear();
   }else{
-    allIndices.forEach(idx=>_playerHistBulkSelected.add(idx));
+    allowed.forEach(idx=>_playerHistBulkSelected.add(idx));
   }
   const btn=document.getElementById('bulk-delete-btn');
   if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
@@ -339,6 +375,12 @@ function openPlayerHistBulkEdit(playerName){
   }
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   // 선택된 기록들의 공통 값 추출
   const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
@@ -393,6 +435,12 @@ function savePlayerHistBulkEdit(playerName){
   if(!isLoggedIn)return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   const newMode=document.getElementById('phe-bulk-mode').value;
   const newMap=document.getElementById('phe-bulk-map').value;
@@ -434,6 +482,7 @@ function openPlayerHistEdit(playerName, histIdx){
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   const races=['T','Z','P'];
   // mapOpts: select는 항상 "목록에서 선택" 기본값, selected 없음
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -1719,8 +1768,9 @@ function buildPlayerDetailHTML(p){
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
-      const selectCheckboxHTML=_playerHistBulkMode?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:'';
-      const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
+      const _canEdit = (isLoggedIn && !hh._readOnly && _canEditByDate(hh.date));
+      const selectCheckboxHTML=(_playerHistBulkMode && _canEdit)?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:(_playerHistBulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:11px">-</td>`:'');
+      const editBtnHTML=_canEdit?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
