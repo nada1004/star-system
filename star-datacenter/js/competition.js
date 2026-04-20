@@ -565,14 +565,15 @@ function rBracketSchedule(tn){
   for(let _i=0;_i<_pcB;_i+=2){const gA=_rankedB[_i],gB=_rankedB[_i+1];_r1teamsB.push(gA?.[0]?.u||'',gB?.[0]?.u||'',gB?.[1]?.u||'',gA?.[1]?.u||'');}
   if(_rankedB.length%2===1){const gL=_rankedB[_rankedB.length-1];_r1teamsB.push(gL?.[0]?.u||'');}
   // 총 라운드 수 계산
-  const numGroups=tn.groups&&tn.groups.length>=2?tn.groups.length:0;
-  const pairCount=Math.floor(numGroups/2)*2;
-  let numR1=pairCount>0?pairCount:4;
-  if(numGroups%2===1)numR1++;
-  // totalRounds는 팀 수(=첫 라운드 경기수 × 2) 기준으로 계산 → rCompTourDynamic과 라운드 레이블 일치
-  let totalRounds=0;let n=numR1*2;while(n>1){n=Math.ceil(n/2);totalRounds++;}
-  if(totalRounds===0)totalRounds=1;
-  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
+  // (요청사항) 64강 이상 지원: 조 수 기반이 아니라 브라켓 규모(override 포함)를 기준으로 계산
+  const firstSize = (typeof _bktComputeBracketSize==='function') ? _bktComputeBracketSize(tn) : 8;
+  let numR1 = Math.max(1, Math.floor(firstSize / 2)); // 첫 라운드 경기 수
+  let totalRounds = 0;
+  let n = firstSize;
+  while(n>1){ n = Math.ceil(n/2); totalRounds++; }
+  if(totalRounds===0) totalRounds=1;
+  // 기존 표기 유지: 4팀 = 준결승(=4강), 8팀 = 8강 ...
+  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
 
   // 브라켓 경기 수집
   const rLabelToR={};
@@ -580,7 +581,8 @@ function rBracketSchedule(tn){
   for(let r=0;r<totalRounds;r++){
     const matchCount=Math.ceil(numR1/Math.pow(2,r));
     const rNum=totalRounds-r;
-    const rLabel=roundLabels[rNum]||(rNum+'강');
+    // rNum → 남은 라운드 수, 라벨은 (예: 6라운드면 64강)
+    const rLabel=roundLabels[rNum]||(Math.pow(2,rNum)+'강');
     if(!rLabelToR[rLabel])rLabelToR[rLabel]={r,matchCount:Math.ceil(numR1/Math.pow(2,r))};
     for(let mi=0;mi<matchCount;mi++){
       let teamA='',teamB='';
