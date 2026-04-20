@@ -221,6 +221,7 @@ function rProComp(C, T) {
       {id:'league', lbl:'📅 조별리그 일정'},
       {id:'grprank', lbl:'📊 조별 순위'},
       {id:'tour', lbl:'🗂️ 토너먼트'},
+      {id:'tourmatch', lbl:'📝 토너먼트 경기'},
       {id:'team', lbl:'👥 팀전'},
       {id:'gj', lbl:'⚔️ 끝장전'},
       {id:'stats', lbl:'🏆 대회 통계'},
@@ -242,6 +243,7 @@ function rProComp(C, T) {
     if (proCompSub === 'league') h += proCompLeague(tn);
     else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
     else if (proCompSub === 'tour') h += proCompBracket(tn);
+    else if (proCompSub === 'tourmatch') h += proCompTourMatchInput(tn);
     else if (proCompSub === 'team') h += proCompTeamSection(tn);
     else if (proCompSub === 'gj') h += proCompGJSection(tn);
     else if (proCompSub === 'stats') h += proCompTourneyStats(tn);
@@ -1069,6 +1071,7 @@ function proCompBracket(tn) {
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} 토너먼트</div>
     ${isLoggedIn?`<button class="btn btn-w btn-sm" onclick="proCompOpenSeedModal('${tn.id}')" title="상위시드(부전승/라운드 합류) 및 배치 지원">🎫 시드/부전승</button>`:''}
     ${isLoggedIn&&_allBktMatches.length?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l)">여러 경기 한번에 입력 가능</span>`:''}
+    ${isLoggedIn?`<button class="btn btn-r btn-sm" onclick="proCompDeleteBracket('${tn.id}')" title="대진표(토너먼트) 삭제">🗑️ 대진표 삭제</button>`:''}
   </div>`;
 
   // 챔피언 배너
@@ -1102,6 +1105,8 @@ function proCompBracket(tn) {
       const aWin=m.winner==='A', bWin=m.winner==='B', isDone=!!m.winner;
       const hasBoth=m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD';
       const aTBD=!m.a||m.a==='TBD', bTBD=!m.b||m.b==='TBD';
+      const _isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+      const _canBye = (!aTBD && _isBye(m.b)) || (!bTBD && _isBye(m.a));
       const winnerName=aWin?m.a:bWin?m.b:'';
       const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
       const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
@@ -1136,8 +1141,10 @@ function proCompBracket(tn) {
           ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:'';})():''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
             <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
+            ${_canBye?`<button class="btn btn-xs" style="font-size:9px;padding:0 6px;border-color:#f59e0b;color:#b45309;background:#fffbeb" onclick="proCompApplyBye('${tn.id}',${ri},${mi})" title="부전승 처리">부전승</button>`:''}
             <button class="btn btn-xs btn-p" style="font-size:9px;padding:0 6px;${hasBoth?'':'opacity:.35'}" onclick="${hasBoth?`openPcBktPasteModal('${tn.id}',${ri},${mi})`:'alert(\"선수 확정 후 사용\")'}" title="자동인식">📋 자동인식</button>
-            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="경기 추가/수정">✏️ 경기수정</button>`:''}
+            <button class="btn btn-xs" style="font-size:9px;padding:0 5px" onclick="proCompBktEditPlayers('${tn.id}',${ri},${mi})" title="경기 추가/수정">✏️ 경기수정</button>
+            <button class="btn btn-xs btn-r" style="font-size:9px;padding:0 6px" onclick="proCompClearBktMatch('${tn.id}',${ri},${mi})" title="경기 삭제(초기화)">🗑</button>`:''}
         </div>
       </div>`;
     });
@@ -1209,6 +1216,48 @@ function _pcRoundLabelBySize(sz){
   if(sz===32) return '32강';
   if(sz===64) return '64강';
   return `${sz}강`;
+}
+
+/* ─────────────────────────────────────────────
+   (요청사항) 토너먼트 경기 입력 메뉴
+   - 토너먼트(대진표) 결과를 붙여넣기 자동인식으로 입력
+   - 저장 시: proTourneys.bracket 반영 + player.history 반영 + 대전기록(토너먼트) 반영
+───────────────────────────────────────────── */
+function proCompTourMatchInput(tn){
+  if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
+  if(!tn.bracket || !tn.bracket.length){
+    return `<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
+      <div style="font-size:36px;margin-bottom:12px">🗂️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">대진표가 없습니다</div>
+      <div style="color:var(--gray-l)">토너먼트 탭에서 대진표를 생성/직접 생성한 뒤 사용하세요.</div>
+    </div>`;
+  }
+  const rounds = tn.bracket || [];
+  const totalRounds = rounds.length;
+  const rndLabel = ri => ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
+  const pending=[];
+  rounds.forEach((rnd,ri)=>{
+    (rnd||[]).forEach((m,mi)=>{
+      if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
+      pending.push({ri,mi,a:m.a,b:m.b,done:!!m.winner, label:`${rndLabel(ri)} ${mi+1}경기`});
+    });
+  });
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:900;color:#1d4ed8">📝 토너먼트 경기 입력</div>
+      <div style="font-size:12px;color:var(--gray-l)">붙여넣기 자동인식으로 결과를 저장합니다 (선수명 기반)</div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        ${isLoggedIn?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:6px">📋 자동인식(여러경기)</button>`:''}
+        <button class="btn btn-w btn-sm" onclick="proCompSub='tour';render()">🗂️ 대진표 보기</button>
+      </div>
+    </div>
+    ${pending.length?`<div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.9">
+      <div style="font-weight:800;margin-bottom:6px;color:var(--gray-l)">진행 중인 경기</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${pending.slice(0,40).map(p=>`<button class="btn btn-xs" style="border-color:${p.done?'#86efac':'#fde68a'};background:${p.done?'#f0fdf4':'#fffbeb'};color:${p.done?'#16a34a':'#92400e'}" onclick="openPcBktPasteModal('${tn.id}',${p.ri},${p.mi})">${p.label}: ${p.a} vs ${p.b}${p.done?' ✓':''}</button>`).join('')}
+      </div>
+    </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">확정된 경기가 없습니다. (선수 배치 후 사용)</div>`}
+  </div>`;
 }
 function _pcCollectSeedCandidates(tn){
   const s=new Set();
@@ -1370,6 +1419,12 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   if (!tn||!tn.bracket||!tn.bracket[ri]) return;
   const m = tn.bracket[ri][mi];
   if (!m) return;
+  const _isByeMatch = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  // (요청사항) 부전승(BYE/TBD) 경기: 승자 전파만 하고 개인 전적/대전기록에는 반영하지 않음
+  const byeSide =
+    (!_isByeMatch(m.a) && _isByeMatch(m.b)) ? 'A'
+    : (_isByeMatch(m.a) && !_isByeMatch(m.b)) ? 'B'
+    : '';
   const prevWinner = m.winner;
   m.winner = m.winner===winner ? '' : winner;
   const nextMi = Math.floor(mi/2);
@@ -1408,8 +1463,95 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   }
   // player history 반영
   const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
-  if (prevWinner && m.a && m.b) _revertProMatch(bktMatchId);
-  _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+  if(!byeSide && !_isByeMatch(m.a) && !_isByeMatch(m.b)){
+    if (prevWinner && m.a && m.b) _revertProMatch(bktMatchId);
+    _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
+  }
+  save(); render();
+}
+
+// (요청사항) 부전승 자동 처리: BYE/TBD 상대일 때 자동 승자 지정 + 다음 라운드 전파
+function proCompApplyBye(tnId, ri, mi){
+  const tn=_findTourneyById(tnId);
+  const m=tn?.bracket?.[ri]?.[mi];
+  if(!tn||!m) return;
+  const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  const side = (!isBye(m.a) && isBye(m.b)) ? 'A' : (isBye(m.a) && !isBye(m.b)) ? 'B' : '';
+  if(!side) return alert('부전승 처리 가능한 경기가 아닙니다.');
+  m.winner = side;
+  const nextMi=Math.floor(mi/2);
+  const isA = mi%2===0;
+  if (tn.bracket[ri+1]&&tn.bracket[ri+1][nextMi]) {
+    const next = tn.bracket[ri+1][nextMi];
+    const wName = side==='A'?m.a:m.b;
+    if (isA) next.a=wName; else next.b=wName;
+  }
+  save(); render();
+}
+
+// (요청사항) 특정 토너먼트 경기 삭제(초기화) + 히스토리 롤백 + 이후 라운드 전파 초기화
+function proCompClearBktMatch(tnId, ri, mi){
+  const tn=_findTourneyById(tnId);
+  if(!tn||!tn.bracket||!tn.bracket[ri]||!tn.bracket[ri][mi]) return;
+  const m=tn.bracket[ri][mi];
+  if(!confirm('이 토너먼트 경기 기록을 삭제(초기화)할까요?')) return;
+  const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  const bktMatchId=`pbn_${tnId}_${ri}_${mi}`;
+  // 기존 히스토리 롤백 (BYE 제외)
+  if(m.winner && !isBye(m.a) && !isBye(m.b)){
+    try{ _revertProMatch(bktMatchId); }catch(e){}
+  }
+  // 3위전 연결된 준결승이면 3위전도 초기화
+  const semiRi = tn.bracket.length - 2;
+  if(tn.thirdPlace && ri===semiRi && (mi===0||mi===1)){
+    const thirdKey=`pbn_${tnId}_3rd`;
+    if(tn.thirdPlace.winner) { try{ _revertProMatch(thirdKey); }catch(e){} }
+    tn.thirdPlace.winner=''; tn.thirdPlace.map=''; tn.thirdPlace.d=''; tn.thirdPlace._games=[];
+    if(mi===0) tn.thirdPlace.a='TBD';
+    if(mi===1) tn.thirdPlace.b='TBD';
+  }
+  // 이 경기 초기화
+  m.winner=''; m.map=''; m.d=''; m._games=[];
+  // 다음 라운드 슬롯 초기화 + 이후 연쇄 초기화
+  const nextMi=Math.floor(mi/2);
+  const isA = mi%2===0;
+  if (tn.bracket[ri+1]&&tn.bracket[ri+1][nextMi]) {
+    const next = tn.bracket[ri+1][nextMi];
+    if (isA) next.a='TBD'; else next.b='TBD';
+    next.winner=''; next.map=''; next.d=''; next._games=[];
+    let curMi=nextMi;
+    for (let r=ri+2; r<tn.bracket.length; r++) {
+      const nxt2Mi=Math.floor(curMi/2);
+      const isA2=curMi%2===0;
+      if (!tn.bracket[r]||!tn.bracket[r][nxt2Mi]) break;
+      if (isA2) tn.bracket[r][nxt2Mi].a='TBD'; else tn.bracket[r][nxt2Mi].b='TBD';
+      tn.bracket[r][nxt2Mi].winner=''; tn.bracket[r][nxt2Mi].map=''; tn.bracket[r][nxt2Mi].d=''; tn.bracket[r][nxt2Mi]._games=[];
+      curMi=nxt2Mi;
+    }
+  }
+  save(); render();
+}
+
+// (요청사항) 대진표 자체 삭제
+function proCompDeleteBracket(tnId){
+  const tn=_findTourneyById(tnId);
+  if(!tn) return;
+  if(!confirm('현재 대회의 대진표(토너먼트)를 삭제할까요?\n\n⚠️ 토너먼트 경기 결과/스트리머 최근 경기 반영도 함께 제거됩니다.')) return;
+  const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  // 히스토리 롤백
+  (tn.bracket||[]).forEach((rnd,ri)=>{
+    (rnd||[]).forEach((m,mi)=>{
+      if(m && m.winner && !isBye(m.a) && !isBye(m.b)){
+        try{ _revertProMatch(`pbn_${tnId}_${ri}_${mi}`); }catch(e){}
+      }
+    });
+  });
+  if(tn.thirdPlace && tn.thirdPlace.winner){
+    try{ _revertProMatch(`pbn_${tnId}_3rd`); }catch(e){}
+  }
+  tn.bracket = [];
+  tn.thirdPlace = null;
+  tn.seedStarts = {};
   save(); render();
 }
 
@@ -2101,6 +2243,8 @@ function openPcBktBulkPasteModal(tnId) {
     if (m.a && m.b && m.a !== 'TBD' && m.b !== 'TBD' && !m.winner)
       confirmed.push(`${m.a} vs ${m.b}`);
   }));
+  // (버그픽스) pasteModal 초기화는 공통 openPasteModal로 수행 (모바일에서 클릭/입력 불가 현상 방지)
+  if(typeof openPasteModal==='function') openPasteModal();
   window._grpPasteState = {tnId, ri: null, mi: null, mode: 'pcbkt'};
   window._grpPasteMode = true;
   const textarea = document.getElementById('paste-input');
@@ -2131,13 +2275,18 @@ function openPcBktBulkPasteModal(tnId) {
   if (_pd) _pd.style.display = 'none';
   const _pt = document.querySelector('#pasteModal .mtitle');
   if (_pt) _pt.textContent = '📋 결과 붙여넣기 (여러 경기)';
-  if (typeof om === 'function') om('pasteModal');
+  if (textarea) textarea.focus();
 }
 
 function openPcBktPasteModal(tnId, ri, mi) {
   const tn = _findTourneyById(tnId); if (!tn) return;
   const m = (tn.bracket||[])[ri]?.[mi];
-  if (!m || !m.a || !m.b || m.a==='TBD' || m.b==='TBD') return alert('양 선수가 모두 확정된 경기에서만 이용 가능합니다.');
+  if (!m) return;
+  const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  // (요청사항) 부전승이면 붙여넣기 대신 부전승 처리 안내
+  if (isBye(m.a) || isBye(m.b)) return alert('부전승(BYE/TBD) 경기는 "부전승" 버튼으로 처리해주세요.');
+  if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') return alert('양 선수가 모두 확정된 경기에서만 이용 가능합니다.');
+  if(typeof openPasteModal==='function') openPasteModal();
   window._grpPasteState = {tnId, ri, mi, mode:'pcbkt'};
   window._grpPasteMode = true;
   const textarea = document.getElementById('paste-input');
@@ -2165,7 +2314,7 @@ function openPcBktPasteModal(tnId, ri, mi) {
   if (_pd) _pd.style.display = 'none';
   const _pt = document.querySelector('#pasteModal .mtitle');
   if (_pt) _pt.textContent = '📋 결과 붙여넣기';
-  if (typeof om === 'function') om('pasteModal');
+  if (textarea) textarea.focus();
 }
 
 function _pcBktPasteApplyLogic(savable, tn) {
