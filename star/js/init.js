@@ -110,6 +110,8 @@ function init(){
   render();
   // 🎵 BGM 버튼 초기화
   try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
+  // 📺 SOOP 멀티뷰 버튼 초기화
+  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{

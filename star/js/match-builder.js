@@ -26,11 +26,13 @@ function _matchPlayerPoolHTML(side, type) {
 }
 
 function _matchFilterPool(searchId, poolId) {
-  const q = document.getElementById(searchId).value.trim();
+  const q0 = document.getElementById(searchId).value.trim();
+  const q = _mbResolveAliasQuery(q0) || q0;
   const pool = document.getElementById(poolId);
   if (!pool) return;
   pool.querySelectorAll('.p-sel-btn').forEach(btn => {
-    btn.style.display = q === '' || btn.getAttribute('data-name').includes(q) ? '' : 'none';
+    const nm = btn.getAttribute('data-name')||'';
+    btn.style.display = q === '' || nm.includes(q) ? '' : 'none';
   });
 }
 
@@ -90,13 +92,40 @@ function _matchPlayerAssignPoolHTML(type) {
 }
 
 function _matchFilterAssignPool(searchId, poolId) {
-  const q = (document.getElementById(searchId)?.value||'').trim().toLowerCase();
+  const q0 = (document.getElementById(searchId)?.value||'').trim();
+  const q = (_mbResolveAliasQuery(q0) || q0).toLowerCase();
   const pool = document.getElementById(poolId);
   if (!pool) return;
   pool.querySelectorAll('.p-ab-row').forEach(el => {
     const hay = el.getAttribute('data-q')||'';
     el.style.display = q==='' || hay.includes(q) ? '' : 'none';
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 경기입력: 선수 별명(예: 샤이니) → 실제 선수명(예: 김재현) 매핑
+// - localStorage: su_player_alias_map (JSON: { "샤이니": "김재현", ... })
+// - 입력창/검색창에서 별명을 입력하면 실제 선수명 검색으로 연결
+// ─────────────────────────────────────────────────────────────
+function _mbResolveAliasQuery(q){
+  const s = String(q||'').trim();
+  if(!s) return '';
+  try{
+    const amap = JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{};
+    const nfc = t => (t||'').normalize ? (t||'').normalize('NFC') : (t||'');
+    const norm = t => nfc(String(t||'')).replace(/\s+/g,'').toLowerCase();
+    const q1 = norm(s);
+    const q2 = norm(s.replace(/\s*[TZPNtzpn]$/i,'')); // 종족 접미사 제거 (샤이니T)
+    for(const k in amap){
+      const nk = norm(k);
+      if(!nk) continue;
+      if(nk===q1 || nk===q2){
+        const v = String(amap[k]||'').trim();
+        return v || '';
+      }
+    }
+  }catch(e){}
+  return '';
 }
 
 /* ══════════════════════════════════════
@@ -1357,7 +1386,7 @@ function buildCKInputHTML(){
     <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:12px 14px;margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🔍 스트리머 검색으로 빠른 팀 짜기 <span style="font-weight:400;color:var(--gray-l)">(이름·대학 검색 후 A팀/B팀 배정)</span></div>
       <div style="position:relative;display:flex;gap:6px;align-items:center">
-        <input type="text" id="ck-search-input" placeholder="스트리머 또는 대학 검색..." 
+        <input type="text" id="ck-search-input" placeholder="스트리머/대학/별명 검색..." 
           style="flex:1;padding:8px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px"
           oninput="ckSearchPlayer()">
       </div>
@@ -1391,23 +1420,33 @@ function ckSearchPlayer(){
   const inp=document.getElementById('ck-search-input');
   const res=document.getElementById('ck-search-results');
   if(!inp||!res)return;
-  const q=inp.value.trim().toLowerCase();
+  const q0=inp.value.trim();
+  const aliasName=_mbResolveAliasQuery(q0);
+  const q=(aliasName||q0).toLowerCase();
   if(!q){res.style.display='none';res.innerHTML='';return;}
   const bld=BLD['ck']||{};
   const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
-  const results=players.filter(p=>
+  let results=players.filter(p=>
     (p.name.toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||(p.tier||'').toLowerCase().includes(q)||(p.race||'').toLowerCase().includes(q))
   ).slice(0,20);
+  // 별명 매칭 시 해당 선수는 최상단 고정 표시
+  if(aliasName){
+    const ap=players.find(p=>p.name===aliasName);
+    if(ap){
+      results=[ap, ...results.filter(x=>x.name!==ap.name)].slice(0,20);
+    }
+  }
   if(!results.length){res.innerHTML='<div style="padding:10px 12px;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';res.style.display='block';return;}
   res.innerHTML=results.map(p=>{
     const col=gc(p.univ);
     const inA=(bld.membersA||[]).some(m=>m.name===p.name);
     const inB=(bld.membersB||[]).some(m=>m.name===p.name);
     const inTeam=inA||inB;
+    const aliasTag = (aliasName && p.name===aliasName) ? `<span style="background:#ecfeff;color:#0e7490;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:800;margin-left:6px">별명: ${esc(q0)}</span>` : '';
     return `<div style="padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);${inTeam?'opacity:.5;':''}">
       <span style="width:28px;height:28px;border-radius:6px;background:${col};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.race||'?'}</span>
       <div style="flex:1;font-size:12px">
-        <span style="font-weight:700">${p.name}</span>
+        <span style="font-weight:700">${p.name}</span>${aliasTag}
         <span style="color:var(--gray-l);font-size:11px;margin-left:4px">${p.univ} · ${p.tier||'-'} · ${p.race||'-'}</span>
         ${inA?'<span style="background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:4px">A팀</span>':''}
         ${inB?'<span style="background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:4px">B팀</span>':''}
@@ -1711,7 +1750,7 @@ function buildProInputHTML(){
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input type="text" id="pro-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('A')">
+          <input type="text" id="pro-a-search" placeholder="🔍 이름·메모/별명 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('A')" onkeydown="if(event.key==='Enter')proAddByQuery('A')">
         </div>
         <div id="pro-a-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersA.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
@@ -1719,7 +1758,7 @@ function buildProInputHTML(){
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input type="text" id="pro-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('B')">
+          <input type="text" id="pro-b-search" placeholder="🔍 이름·메모/별명 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('B')" onkeydown="if(event.key==='Enter')proAddByQuery('B')">
         </div>
         <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
@@ -1732,19 +1771,28 @@ function proSearchPlayer(team){
   const searchEl=document.getElementById(`pro-${team.toLowerCase()}-search`);
   const dropEl=document.getElementById(`pro-${team.toLowerCase()}-drop`);
   if(!searchEl||!dropEl)return;
-  const q=searchEl.value.trim().toLowerCase();
+  const q0=searchEl.value.trim();
+  const aliasName=_mbResolveAliasQuery(q0);
+  const q=(aliasName||q0).toLowerCase();
   if(!q){dropEl.style.display='none';dropEl.innerHTML='';return;}
   const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   const bld=BLD['pro']||{};
   const tf=bld.tierFilters||[];
   const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
   // 검색 시에는 gender 제한 없음 (혼성 경기 지원) - 여자 선수는 티어 무관하게 검색 가능
-  const results=players.filter(p=>
+  let results=players.filter(p=>
     (PRO_TIERS.includes(p.tier) || p.gender==='F') &&
     (tf.length===0||tf.includes(p.tier)||p.gender==='F') &&
     !already.includes(p.name) &&
     (p.name.toLowerCase().includes(q)||(p.memo||'').toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||(p.tier||'').toLowerCase().includes(q))
   ).slice(0,20);
+  // 별명 매칭 시 해당 선수는 최상단 고정 표시
+  if(aliasName){
+    const ap=players.find(p=>p.name===aliasName);
+    if(ap && !already.includes(ap.name)){
+      results=[ap, ...results.filter(x=>x.name!==ap.name)].slice(0,20);
+    }
+  }
   if(!results.length){
     dropEl.innerHTML='<div style="padding:10px;color:var(--gray-l);font-size:12px;text-align:center">검색 결과 없음</div>';
     dropEl.style.display='block';return;
@@ -1754,11 +1802,44 @@ function proSearchPlayer(team){
     onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background=''">
     <span style="display:inline-block;width:28px;height:28px;border-radius:6px;background:${gc(p.univ)};color:#fff;text-align:center;line-height:28px;font-size:11px;font-weight:700;flex-shrink:0">${(p.race||'?').charAt(0)}</span>
     <div>
-      <div style="font-weight:700">${p.name}${p.gender==='F'?'<span style="color:#ec4899;font-size:10px;margin-left:3px">♀</span>':''} <span style="font-size:10px;background:${gc(p.univ)};color:#fff;padding:1px 5px;border-radius:3px">${p.univ}</span></div>
+      <div style="font-weight:700">${p.name}${p.gender==='F'?'<span style="color:#ec4899;font-size:10px;margin-left:3px">♀</span>':''}
+        ${(aliasName && p.name===aliasName)?`<span style="background:#ecfeff;color:#0e7490;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:800;margin-left:6px">별명: ${esc(q0)}</span>`:''}
+        <span style="font-size:10px;background:${gc(p.univ)};color:#fff;padding:1px 5px;border-radius:3px">${p.univ}</span></div>
       <div style="font-size:10px;color:var(--gray-l)">${p.tier||'-'} · ${p.race||'-'}${p.memo?` · ${p.memo.slice(0,20)}`:''}</div>
     </div>
   </div>`).join('');
   dropEl.style.display='block';
+}
+
+// (요청사항) 팀 검색 입력에서 Enter 시: 별명/정확매칭이면 즉시 추가
+function proAddByQuery(team){
+  const searchEl=document.getElementById(`pro-${team.toLowerCase()}-search`);
+  if(!searchEl) return;
+  const raw=searchEl.value.trim();
+  if(!raw) return;
+  const aliasName=_mbResolveAliasQuery(raw);
+  const name=(aliasName||raw).trim().replace(/\s*[TZPNtzpn]$/i,'').trim();
+  const bld=BLD['pro']||{};
+  const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
+  if(name && !already.includes(name) && players.some(p=>p.name===name)){
+    proAddPlayer(team, name);
+    searchEl.value='';
+    return;
+  }
+  // 하나만 남는 검색 결과면 그걸 추가
+  const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
+  const tf=bld.tierFilters||[];
+  const q=name.toLowerCase();
+  const results=players.filter(p=>
+    (PRO_TIERS.includes(p.tier) || p.gender==='F') &&
+    (tf.length===0||tf.includes(p.tier)||p.gender==='F') &&
+    !already.includes(p.name) &&
+    (p.name.toLowerCase().includes(q)||(p.memo||'').toLowerCase().includes(q))
+  ).slice(0,2);
+  if(results.length===1){
+    proAddPlayer(team, results[0].name);
+    searchEl.value='';
+  }
 }
 
 function proAddPlayerDirect(team, name){

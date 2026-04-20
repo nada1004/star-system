@@ -180,6 +180,18 @@ function _applyCloudData(d) {
       b2Content.innerHTML=_b2UnivView();
       if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
     }
+
+    // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
+    try{
+      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      // 버튼 즉시 반영
+      if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
+      if(typeof window.soopApplySettings==='function') window.soopApplySettings();
+    }catch(e){}
   }
 }
 
@@ -237,7 +249,14 @@ async function fbCloudSave() {
       fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
-      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
+      // 🎵 유튜브 BGM (설정 동기화)
+      bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
+      bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
+      bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
+      bgmList: localStorage.getItem('su_bgm_list') || '',
+      // 📺 SOOP 멀티뷰 (설정 동기화)
+      soopList: localStorage.getItem('su_soop_list') || ''
     },
     savedAt
   };
