@@ -126,6 +126,16 @@ function stabs(current, opts){
   }).join('')}</div>`;
 }
 
+// (요청사항) "기록 메뉴 버튼 우측"에 연/월 + 정렬을 붙이기 위한 1줄 드래그 메뉴
+function stabsInline(current, opts, extraHTML=''){
+  const btns = opts.map(o=>{
+    if(o.id==='input'&&!isLoggedIn) return '';
+    return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
+  }).join('');
+  const extra = extraHTML ? `<span class="hist-inline-sep"></span><div class="hist-ctrl-group">${extraHTML}</div>` : '';
+  return `<div class="hist-inlinebar no-export">${btns}${extra}</div>`;
+}
+
 // 모든 데이터에서 연도를 자동 추출
 function getYearOptions(){
   const s=new Set();
@@ -141,23 +151,34 @@ function getYearOptions(){
 }
 
 // 공통 연도/월 필터 UI
+function buildYearMonthFilterControls(section, compact=false){
+  // (요청사항) 드롭다운 기반 연/월 필터 + 필요 시(예: 기록탭 상단 바) 인라인으로 삽입 가능
+  const years = ['전체', ...getYearOptions()];
+  const months = ['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
+
+  const yOpts = years.map(y=>{
+    const label = (y==='전체') ? '전체' : `${y}년`;
+    return `<option value="${y}"${filterYear===y?' selected':''}>${label}</option>`;
+  }).join('');
+
+  const mOpts = months.map(m=>{
+    const label = (m==='전체') ? '전체' : `${parseInt(m,10)}월`;
+    return `<option value="${m}"${filterMonth===m?' selected':''}>${label}</option>`;
+  }).join('');
+
+  return `
+    <div class="ym-filter-controls${compact?' compact':''}">
+      <label class="ym-lbl">연도</label>
+      <select class="ym-sel" onchange="setFilterYear(this.value,'${section}')">${yOpts}</select>
+      <label class="ym-lbl">월</label>
+      <select class="ym-sel" onchange="setFilterMonth(this.value,'${section}')">${mOpts}</select>
+    </div>
+  `;
+}
+
 function buildYearMonthFilter(section){
-  let h=`<div class="fbar no-export" style="margin-bottom:12px;flex-wrap:wrap">
-    <strong></strong>`;
-  ['전체',...getYearOptions()].forEach(y=>{
-    const sel=(filterYear===y);
-    const label=(y==='전체')?'전체':`${y}년`;
-    h+=`<button class="pill ${sel?'on':''}" onclick="setFilterYear('${y}','${section}')">${label}</button>`;
-  });
-  h+=`<span style="font-size:11px;color:var(--gray-l);margin-left:10px"></span>`;
-  const months=['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
-  months.forEach(m=>{
-    const sel=(filterMonth===m);
-    const label=(m==='전체')?'전체':`${parseInt(m,10)}월`;
-    h+=`<button class="pill ${sel?'on':''}" onclick="setFilterMonth('${m}','${section}')">${label}</button>`;
-  });
-  h+='</div>';
-  return h;
+  // (요청사항) 월/연도 드래그 메뉴 대신 더 직관적인 드롭다운 UI
+  return `<div class="fbar no-export ym-filter-bar">${buildYearMonthFilterControls(section,false)}</div>`;
 }
 
 function setFilterYear(y, section){

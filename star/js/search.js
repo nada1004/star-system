@@ -731,6 +731,12 @@ function parsePasteLine(line) {
   // 꼬리 장식 이모지 제거 (예: [라] 👈 → [라])
   line = line.replace(/\s*[\u{10000}-\u{10FFFF}]+\s*$/u, '').trimEnd();
 
+  // (요청사항) "1경기" 번호를 미리 추출해 보관 (후속 prefix 제거로 사라지지 않게)
+  // - 예: "1경기 [실피] 도재욱P (패) vs (승) 임홍규Z"
+  let _gameNum = null;
+  const _gm = line.match(/^\s*(\d+)\s*경기\b/);
+  if (_gm) _gameNum = parseInt(_gm[1]);
+
   // 앞쪽 번호/기호 제거
   // "1.", "1)", "1경기", "1경기.", "①~⑳", "1️⃣", "-", "•", "▶" 등
   // 1️⃣(6티어) 형태 분리: 앞 접두어 제거 후 실제 경기 내용만 추출
@@ -811,8 +817,25 @@ function parsePasteLine(line) {
         if (m) return {mark: m[1] === '승' ? '✅' : '❌', text: s.slice(0, s.lastIndexOf('(' + m[1] + ')')).trim()};
         return {mark: null, text: s.trim()};
       };
-      const L = pickMarkEnd(leftPart);
-      const R = pickMarkEnd(rightPart);
+      const pickMarkStart = (s) => {
+        // "(승) 이름" / "(패) 이름" 형태 지원
+        const m = s.match(/^\((승|패)\)\s*/);
+        if (m) {
+          const mark = m[1] === '승' ? '✅' : '❌';
+          const text = s.slice(m[0].length).trim();
+          return {mark, text};
+        }
+        // "✅ 이름" / "❌ 이름" 형태도 지원
+        for (const mk of ALL_MARKS) {
+          if (s.startsWith(mk)) return {mark: mk, text: s.slice(mk.length).trim()};
+          if (s.startsWith('(' + mk + ')')) return {mark: mk, text: s.slice(mk.length + 2).trim()};
+        }
+        return {mark: null, text: s.trim()};
+      };
+      let L = pickMarkEnd(leftPart);
+      if (!L.mark) L = pickMarkStart(leftPart);
+      let R = pickMarkEnd(rightPart);
+      if (!R.mark) R = pickMarkStart(rightPart);
       if (!L.mark || !R.mark) {
         // 마크가 없으면 이 분기에서는 처리하지 않음 (다른 파서로 넘김)
       } else {
@@ -827,7 +850,7 @@ function parsePasteLine(line) {
         const winName = leftWin ? leftName : rightName;
         const loseName = leftWin ? rightName : leftName;
 
-        if (winName && loseName) return { winName, loseName, map };
+        if (winName && loseName) return { winName, loseName, map, ...( _gameNum ? { gameNum: _gameNum } : {} ) };
       }
     }
   }
@@ -1264,6 +1287,11 @@ function parseSetSeparator(line) {
     if (/SUPER\s*ACE|슈퍼\s*에이스/i.test(t)) return 3;
   }
 
+  // 패턴 6: "1세트 2경기 ..." 처럼 세트 번호가 문장 앞에 붙는 경우도 세트 헤더로 인식
+  // (기존에는 '1세트' 단독 줄만 인식해서, 같은 줄에 경기 정보가 있으면 세트가 항상 1로 보일 수 있었음)
+  const m6 = t.match(/^(\d+)\s*(?:세트|셋|set)\b/i);
+  if (m6) return parseInt(m6[1]);
+
   return null;
 }
 
@@ -1675,6 +1703,7 @@ function renderPastePreview(results, errors) {
 
     // 최대 세트번호 계산 (세트 드롭다운용)
     const maxSet = Math.max(...results.map(r => r.setNum || 1), 3);
+    const _matchModePreview = window._pasteMatchMode || 'game';
 
     // ── 팀 인식: leftName(A칸)/rightName(B칸) 기준으로 소속 대학 빈도 계산 ──
     const _savableForTeam = results.filter(r => r.wPlayer && r.lPlayer);
@@ -1703,9 +1732,10 @@ function renderPastePreview(results, errors) {
     const _teamALabel = '🔵 ' + teamAPreview;
     const _teamBLabel = '🔴 ' + teamBPreview;
 
+    const _colLabel = _matchModePreview==='set' ? '세트/경기' : '경기';
     html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
     html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
-      <th style="text-align:left;padding:6px 8px;font-size:11px;width:76px">세트</th>
+      <th style="text-align:left;padding:6px 8px;font-size:11px;width:86px">${_colLabel}</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:90px">맵</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamALabel}</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamBLabel}</th>
@@ -1854,12 +1884,22 @@ function renderPastePreview(results, errors) {
             ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">유사이름</span>`
             : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">미등록</span>`;
 
-      // ── 세트 드롭다운 ──
-      const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
-        .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
-      const setCell = `<select class="paste-set-sel" data-idx="${i}"
-        style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
-        onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
+      // ── 경기/세트 표시 ──
+      const gn = r.gameNum || r.game || r.gameNo || null;
+      const gameTag = `<span style="font-size:11px;font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
+      let setCell = '';
+      if(_matchModePreview==='set'){
+        // 세트 드롭다운 + 경기번호
+        const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
+          .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
+        const setSel = `<select class="paste-set-sel" data-idx="${i}"
+          style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
+          onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
+        setCell = `<div style="display:flex;flex-direction:column;gap:2px">${setSel}<span style="font-size:10px;color:var(--gray-l);font-weight:800">${(gn|| (i+1))}경기</span></div>`;
+      } else {
+        // 경기 방식: 경기번호만 표시
+        setCell = gameTag;
+      }
 
       // ── 맵 드롭다운 ──
       const mapVal = r.map && r.map !== '-' ? r.map : '';
@@ -1949,7 +1989,6 @@ function renderPastePreview(results, errors) {
     }).join('');
 
     if(savable.length > 0) {
-      const _matchModePreview = window._pasteMatchMode || 'game';
       const _useSetScore = _matchModePreview === 'set' || multiSetPreview;
       // A/B팀 게임 승리 수
       let teamAWins = 0, teamBWins = 0;

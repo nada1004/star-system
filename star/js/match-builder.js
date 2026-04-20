@@ -120,10 +120,12 @@ function rMini(C,T){
     </div>`;
   }
   if(!_enableSubFilter || window._miniFilterOpen){
-    h+=stabs(miniSub,subOpts);
-    if(miniSub!=='input' && typeof buildYearMonthFilter==='function'){
-      h+=buildYearMonthFilter('mini');
-    }
+    const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('mini', true)
+        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(miniSub, subOpts, extra) : stabs(miniSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
@@ -238,8 +240,13 @@ function rInd(C,T){
     </div>`;
   }
   if(!_enableSubFilter || window._indFilterOpen){
-    h+=stabs(indSub,subOpts);
-    if(indSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('ind');
+    // (요청사항) 하위메뉴(순위/기록) 바로 우측에 연/월 + 최신/오래된순을 한 줄로 배치
+    const extra = (indSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('ind', true)
+        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(indSub, subOpts, extra) : stabs(indSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
@@ -339,14 +346,14 @@ function indRecordsHTML(){
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   // 날짜 필터 적용
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  filteredSess.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
   // 날짜(일자) 빠른 선택 메뉴(ASL 스타일) — 설정: su_date_menu_style
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
   const _datePickKey = 'su_rec_date_pick_hist_ind';
   const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
   const _baseSess = filteredSess.slice();
-  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filteredSess = filteredSess.filter(s => String(s.d||'').trim() === _pickedDate);
   }
@@ -958,8 +965,12 @@ function rGJ(C,T,proOnly,proInput){
     </div>`;
   }
   if(!_enableSubFilter || window._gjFilterOpen){
-    h+=stabs(gjSub,subOpts);
-    if(gjSub!=='input' && typeof buildYearMonthFilter==='function') h+=buildYearMonthFilter('gj');
+    const extra = (gjSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('gj', true)
+        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(gjSub, subOpts, extra) : stabs(gjSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
@@ -1157,7 +1168,7 @@ function gjRecordsHTML(proOnly){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSessGj.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  filteredSessGj.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
   // 날짜(일자) 빠른 선택 메뉴(ASL 스타일) — 설정: su_date_menu_style
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
@@ -1315,10 +1326,12 @@ function rCK(C,T){
     </div>`;
   }
   if(!_enableSubFilter || window._ckFilterOpen){
-    h+=stabs(ckSub,subOpts);
-    if(ckSub!=='input' && typeof buildYearMonthFilter==='function'){
-      h+=buildYearMonthFilter('ck');
-    }
+    const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('ck', true)
+        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(ckSub, subOpts, extra) : stabs(ckSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(ckSub==='input'&&isLoggedIn){
     if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
@@ -1509,10 +1522,11 @@ function rUnivM(C,T){
     </div>`;
   }
   if(!_enableSubFilter || window._univmFilterOpen){
-    h+=stabs(univmSub,subOpts);
-    if(univmSub!=='input' && typeof buildYearMonthFilter==='function'){
-      h+=buildYearMonthFilter('univm');
-    }
+    // (요청사항) 대학대전 탭: 하위메뉴 우측에 연/월만 표시(최신/오래된순 제거)
+    const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('univm', true))
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(univmSub, subOpts, extra) : stabs(univmSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
   else if(univmSub==='rank'){h+=univMRankHTML();}
@@ -1616,10 +1630,12 @@ function rPro(C,T){
     </div>`;
   }
   if(!_enableSubFilter || window._proFilterOpen){
-    h+=stabs(proSub,subOpts);
-    if(proSub!=='input' && typeof buildYearMonthFilter==='function'){
-      h+=buildYearMonthFilter('pro');
-    }
+    const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
+      ? (buildYearMonthFilterControls('pro', true)
+        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      : '';
+    h+=typeof stabsInline==='function' ? stabsInline(proSub, subOpts, extra) : stabs(proSub, subOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(proSub==='input'&&isLoggedIn){
     if(!BLD['pro']){const _sv=J('su_bld_pro')||{};BLD['pro']={date:_sv.date||'',membersA:_sv.membersA||[],membersB:_sv.membersB||[],tierFilters:_sv.tierFilters||[],sets:_sv.sets||[]};}

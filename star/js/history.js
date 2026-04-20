@@ -36,8 +36,11 @@ function rHist(C,T){
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
-  // 상단: 그룹 pill 바 (티어 순위표 스타일)
-  let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">`;
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+
+  // 상단: 기록 메뉴(그룹) 버튼 (연/월/정렬은 하위메뉴 우측에 배치)
+  let h=`<div class="hist-topbar no-export">`;
+  h+=`  <div class="hist-topbar-left">`;
   // (요청사항) 필터는 '종합' 좌측(=그룹바 맨 좌측)에 배치
   if((localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1' && !_lockOpen){
     h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
@@ -47,8 +50,7 @@ function rHist(C,T){
     const firstId=tabDefs.find(t=>t.grp===g).id;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${g}</button>`;
   });
-  h+=`<span style="flex:1"></span>`;
-  // (요청사항) 우측 끝 현재 선택 글자 숨김
+  h+=`  </div>`;
   h+=`</div>`;
 
   // (요청사항) 중복되는 하위 버튼(전체통합/개인전 등) 제거: 별도 '현재선택 버튼줄' 없음
@@ -57,16 +59,35 @@ function rHist(C,T){
   const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   if((_enableSubFilter?window._histFilterOpen:true) && grpTabs.length>1){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">`;
+    // (요청사항) "우측 끝 고정"이 아니라, 하위메뉴 버튼 "바로 우측"에
+    // 연도/월 + 최신/오래된순이 이어서 붙어야 함 (한 줄 드래그 메뉴)
+    const _hasCtrl = needDateFilter && (typeof buildYearMonthFilterControls==='function');
+    h+=`<div class="hist-inlinebar no-export">`;
     grpTabs.forEach(t=>{
       const isOn=histSub===t.id;
       h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${t.id}';openDetails={};render()">${t.lbl}</button>`;
     });
+    if(_hasCtrl){
+      h+=`<span class="hist-inline-sep"></span>`;
+      h+=`<div class="hist-ctrl-group">`;
+      // (요청사항) 메뉴 버튼 우측: 연/월 → 그 우측에 최신/오래된순
+      h+=buildYearMonthFilterControls('hist', true);
+      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`;
+      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`;
+      h+=`</div>`;
+    }
     h+=`</div>`;
-  }
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
-  if((_enableSubFilter?window._histFilterOpen:true) && needDateFilter && typeof buildYearMonthFilter==='function'){
-    h+=buildYearMonthFilter('hist');
+  } else {
+    // 하위메뉴가 없는 그룹이라도(예: 버튼 1개 그룹) 필요한 경우 상단에 컨트롤을 한 줄로 제공
+    if((_enableSubFilter?window._histFilterOpen:true) && needDateFilter && (typeof buildYearMonthFilterControls==='function')){
+      h+=`<div class="hist-inlinebar no-export">`;
+      h+=`<div class="hist-ctrl-group">`;
+      h+=buildYearMonthFilterControls('hist', true);
+      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`;
+      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`;
+      h+=`</div>`;
+      h+=`</div>`;
+    }
   }
   if(histSub==='vs'){
     h+=vsSearchHTML();
@@ -908,13 +929,7 @@ function histAllHTML(){
   const curPage=histPage['all'];
   const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
-  let h=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-    <span style="font-size:11px;color:var(--text3)"></span>
-    <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
-    <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l)">${_typeFiltered.length}건</span>
-  </div>
-  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+  let h=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
     ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
   </div>`;
 
@@ -1015,7 +1030,7 @@ function histTourneyHTML(context){
     <span style="font-size:11px;color:var(--text3)"></span>
     <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
+    
   </div>`;
   if(!allItems.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🏆</div><div class="empty-state-title">대회 경기 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
 
@@ -1282,7 +1297,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _rcThemeOn = _rcGet('su_rc_theme_on','1')==='1';
   const _rcAccent  = (_rcGet('su_rc_accent_mode','none')||'none').trim();
   const _rcMemoOn  = _rcGet('su_rc_memo_on','0')==='1';
-  const _uiconPx   = Math.max(12, Math.min(28, parseInt(_rcGet('su_rc_uicon','18'),10)||18));
+  // (요청사항) 기록 카드 대학 로고를 더 크게 (스코어 영역과 밸런스)
+  const _uiconPx   = Math.max(14, Math.min(34, parseInt(_rcGet('su_rc_uicon','24'),10)||24));
   function _hexToRgbStr(hex){
     const h=String(hex||'').replace('#','').trim();
     if(h.length===3){
@@ -1412,11 +1428,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _bulkDests=_bulkKey==='mini'?[{l:'⚔️ 시빌워',d:'civil'},{l:'🏟️ 대학대전',d:'univm'}]
     :_bulkKey==='civil'?[{l:'⚡ 미니대전',d:'mini'},{l:'🏟️ 대학대전',d:'univm'}]
     :_bulkKey==='univm'?[{l:'⚡ 미니대전',d:'mini'},{l:'⚔️ 시빌워',d:'civil'}]:[];
-  const sortBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-    <span style="font-size:11px;color:var(--text3)"></span>
-    <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
-    <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${totalItems}건</span>
+  const sortBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:6px;align-items:center">
+    
     ${_canBulk?`<button onclick="toggleBulkMode('${_bulkKey}')" style="margin-left:auto;padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkOn?'#dc2626':'var(--border2)'};background:${_bulkOn?'#fff1f2':'var(--surface)'};color:${_bulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>`:''}
   </div>
   ${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
@@ -1459,11 +1472,11 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
 
     return `<div class="rec-summary${_themeCls}" style="${_themeStyle}border-left:3px solid ${_wBorderCol}">
-      <div style="padding:7px 12px 0;display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+      <div style="padding:8px 12px 0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
-        <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
+        <span class="rec-date" style="color:var(--text3);font-size:13px;font-weight:900;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
         ${m.fmt>0?`<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700;flex-shrink:0">${m.fmt}:${m.fmt}</span>`:''}
-        ${aWin||bWin?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
+        ${aWin||bWin?`<span class="rec-winner" style="font-size:12px;font-weight:900;padding:2px 10px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1.5px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:11px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드" style="padding:3px 8px;font-size:14px">🎴</button>`:'';})()}
@@ -2523,8 +2536,10 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 
         {
           // ── [WIN] [소속 종족 이름] [사진] vs [사진] [이름 종족 소속] [WIN] ──
-          const loserStyleA = hasWinner && !aIsWinner ? 'opacity:.4;' : '';
-          const loserStyleB = hasWinner && !bIsWinner ? 'opacity:.4;' : '';
+          // (요청사항) 경기 상세 창에서 패자 영역이 '반투명'처럼 보이지 않도록
+          // 패자 스타일에 opacity를 적용하지 않는다. (승자만 강조)
+          const loserStyleA = '';
+          const loserStyleB = '';
           const winA = aIsWinner&&hasWinner;
           const winB = bIsWinner&&hasWinner;
           const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
@@ -2873,7 +2888,7 @@ function compSummaryListHTML(context){
     <span style="font-size:11px;color:var(--text3)"></span>
     <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${filtered.length}건</span>
+    
   </div>`;
   if(!filtered.length)return sortBar+`<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc"></div></div>`;
   let h=sortBar;
@@ -3247,7 +3262,7 @@ function histProCompHTML() {
     <span style="font-size:11px;color:var(--text3)"></span>
     <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
+    
   </div>`;
   if (!allItems.length) return _pcSubBarH+sortBar+`<div class="empty-state"><div class="empty-state-icon">🏅</div><div class="empty-state-title">프로리그 대회 기록이 없습니다</div><div class="empty-state-desc">대회 경기를 입력하면 여기에 표시됩니다</div></div>`;
 
@@ -3348,7 +3363,7 @@ function histProCompTourneyHTML() {
     <span style="font-size:11px;color:var(--text3)"></span>
     <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
     <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    <span style="font-size:11px;color:var(--gray-l);margin-left:4px">${allItems.length}건</span>
+    
   </div>`;
   if (!allItems.length) return _pcSubBar2+sortBar+`<div class="empty-state"><div class="empty-state-icon">🗂️</div><div class="empty-state-title">토너먼트 기록이 없습니다</div><div class="empty-state-desc">대진표 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const groups={};

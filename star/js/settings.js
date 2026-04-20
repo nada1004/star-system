@@ -210,6 +210,8 @@ window.cfgSetRecCardSettings = function(){
   const bg = parseInt(document.getElementById('cfg-rc-bg')?.value||'12',10);
   const hd = parseInt(document.getElementById('cfg-rc-hd')?.value||'14',10);
   const ic = parseInt(document.getElementById('cfg-rc-uicon')?.value||'18',10);
+  const univFontPct = parseInt(document.getElementById('cfg-rc-univ-font')?.value||'100',10);
+  const ymScalePct = parseInt(document.getElementById('cfg-ym-scale')?.value||'100',10);
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
@@ -219,7 +221,9 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border','full','gradient'].includes(accent)?accent:'none'); }catch(e){}
   try{ localStorage.setItem('su_rc_bg_alpha', String(Math.max(0,Math.min(30,bg)))); }catch(e){}
   try{ localStorage.setItem('su_rc_hd_alpha', String(Math.max(0,Math.min(30,hd)))); }catch(e){}
-  try{ localStorage.setItem('su_rc_uicon', String(Math.max(12,Math.min(28,ic)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_uicon', String(Math.max(12,Math.min(34,ic)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_univ_font_pct', String(Math.max(90,Math.min(150,univFontPct||100)))); }catch(e){}
+  try{ localStorage.setItem('su_ym_scale_pct', String(Math.max(80,Math.min(140,ymScalePct||100)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
@@ -1424,7 +1428,9 @@ function rCfg(C,T){
   const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
   const _rcBg = parseInt(localStorage.getItem('su_rc_bg_alpha') ?? '12',10) || 12;
   const _rcHd = parseInt(localStorage.getItem('su_rc_hd_alpha') ?? '14',10) || 14;
-  const _rcIc = parseInt(localStorage.getItem('su_rc_uicon') ?? '18',10) || 18;
+  const _rcIc = parseInt(localStorage.getItem('su_rc_uicon') ?? '24',10) || 24;
+  const _rcUnivFont = parseInt(localStorage.getItem('su_rc_univ_font_pct') ?? '110',10) || 110;
+  const _ymScale = parseInt(localStorage.getItem('su_ym_scale_pct') ?? '100',10) || 100;
   const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
 
@@ -1770,13 +1776,30 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 아이콘 크기(기록 카드)</div>
-          <input type="range" id="cfg-rc-uicon" min="12" max="28" step="1" value="${Math.max(12,Math.min(28,_rcIc))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(28,_rcIc))}px</span></div>
+          <input type="range" id="cfg-rc-uicon" min="12" max="34" step="1" value="${Math.max(12,Math.min(34,_rcIc))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(34,_rcIc))}px</span></div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머 프로필 이미지 크기(전역 배율)</div>
           <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,_avaScale))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
           <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학명 글자 크기(기록 카드)</div>
+          <input type="range" id="cfg-rc-univ-font" min="90" max="150" step="5"
+            value="${Math.max(90,Math.min(150,_rcUnivFont))}"
+            oninput="document.getElementById('cfg-rc-univ-font-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-univ-font-v">${Math.max(90,Math.min(150,_rcUnivFont))}%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연/월 필터 크기(기록탭)</div>
+          <input type="range" id="cfg-ym-scale" min="80" max="140" step="5"
+            value="${Math.max(80,Math.min(140,_ymScale))}"
+            oninput="document.getElementById('cfg-ym-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ym-scale-v">${Math.max(80,Math.min(140,_ymScale))}%</span></div>
         </div>
       </div>
 

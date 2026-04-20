@@ -31,6 +31,60 @@ function closeNoticePopup(){
   cm('noticePopupModal');
 }
 
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 가로 "드래그 메뉴" 지원
+// - overflow-x:auto 인 메뉴 바를 마우스로 클릭-드래그 해서 스크롤 가능하게
+// - render() 이후 동적으로 생성되는 요소에도 적용됨 (render.js에서 호출)
+// ─────────────────────────────────────────────────────────────
+window.enableDragScroll = function(root){
+  const scope = root || document;
+  const bars = scope.querySelectorAll ? scope.querySelectorAll('.hist-inlinebar') : [];
+  bars.forEach(el=>{
+    if(el.dataset && el.dataset.dragScrollBound==='1') return;
+    if(el.dataset) el.dataset.dragScrollBound='1';
+
+    let isDown=false, startX=0, startScroll=0, moved=false;
+
+    const down = (e)=>{
+      // 마우스 좌클릭만(우클릭/휠클릭 제외)
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      isDown=true;
+      moved=false;
+      startX=e.clientX;
+      startScroll=el.scrollLeft;
+      el.classList.add('dragging');
+      try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    };
+    const move = (e)=>{
+      if(!isDown) return;
+      const dx = e.clientX - startX;
+      if(Math.abs(dx)>3) moved=true;
+      el.scrollLeft = startScroll - dx;
+      if(moved) e.preventDefault();
+    };
+    const up = (e)=>{
+      if(!isDown) return;
+      isDown=false;
+      el.classList.remove('dragging');
+      // 드래그로 스크롤한 경우 버튼 클릭 방지
+      el._dragMoved = moved;
+      setTimeout(()=>{ try{ el._dragMoved=false; }catch(_){} }, 0);
+      try{ el.releasePointerCapture(e.pointerId); }catch(_){}
+    };
+
+    el.addEventListener('pointerdown', down, {passive:true});
+    el.addEventListener('pointermove', move, {passive:false});
+    el.addEventListener('pointerup', up, {passive:true});
+    el.addEventListener('pointercancel', up, {passive:true});
+    el.addEventListener('click', (ev)=>{
+      if(el._dragMoved){
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+    }, true);
+  });
+};
+
 function init(){
   fixPoints();
   // 전역 폰트 설정 적용
@@ -346,23 +400,31 @@ function _applyRecCardTheme(){
   const bgKey='su_rc_bg_alpha';
   const hdKey='su_rc_hd_alpha';
   const iconKey='su_rc_uicon';
+  const univFontKey='su_rc_univ_font_pct';
+  const ymScaleKey='su_ym_scale_pct';
   const memoKey='su_rc_memo_on';
   const vsKey='su_rc_vs_align';
   const scKey='su_rc_score_scale';
-  let on=true, accent='none', bg=12, hd=14, uicon=18, memoOn=false, vsAlign='left', scScale=100;
+  let on=true, accent='none', bg=12, hd=14, uicon=24;
+  let univFontPct=110, ymScalePct=100;
+  let memoOn=false, vsAlign='left', scScale=100;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
     const a=localStorage.getItem(acKey); if(a) accent=a;
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
     const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
+    const uf=parseInt(localStorage.getItem(univFontKey)||'',10); if(!isNaN(uf)) univFontPct=uf;
+    const ys=parseInt(localStorage.getItem(ymScaleKey)||'',10); if(!isNaN(ys)) ymScalePct=ys;
     const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
     const va=localStorage.getItem(vsKey); if(va) vsAlign=va;
     const ss=parseInt(localStorage.getItem(scKey)||'',10); if(!isNaN(ss)) scScale=ss;
   }catch(e){}
   bg=Math.max(0,Math.min(30,bg));
   hd=Math.max(0,Math.min(30,hd));
-  uicon=Math.max(12,Math.min(28,uicon));
+  uicon=Math.max(12,Math.min(34,uicon));
+  univFontPct=Math.max(90,Math.min(150,univFontPct||100));
+  ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
   vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'left';
   scScale = Math.max(80, Math.min(130, scScale||100));
@@ -379,6 +441,8 @@ function _applyRecCardTheme(){
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
     document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
+    document.documentElement.style.setProperty('--rc-univ-font-scale', String(univFontPct/100));
+    document.documentElement.style.setProperty('--ym-scale', String(ymScalePct/100));
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
     document.documentElement.style.setProperty('--rc-vs-justify', vsJust);
     document.documentElement.style.setProperty('--rc-score-scale', String(scScale/100));
