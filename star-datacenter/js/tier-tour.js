@@ -211,7 +211,8 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
+  // 다른 화면(토너먼트 대진표 자동인식 등)에서 window._grpPasteState로 상태를 주입하므로 항상 동기화
+  if(window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
   if(!tn) return false;
@@ -241,32 +242,77 @@ function _grpPasteApplyLogic(savable){
     return _bktPasteApplyLogic(savable,tn);
   }
 
-  // 자동인식 모드: gi가 null이면 선수 소속 대학으로 팀/조 자동 탐지
+  // 자동인식 모드: gi가 null이면 팀/선수로 조/경기 자동 탐지
   let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
   const autoDetect = (gi===null||gi===undefined);
   if(autoDetect){
-    // 1. 선수 소속 대학에서 팀A/B 추출
-    const univCount={};
-    savable.forEach(r=>{
-      [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
-    });
-    const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
-    if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-    const autoA=univRanked[0][0], autoB=univRanked[1][0];
-    // 2. 두 팀이 같은 조에 있는지 확인
+    const isTier = tn && tn.type==='tier';
+    // 1) 티어대회(개인전): 선수 이름 기반으로 A/B 추출
+    let autoA='', autoB='';
+    if(isTier){
+      const nameCount={};
+      savable.forEach(r=>{
+        const wn=r.wPlayer?.name, ln=r.lPlayer?.name;
+        if(wn) nameCount[wn]=(nameCount[wn]||0)+1;
+        if(ln) nameCount[ln]=(nameCount[ln]||0)+1;
+      });
+      const ranked=Object.entries(nameCount).sort((a,b)=>b[1]-a[1]);
+      if(ranked.length<2){alert('선수 이름을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+      autoA=ranked[0][0]; autoB=ranked[1][0];
+    } else {
+      // 1) 일반(대학전): 선수 소속 대학에서 팀A/B 추출
+      const univCount={};
+      savable.forEach(r=>{
+        [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
+      });
+      const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
+      if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+      autoA=univRanked[0][0]; autoB=univRanked[1][0];
+    }
+
+    // 2. 두 대상이 같은 조에 있는지 확인
     const groupIdx=tn.groups.findIndex(g=>g.univs.includes(autoA)&&g.univs.includes(autoB));
     if(groupIdx<0){
       // 같은 조가 아니면 autoA의 조에 교류전으로 추가
       const giA=tn.groups.findIndex(g=>g.univs.includes(autoA));
       const giB=tn.groups.findIndex(g=>g.univs.includes(autoB));
-      if(giA<0&&giB<0){alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 대학을 추가해주세요.`);return false;}
-      const targetGi=giA>=0?giA:giB;
-      const GL='ABCDEFGHIJ';
-      const msg=(giA>=0&&giB>=0)
-        ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
-        :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
-      if(!confirm(msg))return false;
-      gi=targetGi;
+      if(giA<0&&giB<0){
+        // (요청사항) 티어대회(개인전)는 자동으로 조편성(선수)을 구성해서 저장 진행
+        if(isTier){
+          if(!tn.groups) tn.groups=[];
+          if(!tn.groups.length) tn.groups.push({name:'A조',univs:[],matches:[]});
+          const g0=tn.groups[0];
+          if(!g0.univs) g0.univs=[];
+          // 붙여넣기에서 등장한 선수들을 자동 추가
+          const addSet=new Set();
+          savable.forEach(r=>{ if(r.wPlayer?.name) addSet.add(r.wPlayer.name); if(r.lPlayer?.name) addSet.add(r.lPlayer.name); });
+          addSet.forEach(n=>{ if(n && !g0.univs.includes(n)) g0.univs.push(n); });
+          gi=0;
+        } else {
+          alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 ${isTier?'선수':'대학'}을(를) 추가해주세요.`);
+          return false;
+        }
+      }
+      if(gi==null){
+        const targetGi=giA>=0?giA:giB;
+        // (요청사항) 티어대회(개인전)는 조에 없으면 자동으로 해당 조에 추가
+        if(isTier){
+          const tgt=tn.groups[targetGi];
+          if(tgt){
+            if(!tgt.univs) tgt.univs=[];
+            if(giA<0 && !tgt.univs.includes(autoA)) tgt.univs.push(autoA);
+            if(giB<0 && !tgt.univs.includes(autoB)) tgt.univs.push(autoB);
+          }
+          gi=targetGi;
+        } else {
+          const GL='ABCDEFGHIJ';
+          const msg=(giA>=0&&giB>=0)
+            ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
+            :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
+          if(!confirm(msg))return false;
+          gi=targetGi;
+        }
+      }
     } else {
       gi=groupIdx;
     }
@@ -286,8 +332,9 @@ function _grpPasteApplyLogic(savable){
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
   const isGameMode = window._pasteMatchMode !== 'set'; // 승차수 모드 여부
 
-  const teamANamesSet = new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
-  const teamBNamesSet = new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  const isTier = tn && tn.type==='tier';
+  const teamANamesSet = isTier ? new Set([teamA]) : new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet = isTier ? new Set([teamB]) : new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
   // 팀 배정: 소속 대학 우선, 무소속 등 어느 팀에도 없으면 붙여넣기 좌측 위치(leftName)로 판단
   const _isWinnerInA = (r) => {
     const wn = r.wPlayer.name;
@@ -545,48 +592,27 @@ function rTierTourTab(C, T){
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
-  // ── 2단 서브탭(기록/입력/대진표/관리) ──
-  const _subsAll=[
-    ...(isLoggedIn?[{id:'input',lbl:'일반',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'일반',fn:`_ttSub='records';openDetails={};render()`},
-    {id:'rank',lbl:'개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
-    {id:'league',lbl:'조별 일정',fn:`_ttSub='league';render()`},
-    {id:'grprecords',lbl:'조별 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
-    {id:'grprank',lbl:'조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'토너 대진표',fn:`_ttSub='tourschedule';render()`,hasContext:true},
-    {id:'bktrecords',lbl:'토너 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
-    ...(isLoggedIn?[{id:'grpedit',lbl:'조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
+  // (롤백) 티어대회 서브메뉴: 단일 라인 탭(기록/입력/대진표/관리로 묶지 않음)
+  const subOpts=[
+    ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
+    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
+    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
+    {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
+    {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
+    {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
+    ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  const _groups=[
-    {id:'rec', lbl:'📋 기록', subs:['records','rank','grprecords','grprank','bktrecords']},
-    {id:'in',  lbl:'📝 입력', subs:['input']},
-    {id:'br',  lbl:'🗂️ 대진표', subs:['league','tourschedule']},
-    {id:'mg',  lbl:'🏗️ 관리', subs:['grpedit']},
-  ];
-  // 현재 sub가 속한 그룹을 자동 선택
-  const _findGroupBySub=(sid)=>_groups.find(g=>g.subs.includes(sid));
-  if(!window._ttSubGroup || !_groups.some(g=>g.id===window._ttSubGroup)){
-    window._ttSubGroup = _findGroupBySub(_ttSub)?.id || 'rec';
-  }
-  // 그룹에 없는 sub면 그룹 기본 sub로 이동
-  const _curG=_groups.find(g=>g.id===window._ttSubGroup) || _groups[0];
-  if(!_curG.subs.includes(_ttSub)){
-    const first=_curG.subs.find(sid=>_subsAll.some(x=>x.id===sid));
-    if(first) _ttSub=first;
-  }
-  const _groupNav=`<div class="subtab-bar no-export" style="margin-bottom:8px">
-    ${_groups.map(g=>{
-      const on = window._ttSubGroup===g.id;
-      // 그룹에 실제 표시 가능한 sub가 없으면 숨김
-      const hasAny = g.subs.some(sid=>_subsAll.some(x=>x.id===sid));
-      if(!hasAny) return '';
-      return `<button class="subtab-btn ${on?'is-active':''}" onclick="window._ttSubGroup='${g.id}';render()">${g.lbl}</button>`;
-    }).join('')}
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    ${subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}
   </div>`;
-  const _subNav=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-    ${_subsAll.filter(o=>_curG.subs.includes(o.id)).map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}
-  </div>`;
-  h+=_groupNav+_subNav;
+
+  // 조편성 화면 진입 보정(일부 상태값 남는 케이스 방지)
+  if(_ttSub==='grpedit'){
+    try{ if(typeof grpSub==='undefined') window.grpSub='edit'; }catch(e){}
+    try{ if(grpSub!=='edit') grpSub='edit'; }catch(e){ window.grpSub='edit'; }
+  }
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -974,8 +1000,8 @@ function grpDelGroup(tnId,gi){
 function grpAddUniv(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const sel=document.getElementById(`grp-univ-sel-${gi}`);const val=sel?sel.value:'';
-  if(!val){alert('대학을 선택하세요.');return;}
-  if(tn.groups[gi].univs.includes(val)){alert('이미 추가된 대학입니다.');return;}
+  if(!val){alert(tn.type==='tier'?'선수를 선택하세요.':'대학을 선택하세요.');return;}
+  if(tn.groups[gi].univs.includes(val)){alert(tn.type==='tier'?'이미 추가된 선수입니다.':'이미 추가된 대학입니다.');return;}
   tn.groups[gi].univs.push(val);save();render();
 }
 function grpRemoveUniv(tnId,gi,ui){
@@ -2509,7 +2535,8 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
+  // 다른 화면(토너먼트 대진표 자동인식 등)에서 window._grpPasteState로 상태를 주입하므로 항상 동기화
+  if(window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
   if(!tn) return false;
@@ -2579,32 +2606,75 @@ function _grpPasteApplyLogic(savable){
     return _bktPasteApplyLogic(savable,tn);
   }
 
-  // 자동인식 모드: gi가 null이면 선수 소속 대학으로 팀/조 자동 탐지
+  // 자동인식 모드: gi가 null이면 팀/선수로 조/경기 자동 탐지
   let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
   const autoDetect = (gi===null||gi===undefined);
   if(autoDetect){
-    // 1. 선수 소속 대학에서 팀A/B 추출
-    const univCount={};
-    savable.forEach(r=>{
-      [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
-    });
-    const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
-    if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-    const autoA=univRanked[0][0], autoB=univRanked[1][0];
-    // 2. 두 팀이 같은 조에 있는지 확인
+    const isTier = tn && tn.type==='tier';
+    // 1) 티어대회(개인전): 선수 이름 기반으로 A/B 추출
+    let autoA='', autoB='';
+    if(isTier){
+      const nameCount={};
+      savable.forEach(r=>{
+        const wn=r.wPlayer?.name, ln=r.lPlayer?.name;
+        if(wn) nameCount[wn]=(nameCount[wn]||0)+1;
+        if(ln) nameCount[ln]=(nameCount[ln]||0)+1;
+      });
+      const ranked=Object.entries(nameCount).sort((a,b)=>b[1]-a[1]);
+      if(ranked.length<2){alert('선수 이름을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+      autoA=ranked[0][0]; autoB=ranked[1][0];
+    } else {
+      // 1) 일반(대학전): 선수 소속 대학에서 팀A/B 추출
+      const univCount={};
+      savable.forEach(r=>{
+        [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
+      });
+      const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
+      if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+      autoA=univRanked[0][0]; autoB=univRanked[1][0];
+    }
+
+    // 2. 두 대상이 같은 조에 있는지 확인
     const groupIdx=tn.groups.findIndex(g=>g.univs.includes(autoA)&&g.univs.includes(autoB));
     if(groupIdx<0){
       // 같은 조가 아니면 autoA의 조에 교류전으로 추가
       const giA=tn.groups.findIndex(g=>g.univs.includes(autoA));
       const giB=tn.groups.findIndex(g=>g.univs.includes(autoB));
-      if(giA<0&&giB<0){alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 대학을 추가해주세요.`);return false;}
-      const targetGi=giA>=0?giA:giB;
-      const GL='ABCDEFGHIJ';
-      const msg=(giA>=0&&giB>=0)
-        ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
-        :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
-      if(!confirm(msg))return false;
-      gi=targetGi;
+      if(giA<0&&giB<0){
+        // (요청사항) 티어대회(개인전)는 자동으로 조편성(선수)을 구성해서 저장 진행
+        if(isTier){
+          if(!tn.groups) tn.groups=[];
+          if(!tn.groups.length) tn.groups.push({name:'A조',univs:[],matches:[]});
+          const g0=tn.groups[0];
+          if(!g0.univs) g0.univs=[];
+          const addSet=new Set();
+          savable.forEach(r=>{ if(r.wPlayer?.name) addSet.add(r.wPlayer.name); if(r.lPlayer?.name) addSet.add(r.lPlayer.name); });
+          addSet.forEach(n=>{ if(n && !g0.univs.includes(n)) g0.univs.push(n); });
+          gi=0;
+        } else {
+          alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 ${isTier?'선수':'대학'}을(를) 추가해주세요.`);
+          return false;
+        }
+      }
+      if(gi==null){
+        const targetGi=giA>=0?giA:giB;
+        if(isTier){
+          const tgt=tn.groups[targetGi];
+          if(tgt){
+            if(!tgt.univs) tgt.univs=[];
+            if(giA<0 && !tgt.univs.includes(autoA)) tgt.univs.push(autoA);
+            if(giB<0 && !tgt.univs.includes(autoB)) tgt.univs.push(autoB);
+          }
+          gi=targetGi;
+        } else {
+          const GL='ABCDEFGHIJ';
+          const msg=(giA>=0&&giB>=0)
+            ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
+            :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
+          if(!confirm(msg))return false;
+          gi=targetGi;
+        }
+      }
     } else {
       gi=groupIdx;
     }
@@ -2624,8 +2694,9 @@ function _grpPasteApplyLogic(savable){
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
   const isGameMode = window._pasteMatchMode !== 'set'; // 승차수 모드 여부
 
-  const teamANamesSet = new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
-  const teamBNamesSet = new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  const isTier = tn && tn.type==='tier';
+  const teamANamesSet = isTier ? new Set([teamA]) : new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet = isTier ? new Set([teamB]) : new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
   // 팀 배정: 소속 대학 우선, 무소속 등 어느 팀에도 없으면 붙여넣기 좌측 위치(leftName)로 판단
   const _isWinnerInA = (r) => {
     const wn = r.wPlayer.name;
@@ -3167,8 +3238,8 @@ function grpDelGroup(tnId,gi){
 function grpAddUniv(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const sel=document.getElementById(`grp-univ-sel-${gi}`);const val=sel?sel.value:'';
-  if(!val){alert('대학을 선택하세요.');return;}
-  if(tn.groups[gi].univs.includes(val)){alert('이미 추가된 대학입니다.');return;}
+  if(!val){alert(tn.type==='tier'?'선수를 선택하세요.':'대학을 선택하세요.');return;}
+  if(tn.groups[gi].univs.includes(val)){alert(tn.type==='tier'?'이미 추가된 선수입니다.':'이미 추가된 대학입니다.');return;}
   tn.groups[gi].univs.push(val);save();render();
 }
 function grpRemoveUniv(tnId,gi,ui){

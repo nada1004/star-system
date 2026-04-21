@@ -217,45 +217,21 @@ function rProComp(C, T) {
       ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${(tn.groups||[]).length}개 조 · ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
     </div>`;
 
-    // ── 2단 서브탭(기록/입력/대진표/관리) ──
-    const _subsAll = [
-      {id:'league', lbl:'조별 일정'},
-      {id:'grprank', lbl:'조별 순위'},
-      {id:'tour', lbl:'토너 대진표'},
-      {id:'tourmatch', lbl:'토너 입력'},
-      {id:'team', lbl:'팀전'},
-      {id:'gj', lbl:'끝장전'},
-      {id:'stats', lbl:'통계'},
-      ...(isLoggedIn?[{id:'grpedit', lbl:'조편성'}]:[]),
+    // (롤백) 프로리그 대회 서브메뉴: 단일 라인 탭(기록/대진표/입력/관리로 묶지 않음)
+    const subOpts = [
+      {id:'league', lbl:'📋 기록'},
+      {id:'grprank', lbl:'📊 순위'},
+      {id:'tour', lbl:'🗂️ 대진표'},
+      {id:'tourmatch', lbl:'📝 입력'},
+      {id:'team', lbl:'🤝 팀전'},
+      {id:'gj', lbl:'🔥 끝장전'},
+      {id:'stats', lbl:'📈 통계'},
+      ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
-    if (!_subsAll.find(o=>o.id===proCompSub)) proCompSub = 'league';
-    const _groups = [
-      {id:'rec', lbl:'📋 기록', subs:['league','grprank','team','gj','stats']},
-      {id:'br',  lbl:'🗂️ 대진표', subs:['tour']},
-      {id:'in',  lbl:'📝 입력', subs:['tourmatch']},
-      {id:'mg',  lbl:'🏗️ 관리', subs:['grpedit']},
-    ];
-    const _findGroupBySub=(sid)=>_groups.find(g=>g.subs.includes(sid));
-    if(!window._pcSubGroup || !_groups.some(g=>g.id===window._pcSubGroup)){
-      window._pcSubGroup = _findGroupBySub(proCompSub)?.id || 'rec';
-    }
-    const _curG = _groups.find(g=>g.id===window._pcSubGroup) || _groups[0];
-    if(!_curG.subs.includes(proCompSub)){
-      const first=_curG.subs.find(sid=>_subsAll.some(x=>x.id===sid));
-      if(first) proCompSub = first;
-    }
-    const _groupNav = `<div class="subtab-bar no-export" style="margin-bottom:8px">
-      ${_groups.map(g=>{
-        const on = window._pcSubGroup===g.id;
-        const hasAny = g.subs.some(sid=>_subsAll.some(x=>x.id===sid));
-        if(!hasAny) return '';
-        return `<button class="subtab-btn ${on?'is-active':''}" onclick="window._pcSubGroup='${g.id}';render()">${g.lbl}</button>`;
-      }).join('')}
+    if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
+    h += `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+      ${subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
     </div>`;
-    const _subNav = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-      ${_subsAll.filter(o=>_curG.subs.includes(o.id)).map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
-    </div>`;
-    h += _groupNav + _subNav;
 
     if (!tn && proCompSub !== 'grpedit') {
       h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
@@ -1278,6 +1254,16 @@ function _pcBktBuildFromPasteApplyLogic(savable, tn){
   const playersSet = new Set();
   matches.forEach(m=>{ playersSet.add(m.p1); playersSet.add(m.p2); });
   const nPlayers = playersSet.size;
+  // (요청사항) 티어대회(개인전)일 때: 붙여넣기에 등장한 선수들을 조편성에 자동 반영
+  try{
+    if(tn.type==='tier'){
+      if(!tn.groups) tn.groups=[];
+      if(!tn.groups.length) tn.groups.push({name:'A조',univs:[],matches:[]});
+      const g0=tn.groups[0];
+      if(!g0.univs) g0.univs=[];
+      playersSet.forEach(n=>{ if(n && !g0.univs.includes(n)) g0.univs.push(n); });
+    }
+  }catch(e){}
   const _lblToSize = (lbl)=>{
     const s=String(lbl||'').replace(/\s+/g,'');
     if(!s) return null;
