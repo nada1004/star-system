@@ -545,48 +545,18 @@ function rTierTourTab(C, T){
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
-  // ── 2단 서브탭(기록/입력/대진표/관리) ──
-  const _subsAll=[
-    ...(isLoggedIn?[{id:'input',lbl:'일반',fn:`_ttSub='input';render()`}]:[]),
-    {id:'records',lbl:'일반',fn:`_ttSub='records';openDetails={};render()`},
-    {id:'rank',lbl:'개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
-    {id:'league',lbl:'조별 일정',fn:`_ttSub='league';render()`},
-    {id:'grprecords',lbl:'조별 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
-    {id:'grprank',lbl:'조별 순위',fn:`_ttSub='grprank';render()`},
-    {id:'tourschedule',lbl:'토너 대진표',fn:`_ttSub='tourschedule';render()`,hasContext:true},
-    {id:'bktrecords',lbl:'토너 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
-    ...(isLoggedIn?[{id:'grpedit',lbl:'조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
+  const subOpts=[
+    ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
+    {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
+    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
+    {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
+    {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
+    {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
+    {id:'tourschedule',lbl:'🗂️ 토너먼트',fn:`_ttSub='tourschedule';render()`,hasContext:true},
+    {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
+    ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  const _groups=[
-    {id:'rec', lbl:'📋 기록', subs:['records','rank','grprecords','grprank','bktrecords']},
-    {id:'in',  lbl:'📝 입력', subs:['input']},
-    {id:'br',  lbl:'🗂️ 대진표', subs:['league','tourschedule']},
-    {id:'mg',  lbl:'🏗️ 관리', subs:['grpedit']},
-  ];
-  // 현재 sub가 속한 그룹을 자동 선택
-  const _findGroupBySub=(sid)=>_groups.find(g=>g.subs.includes(sid));
-  if(!window._ttSubGroup || !_groups.some(g=>g.id===window._ttSubGroup)){
-    window._ttSubGroup = _findGroupBySub(_ttSub)?.id || 'rec';
-  }
-  // 그룹에 없는 sub면 그룹 기본 sub로 이동
-  const _curG=_groups.find(g=>g.id===window._ttSubGroup) || _groups[0];
-  if(!_curG.subs.includes(_ttSub)){
-    const first=_curG.subs.find(sid=>_subsAll.some(x=>x.id===sid));
-    if(first) _ttSub=first;
-  }
-  const _groupNav=`<div class="subtab-bar no-export" style="margin-bottom:8px">
-    ${_groups.map(g=>{
-      const on = window._ttSubGroup===g.id;
-      // 그룹에 실제 표시 가능한 sub가 없으면 숨김
-      const hasAny = g.subs.some(sid=>_subsAll.some(x=>x.id===sid));
-      if(!hasAny) return '';
-      return `<button class="subtab-btn ${on?'is-active':''}" onclick="window._ttSubGroup='${g.id}';render()">${g.lbl}</button>`;
-    }).join('')}
-  </div>`;
-  const _subNav=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-    ${_subsAll.filter(o=>_curG.subs.includes(o.id)).map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}
-  </div>`;
-  h+=_groupNav+_subNav;
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};

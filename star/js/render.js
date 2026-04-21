@@ -114,18 +114,6 @@ function render(){
       _restoreFocus();
       // 탭/필터 바 가로 스크롤 드래그 활성화(렌더링 후 생성된 요소 포함)
       try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
-      // 체크박스 선택 행 하이라이트 (테이블)
-      try{
-        document.querySelectorAll('#rcont table input[type="checkbox"]').forEach(cb=>{
-          cb.onchange = function(){
-            const tr = cb.closest('tr');
-            if(tr) tr.classList.toggle('is-selected', cb.checked);
-          };
-          // 초기 상태 반영
-          const tr = cb.closest('tr');
-          if(tr) tr.classList.toggle('is-selected', cb.checked);
-        });
-      }catch(e){}
     });
   });
 }
