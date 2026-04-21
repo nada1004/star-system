@@ -31,7 +31,7 @@ function rHist(C,T){
   // (요청사항) 관리자 전용 외부 자료 탭
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
-      tabDefs.push({id:'ext', grp:'외부', lbl:'📎 외부 자료'});
+      tabDefs.push({id:'ext', grp:'외부', lbl:'📎'});
     }
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
@@ -729,8 +729,7 @@ function histExternalHTML(){
   setTimeout(()=>{ try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){} }, 0);
   return `
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:10px 0 8px">
-      <div style="font-weight:1000">📎 외부 자료</div>
-      <div style="font-size:11px;color:var(--gray-l)">프록시로 자동 수집 + 필요 시 TSV/CSV 붙여넣기</div>
+      <div style="font-weight:1000">📎</div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">

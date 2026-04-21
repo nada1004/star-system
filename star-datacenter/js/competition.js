@@ -329,7 +329,7 @@ function rCompLeague(tn){
     const grpOpts=(tn.groups||[]).map((grp,gi)=>({name:grp.name,label:`GROUP ${'ABCDEFGHIJ'[gi]||gi+1}`}));
     h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div class="ym-filter-controls compact">
-        <span class="ym-lbl">일자</span>
+        <span class="ym-lbl"></span>
         <select class="ym-sel" onchange="leagueFilterDate=this.value;render()">
           <option value=""${!leagueFilterDate?' selected':''}>전체</option>
           ${dates.map(d=>`<option value="${d}"${leagueFilterDate===d?' selected':''}>${fmt(d)}</option>`).join('')}

@@ -745,7 +745,8 @@ function parsePasteLine(line) {
   if (_pasteCompat) {
     line = line
       .replace(/[（]/g, '(').replace(/[）]/g, ')')
-      .replace(/🆚/g, 'vs')
+      // 🆚 / 🆚️ (variation selector 포함) 모두 처리
+      .replace(/🆚️?/g, 'vs')
       .replace(/ＶＳ/g, 'vs')
       .replace(/V\s*\.?\s*S\s*\.?/gi, 'vs');
   }
@@ -864,7 +865,14 @@ function parsePasteLine(line) {
         const rightWin = WIN_MARKS.includes(R.mark);
         if (leftWin === rightWin) return null;
 
-        const stripRaceSuffix = (s) => String(s || '').trim().replace(/\s*[TZPN]$/i, '').trim();
+        const stripRaceSuffix = (s) => {
+          let t = String(s || '').trim();
+          // "(P)" 같은 종족 괄호 제거
+          t = t.replace(/\s*\([TZPRN]\)\s*$/i, '').trim();
+          // "이광용P" 같은 종족 1글자 접미 제거
+          t = t.replace(/\s*[TZPRN]$/i, '').trim();
+          return t;
+        };
         const leftName = stripRaceSuffix(L.text);
         const rightName = stripRaceSuffix(R.text);
 
@@ -1414,7 +1422,16 @@ function pastePreview() {
         // 탭 구분 TSV 형식: 날짜가 이미 추출됐으므로 나머지 컬럼만 파싱
         if (_restLine.includes('\t')) {
           const _tc = _restLine.split('\t');
-          const _tEx = s => { const m = s.trim().match(/^(.+?)\s*\([TZPN]\)\s*$/i); return m ? m[1].trim() : s.trim(); };
+          const _tEx = s => {
+            const t = (s||'').trim();
+            // "이광용(P)" 형태
+            let m = t.match(/^(.+?)\s*\([TZPRN]\)\s*$/i);
+            if(m) return m[1].trim();
+            // "이광용P" 형태 (끝 1글자 종족)
+            m = t.match(/^(.+?)([TZPRN])$/i);
+            if(m && m[1] && m[1].trim().length>=2 && !m[1].includes(' ')) return m[1].trim();
+            return t;
+          };
 
           // ── 1인칭 TSV: 기준 선수 설정 시 ──
           // 형식: 상대(종족)\t맵\t±점수\t...\t스코어
@@ -1454,6 +1471,30 @@ function pastePreview() {
               wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
               lineNum: idx+1, rawLine: trimmed, _lineDate: _id,
               ...(_lineType ? { _lineType } : {}) });
+            return;
+          }
+
+          // ── (요청사항) 대회 토너먼트 TSV: 선수1(종족)\t선수2(종족)\t맵\tELO변동\t단판/3판... \t메모... ──
+          // 예) 2026-04-17\t이광용P\t김성민P\t네오 실피드\t16.7\t단판\tE-SCORE...
+          // 규칙: ELO가 +면 선수1 승, -면 선수2 승 (숫자 없으면 선수1 승으로 가정)
+          if (_tc.length >= 4 && _tc[0] && _tc[1] && _tc[2]) {
+            const p1 = _tEx(_tc[0]);
+            const p2 = _tEx(_tc[1]);
+            const mp = _tc[2] ? resolveMapName(_tc[2].trim()) : '-';
+            const eloStr = (_tc[3] || '').trim();
+            const eloNum = parseFloat(eloStr.replace(/[^\d\.\-+]/g,''));
+            const p1Win = isNaN(eloNum) ? true : (eloNum >= 0);
+            const winName = p1Win ? p1 : p2;
+            const loseName = p1Win ? p2 : p1;
+            const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            const _memo = (_tc.slice(5).join(' ') || '').trim();
+            results.push({ winName, loseName, map: mp, _rawMapStr: _tc[2]||'', setNum: currentSet,
+              wPlayer: _wM.player, lPlayer: _lM.player,
+              wCandidates: _wM.candidates, lCandidates: _lM.candidates,
+              wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
+              lineNum: idx+1, rawLine: trimmed, _lineDate: _id,
+              ...(currentRoundLabel?{_rndLabel:currentRoundLabel}:{ }),
+              ...(_memo?{_lineMemo:_memo}:{}) });
             return;
           }
         }
@@ -2429,10 +2470,82 @@ function pasteApply() {
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
+  // (요청사항) YAML 블록 기반 대량입력은 삭제됨 (설정탭 규칙 기반으로 자동 분리 저장)
+
   if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
 
   const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
+
+  // ── (요청사항) 설정탭 규칙 기반 자동 분리 저장 ──
+  // - 규칙: localStorage 'su_paste_route_rules'
+  // - 형식(한 줄): /정규식/flags => 모드
+  //   또는: 키워드 => 모드
+  // - 모드 예: 개인전, 끝장전, 미니대전, 시빌워, 대학대전, 대학CK, 프로리그, 프로리그끝장전, 티어대회, 대회
+  // - 동작: 메모/원문에서 규칙을 매칭하여 r._lineType에 저장하고, 기존 "혼합 타입" 저장 로직을 활용
+  function _parsePasteRouteRules(){
+    const raw = String(localStorage.getItem('su_paste_route_rules')||'').trim();
+    if(!raw) return [];
+    const out=[];
+    raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('#')).forEach(line=>{
+      const parts = line.split('=>').map(s=>s.trim());
+      if(parts.length<2) return;
+      const pat = parts[0];
+      const rhs = parts.slice(1).join('=>').trim();
+      // rhs: "mode" 또는 "mode; key=val"
+      const segs = rhs.split(';').map(s=>s.trim()).filter(Boolean);
+      const modeStr = segs[0]||'';
+      const opts={};
+      segs.slice(1).forEach(s=>{
+        const m=s.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+)\s*$/);
+        if(m) opts[m[1]] = m[2];
+      });
+      let rx=null, isRegex=false;
+      const mrx = pat.match(/^\/(.+)\/([gimsuy]*)$/);
+      if(mrx){
+        try{ rx = new RegExp(mrx[1], mrx[2]||''); isRegex=true; }catch(e){ rx=null; }
+      }
+      out.push({ pat, rx, isRegex, modeStr, opts });
+    });
+    return out;
+  }
+  function _normRouteMode(s){
+    const t=String(s||'').trim().toLowerCase();
+    if(['ind','individual','개인전','개인전 기록'].includes(t)) return 'ind';
+    if(['gj','끝장전','개인전 끝장전','개인전 끝장전 기록'].includes(t)) return 'gj';
+    if(['mini','미니','미니대전','미니대전 기록'].includes(t)) return 'mini';
+    if(['civil','시빌','시빌워','시빌워 기록'].includes(t)) return 'mini'; // mini.type=civil로 저장(혼합 저장에서 _miniType 사용)
+    if(['univm','대학대전','대학대전 기록'].includes(t)) return 'univm';
+    if(['ck','대학ck','대학ck 기록'].includes(t)) return 'ck';
+    if(['pro','프로리그','프로리그 기록'].includes(t)) return 'pro';
+    if(['progj','프로리그끝장전','프로리그 끝장전','프로리그 끝장전 기록'].includes(t)) return 'gj'; // pro flag는 옵션으로 확장
+    if(['tt','티어대회','티어대회 일반','티어대회 일반 기록'].includes(t)) return 'tt';
+    if(['comp','대회','대회 기록','조별리그','대회 조별리그'].includes(t)) return 'comp';
+    return '';
+  }
+  const _routeRules = _parsePasteRouteRules();
+  if(_routeRules.length){
+    savable.forEach(r=>{
+      const txt = String((r._lineMemo||'') + ' ' + (r.rawLine||'') + ' ' + (r.winName||'') + ' ' + (r.loseName||'')).trim();
+      for(const rule of _routeRules){
+        let matched=false;
+        if(rule.rx){
+          matched = rule.rx.test(txt);
+        } else {
+          matched = rule.pat && txt.toLowerCase().includes(String(rule.pat).toLowerCase());
+        }
+        if(!matched) continue;
+        const nm = _normRouteMode(rule.modeStr);
+        if(nm){
+          r._lineType = nm; // 혼합 저장 트리거
+          // 시빌워는 mini.type=civil로 저장하도록 표시
+          if(String(rule.modeStr||'').includes('시빌') || String(rule.modeStr||'').toLowerCase()==='civil') r._miniType='civil';
+          // (확장용) 강제 팀명/대회명 등은 추후 적용
+        }
+        break;
+      }
+    });
+  }
 
   // 저장 예정 게임 목록(혼합 타입 포함) → 중복 확인
   const _toAdd = savable.map(r => ({
@@ -2563,15 +2676,16 @@ function pasteApply() {
         if(games.length) gjM.unshift(...games);
       });
     }
-    // mini 저장
+    // mini 저장 (시빌워 포함)
     if (_mixGroups.mini.length) {
       const _miniDG = {};
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','미니대전');});
+        const _isCivil = grp.some(r=>r._miniType==='civil');
+        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','',_isCivil?'시빌워':'미니대전');});
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
-        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
+        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini'});
       });
     }
     save();

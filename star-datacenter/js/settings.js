@@ -59,7 +59,8 @@ const _DEFAULT_CATSECS = {
   '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm','soopmv'],
+  // pasteRoute: 결과 붙여넣기 자동 분리 규칙
+  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
   '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -699,6 +700,18 @@ window.cfgSaveSoopSettings = function(){
   try{ localStorage.setItem('su_soop_list', list); }catch(e){}
   try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────
+// (요청사항) 결과 붙여넣기 자동 분리 저장 규칙
+// - localStorage: su_paste_route_rules
+// - 형식(한 줄): /정규식/flags => 모드
+//   또는: 키워드 => 모드
+// - 모드 예: 개인전, 끝장전, 미니대전, 시빌워, 대학대전, 대학CK, 프로리그, 티어대회, 대회 ...
+// ─────────────────────────────────────────────
+window.cfgSavePasteRouteRules = function(){
+  const v = String(document.getElementById('cfg-paste-route')?.value||'');
+  try{ localStorage.setItem('su_paste_route_rules', v); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1811,6 +1824,28 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </details>`;
   })()}
+  ${(()=>{ 
+    const rules = (localStorage.getItem('su_paste_route_rules') || '').trim();
+    return _scfgD('pasteRoute','🧠 결과 붙여넣기 자동 분리') + `
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+        붙여넣기 텍스트의 <b>메모/원문</b>에 특정 키워드가 포함되면, 저장 시 자동으로 기록탭을 분리합니다.<br>
+        형식: <code>/정규식/flags =&gt; 모드</code> 또는 <code>키워드 =&gt; 모드</code><br>
+        예) <code>E-SCORE TOURNAMENT =&gt; 끝장전</code> / <code>/ASL\\s*S\\d+/i =&gt; 개인전</code>
+      </div>
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;font-weight:1000;color:var(--text2)">규칙 목록 (한 줄에 1개)</div>
+        <textarea id="cfg-paste-route" rows="7" placeholder="예)\nE-SCORE TOURNAMENT => 끝장전\n/mini\\s*league/i => 미니대전\n/civil\\s*war/i => 시빌워" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;resize:vertical;background:var(--white);color:var(--text1);box-sizing:border-box" oninput="cfgSavePasteRouteRules()" onblur="cfgSavePasteRouteRules()">${esc(rules)}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-b btn-sm" onclick="cfgSavePasteRouteRules();if(typeof showToast==='function')showToast('저장됨');">저장</button>
+          <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-paste-route').value='';cfgSavePasteRouteRules();">규칙 비우기</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);line-height:1.5">
+          모드 예시: 개인전 / 끝장전 / 미니대전 / 시빌워 / 대학대전 / 대학CK / 프로리그 / 티어대회 / 대회<br>
+          ※ 현재 자동 분리는 우선 <b>개인전/끝장전/미니대전(시빌워)</b>에 가장 안정적으로 동작합니다.
+        </div>
+      </div>
+    </details>`;
+  })()}
   ${_scfgD('si','🏷️ 스트리머 상태 아이콘 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
@@ -2869,6 +2904,7 @@ ${_scfgD('notice','📢 공지 관리')}
       })()}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-b" onclick="cfgMenuReset()">기본 메뉴로 초기화</button>
+        <button class="btn btn-p" onclick="cfgMenuReset();try{if(typeof showToast==='function')showToast('🤖 자동 정리 완료');}catch(e){}">🤖 자동 정리</button>
         <button class="btn btn-w" onclick="cfgMenuResetSecNames()">이름 변경 초기화</button>
       </div>
     </div>
