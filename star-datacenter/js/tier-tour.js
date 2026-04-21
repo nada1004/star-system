@@ -2522,7 +2522,7 @@ function openGrpPasteModal(){
 // grpPasteApply: 대회 세트 적용 버튼 핸들러 (HTML에서 직접 호출)
 function grpPasteApply(){
   if(!window._pasteResults) return;
-  const savable = window._pasteResults.filter(r=>r.wPlayer&&r.lPlayer);
+  const savable = window._pasteResults.filter(r=>(r.wPlayer&&r.lPlayer)||r._scoreOnly);
   if(!savable.length){ alert('저장 가능한 경기가 없습니다.'); return; }
   const ok = _grpPasteApplyLogic(savable);
   if(ok){
@@ -2543,6 +2543,10 @@ function _grpPasteApplyLogic(savable){
   // 프로컴프 브라켓 모드 분기
   if(_grpPasteState.mode==='pcbkt'){
     return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
+  }
+  // (요청사항) 프로리그/티어대회 토너먼트 대진표 자동생성
+  if(_grpPasteState.mode==='pcbktbuild'){
+    return typeof _pcBktBuildFromPasteApplyLogic==='function' ? _pcBktBuildFromPasteApplyLogic(savable,tn) : false;
   }
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
