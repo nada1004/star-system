@@ -2682,16 +2682,38 @@ function _pcBktPasteApplyLogic(savable, tn) {
   function _applyToMatch(m, matchRi, matchMi, games) {
     const scoreA = games.filter(g=>g.winner==='A').length;
     const scoreB = games.filter(g=>g.winner==='B').length;
-    if (scoreA === scoreB) { alert(`동률입니다 (${m.a} vs ${m.b}): A:${scoreA} / B:${scoreB}`); return false; }
-    const winner = scoreA > scoreB ? 'A' : 'B';
+    const isTie = (scoreA === scoreB);
+    const winner = isTie ? '' : (scoreA > scoreB ? 'A' : 'B');
     if (dateVal) m.d = dateVal;
     m._games = games;
     if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
     const bktMatchId = `pbn_${tn.id}_${matchRi}_${matchMi}`;
-    if (m.winner) _revertProMatch(bktMatchId);
-    m.winner = winner;
+    const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+    // 이전 승자 기록이 있었다면 롤백(BYE 제외)
+    if (m.winner && !isBye(m.a) && !isBye(m.b)) {
+      try{ _revertProMatch(bktMatchId); }catch(e){}
+    }
+    m.winner = winner; // tie면 '' (승자 미정)
     const nextMi = Math.floor(matchMi/2), isA = matchMi%2===0;
-    if (tn.bracket[matchRi+1] && tn.bracket[matchRi+1][nextMi]) {
+    const clearCascadeFromNext = ()=>{
+      if (!(tn.bracket[matchRi+1] && tn.bracket[matchRi+1][nextMi])) return;
+      const next = tn.bracket[matchRi+1][nextMi];
+      if (isA) next.a = 'TBD'; else next.b = 'TBD';
+      next.winner = '';
+      let curMi = nextMi;
+      for (let r = matchRi+2; r < tn.bracket.length; r++) {
+        const nxt2Mi = Math.floor(curMi/2);
+        const isA2 = curMi%2===0;
+        if (!tn.bracket[r] || !tn.bracket[r][nxt2Mi]) break;
+        if (isA2) tn.bracket[r][nxt2Mi].a='TBD'; else tn.bracket[r][nxt2Mi].b='TBD';
+        tn.bracket[r][nxt2Mi].winner='';
+        curMi = nxt2Mi;
+      }
+    };
+    if (isTie) {
+      // 동률: 전파/히스토리 반영하지 않고, 다음 라운드 슬롯은 비움
+      clearCascadeFromNext();
+    } else if (tn.bracket[matchRi+1] && tn.bracket[matchRi+1][nextMi]) {
       const next = tn.bracket[matchRi+1][nextMi];
       const wSlot = winner==='A'?m.a:m.b;
       if (isA) next.a = wSlot; else next.b = wSlot;
@@ -2701,10 +2723,13 @@ function _pcBktPasteApplyLogic(savable, tn) {
       const thirdKey=`pbn_${tn.id}_3rd`;
       if (tn.thirdPlace.winner) _revertProMatch(thirdKey);
       tn.thirdPlace.winner='';
-      const loser=winner==='A'?m.b:m.a;
+      const loser = winner==='A'?m.b:(winner==='B'?m.a:'');
       if (matchMi===0) tn.thirdPlace.a=loser||'TBD'; else tn.thirdPlace.b=loser||'TBD';
     }
-    _syncBktMatchToHistory(tn, m, bktMatchId, matchRi, matchMi);
+    // 동률일 때는 승자 미정이므로 히스토리 반영을 하지 않음(승자 확정 시 반영)
+    if (!isTie && !isBye(m.a) && !isBye(m.b)) {
+      _syncBktMatchToHistory(tn, m, bktMatchId, matchRi, matchMi);
+    }
     return true;
   }
 

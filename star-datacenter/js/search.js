@@ -1411,6 +1411,26 @@ function pastePreview() {
       return;
     }
 
+    // ── (요청사항) "이름 2:2 이름" 형태도 스코어 전용으로 허용 ──
+    // 예) "뽀누나 2:2 뚜비" / "박상현Z 3:3 윤수철P"
+    // ※ 대회/세트 붙여넣기(= _grpPasteMode)에서만 의미가 있으므로 그때만 결과로 포함
+    const _scoreOnlyNameM = trimmed.match(/^(.+?)\s+(\d+)\s*[：:]\s*(\d+)\s+(.+?)\s*$/);
+    if (_scoreOnlyNameM && window._grpPasteMode) {
+      const a = parseInt(_scoreOnlyNameM[2], 10) || 0;
+      const b = parseInt(_scoreOnlyNameM[3], 10) || 0;
+      results.push({
+        _scoreOnly: true,
+        _scoreA: a,
+        _scoreB: b,
+        setNum: currentSet,
+        lineNum: idx + 1,
+        rawLine: trimmed,
+        ...(currentLineDate ? { _lineDate: currentLineDate } : {}),
+        ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
+      });
+      return;
+    }
+
     // ── 토너먼트 라운드 헤더 감지 ──
     // 예) "64강", "32강", "16강", "8강", "4강", "준결승", "결승"
     const _rnd = trimmed.replace(/\s+/g,'');
