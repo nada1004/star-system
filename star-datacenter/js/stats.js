@@ -3793,16 +3793,37 @@ function globalSearchSelectExt(idx){
   document.getElementById('globalSearchDrop').style.display='none';
   window._gsResults = null;
   if(!it) return;
+  // (요청사항) 외부탭 접근은 관리자만 허용. 일반 사용자는 상세 팝업만 노출.
+  const canOpenExtTab = (typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(canOpenExtTab){
+    try{ curTab='hist'; histSub='ext'; }catch(e){}
+    try{ if(typeof window.histExtSetKeyword==='function') window.histExtSetKeyword(window._gsQuery||''); }catch(e){}
+    try{ render(); }catch(e){}
+    return;
+  }
+  // read-only 상세 모달
   try{
-    curTab='hist';
-    histSub='ext';
+    const old=document.getElementById('_gsExtModal'); if(old) old.remove();
+    const modal=document.createElement('div');
+    modal.id='_gsExtModal';
+    modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    const line=`${it.winner||''} vs ${it.loser||''}`;
+    const sub=`${it.date||''}${it.map?` · ${it.map}`:''}${it.elo?` · ELO ${it.elo}`:''}${it.type?` · ${it.type}`:''}`;
+    const memo=(it.memo||'').trim();
+    const src=(it.source||'').trim();
+    modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
+      <div style="font-weight:900;font-size:13px;color:var(--text);margin-bottom:4px">${line}</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
+      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--gray-l);text-align:center">※ 외부탭은 관리자만 접근 가능합니다</div>
+    </div>`;
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
   }catch(e){}
-  try{
-    if(typeof window.histExtSetKeyword==='function'){
-      window.histExtSetKeyword(window._gsQuery||'');
-    }
-  }catch(e){}
-  try{ render(); }catch(e){}
 }
 
 // 외부 클릭 시 드롭다운 닫기

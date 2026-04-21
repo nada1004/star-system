@@ -211,7 +211,10 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys},null,2)],{type:'application/json'});
+    // (요청사항) 외부 대진기록(히스토리 > 외부탭)도 다른 기기에서 볼 수 있도록 백업에 포함
+    let histExt=null;
+    try{ histExt = JSON.parse(localStorage.getItem('su_hist_ext_data_v1')||'null'); }catch(e){ histExt=null; }
+    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys,histExt},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';
@@ -232,6 +235,10 @@ function doFile(inp){
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
       tourneys=d.tourneys||[];
+      // (요청사항) 외부 대진기록 복원
+      if(d.histExt){
+        try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){}
+      }
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
       if(d.gjM!==undefined) gjM=d.gjM||[];

@@ -13,6 +13,38 @@ function esc(s){
 }
 
 /* ══════════════════════════════════════
+   🎨 디자인 모드(리뉴얼)
+   - 기본은 기존 UI 유지
+   - 켜면 body에 design-v2 클래스를 부여하여 CSS로 전환
+══════════════════════════════════════ */
+window.applyDesignV2 = function(forceOn){
+  try{
+    const on = (typeof forceOn==='boolean') ? forceOn : (localStorage.getItem('su_design_v2')==='1');
+    document.body.classList.toggle('design-v2', !!on);
+    // 프리셋(계절/이벤트) 클래스 적용
+    const preset = String(localStorage.getItem('su_design_v2_preset')||'base');
+    const allow = new Set(['base','spring','summer','autumn','winter','xmas','summerbreak','winterbreak','valentine','whiteday','buddha','liberation','hangul','samil','taegeuk']);
+    const p = allow.has(preset) ? preset : 'base';
+    document.body.classList.remove(
+      'designv2-base','designv2-spring','designv2-summer','designv2-autumn','designv2-winter',
+      'designv2-xmas','designv2-summerbreak','designv2-winterbreak','designv2-valentine','designv2-whiteday',
+      'designv2-buddha','designv2-liberation','designv2-hangul','designv2-samil','designv2-taegeuk'
+    );
+    if(!!on) document.body.classList.add('designv2-'+p);
+  }catch(e){}
+};
+window.cfgSetDesignV2 = function(on){
+  try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.cfgSetDesignV2Preset = function(v){
+  try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+/* ══════════════════════════════════════
 
 /* ══════════════════════════════════════
    ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
@@ -60,7 +92,7 @@ const _DEFAULT_CATSECS = {
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
   // pasteRoute: 결과 붙여넣기 자동 분리 규칙
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
+  '🎨 스타일/테마':['designv2','hdr','appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
   '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -426,13 +458,14 @@ function _hdrEnsurePresets(){
   }
   // 테마팩 1회 자동 설치
   try{
-    if(localStorage.getItem('su_hdr_theme_pack_installed_v1')!=='1'){
+    // v2: 신규 프리셋(여름방학 등) 자동 추가를 위해 버전 키를 올림
+    if(localStorage.getItem('su_hdr_theme_pack_installed_v3')!=='1'){
       const out = _hdrPresetInstallThemePack(presets);
       if(out && out.changed){
         presets = out.presets;
         _hdrPresetsSave(presets);
       }
-      localStorage.setItem('su_hdr_theme_pack_installed_v1','1');
+      localStorage.setItem('su_hdr_theme_pack_installed_v3','1');
     }
   }catch(e){}
   return {presets, sel};
@@ -491,6 +524,8 @@ function _hdrPresetInstallThemePack(presets){
   // 4계절
   changed = add('🌸 봄', {fx:'aurora', c1:'#22c55e', c2:'#f472b6', accent:'#22c55e', fullTheme:{bg:'#f3fff6',surface:'#f0fdf4',border:'#d1fae5',border2:'#86efac',gold:'#d97706',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
   changed = add('🏖️ 여름', {fx:'mesh', c1:'#0ea5e9', c2:'#22c55e', accent:'#0ea5e9', fullTheme:{bg:'#f0f9ff',surface:'#eff6ff',border:'#dbeafe',border2:'#93c5fd',gold:'#0891b2',goldBg:'#ecfeff',goldB:'#67e8f9'}}) || changed;
+  changed = add('🏝️ 여름방학', {fx:'aurora', c1:'#38bdf8', c2:'#fbbf24', accent:'#f59e0b', fullTheme:{bg:'#f0f9ff',surface:'#ffffff',border:'#dbeafe',border2:'#93c5fd',gold:'#f59e0b',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('⛄ 겨울방학', {fx:'glass', c1:'#2563eb', c2:'#cbd5e1', accent:'#38bdf8', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#38bdf8',goldBg:'#eff6ff',goldB:'#93c5fd'}}) || changed;
   changed = add('🍁 가을', {fx:'stripes', c1:'#ea580c', c2:'#b45309', accent:'#ea580c', fullTheme:{bg:'#fff7ed',surface:'#fffbeb',border:'#fed7aa',border2:'#fdba74',gold:'#b45309',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
   changed = add('❄️ 겨울', {fx:'glass', c1:'#2563eb', c2:'#94a3b8', accent:'#2563eb', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#2563eb',goldBg:'#eff6ff',goldB:'#93c5fd'}}) || changed;
   // 기념일/데이
@@ -498,6 +533,9 @@ function _hdrPresetInstallThemePack(presets){
   changed = add('🧒 어린이날', {fx:'aurora', c1:'#ff4b6e', c2:'#38bdf8', accent:'#ff4b6e', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#ff4b6e',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
   changed = add('🌹 어버이날', {fx:'glass', c1:'#db2777', c2:'#f43f5e', accent:'#db2777', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#db2777',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
   changed = add('🇰🇷 광복절', {fx:'stripes', c1:'#1d4ed8', c2:'#dc2626', accent:'#1d4ed8', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#1d4ed8',goldBg:'#eff6ff',goldB:'#93c5fd'}, extraVars:{'--red':'#dc2626'}}) || changed;
+  changed = add('🔤 한글날', {fx:'glass', c1:'#7c3aed', c2:'#fbbf24', accent:'#7c3aed', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#fbbf24',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('✊ 3.1절', {fx:'stripes', c1:'#111827', c2:'#e5e7eb', accent:'#111827', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#111827',goldBg:'#f1f5f9',goldB:'#cbd5e1'}}) || changed;
+  changed = add('🪷 석가탄신일', {fx:'aurora', c1:'#a855f7', c2:'#22c55e', accent:'#a855f7', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#22c55e',goldBg:'#f0fdf4',goldB:'#bbf7d0'}}) || changed;
   changed = add('🤍 화이트데이', {fx:'glass', c1:'#38bdf8', c2:'#ffffff', accent:'#38bdf8', fullTheme:{bg:'#ffffff',surface:'#f8fafc',border:'#e2e8f0',border2:'#cbd5e1',gold:'#38bdf8',goldBg:'#f0f9ff',goldB:'#bae6fd'}}) || changed;
   changed = add('💘 발렌타인데이', {fx:'aurora', c1:'#e11d48', c2:'#fb7185', accent:'#e11d48', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#e11d48',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
   changed = add('💋 키스데이', {fx:'aurora', c1:'#a855f7', c2:'#fb7185', accent:'#a855f7', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#a855f7',goldBg:'#faf5ff',goldB:'#e9d5ff'}}) || changed;
@@ -2423,6 +2461,44 @@ ${_scfgD('notice','📢 공지 관리')}
         공유 버튼 숨기기(관리자만 표시)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 관리자=로그인 상태. 기록/대회/캘린더 카드의 공유 버튼이 함께 적용됩니다.</div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const on = (localStorage.getItem('su_design_v2') ?? '0') === '1';
+    const preset = (localStorage.getItem('su_design_v2_preset') ?? 'base');
+    return _scfgD('designv2','🎨 디자인 모드 (리뉴얼)') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">기존 디자인은 유지하고, 켜면 새로운 디자인(탭/카드/모달/현황판 등)을 적용합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-designv2-on" style="width:15px;height:15px" ${on?'checked':''}
+          onchange="cfgSetDesignV2(this.checked)">
+        디자인 모드 사용
+      </label>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">테마 프리셋</div>
+        <select id="cfg-designv2-preset" onchange="cfgSetDesignV2Preset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="base" ${preset==='base'?'selected':''}>기본</option>
+          <option value="taegeuk" ${preset==='taegeuk'?'selected':''}>🇰🇷 태극기</option>
+          <option value="spring" ${preset==='spring'?'selected':''}>🌸 봄</option>
+          <option value="summer" ${preset==='summer'?'selected':''}>🏖️ 여름</option>
+          <option value="autumn" ${preset==='autumn'?'selected':''}>🍁 가을</option>
+          <option value="winter" ${preset==='winter'?'selected':''}>❄️ 겨울</option>
+          <option value="xmas" ${preset==='xmas'?'selected':''}>🎄 크리스마스</option>
+          <option value="summerbreak" ${preset==='summerbreak'?'selected':''}>🏝️ 여름방학</option>
+          <option value="winterbreak" ${preset==='winterbreak'?'selected':''}>⛄ 겨울방학</option>
+          <option value="valentine" ${preset==='valentine'?'selected':''}>💘 발렌타인데이</option>
+          <option value="whiteday" ${preset==='whiteday'?'selected':''}>🤍 화이트데이</option>
+          <option value="buddha" ${preset==='buddha'?'selected':''}>🪷 석가탄신일</option>
+          <option value="liberation" ${preset==='liberation'?'selected':''}>🇰🇷 광복절</option>
+          <option value="hangul" ${preset==='hangul'?'selected':''}>🔤 한글날</option>
+          <option value="samil" ${preset==='samil'?'selected':''}>✊ 3.1절</option>
+        </select>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+        • 적용 범위: 헤더/탭/기록카드/모달/하단내비/현황판 등<br>
+        • 기기별(localStorage)로 저장됩니다.
+      </div>
     </div>
   </details>`;
   })()}

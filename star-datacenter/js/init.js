@@ -91,6 +91,8 @@ function init(){
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // (요청사항) 버튼/필 스타일 설정 적용
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  // 🎨 디자인 모드(리뉴얼) 적용
+  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -347,17 +349,29 @@ window._applyHeaderSettings = function(){
       // fx별 기본 배경 (그라데이션 말고도 제공)
       if(fx==='solid'){
         g = base2;
+      } else if(fx==='glass'){
+        // glass는 CSS에서 배경/블러 처리를 하므로, 여기서 background를 덮어쓰지 않음
+        g = '';
       } else {
         // classic/aurora/mesh는 기본 그라데이션을 유지하고, 효과는 ::before로 표현
         g = `linear-gradient(135deg,${base1} 0%,${base2} 55%,${base3} 100%)`;
       }
       if(bgImg){
-        hdr.style.backgroundImage = `${g}, url('${bgImg.replace(/'/g,"%27")}')`;
+        // glass 모드일 때는 gradient를 합치지 않고 배경 이미지만 깔기
+        if(fx==='glass'){
+          hdr.style.backgroundImage = `url('${bgImg.replace(/'/g,"%27")}')`;
+        }else{
+          hdr.style.backgroundImage = `${g}, url('${bgImg.replace(/'/g,"%27")}')`;
+        }
         hdr.style.backgroundSize = 'cover';
         hdr.style.backgroundPosition = 'center';
         hdr.style.backgroundRepeat = 'no-repeat';
       }else{
-        hdr.style.background = g;
+        if(fx==='glass'){
+          hdr.style.background = '';
+        }else{
+          hdr.style.background = g;
+        }
         hdr.style.backgroundImage = '';
         hdr.style.backgroundSize = '';
         hdr.style.backgroundPosition = '';
