@@ -468,6 +468,8 @@ function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   localStorage.setItem('su_dark',isDark?'1':'');
   if(window._fixHdrBtns) window._fixHdrBtns(); else document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
+  // 다크 전환 시 테마 변수 재적용(다크 모드에서는 accent만 적용)
+  try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
 }
 
 /* ── 클립보드 복사 유틸 ── */

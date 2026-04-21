@@ -1241,6 +1241,10 @@ function rGrpEditInner(){
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">② 경기 일정 (${(grp.matches||[]).length}경기 등록)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px">
+          <button class="btn btn-p btn-xs" onclick="openCompLeaguePasteModal('${tn.id}',${gi})">📋 경기 결과 붙여넣기</button>
+          <span style="font-size:11px;color:var(--gray-l);align-self:center">※ 해당 조에 경기(1줄=1게임)를 일괄 추가</span>
+        </div>
         ${(grp.matches||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${grp.matches.map((m,mi)=>{
           const isDone=m.sa!=null&&m.sb!=null;
           const ca=isTier?gc((players||[]).find(p=>p.name===m.a)?.univ||''):gc(m.a||'');

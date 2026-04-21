@@ -1385,6 +1385,32 @@ function pastePreview() {
     const trimmed = line.trim();
     if (!trimmed) return;
 
+    // ── (요청사항) 세트 스코어만 입력 허용 ──
+    // 예) "2:2", "1:!" (!는 0으로 처리 → 1:0)
+    // 주로 대회/티어대회/프로리그 세트 입력(조별/토너)에서 사용
+    const _scoreOnlyM = trimmed.match(/^(\d+)\s*[：:]\s*([0-9!]+)\s*$/);
+    if (_scoreOnlyM) {
+      const a = parseInt(_scoreOnlyM[1], 10) || 0;
+      const bRaw = String(_scoreOnlyM[2] || '').trim();
+      const b = parseInt(bRaw.replace(/!/g, '0'), 10) || 0;
+      // score-only는 세트/대회 붙여넣기에서만 의미가 있어 _grpPasteMode일 때만 결과로 포함
+      if (window._grpPasteMode) {
+        results.push({
+          _scoreOnly: true,
+          _scoreA: a,
+          _scoreB: b,
+          setNum: currentSet,
+          lineNum: idx + 1,
+          rawLine: trimmed,
+          ...(currentLineDate ? { _lineDate: currentLineDate } : {}),
+          ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
+        });
+      } else {
+        errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+      }
+      return;
+    }
+
     // ── 토너먼트 라운드 헤더 감지 ──
     // 예) "64강", "32강", "16강", "8강", "4강", "준결승", "결승"
     const _rnd = trimmed.replace(/\s+/g,'');
@@ -1629,6 +1655,27 @@ function pastePreview() {
       // 같은 줄에 경기 결과가 있을 수 있음 (예: "1set ⭕선수A vs 선수B❌")
       const setRem = trimmed.replace(/^\d+\s*(?:세트|셋|set)\s*/i, '').trim();
       if (setRem && setRem !== trimmed) {
+        // "1세트 2:2" 같은 형태 지원
+        const _m2 = setRem.match(/^(\d+)\s*[：:]\s*([0-9!]+)\s*$/);
+        if (_m2) {
+          const a = parseInt(_m2[1], 10) || 0;
+          const b = parseInt(String(_m2[2] || '').replace(/!/g, '0'), 10) || 0;
+          if (window._grpPasteMode) {
+            results.push({
+              _scoreOnly: true,
+              _scoreA: a,
+              _scoreB: b,
+              setNum: currentSet,
+              lineNum: idx + 1,
+              rawLine: trimmed,
+              ...(currentLineDate ? { _lineDate: currentLineDate } : {}),
+              ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
+            });
+          } else {
+            errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+          }
+          return;
+        }
         const r2 = parsePasteLine(setRem);
         if (r2) {
           const wM2 = findPlayerByPartialName(r2.winName);
@@ -1738,11 +1785,11 @@ function renderPastePreview(results, errors) {
   const pendWarn  = document.getElementById('paste-pending-warn');
   if (!previewEl) return;
 
-  const savable  = (results || []).filter(r => r.wPlayer && r.lPlayer);
-  const ambig    = (results || []).filter(r => (!r.wPlayer && r.wCandidates?.length > 1) || (!r.lPlayer && r.lCandidates?.length > 1));
+  const savable  = (results || []).filter(r => (r.wPlayer && r.lPlayer) || r._scoreOnly);
+  const ambig    = (results || []).filter(r => !r._scoreOnly).filter(r => (!r.wPlayer && r.wCandidates?.length > 1) || (!r.lPlayer && r.lCandidates?.length > 1));
   const hasSimilar = (r) => (!r.wPlayer && !r.wCandidates?.length && r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && r.lSimilar?.length);
-  const similarRows = (results || []).filter(r => !r.wPlayer || !r.lPlayer).filter(r => hasSimilar(r) && !ambig.includes(r));
-  const missing  = (results || []).filter(r => (!r.wPlayer && !r.wCandidates?.length && !r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && !r.lSimilar?.length));
+  const similarRows = (results || []).filter(r => !r._scoreOnly).filter(r => !r.wPlayer || !r.lPlayer).filter(r => hasSimilar(r) && !ambig.includes(r));
+  const missing  = (results || []).filter(r => !r._scoreOnly).filter(r => (!r.wPlayer && !r.wCandidates?.length && !r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && !r.lSimilar?.length));
 
   // 상단 뱃지
   if (badge) {
@@ -1820,6 +1867,20 @@ function renderPastePreview(results, errors) {
     let _prevRowDate = null;
 
     results.forEach((r, i) => {
+      // 스코어만 입력 (예: 2:2)
+      if (r._scoreOnly) {
+        const sA = r._scoreA ?? 0;
+        const sB = r._scoreB ?? 0;
+        html += `<tr style="border-top:1px solid var(--border);background:#f8fafc">
+          <td style="padding:8px 8px;font-weight:900;white-space:nowrap">${_matchModePreview==='set' ? `${r.setNum||1}세트` : '스코어'}</td>
+          <td style="padding:8px 8px;color:var(--gray-l);white-space:nowrap">스코어</td>
+          <td style="padding:8px 8px;font-weight:1000;color:#2563eb">${sA}</td>
+          <td style="padding:8px 8px;font-weight:1000;color:#dc2626">${sB}</td>
+          <td style="padding:8px 8px;white-space:nowrap"><span style="font-weight:900;color:#16a34a">✅</span></td>
+          <td style="padding:8px 8px;text-align:center;color:var(--gray-l)">-</td>
+        </tr>`;
+        return;
+      }
       const wOk    = !!r.wPlayer;
       const lOk    = !!r.lPlayer;
       const wAmbig = !wOk && r.wCandidates?.length > 1;
@@ -2436,7 +2497,7 @@ function pasteApply() {
 
   // 대회 경기 세트 적용 모드 분기
   if (window._grpPasteMode) {
-    const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
+    const savable = window._pasteResults.filter(r => (r.wPlayer && r.lPlayer) || r._scoreOnly);
     if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
 
     const _closeGrpPaste = () => {
