@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260421-05">
+<link rel="stylesheet" href="css/style.css?v=20260420-16">
 </head>
 <body>
 
@@ -105,9 +105,7 @@
 <div class="app">
 <div class="hdr">
   <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
-  <div class="hdr-titlewrap" style="display:flex;flex-direction:column;min-width:0;gap:2px;z-index:1">
-    <div class="hdr-title" style="pointer-events:none">스타대학 데이터 센터</div>
-  </div>
+  <div class="hdr-title">스타대학 데이터 센터</div>
   <!-- 버전 표시는 화면에서 숨김(요청사항) -->
   <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
     <!-- 헤더 우측 이미지(설정으로 표시) -->
@@ -548,17 +546,17 @@
 <script src="js/constants.js?v=20260420-01"></script>
 <script src="js/data.js"></script>
 <script src="js/auth.js?v=20260420-01"></script>
-<script src="js/settings.js?v=20260421-05"></script>
-<script src="js/tier-tour.js?v=20260421-05"></script>
+<script src="js/settings.js?v=20260420-11"></script>
+<script src="js/tier-tour.js?v=20260421-03"></script>
 <script src="js/competition.js?v=20260421-01"></script>
-<script src="js/render.js?v=20260421-03"></script>
+<script src="js/render.js?v=20260420-02"></script>
 <script src="js/players.js?v=20260420-02"></script>
 <script src="js/vs.js?v=20260416-02"></script>
 <script src="js/history.js?v=20260421-01"></script>
 <script src="js/match.js?v=20260420-01"></script>
 <script src="js/match-builder.js?v=20260420-02"></script>
 <script src="js/search.js?v=20260421-01"></script>
-<script src="js/pro-comp.js?v=20260421-04"></script>
+<script src="js/pro-comp.js?v=20260421-02"></script>
 <script src="js/stats.js?v=20260416-16"></script>
 <script src="js/calendar.js?v=20260416-02"></script>
 <script src="js/roulette.js?v=20260416-05"></script>
@@ -569,7 +567,7 @@
 <script src="js/elboard.js"></script>
 <script src="js/yt-bgm.js?v=20260420-06"></script>
 <script src="js/soop-multiview.js?v=20260420-10"></script>
-<script src="js/init.js?v=20260421-02"></script>
+<script src="js/init.js?v=20260420-05"></script>
 <script src="js/board2.js?v=20260416-22"></script>
 <script src="js/chatbot.js"></script>
 <script src="js/mobile-bar.js"></script>
@@ -614,41 +612,10 @@ function updateFabVisibility(){
 }
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
-
-// ── FAB 빠른 액션 ──
-function fabActionPaste(){
-  try{
-    if(typeof openPasteModal==='function'){ openPasteModal(); return; }
-    if(typeof om==='function') om('pasteModal');
-  }catch(e){}
-  try{ if(typeof showToast==='function') showToast('붙여넣기 모달을 열 수 없습니다.'); }catch(e){}
-}
-function fabActionSave(){
-  try{
-    if(typeof save==='function'){ save(); if(typeof showToast==='function') showToast('저장 요청'); return; }
-  }catch(e){}
-  try{ if(typeof showToast==='function') showToast('save()를 찾을 수 없습니다.'); }catch(e){}
-}
-function fabActionCfgSearch(){
-  try{
-    const btn=document.getElementById('tabCfg');
-    if(btn) sw('cfg', btn);
-    setTimeout(()=>{
-      const inp=document.getElementById('cfgSearchInp');
-      if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-    }, 80);
-  }catch(e){}
-}
 </script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
-    <div class="fab-sub-title">빠른 액션</div>
-    <div class="fab-sub-item" onclick="closeFab();fabActionPaste()"><span>📋</span> 붙여넣기</div>
-    <div class="fab-sub-item" onclick="closeFab();fabActionSave()"><span>💾</span> 저장</div>
-    <div class="fab-sub-item" onclick="closeFab();fabActionCfgSearch()"><span>⚙️</span> 설정 검색</div>
-    <div class="fab-sub-item" onclick="closeFab();window.scrollTo({top:0,behavior:'smooth'})"><span>⬆</span> 맨위</div>
-    <div class="fab-sub-title" style="margin-top:4px">빠른 이동</div>
     <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:20px;height:20px;object-fit:contain"></span> 알등이</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('comp')"><span>⚡</span> 미니대전</div>
