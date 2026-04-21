@@ -48,6 +48,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
+body.design-v2{background:var(--bg);}
 /* (요청사항) 전체 탭 자동 맞춤 ON */
 body.af-on{padding:var(--af-body-pad);}
 body.af-on .main{padding:var(--af-main-pad);}
@@ -1126,6 +1127,430 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 }
 
 #hdrRightImg{max-height:40px;max-width:140px;}
+
+/* ══════════════════════════════════════
+   🎨 디자인 모드 (design-v2)
+   - 설정 > 🎨 디자인 모드에서 토글
+   - 기존 UI는 유지, design-v2 클래스가 있을 때만 오버라이드
+══════════════════════════════════════ */
+body.design-v2{
+  /* 팔레트 확장(라이트) */
+  --primary-start:#4F46E5;
+  --primary-mid:#7C3AED;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --accent-success:#10B981;
+  --accent-danger:#EF4444;
+  --glass-blur:12px;
+  --glass-bg:rgba(255,255,255,.72);
+  /* 기존 시스템 컬러도 같이 갱신(버튼/필/강조색 일관성) */
+  --blue: var(--primary-end);
+  --blue-d: #1e40af;
+  --blue-l: rgba(37,99,235,.10);
+  --blue-ll: rgba(37,99,235,.06);
+  --gold: var(--accent-warm);
+  /* 공통 배경 톤(전체 UI에 파급) */
+  --bg:#F8FAFC;
+  --white:rgba(255,255,255,.92);
+  --surface:rgba(255,255,255,.70);
+  --border:rgba(2,6,23,.08);
+  --border2:rgba(2,6,23,.14);
+  /* gold 계열(상단 메뉴/안내 박스에서 많이 사용)도 디자인모드 톤으로 */
+  --gold-bg: rgba(245,158,11,.14);
+  --gold-b: rgba(245,158,11,.32);
+}
+body.dark.design-v2{
+  --glass-bg:rgba(15,23,42,.55);
+}
+
+/* ── 전체 배경/레이아웃 톤 통일(디자인모드) ── */
+body.design-v2{
+  background:var(--bg) !important;
+}
+body.design-v2 .app{
+  background:var(--white);
+  border-color:var(--border);
+}
+body.design-v2 .main{
+  background:transparent;
+}
+
+/* 표/리스트 zebra/hover도 톤 맞춤(하드코딩 제거) */
+body.design-v2 tr:not(.ugrp):not(.tgrp):nth-child(even) td{
+  background:rgba(2,6,23,.02) !important;
+}
+body.design-v2 tr:not(.ugrp):not(.tgrp):hover td{
+  background:rgba(79,70,229,.06) !important;
+}
+
+/* 상단/하위 메뉴 바(필/정렬/서브메뉴) */
+body.design-v2 .fbar,
+body.design-v2 .hist-topbar,
+body.design-v2 .tabs-scroll-wrap{
+  background:var(--surface) !important;
+  border-color:var(--border) !important;
+}
+
+/* 드롭다운/필터 컨트롤 배경 */
+body.design-v2 .ym-sel,
+body.design-v2 .ym-filter-controls{
+  background:var(--white) !important;
+  border-color:var(--border2) !important;
+}
+
+/* 설정의 섹션 summary(상단 메뉴/하위 메뉴 버튼 느낌)도 톤 맞춤 */
+body.design-v2 details.ssec > summary.cfg-sec-summary{
+  background:var(--white) !important;
+  border-color:var(--border) !important;
+}
+
+/* ── 디자인 모드 프리셋(계절/이벤트) ───────────────────── */
+body.design-v2.designv2-spring{
+  --primary-start:#22c55e;
+  --primary-mid:#f472b6;
+  --primary-end:#4F46E5;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --accent-success:#10B981;
+  --accent-danger:#EF4444;
+  --blue: var(--primary-end);
+}
+body.design-v2.designv2-summer{
+  --primary-start:#0ea5e9;
+  --primary-mid:#22c55e;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: var(--primary-start);
+}
+body.design-v2.designv2-autumn{
+  --primary-start:#ea580c;
+  --primary-mid:#b45309;
+  --primary-end:#7c2d12;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: #2563EB;
+}
+body.design-v2.designv2-winter{
+  --primary-start:#2563eb;
+  --primary-mid:#94a3b8;
+  --primary-end:#1e3a8a;
+  --accent-warm:#38bdf8;
+  --accent-cool:#06B6D4;
+  --blue: #2563EB;
+}
+body.design-v2.designv2-xmas{
+  --primary-start:#16a34a;
+  --primary-mid:#dc2626;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: #16a34a;
+}
+body.design-v2.designv2-summerbreak{
+  --primary-start:#38bdf8;
+  --primary-mid:#fbbf24;
+  --primary-end:#0ea5e9;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: #38bdf8;
+}
+body.design-v2.designv2-valentine{
+  --primary-start:#e11d48;
+  --primary-mid:#fb7185;
+  --primary-end:#7c3aed;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: #7c3aed;
+}
+body.design-v2.designv2-whiteday{
+  --primary-start:#38bdf8;
+  --primary-mid:#ffffff;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue: #38bdf8;
+}
+
+body.design-v2.designv2-winterbreak{
+  --primary-start:#60a5fa;
+  --primary-mid:#e2e8f0;
+  --primary-end:#2563EB;
+  --accent-warm:#38bdf8;
+  --accent-cool:#06B6D4;
+  --blue:#60a5fa;
+}
+body.design-v2.designv2-buddha{
+  --primary-start:#a855f7;
+  --primary-mid:#22c55e;
+  --primary-end:#7c3aed;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue:#a855f7;
+}
+body.design-v2.designv2-liberation{
+  --primary-start:#1d4ed8;
+  --primary-mid:#dc2626;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue:#1d4ed8;
+}
+body.design-v2.designv2-hangul{
+  --primary-start:#7c3aed;
+  --primary-mid:#fbbf24;
+  --primary-end:#4F46E5;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue:#7c3aed;
+}
+body.design-v2.designv2-samil{
+  --primary-start:#111827;
+  --primary-mid:#e5e7eb;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue:#111827;
+}
+
+/* 🇰🇷 태극기 테마(강한 패턴) */
+body.design-v2.designv2-taegeuk{
+  --primary-start:#1d4ed8;
+  --primary-mid:#dc2626;
+  --primary-end:#2563EB;
+  --accent-warm:#F59E0B;
+  --accent-cool:#06B6D4;
+  --blue:#1d4ed8;
+  --bg:#f8fafc;
+  --surface:rgba(255,255,255,.72);
+  --white:rgba(255,255,255,.92);
+}
+body.design-v2.designv2-taegeuk::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:.24; /* 강한 패턴 */
+  mix-blend-mode:multiply;
+  background-repeat:repeat;
+  background-size:280px 280px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='280'%20height='280'%20viewBox='0%200%20280%20280'%3E%3Crect%20width='280'%20height='280'%20fill='white'/%3E%3Cg%20opacity='0.95'%3E%3C!--%20Taegeuk%20circle%20--%3E%3Ccircle%20cx='140'%20cy='140'%20r='72'%20fill='none'%20stroke='%230f172a'%20stroke-width='3'/%3E%3Cpath%20d='M140%2068%20a72%2072%200%201%201%200%20144%20a36%2036%200%201%200%200-72%20a36%2036%200%201%201%200-72z'%20fill='%23dc2626'/%3E%3Cpath%20d='M140%2068%20a72%2072%200%201%200%200%20144%20a36%2036%200%201%201%200-72%20a36%2036%200%201%200%200-72z'%20fill='%231d4ed8'/%3E%3Ccircle%20cx='140'%20cy='104'%20r='12'%20fill='%231d4ed8'/%3E%3Ccircle%20cx='140'%20cy='176'%20r='12'%20fill='%23dc2626'/%3E%3C!--%20Trigrams%20(simple%20bars)%20--%3E%3Cg%20fill='%230f172a'%3E%3Crect%20x='40'%20y='46'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='62'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='78'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='46'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='62'%20width='28'%20height='8'/%3E%3Crect%20x='212'%20y='62'%20width='28'%20height='8'/%3E%3Crect%20x='176'%20y='78'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='194'%20width='28'%20height='8'/%3E%3Crect%20x='76'%20y='194'%20width='28'%20height='8'/%3E%3Crect%20x='40'%20y='210'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='226'%20width='28'%20height='8'/%3E%3Crect%20x='76'%20y='226'%20width='28'%20height='8'/%3E%3Crect%20x='176'%20y='194'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='210'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='226'%20width='64'%20height='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+body.design-v2.designv2-taegeuk .app{position:relative; z-index:1;}
+
+/* 설정 상단 카테고리(메뉴 버튼)도 디자인모드 톤으로 */
+body.design-v2 .cfg-cat-pill{
+  background:rgba(255,255,255,.70);
+  border:1px solid var(--border);
+  backdrop-filter:blur(10px);
+}
+body.design-v2 .cfg-cat-pill.on{
+  background:linear-gradient(135deg,var(--primary-start),var(--primary-end));
+  color:#fff;
+  border-color:transparent;
+}
+
+/* ── 헤더: 더 동적인 그라데이션 ── */
+body.design-v2 .hdr{
+  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 45%,var(--primary-end));
+  position:relative;
+  overflow:hidden;
+}
+body.design-v2 .hdr::before{
+  content:'';
+  position:absolute; inset:-40%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.22), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(6,182,212,.22), transparent 55%),
+    radial-gradient(circle at 60% 80%, rgba(245,158,11,.18), transparent 60%);
+  filter:blur(6px);
+  opacity:.9;
+  pointer-events:none;
+}
+body.design-v2 .hdr > *{ position:relative; z-index:1; }
+
+/* ── 탭: 세그먼트/인디케이터 스타일 ── */
+body.design-v2 .tabs-scroll-wrap{
+  background:rgba(255,255,255,.65);
+  backdrop-filter:blur(14px);
+}
+body.dark.design-v2 .tabs-scroll-wrap{
+  background:rgba(2,6,23,.45);
+}
+body.design-v2 .tab{
+  position:relative;
+  padding:10px 18px;
+  border-radius:12px 12px 0 0;
+  background:transparent;
+  font-weight:650;
+  transition:all .2s ease;
+}
+body.design-v2 .tab:hover:not(.on){
+  background:rgba(79,70,229,.10);
+  color:var(--primary-mid);
+}
+body.design-v2 .tab.on{
+  background:transparent;
+  font-weight:850;
+  color:var(--primary-mid);
+  box-shadow:none;
+}
+body.design-v2 .tab.on::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-1px;
+  width:62%;
+  height:3px;
+  background:linear-gradient(90deg,var(--primary-start),var(--primary-mid));
+  border-radius:3px 3px 0 0;
+}
+
+/* ── 버튼/필/메뉴: 디자인 모드 컬러로 통일 ── */
+body.design-v2 .btn-b{
+  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 55%,var(--primary-end));
+  box-shadow:0 10px 22px color-mix(in srgb, var(--primary-mid) 25%, transparent);
+}
+body.design-v2 .btn-b:hover{
+  filter:brightness(1.02);
+  box-shadow:0 14px 28px color-mix(in srgb, var(--primary-mid) 32%, transparent);
+}
+body.design-v2 .btn-w:hover{
+  border-color:color-mix(in srgb, var(--primary-mid) 35%, var(--border2));
+  color:var(--primary-mid);
+}
+body.design-v2 .btn-p:hover{
+  background:linear-gradient(135deg,var(--primary-mid),var(--primary-end));
+  border-color:color-mix(in srgb, var(--primary-mid) 55%, transparent);
+}
+body.design-v2 .pill.on,
+body.design-v2 .sort-btn.on,
+body.design-v2 .tier-filter-btn.on{
+  background:linear-gradient(135deg,var(--primary-start),var(--primary-end));
+  border-color:color-mix(in srgb, var(--primary-mid) 45%, transparent);
+}
+
+/* ── 기본 pill/필터/드롭다운이 흰색으로 남는 문제: design-v2 톤으로 강제 ── */
+body.design-v2 .pill{
+  background:var(--surface) !important;
+  border-color:var(--border) !important;
+  color:var(--text3) !important;
+  backdrop-filter:blur(10px);
+}
+body.design-v2 .pill:hover{
+  background:color-mix(in srgb, var(--primary-mid) 10%, var(--surface)) !important;
+  border-color:color-mix(in srgb, var(--primary-mid) 25%, var(--border2)) !important;
+  color:var(--primary-mid) !important;
+}
+body.design-v2 .ym-filter-controls .ym-sel{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+}
+body.design-v2 .btn-w{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  box-shadow:0 2px 10px rgba(2,6,23,.04);
+}
+body.design-v2 .btn-detail{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+}
+
+/* ── 기록 카드 배경이 흰색으로 남는 문제 ── */
+body.design-v2 .rec-summary{
+  background:var(--surface) !important;
+}
+body.design-v2 .rec-sum-header{
+  background:transparent !important;
+}
+
+/* ── 기록 카드(대전 카드): 계층적 섀도/호버 ── */
+body.design-v2 .rec-summary{
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:16px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 10px rgba(0,0,0,.04);
+  transition:transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1), border-color .25s;
+}
+body.dark.design-v2 .rec-summary{
+  border:1px solid rgba(148,163,184,.18);
+  box-shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.22);
+}
+body.design-v2 .rec-summary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(0,0,0,.10), 0 18px 42px rgba(0,0,0,.08);
+  border-color:rgba(124,58,237,.25);
+}
+
+/* ── 모달: 글래스/시트 느낌 강화 ── */
+body.design-v2 .modal{
+  background:rgba(15,23,42,.60);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+body.design-v2 .mbox, body.design-v2 .umbox{
+  border-radius:20px;
+  border:1px solid rgba(0,0,0,.06);
+  background:var(--glass-bg);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  box-shadow:0 25px 50px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.05);
+}
+@media (max-width:768px){
+  body.design-v2 .modal{ align-items:flex-end !important; }
+  body.design-v2 .mbox, body.design-v2 .umbox{
+    width:100%;
+    max-height:90vh;
+    border-radius:24px 24px 0 0;
+    border:none;
+    animation:slideUpDesignV2 .30s ease-out;
+  }
+  body.design-v2 .mbox::before, body.design-v2 .umbox::before{
+    content:'';
+    display:block;
+    width:36px;height:4px;
+    background:#CBD5E1;
+    border-radius:2px;
+    margin:10px auto;
+  }
+  @keyframes slideUpDesignV2{ from{transform:translateY(100%);} to{transform:translateY(0);} }
+}
+
+/* ── 하단 내비: 더 글래스/터치 영역 ── */
+body.design-v2 #bottomNav{
+  height:72px;
+  backdrop-filter:blur(20px);
+  background:rgba(255,255,255,.85);
+  box-shadow:0 -4px 20px rgba(0,0,0,.08);
+}
+body.dark.design-v2 #bottomNav{
+  background:rgba(2,6,23,.55);
+  box-shadow:0 -6px 24px rgba(0,0,0,.35);
+}
+body.design-v2 .bnav-item{
+  padding:8px 4px;
+  min-height:56px;
+}
+
+/* ── 현황/요약 카드: 그리드 느낌 강화 ── */
+body.design-v2 .scards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+  gap:14px;
+}
+body.design-v2 .scard{
+  background:rgba(255,255,255,.90);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+body.design-v2 .scard:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 26px rgba(79,70,229,.18), 0 16px 44px rgba(0,0,0,.10);
+}
 
 @media (max-width: 480px) {
   .hdr-title { font-size: 12px; letter-spacing: 0; }
