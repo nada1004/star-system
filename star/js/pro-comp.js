@@ -2025,6 +2025,21 @@ function _bktEditAddGame() {
   _bktEditRenderGames();
 }
 
+// (요청사항) 붙여넣기 없이 스코어(2:2 / 3:3 등)로 빠른 입력
+function _bktEditApplyScore(){
+  const a = parseInt(document.getElementById('_bktEditScoreA')?.value||'0',10) || 0;
+  const b = parseInt(document.getElementById('_bktEditScoreB')?.value||'0',10) || 0;
+  if(a<0||b<0) return alert('스코어는 0 이상이어야 합니다.');
+  if(_bktEditGames.length){
+    if(!confirm('현재 입력된 게임 목록을 스코어 기준으로 재설정할까요?')) return;
+  }
+  const games=[];
+  for(let i=0;i<a;i++) games.push({winner:'A', map:''});
+  for(let i=0;i<b;i++) games.push({winner:'B', map:''});
+  _bktEditGames = games;
+  _bktEditRenderGames();
+}
+
 function openBktEditPasteModal() {
   const tn = _findTourneyById(_bktEditTnId); if (!tn) return;
   const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim() || '';
@@ -2116,7 +2131,11 @@ function _bktEditSave() {
   } else {
     m.winner = ''; m._games = []; m.map = '';
   }
-  _syncBktMatchToHistory(tn, m, bktId, _bktEditRi, _bktEditMi);
+  // 동률/승자미정일 때는 히스토리 반영하지 않음
+  const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
+  if(m.winner && !isBye(m.a) && !isBye(m.b)){
+    _syncBktMatchToHistory(tn, m, bktId, _bktEditRi, _bktEditMi);
+  }
   document.getElementById('_bktEditModal')?.remove();
   save(); render();
 }
@@ -2148,6 +2167,19 @@ function proCompBktEditPlayers(tnId, ri, mi) {
     <div style="margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:var(--text3)">날짜</label>
       <input id="_bktEditD" type="date" value="${m.d||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">⚖️ 스코어로 빠른 입력 (2:2 / 3:3 등)</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="_bktEditScoreA" type="number" min="0" value="0" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box">
+        <span style="font-weight:900;color:var(--gray-l)">:</span>
+        <input id="_bktEditScoreB" type="number" min="0" value="0" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box">
+        <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="_bktEditApplyScore()">적용</button>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:6px;line-height:1.4">
+        • 동률이면 승자 미정으로 저장되며 다음 라운드로 전파되지 않습니다.<br>
+        • 이후 승자가 확정되면 게임별 승자를 다시 입력하면 됩니다.
+      </div>
     </div>
     <div style="margin-bottom:4px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
