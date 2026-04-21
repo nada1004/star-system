@@ -317,7 +317,7 @@ function proCompLeague(tn) {
     const grpOpts=(tn.groups||[]).map((grp,gi)=>({name:grp.name,label:`GROUP ${'ABCDEFGHIJ'[gi]||gi+1}`}));
     h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div class="ym-filter-controls compact">
-        <span class="ym-lbl">일자</span>
+        <span class="ym-lbl"></span>
         <select class="ym-sel" onchange="proCompFilterDate=this.value;render()">
           <option value=""${!proCompFilterDate?' selected':''}>전체</option>
           ${dates.map(d=>`<option value="${d}"${proCompFilterDate===d?' selected':''}>${fmt(d)}</option>`).join('')}
@@ -1229,13 +1229,19 @@ function _pcBktBuildFromPasteApplyLogic(savable, tn){
 
   // 1) 게임들을 매치(선수쌍)로 묶기
   const matchMap = {}; // key => {a,b,games:[{w,l,map}]}
+  const _extractRound = (txt)=>{
+    const s=String(txt||'');
+    const m=s.match(/(64강|32강|16강|8강|4강|준결승|결승)/);
+    return m ? m[1] : null;
+  };
   savable.forEach(r=>{
     const w = r.wPlayer?.name; const l = r.lPlayer?.name;
     if(!w || !l) return;
     const k = [w,l].sort().join('|');
-    if(!matchMap[k]) matchMap[k] = { p1: w, p2: l, games: [], rnd: r._rndLabel || null };
+    const rndHint = r._rndLabel || r.rndLabel || r._roundLabel || _extractRound(r._lineMemo) || _extractRound(r.memo) || null;
+    if(!matchMap[k]) matchMap[k] = { p1: w, p2: l, games: [], rnd: rndHint };
     // 라운드 정보는 첫 등장 라인 기준
-    if(!matchMap[k].rnd && r._rndLabel) matchMap[k].rnd = r._rndLabel;
+    if(!matchMap[k].rnd && rndHint) matchMap[k].rnd = rndHint;
     matchMap[k].games.push({ w, l, map: r.map||'' });
   });
   const matches = Object.values(matchMap);
@@ -2594,8 +2600,31 @@ function _pcBktPasteApplyLogic(savable, tn) {
 
   const keys = Object.keys(matchGroups);
   if (!keys.length) {
+    // (요청사항) 대진표가 아직 TBD라 매칭이 안 되는 경우가 많음 → 붙여넣기만으로 대진표 자동 생성/채움 시도
+    // 조건: savable(선수 인식된 경기)이 있고, 라운드 정보가 있거나(64강/32강...) 전체 토너먼트를 입력하는 경우
+    const _hasSavable = savable.some(r=>r && r.wPlayer && r.lPlayer);
+    const _hasRoundHint = savable.some(r=>{
+      const rl = (r && (r._rndLabel || r.rndLabel || r._roundLabel)) || '';
+      const memo = (r && (r._lineMemo || r.memo)) || '';
+      return /(?:\d{1,3}강|결승|준결승|4강)/.test(String(rl)) || /(?:\d{1,3}강|결승|준결승|4강)/.test(String(memo));
+    });
+    if (_hasSavable && (tn.bracket==null || tn.bracket.length===0 || _hasRoundHint)) {
+      // 기존 브라켓에 결과가 있으면 덮어쓰기 확인
+      const _hasAnyWinner = (tn.bracket||[]).some(rnd=>(rnd||[]).some(m=>m && m.winner));
+      if(_hasAnyWinner){
+        if(!confirm('현재 대진표에 이미 입력된 결과가 있습니다.\n붙여넣기 내용으로 대진표를 자동 생성/재구성하면 기존 입력이 덮어써질 수 있습니다.\n\n계속할까요?')) return false;
+      }
+      try{
+        const ok = (typeof _pcBktBuildFromPasteApplyLogic==='function') ? _pcBktBuildFromPasteApplyLogic(savable, tn) : false;
+        if(ok){
+          alert('대진표를 자동으로 채운 뒤 결과를 반영했습니다.');
+          return true;
+        }
+      }catch(e){}
+    }
     const msg = unmatched.length ? `인식된 경기가 없습니다.\n미인식: ${unmatched.join(', ')}` : '저장 가능한 경기가 없습니다.';
-    alert(msg); return false;
+    alert(msg);
+    return false;
   }
 
   let saved = 0;
@@ -2771,11 +2800,13 @@ function _proCompLeaguePasteApplyLogic(savable) {
   let added = 0;
   savable.forEach(r => {
     if (!r.wPlayer||!r.lPlayer) return;
+    // (요청사항) 날짜가 라인별로 포함된 경우(_lineDate) 그 날짜로 저장
+    const d = (r._lineDate && /^\d{4}-\d{2}-\d{2}$/.test(r._lineDate)) ? r._lineDate : defDate;
     const newMid = 'pco_'+(Date.now()+added).toString(36)+Math.random().toString(36).slice(2,5);
     const aName = r.wPlayer.name;
     const bName = r.lPlayer.name;
-    grp.matches.push({a:aName, b:bName, winner:'A', d:defDate, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
-    applyGameResult(aName, bName, defDate, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
+    grp.matches.push({a:aName, b:bName, winner:'A', d, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
+    applyGameResult(aName, bName, d, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
     added++;
   });
   save(); render();
