@@ -1339,6 +1339,7 @@ function _pcBktBuildFromPasteApplyLogic(savable, tn){
   });
 
   save();
+  try{ render(); }catch(e){}
   return true;
 }
 
@@ -1710,16 +1711,53 @@ function proCompDeleteBracket(tnId){
   if(!tn) return;
   if(!confirm('현재 대회의 대진표(토너먼트)를 삭제할까요?\n\n⚠️ 토너먼트 경기 결과/스트리머 최근 경기 반영도 함께 제거됩니다.')) return;
   const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
-  // 히스토리 롤백
+  const _rmRecordById = (mid)=>{
+    if(!mid) return;
+    try{
+      const pi = (typeof proM!=='undefined'?proM:[]).findIndex(x=>x && x._id===mid);
+      if(pi>=0) proM.splice(pi,1);
+    }catch(e){}
+    try{
+      const ti = (typeof ttM!=='undefined'?ttM:[]).findIndex(x=>x && x._id===mid);
+      if(ti>=0) ttM.splice(ti,1);
+    }catch(e){}
+  };
+  const _buildMatchObj = (mid, m)=>{
+    // revertMatchRecord가 gameMatchId(mid_s0_g#)까지 지울 수 있게 sets/games 구조로 구성
+    const games = (m && Array.isArray(m._games) ? m._games : []);
+    return {
+      _id: mid,
+      d: (m && m.d) ? m.d : '',
+      sets: [{
+        games: games.map(g=>({
+          playerA: g.winName || '',
+          playerB: g.loseName || '',
+          winner: 'A',
+          map: g.map || ''
+        }))
+      }]
+    };
+  };
+  // 히스토리/기록 롤백 (player history + proM/ttM)
   (tn.bracket||[]).forEach((rnd,ri)=>{
     (rnd||[]).forEach((m,mi)=>{
       if(m && m.winner && !isBye(m.a) && !isBye(m.b)){
-        try{ _revertProMatch(`pbn_${tnId}_${ri}_${mi}`); }catch(e){}
+        const mid = `pbn_${tnId}_${ri}_${mi}`;
+        try{
+          if(typeof revertMatchRecord==='function') revertMatchRecord(_buildMatchObj(mid,m));
+          else _revertProMatch(mid);
+        }catch(e){}
+        _rmRecordById(mid);
       }
     });
   });
   if(tn.thirdPlace && tn.thirdPlace.winner){
-    try{ _revertProMatch(`pbn_${tnId}_3rd`); }catch(e){}
+    const mid = `pbn_${tnId}_3rd`;
+    try{
+      if(typeof revertMatchRecord==='function') revertMatchRecord(_buildMatchObj(mid, tn.thirdPlace));
+      else _revertProMatch(mid);
+    }catch(e){}
+    _rmRecordById(mid);
   }
   tn.bracket = [];
   tn.thirdPlace = null;

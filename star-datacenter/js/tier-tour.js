@@ -112,6 +112,8 @@ function openBktPasteModal(){
       </select></div>`;
     compWrap.style.display='block';
   }
+  // 붙여넣기 모달이 경기 수정 모달 뒤에 깔리는 문제 방지: 기존 모달을 먼저 닫고 열기
+  try{ cm('grpMatchModal'); }catch(e){}
   om('pasteModal');
 }
 
@@ -192,6 +194,8 @@ function openGrpPasteModal(){
   const _pTitle=document.querySelector('#pasteModal .mtitle');
   if(_pTitle)_pTitle.textContent='📋 결과 붙여넣기';
 
+  // 붙여넣기 모달이 경기 수정 모달 뒤에 깔리는 문제 방지
+  try{ cm('grpMatchModal'); }catch(e){}
   om('pasteModal');
 }
 
@@ -2374,6 +2378,9 @@ function bulkConvertToGameScore(){
 }
 
 
+// (정리) 아래 블록은 과거 코드가 중복 삽입된 영역입니다.
+// 전역 함수/변수 오염(덮어쓰기)으로 탭 기능이 꼬이는 문제를 막기 위해 IIFE로 격리합니다.
+(function(){
 /* ══════════════════════════════════════
    시즌 관리 함수
 ══════════════════════════════════════ */
@@ -3250,6 +3257,7 @@ function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
+})(); // end legacy-duplicate isolation
 function setBoardMemo2(univName, text){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
