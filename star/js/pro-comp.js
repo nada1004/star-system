@@ -217,18 +217,45 @@ function rProComp(C, T) {
       ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${(tn.groups||[]).length}개 조 · ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
     </div>`;
 
-    const subOpts = [
-      {id:'league', lbl:'📅 조별리그 일정'},
-      {id:'grprank', lbl:'📊 조별 순위'},
-      {id:'tour', lbl:'🗂️ 토너먼트'},
-      {id:'tourmatch', lbl:'📝 토너먼트 경기'},
-      {id:'team', lbl:'👥 팀전'},
-      {id:'gj', lbl:'⚔️ 끝장전'},
-      {id:'stats', lbl:'🏆 대회 통계'},
-      ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 조편성 관리'}]:[]),
+    // ── 2단 서브탭(기록/입력/대진표/관리) ──
+    const _subsAll = [
+      {id:'league', lbl:'조별 일정'},
+      {id:'grprank', lbl:'조별 순위'},
+      {id:'tour', lbl:'토너 대진표'},
+      {id:'tourmatch', lbl:'토너 입력'},
+      {id:'team', lbl:'팀전'},
+      {id:'gj', lbl:'끝장전'},
+      {id:'stats', lbl:'통계'},
+      ...(isLoggedIn?[{id:'grpedit', lbl:'조편성'}]:[]),
     ];
-    if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
-    h += `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+    if (!_subsAll.find(o=>o.id===proCompSub)) proCompSub = 'league';
+    const _groups = [
+      {id:'rec', lbl:'📋 기록', subs:['league','grprank','team','gj','stats']},
+      {id:'br',  lbl:'🗂️ 대진표', subs:['tour']},
+      {id:'in',  lbl:'📝 입력', subs:['tourmatch']},
+      {id:'mg',  lbl:'🏗️ 관리', subs:['grpedit']},
+    ];
+    const _findGroupBySub=(sid)=>_groups.find(g=>g.subs.includes(sid));
+    if(!window._pcSubGroup || !_groups.some(g=>g.id===window._pcSubGroup)){
+      window._pcSubGroup = _findGroupBySub(proCompSub)?.id || 'rec';
+    }
+    const _curG = _groups.find(g=>g.id===window._pcSubGroup) || _groups[0];
+    if(!_curG.subs.includes(proCompSub)){
+      const first=_curG.subs.find(sid=>_subsAll.some(x=>x.id===sid));
+      if(first) proCompSub = first;
+    }
+    const _groupNav = `<div class="subtab-bar no-export" style="margin-bottom:8px">
+      ${_groups.map(g=>{
+        const on = window._pcSubGroup===g.id;
+        const hasAny = g.subs.some(sid=>_subsAll.some(x=>x.id===sid));
+        if(!hasAny) return '';
+        return `<button class="subtab-btn ${on?'is-active':''}" onclick="window._pcSubGroup='${g.id}';render()">${g.lbl}</button>`;
+      }).join('')}
+    </div>`;
+    const _subNav = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+      ${_subsAll.filter(o=>_curG.subs.includes(o.id)).map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
+    </div>`;
+    h += _groupNav + _subNav;
 
     if (!tn && proCompSub !== 'grpedit') {
       h += `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
@@ -2178,6 +2205,7 @@ function proCompGrpEdit() {
           </div>`).join('')}
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <button class="btn btn-b btn-sm" onclick="proCompAddMatch('${tn.id}',${gi})">+ 경기 추가</button>
+            <button class="btn btn-p btn-sm" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 경기 결과 붙여넣기</button>
             ${(grp.players||[]).length>=2?`<button class="btn btn-w btn-sm" onclick="proCompGenRoundRobin('${tn.id}',${gi})" title="선수 목록 기반 라운드로빈 경기 자동 생성">🔄 라운드로빈 생성</button>`:''}
           </div>
         </div>
@@ -2547,6 +2575,12 @@ function _pcBktPasteApplyLogic(savable, tn) {
     if (!m || !m.a || !m.b) return false;
     const games = [];
     for (const r of savable) {
+      if (r._scoreOnly) {
+        const a = (r._scoreA||0), b = (r._scoreB||0);
+        for(let i=0;i<a;i++) games.push({winner:'A', map:''});
+        for(let i=0;i<b;i++) games.push({winner:'B', map:''});
+        continue;
+      }
       if (!r.wPlayer || !r.lPlayer) continue;
       const wn = r.wPlayer.name;
       let winner = '';
@@ -2579,6 +2613,7 @@ function _pcBktPasteApplyLogic(savable, tn) {
   const matchGroups = {}; // key → {ri, mi, games:[]}
   const unmatched = [];
   for (const r of savable) {
+    if (r._scoreOnly) continue; // 여러경기 일괄 모드에서는 스코어만 라인은 지원하지 않음
     if (!r.wPlayer || !r.lPlayer) continue;
     const wn = r.wPlayer.name;
     const ln = r.lPlayer.name;

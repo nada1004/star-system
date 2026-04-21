@@ -168,6 +168,9 @@ const _HIST_EXT_KEY='su_hist_ext_data_v1';
 const _HIST_EXT_PROXY_KEY='su_hist_ext_proxy_v1';
 const _HIST_EXT_PROXY_CFG_KEY='su_hist_ext_proxy_cfg_v1';
 const _HIST_EXT_TARGET_KEY='su_hist_ext_target_v1';
+// (요청사항) 프록시 프리셋(여러개) 지원
+const _HIST_EXT_PROXY_PRESETS_KEY='su_hist_ext_proxy_presets_v1';
+const _HIST_EXT_PROXY_PRESET_SEL_KEY='su_hist_ext_proxy_preset_sel_v1';
 // 선택/페이지 상태(탭 내 UI용 — localStorage 저장은 데이터만)
 window._histExtSel = window._histExtSel || new Set();
 window._histExtPage = window._histExtPage || 1;
@@ -176,11 +179,60 @@ function _histExtLoad(){
   try{ return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''}; }catch(e){ return {items:[],raw:'',mode:'today',today:''}; }
 }
 function _histExtSave(v){ try{ localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v)); }catch(e){} }
+function _histExtUid(){ return 'hex_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function _histExtProxyPresetsLoad(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_PRESETS_KEY)||'null');
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function _histExtProxyPresetsSave(arr){
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){}
+}
+function _histExtProxyPresetSelLoad(){
+  try{ return localStorage.getItem(_HIST_EXT_PROXY_PRESET_SEL_KEY)||''; }catch(e){ return ''; }
+}
+function _histExtProxyPresetSelSave(id){
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, String(id||'')); }catch(e){}
+}
+function _histExtEnsureProxyPresets(){
+  let presets = _histExtProxyPresetsLoad();
+  let sel = _histExtProxyPresetSelLoad();
+  // 최초 1회: 기존 단일 설정을 프리셋으로 승격
+  if(!presets.length){
+    const legacyProxy = (()=>{ try{ return localStorage.getItem(_HIST_EXT_PROXY_KEY)||''; }catch(e){ return ''; } })();
+    const legacyCfg = (()=>{ try{ return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{}; }catch(e){ return {}; } })();
+    presets = [{
+      id: _histExtUid(),
+      name: '기본',
+      proxy: legacyProxy || '',
+      bo: legacyCfg.bo || 'bj_board',
+      pFrom: legacyCfg.pFrom || 1,
+      pTo: legacyCfg.pTo || 6
+    }];
+    sel = presets[0].id;
+    _histExtProxyPresetsSave(presets);
+    _histExtProxyPresetSelSave(sel);
+  }
+  if(!sel || !presets.some(p=>p.id===sel)){
+    sel = presets[0]?.id || '';
+    _histExtProxyPresetSelSave(sel);
+  }
+  return {presets, sel};
+}
+function _histExtGetSelPreset(){
+  const {presets, sel} = _histExtEnsureProxyPresets();
+  return presets.find(p=>p.id===sel) || presets[0] || null;
+}
 function _histExtProxyLoad(){
-  try{ return localStorage.getItem(_HIST_EXT_PROXY_KEY)||''; }catch(e){ return ''; }
+  const p = _histExtGetSelPreset();
+  try{ return (p && p.proxy) ? String(p.proxy) : (localStorage.getItem(_HIST_EXT_PROXY_KEY)||''); }catch(e){ return ''; }
 }
 function _histExtProxySave(v){ try{ localStorage.setItem(_HIST_EXT_PROXY_KEY, String(v||'')); }catch(e){} }
 function _histExtProxyCfgLoad(){
+  const p = _histExtGetSelPreset();
+  if(p) return {bo:p.bo||'bj_board', pFrom:p.pFrom||1, pTo:p.pTo||6};
   try{ return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{}; }catch(e){ return {}; }
 }
 function _histExtProxyCfgSave(obj){
@@ -280,7 +332,7 @@ function _histExtDedup(items){
   const seen=new Set();
   const out=[];
   items.forEach(x=>{
-    const k=[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('|');
+    const k=[x.source||'',x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('|');
     if(seen.has(k)) return;
     seen.add(k); out.push(x);
   });
@@ -290,11 +342,16 @@ function _histExtDedup(items){
 }
 
 function _histExtKey(x){
-  return [x.date||'',x.winner||'',x.loser||'',x.map||'',x.elo||'',x.type||'',x.memo||''].join('|');
+  return [x.source||'',x.date||'',x.winner||'',x.loser||'',x.map||'',x.elo||'',x.type||'',x.memo||''].join('|');
 }
 function _histExtGetViewItems(){
   const st=_histExtLoad();
   let items = st.items || [];
+  // 소스 필터
+  const srcSel = String(st.sourceSel||'').trim();
+  if(srcSel){
+    items = items.filter(x=>String(x.source||'')===srcSel);
+  }
   const kw = String(st.keyword||'').trim();
   if(kw){
     const q = kw.toLowerCase();
@@ -307,6 +364,13 @@ function _histExtGetViewItems(){
   }
   return items;
 }
+window.histExtSetSource = function(v){
+  const st=_histExtLoad();
+  const next={...st, sourceSel:String(v||'')};
+  _histExtSave(next);
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
+};
 window.histExtResetUI = function(){
   try{ window._histExtSel = new Set(); }catch(e){}
   window._histExtPage = 1;
@@ -490,14 +554,16 @@ window.histExtParseAndRender = function(opts){
   let rows=null, fmt='-';
   if(/<table[\s>]/i.test(raw)){ rows=_histExtParseHTMLTable(raw); if(rows) fmt='HTML 표'; }
   if(!rows){ rows=_histExtParseTextTable(raw); if(rows) fmt='텍스트 표'; }
-  const items=_histExtDedup(rows?_histExtMapRows(rows):[]);
-  const next={...st, items, raw, mode:'all', today:''};
+  // (추가) 붙여넣기 데이터는 기존 items에 누적
+  const parsed=(rows?_histExtMapRows(rows):[]).map(x=>({...x, source:x.source||'붙여넣기'}));
+  const merged=_histExtDedup([...(st.items||[]), ...parsed]);
+  const next={...st, items:merged, raw, mode:'all', today:''};
   _histExtSave(next);
   // 출력
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
-  try{ document.getElementById('hist-ext-cnt-raw').textContent=String(items.length); }catch(e){}
-  try{ document.getElementById('hist-ext-cnt').textContent=String(items.length); }catch(e){}
-  try{ document.getElementById('hist-ext-cnt-store').textContent=String(items.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-raw').textContent=String(parsed.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(merged.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(merged.length); }catch(e){}
   try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
 };
 
@@ -513,6 +579,15 @@ window.histExtFetchFromProxy = async function(){
   }
   _histExtProxySave(proxy);
   _histExtProxyCfgSave({bo, pFrom, pTo});
+  // 선택 프리셋에도 반영
+  try{
+    const {presets, sel} = _histExtEnsureProxyPresets();
+    const idx = presets.findIndex(p=>p.id===sel);
+    if(idx>=0){
+      presets[idx] = {...presets[idx], proxy, bo, pFrom, pTo};
+      _histExtProxyPresetsSave(presets);
+    }
+  }catch(e){}
   // UI 리셋
   try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
   const prog=document.getElementById('hist-ext-prog');
@@ -521,6 +596,8 @@ window.histExtFetchFromProxy = async function(){
 
   let rawItems=[];
   let fmt='프록시';
+  const _preset = _histExtGetSelPreset();
+  const _srcName = (_preset && _preset.name) ? _preset.name : '프록시';
   const start=Math.min(pFrom,pTo), end=Math.max(pFrom,pTo);
   const pageLog=[];
   const logEl=document.getElementById('hist-ext-log');
@@ -542,7 +619,7 @@ window.histExtFetchFromProxy = async function(){
       continue;
     }
     const rows=_histExtParseHTMLTable(html) || [];
-    const items=_histExtMapRows(rows);
+    const items=_histExtMapRows(rows).map(x=>({...x, source:_srcName}));
     if(items.length) rawItems = rawItems.concat(items);
     const sample = items[0] ? `${items[0].date} ${items[0].winner} vs ${items[0].loser}` : '';
     let minD='', maxD='';
@@ -571,13 +648,14 @@ window.histExtFetchFromProxy = async function(){
 
   // 저장
   const st=_histExtLoad();
-  const next={...st, items:allItems, raw:st.raw||'', mode:'all', today:''};
+  const merged=_histExtDedup([...(st.items||[]), ...allItems]);
+  const next={...st, items:merged, raw:st.raw||'', mode:'all', today:''};
   _histExtSave(next);
 
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
   try{ document.getElementById('hist-ext-cnt-raw').textContent=String(rawItems.length); }catch(e){}
-  try{ document.getElementById('hist-ext-cnt').textContent=String(allItems.length); }catch(e){}
-  try{ document.getElementById('hist-ext-cnt-store').textContent=String(allItems.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt').textContent=String(merged.length); }catch(e){}
+  try{ document.getElementById('hist-ext-cnt-store').textContent=String(merged.length); }catch(e){}
   try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
 
   // "오늘만"일 때도 전체 수집 결과를 안내(사용자가 1페이지만 가져왔다고 착각 방지)
@@ -666,6 +744,7 @@ function _histExtRenderTable(items){
             <th style="padding:10px;text-align:left;white-space:nowrap;width:34px">
               <input type="checkbox" ${allOnPage?'checked':''} onchange="histExtSelPage(this.checked)" />
             </th>
+            <th style="padding:10px;text-align:left;white-space:nowrap">소스</th>
             <th style="padding:10px;text-align:left;white-space:nowrap">날짜</th>
             <th style="padding:10px;text-align:left;white-space:nowrap">승자</th>
             <th style="padding:10px;text-align:left;white-space:nowrap">패자</th>
@@ -685,6 +764,9 @@ function _histExtRenderTable(items){
               <tr style="border-top:1px solid var(--border)">
                 <td style="padding:10px;white-space:nowrap">
                   <input type="checkbox" ${on?'checked':''} onchange="histExtToggleSel('${k.replace(/'/g,"\\'")}')" />
+                </td>
+                <td style="padding:10px;white-space:nowrap;color:var(--gray-l);font-size:11px;font-weight:900">
+                  ${x.source?esc(x.source):''}
                 </td>
                 <td style="padding:10px;white-space:nowrap;font-weight:900">${x.date}</td>
                 <td style="padding:10px">
@@ -719,10 +801,16 @@ function histExternalHTML(){
     }
   }catch(e){}
   const st=_histExtLoad();
+  const ps=_histExtEnsureProxyPresets();
+  const presets = ps.presets || [];
+  const selPresetId = ps.sel || '';
+  const selPreset = presets.find(p=>p.id===selPresetId) || presets[0] || {id:'',name:'기본'};
   const proxy = _histExtProxyLoad();
   const pCfg = _histExtProxyCfgLoad();
   const tSel = _histExtTargetLoad();
   const keyword = String(st.keyword||'').trim();
+  const srcSel = String(st.sourceSel||'').trim();
+  const srcOptions = [...new Set((st.items||[]).map(x=>String(x.source||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const today=st.today||(()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const da=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${da}`;})();
   // 초기 렌더
   const initItems = (st.items||[]);
@@ -735,6 +823,17 @@ function histExternalHTML(){
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
         <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
         <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)">대기</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <div class="flabel">프리셋</div>
+        <select id="hist-ext-preset" onchange="histExtPresetSelect(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:160px">
+          ${presets.map(p=>`<option value="${p.id}"${p.id===selPresetId?' selected':''}>${esc(p.name||'')}</option>`).join('')}
+        </select>
+        <button class="btn btn-w btn-xs" onclick="histExtPresetAdd()">+ 추가</button>
+        <button class="btn btn-w btn-xs" onclick="histExtPresetRename()">이름변경</button>
+        <button class="btn btn-b btn-xs" onclick="histExtPresetSaveCurrent()">저장</button>
+        <button class="btn btn-r btn-xs" onclick="histExtPresetDelete()">삭제</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 선택 후 URL로 가져오기</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div class="flabel">빠른 URL</div>
@@ -788,6 +887,10 @@ function histExternalHTML(){
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
         <div class="flabel">🔎 검색</div>
+        <select id="hist-ext-srcsel" onchange="histExtSetSource(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:140px">
+          <option value=""${!srcSel?' selected':''}>전체</option>
+          ${srcOptions.map(s=>`<option value="${esc(s)}"${s===srcSel?' selected':''}>${esc(s)}</option>`).join('')}
+        </select>
         <input id="hist-ext-keyword" value="${keyword.replace(/\"/g,'&quot;')}" placeholder="선수명/맵 (예: 히엉, 폴리포이드)" style="flex:1;min-width:220px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px"
           onkeydown="if(event.key==='Enter'){histExtSetKeyword(this.value)}">
         <button class="btn btn-w btn-xs" onclick="histExtSetKeyword(document.getElementById('hist-ext-keyword').value)">적용</button>
@@ -2024,6 +2127,81 @@ window._openMatchDetailByMatchId = function(matchId, modeLabel, silent){
     try{ console.error(e); }catch(_){}
     return false;
   }
+};
+
+// ─────────────────────────────────────────────
+// 프록시 프리셋 UI
+// ─────────────────────────────────────────────
+window.histExtPresetSelect = function(id){
+  const {presets}=_histExtEnsureProxyPresets();
+  const p = presets.find(x=>x.id===id) || presets[0];
+  if(!p) return;
+  _histExtProxyPresetSelSave(p.id);
+  try{
+    const proxyEl=document.getElementById('hist-ext-proxy');
+    const boEl=document.getElementById('hist-ext-bo');
+    const pfEl=document.getElementById('hist-ext-pageFrom');
+    const ptEl=document.getElementById('hist-ext-pageTo');
+    if(proxyEl) proxyEl.value = p.proxy || '';
+    if(boEl) boEl.value = p.bo || 'bj_board';
+    if(pfEl) pfEl.value = String(p.pFrom||1);
+    if(ptEl) ptEl.value = String(p.pTo||6);
+  }catch(e){}
+};
+window.histExtPresetSaveCurrent = function(){
+  const {presets, sel}=_histExtEnsureProxyPresets();
+  const idx = presets.findIndex(p=>p.id===sel);
+  if(idx<0) return;
+  const proxy=(document.getElementById('hist-ext-proxy')?.value||'').trim();
+  const bo=(document.getElementById('hist-ext-bo')?.value||'bj_board').trim();
+  const pFrom=parseInt(document.getElementById('hist-ext-pageFrom')?.value||'1',10)||1;
+  const pTo=parseInt(document.getElementById('hist-ext-pageTo')?.value||String(pFrom),10)||pFrom;
+  presets[idx] = {...presets[idx], proxy, bo, pFrom, pTo};
+  _histExtProxyPresetsSave(presets);
+  // legacy도 갱신
+  _histExtProxySave(proxy);
+  _histExtProxyCfgSave({bo,pFrom,pTo});
+  try{ if(typeof showToast==='function') showToast('저장됨'); }catch(e){}
+};
+window.histExtPresetAdd = function(){
+  const name = prompt('프록시 프리셋 이름');
+  if(name===null) return;
+  const nm = String(name||'').trim();
+  if(!nm) return;
+  const {presets}=_histExtEnsureProxyPresets();
+  const proxy=(document.getElementById('hist-ext-proxy')?.value||'').trim();
+  const bo=(document.getElementById('hist-ext-bo')?.value||'bj_board').trim();
+  const pFrom=parseInt(document.getElementById('hist-ext-pageFrom')?.value||'1',10)||1;
+  const pTo=parseInt(document.getElementById('hist-ext-pageTo')?.value||String(pFrom),10)||pFrom;
+  const p = {id:_histExtUid(), name:nm, proxy, bo, pFrom, pTo};
+  const next=[...presets, p];
+  _histExtProxyPresetsSave(next);
+  _histExtProxyPresetSelSave(p.id);
+  try{ render(); }catch(e){}
+};
+window.histExtPresetRename = function(){
+  const {presets, sel}=_histExtEnsureProxyPresets();
+  const idx = presets.findIndex(p=>p.id===sel);
+  if(idx<0) return;
+  const cur = presets[idx].name || '';
+  const name = prompt('프리셋 이름 변경', cur);
+  if(name===null) return;
+  const nm = String(name||'').trim();
+  if(!nm) return;
+  presets[idx] = {...presets[idx], name:nm};
+  _histExtProxyPresetsSave(presets);
+  try{ render(); }catch(e){}
+};
+window.histExtPresetDelete = function(){
+  const {presets, sel}=_histExtEnsureProxyPresets();
+  const idx = presets.findIndex(p=>p.id===sel);
+  if(idx<0) return;
+  if(presets.length<=1){ alert('프리셋은 최소 1개가 필요합니다.'); return; }
+  if(!confirm(`"${presets[idx].name||'프리셋'}" 프리셋을 삭제할까요?`)) return;
+  const next = presets.filter(p=>p.id!==sel);
+  _histExtProxyPresetsSave(next);
+  _histExtProxyPresetSelSave(next[0]?.id||'');
+  try{ render(); }catch(e){}
 };
 
 // 스트리머 상세의 history 한 줄 정보(날짜/상대/맵/모드)만으로도 경기 상세 찾기
