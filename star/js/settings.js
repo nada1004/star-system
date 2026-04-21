@@ -13,6 +13,38 @@ function esc(s){
 }
 
 /* ══════════════════════════════════════
+   🎨 디자인 모드(리뉴얼)
+   - 기본은 기존 UI 유지
+   - 켜면 body에 design-v2 클래스를 부여하여 CSS로 전환
+══════════════════════════════════════ */
+window.applyDesignV2 = function(forceOn){
+  try{
+    const on = (typeof forceOn==='boolean') ? forceOn : (localStorage.getItem('su_design_v2')==='1');
+    document.body.classList.toggle('design-v2', !!on);
+    // 프리셋(계절/이벤트) 클래스 적용
+    const preset = String(localStorage.getItem('su_design_v2_preset')||'base');
+    const allow = new Set(['base','spring','summer','autumn','winter','xmas','summerbreak','winterbreak','valentine','whiteday','buddha','liberation','hangul','samil','taegeuk']);
+    const p = allow.has(preset) ? preset : 'base';
+    document.body.classList.remove(
+      'designv2-base','designv2-spring','designv2-summer','designv2-autumn','designv2-winter',
+      'designv2-xmas','designv2-summerbreak','designv2-winterbreak','designv2-valentine','designv2-whiteday',
+      'designv2-buddha','designv2-liberation','designv2-hangul','designv2-samil','designv2-taegeuk'
+    );
+    if(!!on) document.body.classList.add('designv2-'+p);
+  }catch(e){}
+};
+window.cfgSetDesignV2 = function(on){
+  try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.cfgSetDesignV2Preset = function(v){
+  try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+/* ══════════════════════════════════════
 
 /* ══════════════════════════════════════
    ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
@@ -60,7 +92,7 @@ const _DEFAULT_CATSECS = {
   '이미지 관리':['imgsettings','imgmodalsettings'],
   // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
   // pasteRoute: 결과 붙여넣기 자동 분리 규칙
-  '🎨 스타일/테마':['appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
+  '🎨 스타일/테마':['designv2','hdr','appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
   '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
   '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -329,6 +361,10 @@ window.cfgSetHeaderSettings = function(){
   const rSz   = parseInt(document.getElementById('cfg-hdr-right-sz')?.value || '32',10) || 32;
   const bgImg = (document.getElementById('cfg-hdr-bg')?.value || '').trim();
   const hH    = parseInt(document.getElementById('cfg-hdr-h')?.value || '0',10) || 0;
+  const fx    = (document.getElementById('cfg-hdr-fx')?.value || 'classic').trim();
+  const c1    = (document.getElementById('cfg-hdr-c1')?.value || '').trim();
+  const c2    = (document.getElementById('cfg-hdr-c2')?.value || '').trim();
+  const sync  = !!document.getElementById('cfg-hdr-sync')?.checked;
   try{ localStorage.setItem('su_hdr_title', title); }catch(e){}
   try{ localStorage.setItem('su_hdr_left_icon', lIco); }catch(e){}
   try{ localStorage.setItem('su_hdr_left_size', String(Math.max(14,Math.min(44,lSz)))); }catch(e){}
@@ -336,8 +372,248 @@ window.cfgSetHeaderSettings = function(){
   try{ localStorage.setItem('su_hdr_right_size', String(Math.max(18,Math.min(70,rSz)))); }catch(e){}
   try{ localStorage.setItem('su_hdr_bg_img', bgImg); }catch(e){}
   try{ localStorage.setItem('su_hdr_height', String(Math.max(0,Math.min(140,hH)))); }catch(e){}
+  try{ localStorage.setItem('su_hdr_fx', fx); }catch(e){}
+  try{ localStorage.setItem('su_hdr_c1', c1); }catch(e){}
+  try{ localStorage.setItem('su_hdr_c2', c2); }catch(e){}
+  try{ localStorage.setItem('su_hdr_sync_theme', sync?'1':'0'); }catch(e){}
   try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 헤더 테마 프리셋
+// - 여러 개 저장/선택/적용
+// ─────────────────────────────────────────────────────────────
+const _HDR_PRESETS_KEY = 'su_hdr_presets_v1';
+const _HDR_PRESET_SEL_KEY = 'su_hdr_preset_sel_v1';
+function _hdrPresetUid(){ return 'hdr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function _hdrPresetsLoad(){
+  try{
+    const v = JSON.parse(localStorage.getItem(_HDR_PRESETS_KEY)||'null');
+    return Array.isArray(v) ? v : [];
+  }catch(e){ return []; }
+}
+function _hdrPresetsSave(arr){
+  try{ localStorage.setItem(_HDR_PRESETS_KEY, JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){}
+}
+function _hdrPresetSelLoad(){ try{ return localStorage.getItem(_HDR_PRESET_SEL_KEY)||''; }catch(e){ return ''; } }
+function _hdrPresetSelSave(id){ try{ localStorage.setItem(_HDR_PRESET_SEL_KEY, String(id||'')); }catch(e){} }
+function _hdrPresetGetCurrentSnapshot(){
+  const get=(k,def='')=>{ try{ return (localStorage.getItem(k)||def); }catch(e){ return def; } };
+  let themeVars=null;
+  try{ themeVars = JSON.parse(localStorage.getItem('su_theme_vars_v1')||'null'); }catch(e){ themeVars=null; }
+  if(!themeVars || typeof themeVars!=='object') themeVars=null;
+  return {
+    title: get('su_hdr_title','스타대학 데이터 센터'),
+    leftIco: get('su_hdr_left_icon','🏆'),
+    leftSz: parseInt(get('su_hdr_left_size','22'),10)||22,
+    rightImg: get('su_hdr_right_img',''),
+    rightSz: parseInt(get('su_hdr_right_size','32'),10)||32,
+    bgImg: get('su_hdr_bg_img',''),
+    hH: parseInt(get('su_hdr_height','0'),10)||0,
+    fx: get('su_hdr_fx','classic'),
+    c1: get('su_hdr_c1','#1e3a8a'),
+    c2: get('su_hdr_c2','#2563eb'),
+    sync: (get('su_hdr_sync_theme','0')==='1'),
+    themeVars: themeVars
+  };
+}
+function _hdrPresetApplySnapshot(s){
+  if(!s) return;
+  try{ localStorage.setItem('su_hdr_title', String(s.title||'')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_left_icon', String(s.leftIco||'')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_left_size', String(s.leftSz||22)); }catch(e){}
+  try{ localStorage.setItem('su_hdr_right_img', String(s.rightImg||'')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_right_size', String(s.rightSz||32)); }catch(e){}
+  try{ localStorage.setItem('su_hdr_bg_img', String(s.bgImg||'')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_height', String(s.hH||0)); }catch(e){}
+  try{ localStorage.setItem('su_hdr_fx', String(s.fx||'classic')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_c1', String(s.c1||'#1e3a8a')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_c2', String(s.c2||'#2563eb')); }catch(e){}
+  try{ localStorage.setItem('su_hdr_sync_theme', s.sync ? '1':'0'); }catch(e){}
+  // 전체 테마 변수(선택 프리셋에 themeVars가 있으면 적용)
+  try{
+    if(s.themeVars && typeof s.themeVars==='object'){
+      localStorage.setItem('su_theme_vars_v1', JSON.stringify(s.themeVars));
+    } else {
+      localStorage.removeItem('su_theme_vars_v1');
+    }
+  }catch(e){}
+  try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
+  try{ if(typeof window._applyHeaderSettings==='function') window._applyHeaderSettings(); }catch(e){}
+}
+function _hdrEnsurePresets(){
+  let presets=_hdrPresetsLoad();
+  let sel=_hdrPresetSelLoad();
+  if(!presets.length){
+    const snap=_hdrPresetGetCurrentSnapshot();
+    presets=[{id:_hdrPresetUid(), name:'기본', createdAt:Date.now(), ...snap}];
+    sel=presets[0].id;
+    _hdrPresetsSave(presets);
+    _hdrPresetSelSave(sel);
+  }
+  if(!sel || !presets.some(p=>p.id===sel)){
+    sel=presets[0]?.id||'';
+    _hdrPresetSelSave(sel);
+  }
+  // 테마팩 1회 자동 설치
+  try{
+    // v2: 신규 프리셋(여름방학 등) 자동 추가를 위해 버전 키를 올림
+    if(localStorage.getItem('su_hdr_theme_pack_installed_v3')!=='1'){
+      const out = _hdrPresetInstallThemePack(presets);
+      if(out && out.changed){
+        presets = out.presets;
+        _hdrPresetsSave(presets);
+      }
+      localStorage.setItem('su_hdr_theme_pack_installed_v3','1');
+    }
+  }catch(e){}
+  return {presets, sel};
+}
+
+// 시즌/기념일/스타크래프트 테마팩 생성
+function _hdrPresetInstallThemePack(presets){
+  const _existsByName = (nm)=> (presets||[]).some(p=>String(p.name||'')===nm);
+  // 색 유틸
+  const _hexToRgb=(hex)=>{ const h=String(hex||'').replace('#','').trim(); if(!/^[0-9a-fA-F]{6}$/.test(h)) return null; return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}; };
+  const _rgbToHex=(r,g,b)=>{ const to=(n)=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0'); return `#${to(r)}${to(g)}${to(b)}`; };
+  const _mix=(a,b,t)=>{ const A=_hexToRgb(a),B=_hexToRgb(b); if(!A||!B) return a||b||'#2563eb'; return _rgbToHex(A.r+(B.r-A.r)*t,A.g+(B.g-A.g)*t,A.b+(B.b-A.b)*t); };
+  const _darken=(hex,t)=>_mix(hex,'#000000',t);
+  const _lighten=(hex,t)=>_mix(hex,'#ffffff',t);
+  const mkThemeVars=(accent)=>{
+    return {
+      '--blue': accent,
+      '--blue-d': _darken(accent, 0.18),
+      '--blue-l': _lighten(accent, 0.86),
+      '--blue-ll': _lighten(accent, 0.92),
+    };
+  };
+  const add=(name, opt)=>{
+    if(_existsByName(name)) return false;
+    const id=_hdrPresetUid();
+    const base = _hdrPresetGetCurrentSnapshot();
+    const accent = opt.accent || (opt.c2||'#2563eb');
+    const themeVars = {
+      ...(opt.themeVars||{}),
+      ...(opt.fullTheme?{
+        '--bg': opt.fullTheme.bg||'#f0f2f5',
+        '--surface': opt.fullTheme.surface||'#f7f9fc',
+        '--border': opt.fullTheme.border||'#e4e8ee',
+        '--border2': opt.fullTheme.border2||'#cdd3dc',
+        '--gold': opt.fullTheme.gold||'#d97706',
+        '--gold-bg': opt.fullTheme.goldBg||'#fffbeb',
+        '--gold-b': opt.fullTheme.goldB||'#fde68a',
+      }:{}),
+      ...mkThemeVars(accent),
+      ...(opt.extraVars||{})
+    };
+    presets.push({
+      ...base,
+      id,
+      name,
+      createdAt: Date.now(),
+      fx: opt.fx || base.fx,
+      c1: opt.c1 || base.c1,
+      c2: opt.c2 || base.c2,
+      sync: true,
+      themeVars
+    });
+    return true;
+  };
+  let changed=false;
+  // 4계절
+  changed = add('🌸 봄', {fx:'aurora', c1:'#22c55e', c2:'#f472b6', accent:'#22c55e', fullTheme:{bg:'#f3fff6',surface:'#f0fdf4',border:'#d1fae5',border2:'#86efac',gold:'#d97706',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('🏖️ 여름', {fx:'mesh', c1:'#0ea5e9', c2:'#22c55e', accent:'#0ea5e9', fullTheme:{bg:'#f0f9ff',surface:'#eff6ff',border:'#dbeafe',border2:'#93c5fd',gold:'#0891b2',goldBg:'#ecfeff',goldB:'#67e8f9'}}) || changed;
+  changed = add('🏝️ 여름방학', {fx:'aurora', c1:'#38bdf8', c2:'#fbbf24', accent:'#f59e0b', fullTheme:{bg:'#f0f9ff',surface:'#ffffff',border:'#dbeafe',border2:'#93c5fd',gold:'#f59e0b',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('⛄ 겨울방학', {fx:'glass', c1:'#2563eb', c2:'#cbd5e1', accent:'#38bdf8', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#38bdf8',goldBg:'#eff6ff',goldB:'#93c5fd'}}) || changed;
+  changed = add('🍁 가을', {fx:'stripes', c1:'#ea580c', c2:'#b45309', accent:'#ea580c', fullTheme:{bg:'#fff7ed',surface:'#fffbeb',border:'#fed7aa',border2:'#fdba74',gold:'#b45309',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('❄️ 겨울', {fx:'glass', c1:'#2563eb', c2:'#94a3b8', accent:'#2563eb', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#2563eb',goldBg:'#eff6ff',goldB:'#93c5fd'}}) || changed;
+  // 기념일/데이
+  changed = add('🎄 크리스마스', {fx:'mesh', c1:'#16a34a', c2:'#dc2626', accent:'#16a34a', fullTheme:{bg:'#f0fdf4',surface:'#ecfdf5',border:'#bbf7d0',border2:'#86efac',gold:'#16a34a',goldBg:'#f0fdf4',goldB:'#bbf7d0'}, extraVars:{'--red':'#dc2626'}}) || changed;
+  changed = add('🧒 어린이날', {fx:'aurora', c1:'#ff4b6e', c2:'#38bdf8', accent:'#ff4b6e', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#ff4b6e',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
+  changed = add('🌹 어버이날', {fx:'glass', c1:'#db2777', c2:'#f43f5e', accent:'#db2777', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#db2777',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
+  changed = add('🇰🇷 광복절', {fx:'stripes', c1:'#1d4ed8', c2:'#dc2626', accent:'#1d4ed8', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#1d4ed8',goldBg:'#eff6ff',goldB:'#93c5fd'}, extraVars:{'--red':'#dc2626'}}) || changed;
+  changed = add('🔤 한글날', {fx:'glass', c1:'#7c3aed', c2:'#fbbf24', accent:'#7c3aed', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#fbbf24',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('✊ 3.1절', {fx:'stripes', c1:'#111827', c2:'#e5e7eb', accent:'#111827', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#111827',goldBg:'#f1f5f9',goldB:'#cbd5e1'}}) || changed;
+  changed = add('🪷 석가탄신일', {fx:'aurora', c1:'#a855f7', c2:'#22c55e', accent:'#a855f7', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#22c55e',goldBg:'#f0fdf4',goldB:'#bbf7d0'}}) || changed;
+  changed = add('🤍 화이트데이', {fx:'glass', c1:'#38bdf8', c2:'#ffffff', accent:'#38bdf8', fullTheme:{bg:'#ffffff',surface:'#f8fafc',border:'#e2e8f0',border2:'#cbd5e1',gold:'#38bdf8',goldBg:'#f0f9ff',goldB:'#bae6fd'}}) || changed;
+  changed = add('💘 발렌타인데이', {fx:'aurora', c1:'#e11d48', c2:'#fb7185', accent:'#e11d48', fullTheme:{bg:'#fff1f2',surface:'#ffe4e6',border:'#fecdd3',border2:'#fda4af',gold:'#e11d48',goldBg:'#fff1f2',goldB:'#fecdd3'}}) || changed;
+  changed = add('💋 키스데이', {fx:'aurora', c1:'#a855f7', c2:'#fb7185', accent:'#a855f7', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#a855f7',goldBg:'#faf5ff',goldB:'#e9d5ff'}}) || changed;
+  // 스타크래프트
+  changed = add('🛡️ 스타크래프트: 테란', {fx:'mesh', c1:'#0f172a', c2:'#2563eb', accent:'#2563eb', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#2563eb',goldBg:'#eff6ff',goldB:'#93c5fd'}}) || changed;
+  changed = add('🧬 스타크래프트: 저그', {fx:'aurora', c1:'#7c3aed', c2:'#22c55e', accent:'#7c3aed', fullTheme:{bg:'#faf5ff',surface:'#f3e8ff',border:'#e9d5ff',border2:'#d8b4fe',gold:'#7c3aed',goldBg:'#faf5ff',goldB:'#e9d5ff'}}) || changed;
+  changed = add('✨ 스타크래프트: 프로토스', {fx:'glass', c1:'#1d4ed8', c2:'#fbbf24', accent:'#1d4ed8', fullTheme:{bg:'#fffbeb',surface:'#fef3c7',border:'#fde68a',border2:'#fbbf24',gold:'#fbbf24',goldBg:'#fffbeb',goldB:'#fde68a'}}) || changed;
+  changed = add('🎲 스타크래프트: 랜덤', {fx:'stripes', c1:'#64748b', c2:'#2563eb', accent:'#64748b', fullTheme:{bg:'#f8fafc',surface:'#f1f5f9',border:'#e2e8f0',border2:'#cbd5e1',gold:'#64748b',goldBg:'#f1f5f9',goldB:'#cbd5e1'}}) || changed;
+
+  return {presets, changed};
+}
+
+// 설정 화면에서 수동으로 테마팩 다시 생성/추가하고 싶을 때
+window.hdrPresetInstallThemePack = function(){
+  const presets=_hdrPresetsLoad();
+  const out=_hdrPresetInstallThemePack(presets);
+  if(out && out.changed){
+    _hdrPresetsSave(out.presets);
+    try{ if(typeof showToast==='function') showToast('테마 프리셋이 추가되었습니다.'); }catch(e){}
+    try{ render(); }catch(e){}
+  } else {
+    alert('이미 테마 프리셋이 추가되어 있습니다.');
+  }
+};
+window.hdrPresetSelect = function(id){
+  const {presets}=_hdrEnsurePresets();
+  const p = presets.find(x=>x.id===id) || presets[0];
+  if(!p) return;
+  _hdrPresetSelSave(p.id);
+  _hdrPresetApplySnapshot(p);
+  try{ render(); }catch(e){}
+};
+window.hdrPresetAdd = function(){
+  const name = prompt('헤더 프리셋 이름');
+  if(name===null) return;
+  const nm=String(name||'').trim();
+  if(!nm) return;
+  const {presets}=_hdrEnsurePresets();
+  const snap=_hdrPresetGetCurrentSnapshot();
+  const p={id:_hdrPresetUid(), name:nm, createdAt:Date.now(), ...snap};
+  const next=[...presets, p];
+  _hdrPresetsSave(next);
+  _hdrPresetSelSave(p.id);
+  try{ render(); }catch(e){}
+};
+window.hdrPresetRename = function(){
+  const {presets, sel}=_hdrEnsurePresets();
+  const idx=presets.findIndex(p=>p.id===sel);
+  if(idx<0) return;
+  const name = prompt('프리셋 이름 변경', presets[idx].name||'');
+  if(name===null) return;
+  const nm=String(name||'').trim();
+  if(!nm) return;
+  presets[idx]={...presets[idx], name:nm};
+  _hdrPresetsSave(presets);
+  try{ render(); }catch(e){}
+};
+window.hdrPresetSaveCurrent = function(){
+  const {presets, sel}=_hdrEnsurePresets();
+  const idx=presets.findIndex(p=>p.id===sel);
+  if(idx<0) return;
+  const snap=_hdrPresetGetCurrentSnapshot();
+  presets[idx]={...presets[idx], ...snap};
+  _hdrPresetsSave(presets);
+  try{ if(typeof showToast==='function') showToast('프리셋 저장됨'); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.hdrPresetDelete = function(){
+  const {presets, sel}=_hdrEnsurePresets();
+  if(presets.length<=1) return alert('프리셋은 최소 1개가 필요합니다.');
+  const cur=presets.find(p=>p.id===sel);
+  if(!confirm(`"${cur?.name||'프리셋'}" 프리셋을 삭제할까요?`)) return;
+  const next=presets.filter(p=>p.id!==sel);
+  _hdrPresetsSave(next);
+  _hdrPresetSelSave(next[0]?.id||'');
+  // 삭제 후 첫 프리셋 적용
+  try{ _hdrPresetApplySnapshot(next[0]); }catch(e){}
+  try{ render(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1501,6 +1777,34 @@ window._cfgApplyCat = _cfgApplyCat;
 window.cfgGo = function(secId){ return _cfgGo(secId); };
 // (요청사항) 카테고리 클릭 시 해당 카테고리 "메뉴만" 보여주고 자동으로 모달을 띄우지 않음
 window.cfgApplyCat = function(cat){ return _cfgApplyCat(cat, false); };
+// 설정 검색(섹션 필터)
+window.cfgSearchSettings = function(q){
+  window._cfgSearchQ = String(q||'').trim();
+  const qq = window._cfgSearchQ.toLowerCase();
+  // 검색어 없으면 현재 카테고리 기준으로 복구
+  if(!qq){
+    try{ _cfgApplyCat(window._cfgCat, false); }catch(e){}
+    try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent=''; }catch(e){}
+    return;
+  }
+  let shown=0;
+  try{
+    const secs=document.querySelectorAll('[data-cfg-sec]');
+    for(let i=0;i<secs.length;i++){
+      const el=secs[i];
+      // 모달에 올라간 섹션은 숨기지 않음
+      try{ if(el.closest && el.closest('#cfgModalBody')) continue; }catch(e){}
+      const id=el.getAttribute('data-cfg-sec')||'';
+      const t = (window._cfgSecTitle && window._cfgSecTitle[id]) ? String(window._cfgSecTitle[id]) : id;
+      const plain = t.replace(/<[^>]+>/g,'').replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,'');
+      const hit = id.toLowerCase().includes(qq) || plain.toLowerCase().includes(qq);
+      el.style.display = hit ? '' : 'none';
+      if(hit) shown++;
+      if(el.tagName==='DETAILS') el.open=false;
+    }
+  }catch(e){}
+  try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent = `검색 ${shown}개`; }catch(e){}
+};
 
 // 디버그 플래그 (기본 OFF): URL에 ?cfgdebug=1 이 포함되면 콘솔에 자세히 기록
 try{
@@ -1567,11 +1871,17 @@ function rCfg(C,T){
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
 
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
-    <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px">
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px;flex-wrap:wrap">
       <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
         ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
           style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid ${on?'var(--blue)':'var(--border)'};border-radius:14px;background:${on?'var(--blue)':'transparent'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};color:${on?'#fff':'var(--text)'};transition:all .12s;touch-action:manipulation;line-height:1.1">
           <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${_catLabel(c)}</button>`;}).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex:1;min-width:220px;justify-content:flex-end">
+        <div style="position:relative;flex:1;max-width:360px;min-width:220px">
+          <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:700" oninput="cfgSearchSettings(this.value)">
+        </div>
+        <span id="cfgSearchCnt" style="font-size:11px;color:var(--gray-l);font-weight:900;white-space:nowrap"></span>
       </div>
       <span style="flex:1"></span>
       ${_menuBtn}
@@ -1741,9 +2051,50 @@ ${_scfgD('notice','📢 공지 관리')}
       const _rs = parseInt(localStorage.getItem('su_hdr_right_size')||'32',10)||32;
       const _bg = (localStorage.getItem('su_hdr_bg_img')||'');
       const _hh = parseInt(localStorage.getItem('su_hdr_height')||'0',10)||0;
+      const _fx = (localStorage.getItem('su_hdr_fx')||'classic');
+      const _c1 = (localStorage.getItem('su_hdr_c1')||'#1e3a8a');
+      const _c2 = (localStorage.getItem('su_hdr_c2')||'#2563eb');
+      const _sync = (localStorage.getItem('su_hdr_sync_theme')||'0')==='1';
+      // 프리셋
+      let _ps=[], _sel='';
+      try{ _ps = JSON.parse(localStorage.getItem('su_hdr_presets_v1')||'null'); if(!Array.isArray(_ps)) _ps=[]; }catch(e){ _ps=[]; }
+      try{ _sel = localStorage.getItem('su_hdr_preset_sel_v1')||''; }catch(e){ _sel=''; }
+      if(!_ps.length){ _ps=[{id:'tmp',name:'기본'}]; _sel=_ps[0].id; }
+      if(!_sel || !_ps.some(p=>p.id===_sel)) _sel=_ps[0].id;
       return `
         <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">상단 헤더의 제목/아이콘/이미지/배경을 커스텀합니다. (URL은 https:// 로 시작)</div>
         <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">프리셋</div>
+            <select id="cfg-hdr-preset" onchange="hdrPresetSelect(this.value)" style="min-width:220px">
+              ${_ps.map(p=>`<option value="${p.id}"${p.id===_sel?' selected':''}>${esc(p.name||'')}</option>`).join('')}
+            </select>
+            <button class="btn btn-w btn-xs" onclick="hdrPresetAdd()">+ 추가</button>
+            <button class="btn btn-w btn-xs" onclick="hdrPresetRename()">이름변경</button>
+            <button class="btn btn-b btn-xs" onclick="hdrPresetSaveCurrent()">현재값 저장</button>
+            <button class="btn btn-r btn-xs" onclick="hdrPresetDelete()">삭제</button>
+            <button class="btn btn-p btn-xs" onclick="hdrPresetInstallThemePack()" title="봄/여름/가을/겨울, 기념일, 스타크래프트 테마 프리셋 자동 추가">🎨 테마팩 추가</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">스타일</div>
+            <select id="cfg-hdr-fx" onchange="cfgSetHeaderSettings()" style="min-width:220px">
+              <option value="classic"${_fx==='classic'?' selected':''}>클래식(기본)</option>
+              <option value="solid"${_fx==='solid'?' selected':''}>솔리드(단색)</option>
+              <option value="glass"${_fx==='glass'?' selected':''}>글래스(유리)</option>
+              <option value="aurora"${_fx==='aurora'?' selected':''}>오로라(움직임)</option>
+              <option value="mesh"${_fx==='mesh'?' selected':''}>메쉬(패턴)</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:var(--text2);cursor:pointer">
+              <input type="checkbox" id="cfg-hdr-sync" ${_sync?'checked':''} onchange="cfgSetHeaderSettings()">
+              헤더색 → 전체 주색
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">색상</div>
+            <input id="cfg-hdr-c1" type="color" value="${esc(_c1)}" onchange="cfgSetHeaderSettings()" style="width:42px;height:34px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--white);cursor:pointer">
+            <input id="cfg-hdr-c2" type="color" value="${esc(_c2)}" onchange="cfgSetHeaderSettings()" style="width:42px;height:34px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--white);cursor:pointer">
+            <span style="font-size:11px;color:var(--gray-l)">왼쪽/오른쪽(그라데이션 기준)</span>
+          </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:84px">제목</div>
             <input id="cfg-hdr-title" type="text" value="${esc(_t)}" placeholder="예: 스타대학 데이터 센터" style="flex:1;min-width:220px" onblur="cfgSetHeaderSettings()">
@@ -2110,6 +2461,44 @@ ${_scfgD('notice','📢 공지 관리')}
         공유 버튼 숨기기(관리자만 표시)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 관리자=로그인 상태. 기록/대회/캘린더 카드의 공유 버튼이 함께 적용됩니다.</div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const on = (localStorage.getItem('su_design_v2') ?? '0') === '1';
+    const preset = (localStorage.getItem('su_design_v2_preset') ?? 'base');
+    return _scfgD('designv2','🎨 디자인 모드 (리뉴얼)') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">기존 디자인은 유지하고, 켜면 새로운 디자인(탭/카드/모달/현황판 등)을 적용합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-designv2-on" style="width:15px;height:15px" ${on?'checked':''}
+          onchange="cfgSetDesignV2(this.checked)">
+        디자인 모드 사용
+      </label>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">테마 프리셋</div>
+        <select id="cfg-designv2-preset" onchange="cfgSetDesignV2Preset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="base" ${preset==='base'?'selected':''}>기본</option>
+          <option value="taegeuk" ${preset==='taegeuk'?'selected':''}>🇰🇷 태극기</option>
+          <option value="spring" ${preset==='spring'?'selected':''}>🌸 봄</option>
+          <option value="summer" ${preset==='summer'?'selected':''}>🏖️ 여름</option>
+          <option value="autumn" ${preset==='autumn'?'selected':''}>🍁 가을</option>
+          <option value="winter" ${preset==='winter'?'selected':''}>❄️ 겨울</option>
+          <option value="xmas" ${preset==='xmas'?'selected':''}>🎄 크리스마스</option>
+          <option value="summerbreak" ${preset==='summerbreak'?'selected':''}>🏝️ 여름방학</option>
+          <option value="winterbreak" ${preset==='winterbreak'?'selected':''}>⛄ 겨울방학</option>
+          <option value="valentine" ${preset==='valentine'?'selected':''}>💘 발렌타인데이</option>
+          <option value="whiteday" ${preset==='whiteday'?'selected':''}>🤍 화이트데이</option>
+          <option value="buddha" ${preset==='buddha'?'selected':''}>🪷 석가탄신일</option>
+          <option value="liberation" ${preset==='liberation'?'selected':''}>🇰🇷 광복절</option>
+          <option value="hangul" ${preset==='hangul'?'selected':''}>🔤 한글날</option>
+          <option value="samil" ${preset==='samil'?'selected':''}>✊ 3.1절</option>
+        </select>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+        • 적용 범위: 헤더/탭/기록카드/모달/하단내비/현황판 등<br>
+        • 기기별(localStorage)로 저장됩니다.
+      </div>
     </div>
   </details>`;
   })()}
@@ -3206,6 +3595,8 @@ ${_scfgD('notice','📢 공지 관리')}
   C.innerHTML=h;
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
   try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false); }catch(e){}
+  // 검색어가 있으면 렌더 직후 검색 필터 적용
+  try{ if(window._cfgSearchQ) window.cfgSearchSettings(window._cfgSearchQ); }catch(e){}
   // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
   _bindCfgHandlers();
   setTimeout(_refreshAliasList, 10);
