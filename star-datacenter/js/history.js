@@ -359,7 +359,10 @@ function _histExtGetViewItems(){
       const w = String(x.winner||'').toLowerCase();
       const l = String(x.loser||'').toLowerCase();
       const m = String(x.map||'').toLowerCase();
-      return w.includes(q) || l.includes(q) || m.includes(q);
+      const memo = String(x.memo||'').toLowerCase();
+      const type = String(x.type||'').toLowerCase();
+      const src  = String(x.source||'').toLowerCase();
+      return w.includes(q) || l.includes(q) || m.includes(q) || memo.includes(q) || type.includes(q) || src.includes(q);
     });
   }
   return items;
@@ -781,10 +784,10 @@ function _histExtRenderTable(items){
                     <span style="font-weight:900;color:var(--text2)">${l}</span>
                   </span>
                 </td>
-                <td style="padding:10px;color:var(--gray-l)">${x.map||''}</td>
+                <td style="padding:10px;color:var(--text3);font-weight:700">${x.map||''}</td>
                 <td style="padding:10px;white-space:nowrap">${x.elo||''}</td>
                 <td style="padding:10px;color:var(--gray-l)">${x.type||''}</td>
-                <td style="padding:10px;color:var(--gray-l)">${x.memo||''}</td>
+                <td style="padding:10px;color:var(--text2);font-weight:700">${x.memo||''}</td>
               </tr>
             `;
           }).join('')}
@@ -891,7 +894,7 @@ function histExternalHTML(){
           <option value=""${!srcSel?' selected':''}>전체</option>
           ${srcOptions.map(s=>`<option value="${esc(s)}"${s===srcSel?' selected':''}>${esc(s)}</option>`).join('')}
         </select>
-        <input id="hist-ext-keyword" value="${keyword.replace(/\"/g,'&quot;')}" placeholder="선수명/맵 (예: 히엉, 폴리포이드)" style="flex:1;min-width:220px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px"
+        <input id="hist-ext-keyword" value="${keyword.replace(/\"/g,'&quot;')}" placeholder="선수명/맵/메모 (예: 히엉, 폴리포이드, 빌드)" style="flex:1;min-width:220px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px"
           onkeydown="if(event.key==='Enter'){histExtSetKeyword(this.value)}">
         <button class="btn btn-w btn-xs" onclick="histExtSetKeyword(document.getElementById('hist-ext-keyword').value)">적용</button>
         <button class="btn btn-w btn-xs" onclick="histExtClearKeyword()">초기화</button>

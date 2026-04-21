@@ -1168,7 +1168,9 @@ function proCompBracket(tn) {
       const winnerName=aWin?m.a:bWin?m.b:'';
       const scoreA=(m._games||[]).filter(g=>g.winner==='A').length;
       const scoreB=(m._games||[]).filter(g=>g.winner==='B').length;
-      const showScore=isDone&&Array.isArray(m._games)&&m._games.length>1;
+      const hasGames = Array.isArray(m._games) && m._games.length>0;
+      const isTieSaved = !isDone && hasGames && scoreA===scoreB && (scoreA+scoreB)>0;
+      const showScore=(isDone||isTieSaved) && hasGames && m._games.length>1;
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
         <!-- A 선수 -->
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
@@ -1190,10 +1192,13 @@ function proCompBracket(tn) {
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${bWin?col:'#94a3b8'};flex-shrink:0">${scoreB}</span>`:''}
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        <!-- 날짜/맵 -->
+        <!-- 날짜/맵/동률 -->
         ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        ${isTieSaved?`<div style="padding:3px 12px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+          <span>⚖️ 동률 저장</span><span style="margin-left:auto">${scoreA}:${scoreB}</span>
+        </div>`:''}
         <!-- 게임 상세 -->
-        ${Array.isArray(m._games)&&m._games.length>0?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
+        ${hasGames?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
         <!-- 옵션 버튼 -->
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
           ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:'';})():''}
@@ -2103,6 +2108,19 @@ function _bktEditSave() {
   const bktId = `pbn_${_bktEditTnId}_${_bktEditRi}_${_bktEditMi}`;
   if (m.winner) _revertProMatch(bktId);
   m.a = aV; m.b = bV; m.d = dV;
+  // (보완) 사용자 혼동 방지: 스코어 입력칸을 채웠는데 [적용]을 안 눌러도 저장 시 반영
+  try{
+    const sAEl = document.getElementById('_bktEditScoreA');
+    const sBEl = document.getElementById('_bktEditScoreB');
+    const sA = parseInt(sAEl?.value||'',10);
+    const sB = parseInt(sBEl?.value||'',10);
+    if (_bktEditGames.length===0 && (Number.isFinite(sA)||Number.isFinite(sB)) && ((sA||0)>0 || (sB||0)>0)) {
+      const games=[];
+      for(let i=0;i<(sA||0);i++) games.push({winner:'A', map:''});
+      for(let i=0;i<(sB||0);i++) games.push({winner:'B', map:''});
+      _bktEditGames = games;
+    }
+  }catch(e){}
   const validGames = _bktEditGames.filter(g => g.winner);
   if (validGames.length > 0) {
     m._games = validGames;
