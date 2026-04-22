@@ -219,7 +219,12 @@ window._applyAppFont = function(){
     ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
-  try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
+  // 이모지(📊📅🏆 등)가 흑백으로 보이는 문제 방지:
+  // - 전역 폰트를 강제 적용(body * { font-family: var(--app-font) !important; })하는 구조라
+  //   이모지 폰트 폴백을 명시적으로 앞에 둬야 컬러 이모지가 유지됩니다.
+  const emojiFam = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';
+  const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
+  try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}

@@ -542,8 +542,8 @@ async function generateResponse(msg) {
     const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : [];
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
 
-    // 1) 대학 정확 일치 (단, 3글자 이하는 건너뛰고 랜덤 스트리머)
-    if (universities.includes(query) && query.length >= 4) return formatUniversityInfo(query);
+    // 1) 대학 정확 일치
+    if (universities.includes(query)) return formatUniversityInfo(query);
 
     // 2) 선수 정확 일치
     let player = typeof players !== 'undefined' ? players.find(p => p.name === query) : null;
@@ -561,8 +561,12 @@ async function generateResponse(msg) {
     }
 
     // 4) 대학 퍼지 매칭 (부분 일치 포함: 츠캄 → 츠캄몬스타즈)
-    const similarUniv = findSimilarUniversity(query, universities);
-    if (similarUniv) return formatUniversityInfo(similarUniv);
+    // 단, 한글 자음만 있는 경우는 건너뜀 (ㅇㄴㅇ 같은 무의미한 입력 방지)
+    const koreanConsonantsOnly = /^[ㄱ-ㅎ]+$/;
+    if (!koreanConsonantsOnly.test(query)) {
+      const similarUniv = findSimilarUniversity(query, universities);
+      if (similarUniv) return formatUniversityInfo(similarUniv);
+    }
 
     // 5) 못 찾으면 랜덤 스트리머
     if (typeof players !== 'undefined' && players.length > 0) {
@@ -726,7 +730,7 @@ function formatPlayerBasicInfo(player) {
 <div style="font-size:14px;font-weight:800;color:${winColor};margin-top:4px">${player.win}승 ${player.loss}패 <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${player.photo}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${toHttpsUrl(player.photo)}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
   // 사진 없는 경우
@@ -1110,34 +1114,7 @@ function findSimilarUniversity(input, universities) {
   return bestMatch;
 }
 
-// Levenshtein 거리 계산
-function levenshteinDistance(a, b) {
-  const matrix = [];
-  
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-  
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  
-  return matrix[b.length][a.length];
-}
+// (정리) levenshteinDistance는 위에서 이미 정의되어 있어 중복 정의를 제거했습니다.
 
 // 선수 승률 차트 생성
 function createWinRateChart(player) {
@@ -2030,7 +2007,8 @@ function formatPlayerCompOnly(player) {
 // ── 티어대회 기록 (ttM만) ──
 function formatPlayerTtM(player) {
   const matches = (typeof ttM !== 'undefined' ? ttM : []).filter(m =>
-    [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name)
+    [...(m.teamAMembers||[]),...(m.teamBMembers||[])].some(mb=>mb.name===player.name) ||
+    (m.a===player.name || m.b===player.name)
   );
   if (!matches.length) return _noRecordCard('🎖️', `${player.name} 티어대회`);
   const totalWL = _calcWL_sets(matches, player.name);

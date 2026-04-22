@@ -4245,7 +4245,8 @@ function saveImageSettings(){
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
-let _imgContextMenuEl = null;
+// tier-tour.js 등 다른 스크립트와 전역 식별자 충돌 방지
+let _settingsImgContextMenuEl = null;
 let _currentImageTarget = null;
 
 function showImageContextMenu(e, imgElement){
@@ -4253,8 +4254,8 @@ function showImageContextMenu(e, imgElement){
   _currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_imgContextMenuEl){
-    _imgContextMenuEl.remove();
+  if(_settingsImgContextMenuEl){
+    _settingsImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -4293,14 +4294,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _imgContextMenuEl = menu;
+  _settingsImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _imgContextMenuEl = null;
+        _settingsImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -4319,9 +4320,9 @@ function applyImageContextStyle(){
   _currentImageTarget.dataset.scale = scale;
   _currentImageTarget.dataset.brightness = brightness;
   
-  if(_imgContextMenuEl){
-    _imgContextMenuEl.remove();
-    _imgContextMenuEl = null;
+  if(_settingsImgContextMenuEl){
+    _settingsImgContextMenuEl.remove();
+    _settingsImgContextMenuEl = null;
   }
 }
 
@@ -4359,7 +4360,7 @@ function rotateRandomImage(){
     if(currentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
-        imgContainer.src = randomPlayer.photo;
+        imgContainer.src = toHttpsUrl(randomPlayer.photo);
       }
     }
     
@@ -4725,7 +4726,7 @@ window.openEP=function(name){
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="(function(el){const v=el.value.trim();const img=document.getElementById('ed-photo-preview');const warn=document.getElementById('ed-photo-warn');if(v&&v.startsWith('data:')){el.style.borderColor='#dc2626';if(warn){warn.style.color='#dc2626';warn.textContent='❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용';}}else{el.style.borderColor='';if(warn){warn.textContent='이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.';warn.style.color='var(--gray-l)';}}const wrap=document.getElementById('ed-photo-preview-wrap');if(v&&!v.startsWith('data:')){img.src=v;img.style.display='block';if(wrap)wrap.style.display='inline-block';}else{if(wrap)wrap.style.display='none';}})(this)">
       <span id="ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${p.photo&&!p.photo.startsWith('data:')?'inline-block':'none'}">
-        <img id="ed-photo-preview" src="${p.photo&&!p.photo.startsWith('data:')?p.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none';const w=document.getElementById('ed-photo-warn');if(w){w.style.color='#d97706';w.textContent='⚠️ 이미지를 불러올 수 없습니다. 다른 도메인에서 차단됐거나 URL이 잘못됐을 수 있습니다.';}">
+        <img id="ed-photo-preview" src="${p.photo&&!p.photo.startsWith('data:')?toHttpsUrl(p.photo):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none';const w=document.getElementById('ed-photo-warn');if(w){w.style.color='#d97706';w.textContent='⚠️ 이미지를 불러올 수 없습니다. 다른 도메인에서 차단됐거나 URL이 잘못됐을 수 있습니다.';}">
       </span>
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>

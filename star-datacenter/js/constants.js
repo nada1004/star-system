@@ -6,6 +6,55 @@ const RACES=['T','Z','P','N'];
 const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
 
+/* ══════════════════════════════════════
+   스트리머 프로필 이미지 공통 스타일
+   - 현황판 칩 프로필 이미지 설정(su_bcp_shape)을 "프로필 이미지 모양"의 기준으로도 사용
+   - 인라인 스타일에서도 적용 가능하도록 CSS 변수로 노출
+══════════════════════════════════════ */
+function applyProfileShapeVars(){
+  try{
+    const shape = localStorage.getItem('su_bcp_shape') || 'circle';
+    const radius = (shape === 'square') ? '5px' : '50%';
+    document.documentElement.style.setProperty('--su_profile_radius', radius);
+  }catch(e){}
+}
+// 초기 1회 적용
+try{ applyProfileShapeVars(); }catch(e){}
+
+/* ══════════════════════════════════════
+   대학 로고 공통 스타일 (현황판/설정 등)
+   - 모양/크기/레이아웃(박스) 크기를 CSS 변수로 노출
+══════════════════════════════════════ */
+function applyUnivLogoVars(){
+  try{
+    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
+    const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
+    const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
+    const radius = (shape === 'square') ? '10px' : '50%';
+    document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
+    document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
+    // 대학 상세(모달)용 (요청: 카드 로고 이미지 크기 조정이 그대로 반영되게)
+    document.documentElement.style.setProperty('--su_univ_logo_size_detail', size + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box_detail', box + 'px');
+  }catch(e){}
+}
+try{ applyUnivLogoVars(); }catch(e){}
+function escJS(s){
+  return String(s??'')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,'\\r')
+    .replace(/\n/g,'\\n');
+}
+function escAttr(s){
+  return String(s??'')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
 function getTierBadge(tier){
   if(!tier) return '';
   // 현황판과 동일한 _TIER_BG / _TIER_TEXT 색상 사용
@@ -41,12 +90,12 @@ function getTierPillLabel(tier){
 // 티어 필터 버튼 색상 — 현황판(TIER_FIXED_COLORS)과 완전히 동일
 const _TIER_BG = {
   'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
-  '0티어':'#1d4ed8','1티어':'#2e54c8','2티어':'#3d6ee0','3티어':'#5082f0',
-  '4티어':'#6898f8','5티어':'#80b0ff','6티어':'#96c6ff','7티어':'#acdbff','8티어':'#c0e8ff',
-  '유스':'#fef08a','미정':'#94a3b8'
+  '0티어':'#1d4ed8','1티어':'#2558d0','2티어':'#3268d8','3티어':'#4a7ee8',
+  '4티어':'#6092f4','5티어':'#74a4f4','6티어':'#86b2ec','7티어':'#98bee4','8티어':'#a8c8dc',
+  '유스':'#b45309','미정':'#94a3b8'
 };
 const _TIER_TEXT = {
-  '5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1d4ed8','8티어':'#1d4ed8','유스':'#854d0e','미정':'#fff'
+  '4티어':'#1a3a8a','5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1a4070','8티어':'#1a4070','미정':'#fff'
 };
 function getTierBtnColor(tier){ return _TIER_BG[tier]||'#64748b'; }
 function getTierBtnTextColor(tier){ return _TIER_TEXT[tier]||'#fff'; }
@@ -56,13 +105,13 @@ function getTierBtnTextColor(tier){ return _TIER_TEXT[tier]||'#fff'; }
    - MAIN_ROLES: 정렬 순서에 영향, 표시+정렬
    - SUB_ROLES: 표시만 (학생회장, 오락부장 등)
 ══════════════════════════════════════ */
-const MAIN_ROLES = ['이사장','선장','동아리장','반장','총장','부총장','총괄','교수','코치'];
-const ROLE_ICONS = {'이사장':'👔','선장':'⚓','동아리장':'🏅','반장':'📋','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯'};
-const ROLE_COLORS = {'이사장':'#6d28d9','선장':'#0369a1','동아리장':'#0f766e','반장':'#7c3aed','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490'};
+const MAIN_ROLES = ['이사장','동아리 회장','총장','부총장','총괄','교수','코치','대표'];
+const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯','대표':'👥'};
+const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490','대표':'#8b5cf6'};
 
 function getRoleOrder(role){
-  // 이사장/선장/동아리장/반장=0, 총장=1, 부총장=2, 총괄=2(동률), 교수=3, 코치=4, 기타=99
-  const ORDER = {'이사장':0,'선장':0,'동아리장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
+  // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
+  const ORDER = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
   if(!role) return 99;
   return role in ORDER ? ORDER[role] : 99;
 }
@@ -81,7 +130,28 @@ function getRoleBadgeHTML(role, size='11px'){
 /* ══════════════════════════════════════
    DATA LOAD
 ══════════════════════════════════════ */
-function J(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}}
+function J(k){
+  try{
+    const v=localStorage.getItem(k);
+    if(!v)return null;
+    // LZ-String 압축 여부 자동 감지: 압축된 데이터는 JSON으로 파싱 불가
+    if(typeof LZString!=='undefined'){
+      try{return JSON.parse(v);}catch{
+        const d=LZString.decompressFromUTF16(v);
+        return d?JSON.parse(d):null;
+      }
+    }
+    return JSON.parse(v);
+  }catch{return null;}
+}
+function _lsSave(k,obj){
+  const s=JSON.stringify(obj);
+  if(typeof LZString!=='undefined'){
+    localStorage.setItem(k,LZString.compressToUTF16(s));
+  }else{
+    localStorage.setItem(k,s);
+  }
+}
 
 let players    = J('su_p')  || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
@@ -110,6 +180,8 @@ let _ttSub     = 'records';
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
 let notices    = J('su_notices') || [];
+// (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
+try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
 
 let BLD = {};
 let openDetails = {};
@@ -117,6 +189,7 @@ let tierRankModeFilter = '전체';
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
 let playerStatusIcons = J('su_psi') || {};
+let playerStatusExpiry = J('su_psi_expiry') || {};
 const STATUS_ICON_DEFS = {
   none:    { label: '없음',     emoji: '' },
   fire:    { label: '🔥 불',    emoji: '🔥' },
@@ -134,16 +207,110 @@ const STATUS_ICON_DEFS = {
   cry:     { label: '😭 울음',  emoji: '😭' },
   blank:   { label: '😐 생각없음', emoji: '😐' },
   sad:     { label: '😢 슬픔',  emoji: '😢' },
+  sob:     { label: '😩 통곡',  emoji: '😩' },
+  cool:    { label: '😎 COOL',  emoji: '😎' },
+  star2:   { label: '⭐ 스타',  emoji: '⭐' },
+  crown:   { label: '👑 왕관',  emoji: '👑' },
+  hot2:    { label: '🥵 핫',    emoji: '🥵' },
+  star3:   { label: '🌟 빛나는별',emoji: '🌟' },
+  new2:    { label: '🆕 NEW',   emoji: '🆕' },
+  trophy:  { label: '🏆 트로피', emoji: '🏆' },
+  diamond: { label: '💎 다이아', emoji: '💎' },
+  skull:   { label: '💀 해골',  emoji: '💀' },
+  muscle:  { label: '💪 강함',  emoji: '💪' },
+  think:   { label: '🤔 생각중',emoji: '🤔' },
+  sleep:   { label: '😴 수면',  emoji: '😴' },
+  boom:    { label: '🤯 폭발',  emoji: '🤯' },
+  cold:    { label: '🥶 추움',  emoji: '🥶' },
+  party:   { label: '🎉 파티',  emoji: '🎉' },
+  dizzy:   { label: '💫 어지러움',emoji:'💫' },
+  clown:   { label: '🤡 광대',  emoji: '🤡' },
+  angry:   { label: '😤 화남',  emoji: '😤' },
+  target:  { label: '🎯 집중',  emoji: '🎯' },
+  ghost:   { label: '👻 유령',  emoji: '👻' },
+  game:    { label: '🎮 게임',  emoji: '🎮' },
+  sword:   { label: '🗡️ 검',    emoji: '🗡️' },
+  gold:    { label: '🥇 금메달',emoji: '🥇' },
+  princess:{ label: '👸 공주',  emoji: '👸' },
+  sprout:  { label: '🌱 새싹',  emoji: '🌱' },
+  chick:   { label: '🐥 병아리',emoji: '🐥' },
 };
-function getStatusIcon(name){ return playerStatusIcons[name]||''; }
-function setStatusIcon(name, iconId){
-  if(!iconId||iconId==='none') delete playerStatusIcons[name];
-  else playerStatusIcons[name]=STATUS_ICON_DEFS[iconId]?.emoji||iconId;
+// ── 커스텀 URL 아이콘 ──
+let _customStatusIcons = J('su_si_customs') || [];
+(function _loadCustomIcons(){
+  _customStatusIcons.forEach((c,i)=>{ STATUS_ICON_DEFS['_c'+i]={label:c.label||'커스텀'+(i+1),emoji:c.emoji}; });
+})();
+function addCustomStatusIcon(label, emoji){
+  if(!emoji) return;
+  _customStatusIcons.push({label:label||'커스텀',emoji});
+  const i=_customStatusIcons.length-1;
+  STATUS_ICON_DEFS['_c'+i]={label:_customStatusIcons[i].label,emoji};
+  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+}
+function removeCustomStatusIcon(idx){
+  _customStatusIcons.splice(idx,1);
+  Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
+  _customStatusIcons.forEach((c,i)=>{STATUS_ICON_DEFS['_c'+i]={label:c.label,emoji:c.emoji};});
+  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+}
+function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
+function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
+
+// (혼합 콘텐츠 방지) http:// 이미지를 https://로 자동 보정 (가능한 경우)
+function toHttpsUrl(u){
+  const s = String(u||'');
+  return s.startsWith('http://') ? ('https://' + s.slice('http://'.length)) : s;
+}
+function getStatusIcon(name){
+  const expiry = playerStatusExpiry[name];
+  if(expiry && expiry < new Date().toISOString().slice(0,10)){
+    delete playerStatusIcons[name];
+    delete playerStatusExpiry[name];
+    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+    localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+    return '';
+  }
+  return playerStatusIcons[name]||'';
+}
+function setStatusIcon(name, iconId, expiryDate){
+  if(!iconId||iconId==='none'){
+    delete playerStatusIcons[name];
+    delete playerStatusExpiry[name];
+  } else {
+    playerStatusIcons[name]=STATUS_ICON_DEFS[iconId]?.emoji||iconId;
+    if(expiryDate) playerStatusExpiry[name]=expiryDate;
+    else delete playerStatusExpiry[name];
+  }
   localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+}
+function onStatusExpiryChange(playerName){
+  const expiryChk = document.getElementById('ed-icon-expiry');
+  const curIcon = playerStatusIcons[playerName];
+  if(!curIcon) return;
+  let expiryDate = null;
+  if(expiryChk && expiryChk.checked){
+    const d = new Date(); d.setDate(d.getDate()+10);
+    expiryDate = d.toISOString().slice(0,10);
+  }
+  if(expiryDate) playerStatusExpiry[playerName] = expiryDate;
+  else delete playerStatusExpiry[playerName];
+  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+  const lbl = document.getElementById('ed-icon-label');
+  if(lbl){
+    const found = Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===curIcon);
+    const expTxt = expiryDate ? ` (${expiryDate} 만료)` : '';
+    lbl.textContent = '선택: ' + (found ? found[1].label : '없음') + expTxt;
+  }
 }
 function setStatusIconFromModal(btn, playerName, iconId){
-  setStatusIcon(playerName, iconId);
-  // Update button highlights
+  const expiryChk = document.getElementById('ed-icon-expiry');
+  let expiryDate = null;
+  if(expiryChk && expiryChk.checked && iconId && iconId !== 'none'){
+    const d = new Date(); d.setDate(d.getDate()+10);
+    expiryDate = d.toISOString().slice(0,10);
+  }
+  setStatusIcon(playerName, iconId, expiryDate);
   const container = btn.closest('#ed-icon-btns') || btn.parentElement;
   if(container){
     container.querySelectorAll('button[data-icon-id]').forEach(b=>{
@@ -154,9 +321,13 @@ function setStatusIconFromModal(btn, playerName, iconId){
   }
   const lbl = document.getElementById('ed-icon-label');
   if(lbl){
-    const d = STATUS_ICON_DEFS[iconId];
-    lbl.textContent = '선택: '+(d?d.label:'없음');
+    const d=STATUS_ICON_DEFS[iconId];
+    const expTxt = expiryDate ? ` (${expiryDate} 만료)` : '';
+    lbl.textContent='선택: '+(d?d.label:'없음')+expTxt;
   }
+  // 만료 체크박스 표시 제어
+  const expiryRow = document.getElementById('ed-icon-expiry-row');
+  if(expiryRow) expiryRow.style.display = (!iconId||iconId==='none') ? 'none' : 'flex';
 }
 function saveCustomStatusIcon(slot, emoji){
   localStorage.setItem('su_si_c'+slot, emoji);
@@ -165,21 +336,43 @@ function saveCustomStatusIcon(slot, emoji){
 }
 function getPlayerPhotoHTML(playerName, size, extraStyle){
   size=size||'32px'; extraStyle=extraStyle||'';
+  // (요청사항) 프로필 이미지 크기 배율(전역) — 설정에서 조절
+  // - 기존 코드가 size 문자열(예: "22px")을 넘기므로, 숫자만 뽑아 배율 적용
+  let _scale=1;
+  try{
+    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
+    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
+  }catch(e){}
+  try{
+    const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
+    if(m && _scale!==1){
+      const n=parseFloat(m[1]);
+      size=(n*_scale).toFixed(2).replace(/\.00$/,'')+'px';
+    }
+  }catch(e){}
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:var(--su_profile_radius,50%);flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const clickStyle='cursor:pointer;';
+  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
     const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
     const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
     const txt=p?.race||'?';
-    return '<span style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42)">'+txt+'</span>';
+    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  return '<img src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+'" onerror="this.style.display=\'none\'">';
+  const src = toHttpsUrl(p.photo);
+  return '<img '+clickAttr+' src="'+src+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
-  return ic?`<span style="font-size:13px;margin-left:3px;flex-shrink:0">${ic}</span>`:'';
+  if(!ic) return '';
+  const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
+  const lbl=def?def.label:ic;
+  if(_siIsImg(ic)) return `<span style="margin-left:3px;flex-shrink:0;display:inline-flex;align-items:center" title="${lbl}">${_siRender(ic,'18px')}</span>`;
+  return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
 }
 
 function fixPoints(){
@@ -196,42 +389,56 @@ function fixPoints(){
 
 function localSave(){
   try{
-    localStorage.setItem('su_tiers',JSON.stringify(TIERS));
+    _lsSave('su_tiers',TIERS);
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
     const _pNoPhoto=players.map(p=>{
       const c={...p};
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
+      if(c.history&&c.history.length){
+        // eslint-disable-next-line no-unused-vars
+        c.history=c.history.map(({eloAfter,...h})=>h);
+      }
       return c;
     });
-    localStorage.setItem('su_pp',JSON.stringify(_pPhotoMap));
-    localStorage.setItem('su_p',JSON.stringify(_pNoPhoto));
-    localStorage.setItem('su_u', JSON.stringify(univCfg));
-    localStorage.setItem('su_m', JSON.stringify(maps));
-    localStorage.setItem('su_mAlias', JSON.stringify(userMapAlias));
-    localStorage.setItem('su_t', JSON.stringify(tourD));
-    localStorage.setItem('su_mm',JSON.stringify(miniM));
-    localStorage.setItem('su_um',JSON.stringify(univM));
-    localStorage.setItem('su_cm',JSON.stringify(comps));
-    localStorage.setItem('su_ck',JSON.stringify(ckM));
-    localStorage.setItem('su_cn',JSON.stringify(compNames));
-    localStorage.setItem('su_cc',JSON.stringify(curComp));
-    localStorage.setItem('su_pro',JSON.stringify(proM));
-    localStorage.setItem('su_ptn',JSON.stringify(proTourneys));
-    localStorage.setItem('su_ptc',JSON.stringify(curProComp));
-    localStorage.setItem('su_tn',JSON.stringify(tourneys));
-    localStorage.setItem('su_ttm',JSON.stringify(ttM));
-    localStorage.setItem('su_ttcur',JSON.stringify(_ttCurComp));
-    localStorage.setItem('su_indm',JSON.stringify(indM));
-    localStorage.setItem('su_gjm',JSON.stringify(gjM));
-    if(typeof boardOrder!=='undefined') localStorage.setItem('su_boardOrder',JSON.stringify(boardOrder));
-    if(typeof boardPlayerOrder!=='undefined') localStorage.setItem('su_bpo',JSON.stringify(boardPlayerOrder));
-    if(typeof playerStatusIcons!=='undefined') localStorage.setItem('su_psi',JSON.stringify(playerStatusIcons));
-    localStorage.setItem('su_notices',JSON.stringify(notices));
-    localStorage.setItem('su_seasons',JSON.stringify(seasons));
-    localStorage.setItem('su_cal_sched',JSON.stringify(calScheduled));
+    // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
+    const _trimM=arr=>arr.map(m=>{
+      if(!m.teamAMembers&&!m.teamBMembers)return m;
+      const r={...m};
+      if(r.teamAMembers)r.teamAMembers=r.teamAMembers.map(x=>({name:x.name,univ:x.univ}));
+      if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
+      return r;
+    });
+    _lsSave('su_pp',_pPhotoMap);
+    _lsSave('su_p',_pNoPhoto);
+    _lsSave('su_u',univCfg);
+    _lsSave('su_m',maps);
+    _lsSave('su_mAlias',userMapAlias);
+    _lsSave('su_t',tourD);
+    _lsSave('su_mm',miniM);
+    _lsSave('su_um',univM);
+    _lsSave('su_cm',comps);
+    _lsSave('su_ck',_trimM(ckM));
+    _lsSave('su_cn',compNames);
+    _lsSave('su_cc',curComp);
+    _lsSave('su_pro',_trimM(proM));
+    _lsSave('su_ptn',proTourneys);
+    _lsSave('su_ptc',curProComp);
+    _lsSave('su_tn',tourneys);
+    _lsSave('su_ttm',_trimM(ttM));
+    _lsSave('su_ttcur',_ttCurComp);
+    _lsSave('su_indm',indM);
+    _lsSave('su_gjm',gjM);
+    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
+    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    _lsSave('su_notices',notices);
+    _lsSave('su_seasons',seasons);
+    _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
-    if(BLD['ck'])localStorage.setItem('su_bld_ck',JSON.stringify({membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]}));
+    if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
+    if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
   }catch(e){
     if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){
       if(typeof showToast==='function')showToast('⚠️ 저장 공간이 부족합니다! 일부 데이터가 저장되지 않았을 수 있습니다.',5000);
@@ -242,6 +449,27 @@ function localSave(){
   }
 }
 
+// 설정 전용 경량 저장 — 선수 기록·대전 데이터 직렬화 없음, Firebase 스킵
+// 맵·약자·상태아이콘·티어·대학 설정 변경 시 사용
+function saveCfg(){
+  try{
+    _lsSave('su_tiers',TIERS);
+    _lsSave('su_u',univCfg);
+    _lsSave('su_m',maps);
+    _lsSave('su_mAlias',userMapAlias);
+    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    localStorage.setItem('su_last_save_time',Date.now().toString());
+  }catch(e){console.error('[saveCfg error]',e);}
+}
+// 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
+function savePhotos(){
+  try{
+    const _ppm={};
+    players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
+    _lsSave('su_pp',_ppm);
+    localStorage.setItem('su_last_save_time',Date.now().toString());
+  }catch(e){console.error('[savePhotos error]',e);}
+}
 function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
@@ -269,17 +497,18 @@ const HIST_PAGE_SIZE=20;
 const HIST_PAGE_SIZE_MOBILE=10;
 function getHistPageSize(){return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:HIST_PAGE_SIZE;}
 const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때 페이지네이션
-let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView='month';
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=localStorage.getItem('su_cal_view')||'month';
+let calTypeFilter='all';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
-let miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
-let miniType='mini'; // 'mini' | 'civil'
-let histUniv='';
-let recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
-let vsNameA='', vsNameB=''; // 1:1 상대전적 조회
+var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
+var miniType='mini'; // 'mini' | 'civil'
+var histUniv='';
+var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순
+var vsNameA='', vsNameB=''; // 1:1 상대전적 조회
 
 // 공통 연도/월 필터 상태
-let yearOptions=['2026'];
+let yearOptions=[]; // 하위호환용 — buildYearMonthFilter는 getYearOptions()로 동적 계산
 let filterYear='전체';
 let filterMonth='전체'; // '전체' 또는 '01'~'12'
 
@@ -341,7 +570,7 @@ const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 
 // 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
 function gUI(n,size='1em'){
   const url=(univCfg.find(x=>x.name===n)||{}).icon || (univCfg.find(x=>x.name===n)||{}).img || '';
-  if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`;
+  if(url)return `<img src="${toHttpsUrl(url)}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 }
@@ -365,7 +594,7 @@ function injectUnivIcons(container){
     if(url){
       const img=document.createElement('img');
       img.src=url; img.setAttribute('data-univ-icon','1');
-      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:2px;flex-shrink:0';
+      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0';
       img.onerror=function(){this.style.display='none';};
       el.insertBefore(img,el.firstChild);
     } else {
@@ -383,7 +612,8 @@ function pS(n){return (n>0?'+':'')+n;}
 function getAllUnivs(){
   const r=[...univCfg];const s=new Set(univCfg.map(u=>u.name));
   players.forEach(p=>{if(!s.has(p.univ)){r.push({name:p.univ,color:'#6b7280'});s.add(p.univ);}});
-  return r;
+  const seen=new Set();
+  return r.filter(u=>{if(seen.has(u.name))return false;seen.add(u.name);return true;});
 }
 
 // 현황판 boardOrder → univCfg 순서 동기화 (현황판에서 이동하면 스트리머 목록도 같이 이동)
@@ -411,11 +641,51 @@ function calcElo(winnerElo, loserElo){
 }
 
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
-  const w=players.find(p=>p.name===winName);
-  const l=players.find(p=>p.name===loseName);
+  // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
+  function _findPlayer(name){
+    // 종족 접미사 제거: "김명운Z", "샤이니T" 같이 이름 뒤에 종족이 붙은 입력도 허용
+    // (붙여넣기/자동인식에서 자주 등장)
+    const raw = (name||'').trim();
+    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
+    let p=players.find(x=>x.name===name);
+    if(p)return p;
+    // cleanedRace 우선으로도 재시도
+    if (cleanedRace && cleanedRace !== name) {
+      p = players.find(x => x.name === cleanedRace);
+      if (p) return p;
+    }
+    const low=cleanedRace.toLowerCase();
+    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+    if(p)return p;
+    const ns=cleanedRace.replace(/\s+/g,'');
+    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+  }
+  const w=_findPlayer(winName);
+  const l=_findPlayer(loseName);
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
+  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
+  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
+  // matchId 기반 체크
+  const wDupMatch=matchId
+    ?(isGameId
+      ?(w.history||[]).find(h=>h.matchId===matchId)
+      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
+    :null;
+  const lDupMatch=matchId
+    ?(isGameId
+      ?(l.history||[]).find(h=>h.matchId===matchId)
+      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
+    :null;
+  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
+  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+  // 둘 중 하나라도 중복이면 중단
+  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -424,11 +694,351 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   w.elo=wElo+delta;
   l.elo=lElo-delta;
   const t=Date.now();
-  const d=date||new Date().toISOString().slice(0,10);
-  const m=map||'-';
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+}
+
+// (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
+// - 승/패/포인트/ELO에는 영향 없음
+// - 스트리머 상세(최근 경기 기록) 및 대전기록 탭에서 확인 가능
+// - matchId는 충돌 방지를 위해 호출부에서 기존 matchId에 "_tie" 같은 suffix를 붙이는 것을 권장
+function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, scoreA, scoreB){
+  function _findPlayer(name){
+    const raw = (name||'').trim();
+    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
+    let p=players.find(x=>x.name===name);
+    if(p)return p;
+    if (cleanedRace && cleanedRace !== name) {
+      p = players.find(x => x.name === cleanedRace);
+      if (p) return p;
+    }
+    const low=cleanedRace.toLowerCase();
+    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+    if(p)return p;
+    const ns=cleanedRace.replace(/\s+/g,'');
+    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+  }
+  const a=_findPlayer(nameA);
+  const b=_findPlayer(nameB);
+  if(!a||!b||a===b) return;
+  if(!a.history)a.history=[];
+  if(!b.history)b.history=[];
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  // 중복 체크: matchId 우선, 없으면 date+map+opp
+  const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;
+  const bDup = matchId ? (b.history||[]).find(h=>h.matchId===matchId) : null;
+  const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
+  const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
+  if(aDup||bDup||aDupFallback||bDupFallback) return;
+  const t=Date.now();
+  const au=univA||a.univ||'';
+  const bu=univB||b.univ||'';
+  const scoreStr = (scoreA!=null && scoreB!=null) ? `${scoreA}:${scoreB}` : '';
+  // eloDelta는 null로 두어 UI에서 "-" 처리되게 함
+  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:mode||'',score:scoreStr});
+  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:mode||'',score:scoreStr});
+}
+
+function rebuildAllPlayerHistory() {
+  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
+
+  // 1. 모든 선수의 history, win, loss, points, elo 초기화
+  players.forEach(p => {
+    p.history = [];
+    p.win = 0;
+    p.loss = 0;
+    p.points = 0;
+    p.elo = ELO_DEFAULT;
+  });
+
+  let count = 0;
+
+  // 2. miniM에서 복구
+  (miniM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        // (요청/수정) 시빌워(내전)는 팀 라벨(A/B)과 무관하게 "선수 실제 소속 대학"을 기록
+        // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
+        const isCivil = (m.type === 'civil') || (m.a === 'A팀' && m.b === 'B팀');
+        const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
+        const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        count++;
+      });
+    });
+  });
+
+  // 3. univM에서 복구
+  (univM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        count++;
+      });
+    });
+  });
+
+  // 4. ckM에서 복구
+  (ckM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        count++;
+      });
+    });
+  });
+
+  // 5. proM에서 복구
+  (proM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        count++;
+      });
+    });
+  });
+
+  // 6. ttM에서 복구
+  (ttM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        count++;
+      });
+    });
+  });
+
+  // 7. indM에서 복구
+  (indM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
+    count++;
+  });
+
+  // 8. gjM에서 복구
+  (gjM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
+    count++;
+  });
+
+  // 9. comps에서 복구
+  (comps || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        count++;
+      });
+    });
+  });
+
+  // 10. tourneys에서 복구
+  if (typeof tourneys !== 'undefined') {
+    tourneys.forEach(tn => {
+      const isTier = tn.type === 'tier';
+      (tn.groups || []).forEach(grp => {
+        (grp.matches || []).forEach(m => {
+          if (!m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
+              count++;
+            });
+          });
+        });
+      });
+      Object.values((tn.bracket || {}).matchDetails || {}).forEach(m => {
+        if (!m._id) return;
+        (m.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            count++;
+          });
+        });
+      });
+      ((tn.bracket || {}).manualMatches || []).forEach(m => {
+        if (!m._id) return;
+        (m.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            count++;
+          });
+        });
+      });
+    });
+  }
+
+  // 11. proTourneys에서 복구
+  if (typeof proTourneys !== 'undefined') {
+    proTourneys.forEach(tn => {
+      (tn.groups || []).forEach(grp => {
+        (grp.matches || []).forEach((m, matchIdx) => {
+          if (!m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
+              count++;
+            });
+          });
+        });
+      });
+      (tn.bracket || []).forEach((rnd, rndIdx) => {
+        rnd.forEach((m, matchIdx) => {
+          if (!m || !m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
+              count++;
+            });
+          });
+        });
+      });
+      if (tn.thirdPlace && tn.thirdPlace._id) {
+        const tp = tn.thirdPlace;
+        (tp.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
+            count++;
+          });
+        });
+      }
+      (tn.teamMatches || []).forEach((tm, tmIdx) => {
+        (tm.games || []).forEach((g, gameIdx) => {
+          if (!g.wName || !g.lName) return;
+          const gameId = tm._id ? `${tm._id}_g${gameIdx}` : genId();
+          applyGameResult(g.wName, g.lName, tm.d || '', g.map || '', gameId, '', '', '프로리그대회');
+          count++;
+        });
+      });
+    });
+  }
+
+  save();
+  alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
+  render();
+}
+
+function deduplicatePlayerHistory(){
+  if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
+
+  let totalRemoved=0;
+  players.forEach(p=>{
+    if(!p.history||!p.history.length)return;
+    const seen=new Set();
+    const before=p.history.length;
+    p.history=p.history.filter(h=>{
+      const mid=h.matchId||'';
+      // 게임 단위 고유 ID(_sN_gN 포함)면 matchId 자체가 고유 키
+      const isGameId=mid.includes('_s')&&mid.includes('_g');
+      let key;
+      if(isGameId){
+        key=mid;
+      } else if(h.time){
+        // time이 있으면 포함하여 진짜 중복만 제거 (합법적 재매치와 구분)
+        key=`${mid}|${h.opp||''}|${h.result||''}|${h.map||'-'}|${h.time}`;
+      } else {
+        // time도 없고 bare matchId면 건드리지 않음 (합법적 재매치와 구분 불가)
+        return true;
+      }
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
+    totalRemoved+=before-p.history.length;
+  });
+
+  // 승패/포인트/ELO 재계산 (날짜 오름차순으로 delta 누적)
+  players.forEach(p=>{
+    p.win=0;p.loss=0;p.points=0;p.elo=ELO_DEFAULT;
+    const sorted=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    sorted.forEach(h=>{
+      if(h.result==='승'){p.win++;p.points+=3;}
+      else if(h.result==='패'){p.loss++;p.points-=3;}
+      if(h.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)+h.eloDelta;
+    });
+  });
+
+  if(typeof fixPoints==='function')fixPoints();
+  save();
+  alert(`🧹 중복 제거 완료: ${totalRemoved}개 항목 삭제`);
+  render();
+}
+
+// game 객체에서 playerA, playerB, winner 정보를 추출해서
+// applyGameResult를 호출한다.
+function updatePlayerHistoryFromGame(game, date, mode){
+  if(!game.playerA || !game.playerB || !game.winner) return;
+
+  const winName = game.winner === 'A' ? game.playerA : 
+                  game.winner === 'B' ? game.playerB : game.winner;
+  const loseName = game.winner === 'A' ? game.playerB : 
+                   game.winner === 'B' ? game.playerA : '';
+
+  if(!winName || !loseName) return;
+
+  // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
+  applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
+                  game.univA||'', game.univB||'', mode);
 }
