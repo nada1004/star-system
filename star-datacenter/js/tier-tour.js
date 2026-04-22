@@ -1,4 +1,4 @@
-﻿﻿/* ══════════════════════════════════════
+﻿/* ══════════════════════════════════════
    🔧 구버전 티어대회 데이터 1회 마이그레이션
 ══════════════════════════════════════ */
 let _ttMigrated = false;
@@ -10,20 +10,6 @@ function _migrateTierTourneys(){
     if(!tn.id){tn.id=genId();changed=true;}
     if(!tn.groups){tn.groups=[];changed=true;}
     if(!tn.bracket){tn.bracket={slots:{},winners:{},champ:''};changed=true;}
-  });
-  // _id 없는 조별리그/브라켓 경기에 ID 생성 (기존 데이터 호환)
-  (tourneys||[]).filter(t=>t.type==='tier').forEach(tn=>{
-    (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>{
-        if(!m._id){m._id=genId();changed=true;}
-      });
-    });
-    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-      if(m&&!m._id){m._id=genId();changed=true;}
-    });
-    ((tn.bracket||{}).manualMatches||[]).forEach(m=>{
-      if(!m._id){m._id=genId();changed=true;}
-    });
   });
   // 기존 브라켓 기록(_proKey가 ptn_으로 시작)에 stage:'bkt' 추가 및 _proKey 제거
   (ttM||[]).forEach(r=>{
@@ -112,8 +98,6 @@ function openBktPasteModal(){
       </select></div>`;
     compWrap.style.display='block';
   }
-  // 붙여넣기 모달이 경기 수정 모달 뒤에 깔리는 문제 방지: 기존 모달을 먼저 닫고 열기
-  try{ cm('grpMatchModal'); }catch(e){}
   om('pasteModal');
 }
 
@@ -194,15 +178,13 @@ function openGrpPasteModal(){
   const _pTitle=document.querySelector('#pasteModal .mtitle');
   if(_pTitle)_pTitle.textContent='📋 결과 붙여넣기';
 
-  // 붙여넣기 모달이 경기 수정 모달 뒤에 깔리는 문제 방지
-  try{ cm('grpMatchModal'); }catch(e){}
   om('pasteModal');
 }
 
 // grpPasteApply: 대회 세트 적용 버튼 핸들러 (HTML에서 직접 호출)
 function grpPasteApply(){
   if(!window._pasteResults) return;
-  const savable = window._pasteResults.filter(r=>(r.wPlayer&&r.lPlayer)||r._scoreOnly);
+  const savable = window._pasteResults.filter(r=>r.wPlayer&&r.lPlayer);
   if(!savable.length){ alert('저장 가능한 경기가 없습니다.'); return; }
   const ok = _grpPasteApplyLogic(savable);
   if(ok){
@@ -215,8 +197,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  // 다른 화면(토너먼트 대진표 자동인식 등)에서 window._grpPasteState로 상태를 주입하므로 항상 동기화
-  if(window._grpPasteState) _grpPasteState = window._grpPasteState;
+  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
   if(!tn) return false;
@@ -224,99 +205,43 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbkt'){
     return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
   }
-  // (요청사항) 프로리그/티어대회 토너먼트 대진표 자동생성
-  if(_grpPasteState.mode==='pcbktbuild'){
-    return typeof _pcBktBuildFromPasteApplyLogic==='function' ? _pcBktBuildFromPasteApplyLogic(savable,tn) : false;
-  }
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
   }
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
-  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
-  if(_grpPasteState.mode==='procomp-league'){
-    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
-  }
-  if(_grpPasteState.mode==='procomp-team'){
-    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
-  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
   }
 
-  // 자동인식 모드: gi가 null이면 팀/선수로 조/경기 자동 탐지
+  // 자동인식 모드: gi가 null이면 선수 소속 대학으로 팀/조 자동 탐지
   let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
   const autoDetect = (gi===null||gi===undefined);
   if(autoDetect){
-    const isTier = tn && tn.type==='tier';
-    // 1) 티어대회(개인전): 선수 이름 기반으로 A/B 추출
-    let autoA='', autoB='';
-    if(isTier){
-      const nameCount={};
-      savable.forEach(r=>{
-        const wn=r.wPlayer?.name, ln=r.lPlayer?.name;
-        if(wn) nameCount[wn]=(nameCount[wn]||0)+1;
-        if(ln) nameCount[ln]=(nameCount[ln]||0)+1;
-      });
-      const ranked=Object.entries(nameCount).sort((a,b)=>b[1]-a[1]);
-      if(ranked.length<2){alert('선수 이름을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-      autoA=ranked[0][0]; autoB=ranked[1][0];
-    } else {
-      // 1) 일반(대학전): 선수 소속 대학에서 팀A/B 추출
-      const univCount={};
-      savable.forEach(r=>{
-        [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
-      });
-      const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
-      if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-      autoA=univRanked[0][0]; autoB=univRanked[1][0];
-    }
-
-    // 2. 두 대상이 같은 조에 있는지 확인
+    // 1. 선수 소속 대학에서 팀A/B 추출
+    const univCount={};
+    savable.forEach(r=>{
+      [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
+    });
+    const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
+    if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+    const autoA=univRanked[0][0], autoB=univRanked[1][0];
+    // 2. 두 팀이 같은 조에 있는지 확인
     const groupIdx=tn.groups.findIndex(g=>g.univs.includes(autoA)&&g.univs.includes(autoB));
     if(groupIdx<0){
       // 같은 조가 아니면 autoA의 조에 교류전으로 추가
       const giA=tn.groups.findIndex(g=>g.univs.includes(autoA));
       const giB=tn.groups.findIndex(g=>g.univs.includes(autoB));
-      if(giA<0&&giB<0){
-        // (요청사항) 티어대회(개인전)는 자동으로 조편성(선수)을 구성해서 저장 진행
-        if(isTier){
-          if(!tn.groups) tn.groups=[];
-          if(!tn.groups.length) tn.groups.push({name:'A조',univs:[],matches:[]});
-          const g0=tn.groups[0];
-          if(!g0.univs) g0.univs=[];
-          // 붙여넣기에서 등장한 선수들을 자동 추가
-          const addSet=new Set();
-          savable.forEach(r=>{ if(r.wPlayer?.name) addSet.add(r.wPlayer.name); if(r.lPlayer?.name) addSet.add(r.lPlayer.name); });
-          addSet.forEach(n=>{ if(n && !g0.univs.includes(n)) g0.univs.push(n); });
-          gi=0;
-        } else {
-          alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 ${isTier?'선수':'대학'}을(를) 추가해주세요.`);
-          return false;
-        }
-      }
-      if(gi==null){
-        const targetGi=giA>=0?giA:giB;
-        // (요청사항) 티어대회(개인전)는 조에 없으면 자동으로 해당 조에 추가
-        if(isTier){
-          const tgt=tn.groups[targetGi];
-          if(tgt){
-            if(!tgt.univs) tgt.univs=[];
-            if(giA<0 && !tgt.univs.includes(autoA)) tgt.univs.push(autoA);
-            if(giB<0 && !tgt.univs.includes(autoB)) tgt.univs.push(autoB);
-          }
-          gi=targetGi;
-        } else {
-          const GL='ABCDEFGHIJ';
-          const msg=(giA>=0&&giB>=0)
-            ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
-            :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
-          if(!confirm(msg))return false;
-          gi=targetGi;
-        }
-      }
+      if(giA<0&&giB<0){alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 대학을 추가해주세요.`);return false;}
+      const targetGi=giA>=0?giA:giB;
+      const GL='ABCDEFGHIJ';
+      const msg=(giA>=0&&giB>=0)
+        ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
+        :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
+      if(!confirm(msg))return false;
+      gi=targetGi;
     } else {
       gi=groupIdx;
     }
@@ -336,9 +261,8 @@ function _grpPasteApplyLogic(savable){
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
   const isGameMode = window._pasteMatchMode !== 'set'; // 승차수 모드 여부
 
-  const isTier = tn && tn.type==='tier';
-  const teamANamesSet = isTier ? new Set([teamA]) : new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
-  const teamBNamesSet = isTier ? new Set([teamB]) : new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  const teamANamesSet = new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet = new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
   // 팀 배정: 소속 대학 우선, 무소속 등 어느 팀에도 없으면 붙여넣기 좌측 위치(leftName)로 판단
   const _isWinnerInA = (r) => {
     const wn = r.wPlayer.name;
@@ -359,12 +283,6 @@ function _grpPasteApplyLogic(savable){
     const gset = m.sets[0];
     if(!gset.games) gset.games=[];
     savable.forEach(r=>{
-      if(r._scoreOnly){
-        const a=(r._scoreA||0), b=(r._scoreB||0);
-        for(let i=0;i<a;i++) gset.games.push({playerA:'',playerB:'',winner:'A',map:''});
-        for(let i=0;i<b;i++) gset.games.push({playerA:'',playerB:'',winner:'B',map:''});
-        return;
-      }
       const wn=r.wPlayer.name; const ln=r.lPlayer.name;
       const wInA=_isWinnerInA(r);
       gset.games.push({playerA:wInA?wn:ln, playerB:wInA?ln:wn, winner:wInA?'A':'B', map:r.map||''});
@@ -395,12 +313,6 @@ function _grpPasteApplyLogic(savable){
     const set = m.sets[setIdx];
     if(!set.games) set.games=[];
     savable.forEach(r=>{
-      if(r._scoreOnly){
-        const a=(r._scoreA||0), b=(r._scoreB||0);
-        for(let i=0;i<a;i++) set.games.push({playerA:'',playerB:'',winner:'A',map:''});
-        for(let i=0;i<b;i++) set.games.push({playerA:'',playerB:'',winner:'B',map:''});
-        return;
-      }
       const wn=r.wPlayer.name; const ln=r.lPlayer.name;
       const wInA=_isWinnerInA(r);
       set.games.push({playerA:wInA?wn:ln, playerB:wInA?ln:wn, winner:wInA?'A':'B', map:r.map||''});
@@ -419,8 +331,8 @@ function _grpPasteApplyLogic(savable){
   if(dateEl&&dateEl.value) m.d=dateEl.value;
 
   // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (grpSaveMatch와 동일 패턴 → 이중저장 방지)
-  const matchId = m._id || genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
+  if(m._id) revertMatchRecord({...m, _id:m._id});
+  const matchId = genId();
   m._id = matchId;
   const dateStr = dateEl?.value || m.d || '';
   (m.sets||[]).forEach(set=>{
@@ -505,12 +417,6 @@ function _bktPasteApplyLogic(savable, tn){
     return (r.leftName||r.winName)===wn;
   };
   savable.forEach(r=>{
-    if(r._scoreOnly){
-      const a=(r._scoreA||0), b=(r._scoreB||0);
-      for(let i=0;i<a;i++) set.games.push({playerA:'',playerB:'',winner:'A',map:''});
-      for(let i=0;i<b;i++) set.games.push({playerA:'',playerB:'',winner:'B',map:''});
-      return;
-    }
     const wn=r.wPlayer.name;const ln=r.lPlayer.name;
     let pA='',pB='',winner='';
     if(_isWinnerInA(r)){pA=wn;pB=ln;winner='A';}
@@ -534,8 +440,8 @@ function _bktPasteApplyLogic(savable, tn){
     if(_bw){const _bbr=getBracket(tn);_bbr.winners[`${_grpPasteState.rnd}-${_grpPasteState.mi}`]=_bw;}
   }
   // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (이중저장 방지)
-  const matchId=m._id||genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
+  if(m._id) revertMatchRecord({...m, _id:m._id});
+  const matchId=genId();
   m._id=matchId;
   const dateStr=m.d;
   (m.sets||[]).forEach(s=>{
@@ -596,11 +502,10 @@ function rTierTourTab(C, T){
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
   if(_ttSub==='input'&&!isLoggedIn) _ttSub='records';
   if(_ttSub==='grpedit'&&!isLoggedIn) _ttSub='records';
-  // (롤백) 티어대회 서브메뉴: 단일 라인 탭(기록/입력/대진표/관리로 묶지 않음)
   const subOpts=[
     ...(isLoggedIn?[{id:'input',lbl:'📝 일반',fn:`_ttSub='input';render()`}]:[]),
     {id:'records',lbl:'📋 일반 기록',fn:`_ttSub='records';openDetails={};render()`},
-    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`,hasContext:true},
+    {id:'rank',lbl:'🏆 개인 순위',fn:`_ttSub='rank';render()`},
     {id:'league',lbl:'📅 조별리그',fn:`_ttSub='league';render()`},
     {id:'grprecords',lbl:'📋 조별리그 기록',fn:`_ttSub='grprecords';openDetails={};render()`},
     {id:'grprank',lbl:'📊 조별 순위',fn:`_ttSub='grprank';render()`},
@@ -608,15 +513,7 @@ function rTierTourTab(C, T){
     {id:'bktrecords',lbl:'🏆 토너먼트 기록',fn:`_ttSub='bktrecords';openDetails={};render()`},
     ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성',fn:`_ttSub='grpedit';grpSub='edit';render()`}]:[]),
   ];
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-    ${subOpts.map(o=>`<button class="pill ${_ttSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}"${o.hasContext?` oncontextmenu="${o.id==='rank'?'showRankContext(event)':'showTournamentContext(event)'};return false"`:''}>${o.lbl}</button>`).join('')}
-  </div>`;
-
-  // 조편성 화면 진입 보정(일부 상태값 남는 케이스 방지)
-  if(_ttSub==='grpedit'){
-    try{ if(typeof grpSub==='undefined') window.grpSub='edit'; }catch(e){}
-    try{ if(grpSub!=='edit') grpSub='edit'; }catch(e){ window.grpSub='edit'; }
-  }
+  h+=`<div class="stabs no-export">${subOpts.map(o=>`<button class="stab ${_ttSub===o.id?'on':''}" onclick="${o.fn}"${o.hasContext?` oncontextmenu="showTournamentContext(event);return false"`:''}>${o.lbl}</button>`).join('')}</div>`;
   const _noTnMsg='<div style="padding:40px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>';
   if(_ttSub==='input' && isLoggedIn){
     if(!BLD['tt'])BLD['tt']={date:'',tiers:[],membersA:[],membersB:[],sets:[]};
@@ -648,12 +545,6 @@ function rTierTourTab(C, T){
     });
     const _allBkt=[..._bktRecs,..._bktFromBracket].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
-    if(isLoggedIn && _curTierTn){
-      h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
-        <button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
-        <span style="font-size:11px;color:var(--gray-l)">여러 경기를 한 번에 입력하면 토너먼트 대진표(🗂️ 토너먼트)에도 자동 반영됩니다.</span>
-      </div>`;
-    }
     h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
@@ -737,9 +628,10 @@ function ttPlayerRankHTML(compName){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['tt']||'rate';
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['tt']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['tt']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['tt']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  if(!entries.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
   if(!window._rankPage)window._rankPage={};
   const _PK='tt_rank';
   const _PAGE=20;
@@ -749,7 +641,7 @@ function ttPlayerRankHTML(compName){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
+  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const col=gc(p.univ);
@@ -1004,8 +896,8 @@ function grpDelGroup(tnId,gi){
 function grpAddUniv(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const sel=document.getElementById(`grp-univ-sel-${gi}`);const val=sel?sel.value:'';
-  if(!val){alert(tn.type==='tier'?'선수를 선택하세요.':'대학을 선택하세요.');return;}
-  if(tn.groups[gi].univs.includes(val)){alert(tn.type==='tier'?'이미 추가된 선수입니다.':'이미 추가된 대학입니다.');return;}
+  if(!val){alert('대학을 선택하세요.');return;}
+  if(tn.groups[gi].univs.includes(val)){alert('이미 추가된 대학입니다.');return;}
   tn.groups[gi].univs.push(val);save();render();
 }
 function grpRemoveUniv(tnId,gi,ui){
@@ -1018,13 +910,13 @@ function grpRemoveUniv(tnId,gi,ui){
    ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
-function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
-function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
+function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));}catch(e){}}
+function _cfgD(id,title,extra){return `<details class="ssec" ${_cfgOpen(id)?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span style="font-size:11px;color:var(--gray-l);font-weight:400">▾ 펼치기</span></summary>`;}
 
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
-function rTierTourCfg(C,T){
+function rCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
@@ -1187,7 +1079,12 @@ function rTierTourCfg(C,T){
     </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </details>
-  ${_cfgD('si','🏷️ 스트리머 상태 아이콘 관리')}
+  <div class="ssec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h4 style="margin:0">🏷️ 스트리머 상태 아이콘 관리</h4>
+      <button id="cfg-si-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-si-body');const btn=document.getElementById('cfg-si-toggle');if(c.style.display==='none'){c.style.display='';_renderCfgSiList();btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    </div>
+    <div id="cfg-si-body" style="display:none">
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">이름 우측에 표시될 상태 아이콘을 스트리머별로 지정합니다. 현황판·순위표·이미지 저장 모두 반영됩니다.</div>
     <!-- 커스텀 아이콘 추가 (URL/링크) -->
     <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
@@ -1214,7 +1111,8 @@ function rTierTourCfg(C,T){
       <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
-  </details>
+    </div>
+  </div>
   ${_cfgD('tier','🎭 티어 관리')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -1481,134 +1379,88 @@ function rTierTourCfg(C,T){
     </div>
   </div>
   ${_cfgD('sync','🔄 데이터 동기화')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">경기 기록을 각 탭 기록 및 스트리머 최근 경기에 반영합니다.</div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">경기 기록을 스트리머 최근 경기에 소급 반영합니다.</div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-b btn-sm" onclick="
-          _ttMigrated=false;_migrateTierTourneys();
-          const n=syncAllHistory?syncAllHistory():0;
-          alert('✅ 티어대회 기록 동기화 + '+n+'건 스트리머 반영 완료');render();">🔄 전체 동기화 (기록탭 + 스트리머)</button>
-        <span style="font-size:11px;color:var(--gray-l)">티어대회 기록탭·대전기록 반영 + 스트리머 최근 경기 소급 반영</span>
+        <button class="btn btn-b btn-sm" onclick="syncAllHistoryBtn()">🔄 전체 데이터 동기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">모든 대전 기록(미니/대학/CK/프로/티어/개인전/대회 등)을 스트리머 최근 경기에 소급 반영</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-p btn-sm" onclick="
-          _ttMigrated=false;_migrateTierTourneys();
-          const before=ttM.length;save();render();
-          alert('✅ 티어대회 기록 동기화 완료\\n추가된 기록: '+(ttM.length-before)+'건');">🎯 티어대회 기록 동기화</button>
-        <span style="font-size:11px;color:var(--gray-l)">조별리그·토너먼트 경기를 기록탭·대전기록에 반영 (누락 시 사용)</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-b btn-sm" onclick="syncAllHistoryBtn()">📋 스트리머 최근 경기 반영</button>
-        <span style="font-size:11px;color:var(--gray-l)">모든 경기를 스트리머 상세의 최근 경기에 소급 반영</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-w btn-sm" onclick="
-          const seen=new Set();let removed=0;
-          ttM=ttM.filter(m=>{if(!m._id)return true;if(seen.has(m._id)){removed++;return false;}seen.add(m._id);return true;});
-          save();render();alert('✅ ttM 중복 제거 완료: '+removed+'건 삭제');
-        ">🗑️ 중복 경기 제거</button>
-        <span style="font-size:11px;color:var(--gray-l)">같은 _id로 이중 등록된 티어대회 경기 제거</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-y btn-sm" onclick="deduplicatePlayerHistory()">🧹 중복 기록 제거</button>
-        <span style="font-size:11px;color:var(--gray-l)">스트리머 history에서 중복 항목만 제거 (승패/ELO 재계산)</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-r btn-sm" onclick="rebuildAllPlayerHistory()">🔄 전체 경기 기록 복구</button>
-        <span style="font-size:11px;color:var(--gray-l)">대전 데이터에서 스트리머 history 재구성 (기존 history 초기화됨)</span>
+        <button class="btn btn-b btn-sm" onclick="syncTourneyHistoryBtn()">🏆 대전기록 반영</button>
+        <span style="font-size:11px;color:var(--gray-l)">대회/티어대회 경기를 스트리머 최근 경기에 소급 반영</span>
       </div>
     </div>
   </details>
   ${_cfgD('b2layout','📐 이미지탭 레이아웃')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭(프로필 탭)의 좌우 비율과 높이를 설정합니다. 저장 즉시 반영됩니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(이미지) 너비</label>
-          <span id="cfg-b2-left-size-val" style="font-size:12px;font-weight:700;color:var(--blue)">55%</span>
-        </div>
-        <input type="range" id="cfg-b2-left-size" min="30" max="70" step="1" value="55" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-left-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-right-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-right-size-val').textContent=(100-parseInt(this.value))+'%'">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 레이아웃을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
+        <input type="number" id="cfg-b2-left-size" value="55" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">%</span>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(목록) 너비</label>
-          <span id="cfg-b2-right-size-val" style="font-size:12px;font-weight:700;color:var(--blue)">45%</span>
-        </div>
-        <input type="range" id="cfg-b2-right-size" min="30" max="70" step="1" value="45" style="width:100%;accent-color:var(--blue)"
-          oninput="this.value=Math.min(70,Math.max(30,this.value));document.getElementById('cfg-b2-right-size-val').textContent=this.value+'%';document.getElementById('cfg-b2-left-size').value=100-parseInt(this.value);document.getElementById('cfg-b2-left-size-val').textContent=(100-parseInt(this.value))+'%'">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>30%</span><span>70%</span></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
+        <input type="number" id="cfg-b2-right-size" value="45" min="30" max="70" style="width:70px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">%</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">PC 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="900" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">태블릿 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="700" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">모바일 높이 <span style="font-weight:400;color:var(--gray-l)">(px)</span></label>
-          <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="600" step="20" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700">
-        </div>
-        <div style="display:flex;align-items:flex-end;padding-bottom:4px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:700">
-            <input type="checkbox" id="cfg-b2-auto-resize" checked style="width:15px;height:15px"> 자동 크기 조절
-          </label>
-        </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">PC 높이:</label>
+        <input type="number" id="cfg-b2-pc-height" value="600" min="400" max="800" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
       </div>
-      <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">모바일 높이:</label>
+        <input type="number" id="cfg-b2-mobile-height" value="320" min="200" max="500" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">태블릿 높이:</label>
+        <input type="number" id="cfg-b2-tablet-height" value="400" min="300" max="600" style="width:80px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <span style="font-size:11px;color:var(--gray-l)">px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-b2-auto-resize" checked> 자동 크기 조절
+        </label>
+      </div>
+      <button class="btn btn-b" onclick="saveB2LayoutSettings()">💾 레이아웃 저장</button>
     </div>
   </details>
-  ${_cfgD('imgsettings','🖼️ 이미지탭 이미지 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">이미지탭 ⚙️ 버튼과 동일한 설정입니다. 크기·밝기·배치·위치를 조절하면 즉시 반영됩니다.</div>
-    <div id="cfg-b2-img-settings-wrap" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
-    </div>
-    <div style="font-size:11px;color:var(--gray-l);margin-top:6px;padding:0 2px">※ 스트리머 상세 모달 이미지 설정은 아래 별도 항목에서 설정</div>
-  </details>
-  ${_cfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
-      </label>
-      <div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 크기</label>
-          <span id="cfg-img-scale-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
-        </div>
-        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.5x</span><span>2.0x</span></div>
+  ${_cfgD('imgsettings','🖼️ 이미지 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">이미지탭의 기본 이미지 설정을 구성합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-fill"> 채우기 모드 (contain/cover)
+        </label>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 밝기</label>
-          <span id="cfg-img-brightness-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
-        </div>
-        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.3x</span><span>2.0x</span></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 크기:</label>
+        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(모바일) 크기</label>
-          <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
-        </div>
-        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">기본 밝기:</label>
+        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-brightness-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(PC) 크기</label>
-          <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
-        </div>
-        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">좌측 크기:</label>
+        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-left-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-use-right-scale" style="width:14px;height:14px"> 좌우 개별 크기 사용
-      </label>
-      <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">우측 크기:</label>
+        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:150px">
+        <span id="cfg-img-scale-right-val" style="font-size:11px;color:var(--gray-l)">1.0x</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cfg-img-use-right-scale"> 우측 크기 적용
+        </label>
+      </div>
+      <button class="btn btn-b" onclick="saveImageSettings()">💾 이미지 설정 저장</button>
     </div>
   </details>
   <div class="ssec">
@@ -1704,7 +1556,6 @@ function rTierTourCfg(C,T){
 
   // 관리자 목록 + 맵 약자 목록 렌더링
   setTimeout(()=>{
-    if(typeof _renderCfgSiList==='function') _renderCfgSiList();
     renderStorageInfo();
     renderSeasonList();
     const el=document.getElementById('adm-count');
@@ -1756,25 +1607,13 @@ function rTierTourCfg(C,T){
     }
     // 이미지탭 레이아웃 설정 초기화
     const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
-    const _b2ls=b2Layout.leftSize||55, _b2rs=b2Layout.rightSize||45;
-    const _b2lEl=document.getElementById('cfg-b2-left-size'), _b2rEl=document.getElementById('cfg-b2-right-size');
-    if(_b2lEl){_b2lEl.value=_b2ls;const v=document.getElementById('cfg-b2-left-size-val');if(v)v.textContent=_b2ls+'%';}
-    if(_b2rEl){_b2rEl.value=_b2rs;const v=document.getElementById('cfg-b2-right-size-val');if(v)v.textContent=_b2rs+'%';}
+    if(document.getElementById('cfg-b2-left-size'))document.getElementById('cfg-b2-left-size').value=b2Layout.leftSize||55;
+    if(document.getElementById('cfg-b2-right-size'))document.getElementById('cfg-b2-right-size').value=b2Layout.rightSize||45;
     if(document.getElementById('cfg-b2-pc-height'))document.getElementById('cfg-b2-pc-height').value=b2Layout.pcHeight||600;
     if(document.getElementById('cfg-b2-mobile-height'))document.getElementById('cfg-b2-mobile-height').value=b2Layout.mobileHeight||320;
     if(document.getElementById('cfg-b2-tablet-height'))document.getElementById('cfg-b2-tablet-height').value=b2Layout.tabletHeight||400;
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
-    // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
-    const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
-    if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
-      _cfgB2ImgWrap.innerHTML=`
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
-        ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
-        ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
-      `;
-    }
-    // 스트리머 상세 이미지 설정 초기화
+    // 이미지 설정 초기화
     const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
@@ -1784,19 +1623,27 @@ function rTierTourCfg(C,T){
     if(document.getElementById('cfg-img-use-right-scale'))document.getElementById('cfg-img-use-right-scale').checked=imgSettings.useRightScale||false;
     if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
     if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
+    // 이미지 설정 슬라이더 이벤트 리스너
+    ['scale','brightness','scaleLeft','scaleRight'].forEach(key=>{
+      const el=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key));
+      const valEl=document.getElementById('cfg-img-'+(key==='scaleLeft'?'scale-left':key==='scaleRight'?'scale-right':key)+'-val');
+      if(el&&valEl){
+        el.addEventListener('input',()=>valEl.textContent=parseFloat(el.value).toFixed(1)+'x');
+      }
+    });
     // 구현황판 밝기 설정 초기화
     const b2LabelAlpha=parseInt(localStorage.getItem('su_b2la')||'16');
     const b2BgAlpha=parseInt(localStorage.getItem('su_b2ba')||'9');
     if(document.getElementById('cfg-b2-label-alpha')){document.getElementById('cfg-b2-label-alpha').value=b2LabelAlpha;document.getElementById('cfg-b2-label-alpha-val').textContent=b2LabelAlpha+'%';}
     if(document.getElementById('cfg-b2-bg-alpha')){document.getElementById('cfg-b2-bg-alpha').value=b2BgAlpha;document.getElementById('cfg-b2-bg-alpha-val').textContent=b2BgAlpha+'%';}
-    // 레이아웃 자동 저장 이벤트 리스너
+    // 이미지탭 레이아웃 자동 저장 이벤트 리스너
     ['cfg-b2-left-size','cfg-b2-right-size','cfg-b2-pc-height','cfg-b2-mobile-height','cfg-b2-tablet-height'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveB2LayoutSettings);
     });
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
-    // 스트리머 상세 이미지 설정 자동 저장 이벤트 리스너
+    // 이미지 설정 자동 저장 이벤트 리스너
     ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
@@ -1960,19 +1807,16 @@ function saveImageSettings(){
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
-// settings.js에서도 동일한 전역 식별자(_imgContextMenuEl)를 사용하고 있어
-// 중복 선언 시 tier-tour.js 전체가 SyntaxError로 로드 실패함.
-// 티어대회 전용으로 별도 변수명을 사용한다.
-let _ttImgContextMenuEl = null;
-let _ttCurrentImageTarget = null;
+let _imgContextMenuEl = null;
+let _currentImageTarget = null;
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _ttCurrentImageTarget = imgElement;
+  _currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -2011,14 +1855,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _ttImgContextMenuEl = menu;
+  _imgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _ttImgContextMenuEl = null;
+        _imgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -2027,24 +1871,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_ttCurrentImageTarget) return;
+  if(!_currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _ttCurrentImageTarget.style.transform = `scale(${scale})`;
-  _ttCurrentImageTarget.style.filter = `brightness(${brightness})`;
-  _ttCurrentImageTarget.dataset.scale = scale;
-  _ttCurrentImageTarget.dataset.brightness = brightness;
+  _currentImageTarget.style.transform = `scale(${scale})`;
+  _currentImageTarget.style.filter = `brightness(${brightness})`;
+  _currentImageTarget.dataset.scale = scale;
+  _currentImageTarget.dataset.brightness = brightness;
   
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
-    _ttImgContextMenuEl = null;
+  if(_imgContextMenuEl){
+    _imgContextMenuEl.remove();
+    _imgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _ttRandomRotationTimer = null;
+let _randomRotationTimer = null;
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -2053,15 +1897,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _ttRandomRotationTimer = setInterval(()=>{
+  _randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_ttRandomRotationTimer){
-    clearInterval(_ttRandomRotationTimer);
-    _ttRandomRotationTimer = null;
+  if(_randomRotationTimer){
+    clearInterval(_randomRotationTimer);
+    _randomRotationTimer = null;
   }
 }
 
@@ -2074,7 +1918,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if(_ttCurrentTab === 'total'){
+    if(currentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = randomPlayer.photo;
@@ -2089,14 +1933,14 @@ function rotateRandomImage(){
   }
 }
 
-// 현재 탭 추적 (settings.js에도 동일 식별자가 있어 충돌 방지)
-let _ttCurrentTab = 'total';
+// 현재 탭 추적
+let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
-const _ttOriginalSw = window.sw;
+const originalSw = window.sw;
 window.sw = function(tab, el){
-  _ttCurrentTab = tab;
-  if(_ttOriginalSw) _ttOriginalSw(tab, el);
+  currentTab = tab;
+  if(originalSw) originalSw(tab, el);
 
   const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   if(imgSettings.randomRotation){
@@ -2105,187 +1949,6 @@ window.sw = function(tab, el){
     stopRandomRotation();
   }
 };
-
-/* ══════════════════════════════════════
-   (버그픽스) 설정탭 버튼 누락 함수들
-   - settings.js / tier-tour.js UI에서 호출하지만 정의가 없던 함수들을 추가
-   - 안전한 범위에서만 일괄 수정/삭제 수행
-══════════════════════════════════════ */
-function _bulkArrMapAll(){
-  // 존재하는 배열만 포함
-  const m = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind: (typeof indM!=='undefined'?indM:[]), gj:(typeof gjM!=='undefined'?gjM:[]), comp:comps };
-  return m;
-}
-
-// ── (요청사항) 조편성 관리: 조별 경기 결과 일괄 입력(1줄=1게임) ──
-// competition.js(대회/티어대회 조편성)에서 호출
-window.openCompLeaguePasteModal = function(tnId, gi){
-  if(!isLoggedIn) return alert('로그인이 필요합니다.');
-  const tn = (typeof _findTourneyById==='function' ? _findTourneyById(tnId) : null) || (typeof tourneys!=='undefined' ? tourneys.find(t=>t.id===tnId) : null);
-  if(!tn || !tn.groups || !tn.groups[gi]) return;
-  // 티어대회 조편성 관리용(선수 vs 선수)
-  _grpPasteState = {mode:'comp-league', tnId, gi};
-  window._grpPasteMode = true;
-
-  // pasteModal 초기화 (openGrpPasteModal과 동일 패턴)
-  const textarea  = document.getElementById('paste-input');
-  const previewEl = document.getElementById('paste-preview');
-  const applyBtn  = document.getElementById('paste-apply-btn');
-  const badge     = document.getElementById('paste-summary-badge');
-  const pendWarn  = document.getElementById('paste-pending-warn');
-  if (textarea)  textarea.value  = '';
-  if (previewEl) previewEl.innerHTML = '';
-  if (applyBtn)  { applyBtn.style.display = 'none'; applyBtn.textContent = '✅ 조에 저장'; }
-  if (badge)     badge.style.display = 'none';
-  if (pendWarn)  pendWarn.style.display = 'none';
-  window._pasteResults = null;
-  window._pasteErrors  = null;
-
-  const dateInput = document.getElementById('paste-date');
-  if (dateInput) dateInput.value = new Date().toISOString().slice(0,10);
-
-  const modeSel = document.getElementById('paste-mode');
-  if(modeSel){ modeSel.value='comp'; modeSel.style.display='none'; }
-  const modeLabel = document.getElementById('paste-mode-label');
-  if(modeLabel) modeLabel.style.display='none';
-  const hintEl = document.getElementById('paste-mode-hint');
-  if(hintEl){
-    const GL='ABCDEFGHIJ';
-    hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px">
-      <span style="color:#1d4ed8;font-weight:800">🏆 조별리그 일괄 입력</span>
-      — <b>${tn.name}</b> · <b>GROUP ${GL[gi]||gi}조</b><br>
-      <span style="font-size:11px;color:#6b7280">형식: 날짜 승자 패자 [맵] (여러 줄)</span>
-    </div>`;
-  }
-  const compWrap = document.getElementById('paste-comp-wrap');
-  if(compWrap){ compWrap.style.display='none'; compWrap.innerHTML=''; }
-  const _pasteDetails=document.querySelector('#pasteModal details');
-  if(_pasteDetails) _pasteDetails.style.display='none';
-
-  // 세트/게임 모드 선택은 의미 없으니 숨김
-  const _matchModeDiv=document.getElementById('paste-match-mode-game')?.closest('div[style]');
-  if(_matchModeDiv) _matchModeDiv.style.display='none';
-
-  const _pTitle=document.querySelector('#pasteModal .mtitle');
-  if(_pTitle) _pTitle.textContent='📋 결과 붙여넣기';
-  om('pasteModal');
-};
-function _bulkSelected(keys, prefix, defaultChecked=true){
-  return keys.filter(k=>{
-    const el=document.getElementById(prefix+k);
-    return el ? !!el.checked : defaultChecked;
-  });
-}
-function bulkChangeDate(){
-  if(!isLoggedIn) return;
-  const from=document.getElementById('bulk-date-from')?.value||'';
-  const to=document.getElementById('bulk-date-to')?.value||'';
-  if(!from||!to){ alert('변경 전/후 날짜를 입력하세요.'); return; }
-  const keys=_bulkSelected(['mini','univm','ck','pro','tt','ind','gj','comp'],'bulk-date-chk-');
-  if(!keys.length){ alert('대상을 선택하세요.'); return; }
-  const arrMap=_bulkArrMapAll();
-  let changed=0;
-  keys.forEach(k=>{
-    const arr=arrMap[k]||[];
-    arr.forEach(m=>{ if(m && m.d===from){ m.d=to; changed++; } });
-  });
-  if(changed){ save(); render(); }
-  const el=document.getElementById('bulk-date-result');
-  if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
-}
-function bulkChangeMap(){
-  if(!isLoggedIn) return;
-  const from=(document.getElementById('bulk-map-from')?.value||'').trim();
-  const to=(document.getElementById('bulk-map-to')?.value||'').trim();
-  if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
-  const arrMap=_bulkArrMapAll();
-  const keys=Object.keys(arrMap); // 맵 교체는 전체 적용
-  let changed=0;
-  const rep=(obj)=>{
-    if(!obj||typeof obj!=='object') return;
-    if(typeof obj.map==='string' && obj.map.trim()===from){ obj.map=to; changed++; }
-    // 세트/게임 내부도 체크
-    (obj.sets||[]).forEach(st=>{
-      if(typeof st.map==='string' && st.map.trim()===from){ st.map=to; changed++; }
-      (st.games||[]).forEach(g=>{
-        if(typeof g.map==='string' && g.map.trim()===from){ g.map=to; changed++; }
-      });
-    });
-  };
-  keys.forEach(k=>{ (arrMap[k]||[]).forEach(rep); });
-  // 대회(tourneys) 내부의 games(map)도 교체
-  (tourneys||[]).forEach(tn=>{
-    (tn.groups||[]).forEach(grp=> (grp.matches||[]).forEach(rep));
-    const br=tn.bracket||{};
-    Object.values(br.matchDetails||{}).forEach(rep);
-    (br.manualMatches||[]).forEach(rep);
-  });
-  // 맵 목록 자체도 교체(선택지 통일)
-  try{
-    if(Array.isArray(maps)){
-      maps = maps.map(m=> (m===from?to:m));
-    }
-  }catch(e){}
-  if(changed){ save(); render(); }
-  const el=document.getElementById('bulk-map-result');
-  if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
-}
-function bulkDeleteByDate(){
-  if(!isLoggedIn) return;
-  const from=document.getElementById('bulk-del-from')?.value||'';
-  const to=document.getElementById('bulk-del-to')?.value||'';
-  if(!from||!to){ alert('시작/종료 날짜를 입력하세요.'); return; }
-  if(!confirm(`⚠️ ${from} ~ ${to} 범위의 기록을 삭제합니다. 되돌릴 수 없습니다.\n계속할까요?`)) return;
-  const keys=_bulkSelected(['mini','univm','ck','pro','tt','ind','gj','comp'],'bulk-del-chk-', false);
-  // bulk-del 체크박스는 기본 미체크라서, element 없으면 false가 자연스러움
-  const arrMap=_bulkArrMapAll();
-  let removed=0;
-  const inRange=(d)=> d && d>=from && d<=to;
-  keys.forEach(k=>{
-    const arr=arrMap[k]||[];
-    const before=arr.length;
-    const next=arr.filter(m=> !(m && inRange(m.d)) );
-    removed += (before-next.length);
-    arrMap[k].length = 0;
-    arrMap[k].push(...next);
-  });
-  if(removed){ save(); render(); }
-  const el=document.getElementById('bulk-del-result');
-  if(el){ el.textContent = removed?`✅ ${removed}건 삭제 완료!`:'삭제할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
-}
-
-function addSeason(){
-  if(!isLoggedIn) return;
-  const name=(document.getElementById('cfg-season-name')?.value||'').trim();
-  const from=(document.getElementById('cfg-season-from')?.value||'').trim();
-  const to=(document.getElementById('cfg-season-to')?.value||'').trim();
-  if(!name||!from||!to){ alert('시즌 이름/시작일/종료일을 입력하세요.'); return; }
-  seasons = Array.isArray(seasons) ? seasons : [];
-  seasons.push({name, from, to});
-  // 정렬
-  try{ seasons.sort((a,b)=>(a.from||'').localeCompare(b.from||'')); }catch(e){}
-  save(); render();
-  try{ renderSeasonList(); }catch(e){}
-}
-function editSeason(i){
-  if(!isLoggedIn) return;
-  const s = (seasons||[])[i]; if(!s) return;
-  const name = prompt('시즌 이름', s.name||''); if(name===null) return;
-  const from = prompt('시작일(YYYY-MM-DD)', s.from||''); if(from===null) return;
-  const to   = prompt('종료일(YYYY-MM-DD)', s.to||''); if(to===null) return;
-  seasons[i] = {name:String(name).trim(), from:String(from).trim(), to:String(to).trim()};
-  try{ seasons.sort((a,b)=>(a.from||'').localeCompare(b.from||'')); }catch(e){}
-  save(); render();
-  try{ renderSeasonList(); }catch(e){}
-}
-function deleteSeason(i){
-  if(!isLoggedIn) return;
-  const s=(seasons||[])[i]; if(!s) return;
-  if(!confirm(`시즌 '${s.name}'을(를) 삭제할까요?`)) return;
-  seasons.splice(i,1);
-  save(); render();
-  try{ renderSeasonList(); }catch(e){}
-}
 
 function bulkChangeTier(){
   if(!isLoggedIn) return;
@@ -2378,9 +2041,6 @@ function bulkConvertToGameScore(){
 }
 
 
-// (정리) 아래 블록은 과거 코드가 중복 삽입된 영역입니다.
-// 전역 함수/변수 오염(덮어쓰기)으로 탭 기능이 꼬이는 문제를 막기 위해 IIFE로 격리합니다.
-(function(){
 /* ══════════════════════════════════════
    시즌 관리 함수
 ══════════════════════════════════════ */
@@ -2529,7 +2189,7 @@ function openGrpPasteModal(){
 // grpPasteApply: 대회 세트 적용 버튼 핸들러 (HTML에서 직접 호출)
 function grpPasteApply(){
   if(!window._pasteResults) return;
-  const savable = window._pasteResults.filter(r=>(r.wPlayer&&r.lPlayer)||r._scoreOnly);
+  const savable = window._pasteResults.filter(r=>r.wPlayer&&r.lPlayer);
   if(!savable.length){ alert('저장 가능한 경기가 없습니다.'); return; }
   const ok = _grpPasteApplyLogic(savable);
   if(ok){
@@ -2542,8 +2202,7 @@ function grpPasteApply(){
 
 // grpPasteApply 내부 로직
 function _grpPasteApplyLogic(savable){
-  // 다른 화면(토너먼트 대진표 자동인식 등)에서 window._grpPasteState로 상태를 주입하므로 항상 동기화
-  if(window._grpPasteState) _grpPasteState = window._grpPasteState;
+  if(!_grpPasteState && window._grpPasteState) _grpPasteState = window._grpPasteState;
   if(!_grpPasteState){ alert('붙여넣기 상태가 초기화되지 않았습니다. 다시 시도해주세요.'); return false; }
   const tn = (typeof _findTourneyById==='function' ? _findTourneyById(_grpPasteState.tnId) : null) || tourneys.find(t=>t.id===_grpPasteState.tnId);
   if(!tn) return false;
@@ -2551,141 +2210,43 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='pcbkt'){
     return typeof _pcBktPasteApplyLogic==='function' ? _pcBktPasteApplyLogic(savable,tn) : false;
   }
-  // (요청사항) 프로리그/티어대회 토너먼트 대진표 자동생성
-  if(_grpPasteState.mode==='pcbktbuild'){
-    return typeof _pcBktBuildFromPasteApplyLogic==='function' ? _pcBktBuildFromPasteApplyLogic(savable,tn) : false;
-  }
   if(_grpPasteState.mode==='pcgj'){
     return typeof _pcGJPasteApplyLogic==='function' ? _pcGJPasteApplyLogic(savable,tn) : false;
   }
   if(_grpPasteState.mode==='pcbktedit'){
     return typeof _pcBktEditPasteApplyLogic==='function' ? _pcBktEditPasteApplyLogic(savable) : false;
   }
-  // 프로리그 대회 조별리그/팀전 붙여넣기 모드
-  if(_grpPasteState.mode==='procomp-league'){
-    return typeof _proCompLeaguePasteApplyLogic==='function' ? _proCompLeaguePasteApplyLogic(savable) : false;
-  }
-  if(_grpPasteState.mode==='procomp-team'){
-    return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
-  }
-  // (추가) 대회/티어대회 조별리그: 조에 경기 일괄 추가
-  if(_grpPasteState.mode==='comp-league'){
-    const gi=_grpPasteState.gi;
-    if(!tn.groups||!tn.groups[gi]) return false;
-    const grp=tn.groups[gi];
-    if(!grp.matches) grp.matches=[];
-    const dateEl=document.getElementById('paste-date');
-    const defDate = dateEl ? (dateEl.value||'') : new Date().toISOString().slice(0,10);
-    let added=0, skipped=0;
-    savable.forEach(r=>{
-      const a = r.wPlayer?.name||r.winName||'';
-      const b = r.lPlayer?.name||r.loseName||'';
-      if(!a||!b) return;
-      const d = (r._lineDate && /^\d{4}-\d{2}-\d{2}$/.test(r._lineDate)) ? r._lineDate : defDate;
-      const mp = (r.map && r.map!=='-') ? r.map : '';
-      // 중복 방지(같은 날짜+조합+맵)
-      const dup = (grp.matches||[]).some(m=>{
-        if((m.d||'')!==d) return false;
-        const samePair = (m.a===a && m.b===b) || (m.a===b && m.b===a);
-        return samePair && String(m.map||'')===String(mp||'');
-      });
-      if(dup){ skipped++; return; }
-      const mid = 'cgl_'+(Date.now()+added).toString(36)+Math.random().toString(36).slice(2,5);
-      const g = {playerA:a, playerB:b, map: mp||'', winner:'A', _id: mid+'_g0'};
-      const set = {scoreA:1, scoreB:0, winner:'A', games:[g]};
-      const m = {a, b, d, sa:1, sb:0, winner:'A', map: mp||'', sets:[set], _id: mid};
-      grp.matches.push(m);
-      // 개인 전적 반영 + 티어대회 기록(ttM)도 동기화(competition.js grpSaveMatch와 동일)
-      const _modeLabel = tn.type==='tier' ? '티어대회' : '조별리그';
-      try{ applyGameResult(a,b,d,mp||'',mid,a,b,_modeLabel); }catch(e){}
-      try{ if(typeof updateHistoryFromGame==='function') updateHistoryFromGame(g, d); }catch(e){}
-      try{
-        if(tn.type==='tier' && typeof ttM!=='undefined'){
-          const _ei=ttM.findIndex(x=>x._id===mid);
-          const _rec={_id:mid,d,a,b,sa:1,sb:0,sets:[set],n:tn.name,compName:tn.name,teamALabel:a,teamBLabel:b,stage:'league'};
-          if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
-        }
-      }catch(e){}
-      added++;
-    });
-    save(); render();
-    if(added>0) setTimeout(()=>alert(`${added}건의 경기가 추가되었습니다.${skipped?` (중복 ${skipped}건 제외)`:''}`), 80);
-    return added>0;
-  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
   }
 
-  // 자동인식 모드: gi가 null이면 팀/선수로 조/경기 자동 탐지
+  // 자동인식 모드: gi가 null이면 선수 소속 대학으로 팀/조 자동 탐지
   let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
   const autoDetect = (gi===null||gi===undefined);
   if(autoDetect){
-    const isTier = tn && tn.type==='tier';
-    // 1) 티어대회(개인전): 선수 이름 기반으로 A/B 추출
-    let autoA='', autoB='';
-    if(isTier){
-      const nameCount={};
-      savable.forEach(r=>{
-        const wn=r.wPlayer?.name, ln=r.lPlayer?.name;
-        if(wn) nameCount[wn]=(nameCount[wn]||0)+1;
-        if(ln) nameCount[ln]=(nameCount[ln]||0)+1;
-      });
-      const ranked=Object.entries(nameCount).sort((a,b)=>b[1]-a[1]);
-      if(ranked.length<2){alert('선수 이름을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-      autoA=ranked[0][0]; autoB=ranked[1][0];
-    } else {
-      // 1) 일반(대학전): 선수 소속 대학에서 팀A/B 추출
-      const univCount={};
-      savable.forEach(r=>{
-        [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
-      });
-      const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
-      if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
-      autoA=univRanked[0][0]; autoB=univRanked[1][0];
-    }
-
-    // 2. 두 대상이 같은 조에 있는지 확인
+    // 1. 선수 소속 대학에서 팀A/B 추출
+    const univCount={};
+    savable.forEach(r=>{
+      [r.wPlayer?.univ,r.lPlayer?.univ].forEach(u=>{if(u&&u!=='무소속')univCount[u]=(univCount[u]||0)+1;});
+    });
+    const univRanked=Object.entries(univCount).sort((a,b)=>b[1]-a[1]);
+    if(univRanked.length<2){alert('선수 소속 대학을 인식할 수 없습니다.\n조편성에 등록된 선수를 입력해주세요.');return false;}
+    const autoA=univRanked[0][0], autoB=univRanked[1][0];
+    // 2. 두 팀이 같은 조에 있는지 확인
     const groupIdx=tn.groups.findIndex(g=>g.univs.includes(autoA)&&g.univs.includes(autoB));
     if(groupIdx<0){
       // 같은 조가 아니면 autoA의 조에 교류전으로 추가
       const giA=tn.groups.findIndex(g=>g.univs.includes(autoA));
       const giB=tn.groups.findIndex(g=>g.univs.includes(autoB));
-      if(giA<0&&giB<0){
-        // (요청사항) 티어대회(개인전)는 자동으로 조편성(선수)을 구성해서 저장 진행
-        if(isTier){
-          if(!tn.groups) tn.groups=[];
-          if(!tn.groups.length) tn.groups.push({name:'A조',univs:[],matches:[]});
-          const g0=tn.groups[0];
-          if(!g0.univs) g0.univs=[];
-          const addSet=new Set();
-          savable.forEach(r=>{ if(r.wPlayer?.name) addSet.add(r.wPlayer.name); if(r.lPlayer?.name) addSet.add(r.lPlayer.name); });
-          addSet.forEach(n=>{ if(n && !g0.univs.includes(n)) g0.univs.push(n); });
-          gi=0;
-        } else {
-          alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 ${isTier?'선수':'대학'}을(를) 추가해주세요.`);
-          return false;
-        }
-      }
-      if(gi==null){
-        const targetGi=giA>=0?giA:giB;
-        if(isTier){
-          const tgt=tn.groups[targetGi];
-          if(tgt){
-            if(!tgt.univs) tgt.univs=[];
-            if(giA<0 && !tgt.univs.includes(autoA)) tgt.univs.push(autoA);
-            if(giB<0 && !tgt.univs.includes(autoB)) tgt.univs.push(autoB);
-          }
-          gi=targetGi;
-        } else {
-          const GL='ABCDEFGHIJ';
-          const msg=(giA>=0&&giB>=0)
-            ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
-            :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
-          if(!confirm(msg))return false;
-          gi=targetGi;
-        }
-      }
+      if(giA<0&&giB<0){alert(`"${autoA}"와 "${autoB}" 모두 조편성에 없습니다.\n조편성에서 해당 대학을 추가해주세요.`);return false;}
+      const targetGi=giA>=0?giA:giB;
+      const GL='ABCDEFGHIJ';
+      const msg=(giA>=0&&giB>=0)
+        ?`"${autoA}"(${GL[giA]}조)와 "${autoB}"(${GL[giB]}조)는 다른 조입니다.\n${GL[targetGi]}조에 교류전으로 추가하시겠습니까?`
+        :`"${giA<0?autoA:autoB}"는 조편성에 없습니다.\n${GL[targetGi]}조에 경기를 추가하시겠습니까?`;
+      if(!confirm(msg))return false;
+      gi=targetGi;
     } else {
       gi=groupIdx;
     }
@@ -2705,9 +2266,8 @@ function _grpPasteApplyLogic(savable){
   const teamB = document.getElementById('gm-b')?.value||m.b||'';
   const isGameMode = window._pasteMatchMode !== 'set'; // 승차수 모드 여부
 
-  const isTier = tn && tn.type==='tier';
-  const teamANamesSet = isTier ? new Set([teamA]) : new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
-  const teamBNamesSet = isTier ? new Set([teamB]) : new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
+  const teamANamesSet = new Set(players.filter(p=>p.univ===teamA).map(p=>p.name));
+  const teamBNamesSet = new Set(players.filter(p=>p.univ===teamB).map(p=>p.name));
   // 팀 배정: 소속 대학 우선, 무소속 등 어느 팀에도 없으면 붙여넣기 좌측 위치(leftName)로 판단
   const _isWinnerInA = (r) => {
     const wn = r.wPlayer.name;
@@ -2776,8 +2336,8 @@ function _grpPasteApplyLogic(savable){
   if(dateEl&&dateEl.value) m.d=dateEl.value;
 
   // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (grpSaveMatch와 동일 패턴 → 이중저장 방지)
-  const matchId = m._id || genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
+  if(m._id) revertMatchRecord({...m, _id:m._id});
+  const matchId = genId();
   m._id = matchId;
   const dateStr = dateEl?.value || m.d || '';
   (m.sets||[]).forEach(set=>{
@@ -2885,8 +2445,8 @@ function _bktPasteApplyLogic(savable, tn){
     if(_bw){const _bbr=getBracket(tn);_bbr.winners[`${_grpPasteState.rnd}-${_grpPasteState.mi}`]=_bw;}
   }
   // 개인 전적 반영: 기존 기록 먼저 롤백 후 전체 세트 재적용 (이중저장 방지)
-  const matchId=m._id||genId();
-  if(m._id) revertMatchRecord({...m, _id:matchId});
+  if(m._id) revertMatchRecord({...m, _id:m._id});
+  const matchId=genId();
   m._id=matchId;
   const dateStr=m.d;
   (m.sets||[]).forEach(s=>{
@@ -2982,9 +2542,10 @@ function ttPlayerRankHTML(compName){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['tt']||'rate';
+  const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--text3)">정렬:</span><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['tt']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['tt']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['tt']='l';render()">패순</button></div>`;
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  if(!entries.length) return sortBar+`<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
   if(!window._rankPage)window._rankPage={};
   const _PK='tt_rank';
   const _PAGE=20;
@@ -2994,7 +2555,7 @@ function ttPlayerRankHTML(compName){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
+  let h=sortBar+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const col=gc(p.univ);
@@ -3249,15 +2810,14 @@ function grpDelGroup(tnId,gi){
 function grpAddUniv(tnId,gi){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const sel=document.getElementById(`grp-univ-sel-${gi}`);const val=sel?sel.value:'';
-  if(!val){alert(tn.type==='tier'?'선수를 선택하세요.':'대학을 선택하세요.');return;}
-  if(tn.groups[gi].univs.includes(val)){alert(tn.type==='tier'?'이미 추가된 선수입니다.':'이미 추가된 대학입니다.');return;}
+  if(!val){alert('대학을 선택하세요.');return;}
+  if(tn.groups[gi].univs.includes(val)){alert('이미 추가된 대학입니다.');return;}
   tn.groups[gi].univs.push(val);save();render();
 }
 function grpRemoveUniv(tnId,gi,ui){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   tn.groups[gi].univs.splice(ui,1);save();render();
 }
-})(); // end legacy-duplicate isolation
 function setBoardMemo2(univName, text){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
@@ -3458,6 +3018,7 @@ function promptBoardNoteImgUrl(univName){
 function onRegTypeChange() {
   const type = document.getElementById('p-reg-type')?.value || 'starcraft';
   const scFields = ['p-univ','p-tier','p-race'];
+  const crewField = document.getElementById('p-crew');
   const genderField = document.getElementById('p-gender');
   const displayNameField = document.getElementById('p-display-name');
 
@@ -3465,12 +3026,23 @@ function onRegTypeChange() {
   scFields.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.style.display = (type === 'starcraft') ? '' : 'none';
+    el.style.display = (type === 'starcraft' || type === 'starcraft-crew') ? '' : 'none';
   });
 
-  // 성별/프로필이름 (종합게임)
-  if (genderField) genderField.style.display = (type === 'general') ? '' : 'none';
-  if (displayNameField) displayNameField.style.display = (type === 'general') ? '' : 'none';
+  // 크루 선택 (스타크루/종합게임/보라크루)
+  if (crewField) {
+    crewField.style.display = (type !== 'starcraft') ? '' : 'none';
+    if (type !== 'starcraft') {
+      // 크루 목록 채우기
+      const cfg = typeof crewCfg !== 'undefined' ? crewCfg : [];
+      crewField.innerHTML = '<option value="">— 크루 없음 —</option>' +
+        cfg.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
+  }
+
+  // 성별/프로필이름 (종합게임/보라크루)
+  if (genderField) genderField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
+  if (displayNameField) displayNameField.style.display = (type === 'general' || type === 'boracrew') ? '' : 'none';
 }
 
 function addPlayer(){
@@ -3497,12 +3069,31 @@ function addPlayer(){
       photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
       gameType:'starcraft',win:0,loss:0,points:0,history:[]};
 
+  } else if(_pRegType==='starcraft-crew'){
+    // 스타크루 — 스타크래프트 + 크루 소속
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,univ:document.getElementById('p-univ').value,tier:document.getElementById('p-tier').value,
+      race:document.getElementById('p-race').value,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,hideFromBoard:_pHideBoard||undefined,
+      gameType:'starcraft',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+
   } else if(_pRegType==='general'){
     // 종합게임 스트리머
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
     playerData={name:n,gender:_pGender,role:_pRole||undefined,
       photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
       hideFromBoard:_pHideBoard||undefined,
-      gameType:'종합게임',
+      gameType:'종합게임',crewName:crewName||undefined,isCrew:crewName?true:undefined,
+      win:0,loss:0,points:0,history:[]};
+
+  } else if(_pRegType==='boracrew'){
+    // 보라크루 스트리머
+    const crewName=(document.getElementById('p-crew')?.value||'').trim();
+    playerData={name:n,gender:_pGender,role:_pRole||undefined,
+      photo:_pPhoto||undefined,displayName:_pDisplayName||undefined,
+      hideFromBoard:_pHideBoard||undefined,
+      gameType:'보라크루',crewName:crewName||undefined,isCrew:crewName?true:undefined,
       win:0,loss:0,points:0,history:[]};
   } else {
     playerData={name:n,univ:'무소속',gender:_pGender,role:_pRole||undefined,
@@ -3577,7 +3168,7 @@ window.openEP=function(name){
     <label>🖼 프로필 사진 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시 · 비워두면 기본 아이콘)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="(function(el){const v=el.value.trim();const img=document.getElementById('ed-photo-preview');const warn=document.getElementById('ed-photo-warn');if(v&&v.startsWith('data:')){el.style.borderColor='#dc2626';if(warn){warn.style.color='#dc2626';warn.textContent='❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용';}}else{el.style.borderColor='';if(warn){warn.textContent='이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.';warn.style.color='var(--gray-l)';}}const wrap=document.getElementById('ed-photo-preview-wrap');if(v&&!v.startsWith('data:')){img.src=v;img.style.display='block';if(wrap)wrap.style.display='inline-block';}else{if(wrap)wrap.style.display='none';}})(this)">
-      <span id="ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${p.photo&&!p.photo.startsWith('data:')?'inline-block':'none'}">
+      <span id="ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${p.photo&&!p.photo.startsWith('data:')?'inline-block':'none'}">
         <img id="ed-photo-preview" src="${p.photo&&!p.photo.startsWith('data:')?p.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none';const w=document.getElementById('ed-photo-warn');if(w){w.style.color='#d97706';w.textContent='⚠️ 이미지를 불러올 수 없습니다. 다른 도메인에서 차단됐거나 URL이 잘못됐을 수 있습니다.';}">
       </span>
     </div>
@@ -3657,7 +3248,14 @@ window.openEP=function(name){
         👁️ 현황판에서 숨기기 (스탯·기록은 유지, 구현황판·신현황판 모두 적용)
       </label>
     </div>
-    <!-- (요청사항) 보라크루 기능 삭제: 크루 소속 항목 제거 -->
+    <div style="margin-top:10px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px">
+      <div style="font-weight:700;font-size:12px;color:#7c3aed;margin-bottom:8px">💜 크루 소속</div>
+      <select id="ed-crew-name" style="width:100%;border:1.5px solid #ddd6fe;border-radius:7px;padding:5px 8px;font-size:13px;background:var(--white);color:var(--text1)">
+        <option value="">— 소속 없음 —</option>
+        ${(typeof crewCfg!=='undefined'?crewCfg:[]).map(c=>`<option value="${c.name}"${p.crewName===c.name?' selected':''}>${c.name}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:4px">선택 시 현황판 → 보라크루 탭에 자동 표시됩니다</div>
+    </div>
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
@@ -3783,7 +3381,9 @@ function savePlayer(){
   if(!p.inactive)p.inactive=undefined;
   p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
   if(!p.hideFromBoard)p.hideFromBoard=undefined;
-  // (요청사항) 보라크루 기능 삭제: crewName/isCrew 저장 제거 (기존 값 유지)
+  const _crewName=(document.getElementById('ed-crew-name')?.value||'').trim();
+  p.crewName=_crewName||undefined;
+  p.isCrew=_crewName?true:undefined; // 하위 호환
   const _memo=(document.getElementById('ed-memo')?.value||'').trim();
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
@@ -3791,7 +3391,14 @@ function savePlayer(){
   save();
   cm('emModal');
   
-  // (요청사항) 보라크루 기능 삭제: 크루 뷰 자동 전환 제거
+  // Auto-switch to 보라크루 view if player was assigned to crew or has position
+  if(_crewName || (_rv && _rv.trim())){
+    // Check if current tab is board2 and switch to crew view
+    const currentTab = document.querySelector('.tab.on');
+    if(currentTab && currentTab.onclick && currentTab.onclick.toString().includes('board2')){
+      _b2View = 'crew';
+    }
+  }
   
   render();
   if(typeof openPlayerModal==='function'){
@@ -3968,28 +3575,10 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
-    // miniM에 _id가 없으면 생성
-    if(!miniM[reIdx]._id)miniM[reIdx]._id=genId();
-    // 선수 history 업데이트
-    (miniM[reIdx].sets||[]).forEach(set=>{
-      (set.games||[]).forEach(game=>{
-        if(!game._id)game._id=miniM[reIdx]._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
-        updatePlayerHistoryFromGame(game, d, 'mini');
-      });
-    });
   } else if(reMode==='univm'){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    // univM에 _id가 없으면 생성
-    if(!m._id)m._id=genId();
-    // 선수 history 업데이트
-    (m.sets||[]).forEach(set=>{
-      (set.games||[]).forEach(game=>{
-        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
-        updatePlayerHistoryFromGame(game, d, 'univ');
-      });
-    });
   } else if(reMode==='comp'){
     const c=comps[reIdx];c.d=d;c.n=document.getElementById('re-cn').value;
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
@@ -4001,30 +3590,12 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    // proM에 _id가 없으면 생성
-    if(!m._id)m._id=genId();
-    // 선수 history 업데이트
-    (m.sets||[]).forEach(set=>{
-      (set.games||[]).forEach(game=>{
-        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
-        updatePlayerHistoryFromGame(game, d, 'pro');
-      });
-    });
   } else if(reMode==='tt'){
     const m=ttM[reIdx];m.d=d;
     const ttn=document.getElementById('re-ttcomp')?.value;
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
-    // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
-    if(!m._id)m._id=genId();
-    // 선수 history 업데이트
-    (m.sets||[]).forEach(set=>{
-      (set.games||[]).forEach(game=>{
-        if(!game._id)game._id=m._id+'-'+Date.now()+Math.random().toString(36).substr(2,9);
-        updatePlayerHistoryFromGame(game, d, 'tier');
-      });
-    });
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
@@ -4115,24 +3686,22 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-// settings.js와 전역 변수명이 충돌 방지
-let _ttUnivDragSrc=-1;
-function _univDragStart(e,i){_ttUnivDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+let _univDragSrc=-1;
+function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if(_ttUnivDragSrc===i)return false;
-  const moved=univCfg.splice(_ttUnivDragSrc,1)[0];
+  if(_univDragSrc===i)return false;
+  const moved=univCfg.splice(_univDragSrc,1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-// settings.js와 전역 변수 충돌 방지
-let _ttDissolveIdx = -1;
+let _dissolveIdx = -1;
 function openDissolveModal(i){
-  _ttDissolveIdx = i;
+  _dissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -4143,8 +3712,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  if(_ttDissolveIdx < 0) return;
-  const u = univCfg[_ttDissolveIdx];
+  if(_dissolveIdx < 0) return;
+  const u = univCfg[_dissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;
@@ -4503,69 +4072,13 @@ function _setPdUnivDarken(univ,val,idx){
 
 
 
-// (주의) 통계 탭 구현은 stats.js에서 담당한다.
-// 과거 임시 코드가 tier-tour.js에도 포함돼 있었는데, settings.js / stats.js와 전역 변수 충돌로
-// tier-tour.js 자체가 로드 실패하는 문제가 생겨 제거함.
-
-// 개인 순위 버튼 우클릭 메뉴
-function showRankContext(e){
-  e.preventDefault();
-  e.stopPropagation();
-  
-  const existingMenu = document.getElementById('rank-context-menu');
-  if(existingMenu) existingMenu.remove();
-  
-  if(!window._rankSort)window._rankSort={};
-  const sk=window._rankSort['tt']||'rate';
-  
-  const menu = document.createElement('div');
-  menu.id = 'rank-context-menu';
-  menu.style.cssText = `
-    position: fixed;
-    left: ${e.clientX}px;
-    top: ${e.clientY}px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 99999;
-    min-width: 160px;
-    padding: 4px 0;
-  `;
-  
-  menu.innerHTML = `
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='rate';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">📊</span>
-      <span>승률순</span>
-    </div>
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='w';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">🏆</span>
-      <span>승순</span>
-    </div>
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='l';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">📉</span>
-      <span>패순</span>
-    </div>
-  `;
-  
-  document.body.appendChild(menu);
-  
-  const closeMenu = (ev) => {
-    if(!menu.contains(ev.target)){
-      menu.remove();
-      document.removeEventListener('click', closeMenu);
-    }
-  };
-  setTimeout(() => document.addEventListener('click', closeMenu), 10);
+/* ==========================================
+   STATISTICS TAB
+========================================== */
+let statsSub='overview';
+function rStats(C,T){
+  T.innerText='Statistics';
+  C.innerHTML='<div style=`"padding:40px;text-align:center`">Statistics feature coming soon.</div>';
 }
 
 // 토너먼트 버튼 우클릭 메뉴
