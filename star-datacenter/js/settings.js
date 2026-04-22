@@ -21,16 +21,171 @@ window.applyDesignV2 = function(forceOn){
   try{
     const on = (typeof forceOn==='boolean') ? forceOn : (localStorage.getItem('su_design_v2')==='1');
     document.body.classList.toggle('design-v2', !!on);
+    // (신규) 디자인 모드 밝기(라이트닝) 적용 — bg/white/surface 변수만 조절 (CSS에서 --dm-bright 사용)
+    try{
+      const pct = parseInt(localStorage.getItem('su_design_v2_bright')||'0',10) || 0;
+      const v = Math.max(0, Math.min(100, pct)) + '%';
+      if(on) document.body.style.setProperty('--dm-bright', v);
+      else document.body.style.setProperty('--dm-bright', '0%');
+    }catch(e){}
+    // (신규) 디자인 모드 어둡게(진하게) — 0~40%
+    try{
+      const pct = parseInt(localStorage.getItem('su_design_v2_dark')||'0',10) || 0;
+      const v = Math.max(0, Math.min(40, pct)) + '%';
+      if(on) document.body.style.setProperty('--dm-dark', v);
+      else document.body.style.setProperty('--dm-dark', '0%');
+    }catch(e){}
     // 프리셋(계절/이벤트) 클래스 적용
     const preset = String(localStorage.getItem('su_design_v2_preset')||'base');
-    const allow = new Set(['base','spring','summer','autumn','winter','xmas','summerbreak','winterbreak','valentine','whiteday','buddha','liberation','hangul','samil','taegeuk']);
+    // (요청사항) 태극기 모드 삭제, 신규 "Nada Dark" 프리셋 추가
+    const allow = new Set(['base','nada','nadalight','spring','summer','autumn','winter','xmas','summerbreak','winterbreak','valentine','whiteday','buddha','liberation','hangul','samil']);
     const p = allow.has(preset) ? preset : 'base';
+    // (마이그레이션) 삭제된 프리셋(예: taegeuk)이 남아있으면 base로 정리
+    try{
+      if(preset !== p) localStorage.setItem('su_design_v2_preset', p);
+    }catch(e){}
     document.body.classList.remove(
-      'designv2-base','designv2-spring','designv2-summer','designv2-autumn','designv2-winter',
+      'designv2-base','designv2-nada','designv2-nadalight','designv2-spring','designv2-summer','designv2-autumn','designv2-winter',
       'designv2-xmas','designv2-summerbreak','designv2-winterbreak','designv2-valentine','designv2-whiteday',
-      'designv2-buddha','designv2-liberation','designv2-hangul','designv2-samil','designv2-taegeuk'
+      'designv2-buddha','designv2-liberation','designv2-hangul','designv2-samil'
     );
     if(!!on) document.body.classList.add('designv2-'+p);
+
+    // (요청사항) Nada Dark 프리셋은 다크 모드가 기본
+    // - 기존 다크 설정(localStorage su_dark) 값은 건드리지 않고, 프리셋 활성 동안만 강제로 body.dark 부여
+    try{
+      const forced = document.body.dataset.designForceDark === '1';
+      if(on && p === 'nada'){
+        // 진입 시 기존 다크 상태를 저장
+        if(!forced){
+          document.body.dataset.designPrevDark = document.body.classList.contains('dark') ? '1' : '0';
+          document.body.dataset.designForceDark = '1';
+        }
+        document.body.classList.add('dark');
+      }else{
+        // 이탈 시: 사용자가 다크를 '영구'로 켜둔 상태면 유지, 아니면 진입 전 상태로 복원
+        if(forced){
+          const keep = (localStorage.getItem('su_dark')==='1') || (document.body.dataset.designPrevDark==='1');
+          delete document.body.dataset.designForceDark;
+          delete document.body.dataset.designPrevDark;
+          if(!keep) document.body.classList.remove('dark');
+        }
+      }
+    }catch(e){}
+
+    // (중요) 밝기/명암이 브라우저 color-mix 지원 여부에 따라 안 먹는 경우가 있어
+    // JS로 --bg/--white/--surface 를 직접 계산해서 항상 적용
+    try{
+      const _supportsMix = (window.CSS && typeof CSS.supports==='function')
+        ? CSS.supports('color', 'color-mix(in srgb, #000, #fff)')
+        : false;
+      // color-mix 지원이면 CSS에서도 되지만, 일관성을 위해 JS도 적용(덮어쓰기)
+      const brightPct = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_design_v2_bright')||'0',10)||0));
+      const darkPct   = Math.max(0, Math.min(40,  parseInt(localStorage.getItem('su_design_v2_dark')||'0',10)||0));
+
+      const parseRGB = (c)=>{
+        c = String(c||'').trim();
+        if(!c) return null;
+        const hex = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if(hex){
+          let h = hex[1];
+          if(h.length===3) h = h.split('').map(x=>x+x).join('');
+          const n = parseInt(h,16);
+          return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+        }
+        const rgb = c.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i);
+        if(rgb) return { r:Math.round(+rgb[1]), g:Math.round(+rgb[2]), b:Math.round(+rgb[3]) };
+        return null;
+      };
+      const mixTo = (base, to, t)=>{
+        t = Math.max(0, Math.min(1, t));
+        return {
+          r: Math.round(base.r + (to.r - base.r)*t),
+          g: Math.round(base.g + (to.g - base.g)*t),
+          b: Math.round(base.b + (to.b - base.b)*t),
+        };
+      };
+      const rgbToCss = (v)=>`rgb(${v.r} ${v.g} ${v.b})`;
+      const cs = getComputedStyle(document.body);
+      const bg0 = parseRGB(cs.getPropertyValue('--bg0'));
+      const w0  = parseRGB(cs.getPropertyValue('--white0'));
+      const s0  = parseRGB(cs.getPropertyValue('--surface0'));
+      if(on && bg0 && w0 && s0){
+        const darkT = darkPct/100;
+        const lightT = brightPct/100;
+        const black = {r:0,g:0,b:0};
+        const white = {r:255,g:255,b:255};
+        const bg1 = mixTo(bg0, black, darkT);
+        const w1  = mixTo(w0,  black, darkT);
+        const s1  = mixTo(s0,  black, darkT);
+        const bg2 = mixTo(bg1, white, lightT);
+        const w2  = mixTo(w1,  white, lightT);
+        const s2  = mixTo(s1,  white, lightT);
+        document.body.style.setProperty('--bg', rgbToCss(bg2));
+        document.body.style.setProperty('--white', rgbToCss(w2));
+        document.body.style.setProperty('--surface', rgbToCss(s2));
+
+        // (추가) 기록 카드/모달 글래스 배경도 밝기 슬라이더에 반응하도록 재계산
+        const pStart = parseRGB(cs.getPropertyValue('--primary-start')) || parseRGB(cs.getPropertyValue('--primary-mid'));
+        if(pStart){
+          // 밝기(연하게)가 높아질수록 포인트색(초록/보라 등) 섞임을 줄여 "진한 틴트"가 남지 않게 함
+          const k2 = Math.max(0, 1 - (brightPct/100)); // 1(원본) → 0(완전 화이트)
+          const rcCard = mixTo(s2, pStart, 0.12 * k2);  // surface + 포인트(가변)
+          const rcHd   = mixTo(w2, pStart, 0.10 * k2);  // header + 포인트(가변)
+          // body + documentElement 둘 다 세팅(우선순위/브라우저별 편차 방지)
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-card-bg', rgbToCss(rcCard));
+            t.style.setProperty('--rc-card-hd-bg', rgbToCss(rcHd));
+            t.style.setProperty('--rc-detail-bg', rgbToCss(w2));
+          });
+        }else{
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-card-bg', rgbToCss(s2));
+            t.style.setProperty('--rc-card-hd-bg', rgbToCss(w2));
+            t.style.setProperty('--rc-detail-bg', rgbToCss(w2));
+          });
+        }
+        // glass 배경도 white 기반으로 (불투명도는 CSS에서 처리)
+        [document.body, document.documentElement].forEach(t=>{
+          if(!t) return;
+          t.style.setProperty('--glass-bg', rgbToCss(w2));
+        });
+
+        // (추가) 기록 카드 승리색 테마(rc-theme-on)의 알파도 밝기/명암에 반응하도록 보정
+        // - 밝기(연하게)가 높아질수록 승리색 틴트를 약하게
+        try{
+          const rs = getComputedStyle(document.documentElement);
+          const baseBgA = parseFloat(rs.getPropertyValue('--rc-bg-a')||'0.12') || 0.12;
+          const baseHdA = parseFloat(rs.getPropertyValue('--rc-hd-a')||'0.14') || 0.14;
+          const k = Math.max(0, 1 - (brightPct/100)); // 0~1
+          // 너무 밋밋해지는 걸 막기 위해 최소치 유지(0.02)
+          const effBgA = Math.max(0.02, baseBgA * k);
+          const effHdA = Math.max(0.03, baseHdA * k);
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-bg-a', String(effBgA));
+            t.style.setProperty('--rc-hd-a', String(effHdA));
+          });
+        }catch(e){}
+      }else{
+        document.body.style.removeProperty('--bg');
+        document.body.style.removeProperty('--white');
+        document.body.style.removeProperty('--surface');
+        [document.body, document.documentElement].forEach(t=>{
+          if(!t) return;
+          t.style.removeProperty('--rc-card-bg');
+          t.style.removeProperty('--rc-card-hd-bg');
+          t.style.removeProperty('--rc-detail-bg');
+          t.style.removeProperty('--glass-bg');
+          t.style.removeProperty('--rc-bg-a');
+          t.style.removeProperty('--rc-hd-a');
+        });
+      }
+      // eslint-disable-next-line no-unused-vars
+      void _supportsMix;
+    }catch(e){}
   }catch(e){}
 };
 window.cfgSetDesignV2 = function(on){
@@ -40,6 +195,58 @@ window.cfgSetDesignV2 = function(on){
 };
 window.cfgSetDesignV2Preset = function(v){
   try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
+  // 프리셋을 바꾸면 "디자인 모드"가 꺼져 있어도 체감이 안 나서 혼동이 많음 → 자동 ON
+  try{
+    const pv = String(v||'base');
+    if(pv && pv !== 'base' && localStorage.getItem('su_design_v2')!=='1'){
+      localStorage.setItem('su_design_v2','1');
+      const cb=document.getElementById('cfg-designv2-on');
+      if(cb) cb.checked = true;
+    }
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (신규) 디자인 모드 밝기(배경만 더 밝게) — 0~35%
+window.cfgSetDesignV2Bright = function(v){
+  try{
+    const n = Math.max(0, Math.min(100, parseInt(v||'0',10)||0));
+    localStorage.setItem('su_design_v2_bright', String(n));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (신규) 디자인 모드 어둡게(배경만 더 진하게) — 0~40%
+window.cfgSetDesignV2Dark = function(v){
+  try{
+    const n = Math.max(0, Math.min(40, parseInt(v||'0',10)||0));
+    localStorage.setItem('su_design_v2_dark', String(n));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (요청사항) 디자인 모드 밝기 프리셋 버튼
+window.cfgApplyDesignV2TonePreset = function(key){
+  const k = String(key||'base');
+  const map = {
+    base: {b:0, d:0},
+    light: {b:40, d:0},
+    verylight: {b:80, d:0},
+    maxlight: {b:100, d:0},
+    dark: {b:0, d:20}
+  };
+  const v = map[k] || map.base;
+  try{ localStorage.setItem('su_design_v2_bright', String(v.b)); }catch(e){}
+  try{ localStorage.setItem('su_design_v2_dark', String(v.d)); }catch(e){}
+  try{
+    const r1=document.querySelector('#cfg-designv2-bright'); if(r1) r1.value=String(v.b);
+    const r2=document.querySelector('#cfg-designv2-dark'); if(r2) r2.value=String(v.d);
+    const s1=document.getElementById('cfg-designv2-bright-v'); if(s1) s1.textContent=v.b+'%';
+    const s2=document.getElementById('cfg-designv2-dark-v'); if(s2) s2.textContent=v.d+'%';
+  }catch(e){}
   try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
   try{ render(); }catch(e){}
 };
@@ -686,14 +893,139 @@ window.cfgImportSettingsCode = function(){
 // (요청사항) 전역 폰트 설정(프리셋 + 커스텀 URL)
 // ─────────────────────────────────────────────────────────────
 window.cfgSetAppFontSettings = function(){
-  const preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
+  let preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
   const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
-  const fam    = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+  let fam      = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+  // CSS 직접 입력은 줄바꿈/앞뒤 공백이 의미 있을 수 있어 trim 하지 않음
+  const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '');
+  // 프리셋 드롭다운에서 "커스텀:FontName" 형태로 선택한 경우
+  try{
+    if(/^custom:/.test(preset)){
+      const name = preset.slice('custom:'.length).trim();
+      preset = 'custom';
+      if(name){
+        fam = `${name}, "Noto Sans KR", sans-serif`;
+        const inp = document.getElementById('cfg-appfont-family');
+        if(inp) inp.value = fam;
+      }
+    }
+  }catch(e){}
   try{ localStorage.setItem('su_app_font_preset', preset); }catch(e){}
   try{ localStorage.setItem('su_app_font_css', cssUrl); }catch(e){}
   try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
+  try{ localStorage.setItem('su_app_font_css_text', cssTxt); }catch(e){}
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록 갱신
+try{
+  const _prevRender = window.render;
+  if(typeof _prevRender === 'function' && !window.__patchedRenderForFontPreset){
+    window.__patchedRenderForFontPreset = true;
+    window.render = function(){
+      const r = _prevRender.apply(this, arguments);
+      try{ if(typeof window.cfgRenderCustomFontPresetOptions==='function') window.cfgRenderCustomFontPresetOptions(); }catch(e){}
+      try{ if(typeof window.cfgRenderAppFontAliasEditor==='function') window.cfgRenderAppFontAliasEditor(); }catch(e){}
+      return r;
+    };
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) CSS 직접입력(@font-face)에서 font-family 자동 추출 → 프리셋 드롭다운
+// ─────────────────────────────────────────────────────────────
+window.cfgGetCustomFontFamilies = function(){
+  let cssTxt = '';
+  try{ cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || localStorage.getItem('su_app_font_css_text') || ''); }catch(e){}
+  cssTxt = String(cssTxt||'');
+  const out = [];
+  const seen = new Set();
+  const re = /font-family\s*:\s*['"]?([^;'"\n\r]+)['"]?\s*;/gi;
+  let m;
+  while((m = re.exec(cssTxt))){
+    const name = String(m[1]||'').trim();
+    if(!name) continue;
+    const key = name.toLowerCase();
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+  }
+  return out;
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 커스텀 폰트 "별칭(표시 이름)" 저장/편집
+// - localStorage: su_app_font_alias_map  (JSON: { "FontFamily": "표시이름" })
+// ─────────────────────────────────────────────────────────────
+window.cfgGetAppFontAliasMap = function(){
+  try{ return JSON.parse(localStorage.getItem('su_app_font_alias_map')||'{}')||{}; }catch(e){ return {}; }
+};
+window.cfgSetAppFontAlias = function(fontFamily, alias){
+  const k = String(fontFamily||'').trim();
+  if(!k) return;
+  const v = String(alias||'').trim();
+  const map = window.cfgGetAppFontAliasMap ? window.cfgGetAppFontAliasMap() : {};
+  if(v) map[k] = v;
+  else delete map[k];
+  try{ localStorage.setItem('su_app_font_alias_map', JSON.stringify(map)); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgRenderAppFontAliasEditor = function(){
+  const wrap = document.getElementById('cfg-appfont-alias-wrap');
+  if(!wrap) return;
+  const fams = window.cfgGetCustomFontFamilies ? window.cfgGetCustomFontFamilies() : [];
+  const map = window.cfgGetAppFontAliasMap ? window.cfgGetAppFontAliasMap() : {};
+  if(!fams.length){
+    wrap.innerHTML = `<div style="font-size:11px;color:var(--gray-l)">커스텀 폰트가 없습니다. (CSS 직접 입력에 @font-face를 추가하면 여기에 표시됩니다)</div>`;
+    return;
+  }
+  wrap.innerHTML = fams.map(f=>{
+    const a = map[f] || '';
+    const fjs = JSON.stringify(String(f||''));
+    return `
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);min-width:140px">${esc(f)}</div>
+        <input type="text" value="${esc(a)}" placeholder="예) 본문용 / 타이틀용" style="flex:1;min-width:180px"
+          oninput="cfgSetAppFontAlias(${fjs}, this.value)">
+      </div>
+    `;
+  }).join('');
+};
+window.cfgRenderCustomFontPresetOptions = function(){
+  const sel = document.getElementById('cfg-appfont-custompreset');
+  if(!sel) return;
+  const fams = window.cfgGetCustomFontFamilies ? window.cfgGetCustomFontFamilies() : [];
+  const cur = (document.getElementById('cfg-appfont-family')?.value || '').trim();
+  const curMain = cur.split(',')[0].replace(/['"]/g,'').trim();
+  let html = `<option value="">(직접입력에서 자동 추출)</option>`;
+  fams.forEach(f=>{
+    const on = (curMain && curMain.toLowerCase() === f.toLowerCase());
+    html += `<option value="${esc(f)}" ${on?'selected':''}>${esc(f)}</option>`;
+  });
+  sel.innerHTML = html;
+};
+window.cfgApplyCustomFontPreset = function(v){
+  const val = String(v||'').trim();
+  if(!val) return;
+  const inp = document.getElementById('cfg-appfont-family');
+  if(inp){
+    inp.value = `${val}, "Noto Sans KR", sans-serif`;
+  }
+  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
+};
+
+// (추가) font-family를 입력 없이 고르기(요청): 드롭다운 선택 → 바로 적용
+window.cfgApplyFontFamilyChoice = function(v){
+  const val = String(v||'').trim();
+  if(!val) return;
+  try{
+    const presetSel = document.getElementById('cfg-appfont-preset');
+    if(presetSel) presetSel.value = 'custom';
+  }catch(e){}
+  const inp = document.getElementById('cfg-appfont-family');
+  if(inp) inp.value = val;
+  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -713,6 +1045,30 @@ window.cfgSetUiBtnStyleSettings = function(){
     const c=document.getElementById('cfg-pillr-v'); if(c) c.textContent=pr+'px';
   }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 전역 UI 배율(폰트/아이콘 크기) — 자동 스케일에 추가로 곱 적용
+// - localStorage: su_ui_scale_pct (80~140, 기본 100)
+// ─────────────────────────────────────────────────────────────
+window.cfgSetUiScalePct = function(v){
+  try{
+    const n = Math.max(80, Math.min(140, parseInt(v||'100',10)||100));
+    localStorage.setItem('su_ui_scale_pct', String(n));
+  }catch(e){}
+  try{
+    const el=document.getElementById('cfg-uiscale-v');
+    if(el) el.textContent = (localStorage.getItem('su_ui_scale_pct')||'100') + '%';
+  }catch(e){}
+  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgResetUiScalePct = function(){
+  try{ localStorage.setItem('su_ui_scale_pct','100'); }catch(e){}
+  try{ const r=document.getElementById('cfg-uiscale'); if(r) r.value='100'; }catch(e){}
+  try{ const el=document.getElementById('cfg-uiscale-v'); if(el) el.textContent='100%'; }catch(e){}
+  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
 };
 window.cfgResetUiBtnStyleSettings = function(){
   try{ localStorage.removeItem('su_btn_scale_pct'); }catch(e){}
@@ -1618,7 +1974,7 @@ function _cfgEnsureModal(){
     m.style.zIndex='9000';
     m.innerHTML=`
       <div class="mbox" style="width:min(860px,96vw);padding:0;border-radius:16px;overflow:hidden;max-height:92vh">
-        <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:14px 16px;display:flex;align-items:center;gap:10px">
+        <div style="background:linear-gradient(135deg,var(--primary-start),var(--primary-end));padding:14px 16px;display:flex;align-items:center;gap:10px">
           <div id="cfgModalTitle" class="mtitle" style="font-size:14px;font-weight:900;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">⚙️ 설정</div>
           <button onclick="closeCfgModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
         </div>
@@ -1873,8 +2229,8 @@ function rCfg(C,T){
   let h=`<div class="no-export" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:10px;padding-bottom:6px;flex-wrap:wrap">
       <div style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
-        ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill" data-cat="${c}" data-cfg-cat="${c}"
-          style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid ${on?'var(--blue)':'var(--border)'};border-radius:14px;background:${on?'var(--blue)':'transparent'};cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};color:${on?'#fff':'var(--text)'};transition:all .12s;touch-action:manipulation;line-height:1.1">
+        ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill${on?' on':''}" data-cat="${c}" data-cfg-cat="${c}"
+          style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};transition:all .12s;touch-action:manipulation;line-height:1.1">
           <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${_catLabel(c)}</button>`;}).join('')}
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex:1;min-width:220px;justify-content:flex-end">
@@ -2467,6 +2823,8 @@ ${_scfgD('notice','📢 공지 관리')}
   ${(()=>{ 
     const on = (localStorage.getItem('su_design_v2') ?? '0') === '1';
     const preset = (localStorage.getItem('su_design_v2_preset') ?? 'base');
+    const bright = parseInt(localStorage.getItem('su_design_v2_bright') ?? '0',10) || 0;
+    const dark = parseInt(localStorage.getItem('su_design_v2_dark') ?? '0',10) || 0;
     return _scfgD('designv2','🎨 디자인 모드 (리뉴얼)') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">기존 디자인은 유지하고, 켜면 새로운 디자인(탭/카드/모달/현황판 등)을 적용합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
@@ -2479,7 +2837,8 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">테마 프리셋</div>
         <select id="cfg-designv2-preset" onchange="cfgSetDesignV2Preset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
           <option value="base" ${preset==='base'?'selected':''}>기본</option>
-          <option value="taegeuk" ${preset==='taegeuk'?'selected':''}>🇰🇷 태극기</option>
+          <option value="nada" ${preset==='nada'?'selected':''}>🌑 Nada Dark</option>
+          <option value="nadalight" ${preset==='nadalight'?'selected':''}>🌤️ Nada Light</option>
           <option value="spring" ${preset==='spring'?'selected':''}>🌸 봄</option>
           <option value="summer" ${preset==='summer'?'selected':''}>🏖️ 여름</option>
           <option value="autumn" ${preset==='autumn'?'selected':''}>🍁 가을</option>
@@ -2495,9 +2854,31 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="samil" ${preset==='samil'?'selected':''}>✊ 3.1절</option>
         </select>
       </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">밝기(연하게)</div>
+        <input type="range" id="cfg-designv2-bright" min="0" max="100" step="1" value="${Math.max(0,Math.min(100,bright))}"
+          oninput="document.getElementById('cfg-designv2-bright-v').textContent=this.value+'%'; cfgSetDesignV2Bright(this.value)"
+          style="flex:1;min-width:180px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right"><span id="cfg-designv2-bright-v">${Math.max(0,Math.min(100,bright))}%</span></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">명암(진하게)</div>
+        <input type="range" id="cfg-designv2-dark" min="0" max="40" step="1" value="${Math.max(0,Math.min(40,dark))}"
+          oninput="document.getElementById('cfg-designv2-dark-v').textContent=this.value+'%'; cfgSetDesignV2Dark(this.value)"
+          style="flex:1;min-width:180px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right"><span id="cfg-designv2-dark-v">${Math.max(0,Math.min(40,dark))}%</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">프리셋</div>
+        <button class="btn btn-w btn-xs" onclick="cfgApplyDesignV2TonePreset('base')">기본</button>
+        <button class="btn btn-w btn-xs" onclick="cfgApplyDesignV2TonePreset('light')">연하게</button>
+        <button class="btn btn-w btn-xs" onclick="cfgApplyDesignV2TonePreset('verylight')">매우 연하게</button>
+        <button class="btn btn-w btn-xs" onclick="cfgApplyDesignV2TonePreset('maxlight')">최대(100%)</button>
+        <button class="btn btn-w btn-xs" onclick="cfgApplyDesignV2TonePreset('dark')">진하게</button>
+      </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
         • 적용 범위: 헤더/탭/기록카드/모달/하단내비/현황판 등<br>
-        • 기기별(localStorage)로 저장됩니다.
+        • 관리자 저장(Firebase 저장) 시 다른 기기에도 동일하게 적용됩니다.
       </div>
     </div>
   </details>`;
@@ -2506,6 +2887,49 @@ ${_scfgD('notice','📢 공지 관리')}
     const p = (localStorage.getItem('su_app_font_preset') ?? 'noto');
     const css = (localStorage.getItem('su_app_font_css') ?? '');
     const fam = (localStorage.getItem('su_app_font_family') ?? '');
+    const cssTxt = (localStorage.getItem('su_app_font_css_text') ?? '');
+    const uiPct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    // CSS 직접입력에서 font-family 자동 추출 → 프리셋 드롭다운에도 합치기(요청)
+    const customFams = (()=>{
+      const out=[]; const seen=new Set();
+      const re=/font-family\s*:\s*['"]?([^;'"\\n\\r]+)['"]?\s*;/gi;
+      let m;
+      while((m=re.exec(String(cssTxt||'')))){
+        const name=String(m[1]||'').trim();
+        if(!name) continue;
+        const key=name.toLowerCase();
+        if(seen.has(key)) continue;
+        seen.add(key); out.push(name);
+      }
+      return out;
+    })();
+    const aliasMap = (()=>{
+      try{ return JSON.parse(localStorage.getItem('su_app_font_alias_map')||'{}')||{}; }catch(e){ return {}; }
+    })();
+    const _dispFontName = (n)=>{
+      const a = aliasMap[n];
+      return a ? `${a} (${n})` : n;
+    };
+    const ffChoices = (()=>{
+      const list=[];
+      // 내장 추천
+      list.push({k:'Pretendard, \"Noto Sans KR\", system-ui, -apple-system, Segoe UI, Roboto, sans-serif', l:'(추천) Pretendard'});
+      list.push({k:'GmarketSans, \"Noto Sans KR\", system-ui, -apple-system, Segoe UI, Roboto, sans-serif', l:'(추천) GmarketSans'});
+      list.push({k:'\"Noto Sans KR\", system-ui, -apple-system, Segoe UI, Roboto, sans-serif', l:'Noto Sans KR'});
+      // 커스텀 폰트들 자동 생성(입력 없이 선택 가능)
+      customFams.forEach(n=>{
+        list.push({k:`${n}, \"Noto Sans KR\", sans-serif`, l:_dispFontName(n)});
+      });
+      // 중복 제거
+      const seen=new Set(); return list.filter(x=>{const kk=x.k.toLowerCase(); if(seen.has(kk)) return false; seen.add(kk); return true;});
+    })();
+    const customPreset = (()=>{
+      // 현재 fam의 첫 토큰이 커스텀 font인지 추정
+      const curMain = String(fam||'').split(',')[0].replace(/['"]/g,'').trim().toLowerCase();
+      if(!curMain) return '';
+      const hit = customFams.find(x=>x.toLowerCase()===curMain);
+      return hit ? ('custom:'+hit) : '';
+    })();
     return _scfgD('appfont','🅰️ 전역 폰트') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">앱 전체 폰트를 변경합니다. (프리셋 + 사용자 CSS URL 지원)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -2520,6 +2944,8 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="dohyeon" ${p==='dohyeon'?'selected':''}>Do Hyeon (개성있는 한글)</option>
           <option value="blackhansans" ${p==='blackhansans'?'selected':''}>Black Han Sans (굵은 헤드라인)</option>
           <option value="ibmplexsans" ${p==='ibmplexsans'?'selected':''}>IBM Plex Sans KR (정갈함)</option>
+          ${customFams.length?`<option value="" disabled>──────── 커스텀(저장한 폰트) ────────</option>`:''}
+          ${customFams.map(n=>`<option value="custom:${esc(n)}" ${customPreset===('custom:'+n)?'selected':''}>${esc(_dispFontName(n))}</option>`).join('')}
         </select>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -2530,9 +2956,60 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">font-family</div>
         <input type="text" id="cfg-appfont-family" value="${fam.replace(/\"/g,'&quot;')}" placeholder="비우면 프리셋 기본값 사용" style="flex:1;min-width:260px" onchange="cfgSetAppFontSettings()">
       </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">font-family 선택</div>
+        <select onchange="cfgApplyFontFamilyChoice(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;flex:1;min-width:260px">
+          <option value="">(입력 없이 선택)</option>
+          ${ffChoices.map(o=>`<option value="${esc(o.k)}">${esc(o.l)}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">폰트 크기(전역)</div>
+        <input type="range" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPct))}"
+          oninput="cfgSetUiScalePct(this.value)" style="flex:1;min-width:180px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right">${Math.max(80,Math.min(140,uiPct))}%</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">커스텀 프리셋</div>
+        <select id="cfg-appfont-custompreset" onchange="cfgApplyCustomFontPreset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;flex:1;min-width:260px">
+          <option value="">(직접입력에서 자동 추출)</option>
+        </select>
+        <button class="btn btn-w btn-xs" onclick="cfgRenderCustomFontPresetOptions()" style="padding:6px 10px">🔄 새로고침</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px;padding-top:8px">CSS 직접 입력</div>
+        <div style="flex:1;min-width:260px">
+          <textarea id="cfg-appfont-csstext" rows="7" placeholder="@font-face { ... }\n(여기에 붙여넣으면 자동 저장/적용됩니다)\n\n여러 개는 @font-face 블록을 연달아 추가하세요."
+            style="width:100%;resize:vertical"
+            oninput="cfgSetAppFontSettings(); try{cfgRenderCustomFontPresetOptions();}catch(e){}">${esc(cssTxt)}</textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+            <button class="btn btn-w btn-xs" onclick="cfgSetAppFontSettings();alert('✅ 저장됨')" style="padding:6px 10px">💾 저장</button>
+            <span style="font-size:11px;color:var(--gray-l)">※ 입력 후 다른 곳을 클릭하지 않아도 자동 저장됩니다.</span>
+          </div>
+        </div>
+      </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.5">
         • 예: <span style="font-family:ui-monospace,monospace">Pretendard Variable, Pretendard, Noto Sans KR, sans-serif</span><br>
         • 유튜브/트위치 같은 외부 사이트 폰트는 적용되지 않을 수 있습니다.
+      </div>
+
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;margin-bottom:8px">미리보기</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px">
+          <div style="font-family:var(--app-font);font-size:22px;font-weight:800">가나다ABC 123</div>
+          <div style="font-family:var(--app-font);font-size:14px;font-weight:400">빠른 갈색 여우가 게으른 개를 뛰어넘는다. (The quick brown fox)</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div style="font-family:var(--app-font);font-size:14px;font-weight:400">Regular 400</div>
+          <div style="font-family:var(--app-font);font-size:14px;font-weight:700">Bold 700</div>
+          <div style="font-family:var(--app-font);font-size:14px;font-weight:900">Black 900</div>
+        </div>
+      </div>
+
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;margin-bottom:8px">커스텀 폰트 별칭(표시 이름)</div>
+        <div id="cfg-appfont-alias-wrap"></div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 별칭을 저장하면 ‘프리셋/선택 드롭다운’에 표시됩니다.</div>
       </div>
     </div>
   </details>`;
@@ -2541,9 +3018,19 @@ ${_scfgD('notice','📢 공지 관리')}
     const pct = parseInt(localStorage.getItem('su_btn_scale_pct')||'100',10)||100;
     const br  = parseInt(localStorage.getItem('su_btn_r')||'8',10)||8;
     const pr  = parseInt(localStorage.getItem('su_pill_r')||'20',10)||20;
+    const uiPct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
     return _scfgD('uibtn','🎛️ 버튼 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">앱 전체 버튼/필(탭·필터) 크기와 라운드를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">전역 UI 배율(글자/아이콘)</div>
+        <input type="range" id="cfg-uiscale" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPct))}"
+          oninput="cfgSetUiScalePct(this.value)" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-uiscale-v">${Math.max(80,Math.min(140,uiPct))}%</span>
+          <button class="btn btn-w btn-xs" style="margin-left:8px" onclick="cfgResetUiScalePct()">초기화</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">※ 자동(기기 폭) 스케일에 추가로 곱해집니다. (100%=기본)</div>
+      </div>
       <div>
         <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">버튼 크기</div>
         <input type="range" id="cfg-btnscale" min="85" max="125" step="5" value="${Math.max(85,Math.min(125,pct))}"
@@ -3729,7 +4216,8 @@ function saveImageSettings(){
   // 이미지탭(board2)과 동기화를 위한 저장
   const b2Settings = {
     primary: {
-      fill: settings.fill ? 'contain' : 'cover',
+      // board2 스키마는 fit 사용 (과거 fill로 저장된 데이터는 board2에서 마이그레이션)
+      fit: settings.fill ? 'cover' : 'contain',
       scale: settings.scale * 100,
       brightness: settings.brightness * 100,
       offsetX: 0,
@@ -3739,7 +4227,7 @@ function saveImageSettings(){
       posY: 0
     },
     secondary: {
-      fill: settings.fill ? 'contain' : 'cover',
+      fit: settings.fill ? 'cover' : 'contain',
       scale: settings.scale * 100,
       brightness: settings.brightness * 100,
       offsetX: 0,

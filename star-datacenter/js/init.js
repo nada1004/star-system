@@ -156,6 +156,8 @@ window._applyAppFont = function(){
   try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}
   try{ cssUrl = (localStorage.getItem('su_app_font_css') || '').trim(); }catch(e){}
   try{ fam = (localStorage.getItem('su_app_font_family') || '').trim(); }catch(e){}
+  let cssTxt = '';
+  try{ cssTxt = (localStorage.getItem('su_app_font_css_text') || '').trim(); }catch(e){}
 
   const ensureLink = (id, href) => {
     const head = document.head || document.getElementsByTagName('head')[0];
@@ -186,6 +188,24 @@ window._applyAppFont = function(){
   };
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
+
+  // CSS 직접 입력(@font-face 등) 지원
+  try{
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if(head){
+      let st = document.getElementById('app-font-custom-style');
+      if(!cssTxt){
+        if(st) st.remove();
+      }else{
+        if(!st){
+          st = document.createElement('style');
+          st.id = 'app-font-custom-style';
+          head.appendChild(st);
+        }
+        st.textContent = cssTxt;
+      }
+    }
+  }catch(e){}
 
   // preset → font-family
   const presetFam = {
@@ -454,10 +474,19 @@ function _applyUiScale(){
     else if (w <= 768) s = 1.00;
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
+    // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
+    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
+    try{
+      const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const mul = Math.max(80, Math.min(140, pct)) / 100;
+      s = s * mul;
+    }catch(e){}
     document.documentElement.style.setProperty('--uiS', String(s));
   }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
+// 설정에서 즉시 반영할 수 있도록 노출
+window._applyUiScale = _applyUiScale;
 _applyUiScale();
 
 // ─────────────────────────────────────────────────────────────

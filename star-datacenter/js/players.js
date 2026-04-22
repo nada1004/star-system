@@ -262,8 +262,9 @@ function _buildGalleryView(rankMap){
     if(!up.length) return;
     anyShown=true;
     const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    // 대학 헤더: 로고 배경이 대학색으로 보이도록(요청)
     html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 4px 4px;border-bottom:2px solid ${u.color||'#6366f1'};margin-top:6px">
-      <span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:800;color:${u.color||'#6366f1'}">${gUI(u.name,'20px')}${u.name}</span>
+      <span class="ubadge" data-icon-done="1" style="background:${u.color||'#6366f1'};display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,'20px')}${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l);font-weight:600">${up.length}명</span>
     </div>`;
     sorted.forEach(p=>{

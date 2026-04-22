@@ -46,6 +46,16 @@ function _b2GetImgSettings(playerName, slot) {
   if (!_b2GlobalImgSettings[key]) {
     _b2GlobalImgSettings[key] = _b2DefaultSingleImgSettings();
   }
+  // (버그/호환) 과거 버전에서 fit 대신 fill, scale 대신 zoom 등으로 저장된 경우 보정
+  try{
+    const s=_b2GlobalImgSettings[key];
+    if(s && typeof s==='object'){
+      if(s.fit==null && typeof s.fill==='string') s.fit=s.fill;
+      if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
+      if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
+      if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
+    }
+  }catch(e){}
   // 동기화
   _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
   _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
@@ -53,9 +63,10 @@ function _b2GetImgSettings(playerName, slot) {
   _b2GlobalImgSettings[key].posY = _b2GlobalImgSettings[key].offsetY;
   return _b2GlobalImgSettings[key];
 }
-function _b2SetImgSetting(playerName, key, val) {
-  // 전역 설정 사용
-  const s = _b2GetImgSettings(playerName, 'primary');
+function _b2SetImgSetting(playerName, slot, key, val) {
+  // 호환: (playerName, key, val) 형태로도 호출 가능
+  if (val === undefined) { val = key; key = slot; slot = 'primary'; }
+  const s = _b2GetImgSettings(playerName, slot);
   s[key] = val;
   _b2SaveImgSettings();
 }

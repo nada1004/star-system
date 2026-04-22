@@ -190,6 +190,23 @@ function _applyCloudData(d) {
       if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
       if(typeof window.soopApplySettings==='function') window.soopApplySettings();
     }catch(e){}
+
+    // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
+    try{
+      if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
+      if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
+      if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
+      if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
+      if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
+      if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
+      if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
+      if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
+      if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(typeof window._applyAppFont==='function') window._applyAppFont();
+      if(typeof window.applyDesignV2==='function') window.applyDesignV2();
+      if(typeof window._applyUiScale==='function') window._applyUiScale();
+    }catch(e){}
   }
 }
 
@@ -200,6 +217,17 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
+  // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
+  // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
+  try{
+    const sa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
+    if(!window._forcingSync && sa && window._lastAppliedSavedAt === sa){
+      const fbTs = document.getElementById('fbLastSync');
+      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
+      return;
+    }
+    if(sa) window._lastAppliedSavedAt = sa;
+  }catch(e){}
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
   // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
@@ -248,6 +276,19 @@ async function fbCloudSave() {
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
+      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
+      designV2On: localStorage.getItem('su_design_v2')==='1',
+      designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
+      designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
+      designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
+      // 🅰️ 전역 폰트 — 모든 기기 동기화
+      appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
+      appFontCss: localStorage.getItem('su_app_font_css')||'',
+      appFontFamily: localStorage.getItem('su_app_font_family')||'',
+      appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
+      appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
+      // 📏 전역 UI 배율(글자/아이콘)
+      uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
       // 🎵 유튜브 BGM (설정 동기화)
       bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
       bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
