@@ -1974,7 +1974,7 @@ function _cfgEnsureModal(){
     m.style.zIndex='9000';
     m.innerHTML=`
       <div class="mbox" style="width:min(860px,96vw);padding:0;border-radius:16px;overflow:hidden;max-height:92vh">
-        <div style="background:linear-gradient(135deg,var(--primary-start),var(--primary-end));padding:14px 16px;display:flex;align-items:center;gap:10px">
+        <div class="cfg-modal-hdr" style="background:linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));padding:14px 16px;display:flex;align-items:center;gap:10px">
           <div id="cfgModalTitle" class="mtitle" style="font-size:14px;font-weight:900;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">⚙️ 설정</div>
           <button onclick="closeCfgModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
         </div>
@@ -2004,6 +2004,8 @@ function _cfgEnsureModal(){
             prev.style.display='';
             // 목록에서는 펼치지 않음
             try{ if(prev.tagName==='DETAILS') prev.open=false; }catch(e){}
+            // 모달에서 숨긴 summary 복구
+            try{ const s=prev.querySelector('summary'); if(s) s.style.display=''; }catch(e){}
           }
           window._cfgModalSecId=null;
         }
@@ -2067,12 +2069,31 @@ function _cfgGo(secId){
     }
     window._cfgModalSecId=secId;
     const titleEl=document.getElementById('cfgModalTitle');
-    if(titleEl) titleEl.textContent=(window._cfgSecTitle&&window._cfgSecTitle[secId]?window._cfgSecTitle[secId]:'⚙️ 설정');
+    if(titleEl){
+      const t = (window._cfgSecTitle && window._cfgSecTitle[secId]) ? window._cfgSecTitle[secId] : '';
+      // 요청사항: cfgmenu는 팝업 헤더에서도 "설정 메뉴" 문구가 보이도록 고정
+      titleEl.textContent = (secId==='cfgmenu') ? '🧭 설정 메뉴 정리' : (t || '⚙️ 설정');
+    }
     const body=document.getElementById('cfgModalBody');
     if(body){
       body.innerHTML='';
+      // (모바일 바텀시트/스크롤 환경) 상단 헤더가 스크롤로 밀려 "제목이 안 보임" 현상 방지:
+      // 바디 내부에 스티키 헤더를 한 번 더 렌더링합니다.
+      try{
+        const _t = (secId==='cfgmenu')
+          ? '🧭 설정 메뉴 정리'
+          : ((window._cfgSecTitle && window._cfgSecTitle[secId]) ? String(window._cfgSecTitle[secId]) : '⚙️ 설정');
+        const _hdr=document.createElement('div');
+        // CSS 적용이 꼬이더라도 항상 보이도록 인라인 스타일로 고정
+        _hdr.style.cssText='position:sticky;top:0;z-index:300;display:flex;align-items:center;gap:10px;padding:12px 14px;margin:0 0 12px;border-radius:12px;background:linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12)';
+        _hdr.innerHTML = `<div style="flex:1;min-width:0;font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_t}</div>
+          <button onclick="closeCfgModal()" aria-label="닫기" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:#fff;width:34px;height:34px;cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center">✕</button>`;
+        body.appendChild(_hdr);
+      }catch(e){}
       el.style.display='';
       body.appendChild(el);
+      // 모달 안에서는 summary(제목)가 중복되고 작은 글씨로 보여 헤더처럼 보이지 않으므로 숨김
+      try{ const s=el.querySelector('summary'); if(s) s.style.display='none'; }catch(e){}
       // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
       try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
     }
@@ -2198,7 +2219,7 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
@@ -3884,15 +3905,15 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">FAB 버튼 표시 설정</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <!-- 모바일 터치 영역이 작아 '잘 안 눌림' 방지: 라벨 전체를 버튼처럼 크게 -->
-        <div onclick="const c=document.getElementById('cfg-fab-hide-mobile');if(c){c.checked=!c.checked;saveFabVisibilitySettings();}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;user-select:none">
-          <input type="checkbox" id="cfg-fab-hide-mobile" onchange="saveFabVisibilitySettings();event.stopPropagation();" style="width:18px;height:18px;accent-color:var(--blue)">
-          <div style="font-size:12px;font-weight:700;color:var(--text2)">모바일에서 숨기기</div>
-        </div>
-        <div onclick="const c=document.getElementById('cfg-fab-hide-pc');if(c){c.checked=!c.checked;saveFabVisibilitySettings();}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;user-select:none">
-          <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings();event.stopPropagation();" style="width:18px;height:18px;accent-color:var(--blue)">
-          <div style="font-size:12px;font-weight:700;color:var(--text2)">PC에서 숨기기</div>
-        </div>
+        <!-- 클릭/터치가 잘 안 잡히는 문제 방지: label 전체를 클릭 영역으로 사용 -->
+        <label for="cfg-fab-hide-mobile" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent">
+          <input type="checkbox" id="cfg-fab-hide-mobile" onchange="saveFabVisibilitySettings()" style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0">
+          <div style="font-size:13px;font-weight:800;color:var(--text2)">모바일에서 숨기기</div>
+        </label>
+        <label for="cfg-fab-hide-pc" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--white);cursor:pointer;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent">
+          <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings()" style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0">
+          <div style="font-size:13px;font-weight:800;color:var(--text2)">PC에서 숨기기</div>
+        </label>
       </div>
     </div>
   </details>
@@ -4107,21 +4128,122 @@ ${_scfgD('notice','📢 공지 관리')}
     if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
   };
   window.saveFabVisibilitySettings = function(){
-    const hideMobile = document.getElementById('cfg-fab-hide-mobile')?.checked;
-    const hidePC = document.getElementById('cfg-fab-hide-pc')?.checked;
+    const elM = document.getElementById('cfg-fab-hide-mobile');
+    const elP = document.getElementById('cfg-fab-hide-pc');
+    const hideMobile = !!(elM && elM.checked);
+    const hidePC = !!(elP && elP.checked);
     localStorage.setItem('su_fabHideMobile', hideMobile ? '1' : '0');
     localStorage.setItem('su_fabHidePC', hidePC ? '1' : '0');
     if(typeof updateFabVisibility==='function')updateFabVisibility();
-    if(typeof save==='function')save();
+    // (안정성) 저장감 피드백
+    try{ if(typeof showToast==='function') showToast('✅ FAB 표시 설정 적용'); }catch(e){}
+    // 다른 기기 반영: (관리자) GitHub Gist에 동기화
+    try{
+      if(typeof window._fabSyncToGist==='function') window._fabSyncToGist();
+    }catch(e){}
+    // 기존 로직 유지: 관리자 로그인 상태일 때만 전체 저장(save) 호출
+    try{
+      if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
+    }catch(e){}
   };
   window.initFabVisibilitySettings = function(){
+    // 다른 기기 반영: Gist에서 먼저 불러와 localStorage를 최신화(가능할 때만)
+    try{ if(typeof window._fabPullFromGist==='function') window._fabPullFromGist(); }catch(e){}
     const hideMobile = localStorage.getItem('su_fabHideMobile') === '1';
     const hidePC = localStorage.getItem('su_fabHidePC') === '1';
-    if(document.getElementById('cfg-fab-hide-mobile'))document.getElementById('cfg-fab-hide-mobile').checked = hideMobile;
-    if(document.getElementById('cfg-fab-hide-pc'))document.getElementById('cfg-fab-hide-pc').checked = hidePC;
+    const elM=document.getElementById('cfg-fab-hide-mobile');
+    const elP=document.getElementById('cfg-fab-hide-pc');
+    if(elM) elM.checked = hideMobile;
+    if(elP) elP.checked = hidePC;
   };
   setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
 } // end first rCfg
+
+// ── FAB 표시 설정: 다른 기기 동기화(GitHub Gist) ──
+// - 토큰/ID는 알등이 메모 동기화에서 쓰는 값(al_github_token, al_gist_id)을 그대로 재사용합니다.
+// - 읽기: Gist ID만 있으면 누구나 가능(공개 Gist 기준)
+// - 쓰기: 관리자(isLoggedIn && !isSubAdmin) + 토큰 필요
+window._fabGistCfg = function(){
+  return {
+    enabled: localStorage.getItem('al_sync_enabled') === '1',
+    token: (localStorage.getItem('al_github_token')||'').trim(),
+    gistId: (localStorage.getItem('al_gist_id')||'').trim(),
+  };
+};
+window._fabIsAdmin = function(){
+  try{
+    if(typeof isLoggedIn!=='undefined' && isLoggedIn){
+      if(typeof isSubAdmin!=='undefined' && isSubAdmin) return false;
+      return true;
+    }
+  }catch(e){}
+  return false;
+};
+async function _fabGistGetFile(gistId, token, filename){
+  const opt={headers:{'Accept':'application/vnd.github+json'}};
+  if(token) opt.headers['Authorization']='token '+token;
+  const res=await fetch(`https://api.github.com/gists/${gistId}`, opt);
+  const js=await res.json().catch(()=>null);
+  if(!res.ok) throw new Error((js&&js.message)||('HTTP '+res.status));
+  const f=js&&js.files?js.files[filename]:null;
+  if(!f) return null;
+  let content=f.content;
+  if((!content||f.truncated) && f.raw_url){
+    const r=await fetch(f.raw_url);
+    content=await r.text();
+  }
+  return content||null;
+}
+async function _fabGistPatchFile(gistId, token, filename, content){
+  const opt={
+    method:'PATCH',
+    headers:{
+      'Accept':'application/vnd.github+json',
+      'Authorization':'token '+token,
+      'Content-Type':'application/json'
+    },
+    body: JSON.stringify({ files: { [filename]: { content } } })
+  };
+  const res=await fetch(`https://api.github.com/gists/${gistId}`, opt);
+  const js=await res.json().catch(()=>null);
+  if(!res.ok) throw new Error((js&&js.message)||('HTTP '+res.status));
+  return true;
+}
+window._fabPullFromGist = async function(){
+  const cfg=window._fabGistCfg();
+  if(!cfg.gistId) return false;
+  // enabled가 꺼져 있어도 "반영" 요구가 있으므로 읽기는 시도
+  try{
+    const txt=await _fabGistGetFile(cfg.gistId, null, 'su_ui_settings.json');
+    if(!txt) return false;
+    const remote=JSON.parse(txt);
+    if(!remote) return false;
+    if(typeof remote.su_fabHideMobile!=='undefined') localStorage.setItem('su_fabHideMobile', String(remote.su_fabHideMobile));
+    if(typeof remote.su_fabHidePC!=='undefined') localStorage.setItem('su_fabHidePC', String(remote.su_fabHidePC));
+    if(typeof updateFabVisibility==='function') updateFabVisibility();
+    return true;
+  }catch(e){
+    return false;
+  }
+};
+window._fabSyncToGist = async function(){
+  const cfg=window._fabGistCfg();
+  if(!window._fabIsAdmin()) return false;
+  if(!cfg.gistId || !cfg.token) return false;
+  const payload={
+    su_fabHideMobile: localStorage.getItem('su_fabHideMobile')||'0',
+    su_fabHidePC: localStorage.getItem('su_fabHidePC')||'0',
+    updatedAt: new Date().toISOString()
+  };
+  try{
+    await _fabGistPatchFile(cfg.gistId, cfg.token, 'su_ui_settings.json', JSON.stringify(payload, null, 2));
+    try{ if(typeof showToast==='function') showToast('☁️ 다른 기기에도 반영됨'); }catch(e){}
+    return true;
+  }catch(e){
+    try{ if(typeof showToast==='function') showToast('⚠️ 동기화 실패: '+e.message); }catch(_){}
+    return false;
+  }
+};
 
 function renderStorageInfo(){
   const el=document.getElementById('cfg-storage-info');
