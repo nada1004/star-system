@@ -3883,17 +3883,16 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">FAB 버튼 표시 설정</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-fab-hide-mobile" onchange="saveFabVisibilitySettings()">
-          모바일에서 숨기기
-        </label>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings()">
-          PC에서 숨기기
-        </label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <!-- 모바일 터치 영역이 작아 '잘 안 눌림' 방지: 라벨 전체를 버튼처럼 크게 -->
+        <div onclick="const c=document.getElementById('cfg-fab-hide-mobile');if(c){c.checked=!c.checked;saveFabVisibilitySettings();}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;user-select:none">
+          <input type="checkbox" id="cfg-fab-hide-mobile" onchange="saveFabVisibilitySettings();event.stopPropagation();" style="width:18px;height:18px;accent-color:var(--blue)">
+          <div style="font-size:12px;font-weight:700;color:var(--text2)">모바일에서 숨기기</div>
+        </div>
+        <div onclick="const c=document.getElementById('cfg-fab-hide-pc');if(c){c.checked=!c.checked;saveFabVisibilitySettings();}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;user-select:none">
+          <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings();event.stopPropagation();" style="width:18px;height:18px;accent-color:var(--blue)">
+          <div style="font-size:12px;font-weight:700;color:var(--text2)">PC에서 숨기기</div>
+        </div>
       </div>
     </div>
   </details>
