@@ -38,6 +38,21 @@
   /* 전역 폰트(설정에서 변경) */
   --app-font: 'Noto Sans KR', sans-serif;
 
+  /* z-index 레이어 체계 */ /* [Z-IDX] */
+  --z-base: 1; /* [Z-IDX] */
+  --z-dropdown: 500; /* [Z-IDX] */
+  --z-sticky: 920; /* [Z-IDX] */
+  --z-fixed: 1000; /* [Z-IDX] */
+  --z-modal-bg: 3500; /* [Z-IDX] */
+  --z-modal: 4000; /* [Z-IDX] */
+  --z-modal-2: 5000; /* [Z-IDX] */
+  --z-modal-3: 5200; /* [Z-IDX] */
+  --z-modal-4: 5500; /* [Z-IDX] */
+  --z-modal-5: 6000; /* [Z-IDX] */
+  --z-header: 9000; /* [Z-IDX] */
+  --z-chatbot: 9999; /* [Z-IDX] */
+  --z-top: 99999; /* [Z-IDX] */
+
   /* (요청사항) 버튼/필 전역 크기 조절 */
   --su_btn_scale: 1;  /* 0.85 ~ 1.25 */
   --su_btn_r: 8px;    /* 기본 버튼 라운드 */
@@ -49,6 +64,101 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS));padding:16px;line-height:1.5;font-weight:400;}
 body.design-v2{background:var(--bg);}
+
+/* SVG 아이콘 공통 */
+.svg-ico-wrap{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;}
+.svg-ico{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.15em;margin-right:6px;}
+
+/* ── Nada Dark 전용: 붙여넣기 미리보기 카드 UI ── */
+body.design-v2.designv2-nada .pv-wrap{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  overflow:hidden;
+  margin-bottom:10px;
+}
+body.design-v2.designv2-nada .pv-head{
+  display:grid;
+  grid-template-columns: 90px 120px 1fr 1fr;
+  gap:10px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  font-size:11px;
+  font-weight:900;
+  color:var(--text3);
+}
+body.design-v2.designv2-nada .pv-cards{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+  padding:10px;
+}
+@media (max-width: 760px){
+  body.design-v2.designv2-nada .pv-head{grid-template-columns: 1fr 1fr; grid-auto-rows:auto;}
+  body.design-v2.designv2-nada .pv-cards{grid-template-columns:1fr;}
+}
+body.design-v2.designv2-nada .pv-date{
+  grid-column:1/-1;
+  padding:8px 10px;
+  border:1px solid rgba(0,212,170,.28);
+  background:rgba(0,212,170,.08);
+  color:var(--text2);
+  border-radius:10px;
+  font-weight:900;
+  font-size:12px;
+}
+body.design-v2.designv2-nada .pv-date-sub{font-size:11px;color:var(--text3);font-weight:700;margin-left:6px;}
+body.design-v2.designv2-nada .pv-card{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+  overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+body.design-v2.designv2-nada .pv-top{
+  display:grid;
+  grid-template-columns: 92px 120px 1fr;
+  gap:10px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  align-items:center;
+}
+body.design-v2.designv2-nada .pv-sides{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  padding:10px 12px;
+}
+body.design-v2.designv2-nada .pv-side{
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  background:rgba(10,37,64,.35);
+  min-width:0;
+}
+body.design-v2.designv2-nada .pv-status{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:wrap;
+}
+body.design-v2.designv2-nada .pv-score .pv-sides{grid-template-columns:1fr 1fr;}
+body.design-v2.designv2-nada .pv-score-a{font-weight:1000;font-size:18px;color:#00D4AA;}
+body.design-v2.designv2-nada .pv-score-b{font-weight:1000;font-size:18px;color:#FF6B35;}
+
+/* 승/패 토글 버튼(이겼다/졌다) 애니메이션 */
+body.design-v2.designv2-nada .paste-flip-btn{
+  transition:filter .18s, transform .18s, box-shadow .18s;
+}
+body.design-v2.designv2-nada .paste-flip-btn:hover{
+  filter:brightness(1.08);
+  box-shadow:0 0 0 3px rgba(0,212,170,.14);
+}
+body.design-v2.designv2-nada .paste-flip-btn:active{
+  transform:scale(.98);
+}
 /* (요청사항) 전체 탭 자동 맞춤 ON */
 body.af-on{padding:var(--af-body-pad);}
 body.af-on .main{padding:var(--af-main-pad);}
@@ -128,7 +238,7 @@ b,strong{font-weight:600;}
 .score-click:hover{background:var(--blue-ll,#dbeafe);}
 
 /* 공유카드 모달 */
-.sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:5500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.sharecard-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:var(--z-modal-4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);} /* [Z-IDX] */
 .sharecard-modal-box{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--sh3);max-width:90vw;max-height:90vh;overflow-y:auto;position:relative;}
 .sharecard-modal-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-l);line-height:1;}
 .sharecard-modal-close:hover{color:var(--text);}
@@ -375,7 +485,7 @@ tr.is-selected td{
 .su-modal-overlay{
   position:fixed; inset:0;
   background:rgba(0,0,0,.55);
-  z-index:99999;
+  z-index:var(--z-top); /* [Z-IDX] */
   display:flex;
   align-items:center;
   justify-content:center;
@@ -550,7 +660,7 @@ body.dark .hist-ctrl-group{
 .cfg-quick-view{display:block;margin:10px 0 14px;}
 .cfg-quick-view .ssec{margin:0;}
 .swrap{position:relative;display:inline-block;}
-.sdrop{display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;width:200px;z-index:500;max-height:190px;overflow-y:auto;box-shadow:var(--sh2);}
+.sdrop{display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;width:200px;z-index:var(--z-dropdown);max-height:190px;overflow-y:auto;box-shadow:var(--sh2);} /* [Z-IDX] */
 .sitem{padding:7px 12px;cursor:pointer;font-size:12px;transition:.1s;}
 .sitem:hover{background:var(--blue-l);color:var(--blue);}
 .scards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
@@ -718,7 +828,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .rec-sum-vs{justify-content: var(--rc-vs-justify, flex-start);}
   .rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
 }
-.rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);display:none;}
+.rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--rc-detail-bg, var(--surface));display:none;}
 .rec-detail-area.open{display:block;}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
 .rec-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border);}
@@ -790,7 +900,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 #cfgModalBody details.ssec > summary.cfg-sec-summary{display:none;}
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
-.modal{display:none;position:fixed;z-index:4000;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);}
+.modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
 .mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
 /* emModal(수정창): 내용이 길어 스크롤 + 제목·버튼 고정 */
 #emModal .mbox{max-height:88vh;display:flex;flex-direction:column;padding:0;}
@@ -1143,19 +1253,32 @@ body.design-v2{
   --accent-success:#10B981;
   --accent-danger:#EF4444;
   --glass-blur:12px;
-  --glass-bg:rgba(255,255,255,.72);
+  /* 모달/카드 글래스 배경: 프리셋(--white) 기반으로 따라가게 */
+  --glass-bg: var(--white);
   /* 기존 시스템 컬러도 같이 갱신(버튼/필/강조색 일관성) */
   --blue: var(--primary-end);
   --blue-d: #1e40af;
   --blue-l: rgba(37,99,235,.10);
   --blue-ll: rgba(37,99,235,.06);
   --gold: var(--accent-warm);
-  /* 공통 배경 톤(전체 UI에 파급) */
-  --bg:#F8FAFC;
-  --white:rgba(255,255,255,.92);
-  --surface:rgba(255,255,255,.70);
+  /* 공통 배경 톤(전체 UI에 파급)
+     - (요청) 디자인 모드에서 "흰색 고정"처럼 보이지 않게 기본 톤도 확실히 틴트
+     - (신규) 밝기 조절(slider)용 base 색상 분리 */
+  --dm-bright: 0%;
+  --dm-dark: 0%;
+  --bg0:#EEF2FF;
+  --white0:#F7FAFF;
+  --surface0:#E9EFFF;
+  /* 기본값(구형 브라우저 대비) */
+  --bg: var(--bg0);
+  --white: var(--white0);
+  --surface: var(--surface0);
   --border:rgba(2,6,23,.08);
   --border2:rgba(2,6,23,.14);
+  /* 기록 카드 기본 톤(프리셋이 따로 없으면 이 값을 사용) */
+  --rc-card-bg: var(--surface);
+  --rc-card-hd-bg: color-mix(in srgb, var(--primary-mid) 7%, var(--white));
+  --rc-detail-bg: var(--white);
   /* gold 계열(상단 메뉴/안내 박스에서 많이 사용)도 디자인모드 톤으로 */
   --gold-bg: rgba(245,158,11,.14);
   --gold-b: rgba(245,158,11,.32);
@@ -1164,16 +1287,69 @@ body.dark.design-v2{
   --glass-bg:rgba(15,23,42,.55);
 }
 
+@supports (color: color-mix(in srgb, #000, #fff)) {
+  body.design-v2:not(.dark){
+    --glass-bg: color-mix(in srgb, var(--white) 78%, transparent);
+  }
+}
+
+/* (신규) 디자인 모드 밝기 조절: bg/white/surface만 화이트로 믹스 (텍스트/이미지 영향 최소화)
+   - 설정 슬라이더 최대 100% */
+@supports (color: color-mix(in srgb, #000, #fff)) {
+  body.design-v2:not(.dark){
+    /* 1) 어둡게 → 2) 연하게(화이트로) */
+    --bg1:     color-mix(in srgb, var(--bg0) calc(100% - var(--dm-dark)), #000000 var(--dm-dark));
+    --white1:  color-mix(in srgb, var(--white0) calc(100% - var(--dm-dark)), #000000 var(--dm-dark));
+    --surface1:color-mix(in srgb, var(--surface0) calc(100% - var(--dm-dark)), #000000 var(--dm-dark));
+
+    --bg:     color-mix(in srgb, var(--bg1) calc(100% - var(--dm-bright)), #ffffff var(--dm-bright));
+    --white:  color-mix(in srgb, var(--white1) calc(100% - var(--dm-bright)), #ffffff var(--dm-bright));
+    --surface:color-mix(in srgb, var(--surface1) calc(100% - var(--dm-bright)), #ffffff var(--dm-bright));
+  }
+}
+
 /* ── 전체 배경/레이아웃 톤 통일(디자인모드) ── */
 body.design-v2{
   background:var(--bg) !important;
 }
 body.design-v2 .app{
-  background:var(--white);
+  /* (요청) 헤더 아래 본문/배경도 프리셋 체감이 나도록 app 자체를 --bg 톤으로 */
+  background:var(--bg);
   border-color:var(--border);
 }
 body.design-v2 .main{
   background:transparent;
+}
+/* 캡처 영역(탭 제목/본문 컨테이너)이 흰색으로 남는 문제 */
+body.design-v2 #cap{
+  background:var(--surface) !important;
+}
+
+/* 페이지 타이틀(각 탭 제목 줄)도 배경 톤 적용 */
+body.design-v2 .rtitle{
+  padding:10px 12px;
+  margin:0 0 12px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  border-radius:12px;
+}
+
+/* 스트리머/티어/통계 등 많은 탭이 #rcont 안에 테이블을 인라인으로 렌더함 */
+body.design-v2 #rcont table{
+  background:var(--surface) !important;
+  border:1px solid var(--border) !important;
+  border-radius:12px;
+  overflow:hidden;
+}
+body.design-v2 #rcont table th{
+  background:var(--white) !important;
+  border-color:var(--border) !important;
+  color:var(--text2) !important;
+}
+/* 디자인 모드: 일반 행만 톤 맞춤(그룹 헤더 .ugrp / .tgrp 는 기존 스타일 유지) */
+body.design-v2 #rcont table tr:not(.ugrp):not(.tgrp) td{
+  background:transparent !important;
+  border-color:var(--border) !important;
 }
 
 /* 표/리스트 zebra/hover도 톤 맞춤(하드코딩 제거) */
@@ -1207,6 +1383,9 @@ body.design-v2 details.ssec > summary.cfg-sec-summary{
 
 /* ── 디자인 모드 프리셋(계절/이벤트) ───────────────────── */
 body.design-v2.designv2-spring{
+  --bg0:#F1FFF6;
+  --white0:#F8FFFB;
+  --surface0:#ECFFF5;
   --primary-start:#22c55e;
   --primary-mid:#f472b6;
   --primary-end:#4F46E5;
@@ -1217,6 +1396,9 @@ body.design-v2.designv2-spring{
   --blue: var(--primary-end);
 }
 body.design-v2.designv2-summer{
+  --bg0:#F1FAFF;
+  --white0:#F5FBFF;
+  --surface0:#E9F6FF;
   --primary-start:#0ea5e9;
   --primary-mid:#22c55e;
   --primary-end:#2563EB;
@@ -1225,6 +1407,9 @@ body.design-v2.designv2-summer{
   --blue: var(--primary-start);
 }
 body.design-v2.designv2-autumn{
+  --bg0:#FFF7ED;
+  --white0:#FFF9F2;
+  --surface0:#FFF0DF;
   --primary-start:#ea580c;
   --primary-mid:#b45309;
   --primary-end:#7c2d12;
@@ -1233,6 +1418,9 @@ body.design-v2.designv2-autumn{
   --blue: #2563EB;
 }
 body.design-v2.designv2-winter{
+  --bg0:#F2F7FF;
+  --white0:#F7FAFF;
+  --surface0:#ECF3FF;
   --primary-start:#2563eb;
   --primary-mid:#94a3b8;
   --primary-end:#1e3a8a;
@@ -1241,6 +1429,9 @@ body.design-v2.designv2-winter{
   --blue: #2563EB;
 }
 body.design-v2.designv2-xmas{
+  --bg0:#F2FFF6;
+  --white0:#F7FFFA;
+  --surface0:#E9FFF0;
   --primary-start:#16a34a;
   --primary-mid:#dc2626;
   --primary-end:#2563EB;
@@ -1314,42 +1505,257 @@ body.design-v2.designv2-samil{
   --blue:#111827;
 }
 
-/* 🇰🇷 태극기 테마(강한 패턴) */
-body.design-v2.designv2-taegeuk{
-  --primary-start:#1d4ed8;
-  --primary-mid:#dc2626;
+/* 🌑 Nada Dark (요청: 다크 기본, #0A2540 배경, #00D4AA 포인트) */
+body.design-v2.designv2-nada{
+  --bg:#0A2540;
+  --white:rgba(10,37,64,.92);
+  --surface:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.10);
+  --border2:rgba(255,255,255,.18);
+
+  --text:#e6f3ff;
+  --text2:#d3eaff;
+  --text3:#a7c7e6;
+  --gray-l:#7aa3c7;
+
+  --primary-start:#00D4AA;
+  --primary-mid:#00D4AA;
+  --primary-end:#00D4AA;
+  --accent-warm:#00D4AA;
+  --accent-cool:#00BCD4;
+
+  --blue:#00D4AA;
+  --gold:#00D4AA;
+  --gold-bg: rgba(0,212,170,.12);
+  --gold-b: rgba(0,212,170,.28);
+
+  --glass-bg:rgba(10,37,64,.55);
+}
+body.design-v2.designv2-nada .hdr{
+  background:linear-gradient(135deg,#06314f 0%, #0A2540 55%, #032033 100%);
+}
+body.design-v2.designv2-nada .hdr::before{
+  background:
+    radial-gradient(circle at 15% 20%, rgba(0,212,170,.22), transparent 55%),
+    radial-gradient(circle at 85% 10%, rgba(0,188,212,.18), transparent 55%),
+    radial-gradient(circle at 70% 80%, rgba(255,255,255,.08), transparent 60%);
+  opacity:1;
+}
+/* 종족 컬러 코딩(요청) */
+body.design-v2.designv2-nada .rT{background:rgba(255,107,53,.14);color:#FF6B35;border:1px solid rgba(255,107,53,.35);}
+body.design-v2.designv2-nada .rZ{background:rgba(156,39,176,.18);color:#9C27B0;border:1px solid rgba(156,39,176,.40);}
+body.design-v2.designv2-nada .rP{background:rgba(0,188,212,.14);color:#00BCD4;border:1px solid rgba(0,188,212,.35);}
+
+/* 🌤️ Nada Light (Nada Dark의 라이트 버전) */
+body.design-v2.designv2-nadalight{
+  /* 아이보리+네이비(요청): 기본과 확실히 다른 '웜 라이트' 톤 */
+  /* (요청) 너무 진한 느낌 → 한 톤 연하게 */
+  --bg0:#FFFDF9;
+  --white0:#FFF9F2;
+  --surface0:#FFF1E6;
+  --border:rgba(15,23,42,.10);
+  --border2:rgba(15,23,42,.18);
+
+  --text:#0B1220;
+  --text2:#0F172A;
+  --text3:#334155;
+  --gray-l:#64748b;
+
+  /* 포인트: 네이비 + 라이트 블루 (촌스러운 형광 방지) */
+  --primary-start:#0F2A5F;
+  --primary-mid:#1F3A8A;
   --primary-end:#2563EB;
-  --accent-warm:#F59E0B;
-  --accent-cool:#06B6D4;
-  --blue:#1d4ed8;
-  --bg:#f8fafc;
-  --surface:rgba(255,255,255,.72);
-  --white:rgba(255,255,255,.92);
+  --accent-warm:#B45309;
+  --accent-cool:#2563EB;
+
+  --blue:#1F3A8A;
+  --blue-d:#0F2A5F;
+  --blue-l: rgba(31,58,138,.10);
+  --blue-ll: rgba(31,58,138,.06);
+  --gold:#B45309;
+  --gold-bg: rgba(180,83,9,.10);
+  --gold-b: rgba(180,83,9,.22);
+
+  /* 기록 카드/상세 배경(프리셋 체감 강화) */
+  --rc-card-bg: rgba(255,241,230,.62);
+  --rc-card-hd-bg: rgba(255,233,220,.70);
+  --rc-detail-bg: rgba(255,249,242,.86);
 }
-body.design-v2.designv2-taegeuk::before{
+
+/* ── 디자인모드에서 "버튼/드롭다운/하위메뉴" 흰색 고정 제거 ── */
+body.design-v2 .pill,
+body.design-v2 .stab,
+body.design-v2 .ym-filter-controls .ym-sel{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  color:var(--text2) !important;
+}
+body.design-v2 .pill:hover,
+body.design-v2 .stab:hover,
+body.design-v2 .ym-filter-controls .ym-sel:hover{
+  background:color-mix(in srgb, var(--primary-end) 10%, var(--surface)) !important;
+  border-color:color-mix(in srgb, var(--primary-end) 25%, var(--border2)) !important;
+}
+
+/* select/input 기본 배경도 디자인모드 톤으로 */
+body.design-v2 select,
+body.design-v2 input[type="text"],
+body.design-v2 input[type="number"],
+body.design-v2 input[type="date"],
+body.design-v2 textarea{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  color:var(--text) !important;
+}
+
+/* 스트리머 탭/모달에서 인라인로 박는 검색창(배경 var(--white)) 강제 톤 적용 */
+body.design-v2 #total-search,
+body.design-v2 #cfgSearchInp,
+body.design-v2 #paste-input,
+body.design-v2 #pro-paste-input{
+  background:var(--surface) !important;
+}
+
+/* 서브탭 바(각 탭 내부의 글자 탭) 흰색 그라데이션 제거 */
+body.design-v2 .subtab-bar{
+  background:var(--surface) !important;
+  border-color:var(--border) !important;
+}
+
+/* 기본 버튼들(흰색 그라데이션 제거) */
+body.design-v2 .btn-w{
+  background:var(--surface) !important;
+  border-color:var(--border2) !important;
+  color:var(--text2) !important;
+}
+
+/* 카드/패널류 전반도 프리셋 톤 반영(통계/티어/기타) */
+body.design-v2 .ssec,
+body.design-v2 .ipanel,
+body.design-v2 .ocard,
+body.design-v2 .rscard,
+body.design-v2 .ck-panel,
+body.design-v2 .rec-card,
+body.design-v2 .grp-match-card{
+  background:var(--surface) !important;
+  border-color:var(--border) !important;
+}
+
+/* JS에서 인라인으로 background:#fff 를 박아둔 영역들(탭 제목/하위 메뉴/드롭 등) 톤 보정 */
+body.design-v2:not(.dark) [style*="background:#fff;"]:not(.sharecard-modal-box):not([onclick*="canvas"]),
+body.design-v2:not(.dark) [style*="background:#ffffff"]:not(.sharecard-modal-box),
+body.design-v2:not(.dark) [style*="background: #fff"]:not(.sharecard-modal-box){
+  background:var(--white) !important;
+}
+
+/* 세미-화이트 계열(#f8fafc/#f1f5f9 등)도 프리셋 톤으로 교정 */
+body.design-v2:not(.dark) [style*="background:#f8fafc"]:not(.sharecard-modal-box),
+body.design-v2:not(.dark) [style*="background: #f8fafc"]:not(.sharecard-modal-box),
+body.design-v2:not(.dark) [style*="background:#f1f5f9"]:not(.sharecard-modal-box),
+body.design-v2:not(.dark) [style*="background: #f1f5f9"]:not(.sharecard-modal-box){
+  background:var(--surface) !important;
+}
+
+/* 세미콜론/공백 유무로 누락되던 케이스까지 보정 */
+body.design-v2:not(.dark) [style*="background:#fff"]:not(.sharecard-modal-box),
+body.design-v2:not(.dark) [style*="background:#ffffff"]:not(.sharecard-modal-box){
+  background:var(--white) !important;
+}
+body.design-v2.designv2-nadalight .hdr{
+  /* 헤더: 네이비→블루 은은한 그라데이션(아이보리 톤과 조화) */
+  background:linear-gradient(135deg, #0F2A5F 0%, #1F3A8A 55%, #2563EB 100%);
+  border-color:rgba(15,23,42,.12);
+}
+body.design-v2.designv2-nadalight .hdr::before{
+  /* 은은한 하이라이트 */
+  background:
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,.28), transparent 55%),
+    radial-gradient(circle at 86% 18%, rgba(255,255,255,.18), transparent 60%),
+    radial-gradient(circle at 70% 85%, rgba(2,6,23,.12), transparent 60%);
+  opacity:.75;
+}
+/* 종족 컬러 코딩(요청 동일) */
+body.design-v2.designv2-nadalight .rT{background:rgba(255,107,53,.12);color:#FF6B35;border:1px solid rgba(255,107,53,.30);}
+body.design-v2.designv2-nadalight .rZ{background:rgba(156,39,176,.14);color:#9C27B0;border:1px solid rgba(156,39,176,.34);}
+body.design-v2.designv2-nadalight .rP{background:rgba(0,188,212,.12);color:#00BCD4;border:1px solid rgba(0,188,212,.30);}
+
+/* ── 기록 카드 모드별 스타일(디자인모드 공통) ── */
+body.design-v2 .rec-summary[data-rec-mode]{
+  border-left-color: var(--rec-mode-col, var(--border2)) !important;
+}
+body.design-v2 .rec-summary[data-rec-mode]::before{
   content:'';
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
-  opacity:.24; /* 강한 패턴 */
-  mix-blend-mode:multiply;
-  background-repeat:repeat;
-  background-size:280px 280px;
-  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='280'%20height='280'%20viewBox='0%200%20280%20280'%3E%3Crect%20width='280'%20height='280'%20fill='white'/%3E%3Cg%20opacity='0.95'%3E%3C!--%20Taegeuk%20circle%20--%3E%3Ccircle%20cx='140'%20cy='140'%20r='72'%20fill='none'%20stroke='%230f172a'%20stroke-width='3'/%3E%3Cpath%20d='M140%2068%20a72%2072%200%201%201%200%20144%20a36%2036%200%201%200%200-72%20a36%2036%200%201%201%200-72z'%20fill='%23dc2626'/%3E%3Cpath%20d='M140%2068%20a72%2072%200%201%200%200%20144%20a36%2036%200%201%201%200-72%20a36%2036%200%201%200%200-72z'%20fill='%231d4ed8'/%3E%3Ccircle%20cx='140'%20cy='104'%20r='12'%20fill='%231d4ed8'/%3E%3Ccircle%20cx='140'%20cy='176'%20r='12'%20fill='%23dc2626'/%3E%3C!--%20Trigrams%20(simple%20bars)%20--%3E%3Cg%20fill='%230f172a'%3E%3Crect%20x='40'%20y='46'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='62'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='78'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='46'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='62'%20width='28'%20height='8'/%3E%3Crect%20x='212'%20y='62'%20width='28'%20height='8'/%3E%3Crect%20x='176'%20y='78'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='194'%20width='28'%20height='8'/%3E%3Crect%20x='76'%20y='194'%20width='28'%20height='8'/%3E%3Crect%20x='40'%20y='210'%20width='64'%20height='8'/%3E%3Crect%20x='40'%20y='226'%20width='28'%20height='8'/%3E%3Crect%20x='76'%20y='226'%20width='28'%20height='8'/%3E%3Crect%20x='176'%20y='194'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='210'%20width='64'%20height='8'/%3E%3Crect%20x='176'%20y='226'%20width='64'%20height='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  position:absolute;
+  left:0; right:0; top:0;
+  height:3px;
+  background: rgba(var(--rec-mode-rgb, 37,99,235), .35);
 }
-body.design-v2.designv2-taegeuk .app{position:relative; z-index:1;}
+body.design-v2 .rec-summary{position:relative;}
+
+/* 경기 상세(펼침 영역) — 디자인모드 공통으로 하드코딩 배경색 교정 */
+body.design-v2 .rec-detail-area [style*="background:#f8fafc"]{background:var(--surface)!important;}
+body.design-v2 .rec-detail-area [style*="background:#f1f5f9"]{background:var(--white)!important;}
+body.design-v2 .rec-detail-area [style*="border:1px solid var(--border);border-radius:10px"]{
+  background:var(--white)!important;
+  border-color:var(--border)!important;
+}
+
+/* Nada Dark: 더 글래시하게 (변수로 제어) */
+body.design-v2.designv2-nada{
+  --rc-card-bg: rgba(255,255,255,.04);
+  --rc-card-hd-bg: rgba(255,255,255,.02);
+  --rc-detail-bg: rgba(255,255,255,.03);
+}
+
+/* 계절/이벤트 프리셋: 기록 카드 톤을 "눈에 보이게" 차등 */
+body.design-v2.designv2-spring:not(.dark){ --rc-card-bg: rgba(34,197,94,.08); --rc-card-hd-bg: rgba(34,197,94,.10); }
+body.design-v2.designv2-summer:not(.dark){ --rc-card-bg: rgba(14,165,233,.08); --rc-card-hd-bg: rgba(14,165,233,.10); }
+body.design-v2.designv2-autumn:not(.dark){ --rc-card-bg: rgba(234,88,12,.08); --rc-card-hd-bg: rgba(234,88,12,.10); }
+body.design-v2.designv2-winter:not(.dark){ --rc-card-bg: rgba(37,99,235,.07); --rc-card-hd-bg: rgba(37,99,235,.09); }
+body.design-v2.designv2-xmas:not(.dark){ --rc-card-bg: rgba(22,163,74,.08); --rc-card-hd-bg: rgba(22,163,74,.10); }
 
 /* 설정 상단 카테고리(메뉴 버튼)도 디자인모드 톤으로 */
 body.design-v2 .cfg-cat-pill{
-  background:rgba(255,255,255,.70);
-  border:1px solid var(--border);
+  background:rgba(255,255,255,.70) !important;
+  border:1px solid var(--border) !important;
+  color:var(--text) !important;
   backdrop-filter:blur(10px);
 }
 body.design-v2 .cfg-cat-pill.on{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-end));
-  color:#fff;
-  border-color:transparent;
+  background:linear-gradient(135deg,var(--primary-start),var(--primary-end)) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+
+/* 설정 섹션(열기 목록)도 프리셋 느낌이 나도록 */
+body.design-v2 details.ssec{
+  padding:0 !important;
+  overflow:hidden;
+}
+body.design-v2 details.ssec > summary.cfg-sec-summary{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px 12px 16px;
+}
+body.design-v2 details.ssec > summary.cfg-sec-summary::before{
+  content:'';
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:4px;
+  background:linear-gradient(180deg,var(--primary-start),var(--primary-end));
+}
+body.design-v2 details.ssec > summary.cfg-sec-summary h4{
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  font-size:13px;
+}
+body.design-v2 details.ssec > summary.cfg-sec-summary .cfg-sec-right{
+  color:var(--text3);
+  font-weight:900;
 }
 
 /* ── 헤더: 더 동적인 그라데이션 ── */
@@ -1373,7 +1779,7 @@ body.design-v2 .hdr > *{ position:relative; z-index:1; }
 
 /* ── 탭: 세그먼트/인디케이터 스타일 ── */
 body.design-v2 .tabs-scroll-wrap{
-  background:rgba(255,255,255,.65);
+  background:var(--surface);
   backdrop-filter:blur(14px);
 }
 body.dark.design-v2 .tabs-scroll-wrap{
@@ -1459,12 +1865,21 @@ body.design-v2 .btn-detail{
   border-color:var(--border2) !important;
 }
 
-/* ── 기록 카드 배경이 흰색으로 남는 문제 ── */
+/* ── 기록 카드 배경 변수(밝기 슬라이더에 반응하도록 surface 기반으로 재계산) ── */
+@supports (color: color-mix(in srgb, #000, #fff)) {
+  body.design-v2:not(.dark){
+    --rc-card-bg: color-mix(in srgb, var(--surface) 88%, var(--primary-start) 12%);
+    --rc-card-hd-bg: color-mix(in srgb, var(--white) 90%, var(--primary-start) 10%);
+    --rc-detail-bg: var(--white);
+  }
+}
+
+/* ── 기록 카드 배경(프리셋/모드별 차등을 변수로 제어) ── */
 body.design-v2 .rec-summary{
-  background:var(--surface) !important;
+  background:var(--rc-card-bg, var(--surface)) !important;
 }
 body.design-v2 .rec-sum-header{
-  background:transparent !important;
+  background:var(--rc-card-hd-bg, transparent) !important;
 }
 
 /* ── 기록 카드(대전 카드): 계층적 섀도/호버 ── */
@@ -1577,7 +1992,7 @@ body.design-v2 .scard:hover{
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 3500;
+  z-index: var(--z-modal-bg); /* [Z-IDX] */
   background: rgba(15,23,42,.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -1692,6 +2107,32 @@ body.dark .mobile-match-sheet-score { background: #162032; border-color: #2d3f55
 body.dark .mobile-match-sheet-footer { background: #1e293b; border-color: #2d3f55; }
 body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
 
+/* 디자인 모드(리뉴얼): 모바일 경기 상세 시트도 프리셋 톤 반영 */
+body.design-v2:not(.dark) .mobile-match-sheet{
+  background: var(--white);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-handle{
+  background: color-mix(in srgb, var(--primary-mid) 18%, #dde2eb);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-hdr{
+  border-bottom-color: var(--border);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-title{
+  color: var(--text2);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-close{
+  background: var(--surface);
+  color: var(--text3);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-score{
+  background: var(--surface);
+  border-bottom-color: var(--border);
+}
+body.design-v2:not(.dark) .mobile-match-sheet-footer{
+  background: var(--white);
+  border-top-color: var(--border);
+}
+
 
 @media (min-width: 769px) {
   #bottomNav { display: none !important; }
@@ -1704,7 +2145,7 @@ body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
   bottom: 0; left: 0; right: 0;
   background: rgba(255,255,255,0.96);
   border-top: 1px solid rgba(0,0,0,.08);
-  z-index: 1000;
+  z-index: var(--z-fixed); /* [Z-IDX] */
   padding: 0 4px env(safe-area-inset-bottom, 8px);
   box-shadow: 0 -4px 24px rgba(0,0,0,.12);
   backdrop-filter: blur(16px);
@@ -1753,7 +2194,7 @@ body.dark .mobile-match-sheet-handle { background: #3a4f6a; }
   position: fixed;
   bottom: calc(98px + env(safe-area-inset-bottom, 0px));
   right: 14px;
-  z-index: 920;
+  z-index: var(--z-sticky); /* [Z-IDX] */
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
@@ -2112,7 +2553,9 @@ body.dark [style*="background:#f0fdf4"] [style*="color:#15803d"]{color:#4ade80!i
 body.dark #emModal [style*="background:#fffbeb"]{background:#1a1200!important;border-color:#78500a!important;}
 body.dark #emModal [style*="color:#b45309"]{color:#fbbf24!important;}
 /* 캘린더 다크 */
-body.dark #rcont table,body.dark #rcont table th,body.dark #rcont table td{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
+body.dark #rcont table{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
+body.dark #rcont table th{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
+body.dark #rcont table tr:not(.ugrp):not(.tgrp) td{background:var(--white)!important;color:var(--text)!important;border-color:var(--border)!important;}
 body.dark #rcont table th{color:var(--text3)!important;font-weight:700;}
 body.dark #rcont [style*="background:#f0f6ff"]{background:#1a2a40!important;border-color:#2d5589!important;}
 body.dark #rcont [style*="background:#f0f6ff"] *{color:#e2e8f0!important;}
@@ -2200,7 +2643,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(15,23,42,0.55);
-  z-index: 9999;
+  z-index: var(--z-chatbot); /* [Z-IDX] */
   opacity: 0;
   transition: opacity 0.28s;
   backdrop-filter: blur(2px);
@@ -2481,3 +2924,239 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
   padding: 6px 12px;
   font-size: 12px;
 }
+
+/* === 모달 개별 스타일 === */
+
+/* 공지 팝업 모달 */
+.modal--notice{ z-index: var(--z-header); }
+.modal--notice .mbox{
+  width:min(520px,96vw);
+  padding:0;
+  border-radius:18px;
+  overflow:hidden;
+}
+.modal--notice #notice-popup-header{
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  padding:18px 22px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.modal--notice #notice-popup-type-icon{ font-size:22px; }
+.modal--notice #noticePopupModal-title{ flex:1; min-width:0; }
+.modal--notice #notice-popup-title{ font-size:16px; font-weight:800; color:#fff; }
+.modal--notice #notice-popup-date{ font-size:11px; color:rgba(255,255,255,.7); margin-top:2px; }
+.modal--notice .modal--notice__close{
+  background:rgba(255,255,255,.15);
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  width:30px;
+  height:30px;
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.modal--notice #notice-popup-body{
+  padding:20px 22px;
+  font-size:14px;
+  line-height:1.7;
+  color:var(--text1);
+  white-space:pre-wrap;
+  max-height:55vh;
+  overflow-y:auto;
+}
+.modal--notice .modal--notice__footer{
+  padding:12px 22px 18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-top:1px solid var(--border);
+}
+.modal--notice .modal--notice__footer label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color:var(--gray-l);
+  cursor:pointer;
+  flex:1;
+}
+.modal--notice #notice-no-show-today{ cursor:pointer; }
+.modal--notice .modal--notice__footer .btn.btn-b{ padding:7px 20px; }
+
+/* 대학 해체 모달 */
+.modal--dissolve{ z-index: var(--z-modal-5); }
+.modal--dissolve .mbox{
+  width:min(420px,96vw);
+  padding:0;
+  border-radius:16px;
+  overflow:hidden;
+}
+.modal--dissolve .modal--dissolve__header{
+  background:linear-gradient(135deg,#7f1d1d,#dc2626);
+  padding:18px 22px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.modal--dissolve .modal--dissolve__icon{ font-size:22px; }
+.modal--dissolve #dissolveModal-title{ flex:1; }
+.modal--dissolve #dissolve-title{ font-size:16px; font-weight:800; color:#fff; }
+.modal--dissolve .modal--dissolve__desc{ font-size:11px; color:rgba(255,255,255,.7); margin-top:2px; }
+.modal--dissolve .modal--dissolve__close{
+  background:rgba(255,255,255,.15);
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  width:30px;
+  height:30px;
+  cursor:pointer;
+  font-size:16px;
+}
+.modal--dissolve .modal--dissolve__body{ padding:20px 22px; }
+.modal--dissolve .modal--dissolve__field{ margin-bottom:14px; }
+.modal--dissolve .modal--dissolve__label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text2);
+  display:block;
+  margin-bottom:6px;
+}
+.modal--dissolve #dissolve-date{
+  width:100%;
+  padding:9px 12px;
+  border:1.5px solid var(--border2);
+  border-radius:8px;
+  font-size:13px;
+}
+.modal--dissolve .modal--dissolve__check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:var(--text1);
+  cursor:pointer;
+  padding:10px 12px;
+  background:var(--surface);
+  border-radius:8px;
+  border:1px solid var(--border);
+}
+.modal--dissolve #dissolve-move-players{ width:16px; height:16px; cursor:pointer; }
+.modal--dissolve #dissolve-player-count{
+  font-size:11px;
+  color:var(--gray-l);
+  margin-top:6px;
+  padding-left:4px;
+}
+.modal--dissolve .modal--dissolve__btns{
+  padding:0 22px 20px;
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+}
+.modal--dissolve .modal--dissolve__btns .btn{ padding:9px 20px; }
+.modal--dissolve .modal--dissolve__btn-confirm{
+  background:#dc2626;
+  color:#fff;
+  border-color:#dc2626;
+}
+
+/* 📅 예정 경기 등록 모달 */
+.modal--calsched .mbox{ width:360px; }
+.modal--calsched label.mbox{
+  padding:0;
+  display:block;
+  margin-top:4px;
+}
+.modal--calsched label{ display:block; margin-top:10px; }
+.modal--calsched label.mbox span,
+.modal--calsched label span{
+  font-size:11px;
+  color:var(--gray-l);
+  font-weight:600;
+}
+.modal--calsched #cal-sched-date{
+  width:100%;
+  margin-top:4px;
+}
+.modal--calsched #cal-sched-time{
+  width:100%;
+  margin-top:4px;
+  padding:8px 12px;
+  border:1.5px solid var(--border2);
+  border-radius:8px;
+  font-size:13px;
+}
+.modal--calsched #cal-sched-note{
+  width:100%;
+  margin-top:4px;
+  padding:8px 12px;
+  border:1.5px solid var(--border2);
+  border-radius:8px;
+  font-size:13px;
+  resize:vertical;
+  font-family:inherit;
+}
+.modal--calsched .mbtns{ margin-top:16px; }
+.modal--calsched .mbtns .btn{ flex:1; }
+
+/* 로그인 모달 */
+.modal--login .mbox{
+  width:340px;
+  text-align:center;
+  padding:32px 28px;
+}
+.modal--login__icon{
+  font-size:32px;
+  margin-bottom:8px;
+}
+.modal--login__title{
+  font-family:'Noto Sans KR',sans-serif;
+  font-weight:900;
+  font-size:17px;
+  color:#1e3a8a;
+  margin-bottom:20px;
+}
+.modal--login__input{
+  width:100%;
+  padding:10px 14px;
+  border:1.5px solid var(--border2);
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:10px;
+  display:block;
+}
+.modal--login__submit{
+  width:100%;
+  padding:11px;
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.modal--login__err{
+  color:#dc2626;
+  font-size:12px;
+  margin-top:8px;
+  min-height:18px;
+}
+.modal--login__cancel{
+  margin-top:10px;
+  background:none;
+  border:none;
+  color:var(--gray-l);
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* emModal / bulkEditModal 공통(버튼 영역 flex) */
+.modal--em{ z-index: var(--z-modal-2); }
+.modal--bulkedit{ z-index: var(--z-modal-2); }
+.modal--em .mbtns .btn,
+.modal--bulkedit .mbtns .btn{ flex:1; }
