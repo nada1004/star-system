@@ -694,6 +694,48 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
 }
 
+// (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
+// - 승/패/포인트/ELO에는 영향 없음
+// - 스트리머 상세(최근 경기 기록) 및 대전기록 탭에서 확인 가능
+// - matchId는 충돌 방지를 위해 호출부에서 기존 matchId에 "_tie" 같은 suffix를 붙이는 것을 권장
+function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, scoreA, scoreB){
+  function _findPlayer(name){
+    const raw = (name||'').trim();
+    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
+    let p=players.find(x=>x.name===name);
+    if(p)return p;
+    if (cleanedRace && cleanedRace !== name) {
+      p = players.find(x => x.name === cleanedRace);
+      if (p) return p;
+    }
+    const low=cleanedRace.toLowerCase();
+    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+    if(p)return p;
+    const ns=cleanedRace.replace(/\s+/g,'');
+    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+  }
+  const a=_findPlayer(nameA);
+  const b=_findPlayer(nameB);
+  if(!a||!b||a===b) return;
+  if(!a.history)a.history=[];
+  if(!b.history)b.history=[];
+  const d=date||new Date().toISOString().slice(0,10);
+  const m=map||'-';
+  // 중복 체크: matchId 우선, 없으면 date+map+opp
+  const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;
+  const bDup = matchId ? (b.history||[]).find(h=>h.matchId===matchId) : null;
+  const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
+  const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
+  if(aDup||bDup||aDupFallback||bDupFallback) return;
+  const t=Date.now();
+  const au=univA||a.univ||'';
+  const bu=univB||b.univ||'';
+  const scoreStr = (scoreA!=null && scoreB!=null) ? `${scoreA}:${scoreB}` : '';
+  // eloDelta는 null로 두어 UI에서 "-" 처리되게 함
+  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:mode||'',score:scoreStr});
+  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:mode||'',score:scoreStr});
+}
+
 function rebuildAllPlayerHistory() {
   if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
 
