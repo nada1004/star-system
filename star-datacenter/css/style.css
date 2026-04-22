@@ -902,6 +902,56 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
 .mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
+
+/* ── 설정 메뉴 팝업(cfgModal): 모바일 바텀시트 CSS로 헤더가 스크롤 밖으로 밀리는 문제 방지 ── */
+#cfgModal .mbox{
+  padding:0 !important;
+  overflow:hidden !important;
+  overflow-x:hidden !important;
+  overflow-y:hidden !important; /* 모바일 전역 .mbox overflow-y:auto 오버라이드 */
+}
+#cfgModal .mbox::before{ display:none !important; } /* 드래그 핸들 숨김(헤더 가림 방지) */
+#cfgModal .cfg-modal-hdr{
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+/* 바디 내부 스티키 헤더(제목이 스크롤로 사라지는 현상 방지용) */
+#cfgModal .cfg-modal-inner-hdr{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 0 0 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));
+  color: #fff;
+}
+#cfgModal .cfg-modal-inner-title{
+  flex: 1;
+  min-width: 0;
+  font-weight: 900;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#cfgModal .cfg-modal-inner-close{
+  background: rgba(255,255,255,.15);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 /* emModal(수정창): 내용이 길어 스크롤 + 제목·버튼 고정 */
 #emModal .mbox{max-height:88vh;display:flex;flex-direction:column;padding:0;}
 #emModal .mtitle{padding:20px 24px 14px;flex-shrink:0;border-bottom:1px solid var(--border);margin-bottom:0;}
