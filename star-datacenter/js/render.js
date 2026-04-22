@@ -46,15 +46,6 @@ function render(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
-  // 상단 헤더 보조 타이틀(탭명) 동기화
-  try{
-    const sub=document.getElementById('hdrSubTitle');
-    if(sub){
-      const tabBtn=[...document.querySelectorAll('.tab')].find(b=>((b.getAttribute('onclick')||'').includes("'"+curTab+"'")));
-      const label=tabBtn ? (tabBtn.textContent||'').trim() : '';
-      sub.textContent = (curTab==='cfg') ? '설정' : label;
-    }
-  }catch(e){}
   const farea=document.getElementById('farea');if(farea)farea.innerHTML='';
   // 탭 버튼 UI 동기화
   document.querySelectorAll('.tab').forEach(b=>{
