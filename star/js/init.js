@@ -156,6 +156,8 @@ window._applyAppFont = function(){
   try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}
   try{ cssUrl = (localStorage.getItem('su_app_font_css') || '').trim(); }catch(e){}
   try{ fam = (localStorage.getItem('su_app_font_family') || '').trim(); }catch(e){}
+  let cssTxt = '';
+  try{ cssTxt = (localStorage.getItem('su_app_font_css_text') || '').trim(); }catch(e){}
 
   const ensureLink = (id, href) => {
     const head = document.head || document.getElementsByTagName('head')[0];
@@ -187,6 +189,24 @@ window._applyAppFont = function(){
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
 
+  // CSS 직접 입력(@font-face 등) 지원
+  try{
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if(head){
+      let st = document.getElementById('app-font-custom-style');
+      if(!cssTxt){
+        if(st) st.remove();
+      }else{
+        if(!st){
+          st = document.createElement('style');
+          st.id = 'app-font-custom-style';
+          head.appendChild(st);
+        }
+        st.textContent = cssTxt;
+      }
+    }
+  }catch(e){}
+
   // preset → font-family
   const presetFam = {
     system: 'system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif',
@@ -199,7 +219,12 @@ window._applyAppFont = function(){
     ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
-  try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
+  // 이모지(📊📅🏆 등)가 흑백으로 보이는 문제 방지:
+  // - 전역 폰트를 강제 적용(body * { font-family: var(--app-font) !important; })하는 구조라
+  //   이모지 폰트 폴백을 명시적으로 앞에 둬야 컬러 이모지가 유지됩니다.
+  const emojiFam = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';
+  const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
+  try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
@@ -454,10 +479,19 @@ function _applyUiScale(){
     else if (w <= 768) s = 1.00;
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
+    // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
+    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
+    try{
+      const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const mul = Math.max(80, Math.min(140, pct)) / 100;
+      s = s * mul;
+    }catch(e){}
     document.documentElement.style.setProperty('--uiS', String(s));
   }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
+// 설정에서 즉시 반영할 수 있도록 노출
+window._applyUiScale = _applyUiScale;
 _applyUiScale();
 
 // ─────────────────────────────────────────────────────────────

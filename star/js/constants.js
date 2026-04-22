@@ -255,6 +255,12 @@ function removeCustomStatusIcon(idx){
 }
 function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
 function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
+
+// (혼합 콘텐츠 방지) http:// 이미지를 https://로 자동 보정 (가능한 경우)
+function toHttpsUrl(u){
+  const s = String(u||'');
+  return s.startsWith('http://') ? ('https://' + s.slice('http://'.length)) : s;
+}
 function getStatusIcon(name){
   const expiry = playerStatusExpiry[name];
   if(expiry && expiry < new Date().toISOString().slice(0,10)){
@@ -357,7 +363,8 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const txt=p?.race||'?';
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
-  return '<img '+clickAttr+' src="'+p.photo+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  const src = toHttpsUrl(p.photo);
+  return '<img '+clickAttr+' src="'+src+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
@@ -563,7 +570,7 @@ const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 
 // 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
 function gUI(n,size='1em'){
   const url=(univCfg.find(x=>x.name===n)||{}).icon || (univCfg.find(x=>x.name===n)||{}).img || '';
-  if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
+  if(url)return `<img src="${toHttpsUrl(url)}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 }

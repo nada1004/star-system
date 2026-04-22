@@ -84,12 +84,15 @@ function render(){
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
   // 즉시 1차 inject (PC 포함 즉시 적용)
   injectUnivIcons(C);
+  // (요청사항) 이모지 → SVG 아이콘 치환(전체 UI)
+  try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
   requestAnimationFrame(()=>{
     C.querySelectorAll('.rec-summary').forEach(el=>{
       const header=el.querySelector('.rec-sum-header');
       if(!header||header.innerText.trim()==='')el.remove();
     });
     injectUnivIcons(C);
+    try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
     // 경기 검색창 포커스 복원
     const _restoreFocus=()=>{
       // 검색 중인 특정 input으로 포커스
@@ -114,6 +117,7 @@ function render(){
       _restoreFocus();
       // 탭/필터 바 가로 스크롤 드래그 활성화(렌더링 후 생성된 요소 포함)
       try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
+      try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
       // 체크박스 선택 행 하이라이트 (테이블)
       try{
         document.querySelectorAll('#rcont table input[type="checkbox"]').forEach(cb=>{
@@ -129,6 +133,60 @@ function render(){
     });
   });
 }
+
+/* ══════════════════════════════════════
+   SVG 아이콘(이모지 치환)
+══════════════════════════════════════ */
+// - 버튼/탭 텍스트 앞쪽에 붙은 이모지를 SVG로 교체
+// - 렌더 후 반복 호출되어도 안전(기존 SVG가 있으면 중복 삽입 안 함)
+window.iconifyUI = window.iconifyUI || function(root){
+  try{
+    root = root || document.body;
+    const MAP = {
+      '🔍': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`,
+      '🌙': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>`,
+      '🔐': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="6" y="11" width="12" height="10" rx="2"/><path d="M12 15v3"/></svg>`,
+      '📋': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="12" height="18" rx="2"/><path d="M16 2H6a2 2 0 0 0-2 2v14"/><path d="M12 4V2"/><path d="M10 6h6"/></svg>`,
+      '📊': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg>`,
+      '📅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>`,
+      '🏆': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z"/><path d="M6 4H4v3a3 3 0 0 0 3 3"/><path d="M18 4h2v3a3 3 0 0 1-3 3"/><path d="M10 14h4"/><path d="M9 20h6"/><path d="M10 14v3a2 2 0 0 1-2 2"/><path d="M14 14v3a2 2 0 0 0 2 2"/></svg>`,
+      '🏅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2l5 7 5-7"/><circle cx="12" cy="16" r="5"/><path d="M12 13v6"/></svg>`,
+      '⚔️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3l7 7-4 4-7-7 4-4Z"/><path d="M10 7l-7 7 4 4 7-7-4-4Z"/><path d="M8 15l-4 4"/><path d="M16 15l4 4"/></svg>`,
+      '🎯': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="M12 12l7-7"/></svg>`,
+      '🎰': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="14" height="14" rx="2"/><path d="M18 10h2a2 2 0 0 1 2 2v2"/><path d="M7 10h8"/><path d="M7 14h8"/><path d="M7 18h8"/></svg>`,
+      '▶': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l10 6-10 6V6Z"/></svg>`,
+      '◀': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6L5 12l10 6V6Z"/></svg>`,
+      '➡️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12"/><path d="M13 6l6 6-6 6"/></svg>`,
+      '🔄': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-15.5-6.4"/><path d="M3 4v6h6"/><path d="M3 12a9 9 0 0 0 15.5 6.4"/><path d="M21 20v-6h-6"/></svg>`,
+      '🗑': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
+      '🗺️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg>`,
+      '✅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`,
+      '✏️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"/></svg>`,
+      '⚙️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.2-2-3.4-2.3.5a7.7 7.7 0 0 0-1.7-1l-.4-2.4H9l-.4 2.4c-.6.3-1.2.6-1.7 1l-2.3-.5-2 3.4 2 1.2a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.2 2 3.4 2.3-.5c.5.4 1.1.7 1.7 1l.4 2.4h6l.4-2.4c.6-.3 1.2-.6 1.7-1l2.3.5 2-3.4-2-1.2c.1-.3.1-.7.1-1Z"/></svg>`,
+    };
+    const RX = new RegExp('^(' + Object.keys(MAP).map(k=>k.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')).join('|') + ')\\s*');
+
+    const targets = root.querySelectorAll('button, .tab, .bnav-item, summary, .pill, .btn, .flabel, label');
+    targets.forEach(el=>{
+      if(!el) return;
+      // 이미 SVG 아이콘이 있으면 스킵(중복 방지)
+      if(el.querySelector && el.querySelector('.svg-ico')) return;
+      // 첫 텍스트 노드만 처리
+      const tn = Array.from(el.childNodes||[]).find(n=>n && n.nodeType===3 && String(n.nodeValue||'').trim().length>0);
+      if(!tn) return;
+      const raw = tn.nodeValue || '';
+      const m = raw.match(RX);
+      if(!m) return;
+      const emo = m[1];
+      const rest = raw.replace(RX,'').replace(/^\s+/,'');
+      const wrap = document.createElement('span');
+      wrap.className = 'svg-ico-wrap';
+      wrap.innerHTML = MAP[emo] || '';
+      el.insertBefore(wrap, tn);
+      tn.nodeValue = (rest ? ' ' + rest : '');
+    });
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    스트리머 상세 모달 페이지네이션 헬퍼
@@ -779,8 +837,8 @@ function toggleUnivEdit(){
       </div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=v;img.style.display='block';}else img.style.display='none'">
-        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none'">
+        <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="display:flex;gap:6px">
@@ -946,8 +1004,18 @@ function buildPlayerDetailHTML(p){
   const _isMobile=window.innerWidth<=768;
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
   const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
-  const _imgFill=_pdStyle.img_fill||'cover';
+  // (버그) "좌우 개별 크기 사용" 체크가 반영되지 않던 문제 수정
+  // - 기본: settings.scale 사용
+  // - 체크 시: 모바일=scaleLeft, PC=scaleRight
+  const _useRight = !!_imgSettings.useRightScale;
+  const _scaleMul = _useRight
+    ? (_isMobile ? (_imgSettings.scaleLeft||1) : (_imgSettings.scaleRight||1))
+    : (_imgSettings.scale||1);
+  const _imgZoom=(_pdStyle.img_zoom||100) * _scaleMul;
+  // (버그) "이미지 채우기(cover)/맞춤(contain)" 설정이 반영되지 않던 문제 수정
+  const _imgFill=(_pdStyle.img_fill!=null && _pdStyle.img_fill!=='')
+    ? _pdStyle.img_fill
+    : (_imgSettings.fill ? 'cover' : 'contain');
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
   let _hdrBg;
@@ -1365,11 +1433,11 @@ function buildPlayerDetailHTML(p){
       const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
       const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
       const _imgBrightness=_imgSettings.brightness||1;
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url
-      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      ? `<img src="${toHttpsUrl(url)}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
       : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   })();
   const _channelHTML=(()=>{
@@ -1885,7 +1953,7 @@ function buildPlayerDetailHTML(p){
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          ?`<img src="${toHttpsUrl(q.photo)}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
           :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
         return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
           ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
@@ -2076,7 +2144,7 @@ function buildUnivDetailHTML(univName){
           const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
           const safeName=escJS(ap.name);
           const photoEl=ap.photo
-            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            ?`<img src="${toHttpsUrl(ap.photo)}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
             :`<div style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
           return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
             <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>

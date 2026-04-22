@@ -1071,7 +1071,7 @@ function histAllHTML(){
     const bWin=!isInd && Number(scoreB)>Number(scoreA);
     const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',tourney:'comp',procomp:'comp'};
     const mode=modeMap[type]||'comp';
-    h+=`<div class="rec-summary" style="border-left:3px solid ${ti.col}">
+    h+=`<div class="rec-summary rec-mode-tierrank" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${(function(){const h=String(ti.col||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};border-left:3px solid ${ti.col}">
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
           <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
@@ -1168,7 +1168,7 @@ function histTourneyHTML(context){
         ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
       const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
       const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
-      h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${_tBorderCol}">
+      h+=`<div class="rec-summary rec-mode-tourney" data-rec-mode="tourney" style="--rec-mode-col:${_tBorderCol};--rec-mode-rgb:${(function(){const h=String(_tBorderCol||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${_tBorderCol}">
         <div class="rec-sum-header">
           <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${grpBadge}
@@ -1362,15 +1362,24 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     const isB=(!isCK&&m.b===filterUniv)||(isCK&&(m.teamBMembers||[]).some(x=>x.univ===filterUniv));
     const myWin=(isA&&aWin)||(isB&&bWin);
     const key=`${ctxPrefix}-${mode}-${i}`;
-    h+=`<div class="rec-summary">
+    const MODE_COL = {
+      ind:'#2563eb', gj:'#dc2626', progj:'#b91c1c',
+      mini:'#7c3aed', civil:'#a855f7',
+      univm:'#16a34a', ck:'#f59e0b', pro:'#0ea5e9',
+      tt:'#10b981', comp:'#3b82f6', tourney:'#7c3aed',
+      procomp:'#2563eb', procomptn:'#7c3aed'
+    };
+    const _mc = MODE_COL[mode] || '#64748b';
+    const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+    h+=`<div class="rec-summary rec-mode-${mode}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)}">
       <div class="rec-sum-header">
         <span style="color:var(--text3);font-size:12px;font-weight:600;min-width:72px">${m.d||''}</span>
         ${m.t?`<span style="font-weight:700;font-size:12px;color:var(--text3)">${m.t}</span>`:''}
         ${(m.n&&mode!=='comp')?`<span style="font-weight:700;font-size:12px;color:var(--text3)">${m.n}</span>`:''}
         <div class="rec-sum-vs">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
+          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
+          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
           <span style="font-size:12px;font-weight:700;color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
         </div>
         <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
@@ -1479,7 +1488,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       const ca=gc(a)||'#64748b', cb=gc(b)||'#64748b';
       const icon = (u, col)=>{
         const url=UNIV_ICONS[u]||(univCfg.find(x=>x.name===u)||{}).icon||'';
-        if(url) return `<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
+        if(url) return `<img src="${toHttpsUrl(url)}" style="width:14px;height:14px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
         return `<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0"></span>`;
       };
       return `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
@@ -1566,8 +1575,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const key=`${context}-${mode}-${i}`;
     // 검색용 hay 데이터
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
-    const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     // 기본(무색)에서는 승리색 테두리도 사용하지 않음
     const _wBorderCol = (_rcThemeOn && _rcAccent==='border' && (aWin||bWin)) ? (aWin?ca:bWin?cb:'var(--border)') : 'var(--border)';
     // 승리 색 테마(대학 색) — 켜져있을 때만 적용
@@ -1576,12 +1585,19 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ` rc-theme rc-accent-${_rcAccent}` : '';
     const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
 
-    return `<div class="rec-summary${_themeCls}" style="${_themeStyle}border-left:3px solid ${_wBorderCol}">
+    const MODE_COL = {
+      ind:'#2563eb', gj:'#dc2626', mini:'#7c3aed', civil:'#a855f7',
+      univm:'#16a34a', ck:'#f59e0b', pro:'#0ea5e9', tt:'#10b981',
+      comp:'#3b82f6', tourney:'#7c3aed', procomptn:'#7c3aed', procompteam:'#2563eb'
+    };
+    const _mc = MODE_COL[mode] || '#64748b';
+    const _rgbM = _hexToRgbStr(_mc);
+    return `<div class="rec-summary rec-mode-${mode}${_themeCls}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}border-left:3px solid ${_wBorderCol}">
       <div style="padding:8px 12px 0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
         <span class="rec-date" style="color:var(--text3);font-size:13px;font-weight:900;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
         ${m.fmt>0?`<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700;flex-shrink:0">${m.fmt}:${m.fmt}</span>`:''}
-        ${aWin||bWin?`<span class="rec-winner" style="font-size:12px;font-weight:900;padding:2px 10px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1.5px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:11px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
+        ${aWin||bWin?`<span class="rec-winner" style="font-size:12px;font-weight:900;padding:2px 10px;border-radius:20px;background:rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .06));color:${aWin?ca:cb};border:1.5px solid rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .16));white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:11px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
           ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드" style="padding:3px 8px;font-size:14px">🎴</button>`:'';})()}
@@ -3081,7 +3097,7 @@ function compSummaryListHTML(context){
     // GROUP 배지 (tourneys 경기)
     const grpBadge=m._src==='tour'
       ?`<span style="background:${m.grpColor};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;margin-left:6px">GROUP ${m.grpLetter}</span>`:'';
-    h+=`<div class="rec-summary">
+    h+=`<div class="rec-summary rec-mode-comp" data-rec-mode="comp" style="--rec-mode-col:#3b82f6;--rec-mode-rgb:59,130,246">
       <div class="rec-sum-header">
         <span style="color:var(--text3);font-size:12px;font-weight:600;min-width:72px">${m.d||''}</span>
         <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}${grpBadge}</span>
@@ -3456,7 +3472,7 @@ function histProCompHTML() {
 
   const _tb = p => p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo = p => p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo = p => p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
 
   h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
@@ -3475,7 +3491,7 @@ function histProCompHTML() {
       const stageTypeBadge = m._stage==='조별리그'
         ? `<span style="background:#e0f2fe;color:#0891b2;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">조별리그</span>`
         : `<span style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">대진표</span>`;
-      h += `<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
+      h += `<div class="rec-summary rec-mode-procomptn" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}${stageBadge}
@@ -3554,7 +3570,7 @@ function histProCompTourneyHTML() {
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
   let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div style="background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border:1.5px solid #ddd6fe;border-left:4px solid #7c3aed;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3567,7 +3583,7 @@ function histProCompTourneyHTML() {
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';
-      h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
+      h+=`<div class="rec-summary rec-mode-procomptn" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span style="background:#f5f3ff;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">토너먼트</span>
@@ -3622,7 +3638,7 @@ function histProCompTeamHTML() {
   if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const _tb=p=>p&&p.tier?`<span style="background:${_TIER_BG[p.tier]||'#64748b'};color:${_TIER_TEXT[p.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
+  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px" onerror="this.style.display='none'">`:'';
   const colA='#2563eb', colB='#dc2626';
   let h=sortBar;
   // 대회명별 그룹
@@ -3650,7 +3666,7 @@ function histProCompTeamHTML() {
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
           const sideWin=g._sideW==='A'?tm.teamAName||'A팀':tm.teamBName||'B팀';
-          return `<div class="rec-summary" style="margin-left:4px;border-left:3px solid ${g._sideW==='A'?colA:colB}">
+          return `<div class="rec-summary rec-mode-procompteam" data-rec-mode="procompteam" style="--rec-mode-col:${g._sideW==='A'?colA:colB};--rec-mode-rgb:${(function(){const c=(g._sideW==='A'?colA:colB);const h=String(c||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:4px;border-left:3px solid ${g._sideW==='A'?colA:colB}">
             <div class="rec-sum-header">
               <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${sideWin}</span>
               <div class="rec-sum-vs" style="flex:1">

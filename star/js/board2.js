@@ -3,6 +3,20 @@
    (구현황판 통합 포함)
 ══════════════════════════════════════ */
 
+// (안정성) 일부 배포/캐시 상황에서 constants.js가 먼저 로드되지 않으면
+// 상태 아이콘 헬퍼가 없어 오류가 날 수 있어, 최소 폴백을 준비합니다.
+if (typeof window._siIsImg !== 'function') {
+  window._siIsImg = function(v){ return typeof v==='string' && (v.startsWith('http') || v.startsWith('data:')); };
+}
+if (typeof window._siRender !== 'function') {
+  window._siRender = function(emoji, size){
+    size=size||'16px';
+    if(!emoji) return '';
+    if(window._siIsImg(emoji)) return `<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`;
+    return emoji;
+  };
+}
+
 let _b2View = 'univ';
 let _b2SaveUniv = '전체';
 let _b2Collapsed = new Set();
@@ -46,6 +60,16 @@ function _b2GetImgSettings(playerName, slot) {
   if (!_b2GlobalImgSettings[key]) {
     _b2GlobalImgSettings[key] = _b2DefaultSingleImgSettings();
   }
+  // (버그/호환) 과거 버전에서 fit 대신 fill, scale 대신 zoom 등으로 저장된 경우 보정
+  try{
+    const s=_b2GlobalImgSettings[key];
+    if(s && typeof s==='object'){
+      if(s.fit==null && typeof s.fill==='string') s.fit=s.fill;
+      if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
+      if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
+      if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
+    }
+  }catch(e){}
   // 동기화
   _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
   _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
@@ -53,9 +77,10 @@ function _b2GetImgSettings(playerName, slot) {
   _b2GlobalImgSettings[key].posY = _b2GlobalImgSettings[key].offsetY;
   return _b2GlobalImgSettings[key];
 }
-function _b2SetImgSetting(playerName, key, val) {
-  // 전역 설정 사용
-  const s = _b2GetImgSettings(playerName, 'primary');
+function _b2SetImgSetting(playerName, slot, key, val) {
+  // 호환: (playerName, key, val) 형태로도 호출 가능
+  if (val === undefined) { val = key; key = slot; slot = 'primary'; }
+  const s = _b2GetImgSettings(playerName, slot);
   s[key] = val;
   _b2SaveImgSettings();
 }
@@ -843,7 +868,7 @@ function _b2FemcoView() {
     const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x => x.name === univName) : null) || {};
     const iconUrl = uCfg.icon || uCfg.img || '';
     const logoHtml = iconUrl
-      ? `<img src="${iconUrl}" style="width:${LOGO}px;height:${LOGO}px;object-fit:contain" onerror="this.style.display='none'">`
+      ? `<img src="${toHttpsUrl(iconUrl)}" style="width:${LOGO}px;height:${LOGO}px;object-fit:contain" onerror="this.style.display='none'">`
       : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(LOGO*0.62)}px;height:${Math.round(LOGO*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 
     // 인원 카운트 규칙:
@@ -1208,7 +1233,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 멤버 없을 때 빈 블록
   if (!members.length) {
     return `<div style="border-radius:14px;border:2px dashed ${col}55;padding:16px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
-      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
@@ -1299,7 +1324,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
       <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
@@ -1429,7 +1454,7 @@ function _b2Avatar(p, col, size) {
   const r = s / 2, br = badgeSize / 2;
   const _bTop   = Math.round(r * 0.134 - br); // ≈ -7px (s=58 기준)
   const _bRight = Math.round(r * 0.5   - br); // ≈  4px
-  const _isImgIcon = _rawIcon && _siIsImg(_rawIcon);
+  const _isImgIcon = _rawIcon && (typeof window._siIsImg === 'function' ? window._siIsImg(_rawIcon) : false);
   const _badgeInner = _isImgIcon
     ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none';console.warn('[현황판] 상태 아이콘 로드 실패:', this.src)">`
     : statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'');
@@ -1439,7 +1464,7 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      <img src="${toHttpsUrl(p.photo)}" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
       ${badge}
     </span>`;
   }
@@ -3013,7 +3038,7 @@ function _b2PlayersView() {
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${_b2SelectedPlayer.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">`
+          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
@@ -3039,7 +3064,7 @@ function _b2PlayersView() {
               const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
               const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
               return iconUrl 
-                ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
+              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
                 : `<span>🏫 ${_b2SelectedPlayer.univ}</span>`;
             })() : ''}
           </div>
@@ -3066,7 +3091,7 @@ function _b2PlayersView() {
     h += `
       <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
         ${p.photo
-          ? `<img src="${p.photo}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          ? `<img src="${toHttpsUrl(p.photo)}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
           : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
@@ -3173,7 +3198,7 @@ function _b2UpdateMainDisplay(playerName) {
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
       ${player.photo
-        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img src="${toHttpsUrl(player.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
@@ -3199,7 +3224,7 @@ function _b2UpdateMainDisplay(playerName) {
             const uCfg = univCfg.find(x => x.name === player.univ) || {};
             const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
             return iconUrl
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
               : `<span>🏫 ${player.univ}</span>`;
           })() : ''}
         </div>
@@ -3250,7 +3275,7 @@ function _b2UpdateMainDisplay(playerName) {
     
     mainBox.innerHTML = `
       ${player.photo
-        ? `<img src="${player.photo}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:1;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+        ? `<img src="${toHttpsUrl(player.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:1;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
       }
@@ -3264,7 +3289,7 @@ function _b2UpdateMainDisplay(playerName) {
             const uCfg = univCfg.find(x => x.name === player.univ) || {};
             const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
             return iconUrl 
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
               : `<span>🏫 ${player.univ}</span>`;
           })() : ''}
         </div>
@@ -3327,7 +3352,7 @@ function openB2ProfileEditModal(playerName) {
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" id="b2-ed-photo" value="${player.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
           <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
-            <img id="b2-ed-photo-preview" src="${player.photo&&!player.photo.startsWith('data:')?player.photo:''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <img id="b2-ed-photo-preview" src="${player.photo&&!player.photo.startsWith('data:')?toHttpsUrl(player.photo):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
           </span>
         </div>
         <div id="b2-ed-photo-warn" style="font-size:10px;color:${player.photo&&player.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${player.photo&&player.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
