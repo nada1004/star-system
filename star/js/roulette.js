@@ -192,9 +192,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const ldItemsText = isLadder ? (localStorage.getItem('su_ld_items') || '') : '';
   const ldNames     = ldNamesText.split(',').map(v=>v.trim()).filter(v=>v);
 
-  const fs   = Math.max(13, Math.round(dome * 0.075));
-  const fsLg = Math.max(16, Math.round(dome * 0.095));
+  // 모바일/태블릿에서 dome 기반 폰트가 과하게 커져 입력창이 "불편"해지는 문제 완화
+  // - 입력창/버튼은 화면폭 기준으로 적당히 clamp
+  const fs   = Math.max(12, Math.min(14, Math.round(dome * 0.065)));
+  const fsLg = Math.max(14, Math.min(16, Math.round(dome * 0.072)));
   const pad  = Math.max(14, Math.round(dome * 0.085));
+  const isCompactUI = avW <= 1024; // 모바일/태블릿
+  const rowsGC = isWide ? 3 : 4;
+  const rowsLd = isWide ? 2 : 3;
 
   // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일
   const _tabBar = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
@@ -218,22 +223,16 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     const _setsOpts=[1,3,5,7].map(n=>`<option value="${n}"${n===_setN?' selected':''}>${n}세트</option>`).join('');
     const _banOpts=[0,1,2,3].map(n=>`<option value="${n}"${n===_banN?' selected':''}>${n}개</option>`).join('');
 
+    // 사용성: "신규" 탭 UI는 복잡하다는 피드백 → 기존 탭바(_tabBar)로 통일 + 그리드 최소폭 축소
     return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-      <div class="subtab-bar">
-        <button class="subtab-btn${_gcTab==='player'?' is-active':''}" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
-        <button class="subtab-btn${_gcTab==='map'?' is-active':''}"    onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
-        <button class="subtab-btn${_gcTab==='ladder'?' is-active':''}" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
-        <button class="subtab-btn is-special${_gcTab==='duck'?' is-active':''}" onclick="_gcSwitchTab('duck')">🐥 경주</button>
-        <button class="subtab-btn is-special${_gcTab==='wheel'?' is-active':''}" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
-        <button class="subtab-btn${_gcTab==='new'?' is-active':''}"    onclick="_gcSwitchTab('new')">🧩 신규</button>
-      </div>
+      ${_tabBar}
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:${Math.max(10,Math.round(pad*0.7))}px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(${isCompactUI?260:320}px,1fr));gap:${Math.max(10,Math.round(pad*0.7))}px">
 
         <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
           <div style="font-weight:900;font-size:14px;margin-bottom:8px">🎯 미션/도전 룰렛</div>
           <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1개. ‘뽑기’로 랜덤 선택</div>
-          <textarea id="rr-mission-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_missions',this.value)">${_mDef.replace(/</g,'&lt;')}</textarea>
+          <textarea id="rr-mission-inp" rows="${isCompactUI?5:6}" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_missions',this.value)">${_mDef.replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <button class="btn btn-b btn-sm" onclick="rrMissionRoll()">🎯 뽑기</button>
             <button class="btn btn-w btn-sm" onclick="rrMissionReroll()">🔄 리롤</button>
@@ -259,7 +258,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
         <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
           <div style="font-weight:900;font-size:14px;margin-bottom:8px">👤 다음 경기 지정(대기열)</div>
           <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1명</div>
-          <textarea id="rr-queue-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_queue',this.value)">${_qDef.replace(/</g,'&lt;')}</textarea>
+          <textarea id="rr-queue-inp" rows="${isCompactUI?5:6}" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_queue',this.value)">${_qDef.replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
             <label style="font-size:12px;font-weight:800;color:var(--text2)">연속 방지</label>
             <select id="rr-queue-cool" onchange="localStorage.setItem('su_rr_queue_cool',this.value)">${[0,1,2,3].map(n=>`<option value="${n}"${n===_cool?' selected':''}>최근 ${n}명 제외</option>`).join('')}</select>
@@ -276,7 +275,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
         <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
           <div style="font-weight:900;font-size:14px;margin-bottom:8px">🧾 스위스 1라운드 매칭</div>
           <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1명. 홀수면 마지막 1명은 BYE</div>
-          <textarea id="rr-swiss-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_swiss',this.value)">${_sDef.replace(/</g,'&lt;')}</textarea>
+          <textarea id="rr-swiss-inp" rows="${isCompactUI?5:6}" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_swiss',this.value)">${_sDef.replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <button class="btn btn-b btn-sm" onclick="rrSwissGenerate()">🧩 생성</button>
             <button class="btn btn-w btn-sm" onclick="rrSwissCopy()">📋 복사</button>
@@ -331,7 +330,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const ldCanvasW = isWide ? Math.min(600, Math.round(avW * 0.55)) : Math.min(avW - 40, 420);
   const ldCanvasH = Math.max(380, Math.round(avH * 0.68));
 
-  const inputW = isWide ? Math.min(360, Math.round(avW * 0.38)) : '100%';
+  // 입력 컬럼 폭: 태블릿에서 너무 좁/넓지 않게 clamp
+  const inputW = isWide ? Math.min(420, Math.max(280, Math.round(avW * 0.34))) : '100%';
   const innerLayout = isWide
     ? `display:flex;gap:${pad*2}px;align-items:flex-start`
     : `display:flex;flex-direction:column;align-items:center`;
@@ -342,7 +342,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const ldItemsAlways = isLadder ? `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">결과 항목 (쉼표 구분, 이름 수와 동일하게)</div>
-      <textarea id="ld-items-input" rows="2" oninput="_ldSaveItems(this.value)"
+      <textarea id="ld-items-input" rows="${rowsLd}" oninput="_ldSaveItems(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
       <button onclick="_ldRebuild()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid #a78bfa;background:#f5f3ff;color:#7c3aed;cursor:pointer;font-weight:600">🎲 사다리 다시 만들기</button>
     </div>
@@ -353,13 +353,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const inputBodyInner = isLadder ? `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
-      <textarea id="ld-names-input" rows="2" oninput="_ldSaveNames(this.value)"
+      <textarea id="ld-names-input" rows="${rowsLd}" oninput="_ldSaveNames(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
     </div>
   ` : `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
-      <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
+      <textarea id="gc-items-input" rows="${rowsGC}" oninput="_gcSaveText(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
       <div style="margin-top:8px;font-size:${Math.max(11,fs-1)}px;color:var(--gray-l);line-height:1.5">
         ✅ 가중치: <b>이름*2</b> (2배) · 예) <span style="font-family:${'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace'}">폴리포이드*2, 라데온*1</span>
