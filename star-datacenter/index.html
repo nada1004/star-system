@@ -8,142 +8,142 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260421-12">
+<link rel="stylesheet" href="css/style.css?v=20260422-26"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
 <!-- 공지 팝업 모달 -->
-<div id="noticePopupModal" class="modal no-export" style="display:none;z-index:9000">
-  <div class="mbox" style="width:min(520px,96vw);padding:0;border-radius:18px;overflow:hidden">
-    <div id="notice-popup-header" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:18px 22px 14px;display:flex;align-items:center;gap:10px">
-      <span id="notice-popup-type-icon" style="font-size:22px">📢</span>
-      <div style="flex:1;min-width:0">
-        <div id="notice-popup-title" style="font-size:16px;font-weight:800;color:#fff"></div>
-        <div id="notice-popup-date" style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px"></div>
+<div id="noticePopupModal" class="modal no-export modal--notice" role="dialog" aria-modal="true" aria-labelledby="noticePopupModal-title"><!-- [A11Y] -->
+  <div class="mbox">
+    <div id="notice-popup-header">
+      <span id="notice-popup-type-icon">📢</span>
+      <div id="noticePopupModal-title"><!-- [A11Y] -->
+        <div id="notice-popup-title"></div>
+        <div id="notice-popup-date"></div>
       </div>
-      <button onclick="closeNoticePopup()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+      <button onclick="closeNoticePopup()" class="modal--notice__close" aria-label="닫기">✕</button><!-- [A11Y] -->
     </div>
-    <div id="notice-popup-body" style="padding:20px 22px;font-size:14px;line-height:1.7;color:var(--text1);white-space:pre-wrap;max-height:55vh;overflow-y:auto"></div>
-    <div style="padding:12px 22px 18px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border)">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-l);cursor:pointer;flex:1">
-        <input type="checkbox" id="notice-no-show-today" style="cursor:pointer"> 오늘 하루 보지 않기
+    <div id="notice-popup-body"></div>
+    <div class="modal--notice__footer">
+      <label>
+        <input type="checkbox" id="notice-no-show-today"> 오늘 하루 보지 않기
       </label>
-      <button onclick="closeNoticePopup()" class="btn btn-b" style="padding:7px 20px">확인</button>
+      <button onclick="closeNoticePopup()" class="btn btn-b">확인</button>
     </div>
   </div>
 </div>
 
 <!-- 대학 해체 모달 -->
-<div id="dissolveModal" class="modal no-export" style="display:none;z-index:6000">
-  <div class="mbox" style="width:min(420px,96vw);padding:0;border-radius:16px;overflow:hidden">
-    <div style="background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:18px 22px 14px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:22px">🏚️</span>
-      <div style="flex:1">
-        <div id="dissolve-title" style="font-size:16px;font-weight:800;color:#fff"></div>
-        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">해체 처리 시 대학은 숨김 처리됩니다. 기록은 보존됩니다.</div>
+<div id="dissolveModal" class="modal no-export modal--dissolve" role="dialog" aria-modal="true" aria-labelledby="dissolveModal-title"><!-- [A11Y] -->
+  <div class="mbox">
+    <div class="modal--dissolve__header">
+      <span class="modal--dissolve__icon">🏚️</span>
+      <div id="dissolveModal-title"><!-- [A11Y] -->
+        <div id="dissolve-title"></div>
+        <div class="modal--dissolve__desc">해체 처리 시 대학은 숨김 처리됩니다. 기록은 보존됩니다.</div>
       </div>
-      <button onclick="cm('dissolveModal')" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+      <button onclick="cm('dissolveModal')" class="modal--dissolve__close" aria-label="닫기">✕</button><!-- [A11Y] -->
     </div>
-    <div style="padding:20px 22px">
-      <div style="margin-bottom:14px">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">📅 해체 날짜</label>
-        <input type="date" id="dissolve-date" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px">
+    <div class="modal--dissolve__body">
+      <div class="modal--dissolve__field">
+        <label class="modal--dissolve__label">📅 해체 날짜</label>
+        <input type="date" id="dissolve-date">
       </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text1);cursor:pointer;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-        <input type="checkbox" id="dissolve-move-players" checked style="width:16px;height:16px;cursor:pointer">
+      <label class="modal--dissolve__check">
+        <input type="checkbox" id="dissolve-move-players" checked>
         <span>소속 선수를 <b>무소속</b>으로 이동</span>
       </label>
-      <div id="dissolve-player-count" style="font-size:11px;color:var(--gray-l);margin-top:6px;padding-left:4px"></div>
+      <div id="dissolve-player-count"></div>
     </div>
-    <div style="padding:0 22px 20px;display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="cm('dissolveModal')" class="btn" style="padding:9px 20px">취소</button>
-      <button onclick="confirmDissolve()" class="btn" style="padding:9px 20px;background:#dc2626;color:#fff;border-color:#dc2626">🏚️ 해체 처리</button>
+    <div class="modal--dissolve__btns">
+      <button onclick="cm('dissolveModal')" class="btn modal--dissolve__btn-cancel">취소</button>
+      <button onclick="confirmDissolve()" class="btn modal--dissolve__btn-confirm">🏚️ 해체 처리</button>
     </div>
   </div>
 </div>
 
 <!-- 📅 예정 경기 등록 모달 -->
-<div id="calSchedModal" class="modal no-export" style="display:none">
-  <div class="mbox" style="width:360px">
-    <div class="mtitle">📌 예정 경기 등록</div>
-    <label class="mbox" style="padding:0;display:block;margin-top:4px">
-      <span style="font-size:11px;color:var(--gray-l);font-weight:600">날짜</span>
-      <input type="date" id="cal-sched-date" style="width:100%;margin-top:4px">
+<div id="calSchedModal" class="modal no-export modal--calsched" role="dialog" aria-modal="true" aria-labelledby="calSchedModal-title"><!-- [A11Y] -->
+  <div class="mbox">
+    <div class="mtitle" id="calSchedModal-title">📌 예정 경기 등록</div><!-- [A11Y] -->
+    <label class="mbox">
+      <span>날짜</span>
+      <input type="date" id="cal-sched-date">
     </label>
-    <label style="display:block;margin-top:10px">
-      <span style="font-size:11px;color:var(--gray-l);font-weight:600">시간 (선택)</span>
-      <input type="time" id="cal-sched-time" style="width:100%;margin-top:4px;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px">
+    <label>
+      <span>시간 (선택)</span>
+      <input type="time" id="cal-sched-time">
     </label>
-    <label style="display:block;margin-top:10px">
-      <span style="font-size:11px;color:var(--gray-l);font-weight:600">메모</span>
-      <textarea id="cal-sched-note" rows="2" placeholder="경기 메모 (예: A팀 vs B팀)" style="width:100%;margin-top:4px;padding:8px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+    <label>
+      <span>메모</span>
+      <textarea id="cal-sched-note" rows="2" placeholder="경기 메모 (예: A팀 vs B팀)"></textarea>
     </label>
-    <div class="mbtns" style="margin-top:16px">
-      <button class="btn btn-b" style="flex:1" onclick="saveCalSched()">💾 저장</button>
+    <div class="mbtns">
+      <button class="btn btn-b" onclick="saveCalSched()">💾 저장</button>
       <button class="btn btn-w" onclick="cm('calSchedModal')">취소</button>
     </div>
   </div>
 </div>
 
 <!-- 로그인 모달 (헤더 버튼 클릭 시) -->
-<div id="loginModal" class="modal no-export" style="display:none">
-  <div class="mbox" style="width:340px;text-align:center;padding:32px 28px">
-    <div style="font-size:32px;margin-bottom:8px">🔐</div>
-    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#1e3a8a;margin-bottom:20px">관리자 로그인</div>
+<div id="loginModal" class="modal no-export modal--login" style="display:none" role="dialog" aria-modal="true" aria-labelledby="loginModal-title"><!-- [A11Y] -->
+  <div class="mbox">
+    <div class="modal--login__icon">🔐</div>
+    <div id="loginModal-title" class="modal--login__title">관리자 로그인</div><!-- [A11Y] -->
     <input type="text" id="li-id" placeholder="아이디" autocomplete="username"
-      style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:10px;display:block"
+      class="modal--login__input"
       onkeydown="if(event.key==='Enter')document.getElementById('li-pw').focus()">
     <input type="password" id="li-pw" placeholder="비밀번호" autocomplete="current-password"
-      style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:10px;display:block"
+      class="modal--login__input"
       onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()" style="width:100%;padding:11px;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🔐 로그인</button>
-    <div class="login-err" id="li-err" style="color:#dc2626;font-size:12px;margin-top:8px;min-height:18px"></div>
-    <button onclick="cm('loginModal')" style="margin-top:10px;background:none;border:none;color:var(--gray-l);font-size:12px;cursor:pointer">취소</button>
+    <button onclick="doLogin()" class="modal--login__submit">🔐 로그인</button>
+    <div class="login-err modal--login__err" id="li-err"></div>
+    <button onclick="cm('loginModal')" class="modal--login__cancel">취소</button>
   </div>
 </div>
 
 <div class="app">
 <div class="hdr">
-  <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:1" title="메인으로">🏆</span>
-  <div class="hdr-titlewrap" style="display:flex;flex-direction:column;min-width:0;gap:2px;z-index:1">
+  <span class="hdr-ico" onclick="document.querySelector('.tab[onclick*=\"total\"]')?.click()" style="cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */" title="메인으로" aria-hidden="true">🏆</span><!-- [A11Y] -->
+  <div class="hdr-titlewrap" style="display:flex;flex-direction:column;min-width:0;gap:2px;z-index:var(--z-base)/* [Z-IDX] */">
     <div class="hdr-title" style="pointer-events:none">스타대학 데이터 센터</div>
   </div>
   <!-- 버전 표시는 화면에서 숨김(요청사항) -->
-  <div style="margin-left:auto;display:flex;gap:6px;z-index:1;align-items:center">
+  <div style="margin-left:auto;display:flex;gap:6px;z-index:var(--z-base)/* [Z-IDX] */;align-items:center">
     <!-- 헤더 우측 이미지(설정으로 표시) -->
     <img id="hdrRightImg" alt="" style="display:none;object-fit:contain">
     <!-- 🎵 유튜브 BGM (오디오) -->
-    <button id="hdrBgmBtn" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;z-index:1;line-height:1">▶</button>
+    <button id="hdrBgmBtn" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */;line-height:1">▶</button>
     <!-- 📺 SOOP 멀티뷰 -->
-    <button id="hdrSoopBtn" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;z-index:1;line-height:1">SOOP</button>
+    <button id="hdrSoopBtn" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */;line-height:1">SOOP</button>
     <!-- 전체 선수 검색 -->
     <div style="position:relative">
       <input id="globalSearch" type="text" placeholder="🔍 스트리머 검색..." oninput="onGlobalSearch(this.value)"
         style="width:160px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;outline:none;"
         onfocus="this.style.background='rgba(255,255,255,.25)'" onblur="this.style.background='rgba(255,255,255,.15)'">
-      <div id="globalSearchDrop" style="display:none;position:fixed;top:50px;right:16px;background:var(--white);border:1px solid var(--border2);border-radius:10px;width:300px;max-height:360px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.22)"></div>
+      <div id="globalSearchDrop" style="display:none;position:fixed;top:50px;right:16px;background:var(--white);border:1px solid var(--border2);border-radius:10px;width:300px;max-height:360px;overflow-y:auto;z-index:var(--z-chatbot)/* [Z-IDX] */;box-shadow:0 8px 32px rgba(0,0,0,.22)"></div>
     </div>
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
 
-    <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:1">🌙 다크</button>
+    <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */" aria-pressed="false" aria-label="다크 모드 전환">🌙 다크</button><!-- [A11Y] -->
     <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
     <button id="hdrLogoutBtn" class="hdr-login-btn" style="display:none;background:rgba(220,38,38,.4);border-color:rgba(220,38,38,.5)" onclick="doLogout()">🔓 로그아웃</button>
   </div>
 </div>
 
-<div class="tabs no-export">
-  <button class="tab on"  onclick="sw('total',this)">📋 스트리머</button>
-  <button class="tab"     onclick="sw('board2',this)">📊 현황판</button>
-  <button class="tab"     onclick="sw('tier',this)">📊 티어 순위표</button>
-  <button class="tab"     onclick="sw('hist',this)">📅 대전 기록</button>
-  <button class="tab"     onclick="sw('ind',this)">⚔️ 개인전</button>
-  <button class="tab"     onclick="sw('univm',this)">🏟️ 대학대전</button>
-  <button class="tab"     onclick="sw('comp',this)">🏆 대회</button>
-  <button class="tab"     onclick="sw('pro',this)">🏅 프로리그</button>
-  <button class="tab" onclick="sw('stats',this)">📊 통계</button>
-  <button class="tab" onclick="sw('cal',this)">📅 캘린더</button>
-  <button class="tab" onclick="sw('roulette',this)">🎰 룰렛</button>
-  <button id="tabCfg" class="tab cfg" onclick="sw('cfg',this)">⚙️ 설정</button>
+<div class="tabs no-export" role="tablist" aria-label="메인 메뉴"><!-- [A11Y] -->
+  <button class="tab on" role="tab" aria-selected="true" onclick="sw('total',this)">📋 스트리머</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('board2',this)">📊 현황판</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('tier',this)">📊 티어 순위표</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('hist',this)">📅 대전 기록</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('ind',this)">⚔️ 개인전</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('univm',this)">🏟️ 대학대전</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('comp',this)">🏆 대회</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('pro',this)">🏅 프로리그</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('stats',this)">📊 통계</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('cal',this)">📅 캘린더</button><!-- [A11Y] -->
+  <button class="tab" role="tab" aria-selected="false" onclick="sw('roulette',this)">🎰 룰렛</button><!-- [A11Y] -->
+  <button id="tabCfg" class="tab cfg" role="tab" aria-selected="false" onclick="sw('cfg',this)">⚙️ 설정</button><!-- [A11Y] -->
 </div>
 
 <div id="fstrip" class="fstrip no-export lock-admin">
@@ -187,34 +187,36 @@
 </div>
 
 <!-- 선수 수정 모달 -->
-<div id="emModal" class="modal no-export" style="z-index:5000" data-no-close="1">
+<div id="emModal" class="modal no-export modal--em" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="emModal-title"><!-- [A11Y] -->
   <div class="mbox">
-    <div class="mtitle">✏️ 스트리머 정보 수정</div>
+    <div class="mtitle" id="emModal-title">✏️ 스트리머 정보 수정</div><!-- [A11Y] -->
     <div id="emBody"></div>
     <div class="mbtns">
-      <button class="btn btn-b" style="flex:1" onclick="savePlayer()">저장</button>
-      <button class="btn btn-r" style="flex:1" onclick="delPlayer()">삭제</button>
-      <button class="btn btn-w" style="flex:1" onclick="cm('emModal')">취소</button>
+      <button class="btn btn-b" onclick="savePlayer()">저장</button>
+      <button class="btn btn-r" onclick="delPlayer()">삭제</button>
+      <button class="btn btn-w" onclick="cm('emModal')">취소</button>
     </div>
   </div>
 </div>
 
 <!-- 일괄 수정 모달 -->
-<div id="bulkEditModal" class="modal no-export" style="z-index:5100">
+<div id="bulkEditModal" class="modal no-export modal--bulkedit" role="dialog" aria-modal="true" aria-labelledby="bulkEditModal-title"><!-- [A11Y] -->
   <div class="mbox">
-    <div class="mtitle">☑ 일괄 수정</div>
+    <div class="mtitle" id="bulkEditModal-title">☑ 일괄 수정</div><!-- [A11Y] -->
     <div id="bulkEditBody"></div>
     <div class="mbtns">
-      <button class="btn btn-b" style="flex:1" onclick="saveBulkEdit()">적용</button>
-      <button class="btn btn-w" style="flex:1" onclick="cm('bulkEditModal')">취소</button>
+      <button class="btn btn-b" onclick="saveBulkEdit()">적용</button>
+      <button class="btn btn-w" onclick="cm('bulkEditModal')">취소</button>
     </div>
   </div>
 </div>
 
 <!-- 크루 설정 모달 -->
-<div id="crewCfgModal" class="modal no-export" style="z-index:5100" data-no-close="1">
+<div id="crewCfgModal" class="modal no-export" style="z-index:var(--z-modal-2)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="crewCfgModal-title"><!-- [A11Y] -->
   <div class="mbox" style="max-width:400px">
-    <div class="mtitle" id="crewCfgModalTitle">크루 설정</div>
+    <div id="crewCfgModal-title"><!-- [A11Y] -->
+      <div class="mtitle" id="crewCfgModalTitle">크루 설정</div>
+    </div><!-- [A11Y] -->
     <input type="hidden" id="crewCfgModalIdx" value="-1">
     <input type="hidden" id="crewCfgType" value=""> <!-- 크루 타입: '보라크루' 또는 'general' -->
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
@@ -247,9 +249,11 @@
 </div>
 
 <!-- 보라크루원 추가/수정 모달 -->
-<div id="crewModal" class="modal no-export" style="z-index:5000" data-no-close="1">
+<div id="crewModal" class="modal no-export" style="z-index:var(--z-modal-2)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="crewModal-title"><!-- [A11Y] -->
   <div class="mbox" style="max-width:360px">
-    <div class="mtitle" id="crewModalTitle">크루원</div>
+    <div id="crewModal-title"><!-- [A11Y] -->
+      <div class="mtitle" id="crewModalTitle">크루원</div>
+    </div><!-- [A11Y] -->
     <input type="hidden" id="crewModalIdx" value="-1">
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
       <div><label style="font-size:12px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">소속 크루</label>
@@ -272,9 +276,11 @@
 </div>
 
 <!-- 크루 상세 모달 -->
-<div id="crewDetailModal" class="modal no-export" style="z-index:5200" data-no-close="1">
+<div id="crewDetailModal" class="modal no-export" style="z-index:var(--z-modal-3)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="crewDetailModal-title"><!-- [A11Y] -->
   <div class="mbox" style="max-width:560px;max-height:85vh;overflow-y:auto">
-    <div class="mtitle" id="crewDetailTitle">크루 상세</div>
+    <div id="crewDetailModal-title"><!-- [A11Y] -->
+      <div class="mtitle" id="crewDetailTitle">크루 상세</div>
+    </div><!-- [A11Y] -->
     <div id="crewDetailBody"></div>
     <div class="mbtns">
       <button class="btn btn-w" style="flex:1" onclick="cm('crewDetailModal')">닫기</button>
@@ -283,9 +289,9 @@
 </div>
 
 <!-- 크루 빠른 이동 모달 -->
-<div id="crewMoveModal" class="modal no-export" style="z-index:5300" data-no-close="1">
+<div id="crewMoveModal" class="modal no-export" style="z-index:var(--z-modal-3)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="crewMoveModal-title"><!-- [A11Y] -->
   <div class="mbox" style="max-width:320px">
-    <div class="mtitle">🔀 크루 이동</div>
+    <div class="mtitle" id="crewMoveModal-title">🔀 크루 이동</div><!-- [A11Y] -->
     <input type="hidden" id="crewMoveModalName">
     <input type="hidden" id="crewMoveModalIsSC">
     <input type="hidden" id="crewMoveModalIdx">
@@ -302,9 +308,11 @@
 </div>
 
 <!-- 기록 수정 모달 -->
-<div id="reModal" class="modal no-export" style="z-index:5000" data-no-close="1">
+<div id="reModal" class="modal no-export" style="z-index:var(--z-modal-2)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="reModal-title"><!-- [A11Y] -->
   <div class="mbox">
-    <div class="mtitle" id="reTitle">수정</div>
+    <div id="reModal-title"><!-- [A11Y] -->
+      <div class="mtitle" id="reTitle">수정</div>
+    </div><!-- [A11Y] -->
     <div id="reBody"></div>
     <div class="mbtns">
       <button class="btn btn-b" style="flex:1" onclick="saveRow()">저장</button>
@@ -331,7 +339,7 @@
         <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️ 수정</button>
         <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
-        <button class="btn btn-w btn-sm" onclick="cm('playerModal')">✕ 닫기</button>
+        <button class="btn btn-w btn-sm" onclick="cm('playerModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
       </div>
     </div>
     <div id="playerModalBody"></div>
@@ -347,7 +355,7 @@
         <button class="btn btn-p btn-sm" onclick="openShareCardFromUniv()">🎴 공유 카드</button>
         <button class="btn-capture" onclick="captureUnivModal()">📸 이미지 저장</button>
         <button id="univEditBtn" class="btn btn-o btn-sm no-export" onclick="toggleUnivEdit()" style="display:none">✏️ 수정</button>
-        <button class="btn btn-w btn-sm" onclick="cm('univModal')">✕ 닫기</button>
+        <button class="btn btn-w btn-sm" onclick="cm('univModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
       </div>
     </div>
     <div id="univModalBody"></div>
@@ -359,7 +367,7 @@
   <div class="umbox" style="width:780px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="mtitle" id="grpMatchTitle" style="margin-bottom:0">경기 입력</div>
-      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">✕ 닫기</button>
+      <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
     </div>
     <div id="grpMatchBody"></div>
   </div>
@@ -370,7 +378,7 @@
   <div class="umbox" style="width:720px;max-width:96vw">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="mtitle" style="margin-bottom:0">📋 대회 경기 결과 붙여넣기 일괄 입력</div>
-      <button class="btn btn-w btn-sm" onclick="cm('grpPasteModal')">✕ 닫기</button>
+      <button class="btn btn-w btn-sm" onclick="cm('grpPasteModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
     </div>
     <div id="grpPasteBody"></div>
     <div class="mbtns" style="margin-top:14px;gap:8px">
@@ -381,13 +389,13 @@
 </div>
 
 
-<div id="pasteModal" class="modal no-export" style="z-index:99999">
+<div id="pasteModal" class="modal no-export" style="z-index:var(--z-top)/* [Z-IDX] */" role="dialog" aria-modal="true" aria-labelledby="pasteModal-title"><!-- [A11Y] -->
   <div class="umbox" style="width:740px;max-width:96vw">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="mtitle" style="margin-bottom:0">📋 경기 결과 붙여넣기 입력</div>
+      <div class="mtitle" id="pasteModal-title" style="margin-bottom:0">📋 경기 결과 붙여넣기 입력</div><!-- [A11Y] -->
       <div style="display:flex;gap:6px;align-items:center">
         <span id="paste-summary-badge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
-        <button class="btn btn-w btn-sm" onclick="closePasteModal()">✕ 닫기</button>
+        <button class="btn btn-w btn-sm" onclick="closePasteModal()" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
       </div>
     </div>
 
@@ -483,7 +491,7 @@
       <div class="mtitle" style="margin-bottom:0">🏅 프로리그 경기 결과 붙여넣기</div>
       <div style="display:flex;gap:6px;align-items:center">
         <span id="pro-paste-badge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
-        <button class="btn btn-w btn-sm" onclick="closeProPasteModal()">✕ 닫기</button>
+        <button class="btn btn-w btn-sm" onclick="closeProPasteModal()" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
       </div>
     </div>
     <details style="margin-bottom:12px">
@@ -548,35 +556,35 @@
 <script src="js/constants.js?v=20260422-01"></script>
 <script src="js/data.js"></script>
 <script src="js/auth.js?v=20260421-01"></script>
-<script src="js/settings.js?v=20260421-09"></script>
+<script src="js/settings.js?v=20260422-19"></script>
 <script src="js/tier-tour.js?v=20260421-13"></script>
 <script src="js/competition.js?v=20260421-01"></script>
-<script src="js/render.js?v=20260422-01"></script>
-<script src="js/players.js?v=20260420-02"></script>
+<script src="js/render.js?v=20260422-04"></script>
+<script src="js/players.js?v=20260422-01"></script>
 <script src="js/vs.js?v=20260416-02"></script>
-<script src="js/history.js?v=20260422-01"></script>
+<script src="js/history.js?v=20260422-05"></script>
 <script src="js/match.js?v=20260420-01"></script>
 <script src="js/match-builder.js?v=20260420-02"></script>
-<script src="js/search.js?v=20260421-03"></script>
+<script src="js/search.js?v=20260422-07"></script>
 <script src="js/pro-comp.js?v=20260422-01"></script>
 <script src="js/stats.js?v=20260421-03"></script>
-<script src="js/calendar.js?v=20260416-02"></script>
+<script src="js/calendar.js?v=20260422-01"></script>
 <script src="js/roulette.js?v=20260421-01"></script>
 <script src="js/duck-race.js?v=20260416-01"></script>
 <script src="js/wheel.js?v=20260416-08"></script>
 <script src="js/vote.js"></script>
-<script src="js/cloud-board.js?v=20260420-02"></script>
-<script src="js/elboard.js"></script>
+<script src="js/cloud-board.js?v=20260422-05"></script>
+<script src="js/elboard.js?v=20260422-01"></script>
 <script src="js/yt-bgm.js?v=20260420-06"></script>
 <script src="js/soop-multiview.js?v=20260420-10"></script>
-<script src="js/init.js?v=20260421-04"></script>
-<script src="js/board2.js?v=20260416-22"></script>
+<script src="js/init.js?v=20260422-02"></script>
+<script src="js/board2.js?v=20260422-01"></script>
 <script src="js/chatbot.js?v=20260421-01"></script>
 <script src="js/mobile-bar.js"></script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
-<div id="mobileActionBar" style="display:none;position:fixed;bottom:68px;right:12px;z-index:995;flex-direction:column;gap:8px;align-items:flex-end;">
+<div id="mobileActionBar" style="display:none;position:fixed;bottom:68px;right:12px;z-index:var(--z-sticky)/* [Z-IDX] */;flex-direction:column;gap:8px;align-items:flex-end;">
 </div>
 
 <!-- 📱 FAB -->
@@ -670,7 +678,7 @@ function fabActionCfgSearch(){
 
 <!-- 🤖 챗봇 팝업 -->
 <div class="chatbot-overlay" id="chatbotOverlay" onclick="closeChatbot(event)">
-  <div class="chatbot-sheet" id="chatbotSheet" onclick="event.stopPropagation()">
+  <div class="chatbot-sheet" id="chatbotSheet" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="챗봇"><!-- [A11Y] -->
     <div class="chatbot-sheet-handle"></div>
     <div class="chatbot-sheet-hdr">
       <div class="chatbot-sheet-title">
@@ -681,8 +689,8 @@ function fabActionCfgSearch(){
         </div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
-        <button class="chatbot-clear-btn" onclick="clearChatHistory()" style="background:none;border:none;font-size:13px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:background 0.2s" title="대화 초기화">🗑️</button>
-        <button class="chatbot-sheet-close" onclick="closeChatbot()">✕</button>
+        <button class="chatbot-clear-btn" onclick="clearChatHistory()" style="background:none;border:none;font-size:13px;cursor:pointer;padding:5px 8px;border-radius:8px;transition:background 0.2s" title="대화 초기화" aria-label="대화 초기화">🗑️</button><!-- [A11Y] -->
+        <button class="chatbot-sheet-close" onclick="closeChatbot()" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
     </div>
     <div class="chatbot-messages" id="chatMessages">
@@ -701,11 +709,11 @@ function fabActionCfgSearch(){
 
 <!-- 모바일 경기 상세 오버레이 -->
 <div class="mobile-match-overlay" id="mobileMatchOverlay" onclick="closeMobileMatchSheet(event)">
-  <div class="mobile-match-sheet" id="mobileMatchSheet" onclick="event.stopPropagation()">
+  <div class="mobile-match-sheet" id="mobileMatchSheet" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="경기 상세"><!-- [A11Y] -->
     <div class="mobile-match-sheet-handle"></div>
     <div class="mobile-match-sheet-hdr">
       <div class="mobile-match-sheet-title" id="mms-title">경기 상세</div>
-      <button class="mobile-match-sheet-close" onclick="closeMobileMatchOverlay()">✕</button>
+      <button class="mobile-match-sheet-close" onclick="closeMobileMatchOverlay()" aria-label="닫기">✕</button><!-- [A11Y] -->
     </div>
     <div class="mobile-match-sheet-score" id="mms-score"></div>
     <div class="mobile-match-sheet-body" id="mms-body"></div>
