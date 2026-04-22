@@ -1288,6 +1288,12 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
 #hdrRightImg{max-height:40px;max-width:140px;}
 
+/* 모바일/태블릿: 헤더 고정 설정 버튼 표시 */
+#hdrCfgBtn{display:none;}
+@media(max-width:1024px){
+  #hdrCfgBtn{display:inline-flex !important; align-items:center; gap:6px;}
+}
+
 /* ══════════════════════════════════════
    🎨 디자인 모드 (design-v2)
    - 설정 > 🎨 디자인 모드에서 토글
