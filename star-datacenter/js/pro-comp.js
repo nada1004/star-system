@@ -1658,6 +1658,10 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
     : (_isByeMatch(m.a) && !_isByeMatch(m.b)) ? 'B'
     : '';
   const prevWinner = m.winner;
+  const tieId = `pbn_${tnId}_${ri}_${mi}_tie`;
+  // 이전에 동률 저장이 있었다면, 승자 확정 시 동률 기록은 제거
+  const hadTie = (!prevWinner && Array.isArray(m._games) && m._games.length>0 &&
+    (m._games.filter(g=>g.winner==='A').length === m._games.filter(g=>g.winner==='B').length));
   m.winner = m.winner===winner ? '' : winner;
   const nextMi = Math.floor(mi/2);
   const isA = mi%2===0;
@@ -1696,6 +1700,7 @@ function proCompSetBktWinner(tnId, ri, mi, winner) {
   // player history 반영
   const bktMatchId = `pbn_${tnId}_${ri}_${mi}`;
   if(!byeSide && !_isByeMatch(m.a) && !_isByeMatch(m.b)){
+    if (hadTie && m.winner) { try{ _revertDrawMatch(tieId); }catch(e){} }
     if (prevWinner && m.a && m.b) _revertProMatch(bktMatchId);
     _syncBktMatchToHistory(tn, m, bktMatchId, ri, mi);
   }
@@ -1729,10 +1734,13 @@ function proCompClearBktMatch(tnId, ri, mi){
   if(!confirm('이 토너먼트 경기 기록을 삭제(초기화)할까요?')) return;
   const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
   const bktMatchId=`pbn_${tnId}_${ri}_${mi}`;
+  const tieId = `${bktMatchId}_tie`;
   // 기존 히스토리 롤백 (BYE 제외)
   if(m.winner && !isBye(m.a) && !isBye(m.b)){
     try{ _revertProMatch(bktMatchId); }catch(e){}
   }
+  // 동률(무승부) 기록도 롤백
+  try{ _revertDrawMatch(tieId); }catch(e){}
   // 3위전 연결된 준결승이면 3위전도 초기화
   const semiRi = tn.bracket.length - 2;
   if(tn.thirdPlace && ri===semiRi && (mi===0||mi===1)){
@@ -1800,8 +1808,17 @@ function proCompDeleteBracket(tnId){
   // 히스토리/기록 롤백 (player history + proM/ttM)
   (tn.bracket||[]).forEach((rnd,ri)=>{
     (rnd||[]).forEach((m,mi)=>{
+      const mid = `pbn_${tnId}_${ri}_${mi}`;
+      // 동률 저장(무승부) 롤백
+      try{
+        const hasGames = m && Array.isArray(m._games) && m._games.length>0;
+        const sA = hasGames ? m._games.filter(g=>g.winner==='A').length : 0;
+        const sB = hasGames ? m._games.filter(g=>g.winner==='B').length : 0;
+        if(m && !m.winner && hasGames && sA===sB && (sA+sB)>0 && !isBye(m.a) && !isBye(m.b)){
+          _revertDrawMatch(`${mid}_tie`);
+        }
+      }catch(e){}
       if(m && m.winner && !isBye(m.a) && !isBye(m.b)){
-        const mid = `pbn_${tnId}_${ri}_${mi}`;
         try{
           if(typeof revertMatchRecord==='function') revertMatchRecord(_buildMatchObj(mid,m));
           else _revertProMatch(mid);
@@ -2106,6 +2123,7 @@ function _bktEditSave() {
   const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim();
   const dV = document.getElementById('_bktEditD')?.value || '';
   const bktId = `pbn_${_bktEditTnId}_${_bktEditRi}_${_bktEditMi}`;
+  const tieId = `${bktId}_tie`;
   if (m.winner) _revertProMatch(bktId);
   m.a = aV; m.b = bV; m.d = dV;
   // (보완) 사용자 혼동 방지: 스코어 입력칸을 채웠는데 [적용]을 안 눌러도 저장 시 반영
@@ -2127,6 +2145,8 @@ function _bktEditSave() {
     const scoreA = validGames.filter(g=>g.winner==='A').length;
     const scoreB = validGames.filter(g=>g.winner==='B').length;
     if (scoreA !== scoreB) {
+      // 기존 동률 기록이 있으면 제거
+      try{ _revertDrawMatch(tieId); }catch(e){}
       m.winner = scoreA > scoreB ? 'A' : 'B';
       m.map = validGames.length === 1 ? validGames[0].map || '' : '';
       const nextMi = Math.floor(_bktEditMi/2), isA = _bktEditMi%2===0;
@@ -2145,9 +2165,15 @@ function _bktEditSave() {
       }
     } else {
       m.winner = ''; m.map = '';
+      // 동률도 "저장" 처리: 히스토리에 무승부 기록 추가(승/패/ELO 영향 없음)
+      try{
+        _revertDrawMatch(tieId);
+        if(typeof applyDrawResult==='function' && (scoreA+scoreB)>0) applyDrawResult(m.a, m.b, m.d||'', m.map||'-', tieId, '', '', '프로리그대회(토너먼트)', scoreA, scoreB);
+      }catch(e){}
     }
   } else {
     m.winner = ''; m._games = []; m.map = '';
+    try{ _revertDrawMatch(tieId); }catch(e){}
   }
   // 동률/승자미정일 때는 히스토리 반영하지 않음
   const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
@@ -2156,6 +2182,17 @@ function _bktEditSave() {
   }
   document.getElementById('_bktEditModal')?.remove();
   save(); render();
+  // 저장 확인 토스트 (동률도 "저장됨"을 명확히 표시)
+  try{
+    const sA = Array.isArray(m._games) ? m._games.filter(g=>g.winner==='A').length : 0;
+    const sB = Array.isArray(m._games) ? m._games.filter(g=>g.winner==='B').length : 0;
+    if ((sA+sB) > 0) {
+      if (sA === sB) showToast(`⚖️ 동률 저장됨 (${sA}:${sB})`, 3200);
+      else showToast(`✅ 저장됨 (${sA}:${sB})`, 2200);
+    } else {
+      showToast('✅ 저장됨', 1800);
+    }
+  }catch(e){}
 }
 
 function proCompBktEditPlayers(tnId, ri, mi) {
@@ -2738,11 +2775,14 @@ function _pcBktPasteApplyLogic(savable, tn) {
     m._games = games;
     if (games.length === 1 && games[0].map) m.map = games[0].map; else if (games.length > 1) m.map = '';
     const bktMatchId = `pbn_${tn.id}_${matchRi}_${matchMi}`;
+    const tieId = `${bktMatchId}_tie`;
     const isBye = (x)=>!x||x==='TBD'||String(x).toUpperCase()==='BYE';
     // 이전 승자 기록이 있었다면 롤백(BYE 제외)
     if (m.winner && !isBye(m.a) && !isBye(m.b)) {
       try{ _revertProMatch(bktMatchId); }catch(e){}
     }
+    // 동률 기록은 승자 확정/취소와 독립이므로, 항상 기존 동률 기록은 제거 후 필요시 재저장
+    try{ _revertDrawMatch(tieId); }catch(e){}
     m.winner = winner; // tie면 '' (승자 미정)
     const nextMi = Math.floor(matchMi/2), isA = matchMi%2===0;
     const clearCascadeFromNext = ()=>{
@@ -2763,6 +2803,12 @@ function _pcBktPasteApplyLogic(savable, tn) {
     if (isTie) {
       // 동률: 전파/히스토리 반영하지 않고, 다음 라운드 슬롯은 비움
       clearCascadeFromNext();
+      // 동률도 저장(스트리머 상세/기록에서 확인 가능)
+      try{
+        if(!isBye(m.a) && !isBye(m.b) && typeof applyDrawResult==='function' && (scoreA+scoreB)>0){
+          applyDrawResult(m.a, m.b, m.d||'', m.map||'-', tieId, '', '', '프로리그대회(토너먼트)', scoreA, scoreB);
+        }
+      }catch(e){}
     } else if (tn.bracket[matchRi+1] && tn.bracket[matchRi+1][nextMi]) {
       const next = tn.bracket[matchRi+1][nextMi];
       const wSlot = winner==='A'?m.a:m.b;
@@ -3404,6 +3450,17 @@ function _revertProMatch(matchId) {
     else { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
     p.elo = (p.elo||1200) - h.eloDelta;
     p.history = p.history.filter(x => x.matchId !== matchId);
+  });
+}
+
+// (요청사항) 무승부(2:2 등) 히스토리 롤백 — 승/패/포인트/ELO 조정 없음
+function _revertDrawMatch(matchId){
+  if(!matchId) return;
+  players.forEach(p=>{
+    if(!p.history) return;
+    const has = p.history.some(x=>x.matchId===matchId && x.result==='무');
+    if(!has) return;
+    p.history = p.history.filter(x=>x.matchId!==matchId);
   });
 }
 

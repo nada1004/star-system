@@ -3527,9 +3527,13 @@ function histProCompTourneyHTML() {
       const rndLabel = ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
       const stageColor = ri===totalRounds-1?'#f59e0b':ri===totalRounds-2?'#7c3aed':ri===totalRounds-3?'#dc2626':'#2563eb';
       rnd.forEach(m => {
-        if (!m.a||!m.b||!m.winner) return;
+        if (!m.a||!m.b) return;
+        const scoreA = (m._games||[]).filter(g=>g.winner==='A').length;
+        const scoreB = (m._games||[]).filter(g=>g.winner==='B').length;
+        const isTieSaved = (!m.winner && Array.isArray(m._games) && m._games.length>0 && scoreA===scoreB && (scoreA+scoreB)>0);
+        if (!m.winner && !isTieSaved) return;
         if (typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return;
-        allItems.push({...m, _tnName:tn.name, _stage:'토너먼트', _stageDetail:rndLabel, _stageColor:stageColor, d:m.d||''});
+        allItems.push({...m, _tnName:tn.name, _stage:'토너먼트', _stageDetail:rndLabel, _stageColor:stageColor, d:m.d||'', _isTie:isTieSaved, _scoreA:scoreA, _scoreB:scoreB});
       });
     });
     if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.winner) {
@@ -3562,24 +3566,26 @@ function histProCompTourneyHTML() {
       const pa=players.find(p=>p.name===m.a), pb=players.find(p=>p.name===m.b);
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
+      const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';
       h+=`<div class="rec-summary" style="margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span style="background:#f5f3ff;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">토너먼트</span>
           ${stageBadge}
+          ${tieBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
-            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}')">🎴 공유카드</button>
           </div>
         </div>
         <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
-            <div style="display:flex;align-items:center;gap:4px;${aWin?'':'opacity:.7'}">
-              ${_photo(pa)}<span style="font-weight:${aWin?'800':'500'};font-size:13px;color:${aWin?'#16a34a':'var(--text)'}">${m.a}</span>
+            <div style="display:flex;align-items:center;gap:4px;${(aWin||m._isTie)?'':'opacity:.7'}">
+              ${_photo(pa)}<span style="font-weight:${aWin?'800':m._isTie?'800':'500'};font-size:13px;color:${aWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.a}</span>
               ${_rb(pa)}${_tb(pa)}${aWin?`<span style="font-size:10px;font-weight:800;color:#16a34a;margin-left:2px">WIN</span>`:''}
             </div>
             <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
-            <div style="display:flex;align-items:center;gap:4px;${bWin?'':'opacity:.7'}">
-              ${_photo(pb)}<span style="font-weight:${bWin?'800':'500'};font-size:13px;color:${bWin?'#16a34a':'var(--text)'}">${m.b}</span>
+            <div style="display:flex;align-items:center;gap:4px;${(bWin||m._isTie)?'':'opacity:.7'}">
+              ${_photo(pb)}<span style="font-weight:${bWin?'800':m._isTie?'800':'500'};font-size:13px;color:${bWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.b}</span>
               ${_rb(pb)}${_tb(pb)}${bWin?`<span style="font-size:10px;font-weight:800;color:#16a34a;margin-left:2px">WIN</span>`:''}
             </div>
             ${m.map?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">📍${m.map}</span>`:''}
