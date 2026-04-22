@@ -36,7 +36,7 @@
   --tc-line-a: .70;        /* 브라켓 연결선 진하기 */
   --tc-line-rgb: 147,197,253; /* 기본 연결선 색 */
   /* 전역 폰트(설정에서 변경) */
-  --app-font: 'Noto Sans KR', sans-serif;
+  --app-font: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",'Noto Sans KR', sans-serif;
 
   /* z-index 레이어 체계 */ /* [Z-IDX] */
   --z-base: 1; /* [Z-IDX] */
