@@ -7,18 +7,104 @@ let chatbotOpen = false;
 let alMemo = JSON.parse(localStorage.getItem('al_memo') || '{}');
 function saveAlMemo(){ try{ localStorage.setItem('al_memo', JSON.stringify(alMemo)); }catch(e){} }
 
-// ── 알등이 메모 동기화 ──
-// settings-store.js(SettingsStore)를 통해 su_settings.json으로 통합 동기화합니다.
+// ── 알등이 메모 동기화 (GitHub Gist) ──
+// - GitHub Pages 환경(서버 없음)이라, 개인 GitHub Gist를 메모 저장소로 사용합니다.
+// - 필요한 것: GitHub Personal Access Token(권한: gist) + Gist ID
+// - 보안: 토큰은 브라우저 localStorage에 저장됩니다. 공용 PC에서는 사용 비권장.
+function _alSyncCfg(){
+  return {
+    enabled: localStorage.getItem('al_sync_enabled') === '1',
+    token: (localStorage.getItem('al_github_token') || '').trim(),
+    gistId: (localStorage.getItem('al_gist_id') || '').trim(),
+  };
+}
+function _alSetSyncCfg(p){
+  if('enabled' in p) localStorage.setItem('al_sync_enabled', p.enabled ? '1' : '0');
+  if('token' in p) localStorage.setItem('al_github_token', (p.token||'').trim());
+  if('gistId' in p) localStorage.setItem('al_gist_id', (p.gistId||'').trim());
+}
 function _alIsAdmin(){
-  try{ return !!(window.SettingsStore && window.SettingsStore.isAdmin && window.SettingsStore.isAdmin()); }catch(e){}
-  // fallback
   try{
+    // 프로젝트 전역 로그인 상태 사용 (관리자만 저장)
     if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+      // 부관리자까지 막고 싶으면 아래 조건 유지
       if (typeof isSubAdmin !== 'undefined' && isSubAdmin) return false;
       return true;
     }
   }catch(e){}
   return false;
+}
+async function _alGistRequest(method, url, token, body){
+  const opt = { method, headers: { 'Accept':'application/vnd.github+json' } };
+  if (token) opt.headers['Authorization'] = 'token ' + token;
+  if (body) { opt.headers['Content-Type']='application/json'; opt.body = JSON.stringify(body); }
+  const res = await fetch(url, opt);
+  const txt = await res.text();
+  let json = null;
+  try{ json = txt ? JSON.parse(txt) : null; }catch(e){}
+  if (!res.ok) {
+    const msg = (json && (json.message||json.error)) ? (json.message||json.error) : (txt||('HTTP '+res.status));
+    throw new Error(msg);
+  }
+  return json;
+}
+async function _alEnsureGist(){
+  const cfg = _alSyncCfg();
+  if (!cfg.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
+  if (cfg.gistId) return cfg.gistId;
+  const payload = {
+    description: 'Aldeungi memo sync',
+    // 다른 기기(시청자 포함)에서도 "읽기"가 가능해야 하므로 public Gist로 생성합니다.
+    // (저장은 관리자만 가능하도록 챗봇 커맨드에서 제한)
+    public: true,
+    files: {
+      'al_memo.json': { content: JSON.stringify({ last: alMemo.last || '', updatedAt: alMemo.updatedAt || null }, null, 2) }
+    }
+  };
+  const created = await _alGistRequest('POST', 'https://api.github.com/gists', cfg.token, payload);
+  const id = created && created.id ? String(created.id) : '';
+  if(!id) throw new Error('Gist 생성에 실패했습니다.');
+  _alSetSyncCfg({ gistId: id });
+  return id;
+}
+async function _alSyncPull(force){
+  const cfg = _alSyncCfg();
+  if (!cfg.gistId) return false;
+  if (!cfg.enabled && !force) return false;
+  // 읽기는 토큰 없이도 가능(공개 Gist 기준). 토큰이 있으면 함께 사용.
+  const gist = await _alGistRequest('GET', `https://api.github.com/gists/${cfg.gistId}`, cfg.token || null);
+  const f = gist && gist.files ? gist.files['al_memo.json'] : null;
+  if (!f) return false;
+  let content = f.content;
+  if ((!content || f.truncated) && f.raw_url) {
+    const r = await fetch(f.raw_url);
+    content = await r.text();
+  }
+  if (!content) return false;
+  let remote = null;
+  try{ remote = JSON.parse(content); }catch(e){ return false; }
+  // 최신 우선 적용
+  const rT = new Date(remote.updatedAt || 0).getTime();
+  const lT = new Date(alMemo.updatedAt || 0).getTime();
+  if (rT >= lT) {
+    alMemo = { ...alMemo, ...remote };
+    saveAlMemo();
+    return true;
+  }
+  return false;
+}
+async function _alSyncPush(){
+  const cfg = _alSyncCfg();
+  if (!cfg.enabled) return false;
+  if (!cfg.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
+  const id = await _alEnsureGist();
+  const payload = {
+    files: {
+      'al_memo.json': { content: JSON.stringify({ last: alMemo.last || '', updatedAt: alMemo.updatedAt || null }, null, 2) }
+    }
+  };
+  await _alGistRequest('PATCH', `https://api.github.com/gists/${id}`, cfg.token, payload);
+  return true;
 }
 
 // 대회 데이터 구조 (예시)
@@ -53,15 +139,9 @@ const tournamentMatches = [
 function initChatbot() {
   loadChatHistory();
   renderChatHistory();
-  // 원격 설정(메모 포함) pull (가능하면)
-  try{ if(window.SettingsStore) window.SettingsStore.pull({silent:true}); }catch(e){}
-  // 로컬 memo 객체 최신화
-  try{
-    if(window.SettingsStore){
-      const m=window.SettingsStore.getMemo();
-      if(m){ alMemo.last=m.last||''; alMemo.updatedAt=m.updatedAt||null; saveAlMemo(); }
-    }
-  }catch(e){}
+  // 동기화가 켜져 있으면 원격 메모를 먼저 가져옵니다(다른 기기에서 저장한 내용 반영).
+  // UI를 막지 않도록 백그라운드로 수행.
+  try{ _alSyncPull(true); }catch(e){}
 }
 
 // 페이지 로드 시 챗봇 초기화 (데이터 로드 후 실행)
@@ -386,45 +466,39 @@ async function generateResponse(msg) {
     const tok = msg.match(/토큰\s*[:\-]\s*([A-Za-z0-9_]+)\s*$/i);
     if (tok && tok[1]) {
       if(!_alIsAdmin()) return '❌ 관리자만 동기화 토큰을 저장할 수 있어.';
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ token: tok[1].trim() }); else localStorage.setItem('al_github_token', tok[1].trim()); }catch(e){}
+      _alSetSyncCfg({ token: tok[1].trim() });
       return '✅ (관리자) 토큰을 저장했어. 이제 "알등이 동기화 켜" 라고 하면 다른 기기와 메모가 공유돼.';
     }
     // gist id 저장
     const gid = msg.match(/gist\s*[:\-]\s*([a-f0-9]+)\s*$/i);
     if (gid && gid[1]) {
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ gistId: gid[1].trim() }); else localStorage.setItem('al_gist_id', gid[1].trim()); }catch(e){}
+      _alSetSyncCfg({ gistId: gid[1].trim() });
       return '✅ Gist ID를 저장했어. (다른 기기에서도 이 ID를 넣으면 메모를 불러올 수 있어)';
     }
     if (userMessage.includes('동기화 켜')) {
       if(!_alIsAdmin()) return '❌ 동기화(저장 기능)는 관리자만 켤 수 있어. (시청자는 Gist ID만 입력하고 불러오기만 가능)';
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ enabled: true }); else localStorage.setItem('al_sync_enabled','1'); }catch(e){}
+      _alSetSyncCfg({ enabled: true });
       try{
-        let id='';
-        if(window.SettingsStore){ id = await window.SettingsStore.ensureGist(); await window.SettingsStore.push(); }
-        else { id = localStorage.getItem('al_gist_id')||''; }
-        return `✅ (관리자) 동기화를 켰어.\nGist ID: ${id}\n\n다른 기기에서는 "알등이 gist: ${id}" 입력 후 "내가 적은것"으로 조회할 수 있어.`;
+        await _alEnsureGist();
+        await _alSyncPull(true);
+        const id = _alSyncCfg().gistId;
+        return `✅ (관리자) 동기화를 켰어.\nGist ID: ${id}\n\n다른 기기에서는 "알등이 gist: ${id}" 입력 후 "알등이 메모 불러와" 또는 "내가 적은것"으로 조회할 수 있어.`;
       }catch(e){
         return `❌ 동기화 켜기 실패: ${e.message}\n\n먼저 "알등이 동기화 토큰: (gist 권한 토큰)" 을 입력해줘.`;
       }
     }
     if (userMessage.includes('동기화 끄기')) {
       if(!_alIsAdmin()) return '❌ 동기화 설정 변경은 관리자만 가능해.';
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ enabled: false }); else localStorage.setItem('al_sync_enabled','0'); }catch(e){}
+      _alSetSyncCfg({ enabled: false });
       return '✅ 동기화를 껐어. (이 기기 local 메모는 유지돼)';
     }
     if (userMessage.includes('동기화 상태')) {
-      const cfg=(window.SettingsStore?window.SettingsStore.cfg():{enabled:localStorage.getItem('al_sync_enabled')==='1',token:(localStorage.getItem('al_github_token')||''),gistId:(localStorage.getItem('al_gist_id')||'')});
+      const cfg=_alSyncCfg();
       return `동기화: ${cfg.enabled?'ON':'OFF'}\n토큰: ${cfg.token? '설정됨':'없음'}\nGist ID: ${cfg.gistId||'(없음)'}`;
     }
     if (userMessage.includes('메모 불러') || userMessage.includes('동기화 불러')) {
       try{
-        const ok = window.SettingsStore ? await window.SettingsStore.pull({silent:true}) : false;
-        try{
-          if(window.SettingsStore){
-            const m=window.SettingsStore.getMemo();
-            if(m){ alMemo.last=m.last||''; alMemo.updatedAt=m.updatedAt||null; saveAlMemo(); }
-          }
-        }catch(e){}
+        const ok = await _alSyncPull(true);
         return ok ? `✅ 원격 메모를 불러왔어.\n\n${alMemo.last||''}` : '불러올 원격 메모가 없거나 Gist ID가 설정되지 않았어.';
       }catch(e){
         return `❌ 불러오기 실패: ${e.message}`;
@@ -457,25 +531,15 @@ async function generateResponse(msg) {
     saveAlMemo();
     let syncedMsg = '';
     try{
-      if(window.SettingsStore){
-        window.SettingsStore.setMemo(memoText);
-        const ok = window.SettingsStore.cfg().enabled ? await window.SettingsStore.push('memo') : false;
-        if(ok) syncedMsg = '\n\n(동기화: 완료)';
-      }
+      const ok = await _alSyncPush();
+      if(ok) syncedMsg = '\n\n(동기화: 완료)';
     }catch(e){
-      const en = window.SettingsStore ? window.SettingsStore.cfg().enabled : (localStorage.getItem('al_sync_enabled')==='1');
-      if(en) syncedMsg = `\n\n(동기화 실패: ${e.message})`;
+      if(_alSyncCfg().enabled) syncedMsg = `\n\n(동기화 실패: ${e.message})`;
     }
     return `✅ 저장했어.\n\n저장한 내용:\n${memoText}\n\n"내가 적은것"이라고 물어보면 다시 알려줄게.${syncedMsg}`;
   }
   if (userMessage.includes('내가 적은') || userMessage.includes('내 메모') || userMessage.includes('저장한 내용')) {
-    try{
-      if(window.SettingsStore) await window.SettingsStore.pull({silent:true});
-      if(window.SettingsStore){
-        const m=window.SettingsStore.getMemo();
-        if(m){ alMemo.last=m.last||''; alMemo.updatedAt=m.updatedAt||null; saveAlMemo(); }
-      }
-    }catch(e){}
+    try{ await _alSyncPull(true); }catch(e){}
     if (!alMemo.last) return '아직 저장된 메모가 없어. "알등이 메모: ... 저장" 이렇게 말해줘.';
     return `📌 저장된 메모:\n${alMemo.last}`;
   }

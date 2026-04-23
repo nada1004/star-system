@@ -1969,16 +1969,16 @@ function _cfgEnsureModal(){
   try{
     m=document.createElement('div');
     m.id='cfgModal';
-    m.className='modal no-export cfg-modal';
+    m.className='modal no-export';
     m.style.display='none';
     m.style.zIndex='9000';
     m.innerHTML=`
-      <div class="mbox cfg-modal-box">
-        <div class="cfg-modal-hdr">
-          <div id="cfgModalTitle" class="cfg-modal-title">⚙️ 설정</div>
-          <button class="cfg-modal-close" onclick="closeCfgModal()" aria-label="닫기">✕</button>
+      <div class="mbox" style="width:min(860px,96vw);padding:0;border-radius:16px;overflow:hidden;max-height:92vh">
+        <div class="cfg-modal-hdr" style="background:linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));padding:14px 16px;display:flex;align-items:center;gap:10px">
+          <div id="cfgModalTitle" class="mtitle" style="font-size:14px;font-weight:900;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">⚙️ 설정</div>
+          <button onclick="closeCfgModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
         </div>
-        <div id="cfgModalBody" class="cfg-modal-body"></div>
+        <div id="cfgModalBody" style="padding:14px 16px;background:var(--bg);overflow:auto;max-height:calc(92vh - 58px)"></div>
       </div>
     `;
     document.body.appendChild(m);
@@ -2004,6 +2004,8 @@ function _cfgEnsureModal(){
             prev.style.display='';
             // 목록에서는 펼치지 않음
             try{ if(prev.tagName==='DETAILS') prev.open=false; }catch(e){}
+            // 모달에서 숨긴 summary 복구
+            try{ const s=prev.querySelector('summary'); if(s) s.style.display=''; }catch(e){}
           }
           window._cfgModalSecId=null;
         }
@@ -2075,8 +2077,23 @@ function _cfgGo(secId){
     const body=document.getElementById('cfgModalBody');
     if(body){
       body.innerHTML='';
+      // (모바일 바텀시트/스크롤 환경) 상단 헤더가 스크롤로 밀려 "제목이 안 보임" 현상 방지:
+      // 바디 내부에 스티키 헤더를 한 번 더 렌더링합니다.
+      try{
+        const _t = (secId==='cfgmenu')
+          ? '🧭 설정 메뉴 정리'
+          : ((window._cfgSecTitle && window._cfgSecTitle[secId]) ? String(window._cfgSecTitle[secId]) : '⚙️ 설정');
+        const _hdr=document.createElement('div');
+        // CSS 적용이 꼬이더라도 항상 보이도록 인라인 스타일로 고정
+        _hdr.style.cssText='position:sticky;top:0;z-index:300;display:flex;align-items:center;gap:10px;padding:12px 14px;margin:0 0 12px;border-radius:12px;background:linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12)';
+        _hdr.innerHTML = `<div style="flex:1;min-width:0;font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_t}</div>
+          <button onclick="closeCfgModal()" aria-label="닫기" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:#fff;width:34px;height:34px;cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center">✕</button>`;
+        body.appendChild(_hdr);
+      }catch(e){}
       el.style.display='';
       body.appendChild(el);
+      // 모달 안에서는 summary(제목)가 중복되고 작은 글씨로 보여 헤더처럼 보이지 않으므로 숨김
+      try{ const s=el.querySelector('summary'); if(s) s.style.display='none'; }catch(e){}
       // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
       try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
     }
@@ -3373,27 +3390,6 @@ ${_scfgD('notice','📢 공지 관리')}
         </div>
         <textarea id="cfg-sync-code" placeholder="여기에 코드가 표시됩니다 (또는 다른 기기에서 복사한 코드를 붙여넣으세요)" style="width:100%;min-height:90px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;resize:vertical"></textarea>
       </div>
-      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:12px">
-        <div style="font-weight:1000;font-size:12px;margin-bottom:6px">☁️ 설정/메모 동기화 (GitHub Gist)</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">
-          Gist ID만 있으면 다른 기기에서 불러오기가 가능합니다. 저장(업로드)은 관리자+토큰이 필요합니다. (이전 파일은 자동 마이그레이션)
-        </div>
-        <div id="cfg-gist-sync-status" style="font-size:12px;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;line-height:1.6">
-          동기화 상태를 불러오는 중...
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-          <label style="font-size:12px;font-weight:800;color:var(--text2)">Gist ID</label>
-          <input id="cfg-gist-id" type="text" placeholder="예: a1b2c3d4..." style="width:240px;max-width:100%">
-          ${(!isSubAdmin?`<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer"><input id="cfg-gist-enabled" type="checkbox"> 동기화 ON</label>`:'')}
-          ${(!isSubAdmin?`<input id="cfg-gist-token" type="password" placeholder="GitHub 토큰(gist)" style="width:220px;max-width:100%" autocomplete="new-password">`:'')}
-          ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`:`<button class="btn btn-w btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`)}
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-          <button class="btn btn-w btn-sm" onclick="cfgGistSyncPull()">⬇️ 원격 불러오기</button>
-          ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncPush()">⬆️ 원격 저장</button>`:'')}
-          <span id="cfg-gist-sync-msg" style="font-size:11px;color:var(--gray-l)"></span>
-        </div>
-      </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-b btn-sm" onclick="
           _ttMigrated=false;_migrateTierTourneys();
@@ -4110,8 +4106,6 @@ ${_scfgD('notice','📢 공지 관리')}
   try{ if(window._cfgSearchQ) window.cfgSearchSettings(window._cfgSearchQ); }catch(e){}
   // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
   _bindCfgHandlers();
-  // 설정/메모 동기화 상태 패널 초기화
-  try{ if(typeof cfgRenderGistSyncStatus==='function') cfgRenderGistSyncStatus(); }catch(e){}
   setTimeout(_refreshAliasList, 10);
   // FAB 탭 설정 초기화
   window.saveFabTabSetting = function(btnKey, tabId){
@@ -4138,21 +4132,23 @@ ${_scfgD('notice','📢 공지 관리')}
     const elP = document.getElementById('cfg-fab-hide-pc');
     const hideMobile = !!(elM && elM.checked);
     const hidePC = !!(elP && elP.checked);
-    try{
-      if (window.SettingsStore) window.SettingsStore.setFab(hideMobile, hidePC);
-      else {
-        localStorage.setItem('su_fabHideMobile', hideMobile ? '1' : '0');
-        localStorage.setItem('su_fabHidePC', hidePC ? '1' : '0');
-        if(typeof updateFabVisibility==='function')updateFabVisibility();
-      }
-    }catch(e){}
+    localStorage.setItem('su_fabHideMobile', hideMobile ? '1' : '0');
+    localStorage.setItem('su_fabHidePC', hidePC ? '1' : '0');
+    if(typeof updateFabVisibility==='function')updateFabVisibility();
+    // (안정성) 저장감 피드백
     try{ if(typeof showToast==='function') showToast('✅ FAB 표시 설정 적용'); }catch(e){}
-    // 다른 기기 반영: (관리자) 설정 통합 파일로 동기화
-    try{ if(window.SettingsStore && window.SettingsStore.cfg().enabled) window.SettingsStore.push('ui.fab'); }catch(e){}
+    // 다른 기기 반영: (관리자) GitHub Gist에 동기화
+    try{
+      if(typeof window._fabSyncToGist==='function') window._fabSyncToGist();
+    }catch(e){}
+    // 기존 로직 유지: 관리자 로그인 상태일 때만 전체 저장(save) 호출
+    try{
+      if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
+    }catch(e){}
   };
   window.initFabVisibilitySettings = function(){
-    // 다른 기기 반영: 설정 통합 파일에서 pull
-    try{ if(window.SettingsStore) window.SettingsStore.pull({silent:true}); }catch(e){}
+    // 다른 기기 반영: Gist에서 먼저 불러와 localStorage를 최신화(가능할 때만)
+    try{ if(typeof window._fabPullFromGist==='function') window._fabPullFromGist(); }catch(e){}
     const hideMobile = localStorage.getItem('su_fabHideMobile') === '1';
     const hidePC = localStorage.getItem('su_fabHidePC') === '1';
     const elM=document.getElementById('cfg-fab-hide-mobile');
@@ -4163,86 +4159,90 @@ ${_scfgD('notice','📢 공지 관리')}
   setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
 } // end first rCfg
 
-// ── 설정/메모 동기화(GitHub Gist) 상태 패널 ──
-window.cfgRenderGistSyncStatus = function(){
-  const box=document.getElementById('cfg-gist-sync-status');
-  if(!box) return;
-  if(!window.SettingsStore){
-    box.innerHTML = `<span style="color:var(--red);font-weight:900">⚠️ SettingsStore 모듈이 없습니다.</span>`;
-    return;
-  }
-  const st = (typeof window.SettingsStore.getSyncStatus==='function')
-    ? window.SettingsStore.getSyncStatus()
-    : { enabled: localStorage.getItem('al_sync_enabled')==='1', gistId: localStorage.getItem('al_gist_id')||'', tokenSet: !!localStorage.getItem('al_github_token'), isAdmin: (typeof isLoggedIn!=='undefined'&&isLoggedIn)&&(!(typeof isSubAdmin!=='undefined'&&isSubAdmin)) };
-
-  // 입력값 채우기
+// ── FAB 표시 설정: 다른 기기 동기화(GitHub Gist) ──
+// - 토큰/ID는 알등이 메모 동기화에서 쓰는 값(al_github_token, al_gist_id)을 그대로 재사용합니다.
+// - 읽기: Gist ID만 있으면 누구나 가능(공개 Gist 기준)
+// - 쓰기: 관리자(isLoggedIn && !isSubAdmin) + 토큰 필요
+window._fabGistCfg = function(){
+  return {
+    enabled: localStorage.getItem('al_sync_enabled') === '1',
+    token: (localStorage.getItem('al_github_token')||'').trim(),
+    gistId: (localStorage.getItem('al_gist_id')||'').trim(),
+  };
+};
+window._fabIsAdmin = function(){
   try{
-    const gid=document.getElementById('cfg-gist-id'); if(gid) gid.value = st.gistId || '';
-    const en=document.getElementById('cfg-gist-enabled'); if(en) en.checked = !!st.enabled;
+    if(typeof isLoggedIn!=='undefined' && isLoggedIn){
+      if(typeof isSubAdmin!=='undefined' && isSubAdmin) return false;
+      return true;
+    }
   }catch(e){}
-
-  const parts=[];
-  parts.push(`<div><b>동기화</b>: ${st.enabled?'ON':'OFF'} ${st.isAdmin?'(관리자 저장 가능)':'(읽기만 가능)'}</div>`);
-  parts.push(`<div><b>Gist ID</b>: ${st.gistId?`<code>${st.gistId}</code>`:'<span style="color:var(--gray-l)">미설정</span>'}</div>`);
-  parts.push(`<div><b>토큰</b>: ${st.tokenSet?'✅ 설정됨':'미설정'}</div>`);
-  if(st.remoteMode) parts.push(`<div><b>원격 파일</b>: ${st.remoteMode==='legacy'?'legacy(자동 마이그레이션 대상)':'su_settings.json'}</div>`);
-  if(st.lastPull) parts.push(`<div><b>마지막 불러오기</b>: ${st.lastPull}</div>`);
-  if(st.lastPush) parts.push(`<div><b>마지막 저장</b>: ${st.lastPush}</div>`);
-  if(st.migrated) parts.push(`<div><b>마이그레이션</b>: ✅ 수행됨</div>`);
-  if(st.lastError) parts.push(`<div style="color:var(--red)"><b>최근 오류</b>: ${esc(String(st.lastError))}</div>`);
-  box.innerHTML = parts.join('');
+  return false;
 };
-
-window.cfgGistSyncSaveCfg = function(){
-  if(!window.SettingsStore) return alert('SettingsStore 모듈이 없습니다.');
-  const gid=(document.getElementById('cfg-gist-id')?.value||'').trim();
-  const tok=(document.getElementById('cfg-gist-token')?.value||'').trim();
-  const enEl=document.getElementById('cfg-gist-enabled');
-  const en = enEl ? !!enEl.checked : (window.SettingsStore.cfg().enabled);
-  const patch={};
-  if(gid) patch.gistId=gid;
-  if(typeof en !== 'undefined') patch.enabled=en;
-  // 보안: 토큰은 입력했을 때만 업데이트(빈 값은 "유지")
-  if(tok) patch.token=tok;
-  try{
-    window.SettingsStore.setCfg(patch);
-    const msg=document.getElementById('cfg-gist-sync-msg');
-    if(msg) msg.textContent='✅ 저장됨';
-  }catch(e){
-    alert('저장 실패: '+e.message);
+async function _fabGistGetFile(gistId, token, filename){
+  const opt={headers:{'Accept':'application/vnd.github+json'}};
+  if(token) opt.headers['Authorization']='token '+token;
+  const res=await fetch(`https://api.github.com/gists/${gistId}`, opt);
+  const js=await res.json().catch(()=>null);
+  if(!res.ok) throw new Error((js&&js.message)||('HTTP '+res.status));
+  const f=js&&js.files?js.files[filename]:null;
+  if(!f) return null;
+  let content=f.content;
+  if((!content||f.truncated) && f.raw_url){
+    const r=await fetch(f.raw_url);
+    content=await r.text();
   }
-  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
-};
-
-window.cfgGistSyncPull = async function(){
-  const msg=document.getElementById('cfg-gist-sync-msg');
-  if(msg) msg.textContent='불러오는 중...';
+  return content||null;
+}
+async function _fabGistPatchFile(gistId, token, filename, content){
+  const opt={
+    method:'PATCH',
+    headers:{
+      'Accept':'application/vnd.github+json',
+      'Authorization':'token '+token,
+      'Content-Type':'application/json'
+    },
+    body: JSON.stringify({ files: { [filename]: { content } } })
+  };
+  const res=await fetch(`https://api.github.com/gists/${gistId}`, opt);
+  const js=await res.json().catch(()=>null);
+  if(!res.ok) throw new Error((js&&js.message)||('HTTP '+res.status));
+  return true;
+}
+window._fabPullFromGist = async function(){
+  const cfg=window._fabGistCfg();
+  if(!cfg.gistId) return false;
+  // enabled가 꺼져 있어도 "반영" 요구가 있으므로 읽기는 시도
   try{
-    if(!window.SettingsStore) throw new Error('SettingsStore 모듈이 없습니다.');
-    const info = await window.SettingsStore.pull({ returnInfo:true });
-    if(msg) msg.textContent = info && info.migrated ? '✅ 불러오기 완료 (+마이그레이션 완료)' : '✅ 불러오기 완료';
-    try{ if(typeof showToast==='function') showToast('✅ 원격 설정 불러오기 완료'); }catch(e){}
+    const txt=await _fabGistGetFile(cfg.gistId, null, 'su_ui_settings.json');
+    if(!txt) return false;
+    const remote=JSON.parse(txt);
+    if(!remote) return false;
+    if(typeof remote.su_fabHideMobile!=='undefined') localStorage.setItem('su_fabHideMobile', String(remote.su_fabHideMobile));
+    if(typeof remote.su_fabHidePC!=='undefined') localStorage.setItem('su_fabHidePC', String(remote.su_fabHidePC));
+    if(typeof updateFabVisibility==='function') updateFabVisibility();
+    return true;
   }catch(e){
-    if(msg) msg.textContent='❌ 실패: '+e.message;
-    try{ if(typeof showToast==='function') showToast('❌ 불러오기 실패: '+e.message); }catch(_){}
+    return false;
   }
-  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
-
-window.cfgGistSyncPush = async function(){
-  const msg=document.getElementById('cfg-gist-sync-msg');
-  if(msg) msg.textContent='저장하는 중...';
+window._fabSyncToGist = async function(){
+  const cfg=window._fabGistCfg();
+  if(!window._fabIsAdmin()) return false;
+  if(!cfg.gistId || !cfg.token) return false;
+  const payload={
+    su_fabHideMobile: localStorage.getItem('su_fabHideMobile')||'0',
+    su_fabHidePC: localStorage.getItem('su_fabHidePC')||'0',
+    updatedAt: new Date().toISOString()
+  };
   try{
-    if(!window.SettingsStore) throw new Error('SettingsStore 모듈이 없습니다.');
-    if(!window.SettingsStore.isAdmin()) throw new Error('관리자만 저장할 수 있습니다.');
-    await window.SettingsStore.push();
-    if(msg) msg.textContent='✅ 원격 저장 완료';
+    await _fabGistPatchFile(cfg.gistId, cfg.token, 'su_ui_settings.json', JSON.stringify(payload, null, 2));
     try{ if(typeof showToast==='function') showToast('☁️ 다른 기기에도 반영됨'); }catch(e){}
+    return true;
   }catch(e){
-    if(msg) msg.textContent='❌ 실패: '+e.message;
-    try{ if(typeof showToast==='function') showToast('❌ 저장 실패: '+e.message); }catch(_){}
+    try{ if(typeof showToast==='function') showToast('⚠️ 동기화 실패: '+e.message); }catch(_){}
+    return false;
   }
-  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
 
 function renderStorageInfo(){
