@@ -290,14 +290,14 @@ b,strong{font-weight:600;}
 
 .tabs-scroll-wrap{position:relative;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;}
 .tabs{flex:1;min-width:0;display:flex;gap:2px;padding:6px 8px;background:transparent;border-bottom:none;overflow-x:auto;scrollbar-width:none;}
-.tabs{touch-action:pan-x;-webkit-overflow-scrolling:touch;}
+.tabs{touch-action:pan-x;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
 .tabs::-webkit-scrollbar{display:none;}
 .tabs-arrow{flex-shrink:0;background:var(--surface);border:none;border-left:1px solid var(--border);padding:0 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:opacity .2s,background .15s;opacity:0;pointer-events:none;}
 .tabs-arrow:first-child{border-left:none;border-right:1px solid var(--border);}
 .tabs-arrow:hover{background:var(--blue-l);color:var(--blue);}
 .tabs-arrow.visible{opacity:1;pointer-events:auto;}
 @media(max-width:768px){.tabs-arrow{display:none!important;}.tabs{padding:4px 6px;}}
-.tab{padding:7px 14px;border:none;background:transparent;color:var(--text3);border-radius:10px;font-size:calc(12px * var(--uiS));font-weight:750;white-space:nowrap;transition:.12s;line-height:1.1;}
+.tab{padding:9px 14px;border:none;background:transparent;color:var(--text3);border-radius:10px;font-size:calc(12px * var(--uiS));font-weight:750;white-space:nowrap;transition:.12s;line-height:1.1;min-height:40px;display:flex;align-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;}
 .tab:hover{background:rgba(37,99,235,.08);color:var(--blue);}
 .tab.on{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-weight:850;box-shadow:0 6px 18px rgba(37,99,235,.20);}
 .tab.cfg{background:transparent;}
@@ -903,54 +903,64 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
 .mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
 
-/* ── 설정 메뉴 팝업(cfgModal): 모바일 바텀시트 CSS로 헤더가 스크롤 밖으로 밀리는 문제 방지 ── */
-#cfgModal .mbox{
+/* ── 설정 메뉴 팝업(cfgModal) 컴포넌트 규격화 ── */
+#cfgModal.cfg-modal{display:none;align-items:center;justify-content:center;padding:16px;}
+@media(max-width:768px){#cfgModal.cfg-modal{align-items:flex-end;padding:0;}}
+
+#cfgModal .cfg-modal-box{
+  width:min(860px,96vw);
   padding:0 !important;
-  overflow:hidden !important;
-  overflow-x:hidden !important;
-  overflow-y:hidden !important; /* 모바일 전역 .mbox overflow-y:auto 오버라이드 */
+  border-radius:16px;
+  overflow:hidden;
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
 }
-#cfgModal .mbox::before{ display:none !important; } /* 드래그 핸들 숨김(헤더 가림 방지) */
+@media(max-width:768px){
+  #cfgModal .cfg-modal-box{
+    width:100% !important;
+    max-width:100% !important;
+    border-radius:20px 20px 0 0;
+  }
+}
+/* 모바일 전역 .mbox 바텀시트(드래그 핸들/패딩) 영향 제거 */
+#cfgModal .cfg-modal-box::before{display:none !important;}
+
 #cfgModal .cfg-modal-hdr{
+  background:linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
   position:sticky;
   top:0;
   z-index:2;
 }
-/* 바디 내부 스티키 헤더(제목이 스크롤로 사라지는 현상 방지용) */
-#cfgModal .cfg-modal-inner-hdr{
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  margin: 0 0 12px;
-  border-radius: 12px;
-  background: linear-gradient(135deg,var(--primary-start,#4F46E5),var(--primary-end,#2563EB));
-  color: #fff;
+#cfgModal .cfg-modal-title{
+  flex:1;min-width:0;
+  font-size:14px;
+  font-weight:900;
+  color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-#cfgModal .cfg-modal-inner-title{
-  flex: 1;
-  min-width: 0;
-  font-weight: 900;
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+#cfgModal .cfg-modal-close{
+  background:rgba(255,255,255,.15);
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  width:34px;height:34px;
+  cursor:pointer;
+  font-size:16px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
-#cfgModal .cfg-modal-inner-close{
-  background: rgba(255,255,255,.15);
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  width: 34px;
-  height: 34px;
-  cursor: pointer;
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+#cfgModal .cfg-modal-body{
+  padding:14px 16px;
+  background:var(--bg);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  flex:1;
 }
 /* emModal(수정창): 내용이 길어 스크롤 + 제목·버튼 고정 */
 #emModal .mbox{max-height:88vh;display:flex;flex-direction:column;padding:0;}
@@ -1287,12 +1297,6 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 }
 
 #hdrRightImg{max-height:40px;max-width:140px;}
-
-/* 모바일/태블릿: 헤더 고정 설정 버튼 표시 */
-#hdrCfgBtn{display:none;}
-@media(max-width:1024px){
-  #hdrCfgBtn{display:inline-flex !important; align-items:center; gap:6px;}
-}
 
 /* ══════════════════════════════════════
    🎨 디자인 모드 (design-v2)
