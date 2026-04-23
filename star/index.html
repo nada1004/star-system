@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260422-30"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260423-05"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -126,8 +126,6 @@
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
 
     <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */" aria-pressed="false" aria-label="다크 모드 전환"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg></span>다크</button><!-- [A11Y] -->
-    <!-- 모바일/태블릿에서 설정 탭이 잘 안 눌리는 문제 대비: 헤더 고정 '설정' 버튼 -->
-    <button id="hdrCfgBtn" onclick="(function(){try{var b=document.getElementById('tabCfg'); if(b&&typeof sw==='function'){sw('cfg',b);} else if(b){b.click();}}catch(e){}})()" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */;line-height:1" aria-label="설정 열기">⚙️ 설정</button><!-- [A11Y] -->
     <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
     <button id="hdrLogoutBtn" class="hdr-login-btn" style="display:none;background:rgba(220,38,38,.4);border-color:rgba(220,38,38,.5)" onclick="doLogout()">🔓 로그아웃</button>
   </div>
@@ -565,7 +563,8 @@
 <script src="js/constants.js?v=20260422-03"></script>
 <script src="js/data.js"></script>
 <script src="js/auth.js?v=20260421-01"></script>
-<script src="js/settings.js?v=20260422-29"></script>
+<script src="js/settings-store.js?v=20260423-02"></script>
+<script src="js/settings.js?v=20260423-04"></script>
 <script src="js/tier-tour.js?v=20260422-01"></script>
 <script src="js/competition.js?v=20260422-02"></script>
 <script src="js/render.js?v=20260422-07"></script>
@@ -578,7 +577,7 @@
 <script src="js/pro-comp.js?v=20260422-02"></script>
 <script src="js/stats.js?v=20260422-01"></script>
 <script src="js/calendar.js?v=20260422-01"></script>
-<script src="js/roulette.js?v=20260422-02"></script>
+<script src="js/roulette.js?v=20260423-01"></script>
 <script src="js/duck-race.js?v=20260416-01"></script>
 <script src="js/wheel.js?v=20260416-08"></script>
 <script src="js/vote.js"></script>
@@ -588,7 +587,7 @@
 <script src="js/soop-multiview.js?v=20260420-10"></script>
 <script src="js/init.js?v=20260422-03"></script>
 <script src="js/board2.js?v=20260422-03"></script>
-<script src="js/chatbot.js?v=20260422-04"></script>
+<script src="js/chatbot.js?v=20260423-08"></script>
 <script src="js/mobile-bar.js?v=20260422-02"></script>
 
 
@@ -628,6 +627,15 @@ function updateFabVisibility(){
   }else{
     fab.style.display=hidePC?'none':'flex';
   }
+
+  // 관리자 전용: 펨붕이붓(AI봇) 메뉴는 관리자만 표시
+  try{
+    const aiItem=document.getElementById('fabAIBotItem');
+    if(aiItem){
+      const admin = (typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+      aiItem.style.display = admin ? '' : 'none';
+    }
+  }catch(e){}
 }
 window.addEventListener('resize',updateFabVisibility);
 window.addEventListener('DOMContentLoaded',updateFabVisibility);
@@ -660,8 +668,7 @@ function fabActionCfgSearch(){
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
-    <div class="fab-sub-title">빠른 액션</div>
-    <div class="fab-sub-title" style="margin-top:4px">빠른 이동</div>
+    <div class="fab-sub-item" id="fabAIBotItem" onclick="closeFab();openChatbot('aibot')"><span>⚽</span> 펨붕이붓</div>
     <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:20px;height:20px;object-fit:contain"></span> 알등이</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('comp')"><span>⚡</span> 미니대전</div>
