@@ -14,8 +14,8 @@ function rRoulette(C, T) {
   if (_playersEmpty && _gcTab === 'player') {
     const _pad = Math.max(14, Math.round(_dome * 0.085));
     C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
-    // 탭바 위에 경고 배너 삽입
-    const _tabBarEl = C.querySelector('.subtab-bar');
+    // 탭바(상단 pill 바) 위에 경고 배너 삽입
+    const _tabBarEl = C.querySelector('.fbar');
     if (_tabBarEl) {
       const _banner = document.createElement('div');
       _banner.id = 'gc-players-banner';
@@ -33,10 +33,16 @@ function rRoulette(C, T) {
       if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
       var _ldI = document.getElementById('ld-items-input');
       if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+      // 뽑기 당첨 내용(1~5등) 값 주입
+      for (var k=1;k<=5;k++){
+        var el = document.getElementById('ppg-prize-' + k);
+        if (el) el.value = localStorage.getItem('su_ppg_prize_' + k) || '';
+      }
     })();
     if (_gcTab === 'ladder') { setTimeout(_ldInit, 60); }
     else if (_gcTab === 'duck') { setTimeout(_drInit, 60); }
     else if (_gcTab === 'wheel') { setTimeout(_whInit, 60); }
+    else if (_gcTab === 'ppopgi') { setTimeout(_ppgInit, 60); }
     else { setTimeout(_gcSetup, 60); }
     return;
   }
@@ -50,6 +56,11 @@ function rRoulette(C, T) {
     if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
     var _ldI = document.getElementById('ld-items-input');
     if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+    // 뽑기 당첨 내용(1~5등) 값 주입
+    for (var k=1;k<=5;k++){
+      var el = document.getElementById('ppg-prize-' + k);
+      if (el) el.value = localStorage.getItem('su_ppg_prize_' + k) || '';
+    }
   })();
   if (_gcTab === 'ladder') {
     setTimeout(_ldInit, 60);
@@ -57,6 +68,8 @@ function rRoulette(C, T) {
     setTimeout(_drInit, 60);
   } else if (_gcTab === 'wheel') {
     setTimeout(_whInit, 60);
+  } else if (_gcTab === 'ppopgi') {
+    setTimeout(_ppgInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }
@@ -81,6 +94,224 @@ let _gcHistory = {
   map:    JSON.parse(localStorage.getItem('su_gc_hist_m')||'[]'),
   ladder: JSON.parse(localStorage.getItem('su_gc_hist_l')||'[]')
 };
+
+// ─────────────────────────────────────────────────────────────
+// 🎁 뽑기(5×5) — 룰렛 탭 내 서브탭
+// - 25칸 중 “1등~5등” 각 1개 + 나머지 “꽝”
+// - 여러 칸 오픈 가능
+// - ‘오늘 고정’ 규칙은 사용하지 않음(사용자가 원할 때 새로 섞기)
+// ─────────────────────────────────────────────────────────────
+let _ppgBoard = null;     // string[25]
+let _ppgRev = null;       // boolean[25]
+let _ppgLastOpenIdx = -1;
+let _ppgAC = null;
+let _ppgPrizeOpen = false;
+
+function _ppgPrizeText(rankStr){
+  const m = String(rankStr||'').match(/^(\d)등$/);
+  if(!m) return '';
+  const k = m[1];
+  return (localStorage.getItem('su_ppg_prize_' + k) || '').trim();
+}
+function _ppgTogglePrizeCfg(){
+  _ppgPrizeOpen = !_ppgPrizeOpen;
+  const body = document.getElementById('ppg-prizecfg-body');
+  const btn  = document.getElementById('ppg-prizecfg-toggle');
+  if(body) body.style.display = _ppgPrizeOpen ? 'block' : 'none';
+  if(btn) btn.textContent = _ppgPrizeOpen ? '🎁 당첨 내용 접기 ▲' : '🎁 당첨 내용 입력 ▼';
+}
+function _ppgSavePrizeCfg(){
+  for(let k=1;k<=5;k++){
+    const el = document.getElementById('ppg-prize-' + k);
+    if(!el) continue;
+    try{ localStorage.setItem('su_ppg_prize_' + k, String(el.value||'').trim()); }catch(e){}
+  }
+  try{ if(typeof showToast==='function') showToast('✅ 당첨 내용 저장'); }catch(e){}
+}
+
+function _ppgLoad(){
+  try{ _ppgBoard = JSON.parse(localStorage.getItem('su_ppg_board')||'null'); }catch(e){ _ppgBoard=null; }
+  try{ _ppgRev = JSON.parse(localStorage.getItem('su_ppg_rev')||'null'); }catch(e){ _ppgRev=null; }
+  if(!Array.isArray(_ppgBoard) || _ppgBoard.length !== 25) _ppgBoard = null;
+  if(!Array.isArray(_ppgRev) || _ppgRev.length !== 25) _ppgRev = null;
+}
+function _ppgSave(){
+  try{ localStorage.setItem('su_ppg_board', JSON.stringify(_ppgBoard||[])); }catch(e){}
+  try{ localStorage.setItem('su_ppg_rev', JSON.stringify(_ppgRev||[])); }catch(e){}
+}
+function _ppgShuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  return arr;
+}
+function _ppgNewBoard(){
+  // 1등 1개, 2등 2개, 3등 3개, 4등 4개, 5등 5개 = 15개 + 나머지 꽝 10개 = 25개
+  const base = [];
+  for(let i=0;i<1;i++) base.push('1등');
+  for(let i=0;i<2;i++) base.push('2등');
+  for(let i=0;i<3;i++) base.push('3등');
+  for(let i=0;i<4;i++) base.push('4등');
+  for(let i=0;i<5;i++) base.push('5등');
+  while(base.length < 25) base.push('꽝');
+  _ppgBoard = _ppgShuffleArray(base);
+  _ppgRev = Array(25).fill(false);
+  _ppgSave();
+}
+function _ppgOpenedCount(){
+  if(!_ppgRev) return 0;
+  return _ppgRev.reduce((s,v)=>s+(v?1:0),0);
+}
+function _ppgRender(){
+  const grid=document.getElementById('ppg-grid');
+  if(!grid || !_ppgBoard || !_ppgRev) return;
+  for(let i=0;i<25;i++){
+    const btn=grid.querySelector(`[data-ppg="${i}"]`);
+    if(!btn) continue;
+    const open = !!_ppgRev[i];
+    btn.classList.toggle('is-open', open);
+    const result = open ? (_ppgBoard[i] || '꽝') : '';
+    if (open) btn.setAttribute('data-result', result);
+    else btn.removeAttribute('data-result');
+
+    const front = btn.querySelector('.ppg-front');
+    const backRank  = btn.querySelector('.ppg-back-rank');
+    const backPrize = btn.querySelector('.ppg-back-prize');
+    if(front) front.textContent = '뽑기';
+    if(backRank)  backRank.textContent  = open ? result : '';
+    if(backPrize) backPrize.textContent = (open && result && result !== '꽝') ? _ppgPrizeText(result) : '';
+
+    // 클릭 직후 애니메이션
+    if (open && i === _ppgLastOpenIdx) {
+      btn.classList.remove('just-open');
+      void btn.offsetWidth;
+      btn.classList.add('just-open');
+      setTimeout(()=>{ try{ btn.classList.remove('just-open'); }catch(e){} }, 520);
+    }
+  }
+  // (요청사항) 오픈 카운트 텍스트는 표시하지 않음
+}
+function _ppgGetAC(){
+  if(!_ppgAC){
+    try{ _ppgAC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ _ppgAC=null; }
+  }
+  try{ if(_ppgAC && _ppgAC.state === 'suspended') _ppgAC.resume().catch(()=>{}); }catch(e){}
+  return _ppgAC;
+}
+function _ppgPlayTap(){
+  const ac=_ppgGetAC();
+  if(!ac) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type = 'square';
+  o.frequency.setValueAtTime(720, t);
+  g.gain.setValueAtTime(0.02, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  o.start(t);
+  o.stop(t + 0.05);
+}
+function _ppgPlayOpenSfx(result){
+  const ac=_ppgGetAC();
+  if(!ac) return;
+  const win = (result && result !== '꽝');
+  const base = win ? [659, 784, 1047] : [220, 164];
+  base.forEach((freq, i)=>{
+    const t = ac.currentTime + i*0.07;
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = win ? 'triangle' : 'sine';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(win ? 0.14 : 0.10, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + (win ? 0.22 : 0.18));
+    o.start(t);
+    o.stop(t + (win ? 0.22 : 0.18));
+  });
+}
+function _ppgOpen(idx){
+  _ppgLoad();
+  if(!_ppgBoard || !_ppgRev) _ppgNewBoard();
+  if(idx<0 || idx>=25) return;
+  if(_ppgRev[idx]) return; // 이미 오픈
+
+  // 클릭 애니메이션(살짝 눌렀다가 플립)
+  const grid=document.getElementById('ppg-grid');
+  const btn = grid ? grid.querySelector(`[data-ppg="${idx}"]`) : null;
+  if(btn){
+    btn.classList.remove('opening');
+    void btn.offsetWidth;
+    btn.classList.add('opening');
+  }
+  _ppgPlayTap();
+
+  setTimeout(()=>{
+    _ppgLoad();
+    if(!_ppgBoard || !_ppgRev) _ppgNewBoard();
+    if(_ppgRev[idx]) return;
+    _ppgRev[idx] = true;
+    const result = _ppgBoard[idx] || '꽝';
+    _ppgLastOpenIdx = idx;
+    _ppgSave();
+
+    const last=document.getElementById('ppg-last');
+    const lastSub=document.getElementById('ppg-last-sub');
+    if(last){
+      last.textContent = result;
+      last.classList.remove('ppg-pop');
+      void last.offsetWidth;
+      last.classList.add('ppg-pop');
+    }
+    if(lastSub){
+      const prize = (result && result !== '꽝') ? _ppgPrizeText(result) : '';
+      lastSub.textContent = prize || '';
+      lastSub.style.display = prize ? 'block' : 'none';
+    }
+    _ppgRender();
+    // opening 클래스 정리(플립/색상 적용 방해 방지)
+    try{
+      const grid2=document.getElementById('ppg-grid');
+      const btn2 = grid2 ? grid2.querySelector(`[data-ppg="${idx}"]`) : null;
+      if(btn2) btn2.classList.remove('opening');
+    }catch(e){}
+    _ppgPlayOpenSfx(result);
+    try{
+      if(typeof showToast==='function') showToast(result==='꽝' ? '꽝...' : `🎉 ${result}!`);
+    }catch(e){}
+  }, 140);
+}
+
+function _ppgReshuffle(){
+  if(!confirm('새로 섞을까요? (진행 중인 오픈 상태가 초기화됩니다)')) return;
+  _ppgNewBoard();
+  _ppgLastOpenIdx = -1;
+  const last=document.getElementById('ppg-last');
+  const lastSub=document.getElementById('ppg-last-sub');
+  if(last) last.textContent = '—';
+  if(lastSub){ lastSub.textContent=''; lastSub.style.display='none'; }
+  _ppgRender();
+}
+function _ppgResetOpen(){
+  if(!confirm('오픈 상태만 초기화할까요? (배치는 유지)')) return;
+  _ppgLoad();
+  if(!_ppgBoard) _ppgNewBoard();
+  _ppgRev = Array(25).fill(false);
+  _ppgLastOpenIdx = -1;
+  _ppgSave();
+  const last=document.getElementById('ppg-last');
+  const lastSub=document.getElementById('ppg-last-sub');
+  if(last) last.textContent = '—';
+  if(lastSub){ lastSub.textContent=''; lastSub.style.display='none'; }
+  _ppgRender();
+}
+function _ppgInit(){
+  _ppgLoad();
+  if(!_ppgBoard || !_ppgRev) _ppgNewBoard();
+  _ppgLastOpenIdx = -1;
+  _ppgRender();
+}
 let _gcSpeedMult = 1;
 let _gcCapsules = [];
 let _gcAnimId = null;
@@ -182,7 +413,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isPlayer = _gcTab === 'player';
   const isLadder = _gcTab === 'ladder';
   const isDuck   = _gcTab === 'duck';
-  const isWheel   = _gcTab === 'wheel';
+  const isWheel  = _gcTab === 'wheel';
+  const isPpopgi = _gcTab === 'ppopgi';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
@@ -207,6 +439,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button class="pill${_gcTab==='ladder'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
     <button class="pill${_gcTab==='duck'?' on':''}"   style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('duck')">🐥 경주</button>
     <button class="pill${_gcTab==='wheel'?' on':''}"  style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+    <button class="pill${_gcTab==='ppopgi'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ppopgi')">🎁 뽑기</button>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃
@@ -222,6 +455,74 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
   ${_tabBar}
   <div id="wh-root"></div>
+</div>`;
+  }
+
+  // 🎁 뽑기 탭: 별도 레이아웃
+  if (isPpopgi) {
+    _ppgLoad();
+    if(!_ppgBoard || !_ppgRev) _ppgNewBoard();
+    const fs = Math.max(14, Math.min(18, Math.round(dome * 0.07)));
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_tabBar}
+  <div class="ppg-wrap">
+    <div class="ppg-panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div>
+          <div class="ppg-title" style="font-size:${fs}px">🎁 5×5 뽑기</div>
+        </div>
+      </div>
+
+      <div class="ppg-actions">
+        <button class="btn btn-b btn-sm" onclick="_ppgReshuffle()">🔀 새로 섞기</button>
+        <button class="btn btn-w btn-sm" onclick="_ppgResetOpen()">♻️ 오픈 초기화</button>
+      </div>
+
+      <div id="ppg-grid" class="ppg-grid">
+        ${Array.from({length:25}, (_,i)=>{
+          const open = !!_ppgRev[i];
+          const result = open ? (_ppgBoard[i] || '꽝') : '';
+          const cls = open ? 'ppg-card is-open' : 'ppg-card';
+          const dataRes = open ? ` data-result="${result}"` : '';
+          return `<button class="${cls}" data-ppg="${i}"${dataRes} onclick="_ppgOpen(${i})" aria-label="뽑기 ${i+1}">
+            <span class="ppg-card-inner">
+              <span class="ppg-face ppg-front">뽑기</span>
+              <span class="ppg-face ppg-back">
+                <span class="ppg-back-rank"></span>
+                <span class="ppg-back-prize"></span>
+              </span>
+            </span>
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div class="ppg-last">
+        <div class="ppg-last-label">최근 결과</div>
+        <div id="ppg-last" class="ppg-last-val">—</div>
+        <div id="ppg-last-sub" class="ppg-last-sub"></div>
+      </div>
+    </div>
+
+    <div class="ppg-panel">
+      <button id="ppg-prizecfg-toggle" class="btn btn-w btn-sm" style="width:100%" onclick="_ppgTogglePrizeCfg()">🎁 당첨 내용 입력 ▼</button>
+      <div id="ppg-prizecfg-body" style="display:none;margin-top:10px">
+        <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">각 등수에 표시할 “당첨 내용”을 적어줘. (비우면 등수만 표시)</div>
+        <div class="ppg-prize-grid">
+          ${[1,2,3,4,5].map(k=>`
+            <label class="ppg-prize-row">
+              <span class="ppg-prize-lbl">${k}등</span>
+              <input id="ppg-prize-${k}" type="text" placeholder="예) 치킨 기프티콘" class="ppg-prize-inp">
+            </label>
+          `).join('')}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+          <button class="btn btn-b btn-sm" onclick="_ppgSavePrizeCfg()">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- (요청사항) 최근 오픈 기록 제거 -->
+  </div>
 </div>`;
   }
 
@@ -328,7 +629,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 오른쪽 패널: 사다리 캔버스 or 가챠 머신
   const rightPanelHTML = isLadder ? `
-  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center':'display:flex;flex-direction:column;align-items:center;margin-top:'+pad+'px'}">
+  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px':'display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px'}">
     <div id="ld-instruction" style="font-size:${fs}px;color:var(--text3);font-weight:600;margin-bottom:10px;text-align:center">이름을 클릭하면 사다리를 타요!</div>
     <canvas id="ld-canvas" width="${ldCanvasW}" height="${ldCanvasH}"
       style="width:${ldCanvasW}px;height:${ldCanvasH}px;border-radius:14px;border:2px solid var(--border);background:var(--white);cursor:pointer;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))"></canvas>
@@ -340,7 +641,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     </div>
   </div>
   ` : `
-  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center':'display:flex;flex-direction:column;align-items:center;margin-top:'+pad+'px'}">
+  <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px':'display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px'}">
     <div style="position:relative;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 8px 22px rgba(255,75,110,0.35))">
       <div style="position:relative;width:${dome}px;height:${dome}px">
         <div id="gc-dome" style="width:${dome}px;height:${dome}px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.52),rgba(255,200,220,0.2) 55%,rgba(255,150,180,0.08));border:${Math.round(dome*0.042)}px solid white;border-radius:50%;overflow:hidden;box-shadow:inset 0 0 ${Math.round(dome*0.21)}px rgba(255,255,255,0.5),0 ${Math.round(dome*0.035)}px ${Math.round(dome*0.12)}px rgba(200,60,90,0.22),0 0 0 ${Math.round(dome*0.024)}px #FFD6E4;position:relative"></div>
@@ -365,13 +666,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   `;
 
   return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  <div class="subtab-bar"><!-- [Fix-3] 인라인 style 제거, CSS 클래스 사용 -->
-    <button class="subtab-btn${_gcTab==='player'?' is-active':''}" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
-    <button class="subtab-btn${_gcTab==='map'?' is-active':''}"    onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
-    <button class="subtab-btn${_gcTab==='ladder'?' is-active':''}" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
-    <button class="subtab-btn is-special${_gcTab==='duck'?' is-active':''}" onclick="_gcSwitchTab('duck')">🐥 경주</button>
-    <button class="subtab-btn is-special${_gcTab==='wheel'?' is-active':''}" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
-  </div>
+  ${_tabBar}
   <div style="${innerLayout}">
     <div style="${inputColStyle}">
       <button onclick="_gcToggleInput()" id="gc-input-toggle" style="width:100%;padding:7px 12px;font-size:${fs}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;transition:.1s;margin-bottom:${Math.round(pad*0.5)}px;text-align:left">${_gcInputOpen?'📝 입력 접기 ▲':'📝 입력 펼치기 ▼'}</button>
@@ -406,6 +701,8 @@ function _gcSwitchTab(tab) {
     setTimeout(_drInit, 60);
   } else if (tab === 'wheel') {
     setTimeout(_whInit, 60);
+  } else if (tab === 'ppopgi') {
+    setTimeout(_ppgInit, 60);
   } else {
     setTimeout(_gcSetup, 60);
   }

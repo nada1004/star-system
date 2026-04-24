@@ -7,7 +7,7 @@
   s.textContent = [
     '#dr-root{font-family:inherit;width:100%}',
     '.dr-setup{background:var(--white);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}',
-    '.dr-pool-wrap{position:relative;overflow:hidden;border-radius:14px;border:3px solid #2aace0;box-shadow:0 4px 20px rgba(30,100,160,.25)}',
+    '.dr-pool-wrap{position:relative;overflow:hidden;border-radius:16px;border:3px solid rgba(15,23,42,.25);box-shadow:0 10px 26px rgba(15,23,42,.12)}',
     '.dr-pool-inner{position:relative;height:100%}',
     '.dr-duck-el{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);pointer-events:none;transition:left 0s}',
     '.dr-duck-emoji{font-size:30px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));display:inline-block;transform:scaleX(-1)}',
@@ -178,6 +178,7 @@ function _drBeginRace() {
   };
 
   const root = document.getElementById('dr-root');
+  try{ _drPlayStart(); }catch(e){}
   _drRenderRace(root);
 }
 
@@ -252,21 +253,42 @@ function _drDrawBG(camX) {
   var lH  = _drSt.laneH || _DR_LANE_H;
   var off = _drSt.waveOff;
 
+  // 트랙 바닥(연한 파랑 톤)
   var bg = ctx.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0,   '#5bc8f5');
-  bg.addColorStop(0.5, '#2aace0');
-  bg.addColorStop(1,   '#0d7bb0');
+  bg.addColorStop(0,   '#dbeafe');
+  bg.addColorStop(0.55,'#bfdbfe');
+  bg.addColorStop(1,   '#93c5fd');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.strokeStyle = 'rgba(255,255,255,.18)';
-  ctx.lineWidth   = 1;
+  // 미세 질감(점)
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  for (var s = 0; s < 420; s++) {
+    var px = (s * 37) % w;
+    var py = (s * 53) % h;
+    ctx.fillRect(px, py, 1, 1);
+  }
+
+  // 레인 구분선
+  ctx.strokeStyle = 'rgba(255,255,255,.70)';
+  ctx.lineWidth   = 2;
   for (var i = 1; i < n; i++) {
     var ly = i * lH;
     ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(w, ly); ctx.stroke();
   }
 
-  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  // 레인 중앙 가이드(점선)
+  ctx.strokeStyle = 'rgba(30,64,175,.22)';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([10, 10]);
+  for (var j = 0; j < n; j++) {
+    var cy = j * lH + lH * 0.5;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // 거리 마커
+  ctx.fillStyle = 'rgba(30,64,175,.55)';
   ctx.font = '11px sans-serif';
   for (var m = 500; m < _DR_FINISH_PX; m += 500) {
     var sx = m - camX;
@@ -274,9 +296,10 @@ function _drDrawBG(camX) {
     ctx.strokeStyle = 'rgba(255,255,255,.12)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, h); ctx.stroke();
-    ctx.fillText(m + 'm', sx + 3, 12);
+    ctx.fillText(m + 'm', sx + 4, 13);
   }
 
+  // 결승선
   var fx = _DR_FINISH_PX - camX;
   if (fx >= 0 && fx <= w) {
     ctx.strokeStyle = '#fff';
@@ -285,26 +308,6 @@ function _drDrawBG(camX) {
     ctx.beginPath(); ctx.moveTo(fx, 0); ctx.lineTo(fx, h); ctx.stroke();
     ctx.setLineDash([]);
   }
-
-  for (var lane = 0; lane < n; lane++) {
-    var lTop = lane * lH;
-    for (var wi = 0; wi < 2; wi++) {
-      var freq  = 0.007 + wi * 0.004;
-      var amp   = 7   + wi * 5;
-      var yBase = lTop + lH * (0.55 + wi * 0.22);
-      var ph    = off * (0.9 + wi * 0.5) * 0.05 + lane * 1.8;
-      ctx.beginPath();
-      ctx.moveTo(0, yBase);
-      for (var x = 0; x <= w; x += 5) {
-        ctx.lineTo(x, yBase + Math.sin(x * freq + ph) * amp);
-      }
-      ctx.lineTo(w, lTop + lH);
-      ctx.lineTo(0, lTop + lH);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(' + (8 + wi * 20) + ',' + (80 + wi * 50) + ',180,' + (0.14 - wi * 0.04) + ')';
-      ctx.fill();
-    }
-  }
 }
 
 // ─── 경주 루프 ───────────────────────────────────────────────────────────────
@@ -312,6 +315,10 @@ function _drLoop() {
   if (!_drSt || !_drSt.running) return;
   _drSt.frame++;
   _drSt.waveOff++;
+  // (요청사항) 경주 중 효과음(가벼운 틱)
+  try{
+    if (_drSt.frame % 18 === 0) _drPlayRunTick();
+  }catch(e){}
 
   _drSt.ducks.forEach(function(duck, i) {
     if (duck.finished) return;
@@ -332,6 +339,7 @@ function _drLoop() {
       duck.evTimer  = ev.dur;
       duck.speed    = duck.baseSpeed * ev.mult;
       _drShowEvBadge(i, ev.label);
+      try{ _drPlayEvent(ev.mult); }catch(e){}
     }
 
     duck.x += duck.speed * (0.85 + Math.random() * 0.3);
@@ -342,6 +350,7 @@ function _drLoop() {
       duck.speed    = 0;
       _drSt.rankCount++;
       duck.rank = _drSt.rankCount;
+      try{ _drPlayFinish(duck.rank); }catch(e){}
       if (duck.rank === 1) {
         _drSt.firstFinished      = true;
         _drSt.firstFinishedFrame = _drSt.frame;
@@ -554,4 +563,76 @@ function _drPlayWin() {
     osc.start(t);
     osc.stop(t + 0.35);
   });
+}
+
+function _drPlayStart() {
+  var ac = _drGetAC();
+  if (!ac) return;
+  var notes = [220, 330, 440];
+  notes.forEach(function(freq, i) {
+    var t    = ac.currentTime + i * 0.08;
+    var osc  = ac.createOscillator();
+    var gain = ac.createGain();
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.start(t);
+    osc.stop(t + 0.18);
+  });
+}
+
+function _drPlayRunTick() {
+  var ac = _drGetAC();
+  if (!ac) return;
+  var t = ac.currentTime;
+  var o = ac.createOscillator();
+  var g = ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(480 + Math.random()*140, t);
+  g.gain.setValueAtTime(0.03, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+  o.start(t);
+  o.stop(t + 0.06);
+}
+
+function _drPlayEvent(mult) {
+  var ac = _drGetAC();
+  if (!ac) return;
+  var t = ac.currentTime;
+  var up = (mult && mult >= 1.0);
+  var f1 = up ? 740 : 320;
+  var f2 = up ? 980 : 240;
+  [f1, f2].forEach(function(freq, i){
+    var tt = t + i*0.06;
+    var o = ac.createOscillator();
+    var g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = up ? 'triangle' : 'sine';
+    o.frequency.setValueAtTime(freq, tt);
+    g.gain.setValueAtTime(0.05, tt);
+    g.gain.exponentialRampToValueAtTime(0.001, tt + 0.10);
+    o.start(tt);
+    o.stop(tt + 0.10);
+  });
+}
+
+function _drPlayFinish(rank) {
+  var ac = _drGetAC();
+  if (!ac) return;
+  if (!(rank >= 1 && rank <= 5)) return;
+  var t = ac.currentTime;
+  var base = 520 + (5-rank)*90;
+  var o = ac.createOscillator();
+  var g = ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type = 'square';
+  o.frequency.setValueAtTime(base, t);
+  g.gain.setValueAtTime(0.05, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+  o.start(t);
+  o.stop(t + 0.08);
 }
