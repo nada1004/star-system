@@ -977,6 +977,19 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
 /* 상세 영역: 열릴 때 컬러 상단 테두리로 연결감 */
 .rec-detail-area.open{border-top:2px solid var(--blue-ll);}
+/* 상세 영역 accent bar (승리팀 색상 기반) */
+.rec-detail-area::before{
+  content:'';
+  position:absolute;
+  left:0; right:0; top:0;
+  height:3px;
+  background:linear-gradient(90deg, var(--primary-start, #4F46E5), var(--primary-mid, #7C3AED), var(--primary-end, #2563EB));
+  opacity:0;
+  transition:opacity .25s ease;
+}
+.rec-detail-area.open::before{
+  opacity:1;
+}
 /* 모바일: 액션 항상 표시 */
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
 .rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
@@ -1001,8 +1014,26 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .rec-sum-vs{justify-content: var(--rc-vs-justify, flex-start);}
   .rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
 }
-.rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--rc-detail-bg, var(--surface));display:none;}
-.rec-detail-area.open{display:block;}
+.rec-detail-area{
+  border-top:1px solid var(--border);
+  padding:0;
+  background:linear-gradient(180deg, var(--rc-detail-bg, var(--surface)) 0%, var(--white) 100%);
+  display:none;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  border-radius:0 0 12px 12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.04);
+  transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s ease, padding .25s ease, box-shadow .25s ease;
+  position:relative;
+}
+.rec-detail-area.open{
+  display:block;
+  max-height:2000px;
+  opacity:1;
+  padding:14px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
 .rec-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border);}
 .rec-sets{padding:10px 14px;}
@@ -1932,6 +1963,17 @@ body.design-v2 .rec-detail-area [style*="border:1px solid var(--border);border-r
   background:var(--white)!important;
   border-color:var(--border)!important;
 }
+/* 디자인 모드: 경기 상세 영역 개선 */
+body.design-v2 .rec-detail-area{
+  background:linear-gradient(180deg, var(--rc-detail-bg, var(--surface)) 0%, var(--white) 100%);
+  border-radius:0 0 16px 16px;
+}
+body.design-v2 .rec-detail-area::before{
+  background:linear-gradient(90deg, var(--primary-start), var(--primary-mid), var(--primary-end));
+}
+body.design-v2 .rec-detail-area.open{
+  box-shadow:0 12px 40px color-mix(in srgb, var(--primary-mid) 15%, rgba(0,0,0,.08));
+}
 
 /* Nada Dark: 더 글래시하게 (변수로 제어) */
 body.design-v2.designv2-nada{
@@ -2513,8 +2555,15 @@ body.dark .ssec{background:#1e293b;border-color:#2d3f55;}
 body.dark .modal .mbox{background:#1e293b;border-color:#2d3f55;}
 body.dark .rec-summary{background:#1e293b;border-color:#2d3f55;}
 body.dark .rec-summary.detail-open{box-shadow:0 2px 12px rgba(37,99,235,.2)!important;}
-body.dark .rec-detail-area{background:#162032;border-color:#2d3f55;}
-body.dark .rec-detail-area.open{border-top-color:#1e3a5f;}
+body.dark .rec-detail-area{
+  background:linear-gradient(180deg, #162032 0%, #1e293b 100%);
+  border-color:#2d3f55;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+body.dark .rec-detail-area.open{
+  border-top-color:#1e3a5f;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
 body.dark .rec-sum-header{background:#1e293b;}
 body.dark .ck-panel{background:#1e293b;border-color:#2d3f55;}
 body.dark .grp-match-card{background:#1e293b;border-color:#2d3f55;}
