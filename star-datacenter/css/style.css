@@ -3333,76 +3333,94 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 /* 로그인 모달 */
 #loginModal{
   display:flex !important;
-  align-items:flex-start !important;
+  align-items:center !important;
   justify-content:center !important;
-  padding-top:20vh !important;
 }
 
 .modal--login .mbox{
-  width:min(90vw, 320px);
+  width:min(90vw, 360px);
   text-align:center;
-  padding:10px 16px 8px 16px;
+  padding:28px 24px;
   margin:0 !important;
+  background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius:12px;
 }
 @media(max-width:768px){
-  #loginModal{
-    padding-top:15vh !important;
-  }
   .modal--login .mbox{
-    width:min(90vw, 300px);
-    padding:8px 14px 6px 14px;
-    margin:0 !important;
+    width:min(90vw, 340px);
+    padding:24px 20px;
   }
 }
 .modal--login__icon{
-  display:none;
-  font-size:32px;
-  margin-bottom:0;
+  display:block;
+  font-size:40px;
+  margin-bottom:12px;
+  opacity:0.9;
 }
 .modal--login__title{
   font-family:'Noto Sans KR',sans-serif;
-  font-weight:700;
-  font-size:13px;
+  font-weight:800;
+  font-size:18px;
   color:#1e3a8a;
-  margin-bottom:8px;
+  margin-bottom:18px;
+  letter-spacing:-0.5px;
 }
 .modal--login__input{
   width:100%;
-  padding:6px 10px;
-  border:1px solid var(--border2);
-  border-radius:6px;
-  font-size:12px;
-  margin-bottom:5px;
+  padding:11px 14px;
+  border:1.5px solid #cbd5e1;
+  border-radius:8px;
+  font-size:14px;
+  margin-bottom:10px;
   display:block;
+  box-sizing:border-box;
+  transition:all 0.2s;
+}
+.modal--login__input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.1);
 }
 .modal--login__submit{
   width:100%;
-  padding:6px;
+  padding:11px;
   background:linear-gradient(135deg,#1e3a8a,#2563eb);
   color:#fff;
   border:none;
-  border-radius:6px;
-  font-size:12px;
+  border-radius:8px;
+  font-size:14px;
   font-weight:700;
   cursor:pointer;
-  margin-bottom:5px;
+  margin-bottom:10px;
+  transition:transform 0.2s, box-shadow 0.2s;
+  box-shadow:0 2px 8px rgba(37,99,235,0.2);
+}
+.modal--login__submit:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
 }
 .modal--login__err{
   color:#dc2626;
-  font-size:11px;
-  margin-top:3px;
-  min-height:0;
-  margin-bottom:3px;
+  font-size:13px;
+  margin-top:8px;
+  min-height:20px;
+  margin-bottom:0;
+  line-height:1.4;
 }
 .modal--login__cancel{
-  margin-top:0;
+  margin-top:8px;
   margin-bottom:0;
-  padding:2px 6px;
+  padding:0;
   background:none;
   border:none;
-  color:var(--gray-l);
-  font-size:11px;
+  color:#64748b;
+  font-size:13px;
   cursor:pointer;
+  transition:color 0.2s;
+  text-decoration:underline;
+}
+.modal--login__cancel:hover{
+  color:#1e3a8a;
 }
 
 /* emModal / bulkEditModal 공통(버튼 영역 flex) */
