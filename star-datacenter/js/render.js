@@ -725,9 +725,153 @@ function openShareCardFromUniv(){
   setTimeout(()=>renderShareCardByUniv(name),80);
 }
 function openProCompMatchShare(a,b,sa,sb,d){
-  window._shareMatchObj={a,b,sa,sb,d,_noUnivIcon:true,_matchType:'pro'};
-  _shareMode='match';openShareCardModal();
-  setTimeout(function(){if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+  const A=String(a||'A팀'), B=String(b||'B팀');
+  const ds=String(d||'').slice(0,10);
+  const _eq=(x,y)=>String(x||'')===String(y||'');
+  const _pairEq=(a1,b1,a2,b2)=>(_eq(a1,a2)&&_eq(b1,b2))||(_eq(a1,b2)&&_eq(b1,a2));
+  const _invWinner=w=>w==='A'?'B':w==='B'?'A':w;
+
+  // 기본값(매칭 실패 시)
+  let share={
+    a:A,b:B,sa:Number(sa||0),sb:Number(sb||0),d:ds,
+    n:'',_matchType:'pro',_subLabel:'프로리그',_noUnivIcon:false,_usePlayerPhoto:true
+  };
+
+  try{
+    const tourneys=Array.isArray(proTourneys)?proTourneys:[];
+
+    // 1) 팀전 우선 매칭 (팀명끼리 공유카드)
+    outerTeam:
+    for(const tn of tourneys){
+      for(const tm of (tn.teamMatches||[])){
+        const tmd=String(tm.d||'').slice(0,10);
+        if(ds && tmd && tmd!==ds) continue;
+        if(!_pairEq(tm.teamAName, tm.teamBName, A, B)) continue;
+        const swap = !_eq(tm.teamAName,A); // 입력 A/B가 데이터의 teamA/teamB와 반대면 swap
+        const teamAName = swap ? (tm.teamBName||B) : (tm.teamAName||A);
+        const teamBName = swap ? (tm.teamAName||A) : (tm.teamBName||B);
+        const games=(tm.games||[]).map(g=>{
+          // winner side 보정 (swap이면 반전)
+          const sideW = swap ? _invWinner(g._sideW) : g._sideW; // 'A' or 'B'
+          // 팀 A(left) vs 팀 B(right) 방향 유지
+          if(sideW==='A'){
+            return { playerA:g.wName||'', playerB:g.lName||'', winner:'A', map:g.map||'' };
+          } else if(sideW==='B'){
+            return { playerA:g.lName||'', playerB:g.wName||'', winner:'B', map:g.map||'' };
+          }
+          // 예외 케이스(사이드 정보 없으면 winner 미표기)
+          return { playerA:g.lName||'', playerB:g.wName||'', winner:'', map:g.map||'' };
+        }).filter(x=>x.playerA||x.playerB);
+        const scoreA=games.filter(g=>g.winner==='A').length;
+        const scoreB=games.filter(g=>g.winner==='B').length;
+        share={
+          a:teamAName,b:teamBName,sa:scoreA,sb:scoreB,d:tmd||ds,
+          n:tn.name||'',_matchType:'procomp-team',_subLabel:(tn.name?`${tn.name} · 팀전`:'팀전'),
+          _noUnivIcon:true,_usePlayerPhoto:false,
+          sets:[{label:'팀전',scoreA,scoreB,games}]
+        };
+        break outerTeam;
+      }
+    }
+
+    // 2) 토너먼트(대진표) 매칭
+    if(!share.sets){
+      outerBkt:
+      for(const tn of tourneys){
+        const totalRnd=(tn.bracket||[]).length||0;
+        const rndLabel = (ri)=>{
+          if(ri==='3rd') return '3·4위전';
+          const r=Number(ri);
+          if(!isFinite(r) || totalRnd<=0) return '토너먼트';
+          return r===totalRnd-1?'결승':r===totalRnd-2?'준결승':r===totalRnd-3?'4강':`${Math.pow(2,totalRnd-r)}강`;
+        };
+        // 일반 라운드
+        for(let ri=0; ri<(tn.bracket||[]).length; ri++){
+          const rnd=tn.bracket[ri]||[];
+          for(let mi=0; mi<rnd.length; mi++){
+            const m=rnd[mi];
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const gamesRaw = Array.isArray(m._games) && m._games.length ? m._games : [{winner:m.winner, map:m.map||''}];
+            const games = gamesRaw.map(g=>({
+              playerA:A,
+              playerB:B,
+              winner: swapped ? _invWinner(g.winner) : (g.winner||''),
+              map: g.map||m.map||''
+            })).filter(x=>x.playerA||x.playerB);
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel(ri);
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerBkt;
+          }
+        }
+        // 3위전
+        if(tn.thirdPlace && tn.thirdPlace.a && tn.thirdPlace.b){
+          const m=tn.thirdPlace;
+          const md=String(m.d||'').slice(0,10);
+          if(ds && md && md!==ds) continue;
+          if(_pairEq(m.a,m.b,A,B)){
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const games = [{playerA:A,playerB:B,winner: swapped ? _invWinner(m.winner) : (m.winner||''), map:m.map||''}];
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel('3rd');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    // 3) 조별리그 매칭
+    if(!share.sets){
+      outerGrp:
+      for(const tn of tourneys){
+        for(const grp of (tn.groups||[])){
+          for(const m of (grp.matches||[])){
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const winner = swapped ? _invWinner(m.winner) : (m.winner||'');
+            const games=[{playerA:A,playerB:B,winner,map:m.map||''}];
+            const scoreA=winner==='A'?1:0;
+            const scoreB=winner==='B'?1:0;
+            const lbl=(grp.stage||grp.name||'조별리그');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'pro',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerGrp;
+          }
+        }
+      }
+    }
+  }catch(e){}
+
+  window._shareMatchObj=share;
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(function(){
+    if(window._shareMatchObj) renderShareCardByMatchObj(window._shareMatchObj);
+  },80);
 }
 function openShareCardFromMatch(mode,idx){
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;

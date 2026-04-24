@@ -1174,6 +1174,41 @@ function gjRankHTML(proOnly){
 }
 
 function gjRecordsHTML(proOnly){
+  // 끝장전 세션 → 팝업용 캐시
+  window._gjSessCache = window._gjSessCache || {};
+  window.openGJSessionPopup = window.openGJSessionPopup || function(sessKey){
+    try{
+      const s = (window._gjSessCache||{})[sessKey];
+      if(!s || !s.games || !s.games.length) return;
+      const A = s.p1 || 'A';
+      const B = s.p2 || 'B';
+      const games = (s.games||[]).map((it, idx)=>({
+        _id: `${sessKey}_s0_g${idx}`,
+        playerA: A,
+        playerB: B,
+        winner: it.wName===A ? 'A' : it.wName===B ? 'B' : '',
+        map: it.map || ''
+      })).filter(g=>g.winner);
+      const sa = games.filter(g=>g.winner==='A').length;
+      const sb = games.filter(g=>g.winner==='B').length;
+      const winner = sa>sb?'A':sb>sa?'B':'';
+      const mm = {
+        _id: sessKey,
+        d: s.d || '',
+        a: A,
+        b: B,
+        sa, sb,
+        _subLabel: s._proOnly ? '프로리그끝장전' : '끝장전',
+        sets: [{ label: s._proOnly ? '프로리그 끝장전' : '끝장전', scoreA: sa, scoreB: sb, winner, games }]
+      };
+      const ca = (typeof gc==='function' ? (gc(A)||'#3b82f6') : '#3b82f6');
+      const cb = (typeof gc==='function' ? (gc(B)||'#ef4444') : '#ef4444');
+      const key = 'mid:'+String(sessKey);
+      if(typeof _regDet==='function') _regDet(key, mm, 'gj', A, B, ca, cb, sa>sb, sb>sa);
+      if(typeof openHistDetailModal==='function') openHistDetailModal(key);
+    }catch(e){}
+  };
+
   const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
   if(!_gjSrc.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
   // 세션 그룹화
@@ -1287,34 +1322,24 @@ function gjRecordsHTML(proOnly){
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}')">🎴 공유카드</button>`;
-    const bulkDateBtn=isLoggedIn?`<button class="btn btn-w btn-xs no-export" style="white-space:nowrap" onclick="event.stopPropagation();bulkEditGjDate('${idsJson}','${escJS(s.d)}')">📅 날짜</button>`:'';
+    const bulkDateBtn=''; // 요청: 날짜 버튼 삭제
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
-    h+=`<details style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <summary style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;background:var(--bg2);justify-content:var(--rc-vs-justify,flex-start)">${bulkCbGj}
+    // 세션ID(팝업용) 생성 + 캐시 저장
+    const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;
+    const _sessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
+    window._gjSessCache[_sessKey] = {...s, _proOnly: !!proOnly};
+
+    h+=`<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;background:var(--white)">
+      <div style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f1f5f9;justify-content:var(--rc-vs-justify,flex-start)" onclick="openGJSessionPopup('${_sessKey}')">${bulkCbGj}
         <span style="font-size:12px;font-weight:600;color:${s.d?'var(--text3)':'#f59e0b'};min-width:80px">${s.d||'날짜 미정'}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
-        <span style="font-size:13px;font-weight:900;color:var(--blue);display:inline-block;transform:scale(var(--rc-score-scale,1));transform-origin:center">${p1wins} - ${p2wins}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:700;font-size:14px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:10px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px">${getPlayerPhotoHTML(s.p1,'28px')}<span style="font-weight:800;font-size:15px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span><span style="font-size:11px;color:var(--gray-l)">${players.find(x=>x.name===s.p1)?.univ||''}</span></span>
+        <span class="score-click" style="font-size:13px;font-weight:1000;color:var(--blue);display:inline-block;transform:scale(var(--rc-score-scale,1));transform-origin:center;text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted">${p1wins} - ${p2wins}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:800;font-size:15px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:11px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto;display:flex;gap:4px">${shareBtn}${moveBtn}${delBtn}</span>
-      </summary>
-      <table style="margin:0;border-radius:0"><thead><tr><th style="text-align:left">경기</th><th style="text-align:right">${s.p1}</th><th style="text-align:center;color:var(--gray-l)">vs</th><th style="text-align:left">${s.p2}</th><th style="text-align:left">맵</th>${isLoggedIn?'<th>관리</th>':''}</tr></thead><tbody>`;
-    s.games.forEach((m,gi)=>{
-      const origIdx=gjM.findIndex(x=>x._id===m._id);
-      const p1win=m.wName===s.p1;
-      const p1photo=getPlayerPhotoHTML(s.p1,'22px',`vertical-align:middle;flex-shrink:0${p1win?'':';filter:blur(1px) grayscale(.2);opacity:.45'}`);
-      const p2photo=getPlayerPhotoHTML(s.p2,'22px',`vertical-align:middle;flex-shrink:0${p1win?';filter:blur(1px) grayscale(.2);opacity:.45':''}`);
-      h+=`<tr>
-        <td style="font-size:11px;color:var(--gray-l)">${gi+1}경기${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px;vertical-align:middle">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</td>
-        <td style="text-align:right"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">${p1photo}<span style="font-weight:${p1win?'900':'400'};color:${p1win?'var(--blue)':'#aaa'};cursor:pointer" onclick="openPlayerModal('${s.p1.replace(/'/g,"\\'")}')">${s.p1}</span></span></td>
-        <td style="text-align:center;font-size:10px;color:var(--gray-l)">vs</td>
-        <td><span style="display:inline-flex;align-items:center;gap:4px">${p2photo}<span style="font-weight:${p1win?'400':'900'};color:${p1win?'#aaa':'var(--blue)'};cursor:pointer" onclick="openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span></span></td>
-        <td style="font-size:11px">${m.map && m.map !== '-' ? m.map : ''}${m.memo?`<span style="font-size:10px;color:var(--gray-l);margin-left:4px">${m.memo.replace(/</g,'&lt;')}</span>`:''}</td>
-        ${isLoggedIn?`<td style="display:flex;gap:4px"><button class="btn btn-o btn-xs" onclick="openRE('gj',${origIdx})">✏️ 수정</button><button class="btn btn-r btn-xs" onclick="deleteGjGame(${origIdx})">🗑️ 삭제</button></td>`:''}
-      </tr>`;
-    });
-    h+=`</tbody></table></details>`;
+        <span style="margin-left:auto;display:flex;gap:4px" onclick="event.stopPropagation()">${shareBtn}${moveBtn}${delBtn}</span>
+      </div>
+    </div>`;
   });
   if(totalPages>1){
     h+=`<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 0;flex-wrap:wrap">`;

@@ -5825,6 +5825,11 @@ function _renderCfgPdSection(){
   const closeOnBadge=s.close_on_badge!==undefined?s.close_on_badge:true;
   const closeOnMatchPlayer=s.close_on_match_player!==undefined?s.close_on_match_player:true;
   const headerClickClose=s.header_click_close!==undefined?s.header_click_close:true;
+  const mdWinTint = (()=>{ try{ return parseInt(localStorage.getItem('su_md_win_tint')||'13',10);}catch(e){return 13;} })();
+  const mdLoseGray = (()=>{ try{ return parseInt(localStorage.getItem('su_md_lose_gray')||'12',10);}catch(e){return 12;} })();
+  const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
+  const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'contain').trim(); }catch(e){ return 'contain'; } })();
+  const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
   const _shape = (()=>{
     try{ return (localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
   })(); // circle | square
@@ -5869,6 +5874,48 @@ function _renderCfgPdSection(){
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
       <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세(팝업) 승/패 배경 강도</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">승자 배경 강도</label>
+        <input type="range" min="0" max="30" step="1" value="${mdWinTint}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_win_tint',String(this.value));document.getElementById('cfg-md-win-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md-win-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdWinTint}%</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">패자 회색 강도</label>
+        <input type="range" min="0" max="30" step="1" value="${mdLoseGray}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_lose_gray',String(this.value));document.getElementById('cfg-md-lose-val').textContent=this.value+'%';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md-lose-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdLoseGray}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">승자는 대학색 배경의 농도, 패자는 회색 배경의 농도를 조절합니다</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 경기 상세 상단 대학 로고 크기</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
+        <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md-logo-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세 팝업 상단(대학 카드) 로고 크기를 조절합니다</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 경기 상세 프로필 이미지</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-xs ${mdAvatarFit==='cover'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_fit','cover');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">가득 채우기</button>
+        <button class="btn btn-xs ${mdAvatarFit!=='cover'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_fit','contain');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">원본 비율</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">크기 배율</label>
+        <input type="range" min="80" max="200" step="10" value="${mdAvatarScale}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_avatar_scale',String(this.value));document.getElementById('cfg-md-avscale-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md-avscale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세(대회탭 포함) 프로필 이미지의 채우기/크기 배율을 조절합니다</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 전적·승률 배경 색상 강도</div>

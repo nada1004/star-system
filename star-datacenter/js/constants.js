@@ -48,6 +48,54 @@ function applyUnivLogoVars(){
 try{ applyUnivLogoVars(); }catch(e){
   console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
 }
+
+/* ══════════════════════════════════════
+   경기 상세(팝업) 승/패 배경 강도 설정
+   - 승자: 대학색 tint(투명도) 조절 (localStorage: su_md_win_tint)
+   - 패자: 회색 배경 강도 조절 (localStorage: su_md_lose_gray)
+══════════════════════════════════════ */
+function applyMatchDetailVars(){
+  try{
+    const losePct = parseInt(localStorage.getItem('su_md_lose_gray') || '12', 10);
+    const lp = Math.max(0, Math.min(30, isNaN(losePct) ? 12 : losePct));
+    document.documentElement.style.setProperty('--su_md_lose_gray', String(lp/100));
+
+    // 상단 대학 로고(대학 카드) 크기
+    const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
+    const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
+    document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
+  }catch(e){
+    console.warn('[applyMatchDetailVars] CSS 변수 설정 실패:', e.message);
+  }
+}
+try{ applyMatchDetailVars(); }catch(e){
+  console.warn('[applyMatchDetailVars 초기화] 실패:', e.message);
+}
+
+function _hexToRgbObj(hex){
+  const h=String(hex||'').replace('#','').trim();
+  if(h.length===3){
+    const r=parseInt(h[0]+h[0],16), g=parseInt(h[1]+h[1],16), b=parseInt(h[2]+h[2],16);
+    return {r:isNaN(r)?100:r, g:isNaN(g)?116:g, b:isNaN(b)?139:b};
+  }
+  if(h.length>=6){
+    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    return {r:isNaN(r)?100:r, g:isNaN(g)?116:g, b:isNaN(b)?139:b};
+  }
+  return {r:100,g:116,b:139};
+}
+function getMatchWinTint(hex){
+  try{
+    const pct = parseInt(localStorage.getItem('su_md_win_tint') || '13', 10);
+    const p = Math.max(0, Math.min(30, isNaN(pct) ? 13 : pct));
+    const a = p/100;
+    const {r,g,b}=_hexToRgbObj(hex);
+    return `rgba(${r},${g},${b},${a})`;
+  }catch(e){
+    // fallback: 기존 0x22(약 13%)
+    return String(hex||'#64748b') + '22';
+  }
+}
 function escJS(s){
   return String(s??'')
     .replace(/\\/g,'\\\\')
@@ -358,6 +406,20 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       size=(n*_scale).toFixed(2).replace(/\.00$/,'')+'px';
     }
   }catch(e){}
+
+  // (요청사항) 경기 상세 전용 프로필 배율/채우기 설정
+  try{
+    const ctx = String(window.__detailCtx||'');
+    if(ctx==='compModal' || ctx==='histModal'){
+      const mdPct = parseFloat(localStorage.getItem('su_md_avatar_scale') || '100');
+      const mdScale = Math.max(0.8, Math.min(2.0, isNaN(mdPct) ? 1 : (mdPct/100)));
+      const m2=String(size).match(/^(\d+(?:\.\d+)?)px$/);
+      if(m2 && mdScale!==1){
+        const n2=parseFloat(m2[1]);
+        size=(n2*mdScale).toFixed(2).replace(/\.00$/,'')+'px';
+      }
+    }
+  }catch(e){}
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
@@ -372,7 +434,23 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
   const src = toHttpsUrl(p.photo);
-  return '<img '+clickAttr+' src="'+src+'" style="'+base+';object-fit:contain;'+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  // object-fit: 기본 contain, 경기 상세에서는 설정에 따라 cover 가능
+  let fit = 'contain';
+  try{
+    const hasFit = /object-fit\s*:\s*/.test(extraStyle);
+    if(!hasFit){
+      const ctx = String(window.__detailCtx||'');
+      if(ctx==='compModal' || ctx==='histModal'){
+        fit = (localStorage.getItem('su_md_avatar_fit') || 'contain').trim();
+      } else {
+        fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
+      }
+      if(!['contain','cover'].includes(fit)) fit='contain';
+    } else {
+      fit = null;
+    }
+  }catch(e){ fit='contain'; }
+  return '<img '+clickAttr+' src="'+src+'" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
 }
 function getStatusIconHTML(name){
   const ic=getStatusIcon(name);
