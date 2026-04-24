@@ -10,6 +10,10 @@
   --sh:0 2px 4px rgba(0,0,0,.04);
   --sh2:0 6px 20px rgba(0,0,0,.06);
   --sh3:0 12px 40px rgba(0,0,0,.10);
+  /* 커스텀 효과 변수 */
+  --custom-shadow-intensity: 50;
+  --custom-card-opacity: 100;
+  --custom-gradient-angle: 135deg;
   /* 전환 기본값 */
   --tr:.15s ease;
   /* 반응형 UI 스케일(자동) */
@@ -1989,7 +1993,7 @@ body.design-v2 details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 
 /* ── 헤더: 더 동적인 그라데이션 ── */
 body.design-v2 .hdr{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 45%,var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-mid) 45%,var(--primary-end));
   position:relative;
   overflow:hidden;
 }
@@ -2046,25 +2050,25 @@ body.design-v2 .tab.on::after{
 
 /* ── 버튼/필/메뉴: 디자인 모드 컬러로 통일 ── */
 body.design-v2 .btn-b{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 55%,var(--primary-end));
-  box-shadow:0 10px 22px color-mix(in srgb, var(--primary-mid) 25%, transparent);
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-mid) 55%,var(--primary-end));
+  box-shadow:0 calc(10px * var(--custom-shadow-intensity) / 50) calc(22px * var(--custom-shadow-intensity) / 50) color-mix(in srgb, var(--primary-mid) 25%, transparent);
 }
 body.design-v2 .btn-b:hover{
   filter:brightness(1.02);
-  box-shadow:0 14px 28px color-mix(in srgb, var(--primary-mid) 32%, transparent);
+  box-shadow:0 calc(14px * var(--custom-shadow-intensity) / 50) calc(28px * var(--custom-shadow-intensity) / 50) color-mix(in srgb, var(--primary-mid) 32%, transparent);
 }
 body.design-v2 .btn-w:hover{
   border-color:color-mix(in srgb, var(--primary-mid) 35%, var(--border2));
   color:var(--primary-mid);
 }
 body.design-v2 .btn-p:hover{
-  background:linear-gradient(135deg,var(--primary-mid),var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-mid),var(--primary-end));
   border-color:color-mix(in srgb, var(--primary-mid) 55%, transparent);
 }
 body.design-v2 .pill.on,
 body.design-v2 .sort-btn.on,
 body.design-v2 .tier-filter-btn.on{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-end));
   border-color:color-mix(in srgb, var(--primary-mid) 45%, transparent);
 }
 
@@ -2106,6 +2110,7 @@ body.design-v2 .btn-detail{
 /* ── 기록 카드 배경(프리셋/모드별 차등을 변수로 제어) ── */
 body.design-v2 .rec-summary{
   background:var(--rc-card-bg, var(--surface)) !important;
+  opacity: calc(var(--custom-card-opacity, 100) / 100);
 }
 body.design-v2 .rec-sum-header{
   background:var(--rc-card-hd-bg, transparent) !important;
