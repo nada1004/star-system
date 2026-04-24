@@ -412,7 +412,7 @@ function rCompLeague(tn){
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
         </div>`:''}
       </div>
-      <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:14px 16px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
+      <div id="${detId}" class="rec-detail-area" style="display:none;margin-top:-4px;margin-bottom:8px">
         ${isDone?buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">아직 경기가 진행되지 않았습니다.</div>'}
       </div>`;
     });
@@ -425,6 +425,7 @@ function leagueToggleDet(id,btn){
   const el=document.getElementById(id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
+  el.classList.toggle('open', open);
   const detBtn=btn||document.getElementById('detbtn-'+id);
   if(detBtn){detBtn.textContent=open?'🔼 닫기':'📂 상세';detBtn.classList.toggle('open',open);}
 }
@@ -652,7 +653,7 @@ function rBracketSchedule(tn){
           ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:`<button class="btn btn-r btn-xs" onclick="bktClearMatchResult('${tn.id}',${r},${mi})">🗑️ 초기화</button>`}
         </div>`:''}
       </div>
-      ${hasGames?`<div id="${detId}" style="display:none;padding:12px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none;margin-top:-1px">
+      ${hasGames?`<div id="${detId}" class="rec-detail-area" style="display:none;margin-top:-1px">
         ${buildDetailHTML(detail,'comp',teamA||'A팀',teamB||'B팀',ca,cb,aWin,bWin)}
       </div>`:''}
     </div>`;
@@ -952,7 +953,7 @@ function rCompTourDynamic(tn){
       footer=`<div style="font-size:9px;color:#94a3b8;text-align:center;padding:4px;border-top:1px solid #f1f5f9">팀 배정 후 입력</div>`;
     }
     const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
-    const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
+    const detDiv=hasGames?`<div id="${detId}" class="rec-detail-area" style="display:none">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
     const _winCol = winner ? (winner===a?.univ?aC:winner===b?.univ?bC:'#64748b') : '#64748b';
     const _winRgb = _tcHexToRgbStr(_winCol);
@@ -1565,6 +1566,7 @@ function bktToggleDet(id,btn){
   const el=document.getElementById(id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
+  el.classList.toggle('open', open);
   if(btn){btn.textContent=open?'🔼 닫기':'📂 상세';}
 }
 
