@@ -3334,9 +3334,12 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 
 /* 로그인 모달 */
 #loginModal{
-  display:flex !important;
+  display:none !important;
   align-items:center !important;
   justify-content:center !important;
+}
+#loginModal[style*="display: flex"]{
+  display:flex !important;
 }
 
 .modal--login .mbox{
