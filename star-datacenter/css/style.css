@@ -3334,12 +3334,12 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .modal--login .mbox{
   width:min(90vw, 380px);
   text-align:center;
-  padding:18px 20px;
+  padding:16px 20px 12px 20px;
 }
 @media(max-width:768px){
   .modal--login .mbox{
     width:min(90vw, 360px);
-    padding:16px 18px;
+    padding:14px 18px 10px 18px;
   }
 }
 .modal--login__icon{
@@ -3381,6 +3381,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 }
 .modal--login__cancel{
   margin-top:6px;
+  margin-bottom:0;
   background:none;
   border:none;
   color:var(--gray-l);
