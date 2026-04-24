@@ -1460,12 +1460,48 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
+  // 동일 날짜 내 정렬 보조키(최신이 위): 시간/생성시각 기반
+  // - time: 숫자(ms) 또는 문자열
+  // - t: 'HH:MM' 형태(존재할 경우)
+  // - _id/sid: genId() = (Date.now base36 + random4) → 앞부분으로 생성시각 추정
+  const _getMatchTs = (m, idx) => {
+    try{
+      // 1) time 필드
+      if (m && typeof m.time === 'number') return m.time;
+      if (m && typeof m.time === 'string' && m.time.trim()) {
+        const n = Number(m.time);
+        if (!isNaN(n) && isFinite(n)) return n;
+      }
+      // 2) t (HH:MM 또는 HH:MM:SS) → 날짜 없는 경우도 있어 보조키로만 사용
+      if (m && typeof m.t === 'string' && m.t.includes(':')) {
+        const parts = m.t.split(':').map(x=>Number(x));
+        if (parts.length >= 2 && parts.every(x=>!isNaN(x))) {
+          const hh = parts[0]||0, mm = parts[1]||0, ss = parts[2]||0;
+          return hh*3600 + mm*60 + ss;
+        }
+      }
+      // 3) genId 기반(_id/sid)
+      const id = (m && (m._id || m.sid)) ? String(m._id || m.sid) : '';
+      if (id && id.length > 4) {
+        const prefix = id.slice(0, -4); // Date.now().toString(36)
+        const t36 = parseInt(prefix, 36);
+        if (!isNaN(t36) && isFinite(t36)) return t36;
+      }
+    }catch(e){}
+    // 4) 최후: 배열 인덱스(대부분 unshift로 최신이 0번) → desc에서는 -idx가 최신 우선
+    return -idx;
+  };
   filtered.sort((a,b)=>{
     const da=(a.m.d||''), db=(b.m.d||'');
     const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
     if(cmp!==0) return cmp;
-    // 동일 날짜일 때 안정적 보조 정렬: 원본 인덱스 기준
-    return recSortDir==='asc' ? (a.i - b.i) : (b.i - a.i);
+    // 동일 날짜일 때: (1) 시간/생성시각 (2) 원본 인덱스
+    const ta=_getMatchTs(a.m, a.i);
+    const tb=_getMatchTs(b.m, b.i);
+    const cmp2 = recSortDir==='asc' ? (ta - tb) : (tb - ta);
+    if (cmp2 !== 0) return cmp2;
+    // asc(오래된→최신): unshift 기준이라 i가 클수록 오래됨
+    return recSortDir==='asc' ? (b.i - a.i) : (a.i - b.i);
   });
 
   // ── 날짜(일자) 빠른 선택: ASL 스타일 날짜 메뉴(설정: su_date_menu_style) ──
