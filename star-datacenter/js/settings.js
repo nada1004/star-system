@@ -537,7 +537,33 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
 
-  // 즉시 반영
+  // 즉시 반영 (init.js 미로드/순서 이슈 대비: 여기서도 직접 적용)
+  try{
+    const _bg=Math.max(0,Math.min(30,bg));
+    const _hd=Math.max(0,Math.min(30,hd));
+    const _ic=Math.max(12,Math.min(34,ic));
+    const _uf=Math.max(90,Math.min(150,univFontPct||100));
+    const _ys=Math.max(80,Math.min(140,ymScalePct||100));
+    const _accent=['none','header','border','full','gradient'].includes(accent)?accent:'none';
+    const _va=['left','center','right'].includes(vsAlign)?vsAlign:'left';
+    const _ss=Math.max(80,Math.min(130,scScale||100));
+    const _vsJust=(_va==='center')?'center':(_va==='right')?'flex-end':'flex-start';
+    if(document.body){
+      document.body.classList.toggle('rc-theme-on', !!on);
+      document.body.classList.toggle('rc-accent-header', !!on && _accent==='header');
+      document.body.classList.toggle('rc-accent-border', !!on && _accent==='border');
+      document.body.classList.toggle('rc-accent-full', !!on && _accent==='full');
+      document.body.classList.toggle('rc-accent-gradient', !!on && _accent==='gradient');
+    }
+    document.documentElement.style.setProperty('--rc-bg-a', String(_bg/100));
+    document.documentElement.style.setProperty('--rc-hd-a', String(_hd/100));
+    document.documentElement.style.setProperty('--rc-uicon', _ic+'px');
+    document.documentElement.style.setProperty('--rc-univ-font-scale', String(_uf/100));
+    document.documentElement.style.setProperty('--ym-scale', String(_ys/100));
+    document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
+    document.documentElement.style.setProperty('--rc-vs-justify', _vsJust);
+    document.documentElement.style.setProperty('--rc-score-scale', String(_ss/100));
+  }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
@@ -562,6 +588,25 @@ window.cfgSetTourneyCardSettings = function(){
   try{ localStorage.setItem('su_tc_line_w', String(Math.max(1,Math.min(4,lw)))); }catch(e){}
   try{ localStorage.setItem('su_tc_line_a', String(Math.max(25,Math.min(100,la)))); }catch(e){}
 
+  // 즉시 반영 (init.js 미로드/순서 이슈 대비)
+  try{
+    const _hd=Math.max(0,Math.min(30,hd));
+    const _bw=Math.max(2,Math.min(6,bw));
+    const _ic=Math.max(24,Math.min(48,ic));
+    const _lw=Math.max(1,Math.min(4,lw));
+    const _la=Math.max(25,Math.min(100,la));
+    const _accent=['none','header','border'].includes(accent)?accent:'none';
+    if(document.body){
+      document.body.classList.toggle('tc-theme-on', !!on);
+      document.body.classList.toggle('tc-accent-header', !!on && _accent==='header');
+      document.body.classList.toggle('tc-accent-border', !!on && _accent==='border');
+    }
+    document.documentElement.style.setProperty('--tc-hd-a', String(_hd/100));
+    document.documentElement.style.setProperty('--tc-bw', _bw+'px');
+    document.documentElement.style.setProperty('--tc-uicon', _ic+'px');
+    document.documentElement.style.setProperty('--tc-line-w', _lw+'px');
+    document.documentElement.style.setProperty('--tc-line-a', String(_la/100));
+  }catch(e){}
   try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
@@ -4003,6 +4048,9 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
+  ${_scfgD('matchdetail','🎮 경기 상세(팝업) 설정')}
+    <div id="cfg-md-body"></div>
+  </details>
   ${_scfgD('pd','🎨 스트리머 상세 스타일 설정')}
     <div id="cfg-pd-body"></div>
   </details>
@@ -4244,8 +4292,9 @@ ${_scfgD('notice','📢 공지 관리')}
     try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
     // 자동인식 출력 포맷 미리보기 초기화
     try{ if(typeof cfgAutoOutfmtRefreshPreview==='function') cfgAutoOutfmtRefreshPreview(); }catch(e){}
-    // 스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
-    if(typeof _renderCfgPdSection==='function') _renderCfgPdSection();
+    // 경기 상세/스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
+    try{ if(typeof _renderCfgMatchDetailSection==='function') _renderCfgMatchDetailSection(); }catch(e){}
+    try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
   },50);
   C.innerHTML=h;
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
@@ -5830,6 +5879,8 @@ function _renderCfgPdSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'contain').trim(); }catch(e){ return 'contain'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  // 설정탭을 열 때도 즉시 반영(캐시/로드 순서 이슈 방지)
+  try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{
     try{ return (localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
   })(); // circle | square
@@ -5896,7 +5947,7 @@ function _renderCfgPdSection(){
       <div style="display:flex;gap:8px;align-items:center">
         <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
         <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md-logo-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
         <span id="cfg-md-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세 팝업 상단(대학 카드) 로고 크기를 조절합니다</div>
@@ -5962,6 +6013,77 @@ function _renderCfgPdSection(){
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
       ${univRows}
     </div>`;
+}
+
+// ─── 경기 상세(팝업) 전용 설정 ─────────────────────────────────────────────────
+function _renderCfgMatchDetailSection(){
+  const body=document.getElementById('cfg-md-body');
+  if(!body) return;
+  const pd=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const closeOnMatchPlayer = pd.close_on_match_player!==undefined ? pd.close_on_match_player : true;
+  const mdWinTint = (()=>{ try{ return parseInt(localStorage.getItem('su_md_win_tint')||'13',10);}catch(e){return 13;} })();
+  const mdLoseGray = (()=>{ try{ return parseInt(localStorage.getItem('su_md_lose_gray')||'12',10);}catch(e){return 12;} })();
+  const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
+  const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
+  const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
+
+  body.innerHTML=`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+      대전기록/대회/프로리그 등에서 열리는 <b>경기 상세 팝업</b>의 상단(대학 카드)과 프로필 표시를 조절합니다.
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 상단 대학 로고 크기</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
+        <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md2-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지(선수)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-xs ${mdAvatarFit==='cover'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_fit','cover');try{if(typeof render==='function')render();}catch(e){};_renderCfgMatchDetailSection()">가득 채우기</button>
+        <button class="btn btn-xs ${mdAvatarFit!=='cover'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_fit','contain');try{if(typeof render==='function')render();}catch(e){};_renderCfgMatchDetailSection()">원본 비율</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">크기 배율</label>
+        <input type="range" min="80" max="200" step="10" value="${mdAvatarScale}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_avatar_scale',String(this.value));document.getElementById('cfg-md2-avscale-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md2-avscale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">팝업 상단의 프로필 표시 크기/채우기 방식입니다</div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 승/패 배경 강도</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">승자 배경 강도</label>
+        <input type="range" min="0" max="30" step="1" value="${mdWinTint}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_win_tint',String(this.value));document.getElementById('cfg-md2-win-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md2-win-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdWinTint}%</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">패자 회색 강도</label>
+        <input type="range" min="0" max="30" step="1" value="${mdLoseGray}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_lose_gray',String(this.value));document.getElementById('cfg-md2-lose-val').textContent=this.value+'%';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+        <span id="cfg-md2-lose-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdLoseGray}%</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:4px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" ${closeOnMatchPlayer?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnMatchPlayer(this.checked)">
+        <span style="font-size:12px;color:var(--text)">경기 상세에서 선수 클릭 시 팝업 닫기</span>
+      </label>
+    </div>
+  `;
 }
 
 function _setPdFontSize(size){

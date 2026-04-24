@@ -441,7 +441,8 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     if(!hasFit){
       const ctx = String(window.__detailCtx||'');
       if(ctx==='compModal' || ctx==='histModal'){
-        fit = (localStorage.getItem('su_md_avatar_fit') || 'contain').trim();
+        // 경기 상세: 기본은 "가득 채우기(cover)" 쪽이 더 보기 좋음
+        fit = (localStorage.getItem('su_md_avatar_fit') || 'cover').trim();
       } else {
         fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
       }
