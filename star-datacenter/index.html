@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260424-09"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260424-13"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -491,6 +491,17 @@
   </div>
 </div>
 
+<!-- ===== 대회 경기 상세 모달 ===== -->
+<div id="compMatchDetailModal" class="modal no-export">
+  <div class="mbox" style="width:600px;max-width:96vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mtitle" style="margin-bottom:0">📊 경기 상세</div>
+      <button class="btn btn-w btn-sm" onclick="closeCompMatchDetailModal()">✕ 닫기</button>
+    </div>
+    <div id="compMatchDetailContent" style="max-height:70vh;overflow-y:auto"></div>
+  </div>
+</div>
+
 <!-- ===== 프로리그 전용 붙여넣기 모달 ===== -->
 <div id="proPasteModal" class="modal no-export">
   <div class="umbox" style="width:780px;max-width:97vw">
@@ -560,7 +571,11 @@
   </div>
 </div>
 
+<script src="js/config.js"></script>
+<script src="js/app-state.js"></script>
 <script src="js/constants.js?v=20260422-03"></script>
+<script src="js/modal-open.js"></script>
+<script src="js/modal-drag.js?v=20260416-01"></script>
 <script src="js/data.js"></script>
 <script src="js/auth.js?v=20260421-01"></script>
 <script src="js/settings-store.js?v=20260423-02"></script>
@@ -570,7 +585,7 @@
 <script src="js/render.js?v=20260422-07"></script>
 <script src="js/players.js?v=20260422-02"></script>
 <script src="js/vs.js?v=20260422-01"></script>
-<script src="js/history.js?v=20260422-06"></script>
+<script src="js/history.js?v=20260424-01"></script>
 <script src="js/match.js?v=20260420-01"></script>
 <script src="js/match-builder.js?v=20260420-02"></script>
 <script src="js/search.js?v=20260422-07"></script>
@@ -617,11 +632,11 @@ function closeFab(){
 function updateFabVisibility(){
   const fab=document.getElementById('mobileFab');
   if(!fab)return;
-  
+
   const isMobile=window.innerWidth<=768;
   const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
   const hidePC=localStorage.getItem('su_fabHidePC')==='1';
-  
+
   if(isMobile){
     fab.style.display=hideMobile?'none':'flex';
   }else{
@@ -736,8 +751,6 @@ function fabActionCfgSearch(){
   </div>
 </div>
 
-
-<script src="js/modal-drag.js?v=20260416-01"></script>
 <script type="module" src="js/firebase-init.js"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 
