@@ -176,33 +176,74 @@ window._histExtSel = window._histExtSel || new Set();
 window._histExtPage = window._histExtPage || 1;
 const _HIST_EXT_PAGE_SIZE = 30; // 요청: 30경기씩
 function _histExtLoad(){
-  try{ return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''}; }catch(e){ return {items:[],raw:'',mode:'today',today:''}; }
+  try{
+    return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''};
+  }catch(e){
+    console.warn('[_histExtLoad] localStorage 로드 실패:', e.message);
+    return {items:[],raw:'',mode:'today',today:''};
+  }
 }
-function _histExtSave(v){ try{ localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v)); }catch(e){} }
+function _histExtSave(v){
+  try{
+    localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v));
+  }catch(e){
+    console.warn('[_histExtSave] localStorage 저장 실패:', e.message);
+  }
+}
 function _histExtUid(){ return 'hex_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 function _histExtProxyPresetsLoad(){
   try{
     const arr = JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_PRESETS_KEY)||'null');
     return Array.isArray(arr) ? arr : [];
-  }catch(e){ return []; }
+  }catch(e){
+    console.warn('[_histExtProxyPresetsLoad] 프리셋 로드 실패:', e.message);
+    return [];
+  }
 }
 function _histExtProxyPresetsSave(arr){
-  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){}
+  try{
+    localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+  }catch(e){
+    console.warn('[_histExtProxyPresetsSave] 프리셋 저장 실패:', e.message);
+  }
 }
 function _histExtProxyPresetSelLoad(){
-  try{ return localStorage.getItem(_HIST_EXT_PROXY_PRESET_SEL_KEY)||''; }catch(e){ return ''; }
+  try{
+    return localStorage.getItem(_HIST_EXT_PROXY_PRESET_SEL_KEY)||'';
+  }catch(e){
+    console.warn('[_histExtProxyPresetSelLoad] 선택된 프리셋 로드 실패:', e.message);
+    return '';
+  }
 }
 function _histExtProxyPresetSelSave(id){
-  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, String(id||'')); }catch(e){}
+  try{
+    localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, String(id||''));
+  }catch(e){
+    console.warn('[_histExtProxyPresetSelSave] 프리셋 선택 저장 실패:', e.message);
+  }
 }
 function _histExtEnsureProxyPresets(){
   let presets = _histExtProxyPresetsLoad();
   let sel = _histExtProxyPresetSelLoad();
   // 최초 1회: 기존 단일 설정을 프리셋으로 승격
   if(!presets.length){
-    const legacyProxy = (()=>{ try{ return localStorage.getItem(_HIST_EXT_PROXY_KEY)||''; }catch(e){ return ''; } })();
-    const legacyCfg = (()=>{ try{ return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{}; }catch(e){ return {}; } })();
+    const legacyProxy = (()=>{
+      try{
+        return localStorage.getItem(_HIST_EXT_PROXY_KEY)||'';
+      }catch(e){
+        console.warn('[_histExtEnsureProxyPresets] 레거시 프록시 로드 실패:', e.message);
+        return '';
+      }
+    })();
+    const legacyCfg = (()=>{
+      try{
+        return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{};
+      }catch(e){
+        console.warn('[_histExtEnsureProxyPresets] 레거시 설정 로드 실패:', e.message);
+        return {};
+      }
+    })();
     presets = [{
       id: _histExtUid(),
       name: '기본',
@@ -227,22 +268,51 @@ function _histExtGetSelPreset(){
 }
 function _histExtProxyLoad(){
   const p = _histExtGetSelPreset();
-  try{ return (p && p.proxy) ? String(p.proxy) : (localStorage.getItem(_HIST_EXT_PROXY_KEY)||''); }catch(e){ return ''; }
+  try{
+    return (p && p.proxy) ? String(p.proxy) : (localStorage.getItem(_HIST_EXT_PROXY_KEY)||'');
+  }catch(e){
+    console.warn('[_histExtProxyLoad] 프록시 로드 실패:', e.message);
+    return '';
+  }
 }
-function _histExtProxySave(v){ try{ localStorage.setItem(_HIST_EXT_PROXY_KEY, String(v||'')); }catch(e){} }
+function _histExtProxySave(v){
+  try{
+    localStorage.setItem(_HIST_EXT_PROXY_KEY, String(v||''));
+  }catch(e){
+    console.warn('[_histExtProxySave] 프록시 저장 실패:', e.message);
+  }
+}
 function _histExtProxyCfgLoad(){
   const p = _histExtGetSelPreset();
   if(p) return {bo:p.bo||'bj_board', pFrom:p.pFrom||1, pTo:p.pTo||6};
-  try{ return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{}; }catch(e){ return {}; }
+  try{
+    return JSON.parse(localStorage.getItem(_HIST_EXT_PROXY_CFG_KEY)||'null')||{};
+  }catch(e){
+    console.warn('[_histExtProxyCfgLoad] 프록시 설정 로드 실패:', e.message);
+    return {};
+  }
 }
 function _histExtProxyCfgSave(obj){
-  try{ localStorage.setItem(_HIST_EXT_PROXY_CFG_KEY, JSON.stringify(obj||{})); }catch(e){}
+  try{
+    localStorage.setItem(_HIST_EXT_PROXY_CFG_KEY, JSON.stringify(obj||{}));
+  }catch(e){
+    console.warn('[_histExtProxyCfgSave] 프록시 설정 저장 실패:', e.message);
+  }
 }
 function _histExtTargetLoad(){
-  try{ return localStorage.getItem(_HIST_EXT_TARGET_KEY)||''; }catch(e){ return ''; }
+  try{
+    return localStorage.getItem(_HIST_EXT_TARGET_KEY)||'';
+  }catch(e){
+    console.warn('[_histExtTargetLoad] 타겟 로드 실패:', e.message);
+    return '';
+  }
 }
 function _histExtTargetSave(v){
-  try{ localStorage.setItem(_HIST_EXT_TARGET_KEY, String(v||'')); }catch(e){}
+  try{
+    localStorage.setItem(_HIST_EXT_TARGET_KEY, String(v||''));
+  }catch(e){
+    console.warn('[_histExtTargetSave] 타겟 저장 실패:', e.message);
+  }
 }
 function _histExtNormDate(s){
   if(!s) return '';
@@ -371,11 +441,23 @@ window.histExtSetSource = function(v){
   const st=_histExtLoad();
   const next={...st, sourceSel:String(v||'')};
   _histExtSave(next);
-  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
-  try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
+  try{
+    window.histExtResetUI && window.histExtResetUI();
+  }catch(e){
+    console.warn('[histExtSetSource] UI 초기화 실패:', e.message);
+  }
+  try{
+    _histExtRenderTable(_histExtGetViewItems());
+  }catch(e){
+    console.error('[histExtSetSource] 테이블 렌더링 실패:', e.message);
+  }
 };
 window.histExtResetUI = function(){
-  try{ window._histExtSel = new Set(); }catch(e){}
+  try{
+    window._histExtSel = new Set();
+  }catch(e){
+    console.warn('[histExtResetUI] 선택 초기화 실패:', e.message);
+  }
   window._histExtPage = 1;
 };
 window.histExtSetKeyword = function(v){
@@ -383,17 +465,34 @@ window.histExtSetKeyword = function(v){
   const kw=String(v||'').trim();
   const next={...st, keyword:kw};
   _histExtSave(next);
-  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
-  try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
+  try{
+    window.histExtResetUI && window.histExtResetUI();
+  }catch(e){
+    console.warn('[histExtSetKeyword] UI 초기화 실패:', e.message);
+  }
+  try{
+    _histExtRenderTable(_histExtGetViewItems());
+  }catch(e){
+    console.error('[histExtSetKeyword] 테이블 렌더링 실패:', e.message);
+  }
 };
 window.histExtClearKeyword = function(){
-  try{ const el=document.getElementById('hist-ext-keyword'); if(el) el.value=''; }catch(e){}
+  try{
+    const el=document.getElementById('hist-ext-keyword');
+    if(el) el.value='';
+  }catch(e){
+    console.warn('[histExtClearKeyword] 키워드 필드 초기화 실패:', e.message);
+  }
   window.histExtSetKeyword('');
 };
 window.histExtToggleSel = function(key){
   const sel = window._histExtSel || (window._histExtSel=new Set());
   if(sel.has(key)) sel.delete(key); else sel.add(key);
-  try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){}
+  try{
+    _histExtRenderTable(_histExtGetViewItems());
+  }catch(e){
+    console.error('[histExtToggleSel] 테이블 렌더링 실패:', e.message);
+  }
 };
 window.histExtSelPage = function(on){
   const items = _histExtGetViewItems();
@@ -405,14 +504,22 @@ window.histExtSelPage = function(on){
     const k=_histExtKey(x);
     if(on) sel.add(k); else sel.delete(k);
   });
-  try{ _histExtRenderTable(items); }catch(e){}
+  try{
+    _histExtRenderTable(items);
+  }catch(e){
+    console.error('[histExtSelPage] 테이블 렌더링 실패:', e.message);
+  }
 };
 window.histExtPageTo = function(p){
   const items = _histExtGetViewItems();
   const total = Math.max(1, Math.ceil(items.length/_HIST_EXT_PAGE_SIZE));
   const np = Math.max(1, Math.min(total, parseInt(p,10)||1));
   window._histExtPage = np;
-  try{ _histExtRenderTable(items); }catch(e){}
+  try{
+    _histExtRenderTable(items);
+  }catch(e){
+    console.error('[histExtPageTo] 테이블 렌더링 실패:', e.message);
+  }
 };
 window.histExtCopySelected = async function(){
   const items = _histExtGetViewItems();
@@ -423,7 +530,13 @@ window.histExtCopySelected = async function(){
     return;
   }
   const tsv=picked.map(x=>[x.date,x.winner,x.loser,x.map,x.elo,x.type,x.memo].join('\t')).join('\n');
-  try{ await navigator.clipboard.writeText(tsv); alert('선택 복사됨'); }catch(e){ alert('복사 실패: 브라우저 권한 문제일 수 있어요.'); }
+  try{
+    await navigator.clipboard.writeText(tsv);
+    alert('선택 복사됨');
+  }catch(e){
+    console.error('[histExtCopySelected] 클립보드 복사 실패:', e.message);
+    alert('복사 실패: 브라우저 권한 문제일 수 있어요.');
+  }
 };
 window.histExtPasteFromClipboard = async function(){
   try{
@@ -1460,12 +1573,48 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
     return true;
   });
+  // 동일 날짜 내 정렬 보조키(최신이 위): 시간/생성시각 기반
+  // - time: 숫자(ms) 또는 문자열
+  // - t: 'HH:MM' 형태(존재할 경우)
+  // - _id/sid: genId() = (Date.now base36 + random4) → 앞부분으로 생성시각 추정
+  const _getMatchTs = (m, idx) => {
+    try{
+      // 1) time 필드
+      if (m && typeof m.time === 'number') return m.time;
+      if (m && typeof m.time === 'string' && m.time.trim()) {
+        const n = Number(m.time);
+        if (!isNaN(n) && isFinite(n)) return n;
+      }
+      // 2) t (HH:MM 또는 HH:MM:SS) → 날짜 없는 경우도 있어 보조키로만 사용
+      if (m && typeof m.t === 'string' && m.t.includes(':')) {
+        const parts = m.t.split(':').map(x=>Number(x));
+        if (parts.length >= 2 && parts.every(x=>!isNaN(x))) {
+          const hh = parts[0]||0, mm = parts[1]||0, ss = parts[2]||0;
+          return hh*3600 + mm*60 + ss;
+        }
+      }
+      // 3) genId 기반(_id/sid)
+      const id = (m && (m._id || m.sid)) ? String(m._id || m.sid) : '';
+      if (id && id.length > 4) {
+        const prefix = id.slice(0, -4); // Date.now().toString(36)
+        const t36 = parseInt(prefix, 36);
+        if (!isNaN(t36) && isFinite(t36)) return t36;
+      }
+    }catch(e){}
+    // 4) 최후: 배열 인덱스(대부분 unshift로 최신이 0번) → desc에서는 -idx가 최신 우선
+    return -idx;
+  };
   filtered.sort((a,b)=>{
     const da=(a.m.d||''), db=(b.m.d||'');
     const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
     if(cmp!==0) return cmp;
-    // 동일 날짜일 때 안정적 보조 정렬: 원본 인덱스 기준
-    return recSortDir==='asc' ? (a.i - b.i) : (b.i - a.i);
+    // 동일 날짜일 때: (1) 시간/생성시각 (2) 원본 인덱스
+    const ta=_getMatchTs(a.m, a.i);
+    const tb=_getMatchTs(b.m, b.i);
+    const cmp2 = recSortDir==='asc' ? (ta - tb) : (tb - ta);
+    if (cmp2 !== 0) return cmp2;
+    // asc(오래된→최신): unshift 기준이라 i가 클수록 오래됨
+    return recSortDir==='asc' ? (b.i - a.i) : (a.i - b.i);
   });
 
   // ── 날짜(일자) 빠른 선택: ASL 스타일 날짜 메뉴(설정: su_date_menu_style) ──

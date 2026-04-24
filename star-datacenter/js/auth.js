@@ -82,7 +82,9 @@ async function sha256(str){
       const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
       return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
     }
-  }catch(e){}
+  }catch(e){
+    console.warn('[sha256] Web Crypto API 실패, 동기 방식 사용:', e.message);
+  }
   return sha256Sync(str);
 }
 const ADMIN_HASH_KEY='su_admin_hashes'; // [{hash,role,label}] 배열
@@ -102,7 +104,9 @@ async function initLoginHash(){
       const migrated=parsed.map((h,i)=>({hash:h,role:'admin',label:`관리자${i+1}`}));
       localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(migrated));
     }
-  }catch{}
+  }catch(e){
+    console.warn('[initLoginHash] 관리자 계정 마이그레이션 실패:', e.message);
+  }
 }
 function getAdminAccounts(){
   try{
@@ -172,7 +176,9 @@ function applyLoginState(){
     if(st && isLoggedIn){
       st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 관리자';
     }
-  }catch(e){}
+  }catch(e){
+    console.warn('[applyLoginState] 로그인 상태 표시 업데이트 실패:', e.message);
+  }
   const _mobileBar=document.getElementById('mobileActionBar');
   if(_mobileBar && !isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='none'; }
   if(_mobileBar && isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='flex'; }
@@ -229,6 +235,10 @@ function doFile(inp){
   r.onload=e=>{
     try{
       const d=JSON.parse(e.target.result);
+      if(!d||typeof d!=='object'||Array.isArray(d)){
+        alert('파일이 유효한 JSON 객체가 아닙니다.');
+        return;
+      }
       players=d.players||[];univCfg=d.univCfg||univCfg;maps=d.maps||maps;tourD=d.tourD||Array(15).fill('');
       if(d.tiers&&d.tiers.length)TIERS.splice(0,TIERS.length,...d.tiers);
       miniM=d.miniM||[];univM=d.univM||[];comps=d.comps||[];ckM=d.ckM||[];
@@ -237,7 +247,9 @@ function doFile(inp){
       tourneys=d.tourneys||[];
       // (요청사항) 외부 대진기록 복원
       if(d.histExt){
-        try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){}
+        try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){
+          console.warn('[doFile] histExt localStorage 저장 실패:', e.message);
+        }
       }
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
@@ -263,7 +275,11 @@ function doFile(inp){
       players.forEach(p=>{if(_dupSeen[p.name])_dupFound.push(p.name);else _dupSeen[p.name]=true;});
       const _dupUniq=[...new Set(_dupFound)];
       if(_dupUniq.length) alert('⚠️ 동명이인 감지!\n중복 이름: '+_dupUniq.join(', ')+'\n\n설정 탭 > 데이터 진단에서 수정하세요.');
-    }catch{alert('파일 읽기 오류');}
+      alert('✅ 데이터 임포트 완료');
+    }catch(err){
+      console.error('[doFile] 파일 처리 오류:', err);
+      alert(`파일 읽기 오류: ${err.message}\n올바른 JSON 파일인지 확인하세요.`);
+    }
   };
   r.readAsText(inp.files[0]);
 }
@@ -476,7 +492,11 @@ function toggleDark(){
   localStorage.setItem('su_dark',isDark?'1':'');
   if(window._fixHdrBtns) window._fixHdrBtns(); else document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
   // 다크 전환 시 테마 변수 재적용(다크 모드에서는 accent만 적용)
-  try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
+  try{
+    window._applyThemeVars && window._applyThemeVars();
+  }catch(e){
+    console.warn('[toggleDark] 테마 변수 재적용 실패:', e.message);
+  }
 }
 
 /* ── 클립보드 복사 유틸 ── */

@@ -16,10 +16,14 @@ function applyProfileShapeVars(){
     const shape = localStorage.getItem('su_bcp_shape') || 'circle';
     const radius = (shape === 'square') ? '5px' : '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
-  }catch(e){}
+  }catch(e){
+    console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
+  }
 }
 // 초기 1회 적용
-try{ applyProfileShapeVars(); }catch(e){}
+try{ applyProfileShapeVars(); }catch(e){
+  console.warn('[applyProfileShapeVars 초기화] 실패:', e.message);
+}
 
 /* ══════════════════════════════════════
    대학 로고 공통 스타일 (현황판/설정 등)
@@ -37,9 +41,13 @@ function applyUnivLogoVars(){
     // 대학 상세(모달)용 (요청: 카드 로고 이미지 크기 조정이 그대로 반영되게)
     document.documentElement.style.setProperty('--su_univ_logo_size_detail', size + 'px');
     document.documentElement.style.setProperty('--su_univ_logo_box_detail', box + 'px');
-  }catch(e){}
+  }catch(e){
+    console.warn('[applyUnivLogoVars] CSS 변수 설정 실패:', e.message);
+  }
 }
-try{ applyUnivLogoVars(); }catch(e){}
+try{ applyUnivLogoVars(); }catch(e){
+  console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
+}
 function escJS(s){
   return String(s??'')
     .replace(/\\/g,'\\\\')

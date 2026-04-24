@@ -69,7 +69,9 @@ function _b2GetImgSettings(playerName, slot) {
       if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
       if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
     }
-  }catch(e){}
+  }catch(e){
+    console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
+  }
   // 동기화
   _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
   _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
@@ -464,7 +466,9 @@ function rBoard2(C, T) {
     setTimeout(()=>{
       try{
         sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
-      }catch(e){}
+      }catch(e){
+        console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
+      }
     }, 0);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
@@ -478,7 +482,9 @@ function rBoard2(C, T) {
           _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
           _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
         }
-      }catch(e){}
+      }catch(e){
+        console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
+      }
     }, 0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
@@ -777,7 +783,9 @@ function _b2FemcoView() {
       badge = statusHtml
         ? `<span style="position:absolute;top:${_bTop}px;left:${_bLeft}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:${_badgeBg};overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${_badgeInner}</span>`
         : '';
-    }catch(e){}
+    }catch(e){
+      console.warn('[femcoAvatarSquare] 상태 아이콘 생성 실패:', e.message);
+    }
 
     if (img) {
       return `<span style="position:relative;display:block;width:100%;height:100%">
@@ -1197,7 +1205,11 @@ async function _saveB2FemcoInternal(){
   tmpDiv.querySelectorAll('.b2-femco-subnav,.b2-femco-panel,.no-export,.no-export-movebtns').forEach(el => el.remove());
 
   await new Promise(r => setTimeout(r, 120));
-  try{ if (typeof injectUnivIcons === 'function') injectUnivIcons(tmpDiv); }catch(e){}
+  try{
+    if (typeof injectUnivIcons === 'function') injectUnivIcons(tmpDiv);
+  }catch(e){
+    console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
+  }
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
@@ -1445,7 +1457,9 @@ function _b2Avatar(p, col, size) {
   try{
     const chipPx = parseInt(localStorage.getItem('su_bcp_size') || '26', 10);
     mult = Math.max(0.6, Math.min(2.4, chipPx / 26));
-  }catch(e){}
+  }catch(e){
+    console.warn('[_b2Avatar] 아바타 크기 설정 로드 실패:', e.message);
+  }
   const s = Math.round(base * mult);
   const badgeSize = Math.round(s * 0.38);
   const _rawIcon = getStatusIcon(p.name);

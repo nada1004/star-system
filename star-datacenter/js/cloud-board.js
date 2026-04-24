@@ -197,6 +197,8 @@ function _applyCloudData(d) {
       if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
       if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
       if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
+      if(s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
       if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
       if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
       if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
@@ -281,6 +283,8 @@ async function fbCloudSave() {
       designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
       designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
       designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
+      designV2Colors: localStorage.getItem('su_design_v2_colors')||'{}',
+      designV2Effects: localStorage.getItem('su_design_v2_effects')||'{}',
       // 🅰️ 전역 폰트 — 모든 기기 동기화
       appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
       appFontCss: localStorage.getItem('su_app_font_css')||'',

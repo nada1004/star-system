@@ -51,6 +51,33 @@ window.applyDesignV2 = function(forceOn){
     );
     if(!!on) document.body.classList.add('designv2-'+p);
 
+    // (신규) 커스텀 색상 적용
+    try{
+      const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+      const presetColors = colors[p] || {};
+      Object.keys(presetColors).forEach(varName => {
+        document.body.style.setProperty('--' + varName, presetColors[varName]);
+      });
+    }catch(e){}
+
+    // (신규) 커스텀 효과 적용
+    try{
+      const effects = JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}');
+      const presetEffects = effects[p] || {};
+      // 그림자 강도
+      if(presetEffects.shadowIntensity !== undefined){
+        document.body.style.setProperty('--custom-shadow-intensity', presetEffects.shadowIntensity);
+      }
+      // 투명도
+      if(presetEffects.cardOpacity !== undefined){
+        document.body.style.setProperty('--custom-card-opacity', presetEffects.cardOpacity);
+      }
+      // 그라데이션 각도
+      if(presetEffects.gradientAngle !== undefined){
+        document.body.style.setProperty('--custom-gradient-angle', presetEffects.gradientAngle);
+      }
+    }catch(e){}
+
     // (요청사항) Nada Dark 프리셋은 다크 모드가 기본
     // - 기존 다크 설정(localStorage su_dark) 값은 건드리지 않고, 프리셋 활성 동안만 강제로 body.dark 부여
     try{
@@ -246,6 +273,44 @@ window.cfgApplyDesignV2TonePreset = function(key){
     const r2=document.querySelector('#cfg-designv2-dark'); if(r2) r2.value=String(v.d);
     const s1=document.getElementById('cfg-designv2-bright-v'); if(s1) s1.textContent=v.b+'%';
     const s2=document.getElementById('cfg-designv2-dark-v'); if(s2) s2.textContent=v.d+'%';
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// ══════════════════════════════════════
+// 🎨 디자인 모드 색상 커스터마이징
+// ══════════════════════════════════════
+window.cfgSetDesignV2Color = function(varName, value){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+    if(!colors[preset]) colors[preset] = {};
+    colors[preset][varName] = value;
+    localStorage.setItem('su_design_v2_colors', JSON.stringify(colors));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+window.cfgResetDesignV2Colors = function(){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+    delete colors[preset];
+    localStorage.setItem('su_design_v2_colors', JSON.stringify(colors));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+window.cfgSetDesignV2Effect = function(effectName, value){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const effects = JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}');
+    if(!effects[preset]) effects[preset] = {};
+    effects[preset][effectName] = value;
+    localStorage.setItem('su_design_v2_effects', JSON.stringify(effects));
   }catch(e){}
   try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
   try{ render(); }catch(e){}
@@ -2883,6 +2948,85 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
         • 적용 범위: 헤더/탭/기록카드/모달/하단내비/현황판 등<br>
         • 관리자 저장(Firebase 저장) 시 다른 기기에도 동일하게 적용됩니다.
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{
+    const preset = (localStorage.getItem('su_design_v2_preset') ?? 'base');
+    const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+    const presetColors = colors[preset] || {};
+    const effects = JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}');
+    const presetEffects = effects[preset] || {};
+    
+    const colorVars = [
+      {key: 'primary-start', label: '메인 색상 (시작)', default: '#4F46E5'},
+      {key: 'primary-mid', label: '메인 색상 (중간)', default: '#7C3AED'},
+      {key: 'primary-end', label: '메인 색상 (끝)', default: '#2563EB'},
+      {key: 'accent-warm', label: '강조 색상 (따뜻함)', default: '#F59E0B'},
+      {key: 'accent-cool', label: '강조 색상 (차가움)', default: '#06B6D4'},
+      {key: 'accent-success', label: '성공 색상', default: '#10B981'},
+      {key: 'accent-danger', label: '위험 색상', default: '#EF4444'},
+    ];
+    
+    return _scfgD('designv2-colors','🎨 디자인 모드 색상 커스터마이징') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현재 프리셋: <strong>${preset}</strong> - 프리셋별로 색상을 개별 저장합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+        ${colorVars.map(v => `
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:11px;font-weight:900;color:var(--text3)">${v.label}</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" 
+                value="${presetColors[v.key] || v.default}"
+                onchange="cfgSetDesignV2Color('${v.key}', this.value)"
+                style="width:40px;height:32px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:0;background:none">
+              <input type="text" 
+                value="${presetColors[v.key] || v.default}"
+                onchange="cfgSetDesignV2Color('${v.key}', this.value)"
+                placeholder="${v.default}"
+                style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;font-family:monospace;text-transform:uppercase">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-w btn-xs" onclick="cfgResetDesignV2Colors()">🔄 기본 색상으로 초기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">현재 프리셋의 색상만 초기화됩니다.</span>
+      </div>
+    </div>
+    
+    <div style="margin-top:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">✨ 다양한 효과</div>
+      
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:100px">그림자 강도</div>
+        <input type="range" min="0" max="100" step="5" value="${presetEffects.shadowIntensity || 50}"
+          oninput="document.getElementById('cfg-shadow-v').textContent=this.value+'%'; cfgSetDesignV2Effect('shadowIntensity', this.value)"
+          style="flex:1;min-width:150px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right"><span id="cfg-shadow-v">${presetEffects.shadowIntensity || 50}%</span></div>
+      </div>
+      
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:100px">카드 투명도</div>
+        <input type="range" min="70" max="100" step="1" value="${presetEffects.cardOpacity || 100}"
+          oninput="document.getElementById('cfg-opacity-v').textContent=this.value+'%'; cfgSetDesignV2Effect('cardOpacity', this.value)"
+          style="flex:1;min-width:150px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right"><span id="cfg-opacity-v">${presetEffects.cardOpacity || 100}%</span></div>
+      </div>
+      
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:100px">그라데이션 각도</div>
+        <input type="range" min="0" max="360" step="5" value="${presetEffects.gradientAngle || 135}"
+          oninput="document.getElementById('cfg-gradient-v').textContent=this.value+'°'; cfgSetDesignV2Effect('gradientAngle', this.value)"
+          style="flex:1;min-width:150px">
+        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right"><span id="cfg-gradient-v">${presetEffects.gradientAngle || 135}°</span></div>
+      </div>
+      
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+        • 그림자 강도: 카드/버튼의 그림자 진하기 조절<br>
+        • 카드 투명도: 기록카드 등의 배경 투명도 조절<br>
+        • 그라데이션 각도: 헤더/버튼의 그라데이션 방향 조절
       </div>
     </div>
   </details>`;

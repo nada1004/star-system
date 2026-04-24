@@ -395,9 +395,9 @@ function rCompLeague(tn){
             </div>
           </div>
           <div style="text-align:center;min-width:80px">
-            ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="leagueToggleDet('${detId}',document.getElementById('detbtn-${detId}'))"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
+            ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
             <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:calc(var(--tc-uicon) * 0.55);height:calc(var(--tc-uicon) * 0.55);object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
-            ${isDone?`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px"><button id="detbtn-${detId}" class="btn-detail" style="font-size:10px" onclick="leagueToggleDet('${detId}',this)">📂 상세</button>${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p" style="font-size:10px;padding:3px 7px;border-radius:7px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴</button>`:'';})()}</div>`:''}
+            ${isDone?`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px"><button class="btn-detail" style="font-size:10px" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})">📂 상세</button>${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p" style="font-size:10px;padding:3px 7px;border-radius:7px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴</button>`:'';})()}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -411,9 +411,6 @@ function rCompLeague(tn){
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="leagueEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
         </div>`:''}
-      </div>
-      <div id="${detId}" style="display:none;margin-top:-4px;margin-bottom:8px;padding:14px 16px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none">
-        ${isDone?buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin):'<div style="font-size:12px;color:var(--gray-l)">아직 경기가 진행되지 않았습니다.</div>'}
       </div>`;
     });
     h+=`</div>`;
@@ -425,8 +422,34 @@ function leagueToggleDet(id,btn){
   const el=document.getElementById(id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
+  el.classList.toggle('open', open);
   const detBtn=btn||document.getElementById('detbtn-'+id);
   if(detBtn){detBtn.textContent=open?'🔼 닫기':'📂 상세';detBtn.classList.toggle('open',open);}
+}
+
+function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
+  const tn=tourneys.find(t=>t.id===tnId);
+  if(!tn)return;
+  let m;
+  if(isManual){
+    m=(tn.bracket?.manualMatches||[])[mi];
+  }else{
+    const br=getBracket(tn);
+    m=br?.matchDetails?.[`${rnd}-${mi}`];
+  }
+  if(!m)return;
+  const ca=gc(m.a||'');const cb=gc(m.b||'');
+  const isDone=m.sa!=null&&m.sb!=null;
+  const aWin=isDone&&m.sa>m.sb;const bWin=isDone&&m.sb>m.sa;
+  const content=document.getElementById('compMatchDetailContent');
+  if(content){
+    content.innerHTML=buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin);
+  }
+  try{ if(typeof cm==='function') cm('compMatchDetailModal'); else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='flex'; } }catch(e){}
+}
+
+function closeCompMatchDetailModal(){
+  try{ if(typeof cm==='function') cm('compMatchDetailModal'); else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='none'; } }catch(e){}
 }
 
 function leagueEditMatch(tnId,gi,mi){
@@ -637,7 +660,7 @@ function rBracketSchedule(tn){
             ${isDone?`<div style="padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span></div>
             <div style="margin-top:4px;font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'}">${winner?winner+' 승':''}</div>
             <button class="btn btn-p btn-xs no-export" style="margin-top:4px" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>
-            ${hasGames?`<button id="detbtn-${detId}" class="btn-detail" style="margin-top:4px;font-size:10px" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:''}
+            ${hasGames?`<button class="btn-detail" style="margin-top:4px;font-size:10px" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})">📂 상세</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -652,9 +675,6 @@ function rBracketSchedule(tn){
           ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:`<button class="btn btn-r btn-xs" onclick="bktClearMatchResult('${tn.id}',${r},${mi})">🗑️ 초기화</button>`}
         </div>`:''}
       </div>
-      ${hasGames?`<div id="${detId}" style="display:none;padding:12px;background:var(--surface);border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none;margin-top:-1px">
-        ${buildDetailHTML(detail,'comp',teamA||'A팀',teamB||'B팀',ca,cb,aWin,bWin)}
-      </div>`:''}
     </div>`;
   }
 
@@ -951,8 +971,8 @@ function rCompTourDynamic(tn){
     }else if(!a?.univ||!b?.univ){
       footer=`<div style="font-size:9px;color:#94a3b8;text-align:center;padding:4px;border-top:1px solid #f1f5f9">팀 배정 후 입력</div>`;
     }
-    const detBtn=hasGames?`<button id="detbtn-${detId}" style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="bktToggleDet('${detId}',this)">📂 상세</button>`:'';
-    const detDiv=hasGames?`<div id="${detId}" style="display:none;padding:8px;background:var(--surface);font-size:10px;border-top:1px solid var(--border)">${buildDetailHTML(det,'comp',a?.univ||'A팀',b?.univ||'B팀',aC,bC,aWin,bWin)}</div>`:'';
+    const detBtn=hasGames?`<button style="width:100%;padding:2px 0;border:none;background:var(--surface);font-size:9px;color:var(--gray-l);cursor:pointer;border-top:1px solid var(--border)" onclick="openCompMatchDetailModal('${tnId}',null,${mi},${rnd},false)">📂 상세</button>`:'';
+    const detDiv='';
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
     const _winCol = winner ? (winner===a?.univ?aC:winner===b?.univ?bC:'#64748b') : '#64748b';
     const _winRgb = _tcHexToRgbStr(_winCol);
@@ -1565,6 +1585,7 @@ function bktToggleDet(id,btn){
   const el=document.getElementById(id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
+  el.classList.toggle('open', open);
   if(btn){btn.textContent=open?'🔼 닫기':'📂 상세';}
 }
 
