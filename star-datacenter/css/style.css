@@ -3334,37 +3334,37 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .modal--login .mbox{
   width:min(90vw, 380px);
   text-align:center;
-  padding:28px 24px;
+  padding:18px 20px;
 }
 @media(max-width:768px){
   .modal--login .mbox{
     width:min(90vw, 360px);
-    padding:24px 20px;
+    padding:16px 18px;
   }
 }
 .modal--login__icon{
   font-size:32px;
-  margin-bottom:8px;
+  margin-bottom:3px;
 }
 .modal--login__title{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:900;
   font-size:17px;
   color:#1e3a8a;
-  margin-bottom:20px;
+  margin-bottom:12px;
 }
 .modal--login__input{
   width:100%;
-  padding:10px 14px;
+  padding:9px 12px;
   border:1.5px solid var(--border2);
   border-radius:8px;
   font-size:13px;
-  margin-bottom:10px;
+  margin-bottom:7px;
   display:block;
 }
 .modal--login__submit{
   width:100%;
-  padding:11px;
+  padding:9px;
   background:linear-gradient(135deg,#1e3a8a,#2563eb);
   color:#fff;
   border:none;
@@ -3376,11 +3376,11 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .modal--login__err{
   color:#dc2626;
   font-size:12px;
-  margin-top:8px;
-  min-height:18px;
+  margin-top:5px;
+  min-height:0;
 }
 .modal--login__cancel{
-  margin-top:10px;
+  margin-top:6px;
   background:none;
   border:none;
   color:var(--gray-l);
