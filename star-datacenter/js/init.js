@@ -1,9 +1,10 @@
-﻿function showNoticePopup(){
+function showNoticePopup(){
   if(typeof notices==='undefined'||!notices.length) return;
   const active=notices.filter(n=>n.active);
   if(!active.length) return;
   const today=new Date().toLocaleDateString('ko-KR').replace(/\./g,'').replace(/ /g,'');
-  // 怨듭?蹂?媛쒕퀎 ?④? ??????怨듭????낅┰?곸쑝濡??앹뾽??  const n=active.find(n=>!localStorage.getItem('su_nhide_'+n.id+'_'+today));
+  // 공지별 개별 숨김 키 — 새 공지는 독립적으로 팝업됨
+  const n=active.find(n=>!localStorage.getItem('su_nhide_'+n.id+'_'+today));
   if(!n) return;
   const todayKey='su_nhide_'+n.id+'_'+today;
   const titleEl=document.getElementById('notice-popup-title');
@@ -12,12 +13,12 @@
   const iconEl=document.getElementById('notice-popup-type-icon');
   const headerEl=document.getElementById('notice-popup-header');
   if(!titleEl||!bodyEl) return;
-  titleEl.textContent=n.title||'怨듭?';
+  titleEl.textContent=n.title||'공지';
   bodyEl.textContent=n.body||'';
   dateEl.textContent=n.date||'';
-  iconEl.textContent=n.type||'?뱼';
-  // ??낅퀎 ?ㅻ뜑 ?됱긽
-  const colors={'?뵦':'linear-gradient(135deg,#991b1b,#dc2626)','?좑툘':'linear-gradient(135deg,#92400e,#d97706)','?럦':'linear-gradient(135deg,#065f46,#059669)'};
+  iconEl.textContent=n.type||'📢';
+  // 타입별 헤더 색상
+  const colors={'🔥':'linear-gradient(135deg,#991b1b,#dc2626)','⚠️':'linear-gradient(135deg,#92400e,#d97706)','🎉':'linear-gradient(135deg,#065f46,#059669)'};
   if(headerEl) headerEl.style.background=colors[n.type]||'linear-gradient(135deg,#1e3a8a,#2563eb)';
   window._noticePopupHideKey=todayKey;
   om('noticePopupModal');
@@ -30,9 +31,11 @@ function closeNoticePopup(){
   cm('noticePopupModal');
 }
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) 媛濡?"?쒕옒洹?硫붾돱" 吏??// - overflow-x:auto ??硫붾돱 諛붾? 留덉슦?ㅻ줈 ?대┃-?쒕옒洹??댁꽌 ?ㅽ겕濡?媛?ν븯寃?// - render() ?댄썑 ?숈쟻?쇰줈 ?앹꽦?섎뒗 ?붿냼?먮룄 ?곸슜??(render.js?먯꽌 ?몄텧)
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 가로 "드래그 메뉴" 지원
+// - overflow-x:auto 인 메뉴 바를 마우스로 클릭-드래그 해서 스크롤 가능하게
+// - render() 이후 동적으로 생성되는 요소에도 적용됨 (render.js에서 호출)
+// ─────────────────────────────────────────────────────────────
 window.enableDragScroll = function(root){
   const scope = root || document;
   const bars = scope.querySelectorAll ? scope.querySelectorAll('.hist-inlinebar') : [];
@@ -43,7 +46,7 @@ window.enableDragScroll = function(root){
     let isDown=false, startX=0, startScroll=0, moved=false;
 
     const down = (e)=>{
-      // 留덉슦??醫뚰겢由?쭔(?고겢由??좏겢由??쒖쇅)
+      // 마우스 좌클릭만(우클릭/휠클릭 제외)
       if(e.pointerType==='mouse' && e.button!==0) return;
       isDown=true;
       moved=false;
@@ -63,7 +66,7 @@ window.enableDragScroll = function(root){
       if(!isDown) return;
       isDown=false;
       el.classList.remove('dragging');
-      // ?쒕옒洹몃줈 ?ㅽ겕濡ㅽ븳 寃쎌슦 踰꾪듉 ?대┃ 諛⑹?
+      // 드래그로 스크롤한 경우 버튼 클릭 방지
       el._dragMoved = moved;
       setTimeout(()=>{ try{ el._dragMoved=false; }catch(_){} }, 0);
       try{ el.releasePointerCapture(e.pointerId); }catch(_){}
@@ -84,31 +87,35 @@ window.enableDragScroll = function(root){
 
 function init(){
   fixPoints();
-  // ?꾩뿭 ?고듃 ?ㅼ젙 ?곸슜
+  // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  // (?붿껌?ы빆) 踰꾪듉/???ㅽ????ㅼ젙 ?곸슜
+  // (요청사항) 버튼/필 스타일 설정 적용
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  // ?렓 ?붿옄??紐⑤뱶(由щ돱?? ?곸슜
+  // 🎨 디자인 모드(리뉴얼) 적용
   try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
-  // ELO 誘몄꽕???좎닔?먭쾶 湲곕낯媛?遺??  if(typeof ELO_DEFAULT!=='undefined'){
+  // ELO 미설정 선수에게 기본값 부여
+  if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
   }
-  // ???tourneys) 湲곕줉 ?먮룞 ?뚭툒 諛섏쁺 (誘몃컲?곷텇留? 以묐났 諛⑹? ?댁옣)
+  // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
   if(typeof syncTourneyHistory==='function') syncTourneyHistory();
-  // ?곗뼱????곗씠??留덉씠洹몃젅?댁뀡 (議곕퀎由ш렇/釉뚮씪耳?湲곕줉 ??ttM ?숆린??
+  // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
   if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
-  // ?곗뼱??????곗뼱???紐낆묶 留덉씠洹몃젅?댁뀡
+  // 티어대전 → 티어대회 명칭 마이그레이션
   if(typeof _migrateTierTourName==='function') _migrateTierTourName();
-  // ?곕룄 ?꾪꽣??getYearOptions()媛 ?뚮뜑留????숈쟻?쇰줈 怨꾩궛?섎?濡?蹂꾨룄 異붿텧 遺덊븘??  const ptier=document.getElementById('p-tier');
+  // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
+  const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
   try{refreshSel();}catch(e){}
   initLoginHash();
   applyLoginState();
   render();
-  // ?렦 BGM 踰꾪듉 珥덇린??  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
-  // ?벟 SOOP 硫?곕럭 踰꾪듉 珥덇린??  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
+  // 🎵 BGM 버튼 초기화
+  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
+  // 📺 SOOP 멀티뷰 버튼 초기화
+  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
   setTimeout(showNoticePopup, 800);
-  // ?넅 URL ?뚮씪誘명꽣濡??좎닔/????먮룞 ?ㅽ뵂
+  // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{
     try{
       const params = new URLSearchParams(window.location.search);
@@ -137,12 +144,13 @@ function init(){
 init();
 initDark();
 
-// ?????????????????????????????????????????????????????????????
-// ?꾩뿭 ?고듃 ?ㅼ젙
+// ─────────────────────────────────────────────────────────────
+// 전역 폰트 설정
 // - localStorage:
 //   su_app_font_preset: system | noto | pretendard | nanum | gmarket | custom
-//   su_app_font_css:    (?듭뀡) ?고듃 CSS URL
-//   su_app_font_family: (?듭뀡) font-family 臾몄옄??// ?????????????????????????????????????????????????????????????
+//   su_app_font_css:    (옵션) 폰트 CSS URL
+//   su_app_font_family: (옵션) font-family 문자열
+// ─────────────────────────────────────────────────────────────
 window._applyAppFont = function(){
   let preset='noto', cssUrl='', fam='';
   try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}
@@ -168,7 +176,7 @@ window._applyAppFont = function(){
     el.href = href;
   };
 
-  // ?꾨━?뗫퀎 沅뚯옣 CSS(?놁뼱???숈옉?섏?留? ?덉쑝硫??덉쭏??
+  // 프리셋별 권장 CSS(없어도 동작하지만, 있으면 품질↑)
   const presetCss = {
     noto: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap',
     pretendard: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable.css',
@@ -181,7 +189,8 @@ window._applyAppFont = function(){
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
 
-  // CSS 吏곸젒 ?낅젰(@font-face ?? 吏??  try{
+  // CSS 직접 입력(@font-face 등) 지원
+  try{
     const head = document.head || document.getElementsByTagName('head')[0];
     if(head){
       let st = document.getElementById('app-font-custom-style');
@@ -198,7 +207,7 @@ window._applyAppFont = function(){
     }
   }catch(e){}
 
-  // preset ??font-family
+  // preset → font-family
   const presetFam = {
     system: 'system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif',
     noto: '"Noto Sans KR", sans-serif',
@@ -210,22 +219,23 @@ window._applyAppFont = function(){
     ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
-  // ?대え吏(?뱤?뱟?룇 ??媛 ?묐갚?쇰줈 蹂댁씠??臾몄젣 諛⑹?:
-  // - ?꾩뿭 ?고듃瑜?媛뺤젣 ?곸슜(body * { font-family: var(--app-font) !important; })?섎뒗 援ъ“??  //   ?대え吏 ?고듃 ?대갚??紐낆떆?곸쑝濡??욎뿉 ?ъ빞 而щ윭 ?대え吏媛 ?좎??⑸땲??
+  // 이모지(📊📅🏆 등)가 흑백으로 보이는 문제 방지:
+  // - 전역 폰트를 강제 적용(body * { font-family: var(--app-font) !important; })하는 구조라
+  //   이모지 폰트 폴백을 명시적으로 앞에 둬야 컬러 이모지가 유지됩니다.
   const emojiFam = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';
   const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
   try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
-// 珥덇린 1???곸슜(?뚮뜑 ?꾪썑 紐⑤몢 ???
+// 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) 踰꾪듉/?????꾪꽣) ?ㅽ????꾩뿭 ?ㅼ젙
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 버튼/필(탭/필터) 스타일 전역 설정
 // - localStorage:
-//   su_btn_scale_pct: 85~125 (湲곕낯 100)
-//   su_btn_r:         px (湲곕낯 8)
-//   su_pill_r:        px (湲곕낯 20)
-// ?????????????????????????????????????????????????????????????
+//   su_btn_scale_pct: 85~125 (기본 100)
+//   su_btn_r:         px (기본 8)
+//   su_pill_r:        px (기본 20)
+// ─────────────────────────────────────────────────────────────
 window._applyUiBtnStyle = function(){
   let pct=100, br=8, pr=20;
   try{ pct = parseInt(localStorage.getItem('su_btn_scale_pct')||'100',10) || 100; }catch(e){}
@@ -241,22 +251,22 @@ window._applyUiBtnStyle = function(){
 };
 try{ window._applyUiBtnStyle(); }catch(e){}
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) ?꾩껜 ?뚮쭏 蹂???곸슜 (?ㅻ뜑 ?꾨━?뗪낵 ?곕룞)
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 전체 테마 변수 적용 (헤더 프리셋과 연동)
 // - localStorage: su_theme_vars_v1 (JSON: { "--bg":"...", "--surface":"...", ... })
-// - dark 紐⑤뱶?먯꽌??諛곌꼍 怨꾩뿴? ?좎??섍퀬, 媛뺤“??--blue 怨꾩뿴)留??곸슜
-// ?????????????????????????????????????????????????????????????
+// - dark 모드에서는 배경 계열은 유지하고, 강조색(--blue 계열)만 적용
+// ─────────────────────────────────────────────────────────────
 window._applyThemeVars = function(){
   let obj=null;
   try{ obj = JSON.parse(localStorage.getItem('su_theme_vars_v1')||'null'); }catch(e){ obj=null; }
   if(!obj || typeof obj!=='object') obj=null;
   const tgt = document.body || document.documentElement;
   if(!tgt) return;
-  // 湲곗〈 ?곸슜媛??쒓굅 ???ъ쟻???녿뒗 ?ㅻ뒗 ?쒓굅)
+  // 기존 적용값 제거 후 재적용(없는 키는 제거)
   const keys = ['--bg','--white','--surface','--border','--border2','--blue','--blue-d','--blue-l','--blue-ll','--gold','--gold-bg','--gold-b','--green','--red','--gray','--gray-l'];
   try{
     keys.forEach(k=>{
-      // obj媛 ?녾굅???대떦 ?ㅺ? ?놁쑝硫?inline ?쒓굅
+      // obj가 없거나 해당 키가 없으면 inline 제거
       if(!obj || !Object.prototype.hasOwnProperty.call(obj,k)) tgt.style.removeProperty(k);
     });
   }catch(e){}
@@ -280,20 +290,21 @@ window.setThemeVars = function(vars){
 };
 try{ window._applyThemeVars(); }catch(e){}
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) ?ㅻ뜑 而ㅼ뒪?(?쒕ぉ/醫뚯륫 ?꾩씠肄??곗륫 ?대?吏/諛곌꼍 ?대?吏/?믪씠)
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 헤더 커스텀(제목/좌측 아이콘/우측 이미지/배경 이미지/높이)
 // - localStorage:
 //   su_hdr_title
-//   su_hdr_left_icon   (URL ?먮뒗 ?대え吏)
+//   su_hdr_left_icon   (URL 또는 이모지)
 //   su_hdr_left_size   (px)
 //   su_hdr_right_img   (URL)
 //   su_hdr_right_size  (px)
 //   su_hdr_bg_img      (URL)
 //   su_hdr_height      (px)
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
 window._applyHeaderSettings = function(){
   let title='', leftIco='', leftSz=22, rightImg='', rightSz=32, bgImg='', hdrH=0;
-  // ?좉퇋: ?ㅻ뜑 ???④낵 + ?뚮쭏 ?숆린??  let fx='classic', c1='', c2='', syncTheme=false;
+  // 신규: 헤더 색/효과 + 테마 동기화
+  let fx='classic', c1='', c2='', syncTheme=false;
   try{ title=(localStorage.getItem('su_hdr_title')||'').trim(); }catch(e){}
   try{ leftIco=(localStorage.getItem('su_hdr_left_icon')||'').trim(); }catch(e){}
   try{ leftSz=parseInt(localStorage.getItem('su_hdr_left_size')||'22',10)||22; }catch(e){}
@@ -318,7 +329,7 @@ window._applyHeaderSettings = function(){
       if(hdrH>0) document.documentElement.style.setProperty('--hdr-h', hdrH+'px');
       else document.documentElement.style.removeProperty('--hdr-h');
     }catch(e){}
-    // ???좏떥
+    // 색 유틸
     const _hexToRgb=(hex)=>{
       const h=String(hex||'').replace('#','').trim();
       if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
@@ -336,42 +347,42 @@ window._applyHeaderSettings = function(){
     const _darken=(hex,t)=>_mix(hex,'#000000',t);
     const _lighten=(hex,t)=>_mix(hex,'#ffffff',t);
 
-    // 湲곕낯 而щ윭
+    // 기본 컬러
     const base1 = _hexToRgb(c1) ? c1 : '#1e3a8a';
     const base2 = _hexToRgb(c2) ? c2 : '#2563eb';
     const base3 = _darken(base1, 0.15);
 
-    // ?대옒???뺣━
+    // 클래스 정리
     try{
       hdr.classList.remove('hdr-stripes','hdr-glass','hdr-aurora','hdr-mesh');
       if(fx==='glass') hdr.classList.add('hdr-glass');
       else if(fx==='aurora') hdr.classList.add('hdr-aurora');
       else if(fx==='mesh') hdr.classList.add('hdr-mesh');
-      else hdr.classList.add('hdr-stripes'); // classic 湲곕낯
+      else hdr.classList.add('hdr-stripes'); // classic 기본
     }catch(e){}
 
-    // CSS 蹂?섎줈 ?꾨떖
+    // CSS 변수로 전달
     try{
       hdr.style.setProperty('--hdr-c1', base1);
       hdr.style.setProperty('--hdr-c2', base2);
       hdr.style.setProperty('--hdr-c3', base3);
     }catch(e){}
 
-    // 諛곌꼍(?대?吏 ?ы븿)
+    // 배경(이미지 포함)
     try{
       let g = '';
-      // fx蹂?湲곕낯 諛곌꼍 (洹몃씪?곗씠??留먭퀬???쒓났)
+      // fx별 기본 배경 (그라데이션 말고도 제공)
       if(fx==='solid'){
         g = base2;
       } else if(fx==='glass'){
-        // glass??CSS?먯꽌 諛곌꼍/釉붾윭 泥섎━瑜??섎?濡? ?ш린??background瑜???뼱?곗? ?딆쓬
+        // glass는 CSS에서 배경/블러 처리를 하므로, 여기서 background를 덮어쓰지 않음
         g = '';
       } else {
-        // classic/aurora/mesh??湲곕낯 洹몃씪?곗씠?섏쓣 ?좎??섍퀬, ?④낵??::before濡??쒗쁽
+        // classic/aurora/mesh는 기본 그라데이션을 유지하고, 효과는 ::before로 표현
         g = `linear-gradient(135deg,${base1} 0%,${base2} 55%,${base3} 100%)`;
       }
       if(bgImg){
-        // glass 紐⑤뱶???뚮뒗 gradient瑜??⑹튂吏 ?딄퀬 諛곌꼍 ?대?吏留?源붽린
+        // glass 모드일 때는 gradient를 합치지 않고 배경 이미지만 깔기
         if(fx==='glass'){
           hdr.style.backgroundImage = `url('${bgImg.replace(/'/g,"%27")}')`;
         }else{
@@ -393,14 +404,15 @@ window._applyHeaderSettings = function(){
       }
     }catch(e){}
 
-    // ?꾩껜 ?뚮쭏(二쇱깋) ?숆린??    try{
+    // 전체 테마(주색) 동기화
+    try{
       if(syncTheme){
         const accent = base2;
         const blue = accent;
         const blueD = _darken(accent, 0.18);
         const blueL = _lighten(accent, 0.86);
         const blueLL = _lighten(accent, 0.92);
-        // body??inline?쇰줈 源붾㈃ dark 紐⑤뱶 蹂?섎룄 ??뼱?
+        // body에 inline으로 깔면 dark 모드 변수도 덮어씀
         const tgt = document.body || document.documentElement;
         tgt.style.setProperty('--blue', blue);
         tgt.style.setProperty('--blue-d', blueD);
@@ -418,14 +430,14 @@ window._applyHeaderSettings = function(){
   if(tEl){
     try{
       if(title) tEl.textContent=title;
-      // 臾몄꽌 ??댄????④퍡 諛섏쁺
-      if(title) document.title = `狩?${title}`;
+      // 문서 타이틀도 함께 반영
+      if(title) document.title = `⭐ ${title}`;
     }catch(e){}
   }
   if(iEl){
     try{
-      const v = leftIco || '?룇';
-      // URL?대㈃ ?대?吏, ?꾨땲硫??띿뒪???대え吏)濡?泥섎━
+      const v = leftIco || '🏆';
+      // URL이면 이미지, 아니면 텍스트(이모지)로 처리
       if(/^https?:\/\//i.test(v)){
         iEl.innerHTML = `<img alt="" src="${v.replace(/"/g,'&quot;')}" style="width:${leftSz}px;height:${leftSz}px;object-fit:contain;display:block">`;
       }else{
@@ -447,19 +459,19 @@ window._applyHeaderSettings = function(){
     }catch(e){}
   }
 };
-// 珥덇린 1???곸슜(?뚮뜑 ?꾪썑 ???
+// 초기 1회 적용(렌더 전후 대응)
 try{ window._applyHeaderSettings(); }catch(e){}
-// ?ㅻ뜑 ?곸슜 ???뚮쭏???ㅼ떆 ?곸슜(?곗꽑?쒖쐞: ?뚮쭏 vars ???ㅻ뜑 sync??--blue留?嫄대뱶由?
+// 헤더 적용 후 테마도 다시 적용(우선순위: 테마 vars → 헤더 sync는 --blue만 건드림)
 try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
 
-// ?????????????????????????????????????????????????????????????
-// 諛섏쓳??UI ?ㅼ????먮룞): 釉뚮씪?곗?/湲곌린 ??뿉 ?곕씪 湲???꾩씠肄??ш린 ?먮룞 議곗젅
-// - CSS 蹂??--uiS 濡??쒖뼱 (style.css?먯꽌 ?곸슜)
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// 반응형 UI 스케일(자동): 브라우저/기기 폭에 따라 글자/아이콘 크기 자동 조절
+// - CSS 변수 --uiS 로 제어 (style.css에서 적용)
+// ─────────────────────────────────────────────────────────────
 function _applyUiScale(){
   try{
     const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
-    // 紐⑤컮?쇱? ?댁쭩 ?묎쾶(?뺣낫 諛?꾟넁), ?쒕툝由?PC??湲곕낯
+    // 모바일은 살짝 작게(정보 밀도↑), 태블릿/PC는 기본
     let s = 1;
     if (w <= 360) s = 0.92;
     else if (w <= 430) s = 0.96;
@@ -467,8 +479,8 @@ function _applyUiScale(){
     else if (w <= 768) s = 1.00;
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
-    // (?좉퇋) ?섎룞 UI ?ㅼ????고듃 ?ш린) ???먮룞媛믪뿉 怨깊빐???꾩뿭 ?곸슜
-    // - localStorage: su_ui_scale_pct (80~140, 湲곕낯 100)
+    // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
+    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
     try{
       const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
       const mul = Math.max(80, Math.min(140, pct)) / 100;
@@ -478,22 +490,23 @@ function _applyUiScale(){
   }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
-// ?ㅼ젙?먯꽌 利됱떆 諛섏쁺?????덈룄濡??몄텧
+// 설정에서 즉시 반영할 수 있도록 노출
 window._applyUiScale = _applyUiScale;
 _applyUiScale();
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) 紐⑤뱺 ??怨듯넻 ?먮룞 留욎땄(紐⑤컮???쒕툝由?
-// - 媛꾧꺽/?⑤뵫/移대뱶쨌洹몃━??諛???뚯씠釉??⑤뵫 ?깆쓣 ?붾㈃??留욎떠 議곗젅
-// - ?ㅼ젙: localStorage su_af_alltabs_v1 = '1'
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 모든 탭 공통 자동 맞춤(모바일/태블릿)
+// - 간격/패딩/카드·그리드 밀도/테이블 패딩 등을 화면에 맞춰 조절
+// - 설정: localStorage su_af_alltabs_v1 = '1'
+// ─────────────────────────────────────────────────────────────
 function _applyAllTabsAutoFit(){
   const key = 'su_af_alltabs_v1';
   let on = false;
   try{ on = (localStorage.getItem(key) === '1'); }catch(e){ on = false; }
 
   try{
-    // 紐⑤컮??二쇱냼李?蹂????묒슜 CSS vh 蹂??    const vh = (window.innerHeight || 800) * 0.01;
+    // 모바일 주소창 변동 대응용 CSS vh 변수
+    const vh = (window.innerHeight || 800) * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
   }catch(e){}
 
@@ -508,7 +521,7 @@ function _applyAllTabsAutoFit(){
   const isMobile = w <= 768;
   const isTablet = w > 768 && w <= 1024;
 
-  // 湲곕낯媛?PC)
+  // 기본값(PC)
   let bodyPad = 16, mainPad = 18, gap = 12, cardMin = 120, cardPad = 14;
   let tdx = 12, tdy = 8;
 
@@ -520,7 +533,7 @@ function _applyAllTabsAutoFit(){
     bodyPad = 10; mainPad = 12; gap = 8; cardMin = 92; cardPad = 10;
     tdx = 8; tdy = 6;
   }
-  // 媛濡쒕え???뱁엳 紐⑤컮??媛濡????몃줈怨듦컙??遺議깊븯????珥섏킌?섍쾶
+  // 가로모드(특히 모바일 가로)는 세로공간이 부족하니 더 촘촘하게
   if(landscape && w <= 1024){
     bodyPad = Math.max(6, bodyPad - 2);
     mainPad = Math.max(8, mainPad - 2);
@@ -544,10 +557,10 @@ window.addEventListener('resize', ()=>{ _applyAllTabsAutoFit(); }, {passive:true
 window.addEventListener('orientationchange', ()=>{ setTimeout(_applyAllTabsAutoFit, 50); }, {passive:true});
 _applyAllTabsAutoFit();
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) 湲곕줉 移대뱶(紐⑤뱺 湲곕줉 ?? ?뚮쭏/諛앷린 ?ㅼ젙
-// - ?밸━ ??숈깋??移대뱶 諛곌꼍/?ㅻ뜑???고븯寃??곸슜
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드(모든 기록 탭) 테마/밝기 설정
+// - 승리 대학색을 카드 배경/헤더에 연하게 적용
+// ─────────────────────────────────────────────────────────────
 function _applyRecCardTheme(){
   const onKey='su_rc_theme_on';
   const acKey='su_rc_accent_mode';
@@ -605,9 +618,9 @@ function _applyRecCardTheme(){
 window._applyRecCardTheme=_applyRecCardTheme;
 _applyRecCardTheme();
 
-// ?????????????????????????????????????????????????????????????
-// (?붿껌?ы빆) ??뚰꺆 移대뱶(議곕퀎由ш렇 ?쇱젙 ?? ?뚮쭏/?붿옄??紐⑤뱶
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭 카드(조별리그 일정 등) 테마/디자인 모드
+// ─────────────────────────────────────────────────────────────
 function _applyTourneyCardTheme(){
   const onKey='su_tc_theme_on';
   const acKey='su_tc_accent_mode';
@@ -650,10 +663,10 @@ function _applyTourneyCardTheme(){
 window._applyTourneyCardTheme=_applyTourneyCardTheme;
 _applyTourneyCardTheme();
 
-// ?????????????????????????????????????????????????????????????
-// ?곷떒 ???꾪꽣諛? ?ㅼ??댄봽/?쒕옒洹몃줈 媛濡??ㅽ겕濡?媛?ν븯寃??대룞 踰꾪듉 ?놁씠??
-// - ??? .tabs, .fbar (overflow-x:auto ?곸뿭)
-// ?????????????????????????????????????????????????????????????
+// ─────────────────────────────────────────────────────────────
+// 상단 탭/필터바: 스와이프/드래그로 가로 스크롤 가능하게(이동 버튼 없이도)
+// - 대상: .tabs, .fbar (overflow-x:auto 영역)
+// ─────────────────────────────────────────────────────────────
 window.enableDragScroll = function(){
   try{
     document.querySelectorAll('.tabs, .fbar').forEach(el=>{
@@ -662,7 +675,8 @@ window.enableDragScroll = function(){
       el.style.cursor = 'grab';
       let down = false, startX = 0, startLeft = 0, moved = false;
       const onDown = (e) => {
-        // 踰꾪듉/?명뭼 ?꾩뿉?쒕뒗 ?쒕옒洹??쒖옉 ????        const t = e.target;
+        // 버튼/인풋 위에서는 드래그 시작 안 함
+        const t = e.target;
         if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea'))) return;
         down = true; moved = false;
         startX = (e.touches ? e.touches[0].clientX : e.clientX);
@@ -684,27 +698,28 @@ window.enableDragScroll = function(){
       el.addEventListener('touchstart', onDown, {passive:true});
       el.addEventListener('touchmove', onMove, {passive:false});
       el.addEventListener('touchend', onUp, {passive:true});
-      // ?쒕옒洹????대┃ ?ㅻ룞??諛⑹?
+      // 드래그 후 클릭 오동작 방지
       el.addEventListener('click', (e)=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } }, true);
     });
   }catch(e){}
 };
-// 珥덇린 1??setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){} }, 400);
+// 초기 1회
+setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){} }, 400);
 
-// ?? ?ъ씠??泥??묒냽 ???먮룞 遺덈윭?ㅺ린 ??
+// ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    // J()瑜??ъ슜??LZ-String ?뺤텞 ?곗씠?곕룄 ?щ컮瑜닿쾶 媛먯?
+    // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
     const localPlayers = J('su_p');
     if(localPlayers && localPlayers.length > 0) return;
   }catch(e){}
-  if (!CONFIG.PROD) console.log('[?먮룞 遺덈윭?ㅺ린] 濡쒖뺄 ?곗씠???놁쓬 ??GitHub ?먮룞 濡쒕뱶');
+  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
   const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
   const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
   const urls = [_RAW, _CDN, _API, _PROXY];
-  gsSetStatus && gsSetStatus('?봽 ?곗씠??遺덈윭?ㅻ뒗 以?..','var(--blue)');
+  gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
   for(const url of urls){
     try{
@@ -728,14 +743,14 @@ window.enableDragScroll = function(){
       } else {
         d = raw;
       }
-      if(d){ console.log('[?먮룞 遺덈윭?ㅺ린] ?깃났:', url); break; }
-    }catch(e){ if (!CONFIG.PROD) console.log('[?먮룞 遺덈윭?ㅺ린] ?ㅽ뙣:', url, e.message); continue; }
+      if(d){ console.log('[자동 불러오기] 성공:', url); break; }
+    }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
   }
   if(d){
-    // LZString ?뺤텞 ?곗씠???먮룞 ?댁젣
+    // LZString 압축 데이터 자동 해제
     if(d && typeof d._lz === 'string'){
       try{ d = JSON.parse(LZString.decompressFromBase64(d._lz)); }
-      catch(e){ console.warn('[?먮룞 遺덈윭?ㅺ린] ?뺤텞 ?댁젣 ?ㅽ뙣:', e); }
+      catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
     }
     try{
       players  = d.players  || d.player  || [];
@@ -758,24 +773,24 @@ window.enableDragScroll = function(){
       years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
       yearOptions.sort();
       fixPoints();
-      // autoLoad ???곗뼱???留덉씠洹몃젅?댁뀡 ?ъ떎??(flag 由ъ뀑 ???ы샇異?
+      // autoLoad 후 티어대회 마이그레이션 재실행 (flag 리셋 후 재호출)
       if(typeof _migrateTierTourneys==='function'){
         if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
         _migrateTierTourneys();
       }
-      // autoLoad ???곗뼱??꾟넂?곗뼱???紐낆묶 留덉씠洹몃젅?댁뀡 ?ъ떎??      if(typeof _migrateTierTourName==='function'){
+      // autoLoad 후 티어대전→티어대회 명칭 마이그레이션 재실행
+      if(typeof _migrateTierTourName==='function'){
         if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
         _migrateTierTourName();
       }
       save(); render();
-      gsSetStatus && gsSetStatus('???먮룞 遺덈윭?ㅺ린 ?꾨즺 ('+new Date().toLocaleTimeString()+')','var(--green)');
+      gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
     }catch(e){
-      console.error('[?먮룞 遺덈윭?ㅺ린] ?곗씠???곸슜 ?ㅻ쪟:', e);
+      console.error('[자동 불러오기] 데이터 적용 오류:', e);
       gsSetStatus && gsSetStatus('','');
     }
   } else {
     gsSetStatus && gsSetStatus('','');
-    console.warn('[?먮룞 遺덈윭?ㅺ린] 紐⑤뱺 URL ?ㅽ뙣');
+    console.warn('[자동 불러오기] 모든 URL 실패');
   }
 })();
-

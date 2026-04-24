@@ -36,7 +36,9 @@ let _statsRankTier = (function(){
 function rStats(C,T){
   T.textContent='📊 통계';
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
-  if(window._statsFilterOpen===undefined) window._statsFilterOpen=false;
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._statsFilterOpen===undefined) window._statsFilterOpen=_lockOpen;
+  if(_lockOpen) window._statsFilterOpen = true;
   // UX 3: 마지막 방문 서브탭 복원
   const _savedSub=localStorage.getItem('su_statsSub');
   window.statsSub = window.statsSub || 'overview';
@@ -89,20 +91,19 @@ function rStats(C,T){
   const _curGrp=_statsGroups.find(g=>g.tabs.some(t=>t.id===(window.statsSub||'overview')))||_statsGroups[0];
   let h=``;
   // 1행: 그룹 pill 바
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">`;
+  const _curSub = (window.statsSub||'overview');
+  const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
+  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px;align-items:center">`;
+  // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
+  }
   _statsGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
   });
-  // (요청사항) 필터 버튼은 그룹(개인/대학/경기/기록실) 우측에 배치
-  h+=`<span style="flex:1"></span>`;
-  h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
-  h+=`</div>`;
-  // (A안) 현재 탭 + 필터 토글(하위 탭/전역필터)
-  const _curSub = (window.statsSub||'overview');
-  const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:10px;align-items:center">`;
-  h+=`<button class="pill on" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">${_curSubObj?.lbl||'선택'}</button>`;
+  // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;
   // 전역 필터 바
   const _isFiltered=!!(_statsDateFrom||_statsDateTo||_statsMinGames!==3||_statsLastN>0);
@@ -123,7 +124,7 @@ function rStats(C,T){
     return`<button onclick="_statsLastN=${n};render()" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid ${on?'#7c3aed':'var(--border2)'};background:${on?'#7c3aed':'var(--white)'};color:${on?'#fff':'var(--text3)'};cursor:pointer;white-space:nowrap;font-weight:${on?'700':'400'}">${n===0?'전체':n+'경기'}</button>`;
   }
   // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
-  if(window._statsFilterOpen){
+  if((_enableSubFilter?window._statsFilterOpen:true)){
   // 하위 탭 pill 바
   h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
   _curGrp.tabs.forEach(o=>{
@@ -1206,7 +1207,7 @@ function statsAwardHTML(){
     return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        ${p.photo?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
+        ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
         <div style="min-width:0">
           <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
           <div style="display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap">
@@ -1713,7 +1714,7 @@ function renderShareCardByPlayer(name){
     <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-      <div style="width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.4);flex-shrink:0;overflow:hidden">${(()=>{const photoUrl=p.photo||'';const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';if(photoUrl)return`<img src="${photoUrl}" style="width:54px;height:54px;object-fit:cover" onerror="this.onerror=null;this.style.display='none'">`;return url?`<img src="${url}" style="width:38px;height:38px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'30\\' height=\\'30\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">` :`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='30' height='30'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
+      <div style="width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.4);flex-shrink:0;overflow:hidden">${(()=>{const photoUrl=p.photo||'';const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';if(photoUrl)return`<img src="${toHttpsUrl(photoUrl)}" style="width:54px;height:54px;object-fit:cover" onerror="this.onerror=null;this.style.display='none'">`;return url?`<img src="${toHttpsUrl(url)}" style="width:38px;height:38px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'30\\' height=\\'30\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">` :`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='30' height='30'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:20px;font-weight:900;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${getStatusIconHTML(p.name)}${p.gender==='M'?'<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:6px">♂</span>':''}</div>
         <div style="font-size:11px;opacity:.8;margin-top:3px">${p.univ} &nbsp;·&nbsp; ${p.tier||'-'} &nbsp;·&nbsp; ${raceLabel}</div>
@@ -1770,7 +1771,7 @@ function renderShareCardByUniv(univName){
     <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">${(()=>{const url=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';return url?`<img src="${url}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'28\\' height=\\'28\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='28' height='28'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
+      <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">${(()=>{const url=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'28\\' height=\\'28\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='28' height='28'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}</div>
       <div>
         <div style="font-size:20px;font-weight:900;letter-spacing:.3px">${u.name}</div>
         <div style="font-size:11px;opacity:.75;margin-top:2px">🎓 소속 선수 ${mem.length}명</div>
@@ -1939,7 +1940,7 @@ function renderShareCardByMatchObj(m){
   function univIconHTML(name, size, fallbackColor){
     const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
     const s=size||'40px';
-    if(url) return `<img src="${url}" style="width:${s};height:${s};object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'${s}\\' height=\\'${s}\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`;
+    if(url) return `<img src="${toHttpsUrl(url)}" style="width:${s};height:${s};object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'${s}\\' height=\\'${s}\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`;
     return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='${s}' height='${s}'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   }
 
@@ -3489,7 +3490,7 @@ function statsPlayerSearchHTML(){
       ${list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
         return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
-          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
@@ -3520,7 +3521,7 @@ function _statsPlayerSearchUpdate(){
     : list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
         return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
-          ${p.photo?`<img src="${p.photo}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
+          ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
@@ -3696,7 +3697,20 @@ function onGlobalSearch(val){
     const genderMatch = !genderFilter || p.gender===genderFilter;
     return nameMatch && raceMatch && genderMatch;
   }).slice(0,18);
-  if(results.length===0){
+  // 외부 대진기록(History > 외부탭)도 함께 검색
+  let extResults = [];
+  try{
+    // history.js의 데이터는 관리자 탭에서 관리되지만, 검색은 read-only로 누구나 가능하게 처리(데이터가 없으면 0건)
+    const items = (typeof _histExtGetViewItems==='function')
+      ? (_histExtGetViewItems()||[])
+      : (typeof _histExtLoad==='function' ? ((_histExtLoad()||{}).items||[]) : []);
+    extResults = (items||[]).filter(it=>{
+      const blob = `${it.source||''} ${it.date||''} ${it.winner||''} ${it.loser||''} ${it.map||''} ${it.elo||''} ${it.type||''} ${it.memo||''}`.toLowerCase();
+      return nameTokens.length===0 ? blob.includes(q) : nameTokens.every(t=>blob.includes(t));
+    }).slice(0,10);
+  }catch(e){}
+
+  if(results.length===0 && extResults.length===0){
     drop.innerHTML=`<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">
       <div style="font-size:20px;margin-bottom:6px">🔍</div>
       검색 결과 없음<br>
@@ -3715,8 +3729,12 @@ function onGlobalSearch(val){
   };
   const mainQ=nameTokens.join(' ');
   window._gsResults = results;
-  drop.innerHTML = `<div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;border-bottom:1px solid var(--border)">${results.length}명 검색됨</div>` +
-  results.map((p,ri)=>{
+  window._gsExtResults = extResults;
+  window._gsQuery = val.trim();
+  let html = '';
+  if(results.length){
+    html += `<div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:var(--gray-l);letter-spacing:.5px;border-bottom:1px solid var(--border)">${results.length}명 검색됨</div>` +
+    results.map((p,ri)=>{
     const col=gc(p.univ);
     const wr=p.win+p.loss===0?0:Math.round(p.win/(p.win+p.loss)*100);
     const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',label:p.race};
@@ -3725,7 +3743,7 @@ function onGlobalSearch(val){
       onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
       ${p.photo
-        ?`<img src="${p.photo}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
+        ?`<img src="${toHttpsUrl(p.photo)}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
         :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
       }
       <div style="flex:1;min-width:0">
@@ -3738,7 +3756,27 @@ function onGlobalSearch(val){
         ${p.points?`<div style="font-size:10px;color:var(--gold);font-weight:700">${p.points>0?'+':''}${p.points}pt</div>`:''}
       </div>
     </div>`;
-  }).join('');
+    }).join('');
+  }
+  if(extResults.length){
+    const sep = results.length ? `<div style="height:8px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)"></div>` : '';
+    html += sep;
+    html += `<div style="padding:6px 12px 4px;font-size:10px;font-weight:900;color:var(--gray-l);letter-spacing:.5px;border-bottom:1px solid var(--border)">📎 외부 대진기록 ${extResults.length}건</div>` +
+      extResults.map((it,ei)=>{
+        const line = `${it.winner||''} vs ${it.loser||''}`;
+        const sub  = `${it.date||''}${it.map?` · ${it.map}`:''}${it.source?` · ${it.source}`:''}`;
+        return `<div data-gsextidx="${ei}" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center"
+          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''"
+          onclick="(function(el){globalSearchSelectExt(+el.dataset.gsextidx);}).call(this,this)">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(line, mainQ||q)}</div>
+            <div style="font-size:11px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(sub, mainQ||q)}</div>
+          </div>
+          <div style="flex-shrink:0;font-size:10px;color:var(--blue);font-weight:800">열기</div>
+        </div>`;
+      }).join('');
+  }
+  drop.innerHTML = html;
   drop.style.display='block';
 }
 
@@ -3747,6 +3785,45 @@ function globalSearchSelect(name){
   document.getElementById('globalSearchDrop').style.display='none';
   window._gsResults = null;
   openPlayerModal(name);
+}
+
+function globalSearchSelectExt(idx){
+  const it = window._gsExtResults && window._gsExtResults[idx];
+  document.getElementById('globalSearch').value='';
+  document.getElementById('globalSearchDrop').style.display='none';
+  window._gsResults = null;
+  if(!it) return;
+  // (요청사항) 외부탭 접근은 관리자만 허용. 일반 사용자는 상세 팝업만 노출.
+  const canOpenExtTab = (typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(canOpenExtTab){
+    try{ curTab='hist'; histSub='ext'; }catch(e){}
+    try{ if(typeof window.histExtSetKeyword==='function') window.histExtSetKeyword(window._gsQuery||''); }catch(e){}
+    try{ render(); }catch(e){}
+    return;
+  }
+  // read-only 상세 모달
+  try{
+    const old=document.getElementById('_gsExtModal'); if(old) old.remove();
+    const modal=document.createElement('div');
+    modal.id='_gsExtModal';
+    modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    const line=`${it.winner||''} vs ${it.loser||''}`;
+    const sub=`${it.date||''}${it.map?` · ${it.map}`:''}${it.elo?` · ELO ${it.elo}`:''}${it.type?` · ${it.type}`:''}`;
+    const memo=(it.memo||'').trim();
+    const src=(it.source||'').trim();
+    modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+      <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
+      <div style="font-weight:900;font-size:13px;color:var(--text);margin-bottom:4px">${line}</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
+      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--gray-l);text-align:center">※ 외부탭은 관리자만 접근 가능합니다</div>
+    </div>`;
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
+  }catch(e){}
 }
 
 // 외부 클릭 시 드롭다운 닫기

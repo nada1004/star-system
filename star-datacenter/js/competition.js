@@ -34,6 +34,10 @@ function getCurrentTourney(){
 
 function rComp(C,T){
   T.innerText='🎖️ 대회';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  if(window._compFilterOpen===undefined) window._compFilterOpen=_lockOpen;
+  if(_lockOpen) window._compFilterOpen=true;
   if(!isLoggedIn && compSub==='grpedit') compSub='league';
 
   // tier 타입 대회가 curComp에 선택되어 있으면 초기화
@@ -78,7 +82,15 @@ function rComp(C,T){
     ];
     if(compSub==='tiertour'||compSub==='input') compSub='league';
   }
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${compSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+  // (요청사항) 대회 하위메뉴도 '필터'로 접기/펼치기
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 6px;align-items:center">
+      <button class="pill ${window._compFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._compFilterOpen=!window._compFilterOpen;render()">🔍 필터 ${window._compFilterOpen?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window._compFilterOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${subOpts.map(o=>`<button class="pill ${compSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="compSub='${o.id}';render()">${o.lbl}</button>`).join('')}</div>`;
+  }
 
   if(!tn && compSub!=='grpedit'){
     h+=`<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
@@ -294,10 +306,6 @@ function rCompLeague(tn){
   }
   h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
-    <div style="margin-left:auto;display:flex;gap:4px">
-      <button class="pill ${leagueSortDir==='desc'?'on':''}" onclick="leagueSortDir='desc';render()">최신순</button>
-      <button class="pill ${leagueSortDir==='asc'?'on':''}" onclick="leagueSortDir='asc';render()">오래된순</button>
-    </div>
   </div>`;
   if(isLoggedIn&&tn.groups.length){
     h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
@@ -311,61 +319,36 @@ function rCompLeague(tn){
     h+=`</div>`;
   }
   {
-    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
-    if(_dateMenuStyle==='asl'){
-      const daysS=['일','월','화','수','목','금','토'];
-      const _mini = (m)=>{
-        // 미니 매치업: 대학 로고 + 이름 (선수 매치업 데이터가 있으면 추후 확장 가능)
-        const a=m.a||''; const b=m.b||'';
-        const ca=gc(a)||'#64748b'; const cb=gc(b)||'#64748b';
-        const icon = (u, col)=>{
-          const url=UNIV_ICONS[u]||(univCfg.find(x=>x.name===u)||{}).icon||'';
-          if(url) return `<img src="${url}" style="width:14px;height:14px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
-          return `<span style="width:10px;height:10px;border-radius:3px;background:${col};display:inline-block;flex-shrink:0"></span>`;
-        };
-        return `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1">${icon(a,ca)}<span style="overflow:hidden;text-overflow:ellipsis">${a||'—'}</span></span>
-          <span style="color:var(--gray-l);font-weight:900;flex-shrink:0">vs</span>
-          <span style="display:inline-flex;align-items:center;gap:4px;min-width:0;flex:1;justify-content:flex-end">${icon(b,cb)}<span style="overflow:hidden;text-overflow:ellipsis">${b||'—'}</span></span>
-        </div>`;
-      };
-      h+=`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-        <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-          <button class="pill ${!leagueFilterDate?'on':''}" style="flex-shrink:0" onclick="leagueFilterDate='';render()">전체</button>`;
-      dates.forEach(d=>{
-        const dt=new Date(d+'T00:00:00');
-        const label=`${daysS[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}`;
-        const dayMs=allMatches.filter(m=>m.d===d).slice(0,2);
-        const prev=dayMs.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayMs.map(_mini).join('')}</div>`:'';
-        const on = (leagueFilterDate===d);
-        h+=`<button type="button" onclick="leagueFilterDate='${d}';render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:220px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
-            <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayMs.length?`매치 ${allMatches.filter(m=>m.d===d).length}`:''}</span>
-          </div>
-          ${prev}
-        </button>`;
-      });
-      h+=`</div></div>`;
-    } else {
-      h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
-        <button class="pill ${!leagueFilterDate?'on':''}" onclick="leagueFilterDate='';render()">전체</button>`;
-      dates.forEach(d=>{
-        const dt=new Date(d+'T00:00:00');const days=['일','월','화','수','목','금','토'];
-        h+=`<button class="pill ${leagueFilterDate===d?'on':''}" onclick="leagueFilterDate='${d}';render()">${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})</button>`;
-      });
-      h+=`</div>`;
-    }
+    // (요청사항) 날짜/조 선택을 "선택 메뉴(드롭다운)"로 변경 (버튼 나열 제거)
+    const days=['일','월','화','수','목','금','토'];
+    const fmt=(d)=>{
+      if(!d) return '전체';
+      const dt=new Date(d+'T00:00:00');
+      return `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`;
+    };
+    const grpOpts=(tn.groups||[]).map((grp,gi)=>({name:grp.name,label:`GROUP ${'ABCDEFGHIJ'[gi]||gi+1}`}));
+    h+=`<div class="no-export" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+      <div class="ym-filter-controls compact">
+        <span class="ym-lbl"></span>
+        <select class="ym-sel" onchange="leagueFilterDate=this.value;render()">
+          <option value=""${!leagueFilterDate?' selected':''}>전체</option>
+          ${dates.map(d=>`<option value="${d}"${leagueFilterDate===d?' selected':''}>${fmt(d)}</option>`).join('')}
+        </select>
+      </div>
+      ${grpOpts.length>1?`<div class="ym-filter-controls compact">
+        <span class="ym-lbl">조</span>
+        <select class="ym-sel" onchange="leagueFilterGrp=this.value;render()">
+          <option value=""${!leagueFilterGrp?' selected':''}>전체</option>
+          ${grpOpts.map(o=>`<option value="${o.name}"${leagueFilterGrp===o.name?' selected':''}>${o.label}</option>`).join('')}
+        </select>
+      </div>`:''}
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:nowrap">
+        <button class="pill ${leagueSortDir==='desc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='desc';render()">최신순</button>
+        <button class="pill ${leagueSortDir==='asc'?'on':''}" style="flex-shrink:0" onclick="leagueSortDir='asc';render()">오래된순</button>
+      </div>
+    </div>`;
   }
-  if(tn.groups.length>1){
-    h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gray-l)">조:</span>
-      <button class="pill ${!leagueFilterGrp?'on':''}" onclick="leagueFilterGrp='';render()">전체</button>`;
-    tn.groups.forEach((grp,gi)=>{
-      const gl='ABCDEFGHIJ'[gi];const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h+=`<button class="pill ${leagueFilterGrp===grp.name?'on':''}" style="${leagueFilterGrp===grp.name?`background:${col};border-color:${col};color:#fff`:''}" onclick="leagueFilterGrp='${grp.name}';render()">GROUP ${gl}</button>`;
-    });
-    h+=`</div>`;
-  }
+  // 조 선택은 "전체/일자" 메뉴 영역 우측으로 이동됨
   let filtered=allMatches;
   if(leagueFilterDate) filtered=filtered.filter(m=>m.d===leagueFilterDate);
   if(leagueFilterGrp) filtered=filtered.filter(m=>m.grpName===leagueFilterGrp);
@@ -407,19 +390,19 @@ function rCompLeague(tn){
         <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           <div style="text-align:center;min-width:100px">
             <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${ca||'#888'};padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;${aWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+ca+',0 6px 18px '+ca+'66':isDone?'opacity:.5;filter:saturate(0.6)':''}" onclick="openUnivModal('${m.a||''}')">
-              ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
+              ${(()=>{const url=UNIV_ICONS[m.a]||(univCfg.find(x=>x.name===m.a)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.a||'—'}</span>
             </div>
           </div>
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="leagueToggleDet('${detId}',document.getElementById('detbtn-${detId}'))"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img class="tc-uicon" src="${url}" style="width:calc(var(--tc-uicon) * 0.55);height:calc(var(--tc-uicon) * 0.55);object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:calc(var(--tc-uicon) * 0.55);height:calc(var(--tc-uicon) * 0.55);object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
             ${isDone?`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px"><button id="detbtn-${detId}" class="btn-detail" style="font-size:10px" onclick="leagueToggleDet('${detId}',this)">📂 상세</button>${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p" style="font-size:10px;padding:3px 7px;border-radius:7px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴</button>`:'';})()}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
             <div style="display:flex;align-items:center;justify-content:center;gap:7px;background:${cb||'#888'};padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;${bWin?'box-shadow:0 0 0 3px #fff,0 0 0 5px '+cb+',0 6px 18px '+cb+'66':isDone?'opacity:.5;filter:saturate(0.6)':''}" onclick="openUnivModal('${m.b||''}')">
-              ${(()=>{const url=UNIV_ICONS[m.b]||(univCfg.find(x=>x.name===m.b)||{}).icon||'';return url?`<img class="tc-uicon" src="${url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
+              ${(()=>{const url=UNIV_ICONS[m.b]||(univCfg.find(x=>x.name===m.b)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='24' height='24'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${m.b||'—'}</span>
             </div>
           </div>
@@ -582,14 +565,15 @@ function rBracketSchedule(tn){
   for(let _i=0;_i<_pcB;_i+=2){const gA=_rankedB[_i],gB=_rankedB[_i+1];_r1teamsB.push(gA?.[0]?.u||'',gB?.[0]?.u||'',gB?.[1]?.u||'',gA?.[1]?.u||'');}
   if(_rankedB.length%2===1){const gL=_rankedB[_rankedB.length-1];_r1teamsB.push(gL?.[0]?.u||'');}
   // 총 라운드 수 계산
-  const numGroups=tn.groups&&tn.groups.length>=2?tn.groups.length:0;
-  const pairCount=Math.floor(numGroups/2)*2;
-  let numR1=pairCount>0?pairCount:4;
-  if(numGroups%2===1)numR1++;
-  // totalRounds는 팀 수(=첫 라운드 경기수 × 2) 기준으로 계산 → rCompTourDynamic과 라운드 레이블 일치
-  let totalRounds=0;let n=numR1*2;while(n>1){n=Math.ceil(n/2);totalRounds++;}
-  if(totalRounds===0)totalRounds=1;
-  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
+  // (요청사항) 64강 이상 지원: 조 수 기반이 아니라 브라켓 규모(override 포함)를 기준으로 계산
+  const firstSize = (typeof _bktComputeBracketSize==='function') ? _bktComputeBracketSize(tn) : 8;
+  let numR1 = Math.max(1, Math.floor(firstSize / 2)); // 첫 라운드 경기 수
+  let totalRounds = 0;
+  let n = firstSize;
+  while(n>1){ n = Math.ceil(n/2); totalRounds++; }
+  if(totalRounds===0) totalRounds=1;
+  // 기존 표기 유지: 4팀 = 준결승(=4강), 8팀 = 8강 ...
+  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
 
   // 브라켓 경기 수집
   const rLabelToR={};
@@ -597,7 +581,8 @@ function rBracketSchedule(tn){
   for(let r=0;r<totalRounds;r++){
     const matchCount=Math.ceil(numR1/Math.pow(2,r));
     const rNum=totalRounds-r;
-    const rLabel=roundLabels[rNum]||(rNum+'강');
+    // rNum → 남은 라운드 수, 라벨은 (예: 6라운드면 64강)
+    const rLabel=roundLabels[rNum]||(Math.pow(2,rNum)+'강');
     if(!rLabelToR[rLabel])rLabelToR[rLabel]={r,matchCount:Math.ceil(numR1/Math.pow(2,r))};
     for(let mi=0;mi<matchCount;mi++){
       let teamA='',teamB='';
@@ -674,7 +659,7 @@ function rBracketSchedule(tn){
   }
 
   // 라운드 필터 버튼용 라운드 목록
-  const _roundOrder=['결승','준결승','4강','8강','16강','32강'];
+  const _roundOrder=['결승','준결승','4강','8강','16강','32강','64강'];
   const _roundSet=new Set(matches.map(m=>m.rLabel));
   const _availRounds=['전체',..._roundOrder.filter(r=>_roundSet.has(r))];
   _roundSet.forEach(r=>{if(!_roundOrder.includes(r)&&r!=='전체')_availRounds.push(r);});
@@ -692,6 +677,8 @@ function rBracketSchedule(tn){
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">⚔️ 토너먼트</span>
       ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="openBktSeedModal('${tn.id}')" title="상위 시드(부전승/라운드 합류) 및 자동 배치">🎫 시드/부전승</button>
 <button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','64강')">64강</button>
+<button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','32강')">32강</button>
 <button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','16강')">16강</button>
 <button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','8강')">8강</button>
 <button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','4강')">4강</button>
@@ -1254,6 +1241,10 @@ function rGrpEditInner(){
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:${col};margin-bottom:8px">② 경기 일정 (${(grp.matches||[]).length}경기 등록)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px">
+          <button class="btn btn-p btn-xs" onclick="openCompLeaguePasteModal('${tn.id}',${gi})">📋 경기 결과 붙여넣기</button>
+          <span style="font-size:11px;color:var(--gray-l);align-self:center">※ 해당 조에 경기(1줄=1게임)를 일괄 추가</span>
+        </div>
         ${(grp.matches||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${grp.matches.map((m,mi)=>{
           const isDone=m.sa!=null&&m.sb!=null;
           const ca=isTier?gc((players||[]).find(p=>p.name===m.a)?.univ||''):gc(m.a||'');

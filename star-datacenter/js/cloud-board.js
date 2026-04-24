@@ -132,9 +132,7 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // 보라크루
-  if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
-  if(d.crewCfg!==undefined&&typeof crewCfg!=='undefined') crewCfg=_fbArr(d.crewCfg,[]);
+  // (요청사항) 보라크루 기능 삭제: crew/crewCfg 수신 적용 제거
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
@@ -180,6 +178,35 @@ function _applyCloudData(d) {
       b2Content.innerHTML=_b2UnivView();
       if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
     }
+
+    // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
+    try{
+      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      // 버튼 즉시 반영
+      if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
+      if(typeof window.soopApplySettings==='function') window.soopApplySettings();
+    }catch(e){}
+
+    // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
+    try{
+      if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
+      if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
+      if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
+      if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
+      if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
+      if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
+      if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
+      if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
+      if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(typeof window._applyAppFont==='function') window._applyAppFont();
+      if(typeof window.applyDesignV2==='function') window.applyDesignV2();
+      if(typeof window._applyUiScale==='function') window._applyUiScale();
+    }catch(e){}
   }
 }
 
@@ -190,6 +217,17 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
+  // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
+  // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
+  try{
+    const sa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
+    if(!window._forcingSync && sa && window._lastAppliedSavedAt === sa){
+      const fbTs = document.getElementById('fbLastSync');
+      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
+      return;
+    }
+    if(sa) window._lastAppliedSavedAt = sa;
+  }catch(e){}
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
   // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
@@ -225,7 +263,7 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
+    curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
@@ -237,7 +275,27 @@ async function fbCloudSave() {
       fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
-      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
+      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
+      designV2On: localStorage.getItem('su_design_v2')==='1',
+      designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
+      designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
+      designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
+      // 🅰️ 전역 폰트 — 모든 기기 동기화
+      appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
+      appFontCss: localStorage.getItem('su_app_font_css')||'',
+      appFontFamily: localStorage.getItem('su_app_font_family')||'',
+      appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
+      appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
+      // 📏 전역 UI 배율(글자/아이콘)
+      uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
+      // 🎵 유튜브 BGM (설정 동기화)
+      bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
+      bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
+      bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
+      bgmList: localStorage.getItem('su_bgm_list') || '',
+      // 📺 SOOP 멀티뷰 (설정 동기화)
+      soopList: localStorage.getItem('su_soop_list') || ''
     },
     savedAt
   };
@@ -674,7 +732,7 @@ function buildUnivBoardCard(u, forExport){
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
-      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
@@ -723,7 +781,7 @@ function buildUnivBoardCard(u, forExport){
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
-          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
+          ? `<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
           + (forExport?'':`<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`)
           : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`;
         // 종족/티어 배지 (좌상단)
@@ -768,7 +826,7 @@ function buildUnivBoardCard(u, forExport){
         const imgRadius = boardCardShape === 'square' ? '8px' : '50%';
         return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
-            ?`<img src="${photoSrcChip}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
+            ?`<img src="${toHttpsUrl(photoSrcChip)}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
             :`<span style="width:64px;height:64px;border-radius:${imgRadius};background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:3px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
           <span style="display:inline-flex;flex-direction:column;gap:3px;min-width:0">
             ${isMain?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
@@ -806,7 +864,7 @@ function buildUnivBoardCard(u, forExport){
       const tierBadgeFs=compact?'9px':'11px';
       // 사진 렌더: 사진 로드 실패 시 플레이스홀더(종족 텍스트) 표시
       const _photoEl = photoSrcChip
-        ? `<span style="width:${photoSz};height:${photoSz};border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`
+        ? `<span style="width:${photoSz};height:${photoSz};border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`
         : `<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
@@ -887,7 +945,7 @@ function buildUnivBoardCard(u, forExport){
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
@@ -1078,7 +1136,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general'||p.gameType==='보라크루')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 

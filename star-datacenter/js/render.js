@@ -2,6 +2,13 @@
    TAB & RENDER
 ══════════════════════════════════════ */
 function sw(t,el){
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  try{
+    if(typeof isSubAdmin!=='undefined' && isSubAdmin && t==='cfg'){
+      if(typeof showToast==='function') showToast('부관리자는 설정탭에 접근할 수 없습니다.');
+      return;
+    }
+  }catch(e){}
   // 탭 변경 시 서브탭 초기화
   if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
   if(t==='mini') miniSub='records';
@@ -77,12 +84,15 @@ function render(){
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
   // 즉시 1차 inject (PC 포함 즉시 적용)
   injectUnivIcons(C);
+  // (요청사항) 이모지 → SVG 아이콘 치환(전체 UI)
+  try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
   requestAnimationFrame(()=>{
     C.querySelectorAll('.rec-summary').forEach(el=>{
       const header=el.querySelector('.rec-sum-header');
       if(!header||header.innerText.trim()==='')el.remove();
     });
     injectUnivIcons(C);
+    try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
     // 경기 검색창 포커스 복원
     const _restoreFocus=()=>{
       // 검색 중인 특정 input으로 포커스
@@ -107,9 +117,76 @@ function render(){
       _restoreFocus();
       // 탭/필터 바 가로 스크롤 드래그 활성화(렌더링 후 생성된 요소 포함)
       try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
+      try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
+      // 체크박스 선택 행 하이라이트 (테이블)
+      try{
+        document.querySelectorAll('#rcont table input[type="checkbox"]').forEach(cb=>{
+          cb.onchange = function(){
+            const tr = cb.closest('tr');
+            if(tr) tr.classList.toggle('is-selected', cb.checked);
+          };
+          // 초기 상태 반영
+          const tr = cb.closest('tr');
+          if(tr) tr.classList.toggle('is-selected', cb.checked);
+        });
+      }catch(e){}
     });
   });
 }
+
+/* ══════════════════════════════════════
+   SVG 아이콘(이모지 치환)
+══════════════════════════════════════ */
+// - 버튼/탭 텍스트 앞쪽에 붙은 이모지를 SVG로 교체
+// - 렌더 후 반복 호출되어도 안전(기존 SVG가 있으면 중복 삽입 안 함)
+window.iconifyUI = window.iconifyUI || function(root){
+  try{
+    root = root || document.body;
+    const MAP = {
+      '🔍': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`,
+      '🌙': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>`,
+      '🔐': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="6" y="11" width="12" height="10" rx="2"/><path d="M12 15v3"/></svg>`,
+      '📋': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="12" height="18" rx="2"/><path d="M16 2H6a2 2 0 0 0-2 2v14"/><path d="M12 4V2"/><path d="M10 6h6"/></svg>`,
+      '📊': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg>`,
+      '📅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>`,
+      '🏆': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z"/><path d="M6 4H4v3a3 3 0 0 0 3 3"/><path d="M18 4h2v3a3 3 0 0 1-3 3"/><path d="M10 14h4"/><path d="M9 20h6"/><path d="M10 14v3a2 2 0 0 1-2 2"/><path d="M14 14v3a2 2 0 0 0 2 2"/></svg>`,
+      '🏅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2l5 7 5-7"/><circle cx="12" cy="16" r="5"/><path d="M12 13v6"/></svg>`,
+      '⚔️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3l7 7-4 4-7-7 4-4Z"/><path d="M10 7l-7 7 4 4 7-7-4-4Z"/><path d="M8 15l-4 4"/><path d="M16 15l4 4"/></svg>`,
+      '🎯': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="M12 12l7-7"/></svg>`,
+      '🎰': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="14" height="14" rx="2"/><path d="M18 10h2a2 2 0 0 1 2 2v2"/><path d="M7 10h8"/><path d="M7 14h8"/><path d="M7 18h8"/></svg>`,
+      '▶': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l10 6-10 6V6Z"/></svg>`,
+      '◀': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6L5 12l10 6V6Z"/></svg>`,
+      '➡️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12"/><path d="M13 6l6 6-6 6"/></svg>`,
+      '🔄': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-15.5-6.4"/><path d="M3 4v6h6"/><path d="M3 12a9 9 0 0 0 15.5 6.4"/><path d="M21 20v-6h-6"/></svg>`,
+      '🗑': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
+      '🗺️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg>`,
+      '✅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`,
+      '✏️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"/></svg>`,
+      '⚙️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.2-2-3.4-2.3.5a7.7 7.7 0 0 0-1.7-1l-.4-2.4H9l-.4 2.4c-.6.3-1.2.6-1.7 1l-2.3-.5-2 3.4 2 1.2a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.2 2 3.4 2.3-.5c.5.4 1.1.7 1.7 1l.4 2.4h6l.4-2.4c.6-.3 1.2-.6 1.7-1l2.3.5 2-3.4-2-1.2c.1-.3.1-.7.1-1Z"/></svg>`,
+    };
+    const RX = new RegExp('^(' + Object.keys(MAP).map(k=>k.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')).join('|') + ')\\s*');
+
+    const targets = root.querySelectorAll('button, .tab, .bnav-item, summary, .pill, .btn, .flabel, label');
+    targets.forEach(el=>{
+      if(!el) return;
+      // 이미 SVG 아이콘이 있으면 스킵(중복 방지)
+      if(el.querySelector && el.querySelector('.svg-ico')) return;
+      // 첫 텍스트 노드만 처리
+      const tn = Array.from(el.childNodes||[]).find(n=>n && n.nodeType===3 && String(n.nodeValue||'').trim().length>0);
+      if(!tn) return;
+      const raw = tn.nodeValue || '';
+      const m = raw.match(RX);
+      if(!m) return;
+      const emo = m[1];
+      const rest = raw.replace(RX,'').replace(/^\s+/,'');
+      const wrap = document.createElement('span');
+      wrap.className = 'svg-ico-wrap';
+      wrap.innerHTML = MAP[emo] || '';
+      el.insertBefore(wrap, tn);
+      tn.nodeValue = (rest ? ' ' + rest : '');
+    });
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    스트리머 상세 모달 페이지네이션 헬퍼
@@ -202,12 +279,32 @@ function openEPFromModal(nameArg) {
 let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
 
+// (요청사항) 부관리자: 최근 N일 경기만 수정/삭제 허용
+function _canEditByDate(dateStr){
+  if(typeof isLoggedIn==='undefined' || !isLoggedIn) return false;
+  if(typeof isSubAdmin==='undefined' || !isSubAdmin) return true; // 일반 관리자는 제한 없음
+  const s=String(dateStr||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  const d = new Date(s+'T00:00:00');
+  if(isNaN(d.getTime())) return false;
+  const diffDays = Math.floor((t.getTime() - d.getTime()) / (24*60*60*1000));
+  return diffDays >= 0 && diffDays <= 1; // 최근 2일(오늘/어제)
+}
+function _guardRecentEdit(dateStr){
+  if(_canEditByDate(dateStr)) return true;
+  alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+  return false;
+}
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   // ELO + 승/패 + 포인트 차감
   if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
   if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
@@ -267,9 +364,16 @@ function deletePlayerHistBulk(playerName){
     alert('선택된 경기 기록이 없습니다.');
     return;
   }
-  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  // 부관리자는 최근 2일만 가능
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   // 인덱스 내림차순 정렬 후 삭제 (인덱스 변동 방지)
   const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
   sortedIdx.forEach(idx=>{
@@ -318,10 +422,12 @@ function togglePlayerHistSelect(idx){
 }
 
 function togglePlayerHistSelectAll(playerName, allIndices){
-  if(_playerHistBulkSelected.size===allIndices.length){
+  const p=players.find(x=>x.name===playerName);
+  const allowed = (p&&p.history)?allIndices.filter(i=>p.history[i] && _canEditByDate(p.history[i].date)):allIndices;
+  if(_playerHistBulkSelected.size===allowed.length){
     _playerHistBulkSelected.clear();
   }else{
-    allIndices.forEach(idx=>_playerHistBulkSelected.add(idx));
+    allowed.forEach(idx=>_playerHistBulkSelected.add(idx));
   }
   const btn=document.getElementById('bulk-delete-btn');
   if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
@@ -339,6 +445,12 @@ function openPlayerHistBulkEdit(playerName){
   }
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   // 선택된 기록들의 공통 값 추출
   const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
@@ -393,6 +505,12 @@ function savePlayerHistBulkEdit(playerName){
   if(!isLoggedIn)return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   const newMode=document.getElementById('phe-bulk-mode').value;
   const newMap=document.getElementById('phe-bulk-map').value;
@@ -434,6 +552,7 @@ function openPlayerHistEdit(playerName, histIdx){
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   const races=['T','Z','P'];
   // mapOpts: select는 항상 "목록에서 선택" 기본값, selected 없음
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -718,8 +837,8 @@ function toggleUnivEdit(){
       </div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=v;img.style.display='block';}else img.style.display='none'">
-        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none'">
+        <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="display:flex;gap:6px">
@@ -838,11 +957,6 @@ function navToMatch(matchId, modeLbl){
 }
 
 function buildPlayerDetailHTML(p){
-  // 보라크루/종합게임 전용 UI 분기
-  const _gt = p.gameType || 'starcraft';
-  if (_gt === '보라크루') return _buildCrewPlayerDetailHTML(p, '#7c3aed', '💜 보라크루');
-  if (_gt === 'general') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
-
   // gjM/indM/tourneys/comps/proTourneys에 _id 미리 할당 (matchId 검색용)
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
     if(!m._id) m._id=`gj_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
@@ -890,8 +1004,18 @@ function buildPlayerDetailHTML(p){
   const _isMobile=window.innerWidth<=768;
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
   const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
-  const _imgFill=_pdStyle.img_fill||'cover';
+  // (버그) "좌우 개별 크기 사용" 체크가 반영되지 않던 문제 수정
+  // - 기본: settings.scale 사용
+  // - 체크 시: 모바일=scaleLeft, PC=scaleRight
+  const _useRight = !!_imgSettings.useRightScale;
+  const _scaleMul = _useRight
+    ? (_isMobile ? (_imgSettings.scaleLeft||1) : (_imgSettings.scaleRight||1))
+    : (_imgSettings.scale||1);
+  const _imgZoom=(_pdStyle.img_zoom||100) * _scaleMul;
+  // (버그) "이미지 채우기(cover)/맞춤(contain)" 설정이 반영되지 않던 문제 수정
+  const _imgFill=(_pdStyle.img_fill!=null && _pdStyle.img_fill!=='')
+    ? _pdStyle.img_fill
+    : (_imgSettings.fill ? 'cover' : 'contain');
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
   let _hdrBg;
@@ -1309,11 +1433,11 @@ function buildPlayerDetailHTML(p){
       const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
       const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
       const _imgBrightness=_imgSettings.brightness||1;
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url
-      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      ? `<img src="${toHttpsUrl(url)}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
       : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   })();
   const _channelHTML=(()=>{
@@ -1411,7 +1535,7 @@ function buildPlayerDetailHTML(p){
     // 최근 10경기 폼
     const recent10 = hist.slice(0,10);
     const formHTML = recent10.length>=3 ? `<div style="display:flex;gap:2px;align-items:center">
-      ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':'#dc2626'};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
+      ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':(h.result==='무'?'#a3a3a3':'#dc2626')};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
       <span style="font-size:10px;color:var(--gray-l);margin-left:3px">최근${recent10.length}</span>
     </div>` : '';
 
@@ -1720,12 +1844,16 @@ function buildPlayerDetailHTML(p){
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
-      const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
+      const isDraw=hh.result==='무';
+      const eloStr=hh.eloDelta!=null
+        ?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':hh.eloDelta<0?'#dc2626':'#64748b'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`
+        :'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
-      const selectCheckboxHTML=_playerHistBulkMode?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:'';
-      const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
+      const _canEdit = (isLoggedIn && !hh._readOnly && _canEditByDate(hh.date));
+      const selectCheckboxHTML=(_playerHistBulkMode && _canEdit)?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:(_playerHistBulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:11px">-</td>`:'');
+      const editBtnHTML=_canEdit?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
@@ -1743,11 +1871,15 @@ function buildPlayerDetailHTML(p){
         ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
         :'';
-      h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+      h+=`<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
         <td>${modeCellHTML}</td>
-        <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
+        <td>${isWin
+          ?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`
+          :isDraw
+            ?`<span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px">DRAW</span>`
+            :`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
         <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
@@ -1821,7 +1953,7 @@ function buildPlayerDetailHTML(p){
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          ?`<img src="${toHttpsUrl(q.photo)}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
           :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
         return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
           ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
@@ -2012,7 +2144,7 @@ function buildUnivDetailHTML(univName){
           const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
           const safeName=escJS(ap.name);
           const photoEl=ap.photo
-            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            ?`<img src="${toHttpsUrl(ap.photo)}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
             :`<div style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
           return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
             <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
@@ -2301,93 +2433,4 @@ window.openStarSystemInfo = function(){
   }
 };
 
-/* ══════════════════════════════════════
-   보라크루 / 종합게임 스트리머 상세 UI
-══════════════════════════════════════ */
-function _buildCrewPlayerDetailHTML(p, accentCol, typeLabel) {
-  const crewCfgArr = typeof crewCfg !== 'undefined' ? crewCfg : [];
-  const crewInfo = p.crewName ? crewCfgArr.find(c => c.name === p.crewName) : null;
-  const crewCol = crewInfo ? (crewInfo.color || accentCol) : accentCol;
-
-  // 헤더 배경
-  const hdrBg = crewInfo && crewInfo.bgImage
-    ? `url(${JSON.stringify(crewInfo.bgImage)}) center/cover no-repeat`
-    : `linear-gradient(135deg, ${crewCol}, ${crewCol}cc)`;
-
-  // 프로필 이미지
-  const photoHTML = p.photo
-    ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none'">`
-    : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${(p.name||'?')[0]}</div>`;
-
-  // 방송 링크
-  const channelHTML = (()=>{
-    if (!p.channelUrl) return '';
-    const url = p.channelUrl;
-    let icon = '🏠', label = '방송';
-    if (url.includes('chzzk.naver.com')) { icon = '🎮'; label = '치지직'; }
-    else if (url.includes('afreecatv.com')) { icon = '📺'; label = '아프리카'; }
-    else if (url.includes('youtube.com') || url.includes('youtu.be')) { icon = '▶️'; label = '유튜브'; }
-    else if (url.includes('twitch.tv')) { icon = '📡'; label = '트위치'; }
-    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff">${icon} ${label}</a>`;
-  })();
-
-  // 크루 로고
-  const crewLogoHTML = crewInfo && crewInfo.logo
-    ? `<img src="${crewInfo.logo}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'"> `
-    : '';
-
-  // 직책 뱃지
-  const crewRoleHTML = (p.crewRole||p.role)
-    ? `<span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:#fff">${p.crewRole||p.role}</span>`
-    : '';
-
-  // 성별
-  const genderIcon = p.gender === 'M' ? '👨' : p.gender === 'F' ? '👩' : '';
-
-  let h = `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:${hdrBg};padding:20px 18px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
-        <div style="width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${photoHTML}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name} ${genderIcon}</span>
-            ${crewRoleHTML}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${p.crewName ? `<span style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700">${crewLogoHTML}${p.crewName}</span>` : ''}
-            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${typeLabel}</span>
-            ${channelHTML}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  // 메모가 있으면 표시
-  if (p.memo) {
-    h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6">
-      <span style="font-weight:700;color:${crewCol}">📝 메모</span><br>${p.memo.replace(/\n/g,'<br>')}
-    </div>`;
-  }
-
-  // 같은 크루 멤버 보기
-  if (p.crewName) {
-    const crewMembers = (typeof players !== 'undefined' ? players : [])
-      .filter(q => q.crewName === p.crewName && q.name !== p.name && !q.hidden && !q.retired);
-    if (crewMembers.length) {
-      h += `<div style="background:var(--white);border:1.5px solid ${crewCol}33;border-radius:12px;padding:14px;margin-bottom:14px">
-        <div style="font-size:12px;font-weight:800;color:${crewCol};margin-bottom:10px">${crewLogoHTML}${p.crewName} 크루원 (${crewMembers.length}명)</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">`;
-      crewMembers.forEach(q => {
-        const qSafe = escJS(q.name);
-        h += `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),100)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${crewCol}44;background:${crewCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
-          ${getPlayerPhotoHTML(q.name,'22px','pointer-events:none;')} ${q.name}${q.crewRole?` <span style="font-size:9px;color:${crewCol}">${q.crewRole}</span>`:''}
-        </button>`;
-      });
-      h += `</div></div>`;
-    }
-  }
-
-  return h;
-}
+// (요청사항) 보라크루/종합게임 전용 스트리머 상세 UI(크루 기반) 삭제됨
