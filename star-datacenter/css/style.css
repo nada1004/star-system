@@ -607,7 +607,66 @@ tr.is-selected td{
 .rZ{background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe;}
 .rP{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
 .rN{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;}
-.ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);position:relative;overflow:hidden;}
+
+/* ─────────────────────────────────────────────────────────────
+   🌈 그라데이션 효과(고정 + 움직임 ON/OFF)
+   - 설정: localStorage
+     * su_grad_mode: classic|soft|radial|split|stripe|glass|solid
+     * su_grad_int: 0~100 (진함)
+     * su_grad_motion: 0/1 (움직임)
+     * su_grad_speed: 6~30 (초)
+   - 적용: .su-grad-motion 을 붙인 영역에 배경 이동 효과
+───────────────────────────────────────────────────────────── */
+:root{ --su_grad_speed: 12s; }
+:root{ --md_fx_int: 2.00; --md_fx_speed: 6s; }
+@keyframes suGradMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.modal--matchdetail{ --md_fx_spot: calc(var(--md_fx_int) * .60); }
+@keyframes mdMoveSweep{
+  0%{ transform:translate3d(-10%, -6%, 0) rotate(-2deg); }
+  50%{ transform:translate3d(10%, 6%, 0) rotate(2deg); }
+  100%{ transform:translate3d(-10%, -6%, 0) rotate(-2deg); }
+}
+.su-grad-hero{position:relative;overflow:hidden;}
+.su-grad-motion{
+  background-size:200% 200% !important;
+  animation:suGradMove var(--su_grad_speed) ease-in-out infinite;
+}
+
+/* 경기 상세 상단 카드용: move 효과(속도/강도는 md vars 사용) */
+.modal--matchdetail .cmd-team.mdfx-move{
+  background-size:200% 200% !important;
+  animation:suGradMove var(--md_fx_speed) ease-in-out infinite;
+}
+/* 배경 이동이 눈에 잘 띄도록 하이라이트 오버레이도 같이 움직임 */
+.modal--matchdetail .cmd-team.mdfx-move::after{
+  opacity:calc(var(--md_fx_spot) + .22);
+  animation:mdMoveSweep var(--md_fx_speed) ease-in-out infinite;
+  will-change:transform;
+  background:
+    radial-gradient(70% 140% at 20% 0%, rgba(255,255,255, calc(var(--md_fx_int) * .45)), transparent 60%),
+    radial-gradient(90% 160% at 90% 90%, rgba(0,0,0, calc(var(--md_fx_int) * .28)), transparent 58%),
+    linear-gradient(110deg, rgba(255,255,255,0), rgba(255,255,255, calc(var(--md_fx_int) * .22)), rgba(255,255,255,0));
+}
+
+/* Move가 "눈에 띄게" 보이도록 대각선 광택 스윕도 추가 */
+.modal--matchdetail .cmd-team.mdfx-move::before{
+  opacity:calc(var(--md_fx_int) * .95);
+  background:linear-gradient(120deg, transparent 38%, rgba(255,255,255,.42) 50%, transparent 62%);
+  transform:translateX(-55%) rotate(10deg);
+  animation:cmdTeamShimmer calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+}
+
+/* Mix도 동일하게 더 티나게 */
+.modal--matchdetail .cmd-team.mdfx-mix::after{
+  opacity:calc(var(--md_fx_spot) + .22);
+  animation:mdMoveSweep var(--md_fx_speed) ease-in-out infinite;
+}
+
 .rec-summary img.rec-uicon{width:var(--rc-uicon);height:var(--rc-uicon);object-fit:contain;flex-shrink:0;}
 
 /* 기록 카드 상단(날짜/승리팀) 강조 */
@@ -993,6 +1052,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 /* 모바일: 액션 항상 표시 */
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
 .rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+.rec-sum-vs.winner-only{flex-wrap:nowrap;gap:10px;}
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:900;
@@ -1110,6 +1170,10 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
    '취소' 버튼 아래로 큰 공백이 생기는 현상 방지 */
 #pasteModal{align-items:center;justify-content:center;padding:16px;}
 #pasteModal .umbox{margin:0;height:auto;max-height:88vh;overflow-y:auto;}
+
+/* proPasteModal(프로리그 경기 결과 붙여넣기)도 동일 현상 방지 */
+#proPasteModal{align-items:center;justify-content:center;padding:16px;}
+#proPasteModal .umbox{margin:0;height:auto;max-height:88vh;overflow-y:auto;}
 .mbox{background:var(--white);margin:5% auto;padding:22px 24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
 
 /* ── 대회 경기 상세 모달(디자인 개선) ── */
@@ -1130,6 +1194,23 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   display:flex;
   align-items:flex-start;
   gap:12px;
+}
+.modal--matchdetail .cmd-head__right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.modal--matchdetail .cmd-date{
+  font-size:11px;
+  font-weight:900;
+  color:#fff;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  padding:4px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+  line-height:1;
 }
 .modal--matchdetail .cmd-head__txt{flex:1;min-width:0;}
 .modal--matchdetail .cmd-title{
@@ -1164,9 +1245,9 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 }
 .modal--matchdetail .cmd-scorebar{
   padding:7px 10px;
-  background:linear-gradient(180deg,rgba(2,132,199,.09),rgba(2,132,199,.02),transparent);
+  background:linear-gradient(180deg,rgba(2,132,199,.12),rgba(2,132,199,.04),transparent);
   background-size:200% 200%;
-  animation:cmdScoreWave 7s ease-in-out infinite;
+  animation:cmdScoreWave calc(var(--md_fx_speed) * .95) ease-in-out infinite;
   border-bottom:1px solid rgba(148,163,184,.25);
 }
 .modal--matchdetail .cmd-scorebar::before{
@@ -1180,6 +1261,331 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   opacity:.9;
 }
 .modal--matchdetail .cmd-scorebar{ position:relative; overflow:hidden; }
+
+/* 상단 스코어바(전체 배경) 효과 — "사람 눈에 확 티나게" */
+@keyframes mdBarSweepX{
+  0%{ transform:translate3d(-12%,0,0) rotate(8deg); }
+  100%{ transform:translate3d(12%,0,0) rotate(8deg); }
+}
+@keyframes mdBarWaveX{
+  0%{ transform:translate3d(-8%,0,0); }
+  50%{ transform:translate3d(8%,0,0); }
+  100%{ transform:translate3d(-8%,0,0); }
+}
+.modal--matchdetail{
+  --md_fx_wave_op: calc(.72 + var(--md_fx_int) * .28);
+  --md_fx_boost: calc(.85 + var(--md_fx_int) * .85);
+}
+
+/* 효과가 "확실히" 보이도록 전체 톤을 올림(효과 클래스가 붙었을 때만) */
+.modal--matchdetail .cmd-scorebar[class*="mdfxbar-"]{
+  filter:saturate(clamp(1, calc(1.25 + var(--md_fx_int) * .55), 4)) contrast(clamp(1, calc(1.10 + var(--md_fx_int) * .25), 2.2));
+}
+.modal--matchdetail .cmd-team[class*="mdfx-"]{
+  filter:saturate(clamp(1, calc(1.15 + var(--md_fx_int) * .55), 3.5)) contrast(clamp(1, calc(1.08 + var(--md_fx_int) * .22), 2.0));
+}
+@keyframes mdWaveScroll{
+  0%{ background-position:0% 50%, 0% 50%, 0% 50%; }
+  50%{ background-position:100% 50%, 60% 50%, 30% 50%; }
+  100%{ background-position:0% 50%, 0% 50%, 0% 50%; }
+}
+@keyframes mdBarPulse{
+  0%,100%{ filter:saturate(1.05) brightness(1.00); }
+  50%{ filter:saturate(1.35) brightness(1.18); }
+}
+.modal--matchdetail .cmd-scorebar::after{
+  content:'';
+  position:absolute;
+  inset:-60%;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:overlay;
+  z-index:0;
+}
+.modal--matchdetail .cmd-scorebar > *{ position:relative; z-index:1; }
+
+/* Move/Mix: 대각선 광택 + 하이라이트 스윕 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-move::after,
+.modal--matchdetail .cmd-scorebar.mdfxbar-mix::after{
+  opacity:calc(var(--md_fx_int) * 1.05);
+  background:
+    linear-gradient(120deg, transparent 28%, rgba(255,255,255,.72) 50%, transparent 72%),
+    radial-gradient(60% 120% at 18% 0%, rgba(255,255,255,.45), transparent 58%),
+    radial-gradient(80% 140% at 92% 100%, rgba(0,0,0,.35), transparent 56%);
+  animation:mdBarSweepX calc(var(--md_fx_speed) * .65) ease-in-out infinite;
+}
+
+/* Wave: 확실한 물결 패턴 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-wave::after{
+  opacity:var(--md_fx_wave_op);
+  mix-blend-mode:normal; /* 어떤 환경에서도 확실히 보이게 */
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,.78) 0 12px,
+      rgba(255,255,255,0) 12px 26px),
+    radial-gradient(60% 160% at 18% 0%, rgba(255,255,255,.50), transparent 60%),
+    radial-gradient(90% 180% at 92% 100%, rgba(0,0,0,.40), transparent 56%);
+  background-size:220% 220%, 160% 160%, 160% 160%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .60) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-wave{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.10),
+    0 0 34px rgba(255,255,255, calc(var(--md_fx_int) * .32)) inset;
+}
+
+@keyframes mdAuroraHue{
+  0%{ filter:hue-rotate(0deg) saturate(1.35) brightness(1.08); }
+  50%{ filter:hue-rotate(35deg) saturate(1.60) brightness(1.18); }
+  100%{ filter:hue-rotate(0deg) saturate(1.35) brightness(1.08); }
+}
+@keyframes mdAuroraFlow{
+  0%{ background-position:0% 50%, 0% 50%; }
+  50%{ background-position:100% 50%, 60% 50%; }
+  100%{ background-position:0% 50%, 0% 50%; }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-aurora::after{
+  opacity:calc(.65 + var(--md_fx_int) * .35);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 180deg at 50% 50%,
+      rgba(255,255,255,.00),
+      rgba(255,255,255,.55),
+      rgba(255,255,255,.00),
+      rgba(0,0,0,.20),
+      rgba(255,255,255,.00)),
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.38), transparent 60%);
+  background-size:180% 180%, 140% 140%;
+  animation:mdAuroraFlow calc(var(--md_fx_speed) * .75) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-aurora{
+  animation:mdAuroraHue calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+  box-shadow:0 10px 30px rgba(0,0,0,.08), 0 0 30px rgba(255,255,255, calc(var(--md_fx_int) * .22)) inset;
+}
+
+@keyframes mdScanSweep{
+  0%{ transform:translate3d(-30%,0,0); }
+  100%{ transform:translate3d(30%,0,0); }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-scan::after{
+  opacity:calc(.70 + var(--md_fx_int) * .30);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.88), rgba(255,255,255,0));
+  animation:mdScanSweep calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-scan{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .75) ease-in-out infinite;
+}
+
+@keyframes mdRippleMove{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+
+@keyframes mdGlitchShift{
+  0%{ transform:translate3d(-6px,0,0); opacity:.75; }
+  20%{ transform:translate3d(6px,-1px,0); opacity:.95; }
+  40%{ transform:translate3d(-4px,1px,0); opacity:.70; }
+  60%{ transform:translate3d(4px,0,0); opacity:.92; }
+  80%{ transform:translate3d(-2px,-1px,0); opacity:.78; }
+  100%{ transform:translate3d(-6px,0,0); opacity:.75; }
+}
+@keyframes mdHueLoop{
+  0%{ filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+  50%{ filter:hue-rotate(110deg) saturate(1.9) brightness(1.20); }
+  100%{ filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+}
+@keyframes mdConfettiDrift{
+  0%{ transform:translate3d(-6%, -4%, 0) rotate(0deg); }
+  50%{ transform:translate3d(6%, 4%, 0) rotate(2deg); }
+  100%{ transform:translate3d(-6%, -4%, 0) rotate(0deg); }
+}
+@keyframes mdFireFlicker{
+  0%,100%{ filter:saturate(1.4) brightness(1.05); }
+  50%{ filter:saturate(2.0) brightness(1.25); }
+}
+@keyframes mdFrostShift{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+@keyframes mdMatrixScroll{
+  0%{ background-position:0% 0%; }
+  100%{ background-position:0% 120%; }
+}
+@keyframes mdVortexSpin{
+  0%{ transform:rotate(0deg) scale(1.05); }
+  50%{ transform:rotate(180deg) scale(1.08); }
+  100%{ transform:rotate(360deg) scale(1.05); }
+}
+
+@keyframes mdStrobe{
+  0%,92%,100%{ opacity:.15; }
+  94%{ opacity:1; }
+  96%{ opacity:.25; }
+  98%{ opacity:.9; }
+}
+@keyframes mdPrismShift{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+@keyframes mdPlasmaFlow{
+  0%{ background-position:0% 50%; filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+  50%{ background-position:100% 50%; filter:hue-rotate(40deg) saturate(2.0) brightness(1.22); }
+  100%{ background-position:0% 50%; filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-ripple::after{
+  opacity:calc(.72 + var(--md_fx_int) * .28);
+  mix-blend-mode:normal;
+  background:
+    repeating-radial-gradient(circle at 20% 50%,
+      rgba(255,255,255,.78) 0 7px,
+      rgba(255,255,255,0) 7px 20px),
+    repeating-radial-gradient(circle at 80% 50%,
+      rgba(255,255,255,.48) 0 6px,
+      rgba(255,255,255,0) 6px 18px);
+  background-size:220% 220%;
+  animation:mdRippleMove calc(var(--md_fx_speed) * .52) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-neon{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.10),
+    0 0 36px rgba(255,255,255, calc(var(--md_fx_int) * .35)),
+    0 0 0 3px rgba(255,255,255, calc(var(--md_fx_int) * .75)) inset;
+}
+
+/* 추가 효과들(강하게) */
+.modal--matchdetail .cmd-scorebar.mdfxbar-rainbow{
+  animation:mdHueLoop calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-rainbow::after{
+  opacity:clamp(.65, calc(.55 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg, rgba(255,0,120,.55), rgba(0,220,255,.55), rgba(120,255,0,.55), rgba(255,220,0,.55), rgba(255,0,120,.55));
+  background-size:200% 200%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .55) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-glitch::after{
+  opacity:clamp(.65, calc(.55 + var(--md_fx_int) * .25), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 3px, rgba(255,255,255,0) 3px 10px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, rgba(0,0,0,0) 2px 8px);
+  animation:mdGlitchShift calc(var(--md_fx_speed) * .35) steps(2,end) infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-glitch{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-confetti::after{
+  opacity:clamp(.60, calc(.50 + var(--md_fx_int) * .22), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,.75) 0 2px, transparent 3px),
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,.60) 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 35%, rgba(255,255,255,.70) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 65%, rgba(255,255,255,.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 90% 25%, rgba(255,255,255,.70) 0 2px, transparent 3px);
+  animation:mdConfettiDrift calc(var(--md_fx_speed) * .65) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-fire{
+  animation:mdFireFlicker calc(var(--md_fx_speed) * .60) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-fire::after{
+  opacity:clamp(.72, calc(.62 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(60% 150% at 20% 90%, rgba(255,180,0,.55), transparent 60%),
+    radial-gradient(60% 150% at 50% 90%, rgba(255,60,0,.45), transparent 62%),
+    radial-gradient(60% 150% at 80% 90%, rgba(255,220,0,.40), transparent 60%),
+    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,0));
+  background-size:140% 140%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .45) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-frost::after{
+  opacity:clamp(.68, calc(.58 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.55) 0 6px, rgba(255,255,255,0) 6px 18px),
+    radial-gradient(80% 140% at 20% 0%, rgba(200,240,255,.35), transparent 60%),
+    radial-gradient(80% 140% at 80% 100%, rgba(255,255,255,.25), transparent 62%);
+  background-size:220% 220%;
+  animation:mdFrostShift calc(var(--md_fx_speed) * .60) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-matrix::after{
+  opacity:clamp(.62, calc(.52 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.32) 0 2px, rgba(255,255,255,0) 2px 10px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, rgba(0,0,0,0) 2px 8px);
+  background-size:100% 120%;
+  animation:mdMatrixScroll calc(var(--md_fx_speed) * .45) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-vortex::after{
+  opacity:clamp(.70, calc(.60 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.00), rgba(255,255,255,.55), rgba(255,255,255,.00), rgba(0,0,0,.25), rgba(255,255,255,.00));
+  animation:mdVortexSpin calc(var(--md_fx_speed) * .65) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-prism::after{
+  opacity:clamp(.70, calc(.58 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg,
+      rgba(255,0,120,.42),
+      rgba(0,220,255,.42),
+      rgba(120,255,0,.42),
+      rgba(255,220,0,.42),
+      rgba(255,0,120,.42));
+  background-size:220% 220%;
+  animation:mdPrismShift calc(var(--md_fx_speed) * .55) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-plasma::after{
+  opacity:clamp(.72, calc(.62 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.38), transparent 60%),
+    radial-gradient(70% 160% at 80% 100%, rgba(0,0,0,.28), transparent 58%),
+    linear-gradient(90deg, rgba(255,0,120,.40), rgba(0,220,255,.40), rgba(180,0,255,.35));
+  background-size:200% 200%;
+  animation:mdPlasmaFlow calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-strobe::after{
+  opacity:clamp(.40, calc(.25 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,.95), rgba(255,255,255,0));
+  animation:mdStrobe calc(var(--md_fx_speed) * .65) steps(1,end) infinite;
+}
+
+/* Sheen: 스윕만(가볍게) */
+.modal--matchdetail .cmd-scorebar.mdfxbar-sheen::after{
+  opacity:calc(var(--md_fx_int) * .85);
+  background:linear-gradient(120deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+  animation:mdBarSweepX calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+}
+
+/* Glow/Border: 테두리/글로우 강조 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-glow{
+  box-shadow:0 0 0 rgba(255,255,255,0);
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-border{
+  animation:mdBorderPulse calc(var(--md_fx_speed) * .95) ease-in-out infinite;
+}
 
 @keyframes cmdScoreWave{
   0%{ background-position:0% 50%; }
@@ -1255,10 +1661,10 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   position:absolute;
   inset:-50% -60%;
   pointer-events:none;
-  background:linear-gradient(120deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
-  transform:translateX(-40%) rotate(8deg);
-  opacity:.8;
-  animation:cmdTeamShimmer 3.2s ease-in-out infinite;
+  background:none;
+  transform:translateX(0) rotate(0deg);
+  opacity:0;
+  animation:none;
   mix-blend-mode:overlay;
   z-index:0;
 }
@@ -1268,9 +1674,98 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   100%{ transform:translateX(45%) rotate(8deg); }
 }
 
+@keyframes mdSparkleTwinkle{
+  0%,100%{opacity:.25; transform:scale(1);}
+  50%{opacity:.7; transform:scale(1.03);}
+}
+@keyframes mdGlowPulse{
+  0%,100%{box-shadow:0 10px 28px rgba(0,0,0,.12), 0 0 0 rgba(255,255,255,0);}
+  50%{box-shadow:0 10px 28px rgba(0,0,0,.12), 0 0 22px rgba(255,255,255, calc(var(--md_fx_int) * .32));}
+}
+
+@keyframes mdBorderPulse{
+  0%,100%{ box-shadow:0 10px 28px rgba(0,0,0,.12), inset 0 0 0 rgba(255,255,255,0); }
+  50%{ box-shadow:0 10px 28px rgba(0,0,0,.12), inset 0 0 0 2px rgba(255,255,255, calc(var(--md_fx_int) * .55)); }
+}
+.modal--matchdetail .cmd-team.mdfx-border{
+  animation:mdBorderPulse calc(var(--md_fx_speed) * .95) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-wave::after{
+  opacity:calc(var(--md_fx_int) * .55);
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.28), rgba(255,255,255,0));
+  background-size:200% 200%;
+  animation:cmdScoreWave var(--md_fx_speed) ease-in-out infinite;
+}
+
+/* 경기 상세 상단 팀 카드 효과 프리셋들 */
+.modal--matchdetail .cmd-team.mdfx-ripple::after{
+  opacity:calc(.70 + var(--md_fx_int) * .30);
+  mix-blend-mode:normal;
+  background:
+    repeating-radial-gradient(circle at 30% 50%,
+      rgba(255,255,255,.78) 0 7px,
+      rgba(255,255,255,0) 7px 20px),
+    repeating-radial-gradient(circle at 70% 50%,
+      rgba(255,255,255,.48) 0 6px,
+      rgba(255,255,255,0) 6px 18px);
+  background-size:220% 220%;
+  animation:mdRippleMove calc(var(--md_fx_speed) * .52) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-aurora::after{
+  opacity:calc(.60 + var(--md_fx_int) * .40);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 180deg at 50% 50%,
+      rgba(255,255,255,.00),
+      rgba(255,255,255,.55),
+      rgba(255,255,255,.00),
+      rgba(0,0,0,.22),
+      rgba(255,255,255,.00)),
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.34), transparent 60%);
+  background-size:180% 180%, 140% 140%;
+  animation:mdAuroraFlow calc(var(--md_fx_speed) * .75) linear infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-aurora{
+  animation:mdAuroraHue calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-scan::before{
+  opacity:calc(.72 + var(--md_fx_int) * .28);
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.92), rgba(255,255,255,0));
+  transform:translateX(-55%) rotate(0deg);
+  animation:mdScanSweep calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-neon{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.12),
+    0 0 34px rgba(255,255,255, calc(var(--md_fx_int) * .35)),
+    0 0 0 3px rgba(255,255,255, calc(var(--md_fx_int) * .75)) inset;
+}
+
+.modal--matchdetail .cmd-team.mdfx-sheen::before,
+.modal--matchdetail .cmd-team.mdfx-mix::before{
+  opacity:calc(var(--md_fx_int) * .95);
+  background:linear-gradient(120deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
+  transform:translateX(-40%) rotate(8deg);
+  animation:cmdTeamShimmer var(--md_fx_speed) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-sparkle::before{
+  opacity:calc(var(--md_fx_int) * .72);
+  inset:-30% -30%;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,.70) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 72% 22%, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 55% 75%, rgba(255,255,255,.60) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 35% 58%, rgba(255,255,255,.50) 0 1px, rgba(255,255,255,0) 2px);
+  animation:mdSparkleTwinkle calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-glow{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce){
-  .modal--matchdetail .cmd-scorebar{ animation:none; background-size:auto; }
-  .modal--matchdetail .cmd-team::before{ animation:none; }
+  /* (요청) 스코어바/상단카드 효과는 체감이 중요해서 애니메이션 유지 */
+  /* (요청) 상단 카드 효과는 체감이 중요해서 ::before 애니메이션은 유지 */
 }
 .modal--matchdetail .cmd-team small{font-weight:900;opacity:.85;}
 .modal--matchdetail .cmd-mid{
@@ -1415,6 +1910,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 
 /* 플레이어 모달이 경기상세 뒤로 깔리는 문제 방지 */
 #playerModal{ z-index: var(--z-modal-5); } /* [Z-IDX] */
+/* 대학 상세 모달이 경기상세(대전기록/대회) 뒤로 깔리는 문제 방지 */
+#univModal{ z-index: var(--z-modal-5); } /* [Z-IDX] */
 .modal--matchdetail .cmd-detail .cmd-player-badges{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .modal--matchdetail .cmd-detail .cmd-midbox{
   width:46px;
