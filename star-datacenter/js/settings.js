@@ -523,6 +523,7 @@ window.cfgSetRecCardSettings = function(){
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
   const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'100',10);
+  const winnerOnly = !!document.getElementById('cfg-rc-winner-only')?.checked;
 
   try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border','full','gradient'].includes(accent)?accent:'none'); }catch(e){}
@@ -532,6 +533,7 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_univ_font_pct', String(Math.max(90,Math.min(150,univFontPct||100)))); }catch(e){}
   try{ localStorage.setItem('su_ym_scale_pct', String(Math.max(80,Math.min(140,ymScalePct||100)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_rc_winner_only', winnerOnly ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
@@ -1716,6 +1718,34 @@ window.cfgMenuReset = function(){
   _cfgMenuApplyAndRerender({});
 };
 
+// (요청) 애니메이션 효과 설정 제거됨 — 그라데이션(고정) 위주로 정리
+
+// ─────────────────────────────────────────────────────────────
+// 🌈 그라데이션 효과(움직임 ON/OFF)
+// - 대학 상세/스트리머 상세/경기 상세(승리팀) 등에 공통 적용
+// - 실제 그라데이션 모양은 각 렌더링 코드에서 localStorage를 읽어 반영
+// ─────────────────────────────────────────────────────────────
+// (요청) 그라데이션 설정(UI) 제거됨
+
+// ─────────────────────────────────────────────────────────────
+// 🎮 경기 상세 상단 카드 효과: 강도/속도 변수 적용
+// - localStorage: su_md_fx_int(0~1000), su_md_fx_speed(6~30)
+//   * su_md_fx_int는 % 값(0~1000)이며, CSS 변수(--md_fx_int)는 0.0~10.0 스케일로 변환됩니다.
+// ─────────────────────────────────────────────────────────────
+function applyMdCardFxVars(){
+  try{
+    const doc=document.documentElement;
+    // 체감이 약하다는 피드백이 많아서 기본값/커브를 "눈에 띄게" 조정
+    const intPct = Math.max(0, Math.min(1000, parseInt(localStorage.getItem('su_md_fx_int')||'200',10)||200));
+    const spd = Math.max(6, Math.min(30, parseInt(localStorage.getItem('su_md_fx_speed')||'6',10)||6));
+    const raw = intPct / 100; // 0~10
+    doc.style.setProperty('--md_fx_int', String(raw));
+    doc.style.setProperty('--md_fx_speed', spd+'s');
+  }catch(e){}
+}
+window.applyMdCardFxVars = applyMdCardFxVars;
+try{ applyMdCardFxVars(); }catch(e){}
+
 // (요청사항) 설정 상단 "바로가기" UI 제거됨.
 
 // closest()/matches()/includes() 미지원 환경 대비: 상위로 올라가며 data-attr 탐색
@@ -2445,6 +2475,14 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${_scfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>
+    ${(()=>{
+      const on = (localStorage.getItem('su_univ_hdr_fx') ?? '1') === '1';
+      return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px">
+        <input type="checkbox" style="width:16px;height:16px" ${on?'checked':''}
+          onchange="localStorage.setItem('su_univ_hdr_fx', this.checked?'1':'0'); try{if(typeof render==='function')render();}catch(e){}">
+        대학 상세 상단(대학색 배경) 효과 사용
+      </label>`;
+    })()}
     ${univCfg.map((u,i)=>{
       const isHidden = !!u.hidden;
       const isDissolved = !!u.dissolved;
@@ -2871,6 +2909,12 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-rc-winner-only" style="width:15px;height:15px" ${(localStorage.getItem('su_rc_winner_only')||'0')==='1'?'checked':''} onchange="cfgSetRecCardSettings()">
+        기록 카드에서 ‘승리자(승리 대학)’만 표시
+      </label>
+      <div style="font-size:11px;color:var(--gray-l)">※ 무승부는 예외로 기존처럼 양쪽이 표시됩니다. 상세(📂)를 열면 전체 정보는 그대로 볼 수 있습니다.</div>
     </div>
   </details>
   ${(()=>{ 
@@ -5939,6 +5983,7 @@ function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');
   if(!body) return;
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const pdHdrFx = (()=>{ try{ return (localStorage.getItem('su_pd_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
   const fs=s.font_size||'normal';
   const cp=s.color_preset||'normal';
   const st=s.stats_tint!==undefined?s.stats_tint:8;
@@ -5976,6 +6021,14 @@ function _renderCfgPdSection(){
     </div>`;
   }).join('');
   body.innerHTML=`
+    <div style="margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:800;color:var(--text2)">
+        <input type="checkbox" style="width:16px;height:16px" ${pdHdrFx?'checked':''}
+          onchange="localStorage.setItem('su_pd_hdr_fx', this.checked?'1':'0'); try{if(typeof render==='function')render();}catch(e){}; _renderCfgPdSection()">
+        스트리머 상세 상단(소속 대학색 배경) 효과 사용
+      </label>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">끄면 상단 배경이 고정됩니다.</div>
+    </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
@@ -6099,6 +6152,11 @@ function _renderCfgMatchDetailSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  const mdWinGradOnly = (()=>{ try{ return (localStorage.getItem('su_md_win_grad_only')||'1')==='1'; }catch(e){ return true; } })();
+  const mdFx = (()=>{ try{ return (localStorage.getItem('su_md_card_fx')||'move').trim(); }catch(e){ return 'move'; } })();
+  const mdFxTarget = (()=>{ try{ return (localStorage.getItem('su_md_fx_target')|| (mdWinGradOnly?'winner':'both')).trim(); }catch(e){ return mdWinGradOnly?'winner':'both'; } })();
+  const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'200',10);}catch(e){return 200;} })();
+  const mdFxSpeed = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_speed')||'6',10);}catch(e){return 6;} })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -6113,6 +6171,65 @@ function _renderCfgMatchDetailSection(){
         <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
         <span id="cfg-md2-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">✨ 상단 대학 카드 효과</div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">효과 종류</div>
+          <select style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px"
+            onchange="localStorage.setItem('su_md_card_fx', this.value); try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="off" ${mdFx==='off'?'selected':''}>OFF (없음)</option>
+            <option value="move" ${mdFx==='move'?'selected':''}>Move (배경 이동)</option>
+            <option value="sheen" ${mdFx==='sheen'?'selected':''}>Sheen (광택 스윕)</option>
+            <option value="sparkle" ${mdFx==='sparkle'?'selected':''}>Sparkle (스파클)</option>
+            <option value="glow" ${mdFx==='glow'?'selected':''}>Glow (은은 글로우)</option>
+            <option value="mix" ${mdFx==='mix'?'selected':''}>Mix (이동+광택)</option>
+            <option value="border" ${mdFx==='border'?'selected':''}>Border (테두리 펄스)</option>
+            <option value="wave" ${mdFx==='wave'?'selected':''}>Wave (물결 하이라이트)</option>
+            <option value="ripple" ${mdFx==='ripple'?'selected':''}>Ripple (물결 링)</option>
+            <option value="aurora" ${mdFx==='aurora'?'selected':''}>Aurora (오로라)</option>
+            <option value="scan" ${mdFx==='scan'?'selected':''}>Scan (스캔 라인)</option>
+            <option value="neon" ${mdFx==='neon'?'selected':''}>Neon (네온 글로우)</option>
+            <option value="rainbow" ${mdFx==='rainbow'?'selected':''}>Rainbow (무지개)</option>
+            <option value="glitch" ${mdFx==='glitch'?'selected':''}>Glitch (글리치)</option>
+            <option value="confetti" ${mdFx==='confetti'?'selected':''}>Confetti (컨페티)</option>
+            <option value="fire" ${mdFx==='fire'?'selected':''}>Fire (불꽃)</option>
+            <option value="frost" ${mdFx==='frost'?'selected':''}>Frost (서리)</option>
+            <option value="matrix" ${mdFx==='matrix'?'selected':''}>Matrix (매트릭스)</option>
+            <option value="vortex" ${mdFx==='vortex'?'selected':''}>Vortex (소용돌이)</option>
+            <option value="prism" ${mdFx==='prism'?'selected':''}>Prism (프리즘)</option>
+            <option value="plasma" ${mdFx==='plasma'?'selected':''}>Plasma (플라즈마)</option>
+            <option value="strobe" ${mdFx==='strobe'?'selected':''}>Strobe (번쩍)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">적용 대상</div>
+          <select style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px"
+            onchange="localStorage.setItem('su_md_fx_target', this.value); localStorage.setItem('su_md_win_grad_only', this.value==='winner'?'1':'0'); try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="none" ${mdFxTarget==='none'?'selected':''}>없음</option>
+            <option value="winner" ${mdFxTarget!=='none' && mdWinGradOnly?'selected':''}>승리팀만</option>
+            <option value="both" ${mdFxTarget!=='none' && !mdWinGradOnly?'selected':''}>양쪽 모두</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">강도</div>
+          <input type="range" min="0" max="1000" step="10" value="${Math.max(0,Math.min(1000,mdFxInt||0))}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_int', String(this.value)); document.getElementById('cfg-md-fx-int-v').textContent=this.value+'%'; try{if(typeof applyMdCardFxVars==='function')applyMdCardFxVars();}catch(e){}">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:64px;text-align:right"><span id="cfg-md-fx-int-v">${Math.max(0,Math.min(1000,mdFxInt||0))}%</span></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">속도</div>
+          <input type="range" min="6" max="30" step="1" value="${Math.max(6,Math.min(30,mdFxSpeed||12))}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_speed', String(this.value)); document.getElementById('cfg-md-fx-spd-v').textContent=this.value+'s'; try{if(typeof applyMdCardFxVars==='function')applyMdCardFxVars();}catch(e){}">
+          <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:52px;text-align:right"><span id="cfg-md-fx-spd-v">${Math.max(6,Math.min(30,mdFxSpeed||12))}s</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+          • 승리팀만: 패배팀은 단색 처리 + 효과는 승리팀에만 적용<br>
+          • 양쪽 모두: 양쪽 모두 동일하게 효과 적용
+        </div>
       </div>
     </div>
 

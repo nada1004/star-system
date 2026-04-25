@@ -3864,7 +3864,11 @@ function openProPasteModal() {
   const warn = document.getElementById('pro-paste-warn');
   const swapRow = document.getElementById('pro-swap-row');
   const multiBadge = document.getElementById('pro-multi-badge');
-  if (ta) ta.value = '';
+  if (ta) {
+    ta.value = '';
+    // 사용자가 이전에 textarea 높이를 늘려둔 경우(리사이즈) 다음번에 공백이 크게 남는 문제 방지
+    ta.style.height = '120px';
+  }
   if (prev) prev.innerHTML = '';
   if (applyBtn) applyBtn.style.display = 'none';
   if (badge) badge.style.display = 'none';
