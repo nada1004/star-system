@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260425-01"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260425-12"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -499,7 +499,10 @@
         <div id="cmdTitle" class="cmd-title">📊 경기 상세</div>
         <div id="cmdSub" class="cmd-sub"></div>
       </div>
-      <button class="cmd-close" onclick="closeCompMatchDetailModal()" aria-label="닫기">✕</button>
+      <div class="cmd-head__right">
+        <span id="cmdDate" class="cmd-date"></span>
+        <button class="cmd-close" onclick="closeCompMatchDetailModal()" aria-label="닫기">✕</button>
+      </div>
     </div>
     <div id="cmdScoreBar" class="cmd-scorebar" style="display:none"></div>
     <div id="compMatchDetailContent" class="cmd-body"></div>
@@ -588,16 +591,16 @@
 <script src="js/data.js?v=20260424-02"></script>
 <script src="js/auth.js?v=20260421-01"></script>
 <script src="js/settings-store.js?v=20260423-02"></script>
-<script src="js/settings.js?v=20260425-01"></script>
+<script src="js/settings.js?v=20260425-10"></script>
 <script src="js/tier-tour.js?v=20260422-01"></script>
-<script src="js/competition.js?v=20260425-01"></script>
-<script src="js/render.js?v=20260425-01"></script>
+<script src="js/competition.js?v=20260425-12"></script>
+<script src="js/render.js?v=20260425-06"></script>
 <script src="js/players.js?v=20260424-01"></script>
 <script src="js/vs.js?v=20260425-01"></script>
-<script src="js/history.js?v=20260425-01"></script>
+<script src="js/history.js?v=20260425-13"></script>
 <script src="js/match.js?v=20260425-05"></script>
 <script src="js/match-builder.js?v=20260425-01"></script>
-<script src="js/search.js?v=20260425-03"></script>
+<script src="js/search.js?v=20260425-06"></script>
 <script src="js/pro-comp.js?v=20260425-01"></script>
 <script src="js/stats.js?v=20260425-01"></script>
 <script src="js/calendar.js?v=20260422-01"></script>
@@ -609,7 +612,7 @@
 <script src="js/elboard.js?v=20260422-01"></script>
 <script src="js/yt-bgm.js?v=20260420-06"></script>
 <script src="js/soop-multiview.js?v=20260420-10"></script>
-<script src="js/init.js?v=20260422-03"></script>
+<script src="js/init.js?v=20260425-06"></script>
 <script src="js/board2.js?v=20260422-03"></script>
 <script src="js/chatbot.js?v=20260423-08"></script>
 <script src="js/mobile-bar.js?v=20260422-02"></script>
