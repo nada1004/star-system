@@ -398,7 +398,81 @@ function _lsSave(k,obj){
   }
 }
 
-let players    = J('su_p')  || [];
+// ─────────────────────────────────────────────────────────────
+// (저장 용량 최적화) 선수 데이터(su_p) 경량 저장/로드
+// - history가 가장 큰 비중이므로, 저장 시 "키 제거 + 문자열 사전(dict) 인덱싱" 형태로 pack
+// - 로드시 즉시 unpack하여 기존 로직(배열 + history 객체)을 그대로 유지
+// ─────────────────────────────────────────────────────────────
+function _unpackPlayers(raw){
+  try{
+    if(!raw || typeof raw!=='object') return Array.isArray(raw)?raw:[];
+    if(raw.v!==2 || !Array.isArray(raw.p) || !raw.d) return Array.isArray(raw)?raw:[];
+    const d=raw.d||{};
+    const res=d.res||[], opp=d.opp||[], race=d.race||[], map=d.map||[], univ=d.univ||[], mode=d.mode||[];
+    const get=(arr,i)=> (i==null||i<0)?'':(arr[i]||'');
+    return raw.p.map(pp=>{
+      const p={...pp};
+      const hp=Array.isArray(p.h)?p.h:[];
+      p.history = hp.map(r=>({
+        date: r[0]||'',
+        time: r[1]||0,
+        result: get(res, r[2]),
+        opp: get(opp, r[3]),
+        oppRace: get(race, r[4]),
+        map: get(map, r[5]),
+        matchId: r[6]||'',
+        eloDelta: (r[7]===undefined?null:r[7]),
+        univ: get(univ, r[8]),
+        mode: get(mode, r[9]),
+        score: r[10]||'',
+        ...(r[11]?{_team:true}:{})
+      }));
+      delete p.h;
+      return p;
+    });
+  }catch(e){
+    return Array.isArray(raw)?raw:[];
+  }
+}
+function _packPlayers(playersArr){
+  try{
+    const dict={res:[], opp:[], race:[], map:[], univ:[], mode:[]};
+    const idx=(arr,s)=>{
+      const v=String(s||'').trim();
+      if(!v) return -1;
+      const i=arr.indexOf(v);
+      if(i>=0) return i;
+      arr.push(v);
+      return arr.length-1;
+    };
+    const packed=(playersArr||[]).map(p=>{
+      const c={...p};
+      const h=Array.isArray(c.history)?c.history:[];
+      // save 단계에서 photo는 분리되므로 history만 pack
+      c.h = h.map(it=>[
+        it.date||'', it.time||0,
+        idx(dict.res, it.result),
+        idx(dict.opp, it.opp),
+        idx(dict.race, it.oppRace),
+        idx(dict.map, it.map),
+        it.matchId||'',
+        (it.eloDelta===undefined?null:it.eloDelta),
+        idx(dict.univ, it.univ),
+        idx(dict.mode, it.mode),
+        it.score||'',
+        it._team?1:0
+      ]);
+      delete c.history;
+      return c;
+    });
+    return {v:2, d:dict, p:packed};
+  }catch(e){
+    return playersArr||[];
+  }
+}
+
+let playersRaw = J('su_p')  || [];
+let players    = _unpackPlayers(playersRaw) || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
 (function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object')players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
@@ -686,30 +760,59 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
+    // (추가) 대전 데이터 sets.games에서 UI 보조 필드 등 중복 키 제거 (용량 절감)
+    const _trimGame=(g)=>{
+      const r={
+        playerA:g.playerA||'',
+        playerB:g.playerB||'',
+        map:g.map||'',
+        winner:g.winner||''
+      };
+      if(g._id) r._id=g._id;
+      if(g._isTeam){
+        r._isTeam=true;
+        if(Array.isArray(g.teamA)) r.teamA=g.teamA;
+        if(Array.isArray(g.teamB)) r.teamB=g.teamB;
+      }
+      return r;
+    };
+    const _trimSets=(sets)=> (sets||[]).map(s=>{
+      const rs={...s};
+      if(rs.games) rs.games=(rs.games||[]).map(_trimGame);
+      return rs;
+    });
+    const _trimMatchArr=(arr)=> (arr||[]).map(m=>{
+      if(!m || !m.sets) return m;
+      const r={...m};
+      r.sets=_trimSets(m.sets);
+      return r;
+    });
     _lsSave('su_pp',_pPhotoMap);
     _lsSave('su_p',_pNoPhoto);
-    _lsSave('su_u',univCfg);
+    // (추가) 선수 데이터(su_p) history pack 저장 (과거 기록 보존, 구조만 경량화)
+    _lsSave('su_p', _packPlayers(_pNoPhoto));
     _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
     _lsSave('su_t',tourD);
     _lsSave('su_mm',miniM);
-    _lsSave('su_um',univM);
-    _lsSave('su_cm',comps);
-    _lsSave('su_ck',_trimM(ckM));
-    _lsSave('su_cn',compNames);
+    _lsSave('su_mm',_trimMatchArr(miniM));
+    _lsSave('su_um',_trimMatchArr(univM));
+    _lsSave('su_cm',_trimMatchArr(comps));
+    _lsSave('su_ck',_trimMatchArr(_trimM(ckM)));
     _lsSave('su_cc',curComp);
     _lsSave('su_pro',_trimM(proM));
-    _lsSave('su_ptn',proTourneys);
+    _lsSave('su_pro',_trimMatchArr(_trimM(proM)));
     _lsSave('su_ptc',curProComp);
     _lsSave('su_tn',tourneys);
     _lsSave('su_ttm',_trimM(ttM));
-    _lsSave('su_ttcur',_ttCurComp);
+    _lsSave('su_ttm',_trimMatchArr(_trimM(ttM)));
     _lsSave('su_indm',indM);
-    _lsSave('su_gjm',gjM);
-    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+    _lsSave('su_indm',_trimMatchArr(indM));
+    _lsSave('su_gjm',_trimMatchArr(gjM));
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     _lsSave('su_notices',notices);
+    _lsSave('su_seasons',seasons);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
@@ -797,7 +900,27 @@ let calScheduled = J('su_cal_sched') || [];
 
 // 🆕 랭킹 변동 스냅샷 (points 기준 순위)
 // { playerName: rank } 형태로 저장
-let _rankSnapshot = J('su_rank_snap') || {};
+// 랭킹 스냅샷(su_rank_snap) 저장 최적화:
+// - 저장은 "정렬된 선수명 배열"로 (맵 형태 대비 용량 크게 절감)
+// - 런타임은 기존과 동일하게 {name: rank} 맵으로 사용
+function _loadRankSnap(){
+  try{
+    const raw = J('su_rank_snap');
+    if(!raw) return {};
+    // v2 포맷: {v:2,a:[name1,name2,...]}
+    if(typeof raw==='object' && raw.v===2 && Array.isArray(raw.a)){
+      const m={}; raw.a.forEach((n,i)=>{m[n]=i+1;}); return m;
+    }
+    // 구 포맷: {name: rank}
+    if(!Array.isArray(raw) && typeof raw==='object') return raw;
+    // 매우 구 포맷: [names]
+    if(Array.isArray(raw)){
+      const m={}; raw.forEach((n,i)=>{m[n]=i+1;}); return m;
+    }
+  }catch(e){}
+  return {};
+}
+let _rankSnapshot = _loadRankSnap();
 let _rankSnapDate = localStorage.getItem('su_rank_snap_date') || '';
 
 // 랭킹 스냅샷 업데이트 (하루 1회)
@@ -808,9 +931,11 @@ function updateRankSnapshot() {
   const ranked = [...players]
     .filter(p => !p.retired)
     .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
+  const names = ranked.map(p=>p.name);
   const snap = {};
-  ranked.forEach((p,i) => { snap[p.name] = i+1; });
-  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
+  names.forEach((n,i)=>{ snap[n]=i+1; });
+  // 저장은 경량 포맷(v2)
+  localStorage.setItem('su_rank_snap', JSON.stringify({v:2,a:names}));
   localStorage.setItem('su_rank_snap_date', today);
   _rankSnapshot = snap;
   _rankSnapDate = today;

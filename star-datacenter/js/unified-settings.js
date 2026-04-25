@@ -11,7 +11,10 @@
 
 (function(){
   const SNAP_KEY = 'su_unified_settings_v1';
-  const MIG_KEY  = 'su_unified_settings_migrated_v1';
+  // (v2) 너무 큰 데이터(선수/대전 데이터 등)까지 스냅샷에 중복 저장되어 용량을 과도하게 차지하는 문제 개선
+  // - 기존 su_* 키는 그대로 유지하고, "통합 설정 스냅샷"은 '설정' 성격의 키만 저장한다.
+  // - 한번만 재구축되도록 MIG_KEY 버전을 올린다.
+  const MIG_KEY  = 'su_unified_settings_migrated_v2';
   const PREFIX   = 'su_';
 
   const _origSet = localStorage.setItem.bind(localStorage);
@@ -20,6 +23,29 @@
   let _inSync = false;
 
   function _now(){ return Date.now(); }
+
+  // 스냅샷에서 제외할 "대용량/대전 데이터" 키들
+  // (대전 데이터는 별도 키로 이미 저장되므로, 스냅샷에 중복 저장하면 용량만 커짐)
+  const _EXCLUDE_KEYS = new Set([
+    'su_p','su_pp','su_t','su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
+    'su_rank_snap','su_cal_sched','su_votes','su_notices','su_seasons',
+    // 빌더 편집 상태는 크기가 커질 수 있고, 백업 대상으로 우선순위 낮음
+    'su_bld_ck','su_bld_pro'
+  ]);
+  const _MAX_VAL_LEN = 12000; // 12KB 이상이면 스냅샷에서 제외 (설정 스냅샷 용도)
+
+  function _shouldSkip(k, v){
+    try{
+      if(!k || typeof k!=='string') return true;
+      if(!k.startsWith(PREFIX)) return true;
+      if(k===SNAP_KEY || k===MIG_KEY) return true;
+      if(_EXCLUDE_KEYS.has(k)) return true;
+      if(typeof v==='string' && v.length > _MAX_VAL_LEN) return true;
+      return false;
+    }catch(e){
+      return true;
+    }
+  }
 
   function _catOf(k){
     if(!k || typeof k!=='string') return 'misc';
@@ -57,9 +83,9 @@
       for(let i=0;i<localStorage.length;i++){
         const k = localStorage.key(i);
         if(!k || !k.startsWith(PREFIX)) continue;
-        if(k===SNAP_KEY || k===MIG_KEY) continue;
         let val = null;
         try{ val = localStorage.getItem(k); }catch(e){ val = null; }
+        if(_shouldSkip(k, val)) continue;
         const cat = _catOf(k);
         if(!snap.cats[cat]) snap.cats[cat] = {};
         snap.cats[cat][k] = val;
@@ -79,7 +105,7 @@
 
   function _upsert(k, v){
     if(!k || !k.startsWith(PREFIX)) return;
-    if(k===SNAP_KEY || k===MIG_KEY) return;
+    if(_shouldSkip(k, v)) return;
     const snap = _loadSnap();
     const cat = _catOf(k);
     if(!snap.cats) snap.cats = {};
@@ -92,6 +118,7 @@
   function _del(k){
     if(!k || !k.startsWith(PREFIX)) return;
     if(k===SNAP_KEY || k===MIG_KEY) return;
+    if(_EXCLUDE_KEYS.has(k)) return;
     const snap = _loadSnap();
     const cat = _catOf(k);
     try{ if(snap.cats && snap.cats[cat]) delete snap.cats[cat][k]; }catch(e){}
@@ -145,4 +172,3 @@
 
   _ensureMigrated();
 })();
-
