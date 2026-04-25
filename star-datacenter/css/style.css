@@ -1105,6 +1105,11 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
+
+/* pasteModal(경기 결과 붙여넣기) — 기본 flex align-items:stretch로 인해 모달 박스가 과도하게 늘어나
+   '취소' 버튼 아래로 큰 공백이 생기는 현상 방지 */
+#pasteModal{align-items:center;justify-content:center;padding:16px;}
+#pasteModal .umbox{margin:0;height:auto;max-height:88vh;overflow-y:auto;}
 .mbox{background:var(--white);margin:5% auto;padding:22px 24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
 
 /* ── 대회 경기 상세 모달(디자인 개선) ── */
@@ -1160,7 +1165,26 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .modal--matchdetail .cmd-scorebar{
   padding:7px 10px;
   background:linear-gradient(180deg,rgba(2,132,199,.09),rgba(2,132,199,.02),transparent);
+  background-size:200% 200%;
+  animation:cmdScoreWave 7s ease-in-out infinite;
   border-bottom:1px solid rgba(148,163,184,.25);
+}
+.modal--matchdetail .cmd-scorebar::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
+    radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
+  opacity:.9;
+}
+.modal--matchdetail .cmd-scorebar{ position:relative; overflow:hidden; }
+
+@keyframes cmdScoreWave{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
 }
 .modal--matchdetail .cmd-score{
   display:flex;
@@ -1184,6 +1208,26 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   width:var(--su_md_logo_size, 42px);
   height:var(--su_md_logo_size, 42px);
   flex-shrink:0;
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.32);
+}
+.modal--matchdetail .cmd-team img.cmd-uicon{
+  object-fit:contain !important;
+  padding:0 !important;
+}
+.modal--matchdetail .cmd-team span.cmd-uicon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* 경기 상세: 프로필/로고 "가득 채우기" 느낌 보강 */
+.modal--matchdetail .cmd-team span.cmd-uicon img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
 }
 .modal--matchdetail .cmd-team{
   font-size:16px;
@@ -1192,6 +1236,41 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   box-shadow:0 10px 28px rgba(0,0,0,.12);
   padding:5px 8px;
   min-height: calc(var(--su_md_logo_size, 42px) + 10px);
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+}
+.modal--matchdetail .cmd-team > *{ position:relative; z-index:1; }
+.modal--matchdetail .cmd-team::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(70% 130% at 20% 0%, rgba(255,255,255,.18), transparent 60%);
+  opacity:.55;
+  z-index:0;
+}
+.modal--matchdetail .cmd-team::before{
+  content:'';
+  position:absolute;
+  inset:-50% -60%;
+  pointer-events:none;
+  background:linear-gradient(120deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
+  transform:translateX(-40%) rotate(8deg);
+  opacity:.8;
+  animation:cmdTeamShimmer 3.2s ease-in-out infinite;
+  mix-blend-mode:overlay;
+  z-index:0;
+}
+@keyframes cmdTeamShimmer{
+  0%{ transform:translateX(-45%) rotate(8deg); }
+  55%{ transform:translateX(35%) rotate(8deg); }
+  100%{ transform:translateX(45%) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .modal--matchdetail .cmd-scorebar{ animation:none; background-size:auto; }
+  .modal--matchdetail .cmd-team::before{ animation:none; }
 }
 .modal--matchdetail .cmd-team small{font-weight:900;opacity:.85;}
 .modal--matchdetail .cmd-mid{
