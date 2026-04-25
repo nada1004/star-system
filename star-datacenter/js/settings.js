@@ -356,17 +356,16 @@ function _scfgToggle(id,el){
 // ─────────────────────────────────────────────────────────────
 const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 
+// (통합 v1) "탭별"이 아니라 "주제별"로 기본 카테고리를 재구성
+// - 기존 키/로직은 유지하고, 메뉴/동선만 통합해서 찾기 쉽게 만든다.
 const _DEFAULT_CATSECS = {
-  '게임 운영':['notice','tier','season','teammatch','acct'],
-  '콘텐츠 관리':['univ','maps','mAlias','si','paste'],
-  // (요청사항) 현황판 관리 메뉴 분리
-  '현황판 관리':['b2layout','b2femco','boardchip','oldbright','boardbg'],
-  '이미지 관리':['imgsettings','imgmodalsettings'],
-  // (요청사항) 설정탭 하위 메뉴 2개 추가(프리셋 중심)
-  // pasteRoute: 결과 붙여넣기 자동 분리 규칙
-  '🎨 스타일/테마':['designv2','hdr','appfont','reccard','tourneycard','calui','pd','bgm','soopmv','pasteRoute'],
-  '🧪 고급/실험실':['cfgmenu','autofitall','fab','storage','selfcheck'],
-  '데이터 관리':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
+  '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','si','paste'],
+  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail'],
+  '🧩 현황판/펨코':['b2femco','boardchip','oldbright','boardbg'],
+  '🎨 디자인/테마':['designv2','hdr','appfont','reccard','tourneycard','calui'],
+  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
+  '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
+  '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
 
@@ -1598,47 +1597,36 @@ function _cfgMenuNormalize(layout){
   const all = _cfgAllSecs.slice();
   const defCats = Object.keys(_DEFAULT_CATSECS);
   let catOrder = Array.isArray(layout?.catOrder) ? layout.catOrder.filter(c=>typeof c==='string' && c.trim()) : defCats.slice();
-  // 구버전 호환: "시스템 설정" → 신규 2카테고리(스타일/테마, 고급/실험실)
-  catOrder = catOrder.filter(c => c !== '시스템 설정');
+  // 구버전 호환: 카테고리명 변경/병합
+  const oldToNewCat = {
+    '게임 운영':'🧩 운영/콘텐츠',
+    '콘텐츠 관리':'🧩 운영/콘텐츠',
+    '현황판 관리':'🧩 현황판/펨코',
+    '이미지 관리':'🖼️ 이미지/프로필',
+    '🎨 스타일/테마':'🎨 디자인/테마',
+    '🧪 고급/실험실':'🧪 고급/점검',
+    '데이터 관리':'💾 데이터',
+    '시스템 설정':'🎨 디자인/테마',
+  };
+  catOrder = catOrder.map(c => oldToNewCat[c] || c).filter((v,i,a)=>a.indexOf(v)===i);
   // 기본 카테고리 누락 시 추가
   defCats.forEach(c=>{ if(!catOrder.includes(c)) catOrder.push(c); });
 
   const catSecs = {};
   const legacyCatSecs = layout?.catSecs && typeof layout.catSecs === 'object' ? layout.catSecs : {};
-  const aliasCatSecs = {...legacyCatSecs};
-  // 구버전 호환(이전 버전에서 현황판/이미지가 하나의 카테고리로 합쳐져 있던 경우) 자동 분리
+  const aliasCatSecs = {};
+  // 구버전/사용자 레이아웃의 카테고리를 신규 카테고리로 병합
   try{
-    const legacyImg = Array.isArray(legacyCatSecs['이미지 관리']) ? legacyCatSecs['이미지 관리'] : [];
-    const hasBoardCat = Array.isArray(legacyCatSecs['현황판 관리']);
-    if(legacyImg.length && !hasBoardCat){
-      const boardSet = new Set(['b2layout','b2femco','boardchip','oldbright','boardbg']);
-      const imgSet = new Set(['imgsettings','imgmodalsettings']);
-      const board = legacyImg.filter(s=>boardSet.has(s));
-      const imgs  = legacyImg.filter(s=>imgSet.has(s));
-      if(board.length) aliasCatSecs['현황판 관리'] = board;
-      aliasCatSecs['이미지 관리'] = imgs.length ? imgs : legacyImg.filter(s=>imgSet.has(s));
-    }
+    Object.entries(legacyCatSecs||{}).forEach(([cat, secs])=>{
+      const nc = oldToNewCat[cat] || cat;
+      if(!Array.isArray(secs)) return;
+      if(!aliasCatSecs[nc]) aliasCatSecs[nc] = [];
+      secs.forEach(s=>{ if(!aliasCatSecs[nc].includes(s)) aliasCatSecs[nc].push(s); });
+    });
   }catch(e){}
 
-  // 시스템 설정 섹션이 기존 레이아웃에 있으면, 섹션별로 신규 카테고리에 자동 분배
-  try{
-    const legacySys = Array.isArray(legacyCatSecs['시스템 설정']) ? legacyCatSecs['시스템 설정'] : [];
-    if(legacySys.length){
-      const secToCat = {
-        appfont:'🎨 스타일/테마', reccard:'🎨 스타일/테마', tourneycard:'🎨 스타일/테마', calui:'🎨 스타일/테마',
-        boardchip:'현황판 관리', oldbright:'현황판 관리', boardbg:'현황판 관리',
-        cfgmenu:'🧪 고급/실험실', autofitall:'🧪 고급/실험실', pd:'🧪 고급/실험실', fab:'🧪 고급/실험실', storage:'🧪 고급/실험실',
-        imgsettings:'이미지 관리', imgmodalsettings:'이미지 관리',
-        b2layout:'현황판 관리', b2femco:'현황판 관리',
-      };
-      legacySys.forEach(sec=>{
-        const t = secToCat[sec] || (Object.keys(_DEFAULT_CATSECS).find(c => (_DEFAULT_CATSECS[c]||[]).includes(sec)) || defCats[0]);
-        if(!aliasCatSecs[t]) aliasCatSecs[t] = [];
-        if(!aliasCatSecs[t].includes(sec)) aliasCatSecs[t].push(sec);
-      });
-      delete aliasCatSecs['시스템 설정'];
-    }
-  }catch(e){}
+  // (구버전 호환) '시스템 설정'을 섹션 단위로 분배하던 로직은
+  // 위의 oldToNewCat 병합으로 자연스럽게 해결됨.
   // 사용자 레이아웃 반영
   catOrder.forEach(c=>{
     const arr = (aliasCatSecs && Array.isArray(aliasCatSecs[c])) ? aliasCatSecs[c] : (_DEFAULT_CATSECS[c] || []);
@@ -1673,7 +1661,7 @@ function _cfgMenuApplyAndRerender(layout){
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   try{
     if(!Object.keys(_catSecs).includes(window._cfgCat)){
-      window._cfgCat = (window._cfgCatOrder && window._cfgCatOrder[0]) || '게임 운영';
+      window._cfgCat = (window._cfgCatOrder && window._cfgCatOrder[0]) || '🧩 운영/콘텐츠';
     }
   }catch(e){}
   try{ render(); }catch(e){}
@@ -2129,7 +2117,7 @@ function _cfgEnsureModal(){
 /* ══════════════════════════════════════
    설정 카테고리 필터
 ══════════════════════════════════════ */
-if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!Object.keys(_catSecs||{}).includes(window._cfgCat)) window._cfgCat=(window._cfgCatOrder&&window._cfgCatOrder[0])||'게임 운영';
+if(typeof window._cfgCat==='undefined'||window._cfgCat==='전체'||!Object.keys(_catSecs||{}).includes(window._cfgCat)) window._cfgCat=(window._cfgCatOrder&&window._cfgCatOrder[0])||'🧩 운영/콘텐츠';
 function _cfgGo(secId){
   // 섹션이 다른 카테고리에 속하면 카테고리 자동 전환
   try{
@@ -2292,27 +2280,32 @@ function rCfg(C,T){
     C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
     return;
   }
-  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='게임 운영';
+  if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='🧩 운영/콘텐츠';
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
-  const _cfgCatIcons={'게임 운영':'🎮','콘텐츠 관리':'📝','현황판 관리':'🧩','이미지 관리':'🖼️','🎨 스타일/테마':'🎨','🧪 고급/실험실':'🧪','데이터 관리':'💾','기타':'🗂️'};
+  const _cfgCatIcons={'🧩 운영/콘텐츠':'🧩','🖼️ 이미지/프로필':'🖼️','🧩 현황판/펨코':'🧩','🎨 디자인/테마':'🎨','🧠 자동화/도구':'🧠','🧪 고급/점검':'🧪','💾 데이터':'💾','기타':'🗂️'};
   // 카테고리명 자체에 이모지가 들어있는 경우(🎨 스타일/테마, 🧪 고급/실험실) 아이콘이 2번 보이는 문제 방지
   const _catLabel = (c)=>{
     const s=String(c||'');
     return s.replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,'');
   };
   const _cfgCatDesc={
-    '게임 운영':'공지/티어/시즌/경기 운영',
-    '콘텐츠 관리':'대학/맵/약자/이미지 리소스',
-    '현황판 관리':'현황판/펨코현황/칩/밝기/배경',
-    '이미지 관리':'이미지별/이미지 모달/리소스',
-    '🎨 스타일/테마':'폰트/카드/캘린더/브라켓 디자인',
-    '🧪 고급/실험실':'메뉴정리/자동맞춤/저장소/점검',
-    '데이터 관리':'동기화/백업/일괄 작업'
+    '🧩 운영/콘텐츠':'공지/티어/시즌/대학/맵/자동인식',
+    '🖼️ 이미지/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)',
+    '🧩 현황판/펨코':'현황판/펨코현황/칩/밝기/배경',
+    '🎨 디자인/테마':'디자인모드/헤더/폰트/카드/캘린더',
+    '🧠 자동화/도구':'BGM/멀티뷰/붙여넣기 분리/자동 맞춤',
+    '🧪 고급/점검':'메뉴정리/저장소/설정 점검',
+    '💾 데이터':'동기화/백업/일괄 작업'
   };
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
-    b2layout:'🖼️ 현황판', b2femco:'🧩 펨코현황', cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드(기록탭)', tourneycard:'🏆 대회 카드(대회탭)', calui:'📅 캘린더', appfont:'🅰️ 폰트', bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', imgsettings:'🖼️ 이미지', imgmodalsettings:'🖼️ 이미지 모달', pd:'🧑‍💻 스트리머 상세', boardchip:'🏷️ 칩/로고', oldbright:'🌗 밝기', boardbg:'🧱 배경', fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지', pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
+    b2femco:'🧩 펨코현황', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
+    cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
+    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
+    designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
+    fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
@@ -2485,7 +2478,7 @@ ${_scfgD('notice','📢 공지 관리')}
     <input type="text" id="nm" placeholder="새 맵 이름" style="width:200px" onkeydown="if(event.key==='Enter')addMap()">
     <button class="btn btn-b" onclick="addMap()">+ 맵 추가</button>
   </div></details>
-  ${_scfgD('mAlias','⚡ 맵 약자 관리 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">붙여넣기 입력 시 자동 변환</span>')}
+  ${_scfgD('mAlias','⚡ 맵 약자 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       약자를 입력하면 경기 결과 붙여넣기 시 자동으로 전체 맵 이름으로 변환됩니다.<br>
       <span style="color:var(--blue);font-weight:600">예:</span> <code style="background:var(--surface);padding:1px 6px;border-radius:4px">녹 → 녹아웃</code>, <code style="background:var(--surface);padding:1px 6px;border-radius:4px">폴 → 폴리포이드</code>
@@ -2696,6 +2689,51 @@ ${_scfgD('notice','📢 공지 관리')}
     <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
   </details>
   ${_scfgD('tier','🎭 티어 관리')}
+    ${(()=>{ 
+      const th = (typeof getTierTheme==='function') ? getTierTheme() : {bg:{},icon:{},sat:1,bri:1};
+      const bri = Math.round((parseFloat(th.bri)||1)*100);
+      const sat = Math.round((parseFloat(th.sat)||1)*100);
+      const _safeHex = (h) => {
+        const s=String(h||'').trim();
+        return /^#([0-9a-fA-F]{6})$/.test(s) ? s : '#64748b';
+      };
+      const _attr = (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const _jsq = (s)=>String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:10px">🎨 티어 색상/밝기/이모지 커스텀</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">밝기</div>
+            <input type="range" min="60" max="160" step="1" value="${bri}" style="width:100%" oninput="document.getElementById('cfg-tier-bri-v').textContent=this.value+'%';cfgTierThemeSetBri(this.value)">
+            <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tier-bri-v">${bri}%</span></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">채도</div>
+            <input type="range" min="50" max="160" step="1" value="${sat}" style="width:100%" oninput="document.getElementById('cfg-tier-sat-v').textContent=this.value+'%';cfgTierThemeSetSat(this.value)">
+            <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tier-sat-v">${sat}%</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-w btn-sm" onclick="cfgTierThemeReset()">기본값으로 초기화</button>
+          <span style="font-size:11px;color:var(--gray-l);align-self:center">※ 변경 즉시 전체 화면(배지/그래프)에 반영됩니다.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px">
+          ${TIERS.map((t,i)=>{
+            const c=_safeHex(th.bg?.[t]||'');
+            const ic=String(th.icon?.[t]||'');
+            return `<div style="padding:10px 10px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:8px">
+              <div id="cfg-tier-prev-${i}" style="display:flex;justify-content:center">${getTierBadge(t)}</div>
+              <div style="display:flex;gap:6px;align-items:center;justify-content:center">
+                <input type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+                <input type="text" value="${_attr(ic)}" placeholder="이모지" title="티어 이모지" style="width:64px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;text-align:center" oninput="cfgTierThemeSetIcon('${_jsq(t)}',this.value)">
+              </div>
+              <div style="font-size:10px;color:var(--gray-l);text-align:center">${t}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })()}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${TIERS.map((t,i)=>`<div style="text-align:center;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
         ${getTierBadge(t)}
@@ -4287,7 +4325,7 @@ ${_scfgD('notice','📢 공지 관리')}
       if(el)el.addEventListener('change',saveImageSettings);
     });
     // 카테고리 필터 적용
-    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false);
+    if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false);
     // 펨코현황 설정 초기화
     try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
     // 자동인식 출력 포맷 미리보기 초기화
@@ -4298,7 +4336,7 @@ ${_scfgD('notice','📢 공지 관리')}
   },50);
   C.innerHTML=h;
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
-  try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'게임 운영', false); }catch(e){}
+  try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false); }catch(e){}
   // 검색어가 있으면 렌더 직후 검색 필터 적용
   try{ if(window._cfgSearchQ) window.cfgSearchSettings(window._cfgSearchQ); }catch(e){}
   // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
@@ -5801,6 +5839,41 @@ function delTier(t){
   if(idx>=0)TIERS.splice(idx,1);
   save();render();
   document.getElementById('p-tier').innerHTML=TIERS.map(t2=>`<option value="${t2}">${getTierLabel(t2)}</option>`).join('');
+}
+
+// ── 티어 색상/밝기/이모지 커스텀 ──
+function cfgTierThemeSetBri(pct){
+  if(typeof setTierTheme!=='function') return;
+  const v=(parseInt(pct,10)||100)/100;
+  setTierTheme({bri:v});
+  if(typeof render==='function') render();
+  if(typeof reCfg==='function') reCfg();
+}
+function cfgTierThemeSetSat(pct){
+  if(typeof setTierTheme!=='function') return;
+  const v=(parseInt(pct,10)||100)/100;
+  setTierTheme({sat:v});
+  if(typeof render==='function') render();
+  if(typeof reCfg==='function') reCfg();
+}
+function cfgTierThemeSetColor(tier, hex){
+  if(typeof setTierTheme!=='function') return;
+  setTierTheme({bg:{[tier]:hex}});
+  if(typeof render==='function') render();
+  if(typeof reCfg==='function') reCfg();
+}
+function cfgTierThemeSetIcon(tier, icon){
+  if(typeof setTierTheme!=='function') return;
+  setTierTheme({icon:{[tier]:String(icon||'').trim()}});
+  if(typeof render==='function') render();
+  if(typeof reCfg==='function') reCfg();
+}
+function cfgTierThemeReset(){
+  if(typeof resetTierTheme!=='function') return;
+  if(!confirm('티어 색상/이모지를 기본값으로 초기화할까요?')) return;
+  resetTierTheme();
+  if(typeof render==='function') render();
+  if(typeof reCfg==='function') reCfg();
 }
 
 async function addAdminAccount(){

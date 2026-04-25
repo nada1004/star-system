@@ -68,6 +68,64 @@ function applyMatchDetailVars(){
     console.warn('[applyMatchDetailVars] CSS 변수 설정 실패:', e.message);
   }
 }
+
+// (추가) 2:2 팀전(2명 vs 2명)도 개인 ELO/승패에 반영
+// - teamA/teamB: ["영희","철수"] 형태의 선수명 배열
+// - winnerSide: 'A' 또는 'B' (A팀 승 / B팀 승)
+// - 개별 전적은 "상대팀(콤마)"를 opp로 기록 (예: "민수,영지수")
+function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode){
+  try{
+    const A = Array.isArray(teamA) ? teamA.map(s=>String(s||'').trim()).filter(Boolean) : [];
+    const B = Array.isArray(teamB) ? teamB.map(s=>String(s||'').trim()).filter(Boolean) : [];
+    if(A.length < 2 || B.length < 2) return;
+    const _find = (name) => players.find(x=>x.name===name) || null;
+    const pA = A.map(_find).filter(Boolean);
+    const pB = B.map(_find).filter(Boolean);
+    if(pA.length < 2 || pB.length < 2) return;
+
+    const d = date || new Date().toISOString().slice(0,10);
+    const m = map || '-';
+    const mid = String(matchId||'').trim();
+    const oppA = B.join(',');
+    const oppB = A.join(',');
+
+    // 중복 방지: 각 선수 history에 동일 matchId 있으면 중단
+    const hasDup = (p) => !!(mid && (p.history||[]).some(h => h.matchId === mid));
+    if(pA.some(hasDup) || pB.some(hasDup)) return;
+
+    // 팀 ELO는 평균으로 계산 (단순)
+    const avg = (arr) => arr.reduce((s,x)=>s+(x.elo||ELO_DEFAULT),0) / (arr.length||1);
+    const eloA = avg(pA);
+    const eloB = avg(pB);
+    const aWin = (winnerSide === 'A');
+    const wElo = aWin ? eloA : eloB;
+    const lElo = aWin ? eloB : eloA;
+    const delta = calcElo(wElo, lElo);
+    const t = Date.now();
+
+    const applyOne = (p, isWin, oppStr) => {
+      if(!p.history) p.history=[];
+      if(isWin){ p.win++; p.points+=3; }
+      else { p.loss++; p.points-=3; }
+      const cur = p.elo || ELO_DEFAULT;
+      p.elo = cur + (isWin ? delta : -delta);
+      p.history.unshift({
+        date:d,time:t,
+        result:isWin?'승':'패',
+        opp:oppStr, oppRace:'',
+        map:m, matchId:mid,
+        eloDelta: isWin ? delta : -delta,
+        eloAfter: p.elo,
+        univ: p.univ||'',
+        mode: mode||'',
+        _team:true
+      });
+    };
+
+    pA.forEach(p => applyOne(p, aWin, oppA));
+    pB.forEach(p => applyOne(p, !aWin, oppB));
+  }catch(e){}
+}
 try{ applyMatchDetailVars(); }catch(e){
   console.warn('[applyMatchDetailVars 초기화] 실패:', e.message);
 }
@@ -113,11 +171,9 @@ function escAttr(s){
 
 function getTierBadge(tier){
   if(!tier) return '';
-  // 현황판과 동일한 _TIER_BG / _TIER_TEXT 색상 사용
-  const icons={'G':'✨','K':'👑','JA':'⚔️','J':'🃏','S':'♠','유스':'🐣','미정':'❓'};
-  const ic=icons[tier]||'';
-  const bg=_TIER_BG[tier]||'#64748b';
-  const col=_TIER_TEXT[tier]||'#fff';
+  const ic=(_TIER_ICON&&_TIER_ICON[tier])||'';
+  const bg=getTierBtnColor(tier)||'#64748b';
+  const col=getTierBtnTextColor(tier)||'#fff';
   // 현황판과 동일한 그라디언트 스타일 (box-shadow 포함)
   const shadowMap={
     'G':'0 2px 14px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3)',
@@ -131,30 +187,163 @@ function getTierBadge(tier){
 }
 
 function getTierLabel(tier){
-  const icons={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
+  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
   const ic=icons[tier]||'';
   return ic?`${ic} ${labels[tier]||tier}`:tier;
 }
 
 function getTierPillLabel(tier){
-  const icons={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
+  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
   const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
   return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
 }
 
-// 티어 필터 버튼 색상 — 현황판(TIER_FIXED_COLORS)과 완전히 동일
-const _TIER_BG = {
+// ── (설정) 티어 색상/이모지 커스텀 ──
+const _TIER_THEME_KEY = 'su_tier_theme_v1';
+const _TIER_DEFAULT_BG = {
   'G':'#5b21b6','K':'#1e3a8a','JA':'#0e6280','J':'#065f46','S':'#2952a3',
   '0티어':'#1d4ed8','1티어':'#2558d0','2티어':'#3268d8','3티어':'#4a7ee8',
   '4티어':'#6092f4','5티어':'#74a4f4','6티어':'#86b2ec','7티어':'#98bee4','8티어':'#a8c8dc',
   '유스':'#b45309','미정':'#94a3b8'
 };
-const _TIER_TEXT = {
+const _TIER_DEFAULT_TEXT = {
   '4티어':'#1a3a8a','5티어':'#1a3a8a','6티어':'#1d4ed8','7티어':'#1a4070','8티어':'#1a4070','미정':'#fff'
 };
-function getTierBtnColor(tier){ return _TIER_BG[tier]||'#64748b'; }
-function getTierBtnTextColor(tier){ return _TIER_TEXT[tier]||'#fff'; }
+const _TIER_DEFAULT_ICON = {G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
+
+let _TIER_BG = {..._TIER_DEFAULT_BG};      // base
+let _TIER_TEXT = {..._TIER_DEFAULT_TEXT}; // base (optional overrides)
+let _TIER_ICON = {..._TIER_DEFAULT_ICON};
+let _TIER_SAT = 1.0; // 0.5~1.6
+let _TIER_BRI = 1.0; // 0.6~1.6 (lightness multiplier)
+
+function _clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function _rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0, s=0, l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){
+      case r: h=(g-b)/d + (g<b?6:0); break;
+      case g: h=(b-r)/d + 2; break;
+      case b: h=(r-g)/d + 4; break;
+    }
+    h/=6;
+  }
+  return {h,s,l};
+}
+function _hslToRgb(h,s,l){
+  const hue2rgb=(p,q,t)=>{
+    if(t<0) t+=1; if(t>1) t-=1;
+    if(t<1/6) return p+(q-p)*6*t;
+    if(t<1/2) return q;
+    if(t<2/3) return p+(q-p)*(2/3-t)*6;
+    return p;
+  };
+  let r,g,b;
+  if(s===0){ r=g=b=l; }
+  else{
+    const q = l<0.5 ? l*(1+s) : l+s-l*s;
+    const p = 2*l-q;
+    r=hue2rgb(p,q,h+1/3);
+    g=hue2rgb(p,q,h);
+    b=hue2rgb(p,q,h-1/3);
+  }
+  return {r:Math.round(r*255), g:Math.round(g*255), b:Math.round(b*255)};
+}
+function _rgbToHex(r,g,b){
+  const to=(n)=>String(n.toString(16)).padStart(2,'0');
+  return `#${to(Math.max(0,Math.min(255,r)))}${to(Math.max(0,Math.min(255,g)))}${to(Math.max(0,Math.min(255,b)))}`;
+}
+function _hexToRgb(hex){
+  const {r,g,b}=_hexToRgbObj(hex);
+  return {r,g,b};
+}
+function _tierFiltered(hex){
+  try{
+    const {r,g,b}=_hexToRgb(hex);
+    const hsl=_rgbToHsl(r,g,b);
+    const s=_clamp01(hsl.s * (isNaN(_TIER_SAT)?1:_TIER_SAT));
+    const l=_clamp01(hsl.l * (isNaN(_TIER_BRI)?1:_TIER_BRI));
+    const rgb=_hslToRgb(hsl.h, s, l);
+    return _rgbToHex(rgb.r, rgb.g, rgb.b);
+  }catch(e){
+    return hex||'#64748b';
+  }
+}
+function _autoTextColor(bgHex){
+  try{
+    const {r,g,b}=_hexToRgb(bgHex);
+    // relative luminance
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b)/255;
+    return lum > 0.62 ? '#0f172a' : '#ffffff';
+  }catch(e){ return '#fff'; }
+}
+
+function getTierBtnColor(tier){
+  const base = _TIER_BG[tier] || '#64748b';
+  return _tierFiltered(base);
+}
+function getTierBtnTextColor(tier){
+  const base = _TIER_TEXT[tier];
+  if(base) return base;
+  return _autoTextColor(getTierBtnColor(tier));
+}
+
+function getTierTheme(){
+  return {
+    bg: {..._TIER_BG},
+    text: {..._TIER_TEXT},
+    icon: {..._TIER_ICON},
+    sat: _TIER_SAT,
+    bri: _TIER_BRI
+  };
+}
+function setTierTheme(patch){
+  try{
+    const cur=getTierTheme();
+    const next={
+      ...cur,
+      ...patch,
+      bg: {...cur.bg, ...(patch?.bg||{})},
+      text: {...cur.text, ...(patch?.text||{})},
+      icon: {...cur.icon, ...(patch?.icon||{})}
+    };
+    _TIER_BG = {..._TIER_DEFAULT_BG, ...next.bg};
+    _TIER_TEXT = {..._TIER_DEFAULT_TEXT, ...next.text};
+    _TIER_ICON = {..._TIER_DEFAULT_ICON, ...next.icon};
+    _TIER_SAT = Math.max(0.5, Math.min(1.6, parseFloat(next.sat)||1));
+    _TIER_BRI = Math.max(0.6, Math.min(1.6, parseFloat(next.bri)||1));
+    localStorage.setItem(_TIER_THEME_KEY, JSON.stringify({
+      bg:_TIER_BG, text:_TIER_TEXT, icon:_TIER_ICON, sat:_TIER_SAT, bri:_TIER_BRI
+    }));
+  }catch(e){}
+}
+function resetTierTheme(){
+  try{
+    localStorage.removeItem(_TIER_THEME_KEY);
+    _TIER_BG = {..._TIER_DEFAULT_BG};
+    _TIER_TEXT = {..._TIER_DEFAULT_TEXT};
+    _TIER_ICON = {..._TIER_DEFAULT_ICON};
+    _TIER_SAT = 1.0;
+    _TIER_BRI = 1.0;
+  }catch(e){}
+}
+// init
+try{
+  const raw = localStorage.getItem(_TIER_THEME_KEY);
+  if(raw){
+    const obj = JSON.parse(raw)||{};
+    setTierTheme(obj);
+  }
+}catch(e){}
+// expose for settings
+window.getTierTheme = getTierTheme;
+window.setTierTheme = setTierTheme;
+window.resetTierTheme = resetTierTheme;
 
 /* ══════════════════════════════════════
    직책 시스템
@@ -858,7 +1047,11 @@ function rebuildAllPlayerHistory() {
         const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
         const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, m.type === 'civil' ? '시빌워' : '미니대전');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        }
         count++;
       });
     });
@@ -875,7 +1068,11 @@ function rebuildAllPlayerHistory() {
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학대전');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        }
         count++;
       });
     });
@@ -890,7 +1087,11 @@ function rebuildAllPlayerHistory() {
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학CK');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        }
         count++;
       });
     });
@@ -905,7 +1106,11 @@ function rebuildAllPlayerHistory() {
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '프로리그');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        }
         count++;
       });
     });
@@ -920,7 +1125,11 @@ function rebuildAllPlayerHistory() {
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '티어대회');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        }
         count++;
       });
     });
@@ -951,7 +1160,11 @@ function rebuildAllPlayerHistory() {
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대회');
+        } else {
+          applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        }
         count++;
       });
     });
@@ -970,7 +1183,11 @@ function rebuildAllPlayerHistory() {
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
               const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
+              if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+                applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '조별리그');
+              } else {
+                applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
+              }
               count++;
             });
           });
@@ -984,7 +1201,11 @@ function rebuildAllPlayerHistory() {
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회');
+            } else {
+              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            }
             count++;
           });
         });
@@ -997,7 +1218,11 @@ function rebuildAllPlayerHistory() {
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
-            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회');
+            } else {
+              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            }
             count++;
           });
         });

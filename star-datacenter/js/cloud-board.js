@@ -632,7 +632,7 @@ function rBoard(C,T){
     <span style="font-size:11px;font-weight:800;color:var(--text2)">👥 ${_brdAllVis.length}명</span>
     <span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>
     <span style="font-size:11px;font-weight:800;color:var(--text2)">🏫 ${visUnivs.length}개 대학</span>
-    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${_TIER_BG[t]||'#64748b'};color:${_TIER_TEXT[t]||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
+    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
   </div>`;
   let h=`
   <style>
@@ -780,8 +780,8 @@ function buildUnivBoardCard(u, forExport){
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
-        const cardTierCol = p.tier ? (_TIER_BG[p.tier] || '#64748b') : null;
-        const cardTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+        const cardTierCol = p.tier ? (getTierBtnColor(p.tier) || '#64748b') : null;
+        const cardTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
@@ -825,8 +825,8 @@ function buildUnivBoardCard(u, forExport){
         const cBgE=hexToRgba(col,.16);
         const cBdE=hexToRgba(col,.45);
         const rTxt=rc.txt||p.race||'?';
-        const chipTierCol2 = p.tier ? (_TIER_BG[p.tier] || col) : '#9ca3af';
-        const chipTierText2 = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+        const chipTierCol2 = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
+        const chipTierText2 = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         const imgRadius = boardCardShape === 'square' ? '8px' : '50%';
         return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
@@ -851,8 +851,8 @@ function buildUnivBoardCard(u, forExport){
         : `openPlayerModal('${pNameSafe}')`;
 
       // 티어 고정 색상 (칩)
-      const chipTierCol = p.tier ? (_TIER_BG[p.tier] || col) : '#9ca3af';
-      const chipTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+      const chipTierCol = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
+      const chipTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
 
       // 칩 배경: 대학 지정색
       const cBgL=hexToRgba(col,.16);
@@ -915,8 +915,8 @@ function buildUnivBoardCard(u, forExport){
       const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
       tierRows=freeTierOrder.map(tier=>{
         const ps=freeTierMap[tier];
-        const tColor=_TIER_BG[tier]||col;
-        const tText=_TIER_TEXT[tier]||'#fff';
+        const tColor=getTierBtnColor(tier)||col;
+        const tText=getTierBtnTextColor(tier)||'#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
@@ -926,8 +926,8 @@ function buildUnivBoardCard(u, forExport){
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
         const ps=tierMap[tier];
-        const tColor = _TIER_BG[tier] || col;
-        const tText = _TIER_TEXT[tier] || '#fff';
+        const tColor = getTierBtnColor(tier) || col;
+        const tText = getTierBtnTextColor(tier) || '#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>

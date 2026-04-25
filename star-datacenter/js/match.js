@@ -300,9 +300,27 @@ function setBuilderHTML(bld, mode){
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-          <select onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
-          <span style="font-size:11px;color:var(--gray-l)">vs</span>
-          <select onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+          <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=!BLD['${mode}'].freeGames[${gi}]._isTeam; if(!BLD['${mode}'].freeGames[${gi}]._isTeam){BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';} render()" title="1경기에 2명 vs 2명 같은 팀전 게임">👥</button>
+          ${g._isTeam
+            ? (function(){
+                const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+                const la = sp(g.playerA); const lb = sp(g.playerB);
+                const a1 = g.a1 || la[0] || ''; const a2 = g.a2 || la[1] || '';
+                const b1 = g.b1 || lb[0] || ''; const b2 = g.b2 || lb[1] || '';
+                const mk = (arr, val) => arr.replace(new RegExp('value=\"'+val.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\"'), (m)=>m+' selected');
+                const oA1 = a1 ? mk(optsA, a1) : optsA;
+                const oA2 = a2 ? mk(optsA, a2) : optsA;
+                const oB1 = b1 ? mk(optsB, b1) : optsB;
+                const oB2 = b2 ? mk(optsB, b2) : optsB;
+                return `<select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A1</option>${oA1}</select>
+                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A2</option>${oA2}</select>
+                        <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B1</option>${oB1}</select>
+                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B2</option>${oB2}</select>`;
+              })()
+            : `<select onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+               <span style="font-size:11px;color:var(--gray-l)">vs</span>
+               <select onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>`}
           <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
           <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
           <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='B';render()">B 승</button>
@@ -338,9 +356,27 @@ function setBuilderHTML(bld, mode){
           const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
           h+=`<div class="game-row">
             <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
-            <span style="font-size:11px;color:var(--gray-l)">vs</span>
-            <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>
+            <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam; if(!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam){BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';} render()" title="1경기에 2명 vs 2명 같은 팀전 게임">👥</button>
+            ${g._isTeam
+              ? (function(){
+                  const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+                  const la = sp(g.playerA); const lb = sp(g.playerB);
+                  const a1 = g.a1 || la[0] || ''; const a2 = g.a2 || la[1] || '';
+                  const b1 = g.b1 || lb[0] || ''; const b2 = g.b2 || lb[1] || '';
+                  const mk = (arr, val) => arr.replace(new RegExp('value=\"'+val.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\"'), (m)=>m+' selected');
+                  const oA1 = a1 ? mk(optsA, a1) : optsA;
+                  const oA2 = a2 ? mk(optsA, a2) : optsA;
+                  const oB1 = b1 ? mk(optsB, b1) : optsB;
+                  const oB2 = b2 ? mk(optsB, b2) : optsB;
+                  return `<select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A1</option>${oA1}</select>
+                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A2</option>${oA2}</select>
+                          <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B1</option>${oB1}</select>
+                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B2</option>${oB2}</select>`;
+                })()
+              : `<select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+                 <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                 <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>`}
             <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
             <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
             <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>
@@ -389,7 +425,13 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         const gameId=genId(); // 각 게임마다 고유 ID 생성
-        applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        if(!g._isTeam) {
+          applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        } else if(typeof applyTeamGameResult==='function') {
+          const ta = [g.a1, g.a2].filter(Boolean);
+          const tb = [g.b1, g.b2].filter(Boolean);
+          applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
+        }
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
@@ -407,7 +449,13 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         const gameId=genId(); // 각 게임마다 고유 ID 생성
-        applyGameResult(wName,lName,date,g.map||'-',gameId,'','','개인전');
+        if(!g._isTeam) {
+          applyGameResult(wName,lName,date,g.map||'-',gameId,'','','개인전');
+        } else if(typeof applyTeamGameResult==='function') {
+          const ta = [g.a1, g.a2].filter(Boolean);
+          const tb = [g.b1, g.b2].filter(Boolean);
+          applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, '개인전');
+        }
         if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
@@ -428,7 +476,13 @@ function saveMatch(mode){
       // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
       const univW=_isCivil?'':(g.winner==='A'?(bld.teamA||''):(bld.teamB||''));
       const univL=_isCivil?'':(g.winner==='A'?(bld.teamB||''):(bld.teamA||''));
-      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+      if(!g._isTeam) {
+        applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+      } else if(typeof applyTeamGameResult==='function') {
+        const ta = [g.a1, g.a2].filter(Boolean);
+        const tb = [g.b1, g.b2].filter(Boolean);
+        applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', g._id, _modeLabel);
+      }
     });
 
     let totalA=0,totalB=0;
@@ -438,7 +492,10 @@ function saveMatch(mode){
     } else {
       freeGames.forEach(g=>{if(g.winner==='A')totalA++;else if(g.winner==='B')totalB++;});
     }
-    const setsSnap=freeGames.length?[{scoreA:totalA,scoreB:totalB,winner:totalA>totalB?'A':totalB>totalA?'B':'',games:freeGames.map(g=>({...g}))}]:[];
+    const setsSnap=freeGames.length?[{scoreA:totalA,scoreB:totalB,winner:totalA>totalB?'A':totalB>totalA?'B':'',games:freeGames.map(g=>({
+      ...g,
+      ...(g._isTeam ? { teamA:[g.a1,g.a2].filter(Boolean), teamB:[g.b1,g.b2].filter(Boolean) } : {})
+    }))}]:[];
 
     if(mode==='ck' || mode==='pro' || mode ==='tt'){
         const mA=bld.membersA||[];const mB=bld.membersB||[];
@@ -495,7 +552,10 @@ function saveMatch(mode){
   const matchId=genId();
   // 각 게임에 _id 부여 (rebuildAllPlayerHistory와 ID 일치를 위해, setsSnap spread에 포함됨)
   bld.sets.forEach((set,setIdx)=>{set.games.forEach((g,gameIdx)=>{g._id=`${matchId}_s${setIdx}_g${gameIdx}`;});});
-  const setsSnap=bld.sets.map(s=>({scoreA:s.scoreA,scoreB:s.scoreB,winner:s.winner,games:s.games.map(g=>({...g}))}));
+  const setsSnap=bld.sets.map(s=>({scoreA:s.scoreA,scoreB:s.scoreB,winner:s.winner,games:s.games.map(g=>({
+    ...g,
+    ...(g._isTeam ? { teamA:[g.a1,g.a2].filter(Boolean), teamB:[g.b1,g.b2].filter(Boolean) } : {})
+  }))}));
   if(mode==='gj'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
@@ -506,7 +566,13 @@ function saveMatch(mode){
         const wName=g.winner==='A'?g.playerA:g.playerB;
         const lName=g.winner==='A'?g.playerB:g.playerA;
         const gameId=g._id||`${sid}_s${setIdx}_g${gameIdx}`;
-        applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        if(!g._isTeam) {
+          applyGameResult(wName,lName,date,g.map||'-',gameId,'','',_modeLabel);
+        } else if(typeof applyTeamGameResult==='function') {
+          const ta = [g.a1, g.a2].filter(Boolean);
+          const tb = [g.b1, g.b2].filter(Boolean);
+          applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
+        }
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
@@ -524,7 +590,13 @@ function saveMatch(mode){
       const lName=g.winner==='A'?g.playerB:g.playerA;
       const univW=_isCivil2?'':(g.winner==='A'?(bld.teamA||''):(bld.teamB||''));
       const univL=_isCivil2?'':(g.winner==='A'?(bld.teamB||''):(bld.teamA||''));
-      applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+      if(!g._isTeam) {
+        applyGameResult(wName,lName,date,g.map||'-',g._id,univW,univL,_modeLabel);
+      } else if(typeof applyTeamGameResult==='function') {
+        const ta = [g.a1, g.a2].filter(Boolean);
+        const tb = [g.b1, g.b2].filter(Boolean);
+        applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', g._id, _modeLabel);
+      }
     });
   });
   if(mode==='mini'){

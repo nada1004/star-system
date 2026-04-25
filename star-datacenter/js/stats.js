@@ -3085,11 +3085,7 @@ function statsTierMatchHTML(){
 
   const tierColor={};
   usedTiers.forEach((t,i)=>{
-    const presets={G:'#091540',K:'#102058',JA:'#182d80',J:'#2040a8',S:'#2d52c8',
-      '0티어':'#3860d8',
-      '1티어':'#3a68d8','2티어':'#4e80e8','3티어':'#6294f4','4티어':'#76a6f6',
-      '5티어':'#8ab6f0','6티어':'#9cc4e8','7티어':'#aecee0','8티어':'#bcd4d8','유스':'#b45309'};
-    tierColor[t]=presets[t]||TIER_PALETTE[i%TIER_PALETTE.length];
+    tierColor[t]= (typeof getTierBtnColor==='function' ? getTierBtnColor(t) : null) || TIER_PALETTE[i%TIER_PALETTE.length];
   });
 
   // 모든 히스토리 포함 (프로리그 포함, 남자 포함)
@@ -3137,7 +3133,7 @@ function statsTierMatchHTML(){
       <thead><tr>
         <th style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);white-space:nowrap">내↓ / 상대→</th>
         ${activeTiers.map(t=>`<th style="padding:6px 8px;background:${tierColor[t]}22;border:1px solid var(--border);white-space:nowrap;min-width:72px">
-          <span style="background:${tierColor[t]};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${getTierLabel(t)}</span>
+          <span style="background:${tierColor[t]};color:${typeof getTierBtnTextColor==='function'?getTierBtnTextColor(t):'#fff'};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${getTierLabel(t)}</span>
         </th>`).join('')}
         <th style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);white-space:nowrap">전체</th>
       </tr></thead>
@@ -3146,7 +3142,7 @@ function statsTierMatchHTML(){
           const ov=tierOverview.find(x=>x.tier===t1);
           return`<tr>
             <td style="padding:6px 10px;background:${tierColor[t1]}22;border:1px solid var(--border);font-weight:700;white-space:nowrap">
-              <span style="background:${tierColor[t1]};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${getTierLabel(t1)}</span>
+              <span style="background:${tierColor[t1]};color:${typeof getTierBtnTextColor==='function'?getTierBtnTextColor(t1):'#fff'};padding:2px 7px;border-radius:4px;font-size:11px">${getTierLabel(t1)}</span>
             </td>
             ${activeTiers.map(t2=>{
               if(t1===t2){
@@ -3182,7 +3178,7 @@ function statsTierMatchHTML(){
         const col=tierColor[t.tier]||'#6b7280';
         const tot=t.w+t.l;
         return`<div style="flex:1;min-width:90px;background:var(--white);border:2px solid ${col}33;border-radius:12px;padding:12px;text-align:center">
-          <div style="background:${col};color:#fff;padding:2px 9px;border-radius:5px;font-weight:800;font-size:12px;display:inline-block;margin-bottom:6px">${getTierLabel(t.tier)}</div>
+          <div style="background:${col};color:${typeof getTierBtnTextColor==='function'?getTierBtnTextColor(t.tier):'#fff'};padding:2px 9px;border-radius:5px;font-weight:800;font-size:12px;display:inline-block;margin-bottom:6px">${getTierLabel(t.tier)}</div>
           <div style="font-size:24px;font-weight:900;color:${col}">${t.rate!==null?t.rate+'%':'-'}</div>
           <div style="font-size:10px;color:var(--gray-l);margin-top:3px">${t.w}승 ${t.l}패</div>
           ${tot?`<div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:5px">

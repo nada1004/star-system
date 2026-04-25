@@ -869,7 +869,7 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const playerInfoBlock = (name, pObj, isWinner, side) => {
     const photo = getPlayerPhotoHTML(name, '64px', `border:3px solid ${isWinner?'#0ea5e9':'#bae6fd'};box-shadow:${isWinner?'0 4px 16px rgba(14,165,233,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
     const race = raceLabel(pObj.race||'');
-    const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
+    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
     const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
     const isRight = side === 'right';
     const badges = isRight ? `${raceSpan}${tier}` : `${tier}${raceSpan}`;
@@ -2124,7 +2124,7 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner) {
   const playerInfoBlock = (name, pObj, isWinner, side) => {
     const photo = getPlayerPhotoHTML(name, '64px', `border:3px solid ${isWinner?'#a855f7':'#e9d5ff'};box-shadow:${isWinner?'0 4px 16px rgba(168,85,247,.45)':'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.4;filter:grayscale(.5)':''}`);
     const race = raceLabel(pObj.race||'');
-    const tier = pObj.tier ? `<span style="background:${_TIER_BG[pObj.tier]||'#64748b'};color:${_TIER_TEXT[pObj.tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
+    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
     const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
     const isRight = side === 'right';
     const badges = isRight ? `${raceSpan}${tier}` : `${tier}${raceSpan}`;

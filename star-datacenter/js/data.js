@@ -180,3 +180,21 @@ function syncIndHistoryBtn(){
   else { alert('이미 모든 개인전/끝장전 경기가 반영되어 있습니다.'); }
 }
 
+// 설정/대회/티어대회에서 공통으로 사용하는 "전체 최근기록 동기화" 버튼
+function syncAllHistoryBtn(){
+  try{
+    const a = (typeof syncTourneyHistory==='function') ? syncTourneyHistory() : 0;
+    const b = (typeof syncIndHistory==='function') ? syncIndHistory() : 0;
+    const n = (a||0) + (b||0);
+    if(n>0){
+      alert(`✅ 최근 기록 동기화 완료\n대회: ${a}건, 개인/끝장: ${b}건 (총 ${n}건) 반영했습니다.`);
+      try{ save && save(); }catch(e){}
+      try{ render && render(); }catch(e){}
+    }else{
+      alert('이미 모든 기록이 최신 상태입니다.');
+    }
+  }catch(e){
+    console.warn('[syncAllHistoryBtn] failed:', e && e.message ? e.message : e);
+    alert('동기화 중 오류가 발생했습니다. 콘솔을 확인해주세요.');
+  }
+}
