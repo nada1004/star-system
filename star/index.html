@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=20260424-09"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260425-21"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -491,6 +491,28 @@
   </div>
 </div>
 
+<!-- ===== 대회 경기 상세 모달 ===== -->
+<div id="compMatchDetailModal" class="modal modal--matchdetail no-export" onclick="closeCompMatchDetailModal()">
+  <div class="mbox mbox--matchdetail" onclick="event.stopPropagation()">
+    <div class="cmd-head">
+      <div class="cmd-head__txt">
+        <div id="cmdTitle" class="cmd-title">📊 경기 상세</div>
+        <div id="cmdSub" class="cmd-sub"></div>
+      </div>
+      <div class="cmd-head__right">
+        <span id="cmdDate" class="cmd-date"></span>
+        <button class="cmd-close" onclick="closeCompMatchDetailModal()" aria-label="닫기">✕</button>
+      </div>
+    </div>
+    <div id="cmdScoreBar" class="cmd-scorebar" style="display:none"></div>
+    <div id="compMatchDetailContent" class="cmd-body"></div>
+    <div class="cmd-actions no-export">
+      <button id="cmdShareBtn" class="btn btn-p" style="display:none" onclick="openCompDetailShareCard()">🎴 공유 카드</button>
+      <button class="btn btn-w" onclick="closeCompMatchDetailModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 프로리그 전용 붙여넣기 모달 ===== -->
 <div id="proPasteModal" class="modal no-export">
   <div class="umbox" style="width:780px;max-width:97vw">
@@ -560,33 +582,38 @@
   </div>
 </div>
 
-<script src="js/constants.js?v=20260422-03"></script>
-<script src="js/data.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app-state.js"></script>
+<script src="js/constants.js?v=20260425-02"></script>
+<script src="js/unified-settings.js?v=20260425-01"></script>
+<script src="js/modal-open.js"></script>
+<script src="js/modal-drag.js?v=20260416-01"></script>
+<script src="js/data.js?v=20260424-02"></script>
 <script src="js/auth.js?v=20260421-01"></script>
 <script src="js/settings-store.js?v=20260423-02"></script>
-<script src="js/settings.js?v=20260423-04"></script>
+<script src="js/settings.js?v=20260425-14"></script>
 <script src="js/tier-tour.js?v=20260422-01"></script>
-<script src="js/competition.js?v=20260422-02"></script>
-<script src="js/render.js?v=20260422-07"></script>
-<script src="js/players.js?v=20260422-02"></script>
-<script src="js/vs.js?v=20260422-01"></script>
-<script src="js/history.js?v=20260424-01"></script>
-<script src="js/match.js?v=20260420-01"></script>
-<script src="js/match-builder.js?v=20260420-02"></script>
-<script src="js/search.js?v=20260422-07"></script>
-<script src="js/pro-comp.js?v=20260422-02"></script>
-<script src="js/stats.js?v=20260422-01"></script>
+<script src="js/competition.js?v=20260425-16"></script>
+<script src="js/render.js?v=20260425-06"></script>
+<script src="js/players.js?v=20260424-01"></script>
+<script src="js/vs.js?v=20260425-01"></script>
+<script src="js/history.js?v=20260425-17"></script>
+<script src="js/match.js?v=20260425-05"></script>
+<script src="js/match-builder.js?v=20260425-01"></script>
+<script src="js/search.js?v=20260425-06"></script>
+<script src="js/pro-comp.js?v=20260425-01"></script>
+<script src="js/stats.js?v=20260425-01"></script>
 <script src="js/calendar.js?v=20260422-01"></script>
 <script src="js/roulette.js?v=20260424-08"></script>
 <script src="js/duck-race.js?v=20260424-04"></script>
 <script src="js/wheel.js?v=20260416-08"></script>
 <script src="js/vote.js"></script>
-<script src="js/cloud-board.js?v=20260422-06"></script>
+<script src="js/cloud-board.js?v=20260425-01"></script>
 <script src="js/elboard.js?v=20260422-01"></script>
 <script src="js/yt-bgm.js?v=20260420-06"></script>
 <script src="js/soop-multiview.js?v=20260420-10"></script>
-<script src="js/init.js?v=20260422-03"></script>
-<script src="js/board2.js?v=20260422-03"></script>
+<script src="js/init.js?v=20260425-06"></script>
+<script src="js/board2.js?v=20260425-01"></script>
 <script src="js/chatbot.js?v=20260423-08"></script>
 <script src="js/mobile-bar.js?v=20260422-02"></script>
 
@@ -617,11 +644,11 @@ function closeFab(){
 function updateFabVisibility(){
   const fab=document.getElementById('mobileFab');
   if(!fab)return;
-  
+
   const isMobile=window.innerWidth<=768;
   const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
   const hidePC=localStorage.getItem('su_fabHidePC')==='1';
-  
+
   if(isMobile){
     fab.style.display=hideMobile?'none':'flex';
   }else{
@@ -736,8 +763,6 @@ function fabActionCfgSearch(){
   </div>
 </div>
 
-
-<script src="js/modal-drag.js?v=20260416-01"></script>
 <script type="module" src="js/firebase-init.js"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 

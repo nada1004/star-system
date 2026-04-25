@@ -1,0 +1,4 @@
+PORT=8005
+# 아래 값을 본인 Groq 키로 교체하세요 (채팅에 키를 붙여넣지 마세요)
+GROQ_API_KEY=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
+
