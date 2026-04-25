@@ -361,7 +361,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','si','paste'],
   '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail'],
-  '🧩 현황판/펨코':['b2femco','boardchip','oldbright','boardbg'],
+  '🧩 현황판/펨코':['b2femco','boardtabs','boardchip','oldbright','boardbg'],
   '🎨 디자인/테마':['designv2','hdr','appfont','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
@@ -1835,6 +1835,66 @@ try{
   window._cfgFemcoSave = _cfgFemcoSave;
 }catch(e){}
 
+// ─────────────────────────────────────────────────────────────
+// 🔀 현황판 탭(펨코현황 포함) 순서 변경
+// - localStorage: b2_tab_order_v1 (JSON 배열)
+// - 적용 대상(현황판 탭 상단): univ, femco, free, old, players
+// ─────────────────────────────────────────────────────────────
+const _CFG_B2_TAB_ORDER_KEY = 'b2_tab_order_v1';
+const _CFG_B2_TAB_ORDER_DEFAULT = ['univ','femco','free','old','players'];
+function _cfgB2TabOrderLoad(){
+  try{
+    if(typeof window._b2LoadTabOrder==='function') return window._b2LoadTabOrder();
+    const raw = localStorage.getItem(_CFG_B2_TAB_ORDER_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    const allowed = new Set(_CFG_B2_TAB_ORDER_DEFAULT);
+    let out = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(x=>allowed.has(x)) : [];
+    out = [...new Set(out)];
+    for(const k of _CFG_B2_TAB_ORDER_DEFAULT){ if(out.indexOf(k)===-1) out.push(k); }
+    return out;
+  }catch(e){
+    return _CFG_B2_TAB_ORDER_DEFAULT.slice();
+  }
+}
+function _cfgB2TabOrderSave(arr){
+  try{ localStorage.setItem(_CFG_B2_TAB_ORDER_KEY, JSON.stringify(arr)); }catch(e){}
+}
+window.cfgB2TabOrderReset = function(){
+  _cfgB2TabOrderSave(_CFG_B2_TAB_ORDER_DEFAULT.slice());
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
+};
+window.cfgB2TabOrderMove = function(key, dir){
+  const arr=_cfgB2TabOrderLoad().slice();
+  const i=arr.indexOf(key);
+  if(i<0) return;
+  const j=i+dir;
+  if(j<0 || j>=arr.length) return;
+  const tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+  _cfgB2TabOrderSave(arr);
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
+};
+window.cfgB2TabOrderRender = function(){
+  const wrap=document.getElementById('cfg-b2tab-order');
+  if(!wrap) return;
+  const arr=_cfgB2TabOrderLoad();
+  const label={
+    univ:'🏟️ 대학별',
+    femco:'🧩 펨코현황',
+    free:'🚶 무소속',
+    old:'📊 구현황판(관리자)',
+    players:'👤 이미지별'
+  };
+  wrap.innerHTML = arr.map((k,idx)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:8px">
+      <div style="flex:1;font-size:13px;font-weight:900;color:var(--text2)">${label[k]||k}</div>
+      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgB2TabOrderMove('${k}',-1)" ${idx===0?'disabled':''}>⬆️</button>
+      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgB2TabOrderMove('${k}', 1)" ${idx===arr.length-1?'disabled':''}>⬇️</button>
+    </div>
+  `).join('');
+};
+
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
   const next = {...cur};
@@ -2331,7 +2391,7 @@ function rCfg(C,T){
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
     b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지', pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
-    b2femco:'🧩 펨코현황', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
+    b2femco:'🧩 펨코현황', boardtabs:'🔀 현황판 탭 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
@@ -4195,6 +4255,18 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
+  ${_scfgD('boardtabs','🔀 현황판 탭(펨코현황) 순서 변경')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
+      현황판 탭 상단 버튼(🏟️ 대학별 / 🧩 펨코현황 / 🚶 무소속 / 📊 구현황판 / 👤 이미지별)의 <b>표시 순서</b>를 바꿉니다.
+    </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div id="cfg-b2tab-order"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-w btn-sm" onclick="cfgB2TabOrderReset()">기본 순서로</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">※ 적용은 즉시 저장되며, 현황판 화면을 다시 열면 반영됩니다.</div>
+    </div>
+  </details>
   ${_scfgD('boardchip','🏷️ 현황판 칩/대학로고 크기')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판 칩/대학 로고 관련 설정입니다. <b>스트리머 프로필 이미지 전역 배율</b>과는 별개로 동작합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
@@ -4264,6 +4336,7 @@ ${_scfgD('notice','📢 공지 관리')}
     if(typeof _renderCfgSiList==='function') _renderCfgSiList();
     renderStorageInfo();
     renderSeasonList();
+    try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();

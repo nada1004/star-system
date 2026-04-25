@@ -34,6 +34,28 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
+// ── 현황판 상단 탭 순서 설정 ──────────────────────────────
+// 설정 탭에서 순서를 바꾸면 현황판 상단(대학별/펨코현황/무소속/구현황판/이미지별) 버튼 순서가 바뀝니다.
+const _B2_TAB_ORDER_KEY = 'b2_tab_order_v1';
+const _B2_TAB_ORDER_DEFAULT = ['univ','femco','free','old','players'];
+function _b2LoadTabOrder(){
+  try{
+    const raw = localStorage.getItem(_B2_TAB_ORDER_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    const ok = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+    const allowed = new Set(_B2_TAB_ORDER_DEFAULT);
+    let out = ok.filter(x=>allowed.has(x));
+    out = [...new Set(out)];
+    for(const k of _B2_TAB_ORDER_DEFAULT){
+      if(out.indexOf(k)===-1) out.push(k);
+    }
+    return out;
+  }catch(e){
+    return _B2_TAB_ORDER_DEFAULT.slice();
+  }
+}
+window._b2LoadTabOrder = _b2LoadTabOrder;
+
 // 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
@@ -436,18 +458,31 @@ function rBoard2(C, T) {
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
   ` : '';
-  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):'';
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
 
+  // (요청) 현황판 탭 상단 버튼 순서(localStorage) 반영
+  const _ord = _b2LoadTabOrder();
+  const _tabMeta = {
+    univ:{ color:'var(--blue)', label:'🏟️ 대학별' },
+    femco:{ color:'var(--blue)', label:'🧩 펨코현황' },
+    free:{ color:'var(--blue)', label:'🚶 무소속' },
+    old:{ color:'#64748b', label:'📊 구현황판' },
+    players:{ color:'var(--purple)', label:profileTabLabel },
+  };
+  const _tabsHtml = _ord.map(k=>{
+    if(k==='old' && !isLoggedIn) return '';
+    const m=_tabMeta[k];
+    if(!m) return '';
+    const btn=_b2TabBtn(k, m.color, m.label);
+    // 이미지별 탭 필터는 이미지별 버튼 옆에 붙이기
+    if(k==='players') return btn + playerFilters;
+    return btn;
+  }).join('');
+
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
-      ${_b2TabBtn('femco','var(--blue)','🧩 펨코현황')}
-      ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
-      ${oldBtn}
-      ${playerFilters}
-      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
+      ${_tabsHtml}
       <span style="flex:1"></span>
       ${rightBtns}
     </div>
