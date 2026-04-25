@@ -1,15 +1,19 @@
 :root{
-  --bg:#f0f2f5;--white:#fff;--surface:#f7f9fc;--border:#e4e8ee;--border2:#cdd3dc;
+  --bg:#f1f5f9;--white:#fff;--surface:#f8fafc;--border:#e2e8f0;--border2:#cbd5e1;
   --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-ll:#dbeafe;
   --gold:#d97706;--gold-bg:#fffbeb;--gold-b:#fde68a;
   --green:#16a34a;--red:#dc2626;--gray:#64748b;--gray-l:#9ca3af;
   --text:#1a202c;--text2:#374151;--text3:#6b7280;
   --god:#7c3aed;--king:#2563eb;--jack:#1e3a8a;--joker:#2040a8;--spade:#2d52c8;--youth:#10b981;
   /* 통일된 그림자 3단계 */
-  --r:8px;--r2:12px;
-  --sh:0 1px 3px rgba(0,0,0,.06);
-  --sh2:0 4px 20px rgba(0,0,0,.08);
-  --sh3:0 8px 32px rgba(0,0,0,.13);
+  --r:10px;--r2:16px;
+  --sh:0 2px 4px rgba(0,0,0,.04);
+  --sh2:0 6px 20px rgba(0,0,0,.06);
+  --sh3:0 12px 40px rgba(0,0,0,.10);
+  /* 커스텀 효과 변수 */
+  --custom-shadow-intensity: 50;
+  --custom-card-opacity: 100;
+  --custom-gradient-angle: 135deg;
   /* 전환 기본값 */
   --tr:.15s ease;
   /* 반응형 UI 스케일(자동) */
@@ -344,14 +348,15 @@ input,select,textarea{font-family:var(--app-font);font-weight:400;}
 body *{font-family:var(--app-font) !important;}
 code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace !important;}
 b,strong{font-weight:600;}
-.app{max-width:1480px;margin:auto;background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh2);overflow:hidden;}
+.app{max-width:1480px;margin:auto;background:var(--white);border-radius:16px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.06);overflow:hidden;}
 .hdr{
   /* 기본값: classic (JS가 설정 안 해도 기존과 유사하게 보이도록) */
   --hdr-c1:#1e3a8a;
   --hdr-c2:#2563eb;
   --hdr-c3:#1e40af;
   background:linear-gradient(135deg,var(--hdr-c1) 0%,var(--hdr-c2) 55%,var(--hdr-c3) 100%);
-  padding:14px 24px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;min-height:var(--hdr-h, auto);
+  padding:12px 20px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;min-height:var(--hdr-h, auto);
+  box-shadow:0 4px 16px rgba(30,58,138,0.15);
 }
 /* 효과 레이어(기본 none) */
 .hdr::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;}
@@ -397,7 +402,7 @@ b,strong{font-weight:600;}
 }
 .hdr-ico{font-size:22px;z-index:1;transition:.15s;}
 .hdr-ico:hover{transform:scale(1.1);}
-.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:#fff;letter-spacing:.5px;z-index:1;cursor:default;pointer-events:none;}
+.hdr-title{font-family:'Noto Sans KR',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:-.3px;z-index:1;cursor:default;pointer-events:none;}
 .hdr-ver{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:.5px;border:1px solid rgba(255,255,255,.22);z-index:1;}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -464,9 +469,9 @@ b,strong{font-weight:600;}
 .tabs-arrow:hover{background:var(--blue-l);color:var(--blue);}
 .tabs-arrow.visible{opacity:1;pointer-events:auto;}
 @media(max-width:768px){.tabs-arrow{display:none!important;}.tabs{padding:4px 6px;}}
-.tab{padding:9px 14px;border:none;background:transparent;color:var(--text3);border-radius:10px;font-size:calc(12px * var(--uiS));font-weight:750;white-space:nowrap;transition:.12s;line-height:1.1;min-height:40px;display:flex;align-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;}
+.tab{padding:8px 16px;border:none;background:transparent;color:var(--text3);border-radius:10px;font-size:calc(12px * var(--uiS));font-weight:700;white-space:nowrap;transition:all var(--tr);line-height:1.1;min-height:40px;display:flex;align-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;cursor:pointer;}
 .tab:hover{background:rgba(37,99,235,.08);color:var(--blue);}
-.tab.on{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-weight:850;box-shadow:0 6px 18px rgba(37,99,235,.20);}
+.tab.on{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-weight:800;box-shadow:0 8px 24px rgba(37,99,235,0.25);}
 .tab.cfg{background:transparent;}
 .tab.cfg.on{background:#334155;color:#fff;}
 
@@ -530,18 +535,19 @@ select:disabled{
 }
 input::placeholder{color:var(--gray-l);}
 .btn{
-  padding:calc(7px * var(--su_btn_scale)) calc(14px * var(--su_btn_scale));
+  padding:calc(8px * var(--su_btn_scale)) calc(16px * var(--su_btn_scale));
   border-radius:var(--su_btn_r);
   border:none;
   font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
-  font-weight:750;
-  transition:var(--tr);
+  font-weight:700;
+  transition:all var(--tr);
   display:inline-flex;align-items:center;justify-content:center;
   gap:calc(4px * var(--su_btn_scale));
+  cursor:pointer;
 }
 .btn:active{filter:brightness(.92);transform:scale(.98);}
 .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
-.btn-b{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.22);}
+.btn-b{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.24);}
 .btn-b:hover{filter:brightness(1.02);box-shadow:0 10px 22px rgba(37,99,235,.26);}
 .btn-g{background:#16a34a;color:#fff;}.btn-g:hover{background:#15803d;}
 .btn-o{background:#ea580c;color:#fff;}.btn-o:hover{background:#c2410c;}
@@ -601,7 +607,66 @@ tr.is-selected td{
 .rZ{background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe;}
 .rP{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
 .rN{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;}
-.ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.ubadge{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;color:#fff!important;display:inline-block;min-width:56px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.15);position:relative;overflow:hidden;}
+
+/* ─────────────────────────────────────────────────────────────
+   🌈 그라데이션 효과(고정 + 움직임 ON/OFF)
+   - 설정: localStorage
+     * su_grad_mode: classic|soft|radial|split|stripe|glass|solid
+     * su_grad_int: 0~100 (진함)
+     * su_grad_motion: 0/1 (움직임)
+     * su_grad_speed: 6~30 (초)
+   - 적용: .su-grad-motion 을 붙인 영역에 배경 이동 효과
+───────────────────────────────────────────────────────────── */
+:root{ --su_grad_speed: 12s; }
+:root{ --md_fx_int: 2.00; --md_fx_speed: 6s; }
+@keyframes suGradMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.modal--matchdetail{ --md_fx_spot: calc(var(--md_fx_int) * .60); }
+@keyframes mdMoveSweep{
+  0%{ transform:translate3d(-10%, -6%, 0) rotate(-2deg); }
+  50%{ transform:translate3d(10%, 6%, 0) rotate(2deg); }
+  100%{ transform:translate3d(-10%, -6%, 0) rotate(-2deg); }
+}
+.su-grad-hero{position:relative;overflow:hidden;}
+.su-grad-motion{
+  background-size:200% 200% !important;
+  animation:suGradMove var(--su_grad_speed) ease-in-out infinite;
+}
+
+/* 경기 상세 상단 카드용: move 효과(속도/강도는 md vars 사용) */
+.modal--matchdetail .cmd-team.mdfx-move{
+  background-size:200% 200% !important;
+  animation:suGradMove var(--md_fx_speed) ease-in-out infinite;
+}
+/* 배경 이동이 눈에 잘 띄도록 하이라이트 오버레이도 같이 움직임 */
+.modal--matchdetail .cmd-team.mdfx-move::after{
+  opacity:calc(var(--md_fx_spot) + .22);
+  animation:mdMoveSweep var(--md_fx_speed) ease-in-out infinite;
+  will-change:transform;
+  background:
+    radial-gradient(70% 140% at 20% 0%, rgba(255,255,255, calc(var(--md_fx_int) * .45)), transparent 60%),
+    radial-gradient(90% 160% at 90% 90%, rgba(0,0,0, calc(var(--md_fx_int) * .28)), transparent 58%),
+    linear-gradient(110deg, rgba(255,255,255,0), rgba(255,255,255, calc(var(--md_fx_int) * .22)), rgba(255,255,255,0));
+}
+
+/* Move가 "눈에 띄게" 보이도록 대각선 광택 스윕도 추가 */
+.modal--matchdetail .cmd-team.mdfx-move::before{
+  opacity:calc(var(--md_fx_int) * .95);
+  background:linear-gradient(120deg, transparent 38%, rgba(255,255,255,.42) 50%, transparent 62%);
+  transform:translateX(-55%) rotate(10deg);
+  animation:cmdTeamShimmer calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+}
+
+/* Mix도 동일하게 더 티나게 */
+.modal--matchdetail .cmd-team.mdfx-mix::after{
+  opacity:calc(var(--md_fx_spot) + .22);
+  animation:mdMoveSweep var(--md_fx_speed) ease-in-out infinite;
+}
+
 .rec-summary img.rec-uicon{width:var(--rc-uicon);height:var(--rc-uicon);object-fit:contain;flex-shrink:0;}
 
 /* 기록 카드 상단(날짜/승리팀) 강조 */
@@ -887,9 +952,9 @@ body.dark .hist-ctrl-group{
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--blue-l);border-radius:8px;margin-bottom:12px;flex-wrap:wrap;}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:26px;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow .15s,border-left-width .15s;min-height:48px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:48px;}
 .rec-summary:empty{display:none!important;}
-.rec-summary:hover{box-shadow:var(--sh);}
+.rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
 .rec-sum-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
@@ -971,9 +1036,23 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
 /* 상세 영역: 열릴 때 컬러 상단 테두리로 연결감 */
 .rec-detail-area.open{border-top:2px solid var(--blue-ll);}
+/* 상세 영역 accent bar (승리팀 색상 기반) */
+.rec-detail-area::before{
+  content:'';
+  position:absolute;
+  left:0; right:0; top:0;
+  height:3px;
+  background:linear-gradient(90deg, var(--primary-start, #4F46E5), var(--primary-mid, #7C3AED), var(--primary-end, #2563EB));
+  opacity:0;
+  transition:opacity .25s ease;
+}
+.rec-detail-area.open::before{
+  opacity:1;
+}
 /* 모바일: 액션 항상 표시 */
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
 .rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+.rec-sum-vs.winner-only{flex-wrap:nowrap;gap:10px;}
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:900;
@@ -995,8 +1074,26 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .rec-sum-vs{justify-content: var(--rc-vs-justify, flex-start);}
   .rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
 }
-.rec-detail-area{border-top:1px solid var(--border);padding:10px 12px;background:var(--rc-detail-bg, var(--surface));display:none;}
-.rec-detail-area.open{display:block;}
+.rec-detail-area{
+  border-top:1px solid var(--border);
+  padding:0;
+  background:linear-gradient(180deg, var(--rc-detail-bg, var(--surface)) 0%, var(--white) 100%);
+  display:none;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  border-radius:0 0 12px 12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.04);
+  transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s ease, padding .25s ease, box-shadow .25s ease;
+  position:relative;
+}
+.rec-detail-area.open{
+  display:block;
+  max-height:2000px;
+  opacity:1;
+  padding:14px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.08);
+}
 .rec-card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
 .rec-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border);}
 .rec-sets{padding:10px 14px;}
@@ -1068,7 +1165,821 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .srow{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--white);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
-.mbox{background:var(--white);margin:5% auto;padding:24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
+
+/* pasteModal(경기 결과 붙여넣기) — 기본 flex align-items:stretch로 인해 모달 박스가 과도하게 늘어나
+   '취소' 버튼 아래로 큰 공백이 생기는 현상 방지 */
+#pasteModal{align-items:center;justify-content:center;padding:16px;}
+#pasteModal .umbox{margin:0;height:auto;max-height:88vh;overflow-y:auto;}
+
+/* proPasteModal(프로리그 경기 결과 붙여넣기)도 동일 현상 방지 */
+#proPasteModal{align-items:center;justify-content:center;padding:16px;}
+#proPasteModal .umbox{margin:0;height:auto;max-height:88vh;overflow-y:auto;}
+.mbox{background:var(--white);margin:5% auto;padding:22px 24px;width:500px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);position:relative;}
+
+/* ── 대회 경기 상세 모달(디자인 개선) ── */
+.modal--matchdetail{align-items:center;justify-content:center;padding:16px;}
+.modal--matchdetail .mbox--matchdetail{
+  width:min(720px,96vw);
+  padding:0;
+  border-radius:18px;
+  overflow:hidden;
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+}
+.modal--matchdetail .cmd-head{
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  color:#fff;
+  padding:14px 16px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+.modal--matchdetail .cmd-head__right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.modal--matchdetail .cmd-date{
+  font-size:11px;
+  font-weight:900;
+  color:#fff;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  padding:4px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+  line-height:1;
+}
+.modal--matchdetail .cmd-head__txt{flex:1;min-width:0;}
+.modal--matchdetail .cmd-title{
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:-.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.modal--matchdetail .cmd-sub{
+  margin-top:3px;
+  font-size:11px;
+  opacity:.86;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.modal--matchdetail .cmd-close{
+  background:rgba(255,255,255,.14);
+  border:none;
+  color:#fff;
+  width:34px;height:34px;
+  border-radius:10px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  flex-shrink:0;
+}
+.modal--matchdetail .cmd-scorebar{
+  padding:7px 10px;
+  background:linear-gradient(180deg,rgba(2,132,199,.12),rgba(2,132,199,.04),transparent);
+  background-size:200% 200%;
+  animation:cmdScoreWave calc(var(--md_fx_speed) * .95) ease-in-out infinite;
+  border-bottom:1px solid rgba(148,163,184,.25);
+}
+.modal--matchdetail .cmd-scorebar::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
+    radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
+  opacity:.9;
+}
+.modal--matchdetail .cmd-scorebar{ position:relative; overflow:hidden; }
+
+/* 상단 스코어바(전체 배경) 효과 — "사람 눈에 확 티나게" */
+@keyframes mdBarSweepX{
+  0%{ transform:translate3d(-12%,0,0) rotate(8deg); }
+  100%{ transform:translate3d(12%,0,0) rotate(8deg); }
+}
+@keyframes mdBarWaveX{
+  0%{ transform:translate3d(-8%,0,0); }
+  50%{ transform:translate3d(8%,0,0); }
+  100%{ transform:translate3d(-8%,0,0); }
+}
+.modal--matchdetail{
+  --md_fx_wave_op: calc(.72 + var(--md_fx_int) * .28);
+  --md_fx_boost: calc(.85 + var(--md_fx_int) * .85);
+}
+
+/* 효과가 "확실히" 보이도록 전체 톤을 올림(효과 클래스가 붙었을 때만) */
+.modal--matchdetail .cmd-scorebar[class*="mdfxbar-"]{
+  filter:saturate(clamp(1, calc(1.25 + var(--md_fx_int) * .55), 4)) contrast(clamp(1, calc(1.10 + var(--md_fx_int) * .25), 2.2));
+}
+.modal--matchdetail .cmd-team[class*="mdfx-"]{
+  filter:saturate(clamp(1, calc(1.15 + var(--md_fx_int) * .55), 3.5)) contrast(clamp(1, calc(1.08 + var(--md_fx_int) * .22), 2.0));
+}
+@keyframes mdWaveScroll{
+  0%{ background-position:0% 50%, 0% 50%, 0% 50%; }
+  50%{ background-position:100% 50%, 60% 50%, 30% 50%; }
+  100%{ background-position:0% 50%, 0% 50%, 0% 50%; }
+}
+@keyframes mdBarPulse{
+  0%,100%{ filter:saturate(1.05) brightness(1.00); }
+  50%{ filter:saturate(1.35) brightness(1.18); }
+}
+.modal--matchdetail .cmd-scorebar::after{
+  content:'';
+  position:absolute;
+  inset:-60%;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:overlay;
+  z-index:0;
+}
+.modal--matchdetail .cmd-scorebar > *{ position:relative; z-index:1; }
+
+/* Move/Mix: 대각선 광택 + 하이라이트 스윕 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-move::after,
+.modal--matchdetail .cmd-scorebar.mdfxbar-mix::after{
+  opacity:calc(var(--md_fx_int) * 1.05);
+  background:
+    linear-gradient(120deg, transparent 28%, rgba(255,255,255,.72) 50%, transparent 72%),
+    radial-gradient(60% 120% at 18% 0%, rgba(255,255,255,.45), transparent 58%),
+    radial-gradient(80% 140% at 92% 100%, rgba(0,0,0,.35), transparent 56%);
+  animation:mdBarSweepX calc(var(--md_fx_speed) * .65) ease-in-out infinite;
+}
+
+/* Wave: 확실한 물결 패턴 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-wave::after{
+  opacity:var(--md_fx_wave_op);
+  mix-blend-mode:normal; /* 어떤 환경에서도 확실히 보이게 */
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,.78) 0 12px,
+      rgba(255,255,255,0) 12px 26px),
+    radial-gradient(60% 160% at 18% 0%, rgba(255,255,255,.50), transparent 60%),
+    radial-gradient(90% 180% at 92% 100%, rgba(0,0,0,.40), transparent 56%);
+  background-size:220% 220%, 160% 160%, 160% 160%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .60) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-wave{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.10),
+    0 0 34px rgba(255,255,255, calc(var(--md_fx_int) * .32)) inset;
+}
+
+@keyframes mdAuroraHue{
+  0%{ filter:hue-rotate(0deg) saturate(1.35) brightness(1.08); }
+  50%{ filter:hue-rotate(35deg) saturate(1.60) brightness(1.18); }
+  100%{ filter:hue-rotate(0deg) saturate(1.35) brightness(1.08); }
+}
+@keyframes mdAuroraFlow{
+  0%{ background-position:0% 50%, 0% 50%; }
+  50%{ background-position:100% 50%, 60% 50%; }
+  100%{ background-position:0% 50%, 0% 50%; }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-aurora::after{
+  opacity:calc(.65 + var(--md_fx_int) * .35);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 180deg at 50% 50%,
+      rgba(255,255,255,.00),
+      rgba(255,255,255,.55),
+      rgba(255,255,255,.00),
+      rgba(0,0,0,.20),
+      rgba(255,255,255,.00)),
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.38), transparent 60%);
+  background-size:180% 180%, 140% 140%;
+  animation:mdAuroraFlow calc(var(--md_fx_speed) * .75) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-aurora{
+  animation:mdAuroraHue calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+  box-shadow:0 10px 30px rgba(0,0,0,.08), 0 0 30px rgba(255,255,255, calc(var(--md_fx_int) * .22)) inset;
+}
+
+@keyframes mdScanSweep{
+  0%{ transform:translate3d(-30%,0,0); }
+  100%{ transform:translate3d(30%,0,0); }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-scan::after{
+  opacity:calc(.70 + var(--md_fx_int) * .30);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.88), rgba(255,255,255,0));
+  animation:mdScanSweep calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-scan{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .75) ease-in-out infinite;
+}
+
+@keyframes mdRippleMove{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+
+@keyframes mdGlitchShift{
+  0%{ transform:translate3d(-6px,0,0); opacity:.75; }
+  20%{ transform:translate3d(6px,-1px,0); opacity:.95; }
+  40%{ transform:translate3d(-4px,1px,0); opacity:.70; }
+  60%{ transform:translate3d(4px,0,0); opacity:.92; }
+  80%{ transform:translate3d(-2px,-1px,0); opacity:.78; }
+  100%{ transform:translate3d(-6px,0,0); opacity:.75; }
+}
+@keyframes mdHueLoop{
+  0%{ filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+  50%{ filter:hue-rotate(110deg) saturate(1.9) brightness(1.20); }
+  100%{ filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+}
+@keyframes mdConfettiDrift{
+  0%{ transform:translate3d(-6%, -4%, 0) rotate(0deg); }
+  50%{ transform:translate3d(6%, 4%, 0) rotate(2deg); }
+  100%{ transform:translate3d(-6%, -4%, 0) rotate(0deg); }
+}
+@keyframes mdFireFlicker{
+  0%,100%{ filter:saturate(1.4) brightness(1.05); }
+  50%{ filter:saturate(2.0) brightness(1.25); }
+}
+@keyframes mdFrostShift{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+@keyframes mdMatrixScroll{
+  0%{ background-position:0% 0%; }
+  100%{ background-position:0% 120%; }
+}
+@keyframes mdVortexSpin{
+  0%{ transform:rotate(0deg) scale(1.05); }
+  50%{ transform:rotate(180deg) scale(1.08); }
+  100%{ transform:rotate(360deg) scale(1.05); }
+}
+
+@keyframes mdStrobe{
+  0%,92%,100%{ opacity:.15; }
+  94%{ opacity:1; }
+  96%{ opacity:.25; }
+  98%{ opacity:.9; }
+}
+@keyframes mdPrismShift{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+@keyframes mdPlasmaFlow{
+  0%{ background-position:0% 50%; filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+  50%{ background-position:100% 50%; filter:hue-rotate(40deg) saturate(2.0) brightness(1.22); }
+  100%{ background-position:0% 50%; filter:hue-rotate(0deg) saturate(1.6) brightness(1.08); }
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-ripple::after{
+  opacity:calc(.72 + var(--md_fx_int) * .28);
+  mix-blend-mode:normal;
+  background:
+    repeating-radial-gradient(circle at 20% 50%,
+      rgba(255,255,255,.78) 0 7px,
+      rgba(255,255,255,0) 7px 20px),
+    repeating-radial-gradient(circle at 80% 50%,
+      rgba(255,255,255,.48) 0 6px,
+      rgba(255,255,255,0) 6px 18px);
+  background-size:220% 220%;
+  animation:mdRippleMove calc(var(--md_fx_speed) * .52) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-neon{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.10),
+    0 0 36px rgba(255,255,255, calc(var(--md_fx_int) * .35)),
+    0 0 0 3px rgba(255,255,255, calc(var(--md_fx_int) * .75)) inset;
+}
+
+/* 추가 효과들(강하게) */
+.modal--matchdetail .cmd-scorebar.mdfxbar-rainbow{
+  animation:mdHueLoop calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-rainbow::after{
+  opacity:clamp(.65, calc(.55 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg, rgba(255,0,120,.55), rgba(0,220,255,.55), rgba(120,255,0,.55), rgba(255,220,0,.55), rgba(255,0,120,.55));
+  background-size:200% 200%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .55) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-glitch::after{
+  opacity:clamp(.65, calc(.55 + var(--md_fx_int) * .25), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 3px, rgba(255,255,255,0) 3px 10px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, rgba(0,0,0,0) 2px 8px);
+  animation:mdGlitchShift calc(var(--md_fx_speed) * .35) steps(2,end) infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-glitch{
+  animation:mdBarPulse calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-confetti::after{
+  opacity:clamp(.60, calc(.50 + var(--md_fx_int) * .22), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,.75) 0 2px, transparent 3px),
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,.60) 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 35%, rgba(255,255,255,.70) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 65%, rgba(255,255,255,.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 90% 25%, rgba(255,255,255,.70) 0 2px, transparent 3px);
+  animation:mdConfettiDrift calc(var(--md_fx_speed) * .65) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-fire{
+  animation:mdFireFlicker calc(var(--md_fx_speed) * .60) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-fire::after{
+  opacity:clamp(.72, calc(.62 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(60% 150% at 20% 90%, rgba(255,180,0,.55), transparent 60%),
+    radial-gradient(60% 150% at 50% 90%, rgba(255,60,0,.45), transparent 62%),
+    radial-gradient(60% 150% at 80% 90%, rgba(255,220,0,.40), transparent 60%),
+    linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,0));
+  background-size:140% 140%;
+  animation:mdWaveScroll calc(var(--md_fx_speed) * .45) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-frost::after{
+  opacity:clamp(.68, calc(.58 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.55) 0 6px, rgba(255,255,255,0) 6px 18px),
+    radial-gradient(80% 140% at 20% 0%, rgba(200,240,255,.35), transparent 60%),
+    radial-gradient(80% 140% at 80% 100%, rgba(255,255,255,.25), transparent 62%);
+  background-size:220% 220%;
+  animation:mdFrostShift calc(var(--md_fx_speed) * .60) ease-in-out infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-matrix::after{
+  opacity:clamp(.62, calc(.52 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.32) 0 2px, rgba(255,255,255,0) 2px 10px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, rgba(0,0,0,0) 2px 8px);
+  background-size:100% 120%;
+  animation:mdMatrixScroll calc(var(--md_fx_speed) * .45) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-vortex::after{
+  opacity:clamp(.70, calc(.60 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.00), rgba(255,255,255,.55), rgba(255,255,255,.00), rgba(0,0,0,.25), rgba(255,255,255,.00));
+  animation:mdVortexSpin calc(var(--md_fx_speed) * .65) linear infinite;
+}
+
+.modal--matchdetail .cmd-scorebar.mdfxbar-prism::after{
+  opacity:clamp(.70, calc(.58 + var(--md_fx_int) * .20), 1);
+  mix-blend-mode:normal;
+  background:
+    linear-gradient(90deg,
+      rgba(255,0,120,.42),
+      rgba(0,220,255,.42),
+      rgba(120,255,0,.42),
+      rgba(255,220,0,.42),
+      rgba(255,0,120,.42));
+  background-size:220% 220%;
+  animation:mdPrismShift calc(var(--md_fx_speed) * .55) linear infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-plasma::after{
+  opacity:clamp(.72, calc(.62 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.38), transparent 60%),
+    radial-gradient(70% 160% at 80% 100%, rgba(0,0,0,.28), transparent 58%),
+    linear-gradient(90deg, rgba(255,0,120,.40), rgba(0,220,255,.40), rgba(180,0,255,.35));
+  background-size:200% 200%;
+  animation:mdPlasmaFlow calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-strobe::after{
+  opacity:clamp(.40, calc(.25 + var(--md_fx_int) * .18), 1);
+  mix-blend-mode:normal;
+  background:linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,.95), rgba(255,255,255,0));
+  animation:mdStrobe calc(var(--md_fx_speed) * .65) steps(1,end) infinite;
+}
+
+/* Sheen: 스윕만(가볍게) */
+.modal--matchdetail .cmd-scorebar.mdfxbar-sheen::after{
+  opacity:calc(var(--md_fx_int) * .85);
+  background:linear-gradient(120deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+  animation:mdBarSweepX calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+}
+
+/* Glow/Border: 테두리/글로우 강조 */
+.modal--matchdetail .cmd-scorebar.mdfxbar-glow{
+  box-shadow:0 0 0 rgba(255,255,255,0);
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-scorebar.mdfxbar-border{
+  animation:mdBorderPulse calc(var(--md_fx_speed) * .95) ease-in-out infinite;
+}
+
+@keyframes cmdScoreWave{
+  0%{ background-position:0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{ background-position:0% 50%; }
+}
+.modal--matchdetail .cmd-score{
+  display:flex;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:6px;
+}
+.modal--matchdetail .cmd-team{
+  flex:1;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:14px;
+  color:#fff;
+  font-weight:1000;
+  font-size:13px;
+  box-shadow:0 6px 18px rgba(0,0,0,.10);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.modal--matchdetail .cmd-team .cmd-uicon{
+  width:var(--su_md_logo_size, 42px);
+  height:var(--su_md_logo_size, 42px);
+  flex-shrink:0;
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.32);
+}
+.modal--matchdetail .cmd-team img.cmd-uicon{
+  object-fit:contain !important;
+  padding:0 !important;
+}
+.modal--matchdetail .cmd-team span.cmd-uicon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* 경기 상세: 프로필/로고 "가득 채우기" 느낌 보강 */
+.modal--matchdetail .cmd-team span.cmd-uicon img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+}
+.modal--matchdetail .cmd-team{
+  font-size:16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+  padding:5px 8px;
+  min-height: calc(var(--su_md_logo_size, 42px) + 10px);
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+}
+.modal--matchdetail .cmd-team > *{ position:relative; z-index:1; }
+.modal--matchdetail .cmd-team::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(70% 130% at 20% 0%, rgba(255,255,255,.18), transparent 60%);
+  opacity:.55;
+  z-index:0;
+}
+.modal--matchdetail .cmd-team::before{
+  content:'';
+  position:absolute;
+  inset:-50% -60%;
+  pointer-events:none;
+  background:none;
+  transform:translateX(0) rotate(0deg);
+  opacity:0;
+  animation:none;
+  mix-blend-mode:overlay;
+  z-index:0;
+}
+@keyframes cmdTeamShimmer{
+  0%{ transform:translateX(-45%) rotate(8deg); }
+  55%{ transform:translateX(35%) rotate(8deg); }
+  100%{ transform:translateX(45%) rotate(8deg); }
+}
+
+@keyframes mdSparkleTwinkle{
+  0%,100%{opacity:.25; transform:scale(1);}
+  50%{opacity:.7; transform:scale(1.03);}
+}
+@keyframes mdGlowPulse{
+  0%,100%{box-shadow:0 10px 28px rgba(0,0,0,.12), 0 0 0 rgba(255,255,255,0);}
+  50%{box-shadow:0 10px 28px rgba(0,0,0,.12), 0 0 22px rgba(255,255,255, calc(var(--md_fx_int) * .32));}
+}
+
+@keyframes mdBorderPulse{
+  0%,100%{ box-shadow:0 10px 28px rgba(0,0,0,.12), inset 0 0 0 rgba(255,255,255,0); }
+  50%{ box-shadow:0 10px 28px rgba(0,0,0,.12), inset 0 0 0 2px rgba(255,255,255, calc(var(--md_fx_int) * .55)); }
+}
+.modal--matchdetail .cmd-team.mdfx-border{
+  animation:mdBorderPulse calc(var(--md_fx_speed) * .95) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-wave::after{
+  opacity:calc(var(--md_fx_int) * .55);
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.28), rgba(255,255,255,0));
+  background-size:200% 200%;
+  animation:cmdScoreWave var(--md_fx_speed) ease-in-out infinite;
+}
+
+/* 경기 상세 상단 팀 카드 효과 프리셋들 */
+.modal--matchdetail .cmd-team.mdfx-ripple::after{
+  opacity:calc(.70 + var(--md_fx_int) * .30);
+  mix-blend-mode:normal;
+  background:
+    repeating-radial-gradient(circle at 30% 50%,
+      rgba(255,255,255,.78) 0 7px,
+      rgba(255,255,255,0) 7px 20px),
+    repeating-radial-gradient(circle at 70% 50%,
+      rgba(255,255,255,.48) 0 6px,
+      rgba(255,255,255,0) 6px 18px);
+  background-size:220% 220%;
+  animation:mdRippleMove calc(var(--md_fx_speed) * .52) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-aurora::after{
+  opacity:calc(.60 + var(--md_fx_int) * .40);
+  mix-blend-mode:normal;
+  background:
+    conic-gradient(from 180deg at 50% 50%,
+      rgba(255,255,255,.00),
+      rgba(255,255,255,.55),
+      rgba(255,255,255,.00),
+      rgba(0,0,0,.22),
+      rgba(255,255,255,.00)),
+    radial-gradient(70% 160% at 20% 0%, rgba(255,255,255,.34), transparent 60%);
+  background-size:180% 180%, 140% 140%;
+  animation:mdAuroraFlow calc(var(--md_fx_speed) * .75) linear infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-aurora{
+  animation:mdAuroraHue calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-scan::before{
+  opacity:calc(.72 + var(--md_fx_int) * .28);
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.92), rgba(255,255,255,0));
+  transform:translateX(-55%) rotate(0deg);
+  animation:mdScanSweep calc(var(--md_fx_speed) * .55) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-neon{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .70) ease-in-out infinite;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.12),
+    0 0 34px rgba(255,255,255, calc(var(--md_fx_int) * .35)),
+    0 0 0 3px rgba(255,255,255, calc(var(--md_fx_int) * .75)) inset;
+}
+
+.modal--matchdetail .cmd-team.mdfx-sheen::before,
+.modal--matchdetail .cmd-team.mdfx-mix::before{
+  opacity:calc(var(--md_fx_int) * .95);
+  background:linear-gradient(120deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
+  transform:translateX(-40%) rotate(8deg);
+  animation:cmdTeamShimmer var(--md_fx_speed) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-sparkle::before{
+  opacity:calc(var(--md_fx_int) * .72);
+  inset:-30% -30%;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,.70) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 72% 22%, rgba(255,255,255,.55) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 55% 75%, rgba(255,255,255,.60) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 35% 58%, rgba(255,255,255,.50) 0 1px, rgba(255,255,255,0) 2px);
+  animation:mdSparkleTwinkle calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+.modal--matchdetail .cmd-team.mdfx-glow{
+  animation:mdGlowPulse calc(var(--md_fx_speed) * .85) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce){
+  /* (요청) 스코어바/상단카드 효과는 체감이 중요해서 애니메이션 유지 */
+  /* (요청) 상단 카드 효과는 체감이 중요해서 ::before 애니메이션은 유지 */
+}
+.modal--matchdetail .cmd-team small{font-weight:900;opacity:.85;}
+.modal--matchdetail .cmd-mid{
+  flex-shrink:0;
+  background:#fff;
+  border:1px solid rgba(148,163,184,.35);
+  border-radius:16px;
+  padding:7px 14px;
+  font-family:'Noto Sans KR',sans-serif;
+  font-weight:1000;
+  font-size:18px;
+  box-shadow:0 4px 16px rgba(0,0,0,.08);
+}
+.modal--matchdetail .cmd-mid{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 12px;
+  font-size:22px;
+  min-height: calc(var(--su_md_logo_size, 42px) + 10px);
+}
+.modal--matchdetail .cmd-mid .cmd-colon{color:#94a3b8;margin:0 4px;font-size:14px;font-weight:900;}
+.modal--matchdetail .cmd-body{
+  padding:14px 16px 4px;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--bg);
+  flex:1;
+  min-height:0;
+}
+.modal--matchdetail .cmd-body > *:first-child{margin-top:0;}
+.modal--matchdetail .cmd-actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  padding:12px 16px 14px;
+  border-top:1px solid rgba(148,163,184,.25);
+  background:rgba(255,255,255,.86);
+  backdrop-filter:blur(6px);
+}
+.modal--matchdetail .mbox--matchdetail{
+  animation: cmdPop .18s ease-out;
+  transform-origin: 50% 90%;
+}
+@keyframes cmdPop{
+  from{ transform:translateY(10px) scale(.985); opacity:0; }
+  to{ transform:translateY(0) scale(1); opacity:1; }
+}
+@media (prefers-reduced-motion: reduce){
+  .modal--matchdetail .mbox--matchdetail{ animation:none; }
+}
+
+/* 상세 내용(세트/게임) 카드화 */
+.modal--matchdetail .cmd-detail{
+  display:block;
+}
+.modal--matchdetail .cmd-detail .set-row{
+  margin:0 0 12px;
+  padding:12px 12px 10px;
+  background:linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+  border:1px solid rgba(148,163,184,.35);
+  border-radius:16px;
+  box-shadow:0 10px 28px rgba(15,23,42,.06);
+}
+.modal--matchdetail .cmd-detail .set-row > div:first-child{
+  border-radius:12px !important;
+}
+.modal--matchdetail .cmd-detail .set-row > div:not(:first-child){
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px dashed rgba(148,163,184,.45);
+}
+.modal--matchdetail .cmd-detail .set-row-title{
+  font-weight:1000 !important;
+  letter-spacing:-.2px;
+}
+.modal--matchdetail .cmd-detail .ubadge{
+  border-radius:999px;
+  padding:2px 10px;
+}
+.modal--matchdetail .cmd-detail .ubadge.loser{
+  opacity:1;
+  filter:saturate(.8);
+  background:#e2e8f0 !important;
+  color:#475569 !important;
+}
+
+/* 게임 라인(본문의 '경기1' 라벨) */
+.modal--matchdetail .cmd-detail [style*="min-width:40px"][style*="경기"]{
+  font-weight:900;
+  color:#64748b !important;
+}
+
+/* 새 경기 라인 UI (mode=comp 전용) */
+.modal--matchdetail .cmd-detail .cmd-game{padding:2px 0;}
+.modal--matchdetail .cmd-detail .cmd-game-row{display:flex;align-items:stretch;gap:4px;}
+.modal--matchdetail .cmd-detail .cmd-player{
+  flex:1;min-width:0;
+  display:flex;align-items:center;gap:6px;
+  padding:5px 7px;
+  border-radius:10px;
+  background:linear-gradient(180deg,#fff, #fbfdff);
+  border:1px solid rgba(148,163,184,.35);
+  box-shadow:0 8px 22px rgba(15,23,42,.05);
+  position:relative;
+}
+.modal--matchdetail .cmd-detail .cmd-photo{margin-right:6px;}
+.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-photo{margin-right:0;margin-left:6px;}
+.modal--matchdetail .cmd-detail .cmd-player.is-lose{
+  background:linear-gradient(180deg, rgba(148,163,184, var(--su_md_lose_gray, .12)), #ffffff);
+  border-color:rgba(148,163,184,.28);
+}
+.modal--matchdetail .cmd-detail .cmd-player.is-lose .cmd-player-name{ color:#334155; opacity:.75; }
+.modal--matchdetail .cmd-detail .cmd-player.is-right{justify-content:flex-end;}
+.modal--matchdetail .cmd-detail .cmd-player.is-win{
+  border:1.5px solid color-mix(in srgb, var(--cmd-col,#2563eb) 55%, rgba(148,163,184,.35));
+  box-shadow:0 10px 30px color-mix(in srgb, var(--cmd-col,#2563eb) 18%, rgba(15,23,42,.06));
+}
+.modal--matchdetail .cmd-detail .cmd-player-meta{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1;}
+.modal--matchdetail .cmd-detail .cmd-player-meta{align-items:flex-end;text-align:right;}
+.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-player-meta{align-items:flex-start;text-align:left;}
+.modal--matchdetail .cmd-detail .cmd-player-badges{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-player-badges{justify-content:flex-start;}
+.modal--matchdetail .cmd-detail .cmd-player-name{
+  font-size:13px;
+  font-weight:1000;
+  color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.modal--matchdetail .cmd-detail .cmd-player-name{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.modal--matchdetail .cmd-detail .cmd-player-name .cmd-player-inline{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  flex-wrap:wrap;
+  transform: translateY(-.5px);
+}
+
+/* 플레이어 모달이 경기상세 뒤로 깔리는 문제 방지 */
+#playerModal{ z-index: var(--z-modal-5); } /* [Z-IDX] */
+/* 대학 상세 모달이 경기상세(대전기록/대회) 뒤로 깔리는 문제 방지 */
+#univModal{ z-index: var(--z-modal-5); } /* [Z-IDX] */
+.modal--matchdetail .cmd-detail .cmd-player-badges{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.modal--matchdetail .cmd-detail .cmd-midbox{
+  width:46px;
+  flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(37,99,235,.10),rgba(37,99,235,.04));
+  border:1px solid rgba(37,99,235,.18);
+}
+.modal--matchdetail .cmd-detail .cmd-gno{font-size:11px;font-weight:1000;color:#1d4ed8;}
+.modal--matchdetail .cmd-detail .cmd-gmap{
+  font-size:11px;
+  color:#475569;
+  text-align:center;
+  line-height:1.15;
+  max-width:70px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+.modal--matchdetail .cmd-detail .cmd-gno{font-size:11px;}
+.modal--matchdetail .cmd-detail .cmd-win{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--cmd-col,#2563eb);
+  color:#fff;
+  font-size:9px;
+  font-weight:1000;
+  padding:1px 6px;
+  border-radius:999px;
+  letter-spacing:.3px;
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+  margin:0;
+}
+/* WIN 배지: 바깥쪽 끝에서 약간 안쪽 */
+.modal--matchdetail .cmd-detail .cmd-player.is-win:not(.is-right) .cmd-win{left:10px;right:auto;}
+.modal--matchdetail .cmd-detail .cmd-player.is-win.is-right .cmd-win{right:10px;left:auto;}
+
+/* 프로필 위치를 살짝 바깥쪽으로(양쪽 가장자리로) */
+.modal--matchdetail .cmd-detail .cmd-player{padding-left:14px;padding-right:14px;}
+.modal--matchdetail .cmd-detail .cmd-photo{transform:translateX(-1px);} /* 좌측: 중앙으로 더 */
+.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-photo{transform:translateX(1px);} /* 우측: 중앙으로 더 */
+
+/* 링크 밑줄(점선) 과한 느낌 완화 */
+.modal--matchdetail .cmd-detail [style*="underline dotted"]{ text-decoration: none !important; }
+
+/* 패자 프로필 흐리게(요청사항) */
+.cmd-photo.is-lose img,
+.cmd-photo.is-lose span{
+  filter: grayscale(.85) blur(0.7px);
+  opacity: .55;
+}
+
+/* 세트 헤더(1세트/2세트...) 가운데 정렬(모든 경기 상세) */
+.modal--matchdetail .cmd-detail .set-row > div:first-child{ justify-content:center; }
+#histDetModal .set-row > div:first-child{ justify-content:center; }
+@media(max-width:768px){
+  .modal--matchdetail{align-items:flex-end;padding:0;}
+  .modal--matchdetail .mbox--matchdetail{
+    width:100%;
+    max-width:100%;
+    border-radius:20px 20px 0 0;
+  }
+}
 
 /* ── 설정 메뉴 팝업(cfgModal) 컴포넌트 규격화 ── */
 #cfgModal.cfg-modal{display:none;align-items:center;justify-content:center;padding:16px;}
@@ -1134,7 +2045,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 #emModal .mtitle{padding:20px 24px 14px;flex-shrink:0;border-bottom:1px solid var(--border);margin-bottom:0;}
 #emModal #emBody{overflow-y:auto;flex:1;min-height:0;padding:12px 24px 4px;}
 #emModal .mbtns{padding:14px 24px 18px;flex-shrink:0;border-top:1px solid var(--border);margin-top:0;}
-.mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:var(--blue);margin-bottom:16px;cursor:move;user-select:none;-webkit-user-select:none;}
+.mtitle{font-family:'Noto Sans KR',sans-serif;font-weight:800;font-size:16px;color:var(--blue);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);cursor:move;user-select:none;-webkit-user-select:none;}
 .mtitle::before{content:'⠿ ';font-size:12px;opacity:.35;margin-right:4px;}
 .mbox label{display:block;font-size:11px;font-weight:500;color:var(--gray-l);margin-top:10px;margin-bottom:3px;}
 .mbox input,.mbox select{width:100%;}
@@ -1926,6 +2837,17 @@ body.design-v2 .rec-detail-area [style*="border:1px solid var(--border);border-r
   background:var(--white)!important;
   border-color:var(--border)!important;
 }
+/* 디자인 모드: 경기 상세 영역 개선 */
+body.design-v2 .rec-detail-area{
+  background:linear-gradient(180deg, var(--rc-detail-bg, var(--surface)) 0%, var(--white) 100%);
+  border-radius:0 0 16px 16px;
+}
+body.design-v2 .rec-detail-area::before{
+  background:linear-gradient(90deg, var(--primary-start), var(--primary-mid), var(--primary-end));
+}
+body.design-v2 .rec-detail-area.open{
+  box-shadow:0 12px 40px color-mix(in srgb, var(--primary-mid) 15%, rgba(0,0,0,.08));
+}
 
 /* Nada Dark: 더 글래시하게 (변수로 제어) */
 body.design-v2.designv2-nada{
@@ -1987,7 +2909,7 @@ body.design-v2 details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 
 /* ── 헤더: 더 동적인 그라데이션 ── */
 body.design-v2 .hdr{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 45%,var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-mid) 45%,var(--primary-end));
   position:relative;
   overflow:hidden;
 }
@@ -2044,25 +2966,25 @@ body.design-v2 .tab.on::after{
 
 /* ── 버튼/필/메뉴: 디자인 모드 컬러로 통일 ── */
 body.design-v2 .btn-b{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-mid) 55%,var(--primary-end));
-  box-shadow:0 10px 22px color-mix(in srgb, var(--primary-mid) 25%, transparent);
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-mid) 55%,var(--primary-end));
+  box-shadow:0 calc(10px * var(--custom-shadow-intensity) / 50) calc(22px * var(--custom-shadow-intensity) / 50) color-mix(in srgb, var(--primary-mid) 25%, transparent);
 }
 body.design-v2 .btn-b:hover{
   filter:brightness(1.02);
-  box-shadow:0 14px 28px color-mix(in srgb, var(--primary-mid) 32%, transparent);
+  box-shadow:0 calc(14px * var(--custom-shadow-intensity) / 50) calc(28px * var(--custom-shadow-intensity) / 50) color-mix(in srgb, var(--primary-mid) 32%, transparent);
 }
 body.design-v2 .btn-w:hover{
   border-color:color-mix(in srgb, var(--primary-mid) 35%, var(--border2));
   color:var(--primary-mid);
 }
 body.design-v2 .btn-p:hover{
-  background:linear-gradient(135deg,var(--primary-mid),var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-mid),var(--primary-end));
   border-color:color-mix(in srgb, var(--primary-mid) 55%, transparent);
 }
 body.design-v2 .pill.on,
 body.design-v2 .sort-btn.on,
 body.design-v2 .tier-filter-btn.on{
-  background:linear-gradient(135deg,var(--primary-start),var(--primary-end));
+  background:linear-gradient(var(--custom-gradient-angle, 135deg),var(--primary-start),var(--primary-end));
   border-color:color-mix(in srgb, var(--primary-mid) 45%, transparent);
 }
 
@@ -2104,6 +3026,7 @@ body.design-v2 .btn-detail{
 /* ── 기록 카드 배경(프리셋/모드별 차등을 변수로 제어) ── */
 body.design-v2 .rec-summary{
   background:var(--rc-card-bg, var(--surface)) !important;
+  opacity: calc(var(--custom-card-opacity, 100) / 100);
 }
 body.design-v2 .rec-sum-header{
   background:var(--rc-card-hd-bg, transparent) !important;
@@ -2506,8 +3429,15 @@ body.dark .ssec{background:#1e293b;border-color:#2d3f55;}
 body.dark .modal .mbox{background:#1e293b;border-color:#2d3f55;}
 body.dark .rec-summary{background:#1e293b;border-color:#2d3f55;}
 body.dark .rec-summary.detail-open{box-shadow:0 2px 12px rgba(37,99,235,.2)!important;}
-body.dark .rec-detail-area{background:#162032;border-color:#2d3f55;}
-body.dark .rec-detail-area.open{border-top-color:#1e3a5f;}
+body.dark .rec-detail-area{
+  background:linear-gradient(180deg, #162032 0%, #1e293b 100%);
+  border-color:#2d3f55;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+body.dark .rec-detail-area.open{
+  border-top-color:#1e3a5f;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
 body.dark .rec-sum-header{background:#1e293b;}
 body.dark .ck-panel{background:#1e293b;border-color:#2d3f55;}
 body.dark .grp-match-card{background:#1e293b;border-color:#2d3f55;}
@@ -3331,30 +4261,58 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .modal--calsched .mbtns .btn{ flex:1; }
 
 /* 로그인 모달 */
+#loginModal{
+  display:none !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#loginModal[style*="display: flex"]{
+  display:flex !important;
+}
+
 .modal--login .mbox{
-  width:340px;
+  width:min(90vw, 360px);
   text-align:center;
-  padding:32px 28px;
+  padding:28px 24px;
+  margin:0 !important;
+  background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius:12px;
+}
+@media(max-width:768px){
+  .modal--login .mbox{
+    width:min(90vw, 340px);
+    padding:24px 20px;
+  }
 }
 .modal--login__icon{
-  font-size:32px;
-  margin-bottom:8px;
+  display:block;
+  font-size:40px;
+  margin-bottom:12px;
+  opacity:0.9;
 }
 .modal--login__title{
   font-family:'Noto Sans KR',sans-serif;
-  font-weight:900;
-  font-size:17px;
+  font-weight:800;
+  font-size:18px;
   color:#1e3a8a;
-  margin-bottom:20px;
+  margin-bottom:18px;
+  letter-spacing:-0.5px;
 }
 .modal--login__input{
   width:100%;
-  padding:10px 14px;
-  border:1.5px solid var(--border2);
+  padding:11px 14px;
+  border:1.5px solid #cbd5e1;
   border-radius:8px;
-  font-size:13px;
+  font-size:14px;
   margin-bottom:10px;
   display:block;
+  box-sizing:border-box;
+  transition:all 0.2s;
+}
+.modal--login__input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.1);
 }
 .modal--login__submit{
   width:100%;
@@ -3366,20 +4324,36 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
   font-size:14px;
   font-weight:700;
   cursor:pointer;
+  margin-bottom:10px;
+  transition:transform 0.2s, box-shadow 0.2s;
+  box-shadow:0 2px 8px rgba(37,99,235,0.2);
+}
+.modal--login__submit:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
 }
 .modal--login__err{
   color:#dc2626;
-  font-size:12px;
+  font-size:13px;
   margin-top:8px;
-  min-height:18px;
+  min-height:20px;
+  margin-bottom:0;
+  line-height:1.4;
 }
 .modal--login__cancel{
-  margin-top:10px;
+  margin-top:8px;
+  margin-bottom:0;
+  padding:0;
   background:none;
   border:none;
-  color:var(--gray-l);
-  font-size:12px;
+  color:#64748b;
+  font-size:13px;
   cursor:pointer;
+  transition:color 0.2s;
+  text-decoration:underline;
+}
+.modal--login__cancel:hover{
+  color:#1e3a8a;
 }
 
 /* emModal / bulkEditModal 공통(버튼 영역 flex) */
