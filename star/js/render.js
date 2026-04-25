@@ -725,9 +725,153 @@ function openShareCardFromUniv(){
   setTimeout(()=>renderShareCardByUniv(name),80);
 }
 function openProCompMatchShare(a,b,sa,sb,d){
-  window._shareMatchObj={a,b,sa,sb,d,_noUnivIcon:true,_matchType:'pro'};
-  _shareMode='match';openShareCardModal();
-  setTimeout(function(){if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+  const A=String(a||'A팀'), B=String(b||'B팀');
+  const ds=String(d||'').slice(0,10);
+  const _eq=(x,y)=>String(x||'')===String(y||'');
+  const _pairEq=(a1,b1,a2,b2)=>(_eq(a1,a2)&&_eq(b1,b2))||(_eq(a1,b2)&&_eq(b1,a2));
+  const _invWinner=w=>w==='A'?'B':w==='B'?'A':w;
+
+  // 기본값(매칭 실패 시)
+  let share={
+    a:A,b:B,sa:Number(sa||0),sb:Number(sb||0),d:ds,
+    n:'',_matchType:'pro',_subLabel:'프로리그',_noUnivIcon:false,_usePlayerPhoto:true
+  };
+
+  try{
+    const tourneys=Array.isArray(proTourneys)?proTourneys:[];
+
+    // 1) 팀전 우선 매칭 (팀명끼리 공유카드)
+    outerTeam:
+    for(const tn of tourneys){
+      for(const tm of (tn.teamMatches||[])){
+        const tmd=String(tm.d||'').slice(0,10);
+        if(ds && tmd && tmd!==ds) continue;
+        if(!_pairEq(tm.teamAName, tm.teamBName, A, B)) continue;
+        const swap = !_eq(tm.teamAName,A); // 입력 A/B가 데이터의 teamA/teamB와 반대면 swap
+        const teamAName = swap ? (tm.teamBName||B) : (tm.teamAName||A);
+        const teamBName = swap ? (tm.teamAName||A) : (tm.teamBName||B);
+        const games=(tm.games||[]).map(g=>{
+          // winner side 보정 (swap이면 반전)
+          const sideW = swap ? _invWinner(g._sideW) : g._sideW; // 'A' or 'B'
+          // 팀 A(left) vs 팀 B(right) 방향 유지
+          if(sideW==='A'){
+            return { playerA:g.wName||'', playerB:g.lName||'', winner:'A', map:g.map||'' };
+          } else if(sideW==='B'){
+            return { playerA:g.lName||'', playerB:g.wName||'', winner:'B', map:g.map||'' };
+          }
+          // 예외 케이스(사이드 정보 없으면 winner 미표기)
+          return { playerA:g.lName||'', playerB:g.wName||'', winner:'', map:g.map||'' };
+        }).filter(x=>x.playerA||x.playerB);
+        const scoreA=games.filter(g=>g.winner==='A').length;
+        const scoreB=games.filter(g=>g.winner==='B').length;
+        share={
+          a:teamAName,b:teamBName,sa:scoreA,sb:scoreB,d:tmd||ds,
+          n:tn.name||'',_matchType:'procomp-team',_subLabel:(tn.name?`${tn.name} · 팀전`:'팀전'),
+          _noUnivIcon:true,_usePlayerPhoto:false,
+          sets:[{label:'팀전',scoreA,scoreB,games}]
+        };
+        break outerTeam;
+      }
+    }
+
+    // 2) 토너먼트(대진표) 매칭
+    if(!share.sets){
+      outerBkt:
+      for(const tn of tourneys){
+        const totalRnd=(tn.bracket||[]).length||0;
+        const rndLabel = (ri)=>{
+          if(ri==='3rd') return '3·4위전';
+          const r=Number(ri);
+          if(!isFinite(r) || totalRnd<=0) return '토너먼트';
+          return r===totalRnd-1?'결승':r===totalRnd-2?'준결승':r===totalRnd-3?'4강':`${Math.pow(2,totalRnd-r)}강`;
+        };
+        // 일반 라운드
+        for(let ri=0; ri<(tn.bracket||[]).length; ri++){
+          const rnd=tn.bracket[ri]||[];
+          for(let mi=0; mi<rnd.length; mi++){
+            const m=rnd[mi];
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const gamesRaw = Array.isArray(m._games) && m._games.length ? m._games : [{winner:m.winner, map:m.map||''}];
+            const games = gamesRaw.map(g=>({
+              playerA:A,
+              playerB:B,
+              winner: swapped ? _invWinner(g.winner) : (g.winner||''),
+              map: g.map||m.map||''
+            })).filter(x=>x.playerA||x.playerB);
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel(ri);
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerBkt;
+          }
+        }
+        // 3위전
+        if(tn.thirdPlace && tn.thirdPlace.a && tn.thirdPlace.b){
+          const m=tn.thirdPlace;
+          const md=String(m.d||'').slice(0,10);
+          if(ds && md && md!==ds) continue;
+          if(_pairEq(m.a,m.b,A,B)){
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const games = [{playerA:A,playerB:B,winner: swapped ? _invWinner(m.winner) : (m.winner||''), map:m.map||''}];
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel('3rd');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    // 3) 조별리그 매칭
+    if(!share.sets){
+      outerGrp:
+      for(const tn of tourneys){
+        for(const grp of (tn.groups||[])){
+          for(const m of (grp.matches||[])){
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const winner = swapped ? _invWinner(m.winner) : (m.winner||'');
+            const games=[{playerA:A,playerB:B,winner,map:m.map||''}];
+            const scoreA=winner==='A'?1:0;
+            const scoreB=winner==='B'?1:0;
+            const lbl=(grp.stage||grp.name||'조별리그');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'pro',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerGrp;
+          }
+        }
+      }
+    }
+  }catch(e){}
+
+  window._shareMatchObj=share;
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(function(){
+    if(window._shareMatchObj) renderShareCardByMatchObj(window._shareMatchObj);
+  },80);
 }
 function openShareCardFromMatch(mode,idx){
   const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
@@ -996,6 +1140,21 @@ function buildPlayerDetailHTML(p){
   });
 
   const col=gc(p.univ)||'#6366f1';
+  // 🌈 그라데이션(고정/움직임) 공통 함수
+  const _hexToRgb=(h)=>{try{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:99,g:102,b:241}}};
+  const _rgba=(hex,a)=>{const {r,g,b}=_hexToRgb(hex);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
+  const _gradMode = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
+  const _gradInt = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70))/100;
+  const _A=(x)=>Math.max(0,Math.min(1,x*_gradInt));
+  const _gradBg=(hex)=>{
+    if(_gradMode==='solid') return `${hex}`;
+    if(_gradMode==='soft') return `linear-gradient(135deg,${_rgba(hex,_A(.95))},${_rgba(hex,_A(.72))} 55%,${_rgba(hex,_A(.98))})`;
+    if(_gradMode==='radial') return `radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',_A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',_A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,_A(.92))},${_rgba(hex,_A(.70))})`;
+    if(_gradMode==='split') return `linear-gradient(90deg,${_rgba(hex,_A(.98))},${_rgba(hex,_A(.70))} 45%,${_rgba(hex,_A(.98))})`;
+    if(_gradMode==='stripe') return `repeating-linear-gradient(135deg,${_rgba(hex,_A(.92))} 0 10px,${_rgba(hex,_A(.72))} 10px 20px)`;
+    if(_gradMode==='glass') return `radial-gradient(70% 130% at 20% 0%,${_rgba('#ffffff',_A(.22))},transparent 60%), linear-gradient(135deg,${_rgba(hex,_A(.90))},${_rgba(hex,_A(.68))})`;
+    return `linear-gradient(135deg,${_rgba(hex,_A(.95))},${_rgba(hex,_A(.72))})`; // classic
+  };
   const _winC ='#16a34a';
   const _lossC='#dc2626';
   const _pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
@@ -1021,13 +1180,13 @@ function buildPlayerDetailHTML(p){
   let _hdrBg;
   if(_imgUrl){
     const _baseBg=_darken>0
-      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
-      :`linear-gradient(135deg,${col},${col}ee)`;
+      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),${_gradBg(col)}`
+      :`${_gradBg(col)}`;
     _hdrBg=`${_baseBg},url('${_imgUrl}') ${_imgX}px ${_imgY}px / ${_imgZoom}% ${_imgZoom}% ${_imgFill} no-repeat`;
   }else{
     _hdrBg=_darken>0
-      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
-      :`linear-gradient(135deg,${col},${col}ee)`;
+      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),${_gradBg(col)}`
+      :`${_gradBg(col)}`;
   }
   const _p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const _statsTint=_pdStyle.stats_tint!==undefined?_pdStyle.stats_tint:8;
@@ -1185,11 +1344,37 @@ function buildPlayerDetailHTML(p){
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
   const _otherMatches=[];
+  // (추가) 팀전(2:2) 게임 처리 헬퍼
+  function _pushTeamGameIfAny(m, s, g, setIdx, gameIdx, modeLabel){
+    try{
+      if(!g || !g.winner || !g._isTeam || !Array.isArray(g.teamA) || !Array.isArray(g.teamB)) return false;
+      const inA = g.teamA.includes(p.name);
+      const inB = g.teamB.includes(p.name);
+      if(!inA && !inB) return false;
+      const oppTeam = (inA ? g.teamB : g.teamA).filter(Boolean).join(',');
+      const winnerTeam = (g.winner==='A') ? g.teamA : g.teamB;
+      const isWin = winnerTeam.includes(p.name);
+      const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+      const isDupInHist = _dedupedHistory.some(h =>
+        h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===oppTeam)
+      );
+      if(isDupInHist) return true;
+      _otherMatches.push({
+        date:m.d||'', time:0, result:isWin?'승':'패',
+        opp: oppTeam, oppRace:'', map:g.map||'-',
+        matchId: gameId, mode: modeLabel,
+        _dupKey:`mid:${gameId}`, _team:true
+      });
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
   if(typeof miniM!=='undefined'&&miniM.length){
     miniM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,(m.type==='civil')?'시빌워':'미니대전') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             // gameId 일관성: g._id > 새 생성
@@ -1215,7 +1400,7 @@ function buildPlayerDetailHTML(p){
     univM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'대학대전') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1238,7 +1423,7 @@ function buildPlayerDetailHTML(p){
     ckM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'대학CK') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1261,7 +1446,7 @@ function buildPlayerDetailHTML(p){
     proM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'프로리그') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1284,9 +1469,9 @@ function buildPlayerDetailHTML(p){
     (tourneys.filter(t=>t.type==='tier')).forEach(tn=>{
       (tn.groups||[]).forEach(grp=>{
         (grp.matches||[]).forEach(m=>{
-          (m.sets||[]).forEach(s=>{
-            (s.games||[]).forEach(g=>{
-              if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          (m.sets||[]).forEach((s,setIdx)=>{
+            (s.games||[]).forEach((g,gameIdx)=>{
+              if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회') || (g.playerA===p.name||g.playerB===p.name))){
                 const opp=g.playerA===p.name?g.playerB:g.playerA;
                 const oppP=players.find(x=>x.name===opp);
                 _otherMatches.push({
@@ -1300,9 +1485,9 @@ function buildPlayerDetailHTML(p){
         });
       });
       Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-        (m.sets||[]).forEach(s=>{
-          (s.games||[]).forEach(g=>{
-            if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+        (m.sets||[]).forEach((s,setIdx)=>{
+          (s.games||[]).forEach((g,gameIdx)=>{
+            if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회') || (g.playerA===p.name||g.playerB===p.name))){
               const opp=g.playerA===p.name?g.playerB:g.playerA;
               const oppP=players.find(x=>x.name===opp);
               _otherMatches.push({
@@ -1464,8 +1649,9 @@ function buildPlayerDetailHTML(p){
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   })();
 
+  const _pdHdrFx = (()=>{ try{ return (localStorage.getItem('su_pd_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
   let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
+    <div class="su-grad-hero${(_pdHdrFx && !_imgUrl)?' su-grad-motion':''}" style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
@@ -1478,7 +1664,7 @@ function buildPlayerDetailHTML(p){
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
-              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              style="background:${col}88;color:#fff;border:1.5px solid ${col}aa;font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:800${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
             ${_channelHTML}
@@ -1702,6 +1888,46 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }
 
+  // ── 맵별 승률 (요청: ‘상대 종족별 전적’ 아래로 이동) ──
+  {
+    const mapStats = {};
+    _modeHist.forEach(h=>{
+      if(!h.map || h.map==='-' || h.map==='') return;
+      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
+      if(h.result==='승') mapStats[h.map].w++;
+      else mapStats[h.map].l++;
+    });
+    const mapList = Object.entries(mapStats)
+      .filter(([,s])=>s.w+s.l>=2)
+      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
+      .slice(0,8);
+    if(mapList.length>=2){
+      const mapCards = mapList.map(([mapName,s])=>{
+        const t=s.w+s.l;
+        const wr=Math.round(s.w/t*100);
+        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
+          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
+            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:${barCol};font-weight:800">${wr}%</span>
+            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
+          </div>
+        </div>`;
+      }).join('');
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
+          맵별 승률
+          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
+      </div>`;
+    }
+  }
+
   // ── 상대 전적 ──
   {
     if(!window._oppSort) window._oppSort='tot';
@@ -1903,46 +2129,6 @@ function buildPlayerDetailHTML(p){
     h+=`</div>`;
   }
 
-  // ── 맵별 승률 ──
-  {
-    const mapStats = {};
-    _modeHist.forEach(h=>{
-      if(!h.map || h.map==='-' || h.map==='') return;
-      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
-      if(h.result==='승') mapStats[h.map].w++;
-      else mapStats[h.map].l++;
-    });
-    const mapList = Object.entries(mapStats)
-      .filter(([,s])=>s.w+s.l>=2)
-      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
-      .slice(0,8);
-    if(mapList.length>=2){
-      const mapCards = mapList.map(([mapName,s])=>{
-        const t=s.w+s.l;
-        const wr=Math.round(s.w/t*100);
-        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
-          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
-          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
-            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px">
-            <span style="color:${barCol};font-weight:800">${wr}%</span>
-            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
-          </div>
-        </div>`;
-      }).join('');
-      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
-          맵별 승률
-          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
-      </div>`;
-    }
-  }
-
   // ── 같은 대학 팀원 ──
   if(p.univ && p.univ !== '무소속'){
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
@@ -2012,7 +2198,8 @@ function buildUnivDetailHTML(univName){
   const wr=tot?Math.round(wins/tot*100):0;
 
   // ── 상단 대학 헤더 카드 ──
-  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
+  const _uHdrFx = (()=>{ try{ return (localStorage.getItem('su_univ_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
+  let h=`<div class="su-grad-hero${_uHdrFx?' su-grad-motion':''}" style="background:${_gradBg(col)};border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">

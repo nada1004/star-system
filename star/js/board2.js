@@ -34,6 +34,28 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
+// ── 현황판 상단 탭 순서 설정 ──────────────────────────────
+// 설정 탭에서 순서를 바꾸면 현황판 상단(대학별/펨코현황/무소속/구현황판/이미지별) 버튼 순서가 바뀝니다.
+const _B2_TAB_ORDER_KEY = 'b2_tab_order_v1';
+const _B2_TAB_ORDER_DEFAULT = ['univ','femco','free','old','players'];
+function _b2LoadTabOrder(){
+  try{
+    const raw = localStorage.getItem(_B2_TAB_ORDER_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    const ok = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+    const allowed = new Set(_B2_TAB_ORDER_DEFAULT);
+    let out = ok.filter(x=>allowed.has(x));
+    out = [...new Set(out)];
+    for(const k of _B2_TAB_ORDER_DEFAULT){
+      if(out.indexOf(k)===-1) out.push(k);
+    }
+    return out;
+  }catch(e){
+    return _B2_TAB_ORDER_DEFAULT.slice();
+  }
+}
+window._b2LoadTabOrder = _b2LoadTabOrder;
+
 // 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
@@ -69,7 +91,9 @@ function _b2GetImgSettings(playerName, slot) {
       if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
       if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
     }
-  }catch(e){}
+  }catch(e){
+    console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
+  }
   // 동기화
   _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
   _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
@@ -434,18 +458,31 @@ function rBoard2(C, T) {
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
   ` : '';
-  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):'';
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
 
+  // (요청) 현황판 탭 상단 버튼 순서(localStorage) 반영
+  const _ord = _b2LoadTabOrder();
+  const _tabMeta = {
+    univ:{ color:'var(--blue)', label:'🏟️ 대학별' },
+    femco:{ color:'var(--blue)', label:'🧩 펨코현황' },
+    free:{ color:'var(--blue)', label:'🚶 무소속' },
+    old:{ color:'#64748b', label:'📊 구현황판' },
+    players:{ color:'var(--purple)', label:profileTabLabel },
+  };
+  const _tabsHtml = _ord.map(k=>{
+    if(k==='old' && !isLoggedIn) return '';
+    const m=_tabMeta[k];
+    if(!m) return '';
+    const btn=_b2TabBtn(k, m.color, m.label);
+    // 이미지별 탭 필터는 이미지별 버튼 옆에 붙이기
+    if(k==='players') return btn + playerFilters;
+    return btn;
+  }).join('');
+
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별')}
-      ${_b2TabBtn('femco','var(--blue)','🧩 펨코현황')}
-      ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
-      ${oldBtn}
-      ${playerFilters}
-      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
+      ${_tabsHtml}
       <span style="flex:1"></span>
       ${rightBtns}
     </div>
@@ -464,7 +501,9 @@ function rBoard2(C, T) {
     setTimeout(()=>{
       try{
         sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
-      }catch(e){}
+      }catch(e){
+        console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
+      }
     }, 0);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
@@ -478,7 +517,9 @@ function rBoard2(C, T) {
           _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
           _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
         }
-      }catch(e){}
+      }catch(e){
+        console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
+      }
     }, 0);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
@@ -777,7 +818,9 @@ function _b2FemcoView() {
       badge = statusHtml
         ? `<span style="position:absolute;top:${_bTop}px;left:${_bLeft}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:${_badgeBg};overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${_badgeInner}</span>`
         : '';
-    }catch(e){}
+    }catch(e){
+      console.warn('[femcoAvatarSquare] 상태 아이콘 생성 실패:', e.message);
+    }
 
     if (img) {
       return `<span style="position:relative;display:block;width:100%;height:100%">
@@ -1197,7 +1240,11 @@ async function _saveB2FemcoInternal(){
   tmpDiv.querySelectorAll('.b2-femco-subnav,.b2-femco-panel,.no-export,.no-export-movebtns').forEach(el => el.remove());
 
   await new Promise(r => setTimeout(r, 120));
-  try{ if (typeof injectUnivIcons === 'function') injectUnivIcons(tmpDiv); }catch(e){}
+  try{
+    if (typeof injectUnivIcons === 'function') injectUnivIcons(tmpDiv);
+  }catch(e){
+    console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
+  }
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
@@ -1445,7 +1492,9 @@ function _b2Avatar(p, col, size) {
   try{
     const chipPx = parseInt(localStorage.getItem('su_bcp_size') || '26', 10);
     mult = Math.max(0.6, Math.min(2.4, chipPx / 26));
-  }catch(e){}
+  }catch(e){
+    console.warn('[_b2Avatar] 아바타 크기 설정 로드 실패:', e.message);
+  }
   const s = Math.round(base * mult);
   const badgeSize = Math.round(s * 0.38);
   const _rawIcon = getStatusIcon(p.name);

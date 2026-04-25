@@ -380,7 +380,7 @@ function openVsShareCard(){
   const raceA=pA?(pA.race==='T'?'테란':pA.race==='Z'?'저그':pA.race==='P'?'프로토스':''):'';
   const raceB=pB?(pB.race==='T'?'테란':pB.race==='Z'?'저그':pB.race==='P'?'프로토스':''):'';
   const ct=t=>t?t.replace(/티어$/,''):'';
-  const tierBadgeVS=(tier,lead)=>tier?`<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(tier)}</span>`:'';
+  const tierBadgeVS=(tier,lead)=>tier?`<span style="background:${getTierBtnColor(tier)||'#64748b'};color:${getTierBtnTextColor(tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(tier)}</span>`:'';
   const raceBadgeVS=race=>race?`<span style="font-size:10px;opacity:.8">${race}</span>`:'';
   const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
   const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);

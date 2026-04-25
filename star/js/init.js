@@ -93,6 +93,8 @@ function init(){
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
   // 🎨 디자인 모드(리뉴얼) 적용
   try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
+  // 🎮 경기 상세 상단 카드 효과(강도/속도)
+  try{ if(typeof window.applyMdCardFxVars === 'function') window.applyMdCardFxVars(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
