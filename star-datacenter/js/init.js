@@ -715,12 +715,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const localPlayers = J('su_p');
     if(localPlayers && localPlayers.length > 0) return;
   }catch(e){}
-  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  console.log('[자동 불러오기] 로컬 데이터 없음 → 기본 data.json 로드 시도');
+  // (중요) 프리뷰/오프라인 환경에서는 GitHub/프록시 호출이 막힐 수 있어
+  // 프로젝트에 포함된 data.json을 최우선으로 시도한다.
+  const _LOCAL = 'data.json';
   const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
   const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
   const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
-  const urls = [_RAW, _CDN, _API, _PROXY];
+  const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
   gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
   for(const url of urls){

@@ -360,7 +360,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - 기존 키/로직은 유지하고, 메뉴/동선만 통합해서 찾기 쉽게 만든다.
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','si','paste'],
-  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail'],
+  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail','univlogoimg'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardtabs','boardchip','oldbright','boardbg'],
   '🎨 디자인/테마':['designv2','hdr','appfont','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
@@ -2407,7 +2407,18 @@ window.cfgSearchSettings = function(q){
       const id=el.getAttribute('data-cfg-sec')||'';
       const t = (window._cfgSecTitle && window._cfgSecTitle[id]) ? String(window._cfgSecTitle[id]) : id;
       const plain = t.replace(/<[^>]+>/g,'').replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,'');
-      const hit = id.toLowerCase().includes(qq) || plain.toLowerCase().includes(qq);
+      // (개선) 섹션 제목뿐 아니라 섹션 내부의 세부 설정 문구도 검색되게
+      // - 최초 1회만 innerText를 캐싱해서 성능을 확보
+      let st = el.getAttribute('data-cfg-searchtext');
+      if(!st){
+        try{
+          st = (plain + ' ' + (el.innerText||'')).toLowerCase();
+          el.setAttribute('data-cfg-searchtext', st);
+        }catch(e){
+          st = plain.toLowerCase();
+        }
+      }
+      const hit = id.toLowerCase().includes(qq) || st.includes(qq);
       el.style.display = hit ? '' : 'none';
       if(hit) shown++;
       if(el.tagName==='DETAILS') el.open=false;
@@ -2453,6 +2464,7 @@ function rCfg(C,T){
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
     b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지', pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
+    univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코현황', femcoorder:'🔀 펨코현황 스타대학 순서', boardtabs:'🔀 현황판 탭 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
@@ -2605,6 +2617,10 @@ ${_scfgD('notice','📢 공지 관리')}
         대학 상세 상단(대학색 배경) 효과 사용
       </label>`;
     })()}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <button class="btn btn-w btn-sm" onclick="cfgGo('univlogoimg')">🏫 대학 로고 이미지(URL) 설정</button>
+      <span style="font-size:11px;color:var(--gray-l)">※ 로고는 대학명 옆 아이콘/대학상세/현황판 등에 표시됩니다.</span>
+    </div>
     ${univCfg.map((u,i)=>{
       const isHidden = !!u.hidden;
       const isDissolved = !!u.dissolved;
@@ -2628,6 +2644,29 @@ ${_scfgD('notice','📢 공지 관리')}
       <input type="color" id="nu-c" value="#2563eb" style="width:40px;height:34px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)">
       <button class="btn btn-b" onclick="addUniv()">+ 대학 추가</button>
     </div></details>
+  ${_scfgD('univlogoimg','🏫 대학 로고 이미지(URL)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+      대학명 옆에 표시되는 <b>로고(아이콘) 이미지 URL</b>을 대학별로 지정합니다.<br>
+      • 권장: <code>https://</code>로 시작하는 직접 이미지 링크(png/jpg/webp/svg)<br>
+      • 저장 위치: 로컬 저장소 <code>su_u</code> (대학 설정)
+    </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      ${univCfg.map((u,i)=>{
+        const url=String(u.icon||u.img||'');
+        const disp=url?toHttpsUrl(url):'';
+        return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--white);margin-bottom:8px">
+          <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+          <div style="min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+          ${disp?`<img src="${esc(disp)}" alt="" style="width:28px;height:28px;object-fit:contain;border-radius:6px;background:#fff;border:1px solid var(--border2)" onerror="this.style.display='none'">`
+               :`<div style="width:28px;height:28px;border-radius:6px;background:var(--surface);border:1px dashed var(--border2)"></div>`}
+          <input type="text" value="${esc(url)}" placeholder="https://... (로고 이미지 URL)" style="flex:1;min-width:240px"
+            onblur="const v=this.value.trim(); if(v){univCfg[${i}].icon=toHttpsUrl(v);} else {delete univCfg[${i}].icon;} saveCfg(); if(typeof showToast==='function')showToast('✅ 저장됨');">
+          <button class="btn btn-w btn-xs" onclick="const inp=this.parentElement.querySelector('input'); if(inp) inp.value=''; delete univCfg[${i}].icon; delete univCfg[${i}].img; saveCfg(); if(typeof showToast==='function')showToast('🧹 로고 삭제됨');">삭제</button>
+        </div>`;
+      }).join('')}
+      <div style="font-size:11px;color:var(--gray-l);margin-top:10px">※ URL이 막히면(깨짐/CORS) 다른 이미지 호스팅을 사용해 주세요.</div>
+    </div>
+  </details>
   ${_scfgD('maps','🗺️ 맵 관리')}<div id="map-list">
     ${maps.map((m,i)=>`<div class="srow">
       <span style="font-size:14px">📍</span>
