@@ -93,8 +93,6 @@ function init(){
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
   // 🎨 디자인 모드(리뉴얼) 적용
   try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
-  // 🎮 경기 상세 상단 카드 효과(강도/속도)
-  try{ if(typeof window.applyMdCardFxVars === 'function') window.applyMdCardFxVars(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -711,17 +709,24 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
-    const localPlayers = J('su_p');
-    if(localPlayers && localPlayers.length > 0) return;
+    // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
+    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
+    if(hasRecordKeys) return;
+    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
+    const localPlayers = (typeof J==='function') ? J('su_p') : null;
+    const ok = Array.isArray(localPlayers)
+      ? localPlayers.length>0
+      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
+    if(ok) return;
   }catch(e){}
-  console.log('[자동 불러오기] 로컬 데이터 없음 → 기본 data.json 로드 시도');
-  // (중요) 프리뷰/오프라인 환경에서는 GitHub/프록시 호출이 막힐 수 있어
-  // 프로젝트에 포함된 data.json을 최우선으로 시도한다.
+  console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  // (복구) 번들에 포함된 data.json을 최우선으로 시도
   const _LOCAL = 'data.json';
-  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
-  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
-  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  // (수정) 실제 경로: star-datacenter/data.json
+  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
+  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
   const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
   gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');

@@ -361,7 +361,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','si','paste'],
   '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail','univlogoimg'],
-  '🧩 현황판/펨코':['b2femco','femcoorder','boardtabs','boardchip','oldbright','boardbg'],
+  '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '🎨 디자인/테마':['designv2','hdr','appfont','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
@@ -523,7 +523,6 @@ window.cfgSetRecCardSettings = function(){
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
   const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'100',10);
-  const winnerOnly = !!document.getElementById('cfg-rc-winner-only')?.checked;
 
   try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border','full','gradient'].includes(accent)?accent:'none'); }catch(e){}
@@ -533,7 +532,6 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_univ_font_pct', String(Math.max(90,Math.min(150,univFontPct||100)))); }catch(e){}
   try{ localStorage.setItem('su_ym_scale_pct', String(Math.max(80,Math.min(140,ymScalePct||100)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
-  try{ localStorage.setItem('su_rc_winner_only', winnerOnly ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
@@ -1718,34 +1716,6 @@ window.cfgMenuReset = function(){
   _cfgMenuApplyAndRerender({});
 };
 
-// (요청) 애니메이션 효과 설정 제거됨 — 그라데이션(고정) 위주로 정리
-
-// ─────────────────────────────────────────────────────────────
-// 🌈 그라데이션 효과(움직임 ON/OFF)
-// - 대학 상세/스트리머 상세/경기 상세(승리팀) 등에 공통 적용
-// - 실제 그라데이션 모양은 각 렌더링 코드에서 localStorage를 읽어 반영
-// ─────────────────────────────────────────────────────────────
-// (요청) 그라데이션 설정(UI) 제거됨
-
-// ─────────────────────────────────────────────────────────────
-// 🎮 경기 상세 상단 카드 효과: 강도/속도 변수 적용
-// - localStorage: su_md_fx_int(0~1000), su_md_fx_speed(6~30)
-//   * su_md_fx_int는 % 값(0~1000)이며, CSS 변수(--md_fx_int)는 0.0~10.0 스케일로 변환됩니다.
-// ─────────────────────────────────────────────────────────────
-function applyMdCardFxVars(){
-  try{
-    const doc=document.documentElement;
-    // 체감이 약하다는 피드백이 많아서 기본값/커브를 "눈에 띄게" 조정
-    const intPct = Math.max(0, Math.min(1000, parseInt(localStorage.getItem('su_md_fx_int')||'200',10)||200));
-    const spd = Math.max(6, Math.min(30, parseInt(localStorage.getItem('su_md_fx_speed')||'6',10)||6));
-    const raw = intPct / 100; // 0~10
-    doc.style.setProperty('--md_fx_int', String(raw));
-    doc.style.setProperty('--md_fx_speed', spd+'s');
-  }catch(e){}
-}
-window.applyMdCardFxVars = applyMdCardFxVars;
-try{ applyMdCardFxVars(); }catch(e){}
-
 // (요청사항) 설정 상단 "바로가기" UI 제거됨.
 
 // closest()/matches()/includes() 미지원 환경 대비: 상위로 올라가며 data-attr 탐색
@@ -1834,128 +1804,6 @@ try{
   window._cfgFemcoLoad = _cfgFemcoLoad;
   window._cfgFemcoSave = _cfgFemcoSave;
 }catch(e){}
-
-// ─────────────────────────────────────────────────────────────
-// 🔀 현황판 탭(펨코현황 포함) 순서 변경
-// - localStorage: b2_tab_order_v1 (JSON 배열)
-// - 적용 대상(현황판 탭 상단): univ, femco, free, old, players
-// ─────────────────────────────────────────────────────────────
-const _CFG_B2_TAB_ORDER_KEY = 'b2_tab_order_v1';
-const _CFG_B2_TAB_ORDER_DEFAULT = ['univ','femco','free','old','players'];
-function _cfgB2TabOrderLoad(){
-  try{
-    if(typeof window._b2LoadTabOrder==='function') return window._b2LoadTabOrder();
-    const raw = localStorage.getItem(_CFG_B2_TAB_ORDER_KEY);
-    const arr = raw ? JSON.parse(raw) : null;
-    const allowed = new Set(_CFG_B2_TAB_ORDER_DEFAULT);
-    let out = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(x=>allowed.has(x)) : [];
-    out = [...new Set(out)];
-    for(const k of _CFG_B2_TAB_ORDER_DEFAULT){ if(out.indexOf(k)===-1) out.push(k); }
-    return out;
-  }catch(e){
-    return _CFG_B2_TAB_ORDER_DEFAULT.slice();
-  }
-}
-function _cfgB2TabOrderSave(arr){
-  try{ localStorage.setItem(_CFG_B2_TAB_ORDER_KEY, JSON.stringify(arr)); }catch(e){}
-}
-window.cfgB2TabOrderReset = function(){
-  _cfgB2TabOrderSave(_CFG_B2_TAB_ORDER_DEFAULT.slice());
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
-};
-window.cfgB2TabOrderMove = function(key, dir){
-  const arr=_cfgB2TabOrderLoad().slice();
-  const i=arr.indexOf(key);
-  if(i<0) return;
-  const j=i+dir;
-  if(j<0 || j>=arr.length) return;
-  const tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
-  _cfgB2TabOrderSave(arr);
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
-};
-window.cfgB2TabOrderRender = function(){
-  const wrap=document.getElementById('cfg-b2tab-order');
-  if(!wrap) return;
-  const arr=_cfgB2TabOrderLoad();
-  const label={
-    univ:'🏟️ 대학별',
-    femco:'🧩 펨코현황',
-    free:'🚶 무소속',
-    old:'📊 구현황판(관리자)',
-    players:'👤 이미지별'
-  };
-  wrap.innerHTML = arr.map((k,idx)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:8px">
-      <div style="flex:1;font-size:13px;font-weight:900;color:var(--text2)">${label[k]||k}</div>
-      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgB2TabOrderMove('${k}',-1)" ${idx===0?'disabled':''}>⬆️</button>
-      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgB2TabOrderMove('${k}', 1)" ${idx===arr.length-1?'disabled':''}>⬇️</button>
-    </div>
-  `).join('');
-};
-
-// ─────────────────────────────────────────────────────────────
-// 🧩 펨코현황: 스타대학(대학 카드) 순서 변경
-// - localStorage: b2_femco_univ_order_v1 (대학명 배열)
-// ─────────────────────────────────────────────────────────────
-const _CFG_FEMCO_UNIV_ORDER_KEY = 'b2_femco_univ_order_v1';
-function _cfgFemcoUnivNames(){
-  try{
-    // univCfg 기준 + (무소속이 실제로 존재하면 포함)
-    const names=(typeof univCfg!=='undefined' ? (univCfg||[]).map(u=>u && u.name).filter(Boolean) : []);
-    const hasFree = (typeof players!=='undefined' && (players||[]).some(p=>p && p.univ==='무소속'));
-    if(hasFree && names.indexOf('무소속')===-1) names.push('무소속');
-    return names;
-  }catch(e){ return []; }
-}
-function _cfgFemcoUnivOrderLoad(){
-  try{
-    const raw=localStorage.getItem(_CFG_FEMCO_UNIV_ORDER_KEY);
-    const arr=raw?JSON.parse(raw):null;
-    const base=_cfgFemcoUnivNames();
-    const allowed=new Set(base);
-    let out = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(x=>allowed.has(x)) : [];
-    out=[...new Set(out)];
-    for(const n of base){ if(out.indexOf(n)===-1) out.push(n); }
-    return out;
-  }catch(e){
-    return _cfgFemcoUnivNames();
-  }
-}
-function _cfgFemcoUnivOrderSave(arr){
-  try{ localStorage.setItem(_CFG_FEMCO_UNIV_ORDER_KEY, JSON.stringify(arr)); }catch(e){}
-}
-window.cfgFemcoUnivOrderReset = function(){
-  _cfgFemcoUnivOrderSave(_cfgFemcoUnivNames());
-  try{ if(typeof window.cfgFemcoUnivOrderRender==='function') window.cfgFemcoUnivOrderRender(); }catch(e){}
-  try{ if(typeof showToast==='function') showToast('✅ 펨코현황 대학 순서를 기본값으로 되돌렸습니다'); }catch(e){}
-};
-window.cfgFemcoUnivOrderMove = function(name, dir){
-  const arr=_cfgFemcoUnivOrderLoad().slice();
-  const i=arr.indexOf(name);
-  if(i<0) return;
-  const j=i+dir;
-  if(j<0||j>=arr.length) return;
-  const tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
-  _cfgFemcoUnivOrderSave(arr);
-  try{ if(typeof window.cfgFemcoUnivOrderRender==='function') window.cfgFemcoUnivOrderRender(); }catch(e){}
-  try{ if(typeof showToast==='function') showToast('✅ 저장됨'); }catch(e){}
-};
-window.cfgFemcoUnivOrderRender = function(){
-  const wrap=document.getElementById('cfg-femco-univ-order');
-  if(!wrap) return;
-  const arr=_cfgFemcoUnivOrderLoad();
-  const escQ = (s)=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  wrap.innerHTML = arr.map((n,idx)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:8px">
-      <div class="cdot" style="background:${(typeof gc==='function')?gc(n):'#64748b'}"></div>
-      <div style="flex:1;font-size:13px;font-weight:900;color:var(--text2)">${n}</div>
-      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgFemcoUnivOrderMove('${escQ(n)}',-1)" ${idx===0?'disabled':''}>⬆️</button>
-      <button class="btn btn-w btn-xs" style="padding:6px 10px" onclick="cfgFemcoUnivOrderMove('${escQ(n)}', 1)" ${idx===arr.length-1?'disabled':''}>⬇️</button>
-    </div>
-  `).join('');
-};
 
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
@@ -2387,6 +2235,26 @@ window._cfgApplyCat = _cfgApplyCat;
 window.cfgGo = function(secId){ return _cfgGo(secId); };
 // (요청사항) 카테고리 클릭 시 해당 카테고리 "메뉴만" 보여주고 자동으로 모달을 띄우지 않음
 window.cfgApplyCat = function(cat){ return _cfgApplyCat(cat, false); };
+// 펨코스타일/신현황판 대학 순서 이동
+// - 인라인 onclick에서 univCfg 직접 참조가 환경에 따라 막히는 경우가 있어(전역 let 바인딩 이슈),
+//   전용 핸들러로 분리해 안정적으로 동작하게 한다.
+window.cfgUnivOrderMove = function(i, dir){
+  try{
+    i = parseInt(i, 10);
+    if(isNaN(i)) return;
+    const j = i + (dir==='up' ? -1 : 1);
+    if(!Array.isArray(univCfg)) return;
+    if(j < 0 || j >= univCfg.length) return;
+    const tmp = univCfg[i];
+    univCfg[i] = univCfg[j];
+    univCfg[j] = tmp;
+    try{ if(typeof saveCfg==='function') saveCfg(); else if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+    try{ if(typeof showToast==='function') showToast('✅ 순서 저장됨'); }catch(e){}
+  }catch(e){
+    try{ console.error('[cfgUnivOrderMove] failed', e); }catch(_){}
+  }
+};
 // 설정 검색(섹션 필터)
 window.cfgSearchSettings = function(q){
   window._cfgSearchQ = String(q||'').trim();
@@ -2454,7 +2322,7 @@ function rCfg(C,T){
   const _cfgCatDesc={
     '🧩 운영/콘텐츠':'공지/티어/시즌/대학/맵/자동인식',
     '🖼️ 이미지/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)',
-    '🧩 현황판/펨코':'현황판/펨코현황/칩/밝기/배경',
+    '🧩 현황판/펨코':'신현황판/펨코스타일/순서/칩/밝기/배경',
     '🎨 디자인/테마':'디자인모드/헤더/폰트/카드/캘린더',
     '🧠 자동화/도구':'BGM/멀티뷰/붙여넣기 분리/자동 맞춤',
     '🧪 고급/점검':'메뉴정리/저장소/설정 점검',
@@ -2465,7 +2333,7 @@ function rCfg(C,T){
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🧩 SI', paste:'🤖 자동인식',
     b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지', pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
-    b2femco:'🧩 펨코현황', femcoorder:'🔀 펨코현황 스타대학 순서', boardtabs:'🔀 현황판 탭 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
+    b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
@@ -2609,17 +2477,9 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${_scfgD('univ','🏛️ 대학 관리')}
     <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">👁️ 숨김 처리된 대학은 비로그인 상태에서 현황판에 표시되지 않습니다.</div>
-    ${(()=>{
-      const on = (localStorage.getItem('su_univ_hdr_fx') ?? '1') === '1';
-      return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px">
-        <input type="checkbox" style="width:16px;height:16px" ${on?'checked':''}
-          onchange="localStorage.setItem('su_univ_hdr_fx', this.checked?'1':'0'); try{if(typeof render==='function')render();}catch(e){}">
-        대학 상세 상단(대학색 배경) 효과 사용
-      </label>`;
-    })()}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
       <button class="btn btn-w btn-sm" onclick="cfgGo('univlogoimg')">🏫 대학 로고 이미지(URL) 설정</button>
-      <span style="font-size:11px;color:var(--gray-l)">※ 로고는 대학명 옆 아이콘/대학상세/현황판 등에 표시됩니다.</span>
+      <span style="font-size:11px;color:var(--gray-l)">※ 대학명 옆 로고(아이콘) 표시용</span>
     </div>
     ${univCfg.map((u,i)=>{
       const isHidden = !!u.hidden;
@@ -2647,8 +2507,7 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('univlogoimg','🏫 대학 로고 이미지(URL)')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
       대학명 옆에 표시되는 <b>로고(아이콘) 이미지 URL</b>을 대학별로 지정합니다.<br>
-      • 권장: <code>https://</code>로 시작하는 직접 이미지 링크(png/jpg/webp/svg)<br>
-      • 저장 위치: 로컬 저장소 <code>su_u</code> (대학 설정)
+      권장: <code>https://</code>로 시작하는 직접 이미지 링크(png/jpg/webp/svg)
     </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       ${univCfg.map((u,i)=>{
@@ -3070,12 +2929,6 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
-
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-winner-only" style="width:15px;height:15px" ${(localStorage.getItem('su_rc_winner_only')||'0')==='1'?'checked':''} onchange="cfgSetRecCardSettings()">
-        기록 카드에서 ‘승리자(승리 대학)’만 표시
-      </label>
-      <div style="font-size:11px;color:var(--gray-l)">※ 무승부는 예외로 기존처럼 양쪽이 표시됩니다. 상세(📂)를 열면 전체 정보는 그대로 볼 수 있습니다.</div>
     </div>
   </details>
   ${(()=>{ 
@@ -3914,12 +3767,29 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveB2LayoutSettings()" style="align-self:flex-start">💾 레이아웃 저장</button>
     </div>
   </details>
-  ${_scfgD('b2femco','🧩 펨코현황 설정')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 &gt; 펨코현황판에서 사용하는 전용 설정입니다. 저장 즉시 반영됩니다.</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-      <button class="btn btn-w btn-sm" onclick="cfgGo('femcoorder')">🔀 스타대학 순서 변경</button>
-      <span style="font-size:11px;color:var(--gray-l)">※ 스타대학(대학 카드) 순서는 별도 메뉴로 분리했습니다.</span>
+  ${_scfgD('femcoorder','🔀 펨코스타일 스타대학 순서')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+      <b>펨코스타일</b> 및 <b>대학별 신현황판</b>에서 대학이 표시되는 순서(= <code>univCfg</code> 순서)를 조정합니다.<br>
+      ※ 순서 변경 즉시 저장되며, 현황판에 바로 반영됩니다.
     </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      ${univCfg.map((u,i)=>`
+        <div class="srow" style="gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+          <div style="flex:1;min-width:140px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-w btn-xs" ${i===0?'disabled style="opacity:.35;cursor:not-allowed"':''}
+              onclick="cfgUnivOrderMove(${i},'up')">▲</button>
+            <button class="btn btn-w btn-xs" ${i===univCfg.length-1?'disabled style="opacity:.35;cursor:not-allowed"':''}
+              onclick="cfgUnivOrderMove(${i},'down')">▼</button>
+          </div>
+        </div>
+      `).join('')}
+      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">팁: ‘대학 관리’에서 대학명/색상도 함께 수정할 수 있습니다.</div>
+    </div>
+  </details>
+  ${_scfgD('b2femco','🧩 펨코스타일 설정')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 &gt; <b>펨코스타일</b> 탭에서 사용하는 전용 설정입니다. 저장 즉시 반영됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
@@ -4360,28 +4230,6 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
-  ${_scfgD('boardtabs','🔀 현황판 탭(펨코현황) 순서 변경')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
-      현황판 탭 상단 버튼(🏟️ 대학별 / 🧩 펨코현황 / 🚶 무소속 / 📊 구현황판 / 👤 이미지별)의 <b>표시 순서</b>를 바꿉니다.
-    </div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div id="cfg-b2tab-order"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button class="btn btn-w btn-sm" onclick="cfgB2TabOrderReset()">기본 순서로</button>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">※ 적용은 즉시 저장되며, 현황판 화면을 다시 열면 반영됩니다.</div>
-    </div>
-  </details>
-  ${_scfgD('femcoorder','🔀 펨코현황 스타대학(대학 카드) 순서')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">현황판 &gt; 🧩 펨코현황 화면에서 보이는 <b>대학 카드(스타대학)</b>의 순서를 바꿉니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <button class="btn btn-w btn-sm" onclick="cfgFemcoUnivOrderReset()">기본 순서로</button>
-        <span style="font-size:11px;color:var(--gray-l)">※ ⬆️/⬇️로 순서 변경하면 즉시 저장됩니다.</span>
-      </div>
-      <div id="cfg-femco-univ-order"></div>
-    </div>
-  </details>
   ${_scfgD('boardchip','🏷️ 현황판 칩/대학로고 크기')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">현황판 칩/대학 로고 관련 설정입니다. <b>스트리머 프로필 이미지 전역 배율</b>과는 별개로 동작합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
@@ -4451,8 +4299,6 @@ ${_scfgD('notice','📢 공지 관리')}
     if(typeof _renderCfgSiList==='function') _renderCfgSiList();
     renderStorageInfo();
     renderSeasonList();
-    try{ if(typeof window.cfgB2TabOrderRender==='function') window.cfgB2TabOrderRender(); }catch(e){}
-    try{ if(typeof window.cfgFemcoUnivOrderRender==='function') window.cfgFemcoUnivOrderRender(); }catch(e){}
     const el=document.getElementById('adm-count');
     const listEl=document.getElementById('adm-list');
     const accounts=getAdminAccounts();
@@ -6172,7 +6018,6 @@ function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');
   if(!body) return;
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  const pdHdrFx = (()=>{ try{ return (localStorage.getItem('su_pd_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
   const fs=s.font_size||'normal';
   const cp=s.color_preset||'normal';
   const st=s.stats_tint!==undefined?s.stats_tint:8;
@@ -6210,14 +6055,6 @@ function _renderCfgPdSection(){
     </div>`;
   }).join('');
   body.innerHTML=`
-    <div style="margin-bottom:16px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:800;color:var(--text2)">
-        <input type="checkbox" style="width:16px;height:16px" ${pdHdrFx?'checked':''}
-          onchange="localStorage.setItem('su_pd_hdr_fx', this.checked?'1':'0'); try{if(typeof render==='function')render();}catch(e){}; _renderCfgPdSection()">
-        스트리머 상세 상단(소속 대학색 배경) 효과 사용
-      </label>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">끄면 상단 배경이 고정됩니다.</div>
-    </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
@@ -6341,11 +6178,6 @@ function _renderCfgMatchDetailSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
-  const mdWinGradOnly = (()=>{ try{ return (localStorage.getItem('su_md_win_grad_only')||'1')==='1'; }catch(e){ return true; } })();
-  const mdFx = (()=>{ try{ return (localStorage.getItem('su_md_card_fx')||'move').trim(); }catch(e){ return 'move'; } })();
-  const mdFxTarget = (()=>{ try{ return (localStorage.getItem('su_md_fx_target')|| (mdWinGradOnly?'winner':'both')).trim(); }catch(e){ return mdWinGradOnly?'winner':'both'; } })();
-  const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'200',10);}catch(e){return 200;} })();
-  const mdFxSpeed = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_speed')||'6',10);}catch(e){return 6;} })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
@@ -6360,65 +6192,6 @@ function _renderCfgMatchDetailSection(){
         <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
         <span id="cfg-md2-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">✨ 상단 대학 카드 효과</div>
-      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">효과 종류</div>
-          <select style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px"
-            onchange="localStorage.setItem('su_md_card_fx', this.value); try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
-            <option value="off" ${mdFx==='off'?'selected':''}>OFF (없음)</option>
-            <option value="move" ${mdFx==='move'?'selected':''}>Move (배경 이동)</option>
-            <option value="sheen" ${mdFx==='sheen'?'selected':''}>Sheen (광택 스윕)</option>
-            <option value="sparkle" ${mdFx==='sparkle'?'selected':''}>Sparkle (스파클)</option>
-            <option value="glow" ${mdFx==='glow'?'selected':''}>Glow (은은 글로우)</option>
-            <option value="mix" ${mdFx==='mix'?'selected':''}>Mix (이동+광택)</option>
-            <option value="border" ${mdFx==='border'?'selected':''}>Border (테두리 펄스)</option>
-            <option value="wave" ${mdFx==='wave'?'selected':''}>Wave (물결 하이라이트)</option>
-            <option value="ripple" ${mdFx==='ripple'?'selected':''}>Ripple (물결 링)</option>
-            <option value="aurora" ${mdFx==='aurora'?'selected':''}>Aurora (오로라)</option>
-            <option value="scan" ${mdFx==='scan'?'selected':''}>Scan (스캔 라인)</option>
-            <option value="neon" ${mdFx==='neon'?'selected':''}>Neon (네온 글로우)</option>
-            <option value="rainbow" ${mdFx==='rainbow'?'selected':''}>Rainbow (무지개)</option>
-            <option value="glitch" ${mdFx==='glitch'?'selected':''}>Glitch (글리치)</option>
-            <option value="confetti" ${mdFx==='confetti'?'selected':''}>Confetti (컨페티)</option>
-            <option value="fire" ${mdFx==='fire'?'selected':''}>Fire (불꽃)</option>
-            <option value="frost" ${mdFx==='frost'?'selected':''}>Frost (서리)</option>
-            <option value="matrix" ${mdFx==='matrix'?'selected':''}>Matrix (매트릭스)</option>
-            <option value="vortex" ${mdFx==='vortex'?'selected':''}>Vortex (소용돌이)</option>
-            <option value="prism" ${mdFx==='prism'?'selected':''}>Prism (프리즘)</option>
-            <option value="plasma" ${mdFx==='plasma'?'selected':''}>Plasma (플라즈마)</option>
-            <option value="strobe" ${mdFx==='strobe'?'selected':''}>Strobe (번쩍)</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">적용 대상</div>
-          <select style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px"
-            onchange="localStorage.setItem('su_md_fx_target', this.value); localStorage.setItem('su_md_win_grad_only', this.value==='winner'?'1':'0'); try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
-            <option value="none" ${mdFxTarget==='none'?'selected':''}>없음</option>
-            <option value="winner" ${mdFxTarget!=='none' && mdWinGradOnly?'selected':''}>승리팀만</option>
-            <option value="both" ${mdFxTarget!=='none' && !mdWinGradOnly?'selected':''}>양쪽 모두</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">강도</div>
-          <input type="range" min="0" max="1000" step="10" value="${Math.max(0,Math.min(1000,mdFxInt||0))}" style="flex:1;min-width:180px;accent-color:var(--blue)"
-            oninput="localStorage.setItem('su_md_fx_int', String(this.value)); document.getElementById('cfg-md-fx-int-v').textContent=this.value+'%'; try{if(typeof applyMdCardFxVars==='function')applyMdCardFxVars();}catch(e){}">
-          <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:64px;text-align:right"><span id="cfg-md-fx-int-v">${Math.max(0,Math.min(1000,mdFxInt||0))}%</span></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">속도</div>
-          <input type="range" min="6" max="30" step="1" value="${Math.max(6,Math.min(30,mdFxSpeed||12))}" style="flex:1;min-width:180px;accent-color:var(--blue)"
-            oninput="localStorage.setItem('su_md_fx_speed', String(this.value)); document.getElementById('cfg-md-fx-spd-v').textContent=this.value+'s'; try{if(typeof applyMdCardFxVars==='function')applyMdCardFxVars();}catch(e){}">
-          <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:52px;text-align:right"><span id="cfg-md-fx-spd-v">${Math.max(6,Math.min(30,mdFxSpeed||12))}s</span></div>
-        </div>
-        <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-          • 승리팀만: 패배팀은 단색 처리 + 효과는 승리팀에만 적용<br>
-          • 양쪽 모두: 양쪽 모두 동일하게 효과 적용
-        </div>
       </div>
     </div>
 

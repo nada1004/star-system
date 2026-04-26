@@ -470,7 +470,7 @@ function openPlayerHistBulkEdit(playerName){
           ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
           <option value="개인전">개인전</option>
           <option value="프로리그">프로리그</option>
-          <option value="끝장전">끝장전</option>
+          <option value="끝장전">중장전</option>
           <option value="미니대전">미니대전</option>
           <option value="시빌워">시빌워</option>
           <option value="대학대전">대학대전</option>
@@ -963,27 +963,6 @@ function openUnivModal(univName){
   });
 }
 
-// 🌈 대학/공용 그라데이션 배경 헬퍼
-// - (버그픽스) buildUnivDetailHTML에서 _gradBg 참조 시 스코프 밖이라 ReferenceError가 나던 문제 해결
-function _gradBg(hex){
-  try{
-    const _hexToRgb=(h)=>{try{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:99,g:102,b:241}}};
-    const _rgba=(h,a)=>{const {r,g,b}=_hexToRgb(h);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
-    const mode = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
-    const gi = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70))/100;
-    const A=(x)=>Math.max(0,Math.min(1,x*gi));
-    if(mode==='solid') return `${hex}`;
-    if(mode==='soft') return `linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))} 55%,${_rgba(hex,A(.98))})`;
-    if(mode==='radial') return `radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,A(.92))},${_rgba(hex,A(.70))})`;
-    if(mode==='split') return `linear-gradient(90deg,${_rgba(hex,A(.98))},${_rgba(hex,A(.70))} 45%,${_rgba(hex,A(.98))})`;
-    if(mode==='stripe') return `repeating-linear-gradient(135deg,${_rgba(hex,A(.92))} 0 10px,${_rgba(hex,A(.72))} 10px 20px)`;
-    if(mode==='glass') return `radial-gradient(70% 130% at 20% 0%,${_rgba('#ffffff',A(.22))},transparent 60%), linear-gradient(135deg,${_rgba(hex,A(.90))},${_rgba(hex,A(.68))})`;
-    return `linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))})`;
-  }catch(e){
-    return String(hex||'#6366f1');
-  }
-}
-
 function toggleUnivEdit(){
   window._univEditOpen=!window._univEditOpen;
   const btn=document.getElementById('univEditBtn');
@@ -1161,21 +1140,6 @@ function buildPlayerDetailHTML(p){
   });
 
   const col=gc(p.univ)||'#6366f1';
-  // 🌈 그라데이션(고정/움직임) 공통 함수
-  const _hexToRgb=(h)=>{try{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:99,g:102,b:241}}};
-  const _rgba=(hex,a)=>{const {r,g,b}=_hexToRgb(hex);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
-  const _gradMode = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
-  const _gradInt = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70))/100;
-  const _A=(x)=>Math.max(0,Math.min(1,x*_gradInt));
-  const _gradBg=(hex)=>{
-    if(_gradMode==='solid') return `${hex}`;
-    if(_gradMode==='soft') return `linear-gradient(135deg,${_rgba(hex,_A(.95))},${_rgba(hex,_A(.72))} 55%,${_rgba(hex,_A(.98))})`;
-    if(_gradMode==='radial') return `radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',_A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',_A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,_A(.92))},${_rgba(hex,_A(.70))})`;
-    if(_gradMode==='split') return `linear-gradient(90deg,${_rgba(hex,_A(.98))},${_rgba(hex,_A(.70))} 45%,${_rgba(hex,_A(.98))})`;
-    if(_gradMode==='stripe') return `repeating-linear-gradient(135deg,${_rgba(hex,_A(.92))} 0 10px,${_rgba(hex,_A(.72))} 10px 20px)`;
-    if(_gradMode==='glass') return `radial-gradient(70% 130% at 20% 0%,${_rgba('#ffffff',_A(.22))},transparent 60%), linear-gradient(135deg,${_rgba(hex,_A(.90))},${_rgba(hex,_A(.68))})`;
-    return `linear-gradient(135deg,${_rgba(hex,_A(.95))},${_rgba(hex,_A(.72))})`; // classic
-  };
   const _winC ='#16a34a';
   const _lossC='#dc2626';
   const _pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
@@ -1201,13 +1165,13 @@ function buildPlayerDetailHTML(p){
   let _hdrBg;
   if(_imgUrl){
     const _baseBg=_darken>0
-      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),${_gradBg(col)}`
-      :`${_gradBg(col)}`;
+      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
+      :`linear-gradient(135deg,${col},${col}ee)`;
     _hdrBg=`${_baseBg},url('${_imgUrl}') ${_imgX}px ${_imgY}px / ${_imgZoom}% ${_imgZoom}% ${_imgFill} no-repeat`;
   }else{
     _hdrBg=_darken>0
-      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),${_gradBg(col)}`
-      :`${_gradBg(col)}`;
+      ?`linear-gradient(rgba(0,0,0,${_darken}),rgba(0,0,0,${_darken})),linear-gradient(135deg,${col},${col}ee)`
+      :`linear-gradient(135deg,${col},${col}ee)`;
   }
   const _p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const _statsTint=_pdStyle.stats_tint!==undefined?_pdStyle.stats_tint:8;
@@ -1670,9 +1634,8 @@ function buildPlayerDetailHTML(p){
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   })();
 
-  const _pdHdrFx = (()=>{ try{ return (localStorage.getItem('su_pd_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
   let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div class="su-grad-hero${(_pdHdrFx && !_imgUrl)?' su-grad-motion':''}" style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
+    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
@@ -1685,7 +1648,7 @@ function buildPlayerDetailHTML(p){
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
-              style="background:${col}88;color:#fff;border:1.5px solid ${col}aa;font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:800${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
             ${_channelHTML}
@@ -1909,46 +1872,6 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }
 
-  // ── 맵별 승률 (요청: ‘상대 종족별 전적’ 아래로 이동) ──
-  {
-    const mapStats = {};
-    _modeHist.forEach(h=>{
-      if(!h.map || h.map==='-' || h.map==='') return;
-      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
-      if(h.result==='승') mapStats[h.map].w++;
-      else mapStats[h.map].l++;
-    });
-    const mapList = Object.entries(mapStats)
-      .filter(([,s])=>s.w+s.l>=2)
-      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
-      .slice(0,8);
-    if(mapList.length>=2){
-      const mapCards = mapList.map(([mapName,s])=>{
-        const t=s.w+s.l;
-        const wr=Math.round(s.w/t*100);
-        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
-          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
-          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
-            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px">
-            <span style="color:${barCol};font-weight:800">${wr}%</span>
-            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
-          </div>
-        </div>`;
-      }).join('');
-      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
-          맵별 승률
-          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
-      </div>`;
-    }
-  }
-
   // ── 상대 전적 ──
   {
     if(!window._oppSort) window._oppSort='tot';
@@ -2150,6 +2073,46 @@ function buildPlayerDetailHTML(p){
     h+=`</div>`;
   }
 
+  // ── 맵별 승률 ──
+  {
+    const mapStats = {};
+    _modeHist.forEach(h=>{
+      if(!h.map || h.map==='-' || h.map==='') return;
+      if(!mapStats[h.map]) mapStats[h.map]={w:0,l:0};
+      if(h.result==='승') mapStats[h.map].w++;
+      else mapStats[h.map].l++;
+    });
+    const mapList = Object.entries(mapStats)
+      .filter(([,s])=>s.w+s.l>=2)
+      .sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l))
+      .slice(0,8);
+    if(mapList.length>=2){
+      const mapCards = mapList.map(([mapName,s])=>{
+        const t=s.w+s.l;
+        const wr=Math.round(s.w/t*100);
+        const barCol = wr>=60?'#16a34a':wr>=40?'#f59e0b':'#dc2626';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:80px;flex:1">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mapName}</div>
+          <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:4px">
+            <div style="height:4px;width:${wr}%;background:${barCol};border-radius:2px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:${barCol};font-weight:800">${wr}%</span>
+            <span style="color:var(--gray-l)">${s.w}승${s.l}패</span>
+          </div>
+        </div>`;
+      }).join('');
+      h += `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
+          맵별 승률
+          <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
+      </div>`;
+    }
+  }
+
   // ── 같은 대학 팀원 ──
   if(p.univ && p.univ !== '무소속'){
     const teammates = players.filter(q=>q.univ===p.univ&&q.name!==p.name&&!q.retired);
@@ -2219,8 +2182,7 @@ function buildUnivDetailHTML(univName){
   const wr=tot?Math.round(wins/tot*100):0;
 
   // ── 상단 대학 헤더 카드 ──
-  const _uHdrFx = (()=>{ try{ return (localStorage.getItem('su_univ_hdr_fx') ?? '1') === '1'; }catch(e){ return true; } })();
-  let h=`<div class="su-grad-hero${_uHdrFx?' su-grad-motion':''}" style="background:${_gradBg(col)};border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
+  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
@@ -2391,7 +2353,7 @@ function _mergedSubBar(tabs, curSub, setFn) {
 
 function rMergedInd(C, T) {
   const bar = _mergedSubBar(
-    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
+    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 중장전'}],
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
@@ -2434,7 +2396,7 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 중장전'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
