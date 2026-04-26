@@ -7,6 +7,45 @@ const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
 
 /* ══════════════════════════════════════
+   탭 라벨(표시 이름) 설정
+   - 내부 id는 유지하고 "표시되는 이름만" 설정에서 교체
+   - localStorage: su_tab_labels_v1 (LZString/JSON 모두 지원: J/_lsSave 활용)
+══════════════════════════════════════ */
+const _TAB_LBL_KEY = 'su_tab_labels_v1';
+function getTabLabel(ctx, id, def){
+  try{
+    const m = J(_TAB_LBL_KEY) || {};
+    const v = (m[ctx] && m[ctx][id] != null) ? String(m[ctx][id]) : '';
+    return v ? v : def;
+  }catch(e){
+    return def;
+  }
+}
+function setTabLabel(ctx, id, val){
+  try{
+    const m = J(_TAB_LBL_KEY) || {};
+    m[ctx] = m[ctx] || {};
+    const v = String(val||'').trim();
+    if(!v) delete m[ctx][id];
+    else m[ctx][id] = v;
+    _lsSave(_TAB_LBL_KEY, m);
+  }catch(e){}
+}
+function resetTabLabels(ctx){
+  try{
+    if(!ctx){ localStorage.removeItem(_TAB_LBL_KEY); return; }
+    const m = J(_TAB_LBL_KEY) || {};
+    delete m[ctx];
+    _lsSave(_TAB_LBL_KEY, m);
+  }catch(e){}
+}
+try{
+  window.getTabLabel = getTabLabel;
+  window.setTabLabel = setTabLabel;
+  window.resetTabLabels = resetTabLabels;
+}catch(e){}
+
+/* ══════════════════════════════════════
    스트리머 프로필 이미지 공통 스타일
    - 현황판 칩 프로필 이미지 설정(su_bcp_shape)을 "프로필 이미지 모양"의 기준으로도 사용
    - 인라인 스타일에서도 적용 가능하도록 CSS 변수로 노출

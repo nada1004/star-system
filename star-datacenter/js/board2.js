@@ -436,17 +436,17 @@ function rBoard2(C, T) {
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
   ` : '';
-  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b','📊 구현황판'):'';
+  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
 
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${_b2TabBtn('femco','var(--blue)','🧩 펨코스타일')}
-      ${_b2TabBtn('univ','var(--blue)','🏟️ 대학별 신현황판')}
-      ${_b2TabBtn('free','var(--blue)','🚶 무소속')}
+      ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코스타일'):'🧩 펨코스타일'))}
+      ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별 신현황판'):'🏟️ 대학별 신현황판'))}
+      ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
       ${playerFilters}
-      ${_b2TabBtn('players','var(--purple)',profileTabLabel)}
+      ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
       ${oldBtn}
       <span style="flex:1"></span>
       ${rightBtns}

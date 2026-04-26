@@ -29,6 +29,14 @@ function rHist(C,T){
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
+  // (탭 라벨 설정) 표시 이름만 설정에서 교체 가능
+  try{
+    if(typeof getTabLabel==='function'){
+      tabDefs.forEach(t=>{
+        t.disp = getTabLabel('history', t.id, t.disp||t.lbl);
+      });
+    }
+  }catch(e){}
   // (요청사항) 관리자 전용 외부 자료 탭
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
