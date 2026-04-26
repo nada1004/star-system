@@ -963,6 +963,27 @@ function openUnivModal(univName){
   });
 }
 
+// 🌈 대학/공용 그라데이션 배경 헬퍼
+// - (버그픽스) buildUnivDetailHTML에서 _gradBg 참조 시 스코프 밖이라 ReferenceError가 나던 문제 해결
+function _gradBg(hex){
+  try{
+    const _hexToRgb=(h)=>{try{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:99,g:102,b:241}}};
+    const _rgba=(h,a)=>{const {r,g,b}=_hexToRgb(h);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
+    const mode = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
+    const gi = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70))/100;
+    const A=(x)=>Math.max(0,Math.min(1,x*gi));
+    if(mode==='solid') return `${hex}`;
+    if(mode==='soft') return `linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))} 55%,${_rgba(hex,A(.98))})`;
+    if(mode==='radial') return `radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,A(.92))},${_rgba(hex,A(.70))})`;
+    if(mode==='split') return `linear-gradient(90deg,${_rgba(hex,A(.98))},${_rgba(hex,A(.70))} 45%,${_rgba(hex,A(.98))})`;
+    if(mode==='stripe') return `repeating-linear-gradient(135deg,${_rgba(hex,A(.92))} 0 10px,${_rgba(hex,A(.72))} 10px 20px)`;
+    if(mode==='glass') return `radial-gradient(70% 130% at 20% 0%,${_rgba('#ffffff',A(.22))},transparent 60%), linear-gradient(135deg,${_rgba(hex,A(.90))},${_rgba(hex,A(.68))})`;
+    return `linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))})`;
+  }catch(e){
+    return String(hex||'#6366f1');
+  }
+}
+
 function toggleUnivEdit(){
   window._univEditOpen=!window._univEditOpen;
   const btn=document.getElementById('univEditBtn');

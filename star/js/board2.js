@@ -635,8 +635,31 @@ function _b2FemcoView() {
   const univList = _b2VisUnivs().filter(u => u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
 
-  // univCfg 순서로 정렬 (없으면 이름순)
-  if (typeof univCfg !== 'undefined' && univCfg.length) {
+  // (요청) 펨코현황 "스타대학 카드" 순서: 설정 탭에서 조절 가능
+  // - localStorage: b2_femco_univ_order_v1 (대학명 배열)
+  const _femcoOrder = (()=>{ try{ return JSON.parse(localStorage.getItem('b2_femco_univ_order_v1')||'null'); }catch(e){ return null; } })();
+  const _femcoOrderArr = Array.isArray(_femcoOrder) ? _femcoOrder.map(x=>String(x||'').trim()).filter(Boolean) : [];
+  const _idxIn = (arr, name)=>{
+    const i = arr.indexOf(name);
+    return i>=0 ? i : 99999;
+  };
+  // 정렬 우선순위:
+  // 1) b2_femco_univ_order_v1에 있으면 그 순서
+  // 2) 없으면 univCfg 순서
+  // 3) 둘 다 없으면 이름순
+  if (_femcoOrderArr.length) {
+    univList.sort((a,b)=>{
+      const oa=_idxIn(_femcoOrderArr, a.name);
+      const ob=_idxIn(_femcoOrderArr, b.name);
+      if(oa!==ob) return oa-ob;
+      if (typeof univCfg !== 'undefined' && univCfg.length) {
+        const ia = univCfg.findIndex(u => u.name === a.name);
+        const ib = univCfg.findIndex(u => u.name === b.name);
+        if(ia!==ib) return (ia>=0?ia:999)-(ib>=0?ib:999);
+      }
+      return (a.name||'').localeCompare(b.name||'');
+    });
+  } else if (typeof univCfg !== 'undefined' && univCfg.length) {
     univList.sort((a, b) => {
       const ia = univCfg.findIndex(u => u.name === a.name);
       const ib = univCfg.findIndex(u => u.name === b.name);
