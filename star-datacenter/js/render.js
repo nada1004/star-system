@@ -257,6 +257,9 @@ function openPlayerModal(name){
 function openEPFromModal(nameArg) {
   const name = nameArg || window._playerModalCurrentName;
   if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
+  // (버그픽스) 스트리머 상세(playerModal) 위에서 수정창(emModal)이 가려지는 환경이 있음
+  // → 수정창을 열기 전에 상세 모달을 먼저 닫아 레이어 문제를 원천 차단
+  try{ if(typeof cm==='function') cm('playerModal'); }catch(e){}
   if (typeof openEP !== 'function') {
     // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
     let attempts = 0;
@@ -264,7 +267,7 @@ function openEPFromModal(nameArg) {
       attempts++;
       if (typeof openEP === 'function') {
         clearInterval(checkOpenEP);
-        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+        try { setTimeout(()=>openEP(name), 50); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
       } else if (attempts >= 20) {
         clearInterval(checkOpenEP);
         alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
@@ -272,7 +275,7 @@ function openEPFromModal(nameArg) {
     }, 200);
     return;
   }
-  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+  try { setTimeout(()=>openEP(name), 50); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
@@ -2157,6 +2160,9 @@ function buildPlayerDetailHTML(p){
 function buildUnivDetailHTML(univName){
   const col=gc(univName);
   const members=getMembers(univName);
+  const _logoSize = (typeof getUnivLogoSizeStr==='function')
+    ? getUnivLogoSizeStr(univName, 'detail', 'var(--su_univ_logo_size_detail,46px)')
+    : 'var(--su_univ_logo_size_detail,46px)';
   const oppStats={};
   function addOpp(myU,oppU,myWin){
     if(myU!==univName)return;
@@ -2187,7 +2193,7 @@ function buildUnivDetailHTML(univName){
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
       <div style="width:var(--su_univ_logo_box_detail,72px);height:var(--su_univ_logo_box_detail,72px);border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
-        ${gUI(univName,'var(--su_univ_logo_size_detail,46px)')}
+        ${gUI(univName,_logoSize)}
       </div>
       <div>
         <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">

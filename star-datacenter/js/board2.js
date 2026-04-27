@@ -1735,9 +1735,9 @@ function _b2CrewView() {
     // 로고 (클릭 → 상세)
     h += '<div style="position:relative;cursor:pointer;flex-shrink:0" onclick="openCrewDetailModal(\'' + safeName + '\')" title="크루 상세보기">';
     if (c.logo) {
-      h += '<img src="' + c.logo + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\'none\'">';
+      h += '<img src="' + c.logo + '" style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\\\'none\\\'">';
     } else {
-      h += '<div style="width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name || '?')[0] + '</div>';
+      h += '<div style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name || '?')[0] + '</div>';
     }
     h += '</div>';
     // 이름 (클릭 → 상세)
@@ -1854,7 +1854,7 @@ function _b2CrewListView(cfg, crewArr, scPlayers) {
 
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40">';
     h += '<div style="padding:10px 16px;background:' + col + labelAlpha + ';display:flex;align-items:center;gap:8px">';
-    if (c.logo) h += '<img src="' + c.logo + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid #fff8" onerror="this.style.display=\'none\'">';
+    if (c.logo) h += '<img src="' + c.logo + '" style="width:24px;height:24px;border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:1.5px solid #fff8" onerror="this.style.display=\'none\'">';
     h += '<span style="font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 3px #0005">' + c.name + '</span>';
     h += '<span style="font-size:11px;color:#ffffffbb">' + allMembers.length + '명</span>';
     h += '</div>';
@@ -1959,9 +1959,9 @@ function openCrewDetailModal(crewName) {
   html += '<div style="position:relative;padding:22px 20px;' + bgStyle + 'display:flex;align-items:center;gap:14px">';
   html += overlay;
   if (c.logo) {
-    html += '<img src="' + c.logo + '" style="position:relative;width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fffb;flex-shrink:0;box-shadow:0 2px 12px #0004" onerror="this.style.display=\'none\'">';
+    html += '<img src="' + c.logo + '" style="position:relative;width:64px;height:64px;border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:3px solid #fffb;flex-shrink:0;box-shadow:0 2px 12px #0004" onerror="this.style.display=\'none\'">';
   } else {
-    html += '<div style="position:relative;width:64px;height:64px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border:3px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+    html += '<div style="position:relative;width:64px;height:64px;border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border:3px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
   }
   html += '<div style="position:relative;flex:1;min-width:0">';
   html += '<div style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 1px 6px #0008;margin-bottom:2px">' + c.name + '</div>';
@@ -2036,9 +2036,9 @@ async function saveCrewImg(target, btn) {
     innerHtml += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
     innerHtml += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'display:flex;align-items:center;gap:12px">' + overlay;
     if (c.logo) {
-      innerHtml += '<img src="' + c.logo + '" style="position:relative;width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8;flex-shrink:0">';
+      innerHtml += '<img src="' + c.logo + '" style="position:relative;width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8;flex-shrink:0">';
     } else {
-      innerHtml += '<div style="position:relative;width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+      innerHtml += '<div style="position:relative;width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
     }
     innerHtml += '<div style="position:relative;flex:1"><div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px #0006">' + c.name + '</div>';
     if (c.desc) innerHtml += '<div style="font-size:11px;color:#ffffffcc">' + c.desc + '</div>';
@@ -2414,9 +2414,9 @@ function _b2GameView() {
     h += overlay;
     h += '<div style="position:relative;flex-shrink:0">';
     if (c.logo) {
-      h += '<img src="' + c.logo + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\'none\'">';
+      h += '<img src="' + c.logo + '" style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\\\'none\\\'">';
     } else {
-      h += '<div style="width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name||'?')[0] + '</div>';
+      h += '<div style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name||'?')[0] + '</div>';
     }
     h += '</div>';
     h += '<div style="position:relative;flex:1;min-width:0">';

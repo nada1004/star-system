@@ -73,13 +73,16 @@ function applyUnivLogoVars(){
     const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
     const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
     const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
+    // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
+    const dSize = parseInt(localStorage.getItem('su_ul_size_detail') || String(size), 10);
+    const dBox  = parseInt(localStorage.getItem('su_ul_box_detail')  || String(box), 10);
     const radius = (shape === 'square') ? '10px' : '50%';
     document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
     document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
     document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
-    // 대학 상세(모달)용 (요청: 카드 로고 이미지 크기 조정이 그대로 반영되게)
-    document.documentElement.style.setProperty('--su_univ_logo_size_detail', size + 'px');
-    document.documentElement.style.setProperty('--su_univ_logo_box_detail', box + 'px');
+    // 대학 상세(모달)용
+    document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box_detail', dBox + 'px');
   }catch(e){
     console.warn('[applyUnivLogoVars] CSS 변수 설정 실패:', e.message);
   }
@@ -87,6 +90,38 @@ function applyUnivLogoVars(){
 try{ applyUnivLogoVars(); }catch(e){
   console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
 }
+
+/* ══════════════════════════════════════
+   현황판(board2) 대학 로고 크기
+══════════════════════════════════════ */
+function applyBoard2LogoVars(){
+  try{
+    const px = parseInt(localStorage.getItem('su_b2_univ_logo_size') || '42', 10);
+    const v = Math.max(24, Math.min(80, isNaN(px) ? 42 : px));
+    document.documentElement.style.setProperty('--su_b2_univ_logo_size', v + 'px');
+  }catch(e){
+    console.warn('[applyBoard2LogoVars] CSS 변수 설정 실패:', e.message);
+  }
+}
+try{ applyBoard2LogoVars(); }catch(e){}
+
+/* ══════════════════════════════════════
+   대학별 로고 크기(대학상세/스트리머탭)
+   - univCfg에 대학별로 저장:
+     * logoSizeDetail  (대학 상세 모달 로고 크기)
+     * logoSizePlayers (스트리머탭(전체) 대학 로고 크기)
+══════════════════════════════════════ */
+function getUnivLogoSizeStr(univName, ctx, fallback){
+  try{
+    const u = (univCfg||[]).find(x=>x && x.name===univName) || null;
+    if(u){
+      if(ctx==='detail' && u.logoSizeDetail)  return String(parseInt(u.logoSizeDetail,10))+'px';
+      if(ctx==='players' && u.logoSizePlayers) return String(parseInt(u.logoSizePlayers,10))+'px';
+    }
+  }catch(e){}
+  return fallback;
+}
+try{ window.getUnivLogoSizeStr = getUnivLogoSizeStr; }catch(e){}
 
 /* ══════════════════════════════════════
    경기 상세(팝업) 승/패 배경 강도 설정
