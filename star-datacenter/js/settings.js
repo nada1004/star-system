@@ -2248,7 +2248,14 @@ window.cfgUnivOrderMove = function(i, dir){
     const tmp = univCfg[i];
     univCfg[i] = univCfg[j];
     univCfg[j] = tmp;
-    try{ if(typeof saveCfg==='function') saveCfg(); else if(typeof save==='function') save(); }catch(e){}
+    // 중요: boardOrder가 존재하면 추후 syncBoardOrderToUnivCfg()에서 순서가 되돌아갈 수 있음
+    // → boardOrder도 함께 갱신하고 "정식 save()"로 저장
+    try{
+      if(typeof boardOrder!=='undefined'){
+        boardOrder = univCfg.map(u=>u && u.name).filter(Boolean);
+      }
+    }catch(e){}
+    try{ if(typeof save==='function') save(); else if(typeof localSave==='function') localSave(); else if(typeof saveCfg==='function') saveCfg(); }catch(e){}
     try{ if(typeof render==='function') render(); }catch(e){}
     try{ if(typeof showToast==='function') showToast('✅ 순서 저장됨'); }catch(e){}
   }catch(e){
@@ -3837,15 +3844,13 @@ ${_scfgD('notice','📢 공지 관리')}
       ※ 순서 변경 즉시 저장되며, 현황판에 바로 반영됩니다.
     </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      ${univCfg.map((u,i)=>`
+      ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>`
         <div class="srow" style="gap:8px;align-items:center;flex-wrap:wrap">
           <div class="cdot" style="background:${u.color||'#64748b'}"></div>
           <div style="flex:1;min-width:140px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            <button class="btn btn-w btn-xs" ${i===0?'disabled style="opacity:.35;cursor:not-allowed"':''}
-              onclick="cfgUnivOrderMove(${i},'up')">▲</button>
-            <button class="btn btn-w btn-xs" ${i===univCfg.length-1?'disabled style="opacity:.35;cursor:not-allowed"':''}
-              onclick="cfgUnivOrderMove(${i},'down')">▼</button>
+            <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'up')">▲</button>
+            <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'down')">▼</button>
           </div>
         </div>
       `).join('')}

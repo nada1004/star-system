@@ -359,7 +359,8 @@ function _b2RoleRank(p) {
 
 // 숨김 대학 항상 제외 (로그인 여부 관계없이 board2에서는 hidden=true인 대학 숨김)
 function _b2VisUnivs() {
-  return getAllUnivs().filter(u => !u.hidden);
+  // 해체(해제)된 대학도 현황판에서 제외
+  return getAllUnivs().filter(u => !u.hidden && !u.dissolved);
 }
 
 function rBoard2(C, T) {
