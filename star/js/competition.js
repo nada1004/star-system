@@ -446,14 +446,12 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   if(!m)return;
   const ca=gc(m.a||'');const cb=gc(m.b||'');
   const isDone=m.sa!=null&&m.sb!=null;
-  const saN = Number(m.sa); const sbN = Number(m.sb);
-  const aWin=isDone&&(saN>sbN);const bWin=isDone&&(sbN>saN);
+  const aWin=isDone&&m.sa>m.sb;const bWin=isDone&&m.sb>m.sa;
 
   // ── 상단 헤더/스코어바 채우기(디자인 개선용) ──
   try{
     const titleEl=document.getElementById('cmdTitle');
     const subEl=document.getElementById('cmdSub');
-    const dateEl=document.getElementById('cmdDate');
     const bar=document.getElementById('cmdScoreBar');
     const shareBtn=document.getElementById('cmdShareBtn');
     const safe=(s)=>String(s||'').replace(/[<>]/g,'');
@@ -462,99 +460,32 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       : (isManual ? (m.rndLabel||'토너먼트 경기') : ((rnd!=null)?`${(m.rndLabel||'')} `.trim()+'' : '토너먼트'));
     if(titleEl) titleEl.textContent = `📊 ${tn.name || '대회'} · ${label || '경기 상세'}`;
     const dStr = m.d ? String(m.d).slice(0,10) : '';
-    // (요청) 경기 상세에서 '📅 날짜' 표시는 제거
-    if(subEl) subEl.textContent = '';
-    if(dateEl){ dateEl.textContent = ''; dateEl.style.display = 'none'; }
+    if(subEl) subEl.textContent = dStr ? `📅 ${dStr}` : '';
 
-    // 스코어바(상단 대학 색상 영역) — 결과가 없더라도 항상 보이게(요청)
+    // 스코어바
     if(bar){
-      const aBg = ca || '#64748b';
-      const bBg = cb || '#64748b';
-      const uicon = (team)=>{
-        try{
-          const url=UNIV_ICONS[team]||(univCfg.find(x=>x.name===team)||{}).icon||'';
-          // 크기는 CSS 변수(--su_md_logo_size)로 제어
-          return url?`<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`:'';
-        }catch(e){ return ''; }
-      };
-      const mdWinGradOnly = (localStorage.getItem('su_md_win_grad_only')||'1')==='1';
-      const mdTarget = (localStorage.getItem('su_md_fx_target')|| (mdWinGradOnly?'winner':'both')).trim(); // none|winner|both
-      const mdFx = (localStorage.getItem('su_md_card_fx')||'wave').trim(); // off|move|sheen|sparkle|glow|mix|border|wave|ripple|aurora|scan|neon
-      const mdGradPreset = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
-      const mdGradInt = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70)) / 100;
-      const canOpen = (team)=>!!(team && (UNIV_ICONS[team] || (univCfg||[]).some(x=>x.name===team)));
-      const escQ = (s)=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const aTeam = m.a||'';
-      const bTeam = m.b||'';
-      const aClick = canOpen(aTeam) ? `onclick="openUnivModal('${escQ(aTeam)}')"` : '';
-      const bClick = canOpen(bTeam) ? `onclick="openUnivModal('${escQ(bTeam)}')"` : '';
-      const aCur = canOpen(aTeam) ? 'cursor:pointer' : '';
-      const bCur = canOpen(bTeam) ? 'cursor:pointer' : '';
-      const hasWinner = !!(aWin||bWin);
-      const aApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : aWin));
-      const bApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : bWin));
-      const fxToCls = (apply)=>{
-        if(!apply) return '';
-        if(mdFx==='off') return '';
-        if(mdFx==='move') return ' mdfx-move';
-        if(mdFx==='sheen') return ' mdfx-sheen';
-        if(mdFx==='sparkle') return ' mdfx-sparkle';
-        if(mdFx==='glow') return ' mdfx-glow';
-        if(mdFx==='mix') return ' mdfx-move mdfx-mix';
-        if(mdFx==='border') return ' mdfx-border';
-        if(mdFx==='wave') return ' mdfx-wave';
-        if(mdFx==='ripple') return ' mdfx-ripple';
-        if(mdFx==='aurora') return ' mdfx-aurora';
-        if(mdFx==='scan') return ' mdfx-scan';
-        if(mdFx==='neon') return ' mdfx-neon';
-        if(mdFx==='rainbow') return ' mdfx-aurora';
-        if(mdFx==='glitch') return ' mdfx-scan';
-        if(mdFx==='confetti') return ' mdfx-sparkle';
-        if(mdFx==='fire') return ' mdfx-glow';
-        if(mdFx==='frost') return ' mdfx-ripple';
-        if(mdFx==='matrix') return ' mdfx-wave';
-        if(mdFx==='vortex') return ' mdfx-move';
-        if(mdFx==='prism') return ' mdfx-aurora';
-        if(mdFx==='plasma') return ' mdfx-mix';
-        if(mdFx==='strobe') return ' mdfx-border';
-        return '';
-      };
-      const aWinCls = (aWin?' win':'') + fxToCls(aApply);
-      const bWinCls = (bWin?' win':'') + fxToCls(bApply);
-      const _hexToRgb=(h)=>{try{h=(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:100,g:116,b:139}}};
-      const _rgba=(h,a)=>{const {r,g,b}=_hexToRgb(h);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
-      const _mdBg=(hex,isLose)=>{
-        if(isLose) return `background:${hex};`;
-        if(mdGradPreset==='solid') return `background:${hex};`;
-        const A=(x)=>Math.max(0,Math.min(1,x*mdGradInt));
-        if(mdGradPreset==='soft') return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.75))} 55%,${_rgba(hex,A(.98))});`;
-        if(mdGradPreset==='radial') return `background:radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.70))});`;
-        if(mdGradPreset==='split') return `background:linear-gradient(90deg,${_rgba(hex,A(.98))},${_rgba(hex,A(.72))} 45%,${_rgba(hex,A(.98))});`;
-        if(mdGradPreset==='stripe') return `background:repeating-linear-gradient(135deg,${_rgba(hex,A(.92))} 0 10px,${_rgba(hex,A(.74))} 10px 20px);`;
-        return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))});`; // classic
-      };
-      const aIsLose = (isDone && mdWinGradOnly && bWin && !aWin);
-      const bIsLose = (isDone && mdWinGradOnly && aWin && !bWin);
-      const aBgCss = _mdBg(aBg, aIsLose);
-      const bBgCss = _mdBg(bBg, bIsLose);
-
-      bar.className = 'cmd-scorebar' + ((mdTarget==='none'||mdFx==='off') ? '' : ` mdfxbar-${mdFx}`);
       if(isDone){
         const sa = m.sa ?? '';
         const sb = m.sb ?? '';
+        const aBg = ca || '#64748b';
+        const bBg = cb || '#64748b';
+        const uicon = (team)=>{
+          try{
+            const url=UNIV_ICONS[team]||(univCfg.find(x=>x.name===team)||{}).icon||'';
+            // 크기는 CSS 변수(--su_md_logo_size)로 제어
+            return url?`<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`:'';
+          }catch(e){ return ''; }
+        };
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team${aWinCls}" ${aClick} style="${aCur};${aBgCss}justify-content:center;text-align:center">${uicon(aTeam)}<span style="font-weight:1000;font-size:22px">${safe(aTeam||'A팀')}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${aBg},${aBg}cc);justify-content:center;text-align:center">${uicon(m.a||'')}<span style="font-weight:1000;font-size:22px">${safe(m.a||'A팀')}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'#111827'}">${sa}</span><span class="cmd-colon">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'#111827'}">${sb}</span></div>
-          <div class="cmd-team${bWinCls}" ${bClick} style="${bCur};${bBgCss}justify-content:center;text-align:center">${uicon(bTeam)}<span style="font-weight:1000;font-size:22px">${safe(bTeam||'B팀')}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${bBg},${bBg}cc);justify-content:center;text-align:center">${uicon(m.b||'')}<span style="font-weight:1000;font-size:22px">${safe(m.b||'B팀')}</span></div>
         </div>`;
+        bar.style.display='block';
       }else{
-        bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team${fxToCls(aApply)}" ${aClick} style="${aCur};${aBgCss}justify-content:center;text-align:center">${uicon(aTeam)}<span style="font-weight:1000;font-size:22px">${safe(aTeam||'A팀')}</span></div>
-          <div class="cmd-mid"><span style="color:#64748b;font-weight:1000;font-size:16px">VS</span></div>
-          <div class="cmd-team${fxToCls(bApply)}" ${bClick} style="${bCur};${bBgCss}justify-content:center;text-align:center">${uicon(bTeam)}<span style="font-weight:1000;font-size:22px">${safe(bTeam||'B팀')}</span></div>
-        </div>`;
+        bar.innerHTML='';
+        bar.style.display='none';
       }
-      bar.style.display='block';
     }
 
     // 공유카드 버튼 노출 여부(관리자 제한 옵션 반영)

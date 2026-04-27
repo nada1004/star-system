@@ -34,28 +34,6 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
-// ── 현황판 상단 탭 순서 설정 ──────────────────────────────
-// 설정 탭에서 순서를 바꾸면 현황판 상단(대학별/펨코현황/무소속/구현황판/이미지별) 버튼 순서가 바뀝니다.
-const _B2_TAB_ORDER_KEY = 'b2_tab_order_v1';
-const _B2_TAB_ORDER_DEFAULT = ['univ','femco','free','old','players'];
-function _b2LoadTabOrder(){
-  try{
-    const raw = localStorage.getItem(_B2_TAB_ORDER_KEY);
-    const arr = raw ? JSON.parse(raw) : null;
-    const ok = Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
-    const allowed = new Set(_B2_TAB_ORDER_DEFAULT);
-    let out = ok.filter(x=>allowed.has(x));
-    out = [...new Set(out)];
-    for(const k of _B2_TAB_ORDER_DEFAULT){
-      if(out.indexOf(k)===-1) out.push(k);
-    }
-    return out;
-  }catch(e){
-    return _B2_TAB_ORDER_DEFAULT.slice();
-  }
-}
-window._b2LoadTabOrder = _b2LoadTabOrder;
-
 // 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 function _b2SaveImgSettings() {
@@ -381,7 +359,8 @@ function _b2RoleRank(p) {
 
 // 숨김 대학 항상 제외 (로그인 여부 관계없이 board2에서는 hidden=true인 대학 숨김)
 function _b2VisUnivs() {
-  return getAllUnivs().filter(u => !u.hidden);
+  // 해체(해제)된 대학도 현황판에서 제외
+  return getAllUnivs().filter(u => !u.hidden && !u.dissolved);
 }
 
 function rBoard2(C, T) {
@@ -458,31 +437,18 @@ function rBoard2(C, T) {
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
   ` : '';
+  const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
 
-  // (요청) 현황판 탭 상단 버튼 순서(localStorage) 반영
-  const _ord = _b2LoadTabOrder();
-  const _tabMeta = {
-    univ:{ color:'var(--blue)', label:'🏟️ 대학별' },
-    femco:{ color:'var(--blue)', label:'🧩 펨코현황' },
-    free:{ color:'var(--blue)', label:'🚶 무소속' },
-    old:{ color:'#64748b', label:'📊 구현황판' },
-    players:{ color:'var(--purple)', label:profileTabLabel },
-  };
-  const _tabsHtml = _ord.map(k=>{
-    if(k==='old' && !isLoggedIn) return '';
-    const m=_tabMeta[k];
-    if(!m) return '';
-    const btn=_b2TabBtn(k, m.color, m.label);
-    // 이미지별 탭 필터는 이미지별 버튼 옆에 붙이기
-    if(k==='players') return btn + playerFilters;
-    return btn;
-  }).join('');
-
   const filterBar = `
     <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${_tabsHtml}
+      ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코스타일'):'🧩 펨코스타일'))}
+      ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별 신현황판'):'🏟️ 대학별 신현황판'))}
+      ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
+      ${playerFilters}
+      ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
+      ${oldBtn}
       <span style="flex:1"></span>
       ${rightBtns}
     </div>
@@ -635,31 +601,8 @@ function _b2FemcoView() {
   const univList = _b2VisUnivs().filter(u => u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
 
-  // (요청) 펨코현황 "스타대학 카드" 순서: 설정 탭에서 조절 가능
-  // - localStorage: b2_femco_univ_order_v1 (대학명 배열)
-  const _femcoOrder = (()=>{ try{ return JSON.parse(localStorage.getItem('b2_femco_univ_order_v1')||'null'); }catch(e){ return null; } })();
-  const _femcoOrderArr = Array.isArray(_femcoOrder) ? _femcoOrder.map(x=>String(x||'').trim()).filter(Boolean) : [];
-  const _idxIn = (arr, name)=>{
-    const i = arr.indexOf(name);
-    return i>=0 ? i : 99999;
-  };
-  // 정렬 우선순위:
-  // 1) b2_femco_univ_order_v1에 있으면 그 순서
-  // 2) 없으면 univCfg 순서
-  // 3) 둘 다 없으면 이름순
-  if (_femcoOrderArr.length) {
-    univList.sort((a,b)=>{
-      const oa=_idxIn(_femcoOrderArr, a.name);
-      const ob=_idxIn(_femcoOrderArr, b.name);
-      if(oa!==ob) return oa-ob;
-      if (typeof univCfg !== 'undefined' && univCfg.length) {
-        const ia = univCfg.findIndex(u => u.name === a.name);
-        const ib = univCfg.findIndex(u => u.name === b.name);
-        if(ia!==ib) return (ia>=0?ia:999)-(ib>=0?ib:999);
-      }
-      return (a.name||'').localeCompare(b.name||'');
-    });
-  } else if (typeof univCfg !== 'undefined' && univCfg.length) {
+  // univCfg 순서로 정렬 (없으면 이름순)
+  if (typeof univCfg !== 'undefined' && univCfg.length) {
     univList.sort((a, b) => {
       const ia = univCfg.findIndex(u => u.name === a.name);
       const ib = univCfg.findIndex(u => u.name === b.name);
@@ -1792,9 +1735,9 @@ function _b2CrewView() {
     // 로고 (클릭 → 상세)
     h += '<div style="position:relative;cursor:pointer;flex-shrink:0" onclick="openCrewDetailModal(\'' + safeName + '\')" title="크루 상세보기">';
     if (c.logo) {
-      h += '<img src="' + c.logo + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\'none\'">';
+      h += '<img src="' + c.logo + '" style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\\\'none\\\'">';
     } else {
-      h += '<div style="width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name || '?')[0] + '</div>';
+      h += '<div style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name || '?')[0] + '</div>';
     }
     h += '</div>';
     // 이름 (클릭 → 상세)
@@ -1911,7 +1854,7 @@ function _b2CrewListView(cfg, crewArr, scPlayers) {
 
     h += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40">';
     h += '<div style="padding:10px 16px;background:' + col + labelAlpha + ';display:flex;align-items:center;gap:8px">';
-    if (c.logo) h += '<img src="' + c.logo + '" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid #fff8" onerror="this.style.display=\'none\'">';
+    if (c.logo) h += '<img src="' + c.logo + '" style="width:24px;height:24px;border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:1.5px solid #fff8" onerror="this.style.display=\'none\'">';
     h += '<span style="font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 3px #0005">' + c.name + '</span>';
     h += '<span style="font-size:11px;color:#ffffffbb">' + allMembers.length + '명</span>';
     h += '</div>';
@@ -2016,9 +1959,9 @@ function openCrewDetailModal(crewName) {
   html += '<div style="position:relative;padding:22px 20px;' + bgStyle + 'display:flex;align-items:center;gap:14px">';
   html += overlay;
   if (c.logo) {
-    html += '<img src="' + c.logo + '" style="position:relative;width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fffb;flex-shrink:0;box-shadow:0 2px 12px #0004" onerror="this.style.display=\'none\'">';
+    html += '<img src="' + c.logo + '" style="position:relative;width:64px;height:64px;border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:3px solid #fffb;flex-shrink:0;box-shadow:0 2px 12px #0004" onerror="this.style.display=\'none\'">';
   } else {
-    html += '<div style="position:relative;width:64px;height:64px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border:3px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+    html += '<div style="position:relative;width:64px;height:64px;border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;border:3px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
   }
   html += '<div style="position:relative;flex:1;min-width:0">';
   html += '<div style="font-size:22px;font-weight:900;color:#fff;text-shadow:0 1px 6px #0008;margin-bottom:2px">' + c.name + '</div>';
@@ -2093,9 +2036,9 @@ async function saveCrewImg(target, btn) {
     innerHtml += '<div style="margin-bottom:18px;border-radius:12px;overflow:hidden;border:1.5px solid ' + col + '40;box-shadow:0 2px 12px ' + col + '22">';
     innerHtml += '<div style="position:relative;padding:14px 18px;' + bgStyle + 'display:flex;align-items:center;gap:12px">' + overlay;
     if (c.logo) {
-      innerHtml += '<img src="' + c.logo + '" style="position:relative;width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8;flex-shrink:0">';
+      innerHtml += '<img src="' + c.logo + '" style="position:relative;width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8;flex-shrink:0">';
     } else {
-      innerHtml += '<div style="position:relative;width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
+      innerHtml += '<div style="position:relative;width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5;flex-shrink:0">' + (c.name || '?')[0] + '</div>';
     }
     innerHtml += '<div style="position:relative;flex:1"><div style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 4px #0006">' + c.name + '</div>';
     if (c.desc) innerHtml += '<div style="font-size:11px;color:#ffffffcc">' + c.desc + '</div>';
@@ -2471,9 +2414,9 @@ function _b2GameView() {
     h += overlay;
     h += '<div style="position:relative;flex-shrink:0">';
     if (c.logo) {
-      h += '<img src="' + c.logo + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\'none\'">';
+      h += '<img src="' + c.logo + '" style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);object-fit:cover;border:2px solid #fff8" onerror="this.style.display=\\\'none\\\'">';
     } else {
-      h += '<div style="width:42px;height:42px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name||'?')[0] + '</div>';
+      h += '<div style="width:var(--su_b2_univ_logo_size,42px);height:var(--su_b2_univ_logo_size,42px);border-radius:var(--su_univ_logo_radius,50%);background:#fff3;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;border:2px solid #fff5">' + (c.name||'?')[0] + '</div>';
     }
     h += '</div>';
     h += '<div style="position:relative;flex:1;min-width:0">';

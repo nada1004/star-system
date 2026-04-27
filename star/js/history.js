@@ -11,23 +11,32 @@ function rHist(C,T){
     {id:'race',     grp:'종합',   lbl:'🧬 종족 승률'},
     {id:'vs',       grp:'종합',   lbl:'⚔️ 1:1 상대전적'},
     {id:'ind',      grp:'개인',    lbl:'🎮 개인전'},
-    {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전'},
+    // 표기만 변경(내부 모드/데이터는 기존 '끝장전' 유지)
+    {id:'gj',       grp:'개인',    lbl:'⚔️ 끝장전', disp:'⚔️ 중장전'},
     {id:'mini',     grp:'팀경기',  lbl:'⚡ 미니대전'},
     {id:'ck',       grp:'팀경기',  lbl:'🤝 대학CK'},
     {id:'univm',    grp:'팀경기',  lbl:'🏟️ 대학대전'},
     {id:'civil',    grp:'팀경기',  lbl:'⚔️ 시빌워'},
     {id:'tourney',  grp:'대회',    lbl:'🎖️ 대회 (토너먼트)'},
     {id:'tiertour', grp:'대회',    lbl:'🎯 티어대회'},
-    // (요청사항) '일반' → '프로리그' 명칭 복구
-    {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전'},
-    {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그'},
-    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록'},
+    // (요청) 표기/순서: 일반 → 중장전 → 대회 …
+    {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그', disp:'🏅 일반'},
+    {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전',   disp:'⚔️ 중장전'},
+    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 대회'},
     {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트'},
     {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
   ];
+  // (탭 라벨 설정) 표시 이름만 설정에서 교체 가능
+  try{
+    if(typeof getTabLabel==='function'){
+      tabDefs.forEach(t=>{
+        t.disp = getTabLabel('history', t.id, t.disp||t.lbl);
+      });
+    }
+  }catch(e){}
   // (요청사항) 관리자 전용 외부 자료 탭
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
@@ -65,7 +74,7 @@ function rHist(C,T){
     h+=`<div class="hist-inlinebar no-export">`;
     grpTabs.forEach(t=>{
       const isOn=histSub===t.id;
-      h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${t.id}';openDetails={};render()">${t.lbl}</button>`;
+      h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${t.id}';openDetails={};render()">${t.disp||t.lbl}</button>`;
     });
     if(_hasCtrl){
       h+=`<span class="hist-inline-sep"></span>`;
@@ -992,7 +1001,7 @@ function histExternalHTML(){
             <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
             <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
             <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
-            <option value="gj" ${tSel==='gj'?'selected':''}>끝장전</option>
+            <option value="gj" ${tSel==='gj'?'selected':''}>중장전</option>
             <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
             <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
             <option value="tt" ${tSel==='tt'?'selected':''}>티어대회</option>
@@ -1720,8 +1729,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
     const labelA=isCK?(rawLA||'A팀'):m.a;
     const labelB=isCK?(rawLB||'B팀'):m.b;
-    const saN = Number(m.sa); const sbN = Number(m.sb);
-    const aWin=(saN>sbN);const bWin=(sbN>saN);
+    const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
     const key=`${context}-${mode}-${i}`;
     // 검색용 hay 데이터
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
@@ -1742,21 +1750,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgbM = _hexToRgbStr(_mc);
-    const _rcWinnerOnly = (localStorage.getItem('su_rc_winner_only')||'0')==='1';
-    const _isWinnerOnly = _rcWinnerOnly && (aWin||bWin);
-
-    const _winnerBadge = ()=>{
-      const wIsA = aWin && !bWin;
-      const wCol = wIsA ? ca : cb;
-      const wLbl = wIsA ? labelA : labelB;
-      const wIcon = wIsA ? iconA : iconB;
-      const wUniv = wIsA ? (m.a||'') : (m.b||'');
-      const clickable = (!isCK && wUniv) ? ' clickable-univ' : '';
-      const clickAttr = (!isCK && wUniv) ? `onclick="openUnivModal('${wUniv}')"` : '';
-      const iconHtml = wIcon ? wIcon.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" ') : '';
-      return `<span class="ubadge${clickable}" data-icon-done="1" style="background:${wCol};display:inline-flex;align-items:center;gap:4px" ${clickAttr}>${iconHtml}${wLbl}</span>`;
-    };
-
     return `<div class="rec-summary rec-mode-${mode}${_themeCls}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}border-left:3px solid ${_wBorderCol}">
       <div style="padding:8px 12px 0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
         ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
@@ -1773,22 +1766,14 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         </div>
       </div>
       <div class="rec-sum-header" style="padding:6px 12px 10px">
-        <div class="rec-sum-vs${_isWinnerOnly?' winner-only':''}">
-          ${_isWinnerOnly
-            ? `${_winnerBadge()}
-              <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
-                <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
-                <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
-                <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
-              </div>`
-            : `<span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
-              <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
-                <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
-                <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
-                <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
-              </div>
-              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>`
-          }
+        <div class="rec-sum-vs">
+          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
+          <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
+            <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+            <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+            <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+          </div>
+          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
@@ -3543,10 +3528,7 @@ function _ensureHistDetailModal(){
           <div id="hmdTitle" class="cmd-title">📅 경기 상세</div>
           <div id="hmdSub" class="cmd-sub"></div>
         </div>
-        <div class="cmd-head__right">
-          <span id="hmdDate" class="cmd-date"></span>
-          <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none'" aria-label="닫기">✕</button>
-        </div>
+        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none'" aria-label="닫기">✕</button>
       </div>
       <div id="hmdScoreBar" class="cmd-scorebar" style="display:none"></div>
       <div id="histDetBody" class="cmd-body"></div>
@@ -3565,31 +3547,28 @@ function openHistDetailModal(key){
   const m=_ensureHistDetailModal();
   const titleEl=document.getElementById('hmdTitle');
   const subEl=document.getElementById('hmdSub');
-  const dateEl=document.getElementById('hmdDate');
   const bar=document.getElementById('hmdScoreBar');
   const bodyEl=document.getElementById('histDetBody');
   const match=reg.m;
   const labelA=reg.lA || match.a || 'A';
   const labelB=reg.lB || match.b || 'B';
   const isDone=(match.sa!=null && match.sb!=null);
-  const saN = Number(match.sa); const sbN = Number(match.sb);
-  const aWin=isDone && (saN>sbN);
-  const bWin=isDone && (sbN>saN);
+  const aWin=isDone && (match.sa>match.sb);
+  const bWin=isDone && (match.sb>match.sa);
   const score=isDone ? `${match.sa}:${match.sb}` : '';
 
   // 헤더 텍스트
   if(titleEl) titleEl.textContent = `📅 ${labelA} vs ${labelB}${score?` (${score})`:''}`;
   if(subEl){
     const parts=[];
-    // (요청) 경기 상세에서 '📅 날짜' 표시는 제거
+    if(match.d) parts.push(`📅 ${String(match.d).slice(0,10)}`);
     if(match.t) parts.push(String(match.t));
     if(match.n) parts.push(String(match.n));
     if(match.memo) parts.push(`📝 ${String(match.memo)}`);
     subEl.textContent = parts.join(' · ');
   }
-  if(dateEl){ dateEl.textContent=''; dateEl.style.display='none'; }
 
-  // 스코어바(상단 대학 색상 영역) — 결과가 없더라도 항상 보이게(요청)
+  // 스코어바(가능할 때만)
   try{
     if(bar){
       if(isDone){
@@ -3606,135 +3585,15 @@ function openHistDetailModal(key){
         };
         const ca=(reg.ca||'#64748b');
         const cb=(reg.cb||'#64748b');
-        const mdWinGradOnly = (localStorage.getItem('su_md_win_grad_only')||'1')==='1';
-        const mdTarget = (localStorage.getItem('su_md_fx_target')|| (mdWinGradOnly?'winner':'both')).trim(); // none|winner|both
-        const mdFx = (localStorage.getItem('su_md_card_fx')||'wave').trim(); // off|move|sheen|sparkle|glow|mix|border|wave|ripple|aurora|scan|neon
-        const mdGradPreset = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
-        const mdGradInt = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70)) / 100;
-        const canOpen = (team)=>!!(team && (UNIV_ICONS[team] || (univCfg||[]).some(x=>x.name===team)));
-        const escQ = (s)=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        const aClick = canOpen(labelA) ? `onclick="openUnivModal('${escQ(labelA)}')"` : '';
-        const bClick = canOpen(labelB) ? `onclick="openUnivModal('${escQ(labelB)}')"` : '';
-        const aCur = canOpen(labelA) ? 'cursor:pointer' : '';
-        const bCur = canOpen(labelB) ? 'cursor:pointer' : '';
-        const hasWinner = !!(aWin||bWin);
-        const aApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : aWin));
-        const bApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : bWin));
-        const fxToCls = (apply)=>{
-          if(!apply) return '';
-          if(mdFx==='off') return '';
-          if(mdFx==='move') return ' mdfx-move';
-          if(mdFx==='sheen') return ' mdfx-sheen';
-          if(mdFx==='sparkle') return ' mdfx-sparkle';
-          if(mdFx==='glow') return ' mdfx-glow';
-          if(mdFx==='mix') return ' mdfx-move mdfx-mix';
-          if(mdFx==='border') return ' mdfx-border';
-          if(mdFx==='wave') return ' mdfx-wave';
-          if(mdFx==='ripple') return ' mdfx-ripple';
-          if(mdFx==='aurora') return ' mdfx-aurora';
-          if(mdFx==='scan') return ' mdfx-scan';
-          if(mdFx==='neon') return ' mdfx-neon';
-          if(mdFx==='rainbow') return ' mdfx-aurora';
-          if(mdFx==='glitch') return ' mdfx-scan';
-          if(mdFx==='confetti') return ' mdfx-sparkle';
-          if(mdFx==='fire') return ' mdfx-glow';
-          if(mdFx==='frost') return ' mdfx-ripple';
-          if(mdFx==='matrix') return ' mdfx-wave';
-          if(mdFx==='vortex') return ' mdfx-move';
-          if(mdFx==='prism') return ' mdfx-aurora';
-          if(mdFx==='plasma') return ' mdfx-mix';
-          if(mdFx==='strobe') return ' mdfx-border';
-          return '';
-        };
-        const aWinCls = (aWin?' win':'') + fxToCls(aApply);
-        const bWinCls = (bWin?' win':'') + fxToCls(bApply);
-        const _hexToRgb=(h)=>{try{h=(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:100,g:116,b:139}}};
-        const _rgba=(h,a)=>{const {r,g,b}=_hexToRgb(h);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
-        const _mdBg=(hex,isLose)=>{
-          if(isLose) return `background:${hex};`;
-          if(mdGradPreset==='solid') return `background:${hex};`;
-          const A=(x)=>Math.max(0,Math.min(1,x*mdGradInt));
-          if(mdGradPreset==='soft') return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.75))} 55%,${_rgba(hex,A(.98))});`;
-          if(mdGradPreset==='radial') return `background:radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.70))});`;
-          if(mdGradPreset==='split') return `background:linear-gradient(90deg,${_rgba(hex,A(.98))},${_rgba(hex,A(.72))} 45%,${_rgba(hex,A(.98))});`;
-          if(mdGradPreset==='stripe') return `background:repeating-linear-gradient(135deg,${_rgba(hex,A(.92))} 0 10px,${_rgba(hex,A(.74))} 10px 20px);`;
-          return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))});`; // classic
-        };
-        const aIsLose = (isDone && mdWinGradOnly && bWin && !aWin);
-        const bIsLose = (isDone && mdWinGradOnly && aWin && !bWin);
-        const aBgCss = _mdBg(ca, aIsLose);
-        const bBgCss = _mdBg(cb, bIsLose);
-        // 스코어바(전체 배경)에도 동일 효과를 붙여 "티"가 나게
-        bar.className = 'cmd-scorebar' + ((mdTarget==='none'||mdFx==='off') ? '' : ` mdfxbar-${mdFx}`);
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team${aWinCls}" ${aClick} style="${aCur};${aBgCss}justify-content:center;text-align:center">${_icon(labelA)}<span style="font-weight:1000;font-size:22px">${safe(labelA)}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${ca},${ca}cc);justify-content:center;text-align:center">${_icon(labelA)}<span style="font-weight:1000;font-size:22px">${safe(labelA)}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'#111827'}">${match.sa??''}</span><span class="cmd-colon">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'#111827'}">${match.sb??''}</span></div>
-          <div class="cmd-team${bWinCls}" ${bClick} style="${bCur};${bBgCss}justify-content:center;text-align:center">${_icon(labelB)}<span style="font-weight:1000;font-size:22px">${safe(labelB)}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${cb},${cb}cc);justify-content:center;text-align:center">${_icon(labelB)}<span style="font-weight:1000;font-size:22px">${safe(labelB)}</span></div>
         </div>`;
         bar.style.display='block';
       }else{
-        // (요청) 아직 결과가 없어도 상단 대학 색상 영역을 보여주기
-        const safe=(s)=>String(s||'').replace(/[<>]/g,'');
-        const ca=(reg.ca||'#64748b');
-        const cb=(reg.cb||'#64748b');
-        const mdWinGradOnly = (localStorage.getItem('su_md_win_grad_only')||'1')==='1';
-        const mdTarget = (localStorage.getItem('su_md_fx_target')|| (mdWinGradOnly?'winner':'both')).trim(); // none|winner|both
-        const mdFx = (localStorage.getItem('su_md_card_fx')||'wave').trim(); // off|move|sheen|sparkle|glow|mix|border|wave|ripple|aurora|scan|neon
-        const mdGradPreset = (localStorage.getItem('su_grad_mode') || localStorage.getItem('su_md_grad_preset') || 'classic').trim();
-        const mdGradInt = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_grad_int') || localStorage.getItem('su_md_grad_int') || '70',10)||70)) / 100;
-        const canOpen = (team)=>!!(team && (UNIV_ICONS[team] || (univCfg||[]).some(x=>x.name===team)));
-        const escQ = (s)=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        const aClick = canOpen(labelA) ? `onclick="openUnivModal('${escQ(labelA)}')"` : '';
-        const bClick = canOpen(labelB) ? `onclick="openUnivModal('${escQ(labelB)}')"` : '';
-        const aCur = canOpen(labelA) ? 'cursor:pointer' : '';
-        const bCur = canOpen(labelB) ? 'cursor:pointer' : '';
-        const hasWinner = false;
-        const aApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : false));
-        const bApply = (mdTarget==='none') ? false : (mdTarget==='both' ? true : (!hasWinner ? true : false));
-        const fxToCls = (apply)=>{
-          if(!apply) return '';
-          if(mdFx==='off') return '';
-          if(mdFx==='move') return ' mdfx-move';
-          if(mdFx==='sheen') return ' mdfx-sheen';
-          if(mdFx==='sparkle') return ' mdfx-sparkle';
-          if(mdFx==='glow') return ' mdfx-glow';
-          if(mdFx==='mix') return ' mdfx-move mdfx-mix';
-          if(mdFx==='border') return ' mdfx-border';
-          if(mdFx==='wave') return ' mdfx-wave';
-          if(mdFx==='ripple') return ' mdfx-ripple';
-          if(mdFx==='aurora') return ' mdfx-aurora';
-          if(mdFx==='scan') return ' mdfx-scan';
-          if(mdFx==='neon') return ' mdfx-neon';
-          if(mdFx==='rainbow') return ' mdfx-aurora';
-          if(mdFx==='glitch') return ' mdfx-scan';
-          if(mdFx==='confetti') return ' mdfx-sparkle';
-          if(mdFx==='fire') return ' mdfx-glow';
-          if(mdFx==='frost') return ' mdfx-ripple';
-          if(mdFx==='matrix') return ' mdfx-wave';
-          if(mdFx==='vortex') return ' mdfx-move';
-          if(mdFx==='prism') return ' mdfx-aurora';
-          if(mdFx==='plasma') return ' mdfx-mix';
-          if(mdFx==='strobe') return ' mdfx-border';
-          return '';
-        };
-        const _hexToRgb=(h)=>{try{h=(h||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};}catch(e){return {r:100,g:116,b:139}}};
-        const _rgba=(h,a)=>{const {r,g,b}=_hexToRgb(h);const aa=Math.max(0,Math.min(1,a));return `rgba(${r},${g},${b},${aa})`;};
-        const _mdBg=(hex)=>{
-          if(mdGradPreset==='solid') return `background:${hex};`;
-          const A=(x)=>Math.max(0,Math.min(1,x*mdGradInt));
-          if(mdGradPreset==='soft') return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.75))} 55%,${_rgba(hex,A(.98))});`;
-          if(mdGradPreset==='radial') return `background:radial-gradient(80% 140% at 20% 0%,${_rgba('#ffffff',A(.28))},transparent 60%), radial-gradient(120% 140% at 80% 120%,${_rgba('#000000',A(.18))},transparent 58%), linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.70))});`;
-          if(mdGradPreset==='split') return `background:linear-gradient(90deg,${_rgba(hex,A(.98))},${_rgba(hex,A(.72))} 45%,${_rgba(hex,A(.98))});`;
-          if(mdGradPreset==='stripe') return `background:repeating-linear-gradient(135deg,${_rgba(hex,A(.92))} 0 10px,${_rgba(hex,A(.74))} 10px 20px);`;
-          return `background:linear-gradient(135deg,${_rgba(hex,A(.95))},${_rgba(hex,A(.72))});`; // classic
-        };
-        bar.className = 'cmd-scorebar' + ((mdTarget==='none'||mdFx==='off') ? '' : ` mdfxbar-${mdFx}`);
-        bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team${fxToCls(aApply)}" ${aClick} style="${aCur};${_mdBg(ca)}justify-content:center;text-align:center">${_icon(labelA)}<span style="font-weight:1000;font-size:22px">${safe(labelA)}</span></div>
-          <div class="cmd-mid"><span style="color:#64748b;font-weight:1000;font-size:16px">VS</span></div>
-          <div class="cmd-team${fxToCls(bApply)}" ${bClick} style="${bCur};${_mdBg(cb)}justify-content:center;text-align:center">${_icon(labelB)}<span style="font-weight:1000;font-size:22px">${safe(labelB)}</span></div>
-        </div>`;
-        bar.style.display='block';
+        bar.style.display='none';
+        bar.innerHTML='';
       }
     }
   }catch(e){}
@@ -3826,7 +3685,7 @@ function histProCompHTML() {
     <button class="pill ${histSub==='procomp'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
     <button class="pill ${histSub==='procomptn'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
     <button class="pill ${histSub==='procompteam'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="pill ${histSub==='procompgj'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+    <button class="pill ${histSub==='procompgj'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 중장전</button>
   </div>`;
   // proTourneys에서 완료된 경기만 추출 (조별리그)
   const allItems = [];
@@ -3923,7 +3782,7 @@ function histProCompTourneyHTML() {
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
     <button class="pill on" style="flex-shrink:0;white-space:nowrap">🗂️ 토너먼트</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 끝장전</button>
+    <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompgj';openDetails={};render()">⚔️ 중장전</button>
   </div>`;
   const allItems = [];
   (proTourneys||[]).forEach(tn => {
@@ -4084,14 +3943,14 @@ function histProCompTeamHTML() {
 }
 
 /* ══════════════════════════════════════
-   ⚔️ 프로리그 대회 끝장전 기록
+   ⚔️ 프로리그 대회 중장전 기록
 ══════════════════════════════════════ */
 function histProCompGJHTML(){
   const _pcGjBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procompteam';openDetails={};render()">🤝 팀전</button>
-    <button class="pill on" style="flex-shrink:0;white-space:nowrap">⚔️ 끝장전</button>
+    <button class="pill on" style="flex-shrink:0;white-space:nowrap">⚔️ 중장전</button>
   </div>`;
   const allSess=[];
   (proTourneys||[]).forEach(tn=>{
@@ -4099,7 +3958,7 @@ function histProCompGJHTML(){
       allSess.push({...sess,tnName:tn.name});
     });
   });
-  if(!allSess.length)return _pcGjBar+`<div class="empty-state"><div class="empty-state-icon">⚔️</div><div class="empty-state-title">프로리그 대회 끝장전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 탭 → 끝장전에서 입력하세요</div></div>`;
+  if(!allSess.length)return _pcGjBar+`<div class="empty-state"><div class="empty-state-icon">⚔️</div><div class="empty-state-title">프로리그 대회 중장전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 탭 → 중장전에서 입력하세요</div></div>`;
   allSess.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   let h=_pcGjBar;
   allSess.forEach(sess=>{

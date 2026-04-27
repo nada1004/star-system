@@ -342,6 +342,9 @@ function findPlayerByPartialName(namePart) {
 
   // 공백 정규화 버전: "안    아" → "안아"
   const noSpace = trimmed.replace(/\s+/g, '');
+  // 종족 접미사 제거 버전: "샤이니P" → "샤이니" (메모/별명 매칭용)
+  const noRace = trimmed.replace(/\s*[TZPNtzpn]$/i,'').trim();
+  const noRaceNS = noSpace.replace(/\s*[TZPNtzpn]$/i,'').trim();
 
   // 1) 정확 일치 (이름)
   const exact = players.filter(p => p.name === trimmed);
@@ -354,6 +357,8 @@ function findPlayerByPartialName(namePart) {
   const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
   const _trimmedLow = _nfc(trimmed).toLowerCase();
   const _noSpaceLow = _nfc(noSpace).toLowerCase();
+  const _noRaceLow = _nfc(noRace).toLowerCase();
+  const _noRaceNSLow = _nfc(noRaceNS).toLowerCase();
   // 메모 토큰 분리: 공백/쉼표뿐 아니라 ":" "/" "()" "[]" 등도 구분자로 처리
   const _memoTokens = (memoNorm) => {
     return String(memoNorm||'')
@@ -364,9 +369,14 @@ function findPlayerByPartialName(namePart) {
   const memoExact = players.filter(p => {
     if (!p.memo) return false;
     const memoNorm = _nfc(p.memo);
-    if (memoNorm.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
+    // 메모 전체 일치(원문/종족 제거)
+    if (memoNorm.trim().toLowerCase() === _trimmedLow) return true;
+    if (_noRaceLow && memoNorm.trim().toLowerCase() === _noRaceLow) return true;
     const memos = _memoTokens(memoNorm);
-    return memos.some(m => m.toLowerCase() === _trimmedLow);
+    return memos.some(m => {
+      const ml = m.toLowerCase();
+      return ml === _trimmedLow || (_noRaceLow && ml === _noRaceLow);
+    });
   });
   if (memoExact.length === 1) {
     // 메모 일치 시 실제 스트리머 이름으로 변환하여 반환
@@ -387,7 +397,7 @@ function findPlayerByPartialName(namePart) {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
       const tokens = _memoTokens(memoNorm).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
-      return tokens.some(t => t === _noSpaceLow);
+      return tokens.some(t => t === _noSpaceLow || (_noRaceNSLow && t === _noRaceNSLow));
     });
     if (memoNS.length === 1) return { player: memoNS[0], candidates: memoNS, similar: [] };
     if (memoNS.length > 1)   return { player: null, candidates: memoNS, similar: [] };
@@ -3864,11 +3874,7 @@ function openProPasteModal() {
   const warn = document.getElementById('pro-paste-warn');
   const swapRow = document.getElementById('pro-swap-row');
   const multiBadge = document.getElementById('pro-multi-badge');
-  if (ta) {
-    ta.value = '';
-    // 사용자가 이전에 textarea 높이를 늘려둔 경우(리사이즈) 다음번에 공백이 크게 남는 문제 방지
-    ta.style.height = '120px';
-  }
+  if (ta) ta.value = '';
   if (prev) prev.innerHTML = '';
   if (applyBtn) applyBtn.style.display = 'none';
   if (badge) badge.style.display = 'none';

@@ -261,7 +261,7 @@ function rProComp(C, T) {
       {id:'tour', lbl:'🗂️ 대진표'},
       {id:'tourmatch', lbl:'📝 입력'},
       {id:'team', lbl:'🤝 팀전'},
-      {id:'gj', lbl:'🔥 끝장전'},
+      {id:'gj', lbl:'🔥 중장전'},
       {id:'stats', lbl:'📈 통계'},
       ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
@@ -4237,7 +4237,7 @@ function _renderProCompGrpShareCard(tnId, gi) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⭐ 프로리그 대회 끝장전
+   ⭐ 프로리그 대회 중장전
    ══════════════════════════════════════════════════════════════ */
 function proCompGJSection(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
@@ -4248,7 +4248,7 @@ function proCompGJSection(tn) {
     const pAObj = players.find(p=>p.name===pA)||{}, pBObj = players.find(p=>p.name===pB)||{};
     const aCol = gc(pAObj.univ)||'#2563eb', bCol = gc(pBObj.univ)||'#dc2626';
     h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📢 끝장전 추가</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📢 중장전 추가</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:140px">
           <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
@@ -4281,7 +4281,7 @@ function proCompGJSection(tn) {
     </div>`;
   }
   if (!tn.gjMatches.length) {
-    h += `<div class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-title">끝장전 기록이 없습니다</div><div class="empty-state-desc">위에서 경기를 추가해보세요</div></div>`;
+    h += `<div class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-title">중장전 기록이 없습니다</div><div class="empty-state-desc">위에서 경기를 추가해보세요</div></div>`;
     return h;
   }
   tn.gjMatches.slice().reverse().forEach((sess, ri) => {
@@ -4335,7 +4335,7 @@ function openPcGJPasteModal(tnId) {
   if (hint) {
     const _a = _pcgjA, _b = _pcgjB;
     hint.innerHTML = _a && _b
-      ? `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📢 끝장전 결과 입력</span> — <b>${_a}</b> vs <b>${_b}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${_a} ${_b} [맵]</code> / <code>${_b} ${_a} [맵]</code> — 여러 줄 입력 가능</span></div>`
+      ? `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📢 중장전 결과 입력</span> — <b>${_a}</b> vs <b>${_b}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${_a} ${_b} [맵]</code> / <code>${_b} ${_a} [맵]</code> — 여러 줄 입력 가능</span></div>`
       : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#16a34a;font-weight:700">🤖 자동인식</span> — 선수 선택 없이 입력하면, 붙여넣기 내용에서 <b>두 선수(A/B)</b>를 자동으로 확정합니다.<br><span style="font-size:11px;color:#6b7280">형식: <code>승자이름 패자이름 [맵]</code> — 여러 줄 입력 가능 (두 선수만 등장해야 저장 가능)</span></div>`;
   }
   const dateInput = document.getElementById('paste-date');
@@ -4343,7 +4343,7 @@ function openPcGJPasteModal(tnId) {
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) compWrap.style.display = 'none';
   const _pt = document.querySelector('#pasteModal .mtitle');
-  if (_pt) _pt.textContent = '📋 끝장전 결과 붙여넣기';
+  if (_pt) _pt.textContent = '📋 중장전 결과 붙여넣기';
   if (typeof om === 'function') om('pasteModal');
 }
 
@@ -4420,7 +4420,7 @@ function _pcGJPasteApplyLogic(savable, tn) {
 
   _pcgjGames = []; _pcgjA = ''; _pcgjB = '';
   save();
-  alert(`끝장전 저장 완료: ${pairs.length}매치 / ${totalGames}게임`);
+  alert(`중장전 저장 완료: ${pairs.length}매치 / ${totalGames}게임`);
   return true;
 }
 function _pcgjRender() {
@@ -4460,7 +4460,7 @@ function proCompGJSave(tnId) {
 }
 
 function proCompGJDel(tnId, si) {
-  if (!confirm('끝장전 기록을 삭제하시겠습니까?\n⚠️ 선수 전적도 롤백됩니다.')) return;
+  if (!confirm('중장전 기록을 삭제하시겠습니까?\n⚠️ 선수 전적도 롤백됩니다.')) return;
   const tn = _findTourneyById(tnId); if (!tn||!tn.gjMatches) return;
   const sess = tn.gjMatches[si]; if (!sess) return;
   // 전적 롤백

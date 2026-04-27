@@ -2117,6 +2117,52 @@ function _bulkArrMapAll(){
   return m;
 }
 
+// (추가) 설정탭 전용: "스트리머별 상태 아이콘 지정"만 보여주는 목록
+function _renderCfgSiAssignList(){
+  const el=document.getElementById('cfg-si-assign-list');
+  if(!el) return;
+  if(!players.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>';
+    return;
+  }
+  const q = String(window._cfgSiAssignQ || '').trim().toLowerCase();
+  const iconOptCache = Object.entries(STATUS_ICON_DEFS);
+  const match = (p)=>{
+    if(!q) return true;
+    const hay = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.memo||'')}`.toLowerCase();
+    return hay.includes(q);
+  };
+  const list = [...players].filter(match).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  el.innerHTML = list.map(p=>{
+    const cur = playerStatusIcons[p.name] || '';
+    const pN = p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const encN=encodeURIComponent(p.name);
+    const opts = iconOptCache.map(([id,d])=>`<option value="${id}"${(!cur&&id==='none')||(cur&&(cur===id||cur===d.emoji)&&id!=='none')?' selected':''}>${!_siIsImg(d.emoji)&&d.emoji?d.emoji+' ':''}${d.label}</option>`).join('');
+    const clrBtn = cur ? `<button class="btn btn-w btn-xs" style="border-color:var(--border2);color:#dc2626" onclick="setStatusIcon('${pN}','none');_cfgRefreshSiAssignRow('${pN}')">×</button>` : '';
+    return `<div style="border-bottom:1px solid var(--border);padding:8px 10px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="flex-shrink:0">${getPlayerPhotoHTML(p.name,'30px')}</span>
+        <span style="font-weight:800;flex:1;min-width:140px">${p.name}<span style="font-size:10px;color:var(--gray-l);margin-left:6px">${p.univ||''}·${p.tier||''}</span></span>
+        <span id="cfg-si-assign-prev-${encN}" style="min-width:26px;text-align:center;display:inline-flex;align-items:center;justify-content:center">${cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):''}</span>
+        <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiAssignRow('${pN}')" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:10px;min-width:140px">${opts}</select>
+        <span id="cfg-si-assign-clr-${encN}">${clrBtn}</span>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:18px;text-align:center;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';
+}
+function _cfgRefreshSiAssignRow(name){
+  const encN=encodeURIComponent(name);
+  const cur=playerStatusIcons[name]||'';
+  const prevEl=document.getElementById('cfg-si-assign-prev-'+encN);
+  if(prevEl) prevEl.innerHTML=cur?(_siIsImg(cur)?_siRender(cur,'22px'):cur):'';
+  const clrEl=document.getElementById('cfg-si-assign-clr-'+encN);
+  if(clrEl){
+    const pN=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    clrEl.innerHTML=cur?`<button class="btn btn-w btn-xs" style="border-color:var(--border2);color:#dc2626" onclick="setStatusIcon('${pN}','none');_cfgRefreshSiAssignRow('${pN}')">×</button>`:'';
+  }
+}
+try{ window._renderCfgSiAssignList = _renderCfgSiAssignList; }catch(e){}
+
 // ── (요청사항) 조편성 관리: 조별 경기 결과 일괄 입력(1줄=1게임) ──
 // competition.js(대회/티어대회 조편성)에서 호출
 window.openCompLeaguePasteModal = function(tnId, gi){
@@ -4256,6 +4302,7 @@ function _renderCfgSiList(){
   const el=document.getElementById('cfg-si-list');
   if(!el)return;
   if(!players.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--gray-l)">등록된 선수 없음</div>';return;}
+  const _showPhoto = (localStorage.getItem('su_si_show_photo') ?? '0') === '1';
   const iconOptCache=Object.entries(STATUS_ICON_DEFS);
   el.innerHTML=[...players].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>{
     const cur=playerStatusIcons[p.name]||'';
@@ -4272,7 +4319,7 @@ function _renderCfgSiList(){
         <select onchange="setStatusIcon('${pN}',this.value);_cfgRefreshSiRow('${pN}')" style="font-size:12px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;max-width:120px">${opts}</select>
         <span id="cfg-si-clr-${encN}">${clrBtn}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:5px;padding:0 12px 6px 52px">
+      <div class="cfg-si-photo-row" style="display:${_showPhoto?'flex':'none'};align-items:center;gap:5px;padding:0 12px 6px 52px">
         <span style="font-size:10px;color:var(--gray-l);white-space:nowrap">🖼️ 프로필</span>
         <input type="text" id="cfg-photo-url-${encN}" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0;font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px" onkeydown="if(event.key==='Enter')setProfilePhoto('${pN}',this.value)">
         <button onclick="setProfilePhoto('${pN}',document.getElementById('cfg-photo-url-${encN}').value)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--blue);background:var(--blue-ll);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">저장</button>

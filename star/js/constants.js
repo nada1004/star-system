@@ -7,6 +7,45 @@ const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
 
 /* ══════════════════════════════════════
+   탭 라벨(표시 이름) 설정
+   - 내부 id는 유지하고 "표시되는 이름만" 설정에서 교체
+   - localStorage: su_tab_labels_v1 (LZString/JSON 모두 지원: J/_lsSave 활용)
+══════════════════════════════════════ */
+const _TAB_LBL_KEY = 'su_tab_labels_v1';
+function getTabLabel(ctx, id, def){
+  try{
+    const m = J(_TAB_LBL_KEY) || {};
+    const v = (m[ctx] && m[ctx][id] != null) ? String(m[ctx][id]) : '';
+    return v ? v : def;
+  }catch(e){
+    return def;
+  }
+}
+function setTabLabel(ctx, id, val){
+  try{
+    const m = J(_TAB_LBL_KEY) || {};
+    m[ctx] = m[ctx] || {};
+    const v = String(val||'').trim();
+    if(!v) delete m[ctx][id];
+    else m[ctx][id] = v;
+    _lsSave(_TAB_LBL_KEY, m);
+  }catch(e){}
+}
+function resetTabLabels(ctx){
+  try{
+    if(!ctx){ localStorage.removeItem(_TAB_LBL_KEY); return; }
+    const m = J(_TAB_LBL_KEY) || {};
+    delete m[ctx];
+    _lsSave(_TAB_LBL_KEY, m);
+  }catch(e){}
+}
+try{
+  window.getTabLabel = getTabLabel;
+  window.setTabLabel = setTabLabel;
+  window.resetTabLabels = resetTabLabels;
+}catch(e){}
+
+/* ══════════════════════════════════════
    스트리머 프로필 이미지 공통 스타일
    - 현황판 칩 프로필 이미지 설정(su_bcp_shape)을 "프로필 이미지 모양"의 기준으로도 사용
    - 인라인 스타일에서도 적용 가능하도록 CSS 변수로 노출
@@ -34,13 +73,16 @@ function applyUnivLogoVars(){
     const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
     const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
     const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
+    // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
+    const dSize = parseInt(localStorage.getItem('su_ul_size_detail') || String(size), 10);
+    const dBox  = parseInt(localStorage.getItem('su_ul_box_detail')  || String(box), 10);
     const radius = (shape === 'square') ? '10px' : '50%';
     document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
     document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
     document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
-    // 대학 상세(모달)용 (요청: 카드 로고 이미지 크기 조정이 그대로 반영되게)
-    document.documentElement.style.setProperty('--su_univ_logo_size_detail', size + 'px');
-    document.documentElement.style.setProperty('--su_univ_logo_box_detail', box + 'px');
+    // 대학 상세(모달)용
+    document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box_detail', dBox + 'px');
   }catch(e){
     console.warn('[applyUnivLogoVars] CSS 변수 설정 실패:', e.message);
   }
@@ -48,6 +90,38 @@ function applyUnivLogoVars(){
 try{ applyUnivLogoVars(); }catch(e){
   console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
 }
+
+/* ══════════════════════════════════════
+   현황판(board2) 대학 로고 크기
+══════════════════════════════════════ */
+function applyBoard2LogoVars(){
+  try{
+    const px = parseInt(localStorage.getItem('su_b2_univ_logo_size') || '42', 10);
+    const v = Math.max(24, Math.min(80, isNaN(px) ? 42 : px));
+    document.documentElement.style.setProperty('--su_b2_univ_logo_size', v + 'px');
+  }catch(e){
+    console.warn('[applyBoard2LogoVars] CSS 변수 설정 실패:', e.message);
+  }
+}
+try{ applyBoard2LogoVars(); }catch(e){}
+
+/* ══════════════════════════════════════
+   대학별 로고 크기(대학상세/스트리머탭)
+   - univCfg에 대학별로 저장:
+     * logoSizeDetail  (대학 상세 모달 로고 크기)
+     * logoSizePlayers (스트리머탭(전체) 대학 로고 크기)
+══════════════════════════════════════ */
+function getUnivLogoSizeStr(univName, ctx, fallback){
+  try{
+    const u = (univCfg||[]).find(x=>x && x.name===univName) || null;
+    if(u){
+      if(ctx==='detail' && u.logoSizeDetail)  return String(parseInt(u.logoSizeDetail,10))+'px';
+      if(ctx==='players' && u.logoSizePlayers) return String(parseInt(u.logoSizePlayers,10))+'px';
+    }
+  }catch(e){}
+  return fallback;
+}
+try{ window.getUnivLogoSizeStr = getUnivLogoSizeStr; }catch(e){}
 
 /* ══════════════════════════════════════
    경기 상세(팝업) 승/패 배경 강도 설정
@@ -398,15 +472,13 @@ function _lsSave(k,obj){
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// (저장 용량 최적화) 선수 데이터(su_p) 경량 저장/로드
-// - history가 가장 큰 비중이므로, 저장 시 "키 제거 + 문자열 사전(dict) 인덱싱" 형태로 pack
-// - 로드시 즉시 unpack하여 기존 로직(배열 + history 객체)을 그대로 유지
-// ─────────────────────────────────────────────────────────────
+// (복구/호환) su_p가 {v:2,p:[...],d:{...}} 형태여도 정상 동작하도록 unpack
 function _unpackPlayers(raw){
   try{
-    if(!raw || typeof raw!=='object') return Array.isArray(raw)?raw:[];
-    if(raw.v!==2 || !Array.isArray(raw.p) || !raw.d) return Array.isArray(raw)?raw:[];
+    if(!raw) return [];
+    if(Array.isArray(raw)) return raw;
+    if(typeof raw!=='object') return [];
+    if(raw.v!==2 || !Array.isArray(raw.p) || !raw.d) return [];
     const d=raw.d||{};
     const res=d.res||[], opp=d.opp||[], race=d.race||[], map=d.map||[], univ=d.univ||[], mode=d.mode||[];
     const get=(arr,i)=> (i==null||i<0)?'':(arr[i]||'');
@@ -431,50 +503,14 @@ function _unpackPlayers(raw){
       return p;
     });
   }catch(e){
-    return Array.isArray(raw)?raw:[];
-  }
-}
-function _packPlayers(playersArr){
-  try{
-    const dict={res:[], opp:[], race:[], map:[], univ:[], mode:[]};
-    const idx=(arr,s)=>{
-      const v=String(s||'').trim();
-      if(!v) return -1;
-      const i=arr.indexOf(v);
-      if(i>=0) return i;
-      arr.push(v);
-      return arr.length-1;
-    };
-    const packed=(playersArr||[]).map(p=>{
-      const c={...p};
-      const h=Array.isArray(c.history)?c.history:[];
-      // save 단계에서 photo는 분리되므로 history만 pack
-      c.h = h.map(it=>[
-        it.date||'', it.time||0,
-        idx(dict.res, it.result),
-        idx(dict.opp, it.opp),
-        idx(dict.race, it.oppRace),
-        idx(dict.map, it.map),
-        it.matchId||'',
-        (it.eloDelta===undefined?null:it.eloDelta),
-        idx(dict.univ, it.univ),
-        idx(dict.mode, it.mode),
-        it.score||'',
-        it._team?1:0
-      ]);
-      delete c.history;
-      return c;
-    });
-    return {v:2, d:dict, p:packed};
-  }catch(e){
-    return playersArr||[];
+    return [];
   }
 }
 
 let playersRaw = J('su_p')  || [];
 let players    = _unpackPlayers(playersRaw) || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
-(function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object')players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
+(function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
@@ -760,59 +796,30 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
-    // (추가) 대전 데이터 sets.games에서 UI 보조 필드 등 중복 키 제거 (용량 절감)
-    const _trimGame=(g)=>{
-      const r={
-        playerA:g.playerA||'',
-        playerB:g.playerB||'',
-        map:g.map||'',
-        winner:g.winner||''
-      };
-      if(g._id) r._id=g._id;
-      if(g._isTeam){
-        r._isTeam=true;
-        if(Array.isArray(g.teamA)) r.teamA=g.teamA;
-        if(Array.isArray(g.teamB)) r.teamB=g.teamB;
-      }
-      return r;
-    };
-    const _trimSets=(sets)=> (sets||[]).map(s=>{
-      const rs={...s};
-      if(rs.games) rs.games=(rs.games||[]).map(_trimGame);
-      return rs;
-    });
-    const _trimMatchArr=(arr)=> (arr||[]).map(m=>{
-      if(!m || !m.sets) return m;
-      const r={...m};
-      r.sets=_trimSets(m.sets);
-      return r;
-    });
     _lsSave('su_pp',_pPhotoMap);
     _lsSave('su_p',_pNoPhoto);
-    // (추가) 선수 데이터(su_p) history pack 저장 (과거 기록 보존, 구조만 경량화)
-    _lsSave('su_p', _packPlayers(_pNoPhoto));
+    _lsSave('su_u',univCfg);
     _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
     _lsSave('su_t',tourD);
     _lsSave('su_mm',miniM);
-    _lsSave('su_mm',_trimMatchArr(miniM));
-    _lsSave('su_um',_trimMatchArr(univM));
-    _lsSave('su_cm',_trimMatchArr(comps));
-    _lsSave('su_ck',_trimMatchArr(_trimM(ckM)));
+    _lsSave('su_um',univM);
+    _lsSave('su_cm',comps);
+    _lsSave('su_ck',_trimM(ckM));
+    _lsSave('su_cn',compNames);
     _lsSave('su_cc',curComp);
     _lsSave('su_pro',_trimM(proM));
-    _lsSave('su_pro',_trimMatchArr(_trimM(proM)));
+    _lsSave('su_ptn',proTourneys);
     _lsSave('su_ptc',curProComp);
     _lsSave('su_tn',tourneys);
     _lsSave('su_ttm',_trimM(ttM));
-    _lsSave('su_ttm',_trimMatchArr(_trimM(ttM)));
+    _lsSave('su_ttcur',_ttCurComp);
     _lsSave('su_indm',indM);
-    _lsSave('su_indm',_trimMatchArr(indM));
-    _lsSave('su_gjm',_trimMatchArr(gjM));
+    _lsSave('su_gjm',gjM);
+    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     _lsSave('su_notices',notices);
-    _lsSave('su_seasons',seasons);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
@@ -900,27 +907,7 @@ let calScheduled = J('su_cal_sched') || [];
 
 // 🆕 랭킹 변동 스냅샷 (points 기준 순위)
 // { playerName: rank } 형태로 저장
-// 랭킹 스냅샷(su_rank_snap) 저장 최적화:
-// - 저장은 "정렬된 선수명 배열"로 (맵 형태 대비 용량 크게 절감)
-// - 런타임은 기존과 동일하게 {name: rank} 맵으로 사용
-function _loadRankSnap(){
-  try{
-    const raw = J('su_rank_snap');
-    if(!raw) return {};
-    // v2 포맷: {v:2,a:[name1,name2,...]}
-    if(typeof raw==='object' && raw.v===2 && Array.isArray(raw.a)){
-      const m={}; raw.a.forEach((n,i)=>{m[n]=i+1;}); return m;
-    }
-    // 구 포맷: {name: rank}
-    if(!Array.isArray(raw) && typeof raw==='object') return raw;
-    // 매우 구 포맷: [names]
-    if(Array.isArray(raw)){
-      const m={}; raw.forEach((n,i)=>{m[n]=i+1;}); return m;
-    }
-  }catch(e){}
-  return {};
-}
-let _rankSnapshot = _loadRankSnap();
+let _rankSnapshot = J('su_rank_snap') || {};
 let _rankSnapDate = localStorage.getItem('su_rank_snap_date') || '';
 
 // 랭킹 스냅샷 업데이트 (하루 1회)
@@ -931,11 +918,9 @@ function updateRankSnapshot() {
   const ranked = [...players]
     .filter(p => !p.retired)
     .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
-  const names = ranked.map(p=>p.name);
   const snap = {};
-  names.forEach((n,i)=>{ snap[n]=i+1; });
-  // 저장은 경량 포맷(v2)
-  localStorage.setItem('su_rank_snap', JSON.stringify({v:2,a:names}));
+  ranked.forEach((p,i) => { snap[p.name] = i+1; });
+  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
   localStorage.setItem('su_rank_snap_date', today);
   _rankSnapshot = snap;
   _rankSnapDate = today;
