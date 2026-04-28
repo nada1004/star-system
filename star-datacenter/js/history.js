@@ -190,7 +190,18 @@ window._histExtPage = window._histExtPage || 1;
 const _HIST_EXT_PAGE_SIZE = 30; // 요청: 30경기씩
 function _histExtLoad(){
   try{
-    return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''};
+    const raw = localStorage.getItem(_HIST_EXT_KEY) || '';
+    if(!raw) return {items:[],raw:'',mode:'today',today:''};
+    // (보강) 외부탭 데이터가 100~수천건으로 커질 수 있어 localStorage 용량 문제 방지:
+    // - 기본은 LZString으로 압축 저장("lz:" prefix)
+    // - 구버전(JSON 직접 저장)도 호환
+    if(raw.startsWith('lz:')){
+      const dec = (typeof LZString!=='undefined' && LZString.decompressFromUTF16)
+        ? (LZString.decompressFromUTF16(raw.slice(3)) || '')
+        : '';
+      return JSON.parse(dec || 'null') || {items:[],raw:'',mode:'today',today:''};
+    }
+    return JSON.parse(raw||'null')||{items:[],raw:'',mode:'today',today:''};
   }catch(e){
     console.warn('[_histExtLoad] localStorage 로드 실패:', e.message);
     return {items:[],raw:'',mode:'today',today:''};
@@ -198,9 +209,16 @@ function _histExtLoad(){
 }
 function _histExtSave(v){
   try{
-    localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v));
+    const json = JSON.stringify(v);
+    // 압축 저장(기본): 대용량 데이터(100건 이상)에서도 안정적으로 저장되게
+    const packed = (typeof LZString!=='undefined' && LZString.compressFromUTF16)
+      ? ('lz:' + LZString.compressFromUTF16(json))
+      : json;
+    localStorage.setItem(_HIST_EXT_KEY, packed);
+    return true;
   }catch(e){
     console.warn('[_histExtSave] localStorage 저장 실패:', e.message);
+    return false;
   }
 }
 function _histExtUid(){ return 'hex_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -687,7 +705,10 @@ window.histExtParseAndRender = function(opts){
   const parsed=(rows?_histExtMapRows(rows):[]).map(x=>({...x, source:x.source||'붙여넣기'}));
   const merged=_histExtDedup([...(st.items||[]), ...parsed]);
   const next={...st, items:merged, raw, mode:'all', today:''};
-  _histExtSave(next);
+  const ok=_histExtSave(next);
+  if(!ok){
+    alert('⚠️ 외부 데이터 저장에 실패했습니다.\n브라우저 저장공간(localStorage) 용량이 부족할 수 있어요.\n(가능하면 크롬/엣지에서 다시 시도하거나, 페이지 범위를 줄여주세요)');
+  }
   // 출력
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
   try{ document.getElementById('hist-ext-cnt-raw').textContent=String(parsed.length); }catch(e){}
@@ -779,7 +800,10 @@ window.histExtFetchFromProxy = async function(){
   const st=_histExtLoad();
   const merged=_histExtDedup([...(st.items||[]), ...allItems]);
   const next={...st, items:merged, raw:st.raw||'', mode:'all', today:''};
-  _histExtSave(next);
+  const ok=_histExtSave(next);
+  if(!ok){
+    alert('⚠️ 외부 데이터 저장에 실패했습니다.\n브라우저 저장공간(localStorage) 용량이 부족할 수 있어요.\n(페이지 범위를 줄이거나, 크롬/엣지에서 다시 시도해주세요)');
+  }
 
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
   try{ document.getElementById('hist-ext-cnt-raw').textContent=String(rawItems.length); }catch(e){}
