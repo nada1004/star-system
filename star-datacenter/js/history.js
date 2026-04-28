@@ -22,9 +22,10 @@ function rHist(C,T){
     // (요청) 표기/순서: 일반 → 중장전 → 대회 …
     {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그', disp:'🏅 일반'},
     {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전',   disp:'⚔️ 중장전'},
-    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 대회'},
-    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트'},
-    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전'},
+    {id:'procomp',    grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 조별리그'},
+    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트', disp:'🗂️ 토너먼트'},
+    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전',     disp:'🤝 팀전'},
+    {id:'procompgj',  grp:'프로리그', lbl:'⚔️ 중장전',   disp:'⚔️ 중장전'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
@@ -45,7 +46,7 @@ function rHist(C,T){
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','procomptn','procompteam','procompgj','all'].includes(histSub);
 
   // 상단: 기록 메뉴(그룹) 버튼 (연/월/정렬은 하위메뉴 우측에 배치)
   let h=`<div class="hist-topbar no-export">`;
@@ -1758,6 +1759,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${aWin||bWin?`<span class="rec-winner" style="font-size:12px;font-weight:900;padding:2px 10px;border-radius:20px;background:rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .06));color:${aWin?ca:cb};border:1.5px solid rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .16));white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:11px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
           <button class="btn btn-w btn-xs" style="padding:3px 10px;font-size:14px" title="메뉴"
+            class="rec-morebtn"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
               a:'${(m.a||'').replace(/'/g,"\\'")}',
@@ -3324,6 +3326,7 @@ function compSummaryListHTML(context){
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0" class="no-export">
           <button class="btn btn-w btn-xs" style="padding:3px 10px;font-size:14px" title="메뉴"
+            class="rec-morebtn"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
               a:'${a.replace(/'/g,"\\'")}',
@@ -3838,7 +3841,7 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
    대전 기록 > 프로리그 대회 탭
 ══════════════════════════════════════ */
 function histProCompHTML() {
-  // 프로리그 대회 서브탭 바
+  // 프로리그 대회 기록 서브탭 (조별/토너/팀전/중장전)
   const _pcSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill ${histSub==='procomp'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
     <button class="pill ${histSub==='procomptn'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
@@ -3853,10 +3856,10 @@ function histProCompHTML() {
     (tn.groups||[]).forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi]||gi;
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      (grp.matches||[]).forEach(m => {
+      (grp.matches||[]).forEach((m, mi) => {
         if (!m.a||!m.b||!m.winner) return;
         if (typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return;
-        allItems.push({...m, _tnName:tn.name, _stage:'조별리그', _stageDetail:`GROUP ${gl}`, _stageColor:col});
+        allItems.push({...m, _tnName:tn.name, _tnId:tn.id, _gi:gi, _mi:mi, _stage:'조별리그', _stageDetail:`GROUP ${gl}`, _stageColor:col});
       });
     });
   });
@@ -3904,6 +3907,8 @@ function histProCompHTML() {
           ${stageTypeBadge}${stageBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
             <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+            ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">✏️ 결과</button>
+            <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">🗑️ 삭제</button>`:''}
           </div>
         </div>
         <div class="rec-sum-header" style="padding:5px 12px 10px">
@@ -3947,7 +3952,8 @@ function histProCompTourneyHTML() {
     const rounds = tn.bracket||[];
     const totalRounds = rounds.length;
     rounds.forEach((rnd, ri) => {
-      const rndLabel = ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
+      // 라운드 표기: 16강/8강/4강/결승 (※ 4강=준결승)
+      const rndLabel = ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,totalRounds-ri)}강`;
       const stageColor = ri===totalRounds-1?'#f59e0b':ri===totalRounds-2?'#7c3aed':ri===totalRounds-3?'#dc2626':'#2563eb';
       rnd.forEach(m => {
         if (!m.a||!m.b) return;

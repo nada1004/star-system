@@ -786,7 +786,8 @@ function openProCompMatchShare(a,b,sa,sb,d){
           if(ri==='3rd') return '3·4위전';
           const r=Number(ri);
           if(!isFinite(r) || totalRnd<=0) return '토너먼트';
-          return r===totalRnd-1?'결승':r===totalRnd-2?'준결승':r===totalRnd-3?'4강':`${Math.pow(2,totalRnd-r)}강`;
+          // 라운드 표기: 16강/8강/4강/결승 (※ 4강=준결승)
+          return r===totalRnd-1?'결승':r===totalRnd-2?'4강':r===totalRnd-3?'8강':`${Math.pow(2,totalRnd-r)}강`;
         };
         // 일반 라운드
         for(let ri=0; ri<(tn.bracket||[]).length; ri++){
