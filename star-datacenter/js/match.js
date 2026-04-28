@@ -545,6 +545,8 @@ function saveMatch(mode){
         }
     }
     
+    // (보강) 티어대회: ttM → history 누락 케이스를 방지하기 위해 저장 직후 동기화
+    try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
     if(mode==='mini')miniSub='records';
     else if(mode==='univm')univmSub='records';
@@ -553,6 +555,13 @@ function saveMatch(mode){
     else if(mode==='comp')compSub='records';
     else if(mode==='tt'){_ttSub='records';compSub='tiertour';}
     render();
+    // (보강) 티어대회 등 기록 저장 직후, 열려있는 스트리머 상세(최근 경기)가 즉시 갱신되지 않는 문제 대응
+    try{
+      const pm = document.getElementById('playerModal');
+      if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
+        window._rebuildPlayerDetail(window._playerModalCurrentName);
+      }
+    }catch(e){}
     return;
   }
   if(!bld.sets.length)return alert('세트를 추가하세요.');
@@ -682,6 +691,8 @@ function saveMatch(mode){
       compName:_ttComp, n:_ttComp, stage:'general'
     });
   }
+  // (보강) 티어대회: ttM → history 누락 케이스를 방지하기 위해 저장 직후 동기화
+  try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
   if(mode==='mini')miniSub='records';
   else if(mode==='univm')univmSub='records';
@@ -690,4 +701,11 @@ function saveMatch(mode){
   else if(mode==='comp')compSub='records';
   else if(mode==='tt'){_ttSub='records';compSub='tiertour';}
   render();
+  // (보강) 기록 저장 직후 열려있는 스트리머 상세 즉시 갱신
+  try{
+    const pm = document.getElementById('playerModal');
+    if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
+      window._rebuildPlayerDetail(window._playerModalCurrentName);
+    }
+  }catch(e){}
 }

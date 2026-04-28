@@ -863,6 +863,17 @@ window.histExtClear = function(){
   try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
   try{ render(); }catch(e){}
 };
+// 외부 데이터 전체 삭제(확인 포함) — 출력 영역에서 바로 실행 가능
+window.histExtClearAll = function(){
+  if(!confirm('외부 탭 데이터를 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
+  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  try{
+    const ta=document.getElementById('hist-ext-raw');
+    if(ta) ta.value='';
+  }catch(e){}
+  try{ render(); }catch(e){}
+};
 window.histExtCopy = async function(){
   const st=_histExtLoad();
   const items=st.items||[];
@@ -983,13 +994,10 @@ function histExternalHTML(){
   const initItems = (st.items||[]);
   setTimeout(()=>{ try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){} }, 0);
   return `
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:10px 0 8px">
-      <div style="font-weight:1000">📎</div>
-    </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
         <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
-        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)">대기</div>
+        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div class="flabel">프리셋</div>
@@ -1039,6 +1047,7 @@ function histExternalHTML(){
         <div style="font-weight:900">2) 출력</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-w btn-xs" onclick="histExtCopy()">전체 복사(현재 보기)</button>
+          <button class="btn btn-w btn-xs" onclick="histExtClearAll()">🗑️ 전체 삭제</button>
           <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
             <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
             <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>

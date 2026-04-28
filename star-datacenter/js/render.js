@@ -222,6 +222,17 @@ window._rebuildPlayerDetail = function(name){
   _mb.innerHTML = buildPlayerDetailHTML(_p);
   injectUnivIcons(_mb);
 };
+// 열려있는 스트리머 상세(최근 경기) 즉시 갱신 헬퍼
+// - 티어대회/대회 조별리그/토너먼트 등 다양한 저장 경로에서 공통 호출 가능
+window.refreshPlayerModalIfOpen = function(){
+  try{
+    const pm = document.getElementById('playerModal');
+    if(!pm || pm.style.display==='none') return;
+    const name = window._playerModalCurrentName || '';
+    if(!name) return;
+    if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(name);
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    선수 이름 클릭 → 모달
@@ -1504,6 +1515,42 @@ function buildPlayerDetailHTML(p){
               });
             }
           });
+        });
+      });
+    });
+  }
+
+  // (보강) ttM(티어대회 기록) 기반으로도 최근 경기 추출
+  // - 티어대회 "일반 기록"은 tourneys.groups/bracket에 없고 ttM에만 쌓일 수 있음
+  // - 이 경우 players.history 반영이 지연/누락되면 스트리머 상세에서 안 보이는 문제가 발생
+  // → ttM의 세트/게임을 직접 스캔해서 최근 경기 목록에 포함
+  if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){
+    ttM.forEach(m=>{
+      if(!m || !m._id || !m.sets) return;
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
+          if(!g || !g.playerA || !g.playerB || !g.winner) return;
+          // 2v2 팀전/콤마 구분 이름 포함 케이스 지원
+          const sp = (x)=>String(x||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+          const aList = sp(g.playerA), bList = sp(g.playerB);
+          const hasMe = (g.playerA===p.name || g.playerB===p.name || aList.includes(p.name) || bList.includes(p.name));
+          const pushedTeam = (typeof _pushTeamGameIfAny==='function')
+            ? _pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회')
+            : false;
+          if(!pushedTeam && !hasMe) return;
+          const opp = (g.playerA===p.name || aList.includes(p.name)) ? g.playerB : g.playerA;
+          const oppP=players.find(x=>x.name===opp);
+          const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+          const isDupInHist = _dedupedHistory.some(h =>
+            h.matchId===gameId || (h.date===(m.d||'') && h.map===(g.map||'-') && h.opp===opp)
+          );
+          if(!isDupInHist){
+            _otherMatches.push({
+              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'티어대회',
+              _dupKey:`mid:${gameId}`
+            });
+          }
         });
       });
     });

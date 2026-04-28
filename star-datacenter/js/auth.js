@@ -359,8 +359,9 @@ function openGameEditModal(editRef, si, gi){
 
   const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
   const modal=document.createElement('div');
-  modal.className='modal';modal.style.display='flex';
-  modal.innerHTML=`<div class="mbox" style="max-width:460px">
+  modal.className='modal modal--gameedit';modal.style.display='flex';
+  // (요청사항) 저장/취소 버튼 아래 여백 최소화
+  modal.innerHTML=`<div class="mbox" style="max-width:460px;padding-bottom:12px">
     <div class="mtitle">✏️ 경기 수정 (${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1})</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px">
       <div style="display:flex;gap:8px;align-items:center">
@@ -461,6 +462,9 @@ function saveGameEdit(editRef, si, gi, btn){
   save();
   btn.closest('.modal').remove();
   render();
+  // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
+  try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 async function captureStats(){
