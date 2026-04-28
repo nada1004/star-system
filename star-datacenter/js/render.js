@@ -1541,6 +1541,12 @@ function buildPlayerDetailHTML(p){
           const opp = (g.playerA===p.name || aList.includes(p.name)) ? g.playerB : g.playerA;
           const oppP=players.find(x=>x.name===opp);
           const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+          // players.history에 동일 gameId가 있으면 eloDelta/eloAfter를 가져와 표시(티어대회 ELO 표시 보강)
+          let _ed=null,_ea=null;
+          try{
+            const hh = (p.history||[]).find(h=>h && h.matchId===gameId);
+            if(hh){ _ed = (hh.eloDelta!=null ? hh.eloDelta : null); _ea = (hh.eloAfter!=null ? hh.eloAfter : null); }
+          }catch(e){}
           const isDupInHist = _dedupedHistory.some(h =>
             h.matchId===gameId || (h.date===(m.d||'') && h.map===(g.map||'-') && h.opp===opp)
           );
@@ -1548,6 +1554,7 @@ function buildPlayerDetailHTML(p){
             _otherMatches.push({
               date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
               opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'티어대회',
+              eloDelta:_ed, eloAfter:_ea,
               _dupKey:`mid:${gameId}`
             });
           }
