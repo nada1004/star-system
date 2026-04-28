@@ -418,6 +418,10 @@ function rBoard2(C, T) {
   } else {
     playerUnivList.sort();
   }
+  const _selBadge = (_b2PlayersUnivFilter && _b2PlayersUnivFilter!=='전체')
+    ? `<button class="pill on" style="flex-shrink:0;white-space:nowrap;background:var(--blue);border-color:var(--blue);color:#fff"
+        onclick="_b2PlayersUnivFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">현재: ${_b2PlayersUnivFilter} ✕</button>`
+    : '';
   const playerFilters = _b2View === 'players' ? `
     <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
     <div style="position:relative">
@@ -427,6 +431,7 @@ function rBoard2(C, T) {
       </select>
       <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
     </div>
+    ${_selBadge}
     <div style="position:relative">
       <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
@@ -442,7 +447,7 @@ function rBoard2(C, T) {
   const rightBtns = saveBar;
 
   const filterBar = `
-    <div id="b2-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <div id="b2-nav" class="b2-nav">
       ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코스타일'):'🧩 펨코스타일'))}
       ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별 신현황판'):'🏟️ 대학별 신현황판'))}
       ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
@@ -578,7 +583,8 @@ function _b2FemcoView() {
       if (existing) existing.remove();
       const ov = document.createElement('div');
       ov.id = 'b2-femco-bg-modal';
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.60);z-index:12000;display:flex;align-items:center;justify-content:center;padding:16px';
+      // (개선) z-index CSS 변수로 통일
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.60);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px';
       const safeTitle = (u||'영상').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       ov.innerHTML = `
         <div style="width:min(980px,96vw);background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 60px rgba(0,0,0,.35)">
@@ -1076,7 +1082,8 @@ function openB2PlayerCreateModal() {
 
   const modal = document.createElement('div');
   modal.id = 'b2-player-create-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000';
+  // (개선) z-index CSS 변수로 통일
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:var(--z-modal-5)';
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;max-width:560px;width:92%;max-height:84vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
@@ -3357,7 +3364,8 @@ function openB2ProfileEditModal(playerName) {
 
   const modal = document.createElement('div');
   modal.id = 'b2-profile-edit-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000';
+  // (개선) z-index CSS 변수로 통일
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:var(--z-modal-5)';
   
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">

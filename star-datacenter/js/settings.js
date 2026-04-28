@@ -2278,6 +2278,7 @@ window.cfgSearchSettings = function(q){
   if(!qq){
     try{ _cfgApplyCat(window._cfgCat, false); }catch(e){}
     try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent=''; }catch(e){}
+    try{ const sug=document.getElementById('cfgSearchSug'); if(sug){ sug.innerHTML=''; sug.style.display='none'; } }catch(e){}
     return;
   }
   let shown=0;
@@ -2308,6 +2309,29 @@ window.cfgSearchSettings = function(q){
     }
   }catch(e){}
   try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent = `검색 ${shown}개`; }catch(e){}
+
+  // (개선) 검색 결과 "바로가기" 추천 목록
+  try{
+    const sug=document.getElementById('cfgSearchSug');
+    if(!sug) return;
+    const titles=window._cfgSecTitle||{};
+    const hits=[];
+    for(const id in titles){
+      const t=String(titles[id]||'');
+      const plain=t.replace(/<[^>]+>/g,'');
+      const hay=(id+' '+plain).toLowerCase();
+      if(hay.includes(qq)) hits.push({id,t:plain});
+    }
+    hits.sort((a,b)=>a.t.localeCompare(b.t,'ko'));
+    const top=hits.slice(0,10);
+    if(!top.length){
+      sug.innerHTML='';
+      sug.style.display='none';
+      return;
+    }
+    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()">${x.t}</button>`).join('');
+    sug.style.display='block';
+  }catch(e){}
 };
 
 // 디버그 플래그 (기본 OFF): URL에 ?cfgdebug=1 이 포함되면 콘솔에 자세히 기록
@@ -2392,6 +2416,7 @@ function rCfg(C,T){
       <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex:1;min-width:220px;justify-content:flex-end">
         <div style="position:relative;flex:1;max-width:360px;min-width:220px">
           <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:700" oninput="cfgSearchSettings(this.value)">
+          <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
         </div>
         <span id="cfgSearchCnt" style="font-size:11px;color:var(--gray-l);font-weight:900;white-space:nowrap"></span>
       </div>
@@ -6158,6 +6183,35 @@ function cfgTierThemeReset(){
   if(typeof reCfg==='function') reCfg();
 }
 
+// ── 경기 상세(팝업) FX 프리셋 ─────────────────────────────────────
+function cfgMdFxApplyPreset(preset){
+  try{
+    const p = String(preset||'').trim();
+    if(p==='minimal'){
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','minimal');
+      localStorage.setItem('su_md_fx_anim','shimmer');
+      localStorage.setItem('su_md_fx_speed_mul','1.6');
+      localStorage.setItem('su_md_fx_int','60');
+    }else if(p==='strong'){
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','classic');
+      localStorage.setItem('su_md_fx_anim','glint');
+      localStorage.setItem('su_md_fx_speed_mul','0.8');
+      localStorage.setItem('su_md_fx_int','140');
+    }else{ // basic
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','classic');
+      localStorage.setItem('su_md_fx_anim','both');
+      localStorage.setItem('su_md_fx_speed_mul','1');
+      localStorage.setItem('su_md_fx_int','100');
+    }
+    try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+    try{ if(typeof _renderCfgMatchDetailSection==='function') _renderCfgMatchDetailSection(); }catch(e){}
+  }catch(e){}
+}
+
 // ── 색상 입력/스포이드 공용 유틸 ──
 function cfgNormHex(v){
   const s=String(v||'').trim();
@@ -6455,6 +6509,12 @@ function _renderCfgMatchDetailSection(){
           헤더 애니메이션 사용
           <span style="font-size:11px;color:var(--gray-l);font-weight:700">(ON/OFF)</span>
         </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('basic')">기본</button>
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('strong')">강하게</button>
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('minimal')">미니멀</button>
+          <span style="font-size:11px;color:var(--gray-l);align-self:center">프리셋을 누르면 ON/색감/효과/속도/강도가 한번에 적용됩니다</span>
+        </div>
         <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
           <div style="font-size:12px;font-weight:800;color:var(--text2)">색감 프리셋</div>
           <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"

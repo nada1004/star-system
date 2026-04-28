@@ -100,7 +100,7 @@ function rTotal(C,T){
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
-  let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+  let filterBar=`<div class="fbar utilbar utilbar--scroll" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
     <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
@@ -450,7 +450,8 @@ function openMergePlayersModal(){
   if(modal) modal.remove();
   modal=document.createElement('div');
   modal.id=modalId;
-  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:12000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  // (개선) z-index CSS 변수로 통일
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   const list=players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
   modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 16px;width:520px;max-width:100%;box-shadow:0 10px 50px rgba(0,0,0,.35)">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
