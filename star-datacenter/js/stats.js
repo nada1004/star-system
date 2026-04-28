@@ -1574,6 +1574,18 @@ function statsShareCardHTML(){
     :[];  // 검색하기 전에는 빈 배열 - 아무것도 표시 안 함
   // 모든 경기 최신순 (tourneys 대회 경기 포함)
   const tourMatchesForShare=typeof getTourneyMatches==="function"?getTourneyMatches():[];
+  // (보강) 티어대회(tourneys.type==='tier') 공유 카드에서는 "대학 로고"를 숨김
+  // getTourneyMatches()의 결과는 tn.type이 없어서 tnId로 역참조하여 플래그 주입
+  try{
+    const tnMap = new Map((tourneys||[]).map(tn=>[tn.id, tn]));
+    tourMatchesForShare.forEach(m=>{
+      const tn = tnMap.get(m._tnId);
+      if(tn && tn.type==='tier'){
+        m._matchType = 'tt';
+        m._noUnivIcon = true;
+      }
+    });
+  }catch(e){}
   const allMatches=statsFilterMatches([...miniM,...univM,...ckM,...comps,...tourMatchesForShare]).sort((a,b)=>(b.d||"").localeCompare(a.d||""));
   // 인덱스 일치/성능 위해 리스트를 전역에 보관
   try{ window._shareMatchList = allMatches; }catch(e){}

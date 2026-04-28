@@ -191,6 +191,13 @@ function _applyCloudData(d) {
       if(typeof window.soopApplySettings==='function') window.soopApplySettings();
     }catch(e){}
 
+    // 🧾 대전기록 > 외부 탭 데이터 동기화
+    try{
+      if(s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
+      if(s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
+      if(s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
+    }catch(e){}
+
     // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
     try{
       if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
@@ -299,7 +306,14 @@ async function fbCloudSave() {
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
       // 📺 SOOP 멀티뷰 (설정 동기화)
-      soopList: localStorage.getItem('su_soop_list') || ''
+      soopList: localStorage.getItem('su_soop_list') || '',
+
+      // 🧾 대전기록 > 외부 탭 데이터 동기화
+      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
+      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
+      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
+      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
+      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || ''
     },
     savedAt
   };
