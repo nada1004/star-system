@@ -437,8 +437,20 @@ function _histExtDedup(items){
     if(seen.has(k)) return;
     seen.add(k); out.push(x);
   });
-  // 날짜 내림차순
-  out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  // 날짜 내림차순 (정규화: 2026-4-2 같은 형태도 최신순이 정확히 나오게)
+  const _normDateSort = (d)=>{
+    const s=String(d||'').trim();
+    if(!s) return '';
+    const m=s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
+  out.sort((a,b)=>_normDateSort(String(b.date||'')).localeCompare(_normDateSort(String(a.date||''))));
   return out;
 }
 
@@ -1484,18 +1496,32 @@ function statCard(label,w,l,d,col){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // (정렬 보강) 티어대회 등 filtered 목록도 "입력 순서"가 아니라 날짜 기준으로 정렬
+  // - 사용자가 과거 날짜 경기를 나중에 저장하면 unshift 때문에 최신순이 깨질 수 있음
+  const _normDateSort = (d)=>{
+    const s = String(d||'').trim();
+    if(!s) return '';
+    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
   let h='';
   let _filtered=false;
   // 유효 경기만 모아 렌더(그룹 요약 제거 요청)
   const list=[];
-  arr.forEach(m=>{
+  arr.forEach((m, _origIdx)=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
-    list.push(m);
+    list.push({m, _origIdx});
   });
 
   function _renderItem(m){
@@ -1549,7 +1575,17 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     </div>`;
   }
 
-  list.forEach(_renderItem);
+  // 날짜 정렬(기본: 최신순). 같은 날짜면 원래 배열 순서를 유지
+  try{
+    const dir = (typeof recSortDir!=='undefined' && recSortDir==='asc') ? 'asc' : 'desc';
+    list.sort((x,y)=>{
+      const dx=_normDateSort(x.m?.d||''), dy=_normDateSort(y.m?.d||'');
+      const cmp = dir==='asc' ? dx.localeCompare(dy) : dy.localeCompare(dx);
+      if(cmp!==0) return cmp;
+      return (x._origIdx||0) - (y._origIdx||0);
+    });
+  }catch(e){}
+  list.forEach(x=>_renderItem(x.m));
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }
@@ -3624,7 +3660,10 @@ function openHistDetailModal(key){
   // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
   const _openShareByObj = (obj)=>{
     try{
-      window._shareMatchObj = obj ? {...obj} : null;
+      // 티어대회(tt) 등에서 공유카드 표기 보정
+      const _mt = modeKey==='tt' ? 'tt' : (obj?._matchType || (modeKey||''));
+      const _usePhoto = modeKey==='tt' ? true : (obj?._usePlayerPhoto || false);
+      window._shareMatchObj = obj ? {...obj, _matchType:_mt, _usePlayerPhoto:_usePhoto} : null;
       window._shareMode = 'match';
       if(typeof openShareCardModal==='function') openShareCardModal();
       setTimeout(()=>{ try{ if(window._shareMatchObj && typeof renderShareCardByMatchObj==='function') renderShareCardByMatchObj(window._shareMatchObj); }catch(_){ } }, 80);

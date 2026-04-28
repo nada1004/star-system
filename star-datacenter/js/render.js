@@ -884,10 +884,22 @@ function openProCompMatchShare(a,b,sa,sb,d){
   },80);
 }
 function openShareCardFromMatch(mode,idx){
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
+  const arr=mode==='mini'?miniM
+    :mode==='univm'?univM
+    :mode==='ck'?ckM
+    :mode==='comp'?comps
+    :mode==='pro'?proM
+    :mode==='tt'?(typeof ttM!=='undefined'?ttM:[])
+    :miniM;
   const m=arr[idx]||null;
   const isCKorPro=(mode==='ck'||mode==='pro');
-  window._shareMatchObj=m?{...m,_noUnivIcon:isCKorPro,_matchType:isCKorPro?mode:''}:null;
+  // 티어대회(tt): 대학 로고가 아닌 "선수 사진/종족" 기반으로 표시 (대학 로고 노출 방지)
+  const isTier = (mode==='tt');
+  window._shareMatchObj=m?{...m,
+    _matchType:isCKorPro?mode:(isTier?'tt':''),
+    _noUnivIcon:isCKorPro, // ck/pro는 대학 로고를 숨김(기존 정책)
+    _usePlayerPhoto:isTier?true:(m._usePlayerPhoto||false)
+  }:null;
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{
