@@ -230,6 +230,12 @@ window._rebuildPlayerDetail = function(name){
 function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
+  // (버그픽스) 공유카드(sharecard)에서 스트리머 클릭 시 상세 모달이 뒤로 깔리는 문제:
+  // 공유카드 오버레이를 먼저 닫고(제거) 스트리머 상세를 연다.
+  try{
+    const sc=document.getElementById('sharecard-overlay');
+    if(sc) sc.remove();
+  }catch(e){}
   // REQ4: 다른 선수로 변경 시 페이지 초기화
   if(window._playerModalCurrentName!==name){
     playerHistPage=0; window._oppPage=0; window._playerModalYear='';
@@ -2032,8 +2038,14 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
       const modeLbl=hh.mode||'';
-      const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
-      const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
+      const _getPdModeBadgeColors = ()=>{
+        const defaults={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
+        try{
+          const user=JSON.parse(localStorage.getItem('su_pd_mode_badge_colors')||'{}')||{};
+          return {...defaults, ...user};
+        }catch(e){ return defaults; }
+      };
+      const modeColor=(_getPdModeBadgeColors()[modeLbl])||'#6b7280';
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
       const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전','티어대회 토너먼트'];
       const _selfSafe=escJS(p.name);
