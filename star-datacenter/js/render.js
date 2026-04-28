@@ -906,10 +906,21 @@ function openShareCardFromMatch(mode,idx){
   const isCKorPro=(mode==='ck'||mode==='pro');
   // 티어대회(tt): 대학 로고가 아닌 "선수 사진/종족" 기반으로 표시 (대학 로고 노출 방지)
   const isTier = (mode==='tt');
+  // (보강) 티어대회 "일반 기록"(A팀/B팀 팀전) 공유카드에서 로고가 '?'로 나오는 문제:
+  // - 일반 기록은 m.a/m.b가 없거나 'A팀'/'B팀' 형태일 수 있어 getPlayerPhotoHTML이 '?'를 출력함
+  // → 이 경우 대학/선수 로고 대신 텍스트(A팀/B팀)만 표시하도록 처리
+  const isTierTeamStyle = isTier && m && (
+    (Array.isArray(m.teamAMembers) && m.teamAMembers.length) ||
+    (Array.isArray(m.teamBMembers) && m.teamBMembers.length) ||
+    (!m.a && !m.b) ||
+    (String(m.a||'').trim()==='A팀' && String(m.b||'').trim()==='B팀')
+  );
   window._shareMatchObj=m?{...m,
     _matchType:isCKorPro?mode:(isTier?'tt':''),
-    _noUnivIcon:isCKorPro, // ck/pro는 대학 로고를 숨김(기존 정책)
-    _usePlayerPhoto:isTier?true:(m._usePlayerPhoto||false)
+    _noUnivIcon:isCKorPro || isTierTeamStyle,
+    _usePlayerPhoto:isTier ? (!isTierTeamStyle) : (m._usePlayerPhoto||false),
+    // 팀 스타일은 a/b를 강제로 A팀/B팀으로
+    ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
   }:null;
   _shareMode='match';
   openShareCardModal();
@@ -2127,14 +2138,15 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
-        :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
+        ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
+        :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
-        <td>${modeCellHTML}</td>
+        <td style="white-space:nowrap">${modeCellHTML}</td>
         <td>${isWin
           ?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`
           :isDraw

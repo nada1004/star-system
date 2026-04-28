@@ -6398,7 +6398,7 @@ function _renderCfgPdSection(){
   // 설정탭을 열 때도 즉시 반영(캐시/로드 순서 이슈 방지)
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{
-    try{ return (localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
+    try{ return (localStorage.getItem('su_profile_shape')||localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
   })(); // circle | square
   const shapeBtns = `
     <button class="btn btn-xs ${_shape==='circle'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('circle')">⭕ 원형</button>
@@ -6759,10 +6759,8 @@ function cfgPdResetModeBadgeColors(){
 function _setGlobalProfileShape(shape){
   try{
     const v = (shape==='square') ? 'square' : 'circle';
-    localStorage.setItem('su_bcp_shape', v);
-    // 현황판 칩 설정과 동일 키 사용
-    try{ if(typeof boardChipPhotoShape!=='undefined') boardChipPhotoShape=v; }catch(e){}
-    try{ if(typeof saveBoardChipPhotoSettings==='function') saveBoardChipPhotoSettings(); }catch(e){}
+    // 전역 프로필 모양은 현황판 칩과 분리 저장
+    localStorage.setItem('su_profile_shape', v);
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}
   _renderCfgPdSection();
