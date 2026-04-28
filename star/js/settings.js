@@ -345,6 +345,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
       window._renderCfgPdSection();
     }
+    if(el && el.open && id==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function'){
+      window._renderCfgPdModeBadgeSection();
+    }
     if(el && el.open && id==='paste' && typeof window.cfgRenderPlayerAliasMap==='function'){
       window.cfgRenderPlayerAliasMap();
     }
@@ -360,7 +363,8 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - 기존 키/로직은 유지하고, 메뉴/동선만 통합해서 찾기 쉽게 만든다.
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pd','matchdetail','univlogoimg','si','siAssign'],
+  // (요청사항) "최근 경기 종목(종류) 배지" 색상은 별도 메뉴로 분리
+  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
@@ -2347,27 +2351,8 @@ try{
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
-    // (요청사항) 일부 UI/디자인 설정은 로그인 없이도 조정 가능해야 함
-    // - 특히 스트리머 상세 "최근 경기"의 종목(종류) 배지 색상 등
-    C.innerHTML=`
-      <div style="padding:14px 10px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-          <div style="font-weight:900;font-size:14px;color:var(--text)">일반 설정</div>
-          <span style="font-size:11px;color:var(--gray-l)">※ 아래 항목은 로그인 없이 변경 가능합니다</span>
-          <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="om('loginModal')" title="관리자 전용 설정은 로그인 후 이용 가능합니다">🔐 관리자 로그인</button>
-        </div>
-        <details open data-cfg-sec="pd" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 12px;margin-bottom:12px">
-          <summary style="cursor:pointer;font-weight:900;font-size:13px;color:var(--text2)">🎨 스트리머 상세 스타일 설정</summary>
-          <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px">스트리머 상세(최근 경기 포함) UI 색상/표시를 조정합니다.</div>
-          <div id="cfg-pd-body"></div>
-        </details>
-        <div style="font-size:11px;color:var(--gray-l);padding:0 2px">
-          더 많은 설정(동기화/데이터/운영 등)은 관리자 로그인 후 이용할 수 있습니다.
-        </div>
-      </div>
-    `;
-    // 섹션 렌더 (펼침 여부 무관)
-    try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
+    // (요청사항) 설정탭은 관리자 로그인 후만 접근 가능
+    C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(&#39;loginModal&#39;)">&#128273; 로그인</button></div>';
     return;
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='🧩 운영/콘텐츠';
@@ -2390,7 +2375,9 @@ function rCfg(C,T){
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🎭 상태 아이콘 (목록/추가)', paste:'🤖 자동인식',
-    b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지', pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
+    b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지',
+    pdModeBadge:'🎨 최근 경기 종목 배지 색상',
+    pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
@@ -4382,6 +4369,10 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('matchdetail','🎮 경기 상세(팝업) 설정')}
     <div id="cfg-md-body"></div>
   </details>
+  ${_scfgD('pdModeBadge','🎨 최근 경기 종목(종류) 배지 색상')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 → 최근 경기 기록의 “종목/종류” 배지 색상을 변경합니다.</div>
+    <div id="cfg-pdmb-body"></div>
+  </details>
   ${_scfgD('pd','🎨 스트리머 상세 스타일 설정')}
     <div id="cfg-pd-body"></div>
   </details>
@@ -6344,6 +6335,48 @@ function clearGhToken(){
 }
 
 // ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
+function _cfgBuildPdModeBadgeColorRows(){
+  // 최근 경기 기록 "종목(종류) 배지" 색상 커스텀 (기본값 + 사용자 오버라이드)
+  const defaults = {
+    '조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777',
+    '대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b',
+    '대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'
+  };
+  const user = (()=>{ try{ return JSON.parse(localStorage.getItem('su_pd_mode_badge_colors')||'{}')||{}; }catch(e){ return {}; } })();
+  const colors = {...defaults, ...user};
+  const rows = Object.keys(defaults).map(k=>{
+    const v = colors[k] || defaults[k];
+    const kk = k.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="min-width:84px;font-size:12px;font-weight:800;color:var(--text2)">${k}</span>
+      <input type="color" value="${v}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--white);cursor:pointer"
+        onchange="cfgPdSetModeBadgeColor('${kk}',this.value)">
+      <input type="text" value="${v}" style="width:96px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;text-align:center"
+        onblur="cfgPdSetModeBadgeColor('${kk}',this.value)" placeholder="#RRGGBB">
+      <span style="margin-left:auto;background:${v};color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px">예시</span>
+    </div>`;
+  }).join('');
+  return {defaults, rows};
+}
+
+function _renderCfgPdModeBadgeSection(){
+  const body = document.getElementById('cfg-pdmb-body');
+  if(!body) return;
+  const {rows} = _cfgBuildPdModeBadgeColorRows();
+  body.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 종목(종류) 배지 색상</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">변경 즉시 반영됩니다.</div>
+      ${rows}
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <button class="btn btn-w btn-xs" onclick="cfgPdResetModeBadgeColors()">🔄 기본값으로 초기화</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 바뀐 색상은 즉시 반영됩니다</span>
+      </div>
+    </div>
+  `;
+}
+try{ window._renderCfgPdModeBadgeSection = _renderCfgPdModeBadgeSection; }catch(e){}
+
 function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');
   if(!body) return;
@@ -6361,26 +6394,7 @@ function _renderCfgPdSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'contain').trim(); }catch(e){ return 'contain'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
-  // 최근 경기 기록 "종목(종류) 배지" 색상 커스텀
-  const _pdModeDefaults = {
-    '조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777',
-    '대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b',
-    '대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'
-  };
-  const _pdModeUser = (()=>{ try{ return JSON.parse(localStorage.getItem('su_pd_mode_badge_colors')||'{}')||{}; }catch(e){ return {}; } })();
-  const _pdModeColors = {..._pdModeDefaults, ..._pdModeUser};
-  const _pdModeColorRows = Object.keys(_pdModeDefaults).map((k,i)=>{
-    const v = _pdModeColors[k] || _pdModeDefaults[k];
-    const kk = k.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="min-width:84px;font-size:12px;font-weight:800;color:var(--text2)">${k}</span>
-      <input type="color" value="${v}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--white);cursor:pointer"
-        onchange="cfgPdSetModeBadgeColor('${kk}',this.value)">
-      <input type="text" value="${v}" style="width:96px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;text-align:center"
-        onblur="cfgPdSetModeBadgeColor('${kk}',this.value)" placeholder="#RRGGBB">
-      <span style="margin-left:auto;background:${v};color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px">예시</span>
-    </div>`;
-  }).join('');
+  const _pdModeColorRows = _cfgBuildPdModeBadgeColorRows().rows;
   // 설정탭을 열 때도 즉시 반영(캐시/로드 순서 이슈 방지)
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{
@@ -6727,6 +6741,7 @@ function cfgPdSetModeBadgeColor(mode, color){
     localStorage.setItem('su_pd_mode_badge_colors', JSON.stringify(obj));
     try{ if(typeof render==='function') render(); }catch(e){}
     _renderCfgPdSection();
+    try{ if(typeof _renderCfgPdModeBadgeSection==='function') _renderCfgPdModeBadgeSection(); }catch(e){}
   }catch(e){}
 }
 
@@ -6737,6 +6752,7 @@ function cfgPdResetModeBadgeColors(){
   try{ localStorage.removeItem('su_pd_mode_badge_colors'); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   _renderCfgPdSection();
+  try{ if(typeof _renderCfgPdModeBadgeSection==='function') _renderCfgPdModeBadgeSection(); }catch(e){}
 }
 
 // 전역 프로필 이미지 모양(원/네모)
