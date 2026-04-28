@@ -1206,6 +1206,21 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .cdot{width:24px;height:24px;border-radius:5px;flex-shrink:0;}
 .modal{display:none;position:fixed;z-index:var(--z-modal);inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);} /* [Z-IDX] */
 
+/* (요청사항) 대전기록 "경기 수정" 류 모달에서 align-items 기본값(stretch) 때문에
+   저장/취소 버튼 아래로 과도한 공백이 생기는 현상 방지 */
+.modal--re,
+.modal--gameedit{
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+.modal--re .mbox,
+.modal--gameedit .mbox{
+  height:auto;
+  max-height:88vh;
+  overflow-y:auto;
+}
+
 /* pasteModal(경기 결과 붙여넣기) — 기본 flex align-items:stretch로 인해 모달 박스가 과도하게 늘어나
    '취소' 버튼 아래로 큰 공백이 생기는 현상 방지 */
 #pasteModal{align-items:center;justify-content:center;padding:16px;}
@@ -1616,6 +1631,13 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     width:100%;
     max-width:100%;
     border-radius:20px 20px 0 0;
+  }
+  /* (요청사항) 경기 수정/기록 수정 모달: 저장/취소 버튼 아래 과한 여백 제거 */
+  /* - 기본 바텀시트는 safe-area 포함해 하단 패딩이 커서 공백이 크게 보일 수 있음 */
+  .modal--gameedit .mbox,
+  .modal--re .mbox{
+    /* safe-area는 유지하되, 추가 여백은 최소화 */
+    padding: 0 14px env(safe-area-inset-bottom, 0px) !important;
   }
 }
 
