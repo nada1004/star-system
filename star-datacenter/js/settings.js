@@ -2505,8 +2505,11 @@ ${_scfgD('notice','📢 공지 관리')}
       return `<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
         <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
         <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
-        <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상"
-          onchange="univCfg[${i}].color=this.value;try{const d=this.parentElement.querySelector('.cdot');if(d)d.style.background=this.value;}catch(e){};save();if(typeof renderBoard==='function')renderBoard()">
+        <input id="cfg-univ-c-${i}" type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상"
+          onchange="cfgUnivSetColor(${i},this.value)">
+        <input id="cfg-univ-hex-${i}" type="text" value="${u.color}" placeholder="#RRGGBB" title="대학 색상 HEX 입력" style="width:96px;padding:4px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800"
+          onblur="cfgUnivSetColor(${i},this.value)">
+        <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgUnivPickColor(${i})">🎯</button>
         <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
           onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
           ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
@@ -2924,8 +2927,10 @@ ${_scfgD('notice','📢 공지 관리')}
             const ic=String(th.icon?.[t]||'');
             return `<div style="padding:10px 10px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:8px">
               <div id="cfg-tier-prev-${i}" style="display:flex;justify-content:center">${getTierBadge(t)}</div>
-              <div style="display:flex;gap:6px;align-items:center;justify-content:center">
-                <input type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+              <div style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap">
+                <input id="cfg-tier-c-${encodeURIComponent(t)}" type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+                <input id="cfg-tier-hex-${encodeURIComponent(t)}" type="text" value="${c}" placeholder="#RRGGBB" title="티어 색상 HEX 입력" style="width:92px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800;text-align:center" onblur="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+                <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgTierThemePickColor('${_jsq(t)}')">🎯</button>
                 <input type="text" value="${_attr(ic)}" placeholder="이모지" title="티어 이모지" style="width:64px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;text-align:center" oninput="cfgTierThemeSetIcon('${_jsq(t)}',this.value)">
               </div>
               <div style="font-size:10px;color:var(--gray-l);text-align:center">${t}</div>
@@ -6125,7 +6130,17 @@ function cfgTierThemeSetSat(pct){
 }
 function cfgTierThemeSetColor(tier, hex){
   if(typeof setTierTheme!=='function') return;
-  setTierTheme({bg:{[tier]:hex}});
+  const c = cfgNormHex(hex);
+  if(!c){ try{ alert('색상 코드는 #RRGGBB 형식으로 입력하세요.'); }catch(e){}; return; }
+  setTierTheme({bg:{[tier]:c}});
+  // 입력창 동기화
+  try{
+    const sid=encodeURIComponent(tier);
+    const cInp=document.getElementById('cfg-tier-c-'+sid);
+    if(cInp) cInp.value=c;
+    const hInp=document.getElementById('cfg-tier-hex-'+sid);
+    if(hInp) hInp.value=c;
+  }catch(e){}
   if(typeof render==='function') render();
   if(typeof reCfg==='function') reCfg();
 }
@@ -6141,6 +6156,59 @@ function cfgTierThemeReset(){
   resetTierTheme();
   if(typeof render==='function') render();
   if(typeof reCfg==='function') reCfg();
+}
+
+// ── 색상 입력/스포이드 공용 유틸 ──
+function cfgNormHex(v){
+  const s=String(v||'').trim();
+  if(!s) return null;
+  const t = s.startsWith('#') ? s.slice(1) : s;
+  if(/^[0-9a-fA-F]{6}$/.test(t)) return '#'+t.toUpperCase();
+  if(/^[0-9a-fA-F]{3}$/.test(t)) return '#'+t.split('').map(ch=>ch+ch).join('').toUpperCase();
+  return null;
+}
+async function cfgPickColorHex(){
+  try{
+    if(!window.EyeDropper){
+      alert('스포이드 기능은 크롬/엣지 등 일부 브라우저에서만 지원됩니다.');
+      return null;
+    }
+    const ed=new EyeDropper();
+    const res=await ed.open();
+    return res && res.sRGBHex ? String(res.sRGBHex) : null;
+  }catch(e){
+    return null;
+  }
+}
+
+function cfgUnivSetColor(i, hex){
+  const c = cfgNormHex(hex);
+  if(!c){ try{ alert('색상 코드는 #RRGGBB 형식으로 입력하세요.'); }catch(e){}; return; }
+  try{ univCfg[i].color = c; }catch(e){ return; }
+  // UI 동기화
+  try{ 
+    const cInp=document.getElementById('cfg-univ-c-'+i);
+    const row=cInp && cInp.closest ? cInp.closest('.srow') : null;
+    const dot=row ? row.querySelector('.cdot') : null;
+    if(dot) dot.style.background=c;
+  }catch(e){}
+  try{
+    const cInp=document.getElementById('cfg-univ-c-'+i);
+    if(cInp) cInp.value=c;
+    const hInp=document.getElementById('cfg-univ-hex-'+i);
+    if(hInp) hInp.value=c;
+  }catch(e){}
+  try{ save(); }catch(e){}
+  try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+}
+async function cfgUnivPickColor(i){
+  const c = await cfgPickColorHex();
+  if(c) cfgUnivSetColor(i,c);
+}
+
+async function cfgTierThemePickColor(tier){
+  const c = await cfgPickColorHex();
+  if(c) cfgTierThemeSetColor(tier,c);
 }
 
 async function addAdminAccount(){
