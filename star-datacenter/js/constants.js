@@ -1168,27 +1168,22 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
-  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
+  // 중복 체크
+  // - matchId가 있으면 matchId가 곧 고유키(게임 단위)라고 가정하고 matchId만으로 중복 판단
+  //   (티어대회/대학CK 등에서 같은 날짜/같은 맵/같은 상대가 여러 번 나올 수 있어 date+map+opp로 막으면 누락됨)
+  // - matchId가 없을 때만 date+map+opp로 중복 방지
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
   // matchId 기반 체크
-  const wDupMatch=matchId
-    ?(isGameId
-      ?(w.history||[]).find(h=>h.matchId===matchId)
-      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
-    :null;
-  const lDupMatch=matchId
-    ?(isGameId
-      ?(l.history||[]).find(h=>h.matchId===matchId)
-      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
-    :null;
-  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
-  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
-  // 둘 중 하나라도 중복이면 중단
-  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
+  const wDupMatch = matchId ? (w.history||[]).find(h=>h.matchId===matchId) : null;
+  const lDupMatch = matchId ? (l.history||[]).find(h=>h.matchId===matchId) : null;
+  if(wDupMatch||lDupMatch) return;
+  // matchId가 없을 때만 fallback 사용
+  if(!matchId){
+    const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+    const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+    if(wDupFallback||lDupFallback) return;
+  }
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -1231,12 +1226,16 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   if(!b.history)b.history=[];
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  // 중복 체크: matchId 우선, 없으면 date+map+opp
+  // 중복 체크: matchId가 있으면 matchId만으로 판단(게임 단위 중복 허용 방지)
   const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;
   const bDup = matchId ? (b.history||[]).find(h=>h.matchId===matchId) : null;
-  const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
-  const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
-  if(aDup||bDup||aDupFallback||bDupFallback) return;
+  if(aDup||bDup) return;
+  // matchId 없을 때만 fallback
+  if(!matchId){
+    const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
+    const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
+    if(aDupFallback||bDupFallback) return;
+  }
   const t=Date.now();
   const au=univA||a.univ||'';
   const bu=univB||b.univ||'';

@@ -47,6 +47,13 @@ function _applyCloudData(d) {
     if(v !== undefined) {
       players=_fbArr(v, []);
       players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+      // photo 복원 (players에 photo가 없고, playerPhotos 맵이 있으면 주입)
+      try{
+        const pm = d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null;
+        if(pm){
+          players.forEach(p=>{ if(p && p.name && !p.photo && pm[p.name]) p.photo = pm[p.name]; });
+        }
+      }catch(e){}
     }
   }
   if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
@@ -102,6 +109,23 @@ function _applyCloudData(d) {
     }
   }
   {
+  }
+  // ttM (티어대회 기록)
+  {
+    const v = d.ttM||d.tiertour||d.tierTourM;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
+    if(arr !== null){
+      ttM = arr;
+      // 중첩 구조 보정
+      try{
+        (ttM||[]).forEach(m=>{
+          if(m.sets) m.sets=_fbArr(m.sets,[]);
+          (m.sets||[]).forEach(s=>{ if(s.games) s.games=_fbArr(s.games,[]); });
+        });
+      }catch(e){}
+      // 티어대회 마이그레이션 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+    }
   }
   {
     const v = d.indM||d.ind;
@@ -268,9 +292,27 @@ async function fbCloudSave() {
   window._lastAdminSaveTime = savedAt;
   window._isSaving = true;
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
+  // (용량 최적화) Firebase 페이로드를 줄이기 위해 players.photo(base64)를 분리 저장
+  // - localSave와 동일한 전략: 사진은 map으로 따로 보내고, players에는 photo를 제거
+  // - history의 eloAfter는 UI에서 재계산 가능하므로 제거(크기 절감)
+  const _pPhotoMap = {};
+  const _pNoPhoto = (players||[]).map(p=>{
+    const c={...p};
+    if(c.photo){ _pPhotoMap[c.name]=c.photo; delete c.photo; }
+    if(c.history && c.history.length){
+      // eslint-disable-next-line no-unused-vars
+      c.history = c.history.map(({eloAfter,...h})=>h);
+    }
+    return c;
+  });
+
   const dataObj = {
-    players, univCfg, maps, tourD, miniM, univM, comps, ckM,
+    players: _pNoPhoto,
+    playerPhotos: _pPhotoMap,
+    univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
+    // 🎯 티어대회 기록(대전기록 탭/스트리머 history 동기화용)
+    ttM: (typeof ttM!=='undefined' ? ttM : []),
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
     curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)

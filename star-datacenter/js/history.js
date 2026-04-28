@@ -716,7 +716,9 @@ window.histExtParseAndRender = function(opts){
   // (추가) 붙여넣기 데이터는 기존 items에 누적
   const parsed=(rows?_histExtMapRows(rows):[]).map(x=>({...x, source:x.source||'붙여넣기'}));
   const merged=_histExtDedup([...(st.items||[]), ...parsed]);
-  const next={...st, items:merged, raw, mode:'all', today:''};
+  // (용량 최적화) raw(붙여넣은 원문 HTML/텍스트)는 용량이 매우 커질 수 있어 저장하지 않음
+  // - items(정규화된 데이터)만 저장하면 다른 기기 동기화/검색에는 충분
+  const next={...st, items:merged, raw:'', mode:'all', today:''};
   const ok=_histExtSave(next);
   if(!ok){
     alert('⚠️ 외부 데이터 저장에 실패했습니다.\n브라우저 저장공간(localStorage) 용량이 부족할 수 있어요.\n(가능하면 크롬/엣지에서 다시 시도하거나, 페이지 범위를 줄여주세요)');
