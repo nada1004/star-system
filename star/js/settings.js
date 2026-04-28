@@ -2013,12 +2013,20 @@ function _cfgHandleCfgClick(e){
     if(secWrap && secWrap.tagName === 'DETAILS'){
       const inModal = !!(secWrap.closest && secWrap.closest('#cfgModalBody'));
       // summary 영역 클릭인지 확인
-      let cur = t, inSummary = false;
+      let cur = t, inSummary = false, sumEl = null;
       for(let i=0;i<8 && cur && cur!==secWrap;i++){
-        if(cur.tagName === 'SUMMARY'){ inSummary = true; break; }
+        if(cur.tagName === 'SUMMARY'){ inSummary = true; sumEl = cur; break; }
         cur = cur.parentNode;
       }
       if(inSummary){
+        // (버그픽스) 섹션(details[data-cfg-sec]) 내부에 또 다른 <details><summary> UI가 있을 수 있음.
+        // 그 경우 중첩 summary 클릭까지 "섹션 요약 클릭"으로 오인하여 모달이 닫히는 문제가 발생.
+        // → summary의 직접 부모가 secWrap(섹션 details)일 때만 섹션 요약 클릭으로 처리한다.
+        try{
+          if(sumEl && sumEl.parentNode !== secWrap){
+            return; // 중첩 details/summary는 기본 토글 동작 허용
+          }
+        }catch(_){}
         if(inModal){
           try{ if(e && e.preventDefault) e.preventDefault(); }catch(_){}
           try{ if(e && e.stopPropagation) e.stopPropagation(); }catch(_){}
@@ -3936,6 +3944,30 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="range" id="cfg-femco-logoSize" min="60" max="520" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-logoSizeNum').value=this.value;cfgFemcoUpd('logoSize',this.value)">
         <input type="number" id="cfg-femco-logoSizeNum" min="60" max="520" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-logoSize').value=this.value;cfgFemcoUpd('logoSize',this.value)">
       </div>
+      <!-- (버그픽스) 설정 모달에서 summary 클릭 시 바깥 클릭으로 인식되어 팝업이 닫히는 케이스가 있어 이벤트 전파 차단 -->
+      <details style="border:1px dashed var(--border2);border-radius:12px;padding:10px 12px;background:var(--white)" onclick="event.stopPropagation()">
+        <summary style="cursor:pointer;font-weight:900;color:var(--text2);list-style:none" onclick="event.stopPropagation()">🏫 대학별 로고 크기 (펨코스타일) <span style="font-size:11px;color:var(--gray-l);font-weight:600">(선택)</span></summary>
+        <div style="font-size:11px;color:var(--gray-l);margin:8px 0 10px;line-height:1.6">
+          위의 “대학 로고 크기”가 <b>기본(공통)</b>이고, 아래는 대학별로 <b>예외값</b>을 줄 때만 사용합니다.<br>
+          초기화하면 공통값을 따릅니다.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>{
+            const _v = parseInt(u.logoSizeFemco||'',10);
+            const cur = isNaN(_v) ? '' : Math.max(60, Math.min(520,_v));
+            return `
+              <div class="srow" style="gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+                <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+                <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('su_femco_settings')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
+                  oninput="univCfg[${i}].logoSizeFemco=+this.value;saveCfg();render()">
+                <span style="font-size:11px;color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'px':'(기본)'}</span>
+                <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeFemco;saveCfg();render()">초기화</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </details>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2)">배경 투명(오버레이)</div>
@@ -6334,11 +6366,64 @@ function _renderCfgMatchDetailSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  const mdFxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
+  const mdFxPreset = (localStorage.getItem('su_md_fx_preset') || 'classic').trim();
+  const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
+  const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
+  const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       대전기록/대회/프로리그 등에서 열리는 <b>경기 상세 팝업</b>의 상단(대학 카드)과 프로필 표시를 조절합니다.
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">✨ 헤더 애니메이션/효과</div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:800;color:var(--text2);font-size:12px">
+          <input type="checkbox" ${mdFxOn?'checked':''} style="width:16px;height:16px;cursor:pointer"
+            onchange="localStorage.setItem('su_md_fx_on', this.checked?'1':'0'); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+          헤더 애니메이션 사용
+          <span style="font-size:11px;color:var(--gray-l);font-weight:700">(ON/OFF)</span>
+        </label>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">색감 프리셋</div>
+          <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"
+            onchange="localStorage.setItem('su_md_fx_preset',this.value); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="classic" ${mdFxPreset==='classic'?'selected':''}>기본(파랑)</option>
+            <option value="aurora" ${mdFxPreset==='aurora'?'selected':''}>오로라(보라/청록)</option>
+            <option value="sunset" ${mdFxPreset==='sunset'?'selected':''}>선셋(핑크/오렌지)</option>
+            <option value="minimal" ${mdFxPreset==='minimal'?'selected':''}>미니멀(무채색)</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">효과 종류</div>
+          <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"
+            onchange="localStorage.setItem('su_md_fx_anim',this.value); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="both" ${mdFxAnim==='both'?'selected':''}>기본(물결+반짝)</option>
+            <option value="wave" ${mdFxAnim==='wave'?'selected':''}>물결만</option>
+            <option value="shimmer" ${mdFxAnim==='shimmer'?'selected':''}>반짝만</option>
+            <option value="pulse" ${mdFxAnim==='pulse'?'selected':''}>펄스(부드럽게)</option>
+            <option value="glint" ${mdFxAnim==='glint'?'selected':''}>글린트(강하게)</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">속도</div>
+          <input type="range" min="0.6" max="1.8" step="0.1" value="${isNaN(mdFxSpeedMul)?1:mdFxSpeedMul}" style="width:100%;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_speed_mul',String(this.value));document.getElementById('cfg-md-fx-speed-val').textContent=this.value+'x'; try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}">
+          <div id="cfg-md-fx-speed-val" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(isNaN(mdFxSpeedMul)?1:mdFxSpeedMul).toFixed(1)}x</div>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">강도</div>
+          <input type="range" min="0" max="150" step="5" value="${isNaN(mdFxInt)?100:mdFxInt}" style="width:100%;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_int',String(this.value));document.getElementById('cfg-md-fx-int-val').textContent=this.value+'%'; try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}">
+          <div id="cfg-md-fx-int-val" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${isNaN(mdFxInt)?100:mdFxInt}%</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+          ※ “속도”는 <b>값이 작을수록 더 빠르게</b> 움직입니다. (0.6x 빠름 · 1.0x 기본 · 1.8x 느림)
+        </div>
+      </div>
     </div>
 
     <div style="margin-bottom:16px">

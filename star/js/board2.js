@@ -618,6 +618,7 @@ function _b2FemcoView() {
     membersByUniv[u.name] = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
   });
 
+  // 공통 로고 크기(기본)
   const LOGO = Math.max(60, Math.min(520, parseInt(femcoSettings.logoSize || 150, 10) || 150));
   const LOGO_OFF_X = Math.max(-120, Math.min(120, parseInt(femcoSettings.logoOffsetX ?? 0, 10) || 0));
   const LOGO_OFF_Y = Math.max(-120, Math.min(120, parseInt(femcoSettings.logoOffsetY ?? 0, 10) || 0));
@@ -875,10 +876,16 @@ function _b2FemcoView() {
     const col = overrideCol || gc(univName);
     const textCol = _b2ContrastColor(col);
     const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x => x.name === univName) : null) || {};
+    // 대학별 로고 크기(옵션): univCfg[i].logoSizeFemco 가 있으면 우선 적용
+    const _uLogo = (() => {
+      const v = parseInt(uCfg.logoSizeFemco || '', 10);
+      if (!isNaN(v) && v > 0) return Math.max(60, Math.min(520, v));
+      return LOGO;
+    })();
     const iconUrl = uCfg.icon || uCfg.img || '';
     const logoHtml = iconUrl
-      ? `<img src="${toHttpsUrl(iconUrl)}" style="width:${LOGO}px;height:${LOGO}px;object-fit:contain" onerror="this.style.display='none'">`
-      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(LOGO*0.62)}px;height:${Math.round(LOGO*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
+      ? `<img src="${toHttpsUrl(iconUrl)}" style="width:${_uLogo}px;height:${_uLogo}px;object-fit:contain" onerror="this.style.display='none'">`
+      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(_uLogo*0.62)}px;height:${Math.round(_uLogo*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 
     // 인원 카운트 규칙:
     // - 이사장 인원
@@ -951,7 +958,7 @@ function _b2FemcoView() {
     const headLayout = (() => {
       if (!_attach) {
         // 로고만 이동일 때 제목과 겹치지 않도록 좌/우는 공간을 예약
-        const reserve = Math.max(0, Math.round(LOGO * 0.55) + 16);
+        const reserve = Math.max(0, Math.round(_uLogo * 0.55) + 16);
         const padL = (_posNorm === 'left') ? reserve : 0;
         const padR = (_posNorm === 'right') ? reserve : 0;
         return `
