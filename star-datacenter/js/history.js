@@ -1556,6 +1556,20 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // 날짜 정규화(정렬용): 2026-4-2 같이 0이 빠진 날짜가 있으면 문자열 정렬이 깨질 수 있음
+  const _normDateSort = (d)=>{
+    const s = String(d||'').trim();
+    if(!s) return '';
+    // yyyy-mm-dd / yyyy.m.d / yyyy/m/d
+    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
   // 기록 카드 스타일 설정 (localStorage 기반)
   function _rcGet(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } }
   const _rcThemeOn = _rcGet('su_rc_theme_on','1')==='1';
@@ -1642,7 +1656,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return -idx;
   };
   filtered.sort((a,b)=>{
-    const da=(a.m.d||''), db=(b.m.d||'');
+    const da=_normDateSort(a.m.d||''), db=_normDateSort(b.m.d||'');
     const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
     if(cmp!==0) return cmp;
     // 동일 날짜일 때: (1) 시간/생성시각 (2) 원본 인덱스
@@ -1660,9 +1674,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _datePickKey = `su_rec_date_pick_${context||'x'}_${mode}`;
   const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
   const _baseFiltered = filtered.slice(); // 메뉴/카운트는 원본(일자 선택 전) 기준
-  const _allDates = Array.from(new Set(_baseFiltered.map(x=>String(x.m.d||'').trim()).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseFiltered.map(x=>_normDateSort(x.m.d||'')).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
-    filtered = filtered.filter(x => String(x.m.d||'').trim() === _pickedDate);
+    filtered = filtered.filter(x => _normDateSort(x.m.d||'') === _pickedDate);
   }
   const _dateMenuHTML = (()=>{
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';

@@ -2037,7 +2037,15 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
-      const modeLbl=hh.mode||'';
+      // (표기 통일) 과거 데이터/외부 데이터에서 mode가 짧은 키로 들어간 경우 사람이 읽는 라벨로 정규화
+      // - 예: 'tier' → '티어대회'
+      // - 가능한 한 "표시만" 바꾸고, matchId 기반 네비게이션은 그대로 유지
+      let modeLbl=hh.mode||'';
+      if(modeLbl==='tier') modeLbl='티어대회';
+      if(modeLbl==='tt') modeLbl='티어대회';
+      if(modeLbl==='univ') modeLbl='대학대전';
+      if(modeLbl==='ck') modeLbl='대학CK';
+      if(modeLbl==='pro') modeLbl='프로리그';
       const _getPdModeBadgeColors = ()=>{
         const defaults={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
         try{
