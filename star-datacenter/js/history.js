@@ -155,7 +155,9 @@ function rHist(C,T){
       <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
-    const _ttAll=ttM.filter(m=>!m._proKey);
+    // (요청사항) 티어대회 기록이 "사라져 보이는" 현상 방지:
+    // 일부 데이터는 _proKey가 붙어도 ttM(티어대회 기록)에 포함되므로, 전체 목록에서는 제외하지 않음
+    const _ttAll=(typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [];
     const _ttGen=_ttAll.filter(m=>!m.stage||m.stage==='general'||m.stage==='grp');
     const _ttLeague=_ttAll.filter(m=>m.stage==='league');
     const _ttBkt=_ttAll.filter(m=>m.stage==='bkt');

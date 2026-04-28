@@ -85,8 +85,59 @@ window.enableDragScroll = function(root){
   });
 };
 
+// ─────────────────────────────────────────────────────────────
+// (복구) 티어대회 기록(ttM) 시드 로딩
+// - 일부 백업 데이터는 tourneys(type:'tier')에 브라켓 결과만 있고 ttM이 비어있는 경우가 있음
+// - 이 경우 대전기록탭(티어대회)이 "전부 사라진 것처럼" 보이므로, 배포 번들에 시드 JSON을 넣어 복구
+// - 로컬에 ttM이 이미 있으면 절대 덮어쓰지 않음
+// ─────────────────────────────────────────────────────────────
+let _ttSeedLoaded = false;
+let _ttSeedLoading = false;
+async function _seedTierTtM(){
+  try{
+    if(_ttSeedLoaded || _ttSeedLoading) return;
+    if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){ _ttSeedLoaded=true; return; }
+    _ttSeedLoading = true;
+    const urls = ['ttm_seed_part1.json','ttm_seed_part2.json'];
+    const all = [];
+    for(const u of urls){
+      try{
+        const res = await fetch(u, {cache:'no-store'});
+        if(!res || !res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) all.push(...arr);
+      }catch(e){}
+    }
+    if(all.length){
+      const seen = new Set();
+      const merged = [];
+      all.forEach(m=>{
+        if(!m || !m._id || seen.has(m._id)) return;
+        seen.add(m._id);
+        merged.push(m);
+      });
+      merged.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+      ttM = merged;
+      try{ save && save(); }catch(e){}
+      // 티어대회 마이그레이션/표시 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+      try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
+      // 스트리머 상세(최근 경기)에도 보이도록 ttM → history 반영
+      try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+      try{ render && render(); }catch(e){}
+    }
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }catch(e){
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }
+}
+
 function init(){
   fixPoints();
+  // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
+  try{ _seedTierTtM(); }catch(e){}
   // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // (요청사항) 버튼/필 스타일 설정 적용

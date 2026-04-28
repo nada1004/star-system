@@ -141,6 +141,41 @@ function syncTourneyHistory(){
   return added;
 }
 
+// ─────────────────────────────────────────
+// 2-1) 티어대회 기록(ttM) → 최근 기록(history) 동기화
+// - ttM은 "기록 탭"용으로만 쌓여서, history가 비어 있으면 스트리머 상세에 안 보일 수 있음
+// - gameId(_sN_gN)를 사용해 세부 게임 단위로 모두 반영
+// - 날짜(m.d)가 비어있는 레코드는 '오늘'로 오염되는 것을 막기 위해 스킵
+// ─────────────────────────────────────────
+function syncTierTtMHistory(){
+  if(typeof applyGameResult!=='function') return 0;
+  if(typeof ttM==='undefined' || !Array.isArray(ttM)) return 0;
+  const existingIds=new Set();
+  _safeArr(players).forEach(p=>_safeArr(p?.history).forEach(h=>{ if(h && h.matchId) existingIds.add(h.matchId); }));
+  let added=0;
+  const isValidDate = (d)=> typeof d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+  ttM.forEach(m=>{
+    if(!m || !m._id || !m.sets || !m.sets.length) return;
+    if(!isValidDate(m.d||'')) return; // 날짜 없으면 '오늘'로 저장되는 부작용 방지
+    const mid=m._id;
+    (m.sets||[]).forEach((set, si)=>{
+      (set.games||[]).forEach((g, gi)=>{
+        if(!g || !g.playerA || !g.playerB || !g.winner) return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        const gameId = g._id || `${mid}_s${si}_g${gi}`;
+        if(existingIds.has(gameId)) return;
+        applyGameResult(wn, ln, m.d, g.map||'', gameId, '', '', '티어대회');
+        existingIds.add(gameId);
+        added++;
+      });
+    });
+  });
+  if(added>0){ try{ save && save(); }catch(e){} }
+  return added;
+}
+try{ window.syncTierTtMHistory = syncTierTtMHistory; }catch(e){}
+
 function syncTourneyHistoryBtn(){
   const n=syncTourneyHistory();
   if(n>0){ alert(`✅ ${n}개의 대회 경기를 최근 기록에 반영했습니다.`); try{ render && render(); }catch(e){} }

@@ -1091,6 +1091,58 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
+// ─────────────────────────────────────────────
+// 스트리머 이름 정규화/별명(메모) 매칭
+// - 예: 김재현 memo에 "샤이니"가 있으면, 입력에 "샤이니"를 넣어도 "김재현"으로 저장되게
+// - 별명/메모가 애매하거나 부분일치만 되면 후보 리스트를 반환
+// ─────────────────────────────────────────────
+function _cleanPlayerInputName(name){
+  const raw = (name||'').trim();
+  // 종족 접미사 제거: "김명운Z", "샤이니T"
+  return raw.replace(/\s*[TZPN]$/i,'').trim();
+}
+function resolvePlayerName(rawName){
+  const raw = (rawName||'').trim();
+  const cleaned = _cleanPlayerInputName(raw);
+  if(!cleaned) return {name:'', player:null, match:'empty', candidates:[]};
+
+  // 1) 정확한 이름
+  let p = (players||[]).find(x=>x && x.name===cleaned) || (players||[]).find(x=>x && x.name===raw);
+  if(p) return {name:p.name, player:p, match:'name', candidates:[p]};
+
+  // 2) 메모(별명) 정확 일치
+  const low = cleaned.toLowerCase();
+  const memoExact = (players||[]).filter(x=>x && x.memo && String(x.memo).split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+  if(memoExact.length===1) return {name:memoExact[0].name, player:memoExact[0], match:'memo', candidates:memoExact};
+
+  // 3) 공백 제거 후 이름 일치
+  const ns = cleaned.replace(/\s+/g,'');
+  const nsMatches = (players||[]).filter(x=>x && x.name && x.name.replace(/\s+/g,'')===ns);
+  if(nsMatches.length===1) return {name:nsMatches[0].name, player:nsMatches[0], match:'space', candidates:nsMatches};
+
+  // 4) 후보 추천(부분 일치)
+  const cand = [];
+  const push = (pp, why)=>{
+    if(!pp || !pp.name) return;
+    if(cand.some(x=>x.p.name===pp.name)) return;
+    cand.push({p:pp, why});
+  };
+  (players||[]).forEach(pp=>{
+    if(!pp || !pp.name) return;
+    const n = String(pp.name);
+    if(n.includes(cleaned) || n.replace(/\s+/g,'').includes(ns)) push(pp,'name');
+    else if(pp.memo){
+      const toks = String(pp.memo).split(/[\s,，\n]+/).map(x=>x.trim()).filter(Boolean);
+      if(toks.some(t=>t.toLowerCase().includes(low))) push(pp,'memo');
+    }
+  });
+  cand.sort((a,b)=>(a.why===b.why? a.p.name.localeCompare(b.p.name) : (a.why==='name'?-1:1)));
+  const candidates = cand.slice(0,8).map(x=>x.p);
+  return {name: raw, player:null, match:'none', candidates};
+}
+// 전역 노출(모달/인라인 onclick에서 사용)
+try{ window.resolvePlayerName = resolvePlayerName; }catch(e){}
+
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
