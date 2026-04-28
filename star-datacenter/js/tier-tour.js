@@ -32,6 +32,11 @@ function _migrateTierTourneys(){
       delete r._proKey; changed=true;
     }
   });
+  // 구버전 stage 값 보정
+  // - 'grp'는 조별리그와 동일한 의미로 사용되던 케이스가 있어 'league'로 통일
+  (ttM||[]).forEach(r=>{
+    if(r && r.stage==='grp'){ r.stage='league'; changed=true; }
+  });
   // ttM에 없는 stage 미설정 레코드에 stage:'general' 적용
   (ttM||[]).forEach(r=>{
     if(!r.stage&&!r._proKey){ r.stage='general'; changed=true; }
@@ -584,24 +589,59 @@ function rTierTourTab(C, T){
     const d = String(m?.t||'').trim();
     return a===c || b===c || d===c;
   };
-  if(_ttCurComp && !tierTourneys.find(t=>t.name===_ttCurComp)) _ttCurComp='';
-  if(!_ttCurComp && tierTourneys.length) _ttCurComp=tierTourneys[0].name;
+  // (보강) tourneys에 없는 "기록만 있는 티어대회(compName)"도 선택 가능하게
+  const _ttmCompNames = (() => {
+    try{
+      const set=new Set();
+      (ttM||[]).forEach(m=>{
+        const n = String(m?.compName||m?.n||m?.t||'').trim();
+        if(n) set.add(n);
+      });
+      return [...set];
+    }catch(e){ return []; }
+  })();
+  const _allCompNames = (() => {
+    const set=new Set((tierTourneys||[]).map(t=>String(t?.name||'').trim()).filter(Boolean));
+    _ttmCompNames.forEach(n=>set.add(n));
+    return [...set];
+  })();
+
+  if(_ttCurComp && !_allCompNames.includes(String(_ttCurComp).trim())) _ttCurComp='';
+  if(!_ttCurComp && _allCompNames.length) _ttCurComp=_allCompNames[0];
   let h='';
   h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${tierTourneys.map(t=>{const _tDates=[];(t.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{if(m.d&&m.sa!=null)_tDates.push(m.d);}));(ttM||[]).filter(m=>_eqComp(m,t.name)&&m.d).forEach(m=>_tDates.push(m.d));_tDates.sort();const _ds=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'/')}${_tDates.length>1&&_tDates[0]!==_tDates[_tDates.length-1]?'~'+_tDates[_tDates.length-1].slice(2).replace(/-/g,'/'):''})`:(t.createdAt?` (${t.createdAt.slice(0,10)})`:'');return`<option value="${t.name}"${_ttCurComp===t.name?' selected':''}>${t.name}${_ds}</option>`;}).join('')}
+      ${_allCompNames.map(name=>{
+        const t = (tierTourneys||[]).find(x=>String(x?.name||'').trim()===String(name||'').trim());
+        const _tDates=[];
+        if(t){
+          (t.groups||[]).forEach(g=>(g.matches||[]).forEach(m=>{if(m.d&&m.sa!=null)_tDates.push(m.d);})); 
+          // 브라켓/수동 경기 날짜도 포함
+          try{
+            const br=t.bracket||{};
+            Object.values(br.matchDetails||{}).forEach(m=>{if(m&&m.d&&m.sa!=null)_tDates.push(m.d);});
+            (br.manualMatches||[]).forEach(m=>{if(m&&m.d&&m.sa!=null)_tDates.push(m.d);});
+          }catch(e){}
+        }
+        (ttM||[]).filter(m=>_eqComp(m,name)&&m.d).forEach(m=>_tDates.push(m.d));
+        _tDates.sort();
+        const _ds=_tDates.length?` (${_tDates[0].slice(2).replace(/-/g,'/')}${_tDates.length>1&&_tDates[0]!==_tDates[_tDates.length-1]?'~'+_tDates[_tDates.length-1].slice(2).replace(/-/g,'/'):''})`
+          :(t && t.createdAt?` (${String(t.createdAt).slice(0,10)})`:'');
+        const hint = t ? '' : ' (기록만)';
+        return `<option value="${name}"${String(_ttCurComp).trim()===String(name).trim()?' selected':''}>${name}${hint}${_ds}</option>`;
+      }).join('')}
     </select>
     ${isLoggedIn?`<button class="btn btn-p btn-xs" onclick="grpNewTierTourney()">+ 추가</button>`:''}
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
     <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
   </div>`;
-  if(!tierTourneys.length){
+  if(!_allCompNames.length){
     h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
     C.innerHTML=h; return;
   }
-  const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier');
+  const _curTierTn=(tourneys||[]).find(t=>t.name===_ttCurComp&&t.type==='tier') || null;
   // 유효하지 않은 _ttSub 리셋
   const _validSubs=['input','records','rank','league','grprecords','grprank','tourschedule','bktrecords','grpedit'];
   if(!_validSubs.includes(_ttSub)) _ttSub='records';
@@ -641,22 +681,23 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='tourschedule'){
     h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='bktrecords'){
-    if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
     const _bktIds=new Set(_bktRecs.map(m=>m._id));
     const _bktFromBracket=[];
-    const _br=_curTierTn.bracket||{};
-    Object.values(_br.matchDetails||{}).forEach(m=>{
-      if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
-        _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt'});
-      }
-    });
-    (_br.manualMatches||[]).forEach(m=>{
-      if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
-        _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt',rndLabel:m.rndLabel||'토너먼트 경기'});
-      }
-    });
+    if(_curTierTn){
+      const _br=_curTierTn.bracket||{};
+      Object.values(_br.matchDetails||{}).forEach(m=>{
+        if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
+          _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt'});
+        }
+      });
+      (_br.manualMatches||[]).forEach(m=>{
+        if(m._id&&!_bktIds.has(m._id)&&m.sa!=null){
+          _bktFromBracket.push({_id:m._id,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,compName:_ttCurComp,stage:'bkt',rndLabel:m.rndLabel||'토너먼트 경기'});
+        }
+      });
+    }
     const _allBkt=[..._bktRecs,..._bktFromBracket].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
     if(isLoggedIn && _curTierTn){
@@ -673,17 +714,18 @@ function rTierTourTab(C, T){
     grpEditId=_curTierTn.id;
     h+=rGrpEditInner();
   } else if(_ttSub==='grprecords'){
-    if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     const _grpRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league');
     // tourneys 조별리그에서 아직 ttM에 없는 기존 경기도 포함 (fallback)
     const _grpIds=new Set(_grpRecs.map(m=>m._id));
     const _grpFromTn=[];
-    (_curTierTn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>{
-        if(!m._id||_grpIds.has(m._id)||m.sa==null) return;
-        _grpFromTn.push({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],compName:_ttCurComp,stage:'league'});
+    if(_curTierTn){
+      (_curTierTn.groups||[]).forEach(grp=>{
+        (grp.matches||[]).forEach(m=>{
+          if(!m._id||_grpIds.has(m._id)||m.sa==null) return;
+          _grpFromTn.push({_id:m._id,d:m.d||'',a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,sets:m.sets||[],compName:_ttCurComp,stage:'league'});
+        });
       });
-    });
+    }
     const _allGrp=[..._grpRecs,..._grpFromTn].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
     h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
