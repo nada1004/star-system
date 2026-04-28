@@ -138,6 +138,71 @@ function applyMatchDetailVars(){
     const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
     const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
     document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
+
+    // ── 헤더 애니메이션/효과 설정 ──
+    const fxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
+    const fxPreset = (localStorage.getItem('su_md_fx_preset') || 'classic').trim(); // classic|aurora|sunset|minimal
+    const fxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim(); // both|wave|shimmer|pulse|glint
+    const fxSpeedMul = parseFloat(localStorage.getItem('su_md_fx_speed_mul') || '1');
+    const sm = isNaN(fxSpeedMul) ? 1 : Math.max(0.5, Math.min(2.2, fxSpeedMul));
+    const fxIntPct = parseInt(localStorage.getItem('su_md_fx_int') || '100', 10);
+    const ip = Math.max(0, Math.min(150, isNaN(fxIntPct) ? 100 : fxIntPct)) / 100;
+
+    // 기본값 (파랑)
+    let headC1='#1e3a8a', headC2='#2563eb';
+    let scoreC1='rgba(2,132,199,.09)', scoreC2='rgba(2,132,199,.02)';
+    if(fxPreset==='aurora'){
+      headC1='#4c1d95'; headC2='#0ea5e9';
+      scoreC1='rgba(139,92,246,.10)'; scoreC2='rgba(14,165,233,.03)';
+    }else if(fxPreset==='sunset'){
+      headC1='#9f1239'; headC2='#f97316';
+      scoreC1='rgba(244,63,94,.10)'; scoreC2='rgba(249,115,22,.03)';
+    }else if(fxPreset==='minimal'){
+      headC1='#0f172a'; headC2='#334155';
+      scoreC1='rgba(148,163,184,.08)'; scoreC2='rgba(148,163,184,.02)';
+    }
+
+    // 애니메이션 이름 결정 (CSS 변수로 제어)
+    let scoreAnim = 'cmdScoreWave';
+    let scoreSparkleAnim = 'cmdScoreSparkle';
+    let shimmerAnim = 'cmdTeamShimmer';
+    if(fxAnim==='pulse'){
+      scoreAnim = 'cmdScoreWave';
+      scoreSparkleAnim = 'cmdScorePulse';
+      shimmerAnim = 'cmdTeamPulse';
+    }else if(fxAnim==='glint'){
+      scoreAnim = 'cmdScoreWave';
+      scoreSparkleAnim = 'cmdScoreSparkle';
+      shimmerAnim = 'cmdTeamGlint';
+    }else if(fxAnim==='wave'){
+      scoreAnim = 'cmdScoreWave';
+      scoreSparkleAnim = 'cmdScoreSparkle';
+      shimmerAnim = 'none';
+    }else if(fxAnim==='shimmer'){
+      scoreAnim = 'none';
+      scoreSparkleAnim = 'none';
+      shimmerAnim = 'cmdTeamShimmer';
+    }else{ // both
+      scoreAnim = 'cmdScoreWave';
+      scoreSparkleAnim = 'cmdScoreSparkle';
+      shimmerAnim = 'cmdTeamShimmer';
+    }
+
+    if(!fxOn){
+      scoreAnim = 'none';
+      scoreSparkleAnim = 'none';
+      shimmerAnim = 'none';
+    }
+
+    document.documentElement.style.setProperty('--su_md_fx_speed_mul', String(sm));
+    document.documentElement.style.setProperty('--su_md_fx_int', String(ip));
+    document.documentElement.style.setProperty('--su_md_fx_head_c1', headC1);
+    document.documentElement.style.setProperty('--su_md_fx_head_c2', headC2);
+    document.documentElement.style.setProperty('--su_md_fx_score_c1', scoreC1);
+    document.documentElement.style.setProperty('--su_md_fx_score_c2', scoreC2);
+    document.documentElement.style.setProperty('--su_md_fx_score_anim', scoreAnim);
+    document.documentElement.style.setProperty('--su_md_fx_score_sparkle_anim', scoreSparkleAnim);
+    document.documentElement.style.setProperty('--su_md_fx_shimmer_anim', shimmerAnim);
   }catch(e){
     console.warn('[applyMatchDetailVars] CSS 변수 설정 실패:', e.message);
   }

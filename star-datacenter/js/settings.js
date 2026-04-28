@@ -6366,11 +6366,64 @@ function _renderCfgMatchDetailSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  const mdFxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
+  const mdFxPreset = (localStorage.getItem('su_md_fx_preset') || 'classic').trim();
+  const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
+  const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
+  const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       대전기록/대회/프로리그 등에서 열리는 <b>경기 상세 팝업</b>의 상단(대학 카드)과 프로필 표시를 조절합니다.
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">✨ 헤더 애니메이션/효과</div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:800;color:var(--text2);font-size:12px">
+          <input type="checkbox" ${mdFxOn?'checked':''} style="width:16px;height:16px;cursor:pointer"
+            onchange="localStorage.setItem('su_md_fx_on', this.checked?'1':'0'); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+          헤더 애니메이션 사용
+          <span style="font-size:11px;color:var(--gray-l);font-weight:700">(ON/OFF)</span>
+        </label>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">색감 프리셋</div>
+          <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"
+            onchange="localStorage.setItem('su_md_fx_preset',this.value); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="classic" ${mdFxPreset==='classic'?'selected':''}>기본(파랑)</option>
+            <option value="aurora" ${mdFxPreset==='aurora'?'selected':''}>오로라(보라/청록)</option>
+            <option value="sunset" ${mdFxPreset==='sunset'?'selected':''}>선셋(핑크/오렌지)</option>
+            <option value="minimal" ${mdFxPreset==='minimal'?'selected':''}>미니멀(무채색)</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">효과 종류</div>
+          <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"
+            onchange="localStorage.setItem('su_md_fx_anim',this.value); try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}; _renderCfgMatchDetailSection()">
+            <option value="both" ${mdFxAnim==='both'?'selected':''}>기본(물결+반짝)</option>
+            <option value="wave" ${mdFxAnim==='wave'?'selected':''}>물결만</option>
+            <option value="shimmer" ${mdFxAnim==='shimmer'?'selected':''}>반짝만</option>
+            <option value="pulse" ${mdFxAnim==='pulse'?'selected':''}>펄스(부드럽게)</option>
+            <option value="glint" ${mdFxAnim==='glint'?'selected':''}>글린트(강하게)</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">속도</div>
+          <input type="range" min="0.6" max="1.8" step="0.1" value="${isNaN(mdFxSpeedMul)?1:mdFxSpeedMul}" style="width:100%;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_speed_mul',String(this.value));document.getElementById('cfg-md-fx-speed-val').textContent=this.value+'x'; try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}">
+          <div id="cfg-md-fx-speed-val" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(isNaN(mdFxSpeedMul)?1:mdFxSpeedMul).toFixed(1)}x</div>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">강도</div>
+          <input type="range" min="0" max="150" step="5" value="${isNaN(mdFxInt)?100:mdFxInt}" style="width:100%;accent-color:var(--blue)"
+            oninput="localStorage.setItem('su_md_fx_int',String(this.value));document.getElementById('cfg-md-fx-int-val').textContent=this.value+'%'; try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){}; try{if(typeof render==='function')render();}catch(e){}">
+          <div id="cfg-md-fx-int-val" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${isNaN(mdFxInt)?100:mdFxInt}%</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+          ※ “속도”는 <b>값이 작을수록 더 빠르게</b> 움직입니다. (0.6x 빠름 · 1.0x 기본 · 1.8x 느림)
+        </div>
+      </div>
     </div>
 
     <div style="margin-bottom:16px">
