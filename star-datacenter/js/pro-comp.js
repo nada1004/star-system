@@ -225,12 +225,13 @@ function rProComp(C, T) {
       ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${(tn.groups||[]).length}개 조 · ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
     </div>`;
 
-    // (롤백) 프로리그 대회 서브메뉴: 단일 라인 탭(기록/대진표/입력/관리로 묶지 않음)
+    // 프로리그 대회 서브메뉴
     const subOpts = [
-      {id:'league', lbl:'📋 기록'},
+      {id:'league', lbl:'📅 조별리그'},
       {id:'grprank', lbl:'📊 순위'},
+      // (요청사항) 대진표(보기) 탭 + 대진표 기록(입력) 탭 모두 제공
       {id:'tour', lbl:'🗂️ 대진표'},
-      {id:'tourmatch', lbl:'📝 입력'},
+      {id:'tourmatch', lbl:'🗂️ 대진표 기록'},
       {id:'team', lbl:'🤝 팀전'},
       {id:'gj', lbl:'🔥 중장전'},
       {id:'stats', lbl:'📈 통계'},
@@ -270,8 +271,7 @@ function rProComp(C, T) {
 /* 조별리그 일정 */
 function proCompLeague(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
-  // (요청사항) 프로리그 대회 "기록"은 조별리그 전용.
-  // 토너먼트(대진표) 기록은 이 탭에서 다루지 않음.
+  // (요청사항) 조별리그 탭 하단 '기록:' 영역에서는 조별리그/대진표(보기)만 노출
   // 스테이지(16강/8강/4강/결승) 개념 삭제: 그룹의 stage 값이 있더라도 무시
   const grpList = (tn.groups||[]).map((grp, gi)=>({grp, gi})).filter(x=>x.grp);
 
@@ -280,6 +280,8 @@ function proCompLeague(tn) {
     const gl = 'ABCDEFGHIJ'[idx] || idx;
     const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][idx%6];
     (grp.matches||[]).forEach((m, mi) => {
+      // (요청사항) 대진표 기록(stage)으로 반영된 경기는 조별리그 화면/순위에서 제외
+      if (m && (m._stageRecId || (grp._recTarget||'')==='stage')) return;
       allMatches.push({...m, grpName:grp.name, grpIdx:gi, grpLetter:gl, matchNum:mi+1, grpColor:col});
     });
   });
@@ -289,12 +291,7 @@ function proCompLeague(tn) {
   const _pct = _totalM ? Math.round(_doneM/_totalM*100) : 0;
   const _pctColor = _pct===100?'#16a34a':_pct>=50?'#2563eb':'#d97706';
   let h = '';
-  // 조별리그 고정 안내
-  h += `<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-    <span style="font-size:11px;font-weight:900;color:var(--text3)">기록:</span>
-    <span class="pill on" style="cursor:default">조별리그</span>
-    <span style="font-size:11px;color:var(--gray-l)">※ 토너먼트(대진표) 결과 입력은 “🗂️ 대진표 / 📝 입력”에서 진행</span>
-  </div>`;
+  // (요청사항) 조별리그 탭 하단의 '기록:' / 조별리그 / 대진표 버튼 영역 제거
   if (_totalM > 0) {
     h += `<div style="margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -426,7 +423,7 @@ function proCompLeague(tn) {
       };
       h += `<div class="grp-match-card tc-card" style="--tc-win-rgb:${winRgb};background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
-          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
+          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
@@ -465,6 +462,8 @@ function _calcProGrpRank(grp) {
   members.forEach(p => { st[p] = {w:0, l:0}; });
   (grp.matches||[]).forEach(m => {
     if (!m.a || !m.b || !m.winner) return;
+    // (요청사항) stage 반영 경기(대진표 기록용)는 조별 순위에서 제외
+    if (m._stageRecId || (grp._recTarget||'')==='stage') return;
     if (!st[m.a]) st[m.a] = {w:0, l:0};
     if (!st[m.b]) st[m.b] = {w:0, l:0};
     if (m.winner==='A') { st[m.a].w++; st[m.b].l++; }
@@ -1376,93 +1375,220 @@ function _pcBktBuildFromPasteApplyLogic(savable, tn){
 
 /* ─────────────────────────────────────────────
    (요청사항) 토너먼트 경기 입력 메뉴
-   - 토너먼트(대진표) 결과를 붙여넣기 자동인식으로 입력
-   - 저장 시: proTourneys.bracket 반영 + player.history 반영 + 대전기록(토너먼트) 반영
+   - "대진표(브라켓) 작성"이 아니라 "토너먼트 기록(16강/8강/4강/결승)"을 입력하는 화면
+   - 저장 시: player.history 반영 + 대전기록(프로리그 대회 > 토너먼트) 반영
+   - (옵션) 대진표(bracket)가 있는 경우에도 별개로 기록 입력 가능
 ───────────────────────────────────────────── */
 function proCompTourMatchInput(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
-  if(!tn.bracket || !tn.bracket.length){
-    return `<div style="padding:40px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
-      <div style="font-size:36px;margin-bottom:12px">🗂️</div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:8px">대진표가 없습니다</div>
-      <div style="color:var(--gray-l)">토너먼트 탭에서 대진표를 생성/직접 생성한 뒤 사용하세요.</div>
+  // stageRecords 초기화
+  if(!tn.stageRecords) tn.stageRecords = {};
+  ['16강','8강','4강','결승'].forEach(r=>{ if(!Array.isArray(tn.stageRecords[r])) tn.stageRecords[r]=[]; });
+  if(!window._pcStageRecRound) window._pcStageRecRound='16강';
+  const round = (['16강','8강','4강','결승'].includes(window._pcStageRecRound)) ? window._pcStageRecRound : '16강';
+  window._pcStageRecRound = round;
+
+  const roundBtns = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:10px 0 0">
+    ${['16강','8강','4강','결승'].map(r=>`<button class="pill ${round===r?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._pcStageRecRound='${r}';render()">${r}</button>`).join('')}
+  </div>`;
+
+  const list = (tn.stageRecords[round]||[]);
+  const sorted = [...list].map((m,i)=>({m,i})).sort((a,b)=>(b.m.d||'').localeCompare(a.m.d||'')||b.i-a.i);
+  const card = (m, idx)=>{
+    const pa = players.find(p=>p.name===m.a);
+    const pb = players.find(p=>p.name===m.b);
+    const isDone = !!m.winner;
+    const aWin = isDone && m.winner==='A';
+    const bWin = isDone && m.winner==='B';
+    const col = round==='결승'?'#f59e0b':round==='4강'?'#7c3aed':round==='8강'?'#dc2626':'#2563eb';
+    const winRgb = _tcHexToRgbStr(col);
+    const _tb = p => p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${p.tier}</span>`:'';
+    const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 4px">${p.race}</span>`:'';
+    const _univ = p => p&&p.univ?`<span style="font-size:9px;color:var(--gray-l);font-weight:600">${p.univ}</span>`:'';
+    const _pcard = (p, name, isWin) => {
+      const photo = p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
+        : `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
+      const canClick = !!name;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'var(--surface)':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px">
+        ${photo}
+        <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${canClick?'pointer':'default'};text-decoration:${canClick?'underline dotted':'none'}" onclick="${canClick?`openPlayerModal('${escJS(name)}')`:''}">${name||'미정'}</span>
+        ${_univ(p)}
+        <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
+      </div>`;
+    };
+    const dLabel = (m.d||'') ? (m.d||'').slice(2).replace(/-/g,'/') : '미정';
+    return `<div class="grp-match-card tc-card" style="--tc-win-rgb:${winRgb};background:linear-gradient(135deg,var(--white) 0%,#f5f3ff 100%);border:1.5px solid ${col}22;border-left:4px solid ${col};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
+        <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:600">${idx+1}경기</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:800">${dLabel}</span>
+        ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+      </div>
+      <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+        ${_pcard(pa, m.a, aWin)}
+        <div style="text-align:center;min-width:60px">
+          ${isDone?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+            <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
+            <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
+            <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
+          </div>
+          <div style="font-size:10px;font-weight:700;color:#16a34a;margin-top:4px">${aWin?m.a+' 승':bWin?m.b+' 승':'결과없음'}</div>
+          ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
+          `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}
+        </div>
+        ${_pcard(pb, m.b, bWin)}
+      </div>
+      <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
+        ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openPcStageRecModal('${tn.id}','${round}',${idx})">✏️ 결과</button>
+        <button class="btn btn-r btn-xs" onclick="pcDeleteStageRec('${tn.id}','${round}',${idx})">🗑️ 삭제</button>`:''}
+      </div>
     </div>`;
-  }
-  const rounds = tn.bracket || [];
-  const totalRounds = rounds.length;
-  const rndLabel = ri => ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,totalRounds-ri)}강`;
-  const firstSize = (rounds[0]||[]).length*2;
-  const sizes=[];
-  for(let s=firstSize; s>=2; s=Math.floor(s/2)) sizes.push(s);
-  if(typeof window._pcTourMatchRoundSize==='undefined') window._pcTourMatchRoundSize = '전체';
-  const curSz = window._pcTourMatchRoundSize;
-  const szToRi = (sz)=>{
-    if(sz==='결승') return totalRounds-1;
-    if(sz==='준결승') return totalRounds-2;
-    const n=parseInt(sz,10);
-    if(!n) return null;
-    const ratio = firstSize / n;
-    const ri = Math.round(Math.log2(ratio));
-    return Math.max(0, Math.min(totalRounds-1, ri));
   };
 
-  const pending=[];
-  rounds.forEach((rnd,ri)=>{
-    (rnd||[]).forEach((m,mi)=>{
-      if(!m||!m.a||!m.b||m.a==='TBD'||m.b==='TBD') return;
-      // 라운드 필터 적용
-      if(curSz!=='전체'){
-        const _riNeed = (curSz==='준결승'||curSz==='결승') ? szToRi(curSz) : szToRi(curSz);
-        if(_riNeed!==ri) return;
-      }
-      pending.push({ri,mi,a:m.a,b:m.b,done:!!m.winner, label:`${rndLabel(ri)} ${mi+1}경기`, rnd:rndLabel(ri)});
-    });
-  });
-  const roundBtns = (() => {
-    const btn = (lbl, val) => `<button class="pill ${curSz===val?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._pcTourMatchRoundSize='${val}';render()">${lbl}</button>`;
-    // 4강/준결승 표기 통일: 버튼은 4강/결승으로 표시하되 내부는 숫자 기반
-    const mapped = sizes.map(s=>{
-      if(s===2) return {lbl:'결승', val:'결승'};
-      if(s===4) return {lbl:'4강', val:'4'};
-      return {lbl:`${s}강`, val:String(s)};
-    });
-    return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:10px 0 0">${btn('전체','전체')}${mapped.map(o=>btn(o.lbl,o.val)).join('')}</div>`;
-  })();
-  const groupedHTML = (()=>{
-    if(!pending.length) return `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">확정된 경기가 없습니다. (선수 배치 후 사용)</div>`;
-    // ri 내림차순(결승→)으로 그룹 표시
-    const byRi={};
-    pending.forEach(p=>{ if(!byRi[p.ri]) byRi[p.ri]=[]; byRi[p.ri].push(p); });
-    const ris=Object.keys(byRi).map(n=>parseInt(n,10)).sort((a,b)=>b-a);
-    return `<div style="margin-top:10px">
-      ${ris.map(ri=>{
-        const lbl=rndLabel(ri);
-        return `<div style="margin-top:10px">
-          <div style="font-weight:900;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;margin:0 0 6px">
-            <span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:var(--blue)"></span>
-            ${lbl}
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${byRi[ri].map(p=>`<button class="btn btn-xs" style="border-color:${p.done?'#86efac':'#fde68a'};background:${p.done?'#f0fdf4':'#fffbeb'};color:${p.done?'#16a34a':'#92400e'}" onclick="openPcBktPasteModal('${tn.id}',${p.ri},${p.mi})">${p.label}: ${p.a} vs ${p.b}${p.done?' ✓':''}</button>`).join('')}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  })();
+  const listHTML = sorted.length
+    ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${sorted.map(({m,i})=>card(m,i)).join('')}</div>`
+    : `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">등록된 기록이 없습니다.</div>`;
 
   return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-weight:900;color:#1d4ed8">📝 토너먼트 경기 입력</div>
-      <div style="font-size:12px;color:var(--gray-l)">붙여넣기 자동인식으로 결과를 저장합니다 (선수명 기반)</div>
+      <div style="font-weight:900;color:#1d4ed8">🗂️ 대진표 기록(토너먼트 기록)</div>
+      <div style="font-size:12px;color:var(--gray-l)">대진표 작성이 아니라, 라운드별 경기 결과를 기록합니다 (16강/8강/4강/결승)</div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-        ${isLoggedIn?`<button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${tn.id}')" style="display:inline-flex;align-items:center;gap:6px">📋 자동인식(여러경기)</button>`:''}
-        <button class="btn btn-w btn-sm" onclick="proCompSub='tour';render()">🗂️ 대진표 보기</button>
+        ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','${round}',-1)">+ 경기 추가</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','${round}')">📋 ${round} 결과 붙여넣기</button>`:''}
       </div>
     </div>
     ${roundBtns}
-    ${groupedHTML}
+    ${listHTML}
   </div>`;
 }
+
+// ─────────────────────────────────────────────
+// 대진표 기록(라운드 기록) 입력 모달
+// ─────────────────────────────────────────────
+window.openPcStageRecModal = function(tnId, round, idx){
+  const tn=_findTourneyById(tnId);
+  if(!tn) return;
+  if(!tn.stageRecords) tn.stageRecords={};
+  ['16강','8강','4강','결승'].forEach(r=>{ if(!Array.isArray(tn.stageRecords[r])) tn.stageRecords[r]=[]; });
+  const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
+  const arr = tn.stageRecords[r];
+  const m = (idx>=0 && arr[idx]) ? arr[idx] : {a:'',b:'',winner:'',d:new Date().toISOString().slice(0,10),map:''};
+  const mid = m._id || `ptr_${tnId}_${r}_${idx>=0?idx:Date.now().toString(36)}`;
+  const modal=document.createElement('div');
+  modal.id='_pcStageRecModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML=`<div style="background:var(--white);border-radius:14px;padding:18px;width:min(520px,100%);box-shadow:0 10px 40px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="font-weight:900;font-size:14px">🗂️ ${r} 기록 ${idx>=0?'수정':'추가'}</div>
+      <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="document.getElementById('_pcStageRecModal')?.remove()">닫기</button>
+    </div>
+    <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">날짜</div>
+      <input id="_pcsr_d" type="date" value="${m.d||''}" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">A</div>
+      <input id="_pcsr_a" type="text" value="${(m.a||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">B</div>
+      <input id="_pcsr_b" type="text" value="${(m.b||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">승자</div>
+      <select id="_pcsr_w" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-weight:900">
+        <option value="" ${!m.winner?'selected':''}>미정</option>
+        <option value="A" ${m.winner==='A'?'selected':''}>A 승</option>
+        <option value="B" ${m.winner==='B'?'selected':''}>B 승</option>
+      </select>
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">맵</div>
+      <input id="_pcsr_map" type="text" value="${(m.map||'').replace(/\"/g,'&quot;')}" placeholder="맵(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-b" style="flex:1" onclick="pcSaveStageRec('${tnId}','${r}',${idx},'${mid.replace(/'/g,"\\'")}')">✅ 저장</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcStageRecModal')?.remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+window.pcSaveStageRec = function(tnId, round, idx, mid){
+  const tn=_findTourneyById(tnId); if(!tn) return;
+  if(!tn.stageRecords) tn.stageRecords={};
+  ['16강','8강','4강','결승'].forEach(r=>{ if(!Array.isArray(tn.stageRecords[r])) tn.stageRecords[r]=[]; });
+  const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
+  const arr = tn.stageRecords[r];
+  const d = document.getElementById('_pcsr_d')?.value || '';
+  const a = (document.getElementById('_pcsr_a')?.value || '').trim();
+  const b = (document.getElementById('_pcsr_b')?.value || '').trim();
+  const w = document.getElementById('_pcsr_w')?.value || '';
+  const map = (document.getElementById('_pcsr_map')?.value || '').trim();
+  if(!a || !b) return alert('A/B 선수명을 입력하세요.');
+  const prev = (idx>=0 && arr[idx]) ? arr[idx] : null;
+  if(prev && prev.winner && prev._id) try{ _revertProMatch(prev._id); }catch(e){}
+  const obj = {a,b,winner:w,d,map,_id:mid};
+  if(idx>=0 && arr[idx]) arr[idx]=obj;
+  else arr.push(obj);
+  if(w) try{ applyGameResult(w==='A'?a:b, w==='A'?b:a, d, map, mid, '', '', '프로리그대회'); }catch(e){}
+  try{ document.getElementById('_pcStageRecModal')?.remove(); }catch(e){}
+  save(); render();
+};
+
+window.pcDeleteStageRec = function(tnId, round, idx){
+  if(!confirm('기록을 삭제하시겠습니까?')) return;
+  const tn=_findTourneyById(tnId); if(!tn||!tn.stageRecords) return;
+  const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
+  const arr = tn.stageRecords[r]||[];
+  const m = arr[idx];
+  if(m && m.winner && m._id) try{ _revertProMatch(m._id); }catch(e){}
+  arr.splice(idx,1);
+  tn.stageRecords[r]=arr;
+  save(); render();
+};
+
+window.openPcStageBulkPasteModal = function(tnId, round){
+  const tn=_findTourneyById(tnId); if(!tn) return;
+  const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
+  const modal=document.createElement('div');
+  modal.id='_pcStageBulkPaste';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML=`<div style="background:var(--white);border-radius:14px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-weight:900;font-size:14px">📋 ${r} 결과 붙여넣기</div>
+      <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">닫기</button>
+    </div>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.5">
+      한 줄에 한 경기씩 입력하세요.<br>
+      형식: <b>승자이름 패자이름 [맵]</b> (날짜는 오늘로 저장)<br>
+    </div>
+    <textarea id="_pcStageBulkText" style="width:100%;height:220px;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;resize:none" placeholder="예) 홍길동 임꺽정 투혼"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-b" style="flex:1" onclick="pcApplyStageBulkPaste('${tnId}','${r}')">✅ 적용</button>
+      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">취소</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+window.pcApplyStageBulkPaste = function(tnId, round){
+  const tn=_findTourneyById(tnId); if(!tn) return;
+  if(!tn.stageRecords) tn.stageRecords={};
+  ['16강','8강','4강','결승'].forEach(r=>{ if(!Array.isArray(tn.stageRecords[r])) tn.stageRecords[r]=[]; });
+  const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
+  const text=(document.getElementById('_pcStageBulkText')?.value||'').trim();
+  if(!text) return;
+  const d = new Date().toISOString().slice(0,10);
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let added=0;
+  lines.forEach(line=>{
+    const parts=line.split(/[\s\t]+/).filter(Boolean);
+    if(parts.length<2) return;
+    const wName=parts[0], lName=parts[1], map=parts.slice(2).join(' ').trim();
+    const a=wName, b=lName, winner='A';
+    const mid=`ptr_${tnId}_${r}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
+    tn.stageRecords[r].push({a,b,winner,d,map,_id:mid});
+    try{ applyGameResult(wName, lName, d, map, mid, '', '', '프로리그대회'); }catch(e){}
+    added++;
+  });
+  try{ document.getElementById('_pcStageBulkPaste')?.remove(); }catch(e){}
+  save(); render();
+  if(added>0) alert(`${added}경기가 추가되었습니다.`);
+};
 function _pcCollectSeedCandidates(tn){
   const s=new Set();
   // 1) 브라켓에 이미 들어간 선수
@@ -2341,11 +2467,25 @@ function proCompGrpEdit() {
   const GL = 'ABCDEFGHIJ';
   tn.groups.forEach((grp, gi) => {
     const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
+    const recTarget = grp._recTarget || ''; // pro | stage | none
+    const recRound = grp._recRound || '16강'; // stage일 때만 사용
     h += `<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;border:1.5px solid ${col}44">
       <div style="padding:10px 16px;background:linear-gradient(135deg,${col},${col}cc);color:#fff;display:flex;align-items:center;gap:8px">
         <span style="font-weight:900;font-size:13px">GROUP ${GL[gi]}</span>
         <input value="${grp.name||''}" placeholder="조 이름" style="background:#fff3;border:1px solid #fff5;border-radius:6px;padding:3px 8px;font-size:12px;color:#fff;width:120px"
           onchange="proCompRenameGrp('${tn.id}',${gi},this.value)">
+        <span style="margin-left:8px;font-size:11px;font-weight:900;opacity:.9">기록 반영</span>
+        <select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:11px"
+          onchange="proCompSetGrpRecTarget('${tn.id}',${gi},this.value)">
+          <option value="" ${!recTarget?'selected':''}>선택</option>
+          <option value="pro" ${recTarget==='pro'?'selected':''}>프로리그</option>
+          <option value="stage" ${recTarget==='stage'?'selected':''}>대진표 기록</option>
+          <option value="none" ${recTarget==='none'?'selected':''}>반영안함</option>
+        </select>
+        ${recTarget==='stage'?`<select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:11px"
+          onchange="proCompSetGrpRecRound('${tn.id}',${gi},this.value)">
+          ${['16강','8강','4강','결승'].map(r=>`<option value="${r}" ${recRound===r?'selected':''}>${r}</option>`).join('')}
+        </select>`:''}
         <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="proCompDelGrp('${tn.id}',${gi})">🗑️ 조 삭제</button>
       </div>
       <div style="padding:12px 16px;background:var(--white)">
@@ -3061,6 +3201,10 @@ function _proCompLeaguePasteApplyLogic(savable) {
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return false;
   const grp = tn.groups[gi];
+  // (요청사항) 조별 "기록 반영" 설정(pro/stage/none)을 붙여넣기에도 동일 적용
+  const recTarget = (grp._recTarget||'').trim(); // pro | stage | none
+  if (!recTarget) { alert('조편성 관리에서 해당 조의 “기록 반영”을 먼저 선택하세요.'); return false; }
+  const recRound = (grp._recRound||'16강').trim();
   const dateEl = document.getElementById('paste-date');
   const defDate = dateEl?.value || new Date().toISOString().slice(0,10);
   if (!grp.matches) grp.matches = [];
@@ -3072,8 +3216,20 @@ function _proCompLeaguePasteApplyLogic(savable) {
     const newMid = 'pco_'+(Date.now()+added).toString(36)+Math.random().toString(36).slice(2,5);
     const aName = r.wPlayer.name;
     const bName = r.lPlayer.name;
-    grp.matches.push({a:aName, b:bName, winner:'A', d, map:r.map&&r.map!=='-'?r.map:'', _id:newMid});
-    applyGameResult(aName, bName, d, r.map&&r.map!=='-'?r.map:'', newMid, '', '', '프로리그대회');
+    const mapVal = r.map&&r.map!=='-' ? r.map : '';
+    const newObj = {a:aName, b:bName, winner:'A', d, map:mapVal, _id:newMid};
+    grp.matches.push(newObj);
+    if (recTarget === 'pro') {
+      applyGameResult(aName, bName, d, mapVal, newMid, '', '', '프로리그대회');
+    } else if (recTarget === 'stage') {
+      if (!tn.stageRecords) tn.stageRecords = {};
+      if (!Array.isArray(tn.stageRecords[recRound])) tn.stageRecords[recRound] = [];
+      const sid = `ptr_${tnId}_${recRound}_${newMid}`;
+      newObj._stageRecId = sid;
+      newObj._stageRecRound = recRound;
+      tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d,map:mapVal,_id:sid});
+      applyGameResult(aName, bName, d, mapVal, sid, '', '', '프로리그대회');
+    } // none: 반영 안함
     added++;
   });
   save(); render();
@@ -3085,6 +3241,9 @@ function proCompSavePaste(tnId, gi) {
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return;
   const grp = tn.groups[gi];
+  const recTarget = (grp._recTarget||'').trim(); // pro | stage | none
+  if (!recTarget) { alert('조편성 관리에서 해당 조의 “기록 반영”을 먼저 선택하세요.'); return; }
+  const recRound = (grp._recRound||'16강').trim();
   const text = (document.getElementById('_pcPasteText')||{}).value||'';
   const defDate = (document.getElementById('_pcPasteDate')||{}).value || new Date().toISOString().slice(0,10);
   document.getElementById('_pcPasteModal').remove();
@@ -3108,8 +3267,21 @@ function proCompSavePaste(tnId, gi) {
     else if (winnerRaw===b) winner='B';
     const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
     if (!grp.matches) grp.matches = [];
-    grp.matches.push({a,b,winner,d,map:'',_id:newMid});
-    if (winner) applyGameResult(winner==='A'?a:b, winner==='A'?b:a, d, '', newMid, '', '', '프로리그대회');
+    const newObj = {a,b,winner,d,map:'',_id:newMid};
+    grp.matches.push(newObj);
+    if (winner) {
+      if (recTarget === 'pro') {
+        applyGameResult(winner==='A'?a:b, winner==='A'?b:a, d, '', newMid, '', '', '프로리그대회');
+      } else if (recTarget === 'stage') {
+        if(!tn.stageRecords) tn.stageRecords={};
+        if(!Array.isArray(tn.stageRecords[recRound])) tn.stageRecords[recRound]=[];
+        const sid = `ptr_${tnId}_${recRound}_${newMid}`;
+        newObj._stageRecId = sid;
+        newObj._stageRecRound = recRound;
+        tn.stageRecords[recRound].push({a,b,winner,d,map:'',_id:sid});
+        applyGameResult(winner==='A'?a:b, winner==='A'?b:a, d, '', sid, '', '', '프로리그대회');
+      }
+    }
     added++;
   });
   save(); render();
@@ -3343,6 +3515,9 @@ function proCompAutoApply(tnId, gi) {
   const tn = _findTourneyById(tnId);
   if (!tn || !tn.groups[gi]) return;
   const grp = tn.groups[gi];
+  const recTarget = (grp._recTarget||'').trim(); // pro | stage | none
+  if (!recTarget) { alert('조편성 관리에서 해당 조의 “기록 반영”을 먼저 선택하세요.'); return; }
+  const recRound = (grp._recRound||'16강').trim();
   const savable = (window._pcAutoResults||[]).filter(r => r.wPlayer && r.lPlayer);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
   const defDate = (document.getElementById('pm_d')||{}).value || new Date().toISOString().slice(0,10);
@@ -3352,8 +3527,20 @@ function proCompAutoApply(tnId, gi) {
     const mid = 'pco_' + (Date.now()+added).toString(36) + Math.random().toString(36).slice(2,5);
     const mapVal = r.map && r.map !== '-' ? r.map : '';
     const dVal = (r._lineDate && /^\d{4}-\d{2}-\d{2}$/.test(r._lineDate)) ? r._lineDate : defDate;
-    grp.matches.push({ a: r.wPlayer.name, b: r.lPlayer.name, winner: 'A', d: dVal, map: mapVal, _id: mid });
-    applyGameResult(r.wPlayer.name, r.lPlayer.name, dVal, mapVal, mid, '', '', '프로리그대회');
+    const aName = r.wPlayer.name, bName = r.lPlayer.name;
+    const newObj = { a: aName, b: bName, winner: 'A', d: dVal, map: mapVal, _id: mid };
+    grp.matches.push(newObj);
+    if (recTarget === 'pro') {
+      applyGameResult(aName, bName, dVal, mapVal, mid, '', '', '프로리그대회');
+    } else if (recTarget === 'stage') {
+      if(!tn.stageRecords) tn.stageRecords={};
+      if(!Array.isArray(tn.stageRecords[recRound])) tn.stageRecords[recRound]=[];
+      const sid = `ptr_${tnId}_${recRound}_${mid}`;
+      newObj._stageRecId = sid;
+      newObj._stageRecRound = recRound;
+      tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d:dVal,map:mapVal,_id:sid});
+      applyGameResult(aName, bName, dVal, mapVal, sid, '', '', '프로리그대회');
+    }
     added++;
   });
   save();
@@ -3440,6 +3627,11 @@ function proCompSaveMatch() {
   const {tnId, gi, mi} = proCompMatchState;
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return;
+  const grp = tn.groups[gi];
+  // (요청사항) 조별 "기록 반영 대상" 선택이 필수
+  const recTarget = (grp._recTarget||'').trim(); // pro | stage | none
+  if (!recTarget) { alert('조편성 관리에서 해당 조의 “기록 반영”을 먼저 선택하세요.'); return; }
+  const recRound = (grp._recRound||'16강').trim();
   const aVal = document.getElementById('pm_a').value.trim();
   const bVal = document.getElementById('pm_b').value.trim();
   if (!aVal || !bVal) { alert('A, B 선수를 모두 선택하세요.'); return; }
@@ -3452,15 +3644,59 @@ function proCompSaveMatch() {
     // 새 경기 추가
     if (!tn.groups[gi].matches) tn.groups[gi].matches = [];
     const newMid = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    tn.groups[gi].matches.push({a:aVal, b:bVal, winner:winVal, d:dVal, map:mapVal, _id:newMid});
-    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, newMid, '', '', '프로리그대회');
+    const newObj = {a:aVal, b:bVal, winner:winVal, d:dVal, map:mapVal, _id:newMid};
+    tn.groups[gi].matches.push(newObj);
+    if (winVal) {
+      if (recTarget === 'pro') {
+        applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, newMid, '', '', '프로리그대회');
+      } else if (recTarget === 'stage') {
+        if(!tn.stageRecords) tn.stageRecords={};
+        if(!Array.isArray(tn.stageRecords[recRound])) tn.stageRecords[recRound]=[];
+        const sid = `ptr_${tnId}_${recRound}_${newMid}`;
+        newObj._stageRecId = sid;
+        newObj._stageRecRound = recRound;
+        tn.stageRecords[recRound].push({a:aVal,b:bVal,winner:winVal,d:dVal,map:mapVal,_id:sid});
+        applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, sid, '', '', '프로리그대회');
+      }
+    }
   } else {
     const m = tn.groups[gi].matches[mi];
     if (!m) return;
     if (!m._id) m._id = 'pco_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    if (m.winner) _revertProMatch(m._id);
+    // 기존 반영 롤백
+    if (m.winner) {
+      if (m._stageRecId) {
+        try{ _revertProMatch(m._stageRecId); }catch(e){}
+        try{
+          const rr=m._stageRecRound||recRound;
+          if(tn.stageRecords && Array.isArray(tn.stageRecords[rr])){
+            const si=tn.stageRecords[rr].findIndex(x=>x && x._id===m._stageRecId);
+            if(si>=0) tn.stageRecords[rr].splice(si,1);
+          }
+        }catch(e){}
+        m._stageRecId = ''; m._stageRecRound='';
+      } else {
+        _revertProMatch(m._id);
+      }
+    }
     m.a = aVal; m.b = bVal; m.d = dVal; m.map = mapVal; m.winner = winVal;
-    if (winVal) applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, m._id, '', '', '프로리그대회');
+    if (winVal) {
+      if (recTarget === 'pro') {
+        applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, m._id, '', '', '프로리그대회');
+      } else if (recTarget === 'stage') {
+        if(!tn.stageRecords) tn.stageRecords={};
+        if(!Array.isArray(tn.stageRecords[recRound])) tn.stageRecords[recRound]=[];
+        const sid = m._stageRecId || `ptr_${tnId}_${recRound}_${m._id}`;
+        m._stageRecId = sid;
+        m._stageRecRound = recRound;
+        // 기존 동일 id 있으면 업데이트, 없으면 추가
+        const si = tn.stageRecords[recRound].findIndex(x=>x && x._id===sid);
+        const recObj = {a:aVal,b:bVal,winner:winVal,d:dVal,map:mapVal,_id:sid};
+        if(si>=0) tn.stageRecords[recRound][si]=recObj;
+        else tn.stageRecords[recRound].push(recObj);
+        applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, sid, '', '', '프로리그대회');
+      }
+    }
   }
   document.getElementById('proMatchModal').remove();
   save(); render();
@@ -3471,7 +3707,20 @@ function proCompDelMatch(tnId, gi, mi) {
   const tn = _findTourneyById(tnId);
   if (!tn||!tn.groups[gi]) return;
   const m = tn.groups[gi].matches[mi];
-  if (m && m.winner && m._id) _revertProMatch(m._id);
+  if (m && m.winner) {
+    if (m._stageRecId) {
+      try{ _revertProMatch(m._stageRecId); }catch(e){}
+      try{
+        const rr = m._stageRecRound || '16강';
+        if(tn.stageRecords && Array.isArray(tn.stageRecords[rr])){
+          const si=tn.stageRecords[rr].findIndex(x=>x && x._id===m._stageRecId);
+          if(si>=0) tn.stageRecords[rr].splice(si,1);
+        }
+      }catch(e){}
+    } else if (m._id) {
+      _revertProMatch(m._id);
+    }
+  }
   tn.groups[gi].matches.splice(mi, 1);
   save(); render();
 }
@@ -3645,6 +3894,23 @@ function proCompDelGrp(tnId, gi) {
   save(); render();
 }
 
+// 조별 "기록 반영 대상" 설정 (필수)
+function proCompSetGrpRecTarget(tnId, gi, v){
+  const tn=_findTourneyById(tnId);
+  if(!tn||!tn.groups||!tn.groups[gi]) return;
+  const val = String(v||'').trim();
+  tn.groups[gi]._recTarget = val; // pro | stage | none | ''
+  if(val==='stage' && !tn.groups[gi]._recRound) tn.groups[gi]._recRound='16강';
+  save(); render();
+}
+function proCompSetGrpRecRound(tnId, gi, r){
+  const tn=_findTourneyById(tnId);
+  if(!tn||!tn.groups||!tn.groups[gi]) return;
+  const val = String(r||'16강').trim();
+  tn.groups[gi]._recRound = (['16강','8강','4강','결승'].includes(val)) ? val : '16강';
+  save(); render();
+}
+
 /* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?
    ?�???�계 (Feature 3 + 2)
 ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
@@ -3652,7 +3918,11 @@ function proCompTourneyStats(tn) {
   if (!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   // 전체 경기 수집 (조별리그 + 대진표 + 3위전)
   const allM = [];
-  tn.groups.forEach(grp => (grp.matches||[]).forEach(m => allM.push(m)));
+  tn.groups.forEach(grp => (grp.matches||[]).forEach(m => {
+    // (요청사항) stage 반영 경기(대진표 기록용)는 조별리그 통계에서 제외(중복 방지)
+    if (m && (m._stageRecId || (grp._recTarget||'')==='stage')) return;
+    allM.push(m);
+  }));
   (tn.bracket||[]).forEach(rnd => rnd.forEach(m => { if(m&&m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') allM.push(m); }));
   if (tn.thirdPlace&&tn.thirdPlace.a&&tn.thirdPlace.b&&tn.thirdPlace.a!=='TBD'&&tn.thirdPlace.b!=='TBD') allM.push(tn.thirdPlace);
   const doneM = allM.filter(m=>m.winner);
