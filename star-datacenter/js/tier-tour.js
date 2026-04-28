@@ -37,6 +37,25 @@ function _migrateTierTourneys(){
   (ttM||[]).forEach(r=>{
     if(r && r.stage==='grp'){ r.stage='league'; changed=true; }
   });
+  // (보강) compName 누락 보정
+  // - 티어대회 탭은 compName 기준으로 필터링하므로 비어 있으면 기록이 "사라진 것처럼" 보일 수 있음
+  try{
+    const firstTierName = (tourneys||[]).find(t=>t && t.type==='tier' && t.name)?.name || '';
+    (ttM||[]).forEach(r=>{
+      if(!r) return;
+      const comp = String(r.compName||'').trim();
+      const n = String(r.n||r.t||'').trim();
+      if(!comp){
+        r.compName = n || String(firstTierName||'').trim();
+        if(r.compName) changed=true;
+      }
+      // 표시용 name(n)도 비어 있으면 채움(공유/라벨 등에서 사용)
+      if(!String(r.n||'').trim() && String(r.compName||'').trim()){
+        r.n = String(r.compName||'').trim();
+        changed=true;
+      }
+    });
+  }catch(e){}
   // ttM에 없는 stage 미설정 레코드에 stage:'general' 적용
   (ttM||[]).forEach(r=>{
     if(!r.stage&&!r._proKey){ r.stage='general'; changed=true; }
