@@ -55,7 +55,7 @@ function applyProfileShapeVars(){
     // (보강) 전역 프로필 모양은 su_profile_shape를 우선 사용하고,
     // 없으면 과거 호환으로 su_bcp_shape(현황판 칩 모양)를 사용
     const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
-    const radius = (shape === 'square') ? '5px' : '50%';
+    const radius = (shape === 'square') ? '8px' : '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
