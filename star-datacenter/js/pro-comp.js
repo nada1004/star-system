@@ -146,14 +146,21 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
   if (m.winner && m.a && m.b) {
     const d = m.d || new Date().toISOString().slice(0,10);
     const mode = tn.type === 'tier' ? '티어대회' : '프로리그대회';
+    // (요청사항) 대진표 기록은 "세부 경기(게임)" 단위로 전부 스트리머 상세/대전기록에 반영
+    // - applyGameResult는 matchId 중복을 막기 때문에, 게임별로 고유한 gameId를 만들어 저장
+    // - gameId는 "_s?_g?" 패턴을 포함해야 중복 체크가 matchId 단독으로 동작함 (opp/date fallback과 분리)
     if (Array.isArray(m._games) && m._games.length > 0) {
-      m._games.forEach(g => {
+      m._games.forEach((g, gi) => {
+        if (!g || !g.winner) return;
         const win = g.winner === 'A' ? m.a : m.b;
         const loss = g.winner === 'A' ? m.b : m.a;
-        applyGameResult(win, loss, d, g.map || '', matchId, '', '', mode);
+        const gameId = `${matchId}_s0_g${gi}`;
+        applyGameResult(win, loss, d, g.map || m.map || '', gameId, '', '', mode);
       });
     } else {
-      applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', matchId, '', '', mode);
+      // 세부 게임이 없으면 매치 1건으로 저장
+      const gameId = `${matchId}_s0_g0`;
+      applyGameResult(m.winner === 'A' ? m.a : m.b, m.winner === 'A' ? m.b : m.a, d, m.map || '', gameId, '', '', mode);
     }
 
     if (tn.type === 'tier') {
@@ -1392,9 +1399,56 @@ function proCompTourMatchInput(tn){
     ${['16강','8강','4강','결승'].map(r=>`<button class="pill ${round===r?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._pcStageRecRound='${r}';render()">${r}</button>`).join('')}
   </div>`;
 
-  const list = (tn.stageRecords[round]||[]);
-  const sorted = [...list].map((m,i)=>({m,i})).sort((a,b)=>(b.m.d||'').localeCompare(a.m.d||'')||b.i-a.i);
-  const card = (m, idx)=>{
+  // ── (요청사항) "대진표에서 기록"한 내용도 이 탭에 자동 반영되도록: 브라켓에서 게임 단위로 수집
+  const _getBracketRoundLabel = (tn, ri)=>{
+    const total = (tn && Array.isArray(tn.bracket)) ? tn.bracket.length : 0;
+    if (!total) return '';
+    if (ri === total-1) return '결승';
+    if (ri === total-2) return '4강';
+    if (ri === total-3) return '8강';
+    const n = Math.pow(2, total - ri);
+    return `${n}강`;
+  };
+  const _bracketItems = [];
+  try{
+    if (tn && Array.isArray(tn.bracket)) {
+      tn.bracket.forEach((rnd, ri)=>{
+        const lbl = _getBracketRoundLabel(tn, ri);
+        if (lbl !== round) return;
+        (rnd||[]).forEach((m, mi)=>{
+          if (!m || !m.a || !m.b) return;
+          const baseId = `pbn_${tn.id}_${ri}_${mi}`;
+          const d = m.d || '';
+          if (Array.isArray(m._games) && m._games.length) {
+            m._games.forEach((g, gi)=>{
+              if (!g || !g.winner) return;
+              _bracketItems.push({
+                m:{a:m.a,b:m.b,winner:g.winner,d,map:g.map||m.map||'', _id:`${baseId}_s0_g${gi}`},
+                src:'bkt',
+                key: `${baseId}_${gi}`,
+                _dateKey: d || ''
+              });
+            });
+          } else if (m.winner) {
+            _bracketItems.push({
+              m:{a:m.a,b:m.b,winner:m.winner,d,map:m.map||'', _id:`${baseId}_s0_g0`},
+              src:'bkt',
+              key: baseId,
+              _dateKey: d || ''
+            });
+          }
+        });
+      });
+    }
+  }catch(e){}
+
+  const _stageList = (tn.stageRecords[round]||[]).map((m,i)=>({m, src:'stage', idx:i, key:(m&&m._id)||`stage_${i}`, _dateKey:(m&&m.d)||''}));
+
+  const sorted = [..._bracketItems, ..._stageList]
+    .sort((a,b)=>(b._dateKey||'').localeCompare(a._dateKey||'')||String(b.key).localeCompare(String(a.key)));
+
+  const card = (item, displayNo)=>{
+    const m = item.m;
     const pa = players.find(p=>p.name===m.a);
     const pb = players.find(p=>p.name===m.b);
     const isDone = !!m.winner;
@@ -1420,7 +1474,7 @@ function proCompTourMatchInput(tn){
     return `<div class="grp-match-card tc-card" style="--tc-win-rgb:${winRgb};background:linear-gradient(135deg,var(--white) 0%,#f5f3ff 100%);border:1.5px solid ${col}22;border-left:4px solid ${col};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:600">${idx+1}경기</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:800">${dLabel}</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
       </div>
@@ -1439,14 +1493,18 @@ function proCompTourMatchInput(tn){
         ${_pcard(pb, m.b, bWin)}
       </div>
       <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openPcStageRecModal('${tn.id}','${round}',${idx})">✏️ 결과</button>
-        <button class="btn btn-r btn-xs" onclick="pcDeleteStageRec('${tn.id}','${round}',${idx})">🗑️ 삭제</button>`:''}
+        ${isLoggedIn && item.src==='stage'
+          ?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openPcStageRecModal('${tn.id}','${round}',${item.idx})">✏️ 결과</button>
+            <button class="btn btn-r btn-xs" onclick="pcDeleteStageRec('${tn.id}','${round}',${item.idx})">🗑️ 삭제</button>`
+          : item.src==='bkt'
+            ?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="proCompSub='tour';render()">🗂️ 대진표</button>`
+            :''}
       </div>
     </div>`;
   };
 
   const listHTML = sorted.length
-    ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${sorted.map(({m,i})=>card(m,i)).join('')}</div>`
+    ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${sorted.map((it,idx)=>card(it, idx+1)).join('')}</div>`
     : `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">등록된 기록이 없습니다.</div>`;
 
   return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
@@ -3601,14 +3659,19 @@ function proCompEditMatch(tnId, gi, mi) {
 
 function _revertProMatch(matchId) {
   if (!matchId) return;
+  const pref = matchId + '_s';
   players.forEach(p => {
     if (!p.history) return;
-    const h = p.history.find(x => x.matchId === matchId);
-    if (!h) return;
-    if (h.result === '승') { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
-    else { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
-    p.elo = (p.elo||1200) - h.eloDelta;
-    p.history = p.history.filter(x => x.matchId !== matchId);
+    // (요청사항) 대진표는 matchId 아래로 gameId가 여러개 생길 수 있음(matchId_s0_g0 ...)
+    // → base matchId로 롤백 시 해당 prefix 전부 롤백
+    const hits = p.history.filter(x => x.matchId === matchId || (x.matchId && x.matchId.startsWith(pref)));
+    if (!hits.length) return;
+    hits.forEach(h => {
+      if (h.result === '승') { p.win = Math.max(0,(p.win||0)-1); p.points = (p.points||0)-3; }
+      else if (h.result === '패') { p.loss = Math.max(0,(p.loss||0)-1); p.points = (p.points||0)+3; }
+      if (h.eloDelta != null) p.elo = (p.elo||1200) - h.eloDelta;
+    });
+    p.history = p.history.filter(x => !(x.matchId === matchId || (x.matchId && x.matchId.startsWith(pref))));
   });
 }
 
