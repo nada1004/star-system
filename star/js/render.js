@@ -786,7 +786,8 @@ function openProCompMatchShare(a,b,sa,sb,d){
           if(ri==='3rd') return '3·4위전';
           const r=Number(ri);
           if(!isFinite(r) || totalRnd<=0) return '토너먼트';
-          return r===totalRnd-1?'결승':r===totalRnd-2?'준결승':r===totalRnd-3?'4강':`${Math.pow(2,totalRnd-r)}강`;
+          // 라운드 표기: 16강/8강/4강/결승 (※ 4강=준결승)
+          return r===totalRnd-1?'결승':r===totalRnd-2?'4강':r===totalRnd-3?'8강':`${Math.pow(2,totalRnd-r)}강`;
         };
         // 일반 라운드
         for(let ri=0; ri<(tn.bracket||[]).length; ri++){
@@ -2352,7 +2353,7 @@ var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
-  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px">
+  return `<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px">
     ${tabs.map(t=>`<button class="pill ${curSub===t.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${setFn}='${t.id}';render()">${t.lbl}</button>`).join('')}
   </div>`;
 }

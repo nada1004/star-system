@@ -22,9 +22,10 @@ function rHist(C,T){
     // (요청) 표기/순서: 일반 → 중장전 → 대회 …
     {id:'pro',      grp:'프로리그', lbl:'🏅 프로리그', disp:'🏅 일반'},
     {id:'progj',    grp:'프로리그', lbl:'⚔️ 끝장전',   disp:'⚔️ 중장전'},
-    {id:'procomp',  grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 대회'},
-    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트'},
-    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전'},
+    {id:'procomp',    grp:'프로리그', lbl:'🏆 대회 기록', disp:'🏆 조별리그'},
+    {id:'procomptn',  grp:'프로리그', lbl:'🗂️ 토너먼트', disp:'🗂️ 토너먼트'},
+    {id:'procompteam',grp:'프로리그', lbl:'🤝 팀전',     disp:'🤝 팀전'},
+    {id:'procompgj',  grp:'프로리그', lbl:'⚔️ 중장전',   disp:'⚔️ 중장전'},
     {id:'univstat', grp:'통계',   lbl:'🏛️ 대학별 기록'},
     {id:'univrank', grp:'통계',   lbl:'🏛️ 대학별 포인트'},
     {id:'univcomp',  grp:'통계',   lbl:'⚔️ 대학 전력 비교'},
@@ -45,7 +46,7 @@ function rHist(C,T){
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
-  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
+  const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','procomptn','procompteam','procompgj','all'].includes(histSub);
 
   // 상단: 기록 메뉴(그룹) 버튼 (연/월/정렬은 하위메뉴 우측에 배치)
   let h=`<div class="hist-topbar no-export">`;
@@ -1223,7 +1224,7 @@ function histAllHTML(){
                 ${mapStr}
               </div>`;
             })()
-          : _regDet(key, m, mode, labelA, labelB, ca, cb, aWin, bWin)}
+          : _regDet(key, m, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
       </div>
     </div>`;
   });
@@ -1313,7 +1314,7 @@ function histTourneyHTML(context){
           </div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
-          ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin)}
+        ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
             ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -1511,7 +1512,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin)}
+        ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:'';})()}
@@ -1757,12 +1758,23 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${m.fmt>0?`<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700;flex-shrink:0">${m.fmt}:${m.fmt}</span>`:''}
         ${aWin||bWin?`<span class="rec-winner" style="font-size:12px;font-weight:900;padding:2px 10px;border-radius:20px;background:rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .06));color:${aWin?ca:cb};border:1.5px solid rgba(var(--rc-win-rgb, 100,116,139), calc(var(--rc-bg-a, .12) + .16));white-space:nowrap;flex-shrink:0">🏆 ${aWin?labelA:labelB}</span>`:`<span style="font-size:11px;color:var(--gray-l);flex-shrink:0">무승부</span>`}
         <div class="rec-actions no-export" style="margin-left:auto">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${(m.a||'').replace(/'/g,"\\'")}',${m.sa||0},'${(m.b||'').replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','${mode}',${i})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
-          ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openShareCardFromMatch('${mode}',${i})" title="공유 카드" style="padding:3px 8px;font-size:14px">🎴</button>`:'';})()}
-          <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-          ${adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`)}
-          ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
-          ${isLoggedIn&&(mode==='mini'||mode==='univm')?`<button class="btn btn-w btn-xs no-export" onclick="event.stopPropagation();openMoveMatchPop(this,'${mode}',${i})" title="다른 탭으로 이동">↗ 이동</button>`:''}
+          <button class="btn btn-w btn-xs" style="padding:3px 10px;font-size:14px" title="메뉴"
+            class="rec-morebtn"
+            onclick="openRecActionMenu(event,{
+              _btnEl:this,
+              a:'${(m.a||'').replace(/'/g,"\\'")}',
+              sa:${m.sa||0},
+              b:'${(m.b||'').replace(/'/g,"\\'")}',
+              sb:${m.sb||0},
+              d:'${m.d||''}',
+              mode:'${mode}',
+              idx:${i},
+              key:'${key}',
+              canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
+              canEdit:${(isLoggedIn && !isSubAdmin)?'true':'false'},
+              canDel:${(isLoggedIn && !isSubAdmin)?'true':'false'},
+              canMove:${(isLoggedIn && (mode==='mini'||mode==='univm'))?'true':'false'}
+            })">⋯</button>
         </div>
       </div>
       <div class="rec-sum-header" style="padding:6px 12px 10px">
@@ -1777,7 +1789,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin)}
+        ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -1818,8 +1830,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
 
 /* 모바일 시트용 레지스트리 */
 window._detReg = window._detReg || {};
-function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW){
-  window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW};
+function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW, idx){
+  window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW, idx};
   return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
 }
 
@@ -3312,18 +3324,29 @@ function compSummaryListHTML(context){
             ${aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}
           </span>`:''}
         </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <button class="btn btn-w btn-xs" onclick="copyMatchResult('${a.replace(/'/g,"\\'")}',${m.sa||0},'${b.replace(/'/g,"\\'")}',${m.sb||0},'${m.d||''}','comp',${rIdx>=0?rIdx:'null'})" title="결과 복사" style="padding:3px 8px;font-size:14px">📤</button>
-          <div style="display:flex;gap:4px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">✏️ 수정</button>`):''}
-            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">🗑️ 삭제</button>`):''}
-            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
-          </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0" class="no-export">
+          <button class="btn btn-w btn-xs" style="padding:3px 10px;font-size:14px" title="메뉴"
+            class="rec-morebtn"
+            onclick="openRecActionMenu(event,{
+              _btnEl:this,
+              a:'${a.replace(/'/g,"\\'")}',
+              sa:${m.sa||0},
+              b:'${b.replace(/'/g,"\\'")}',
+              sb:${m.sb||0},
+              d:'${m.d||''}',
+              mode:'comp',
+              idx:${rIdx>=0?rIdx:'null'},
+              key:'${key}',
+              canShare:false,
+              canEdit:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+              canDel:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+              canMove:false
+            })">⋯</button>
+          ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin)}
+        ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin, rIdx)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -3519,7 +3542,8 @@ function _ensureHistDetailModal(){
   m=document.createElement('div');
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
-  m.style.cssText='z-index:5600;display:none';
+  // (개선) z-index는 CSS 변수로 통일 (공유카드가 항상 위로 오도록)
+  m.style.cssText='z-index:var(--z-modal-4);display:none';
   m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none'");
   m.innerHTML=`
     <div class="mbox mbox--matchdetail" onclick="event.stopPropagation()">
@@ -3527,6 +3551,10 @@ function _ensureHistDetailModal(){
         <div class="cmd-head__txt">
           <div id="hmdTitle" class="cmd-title">📅 경기 상세</div>
           <div id="hmdSub" class="cmd-sub"></div>
+        </div>
+        <div class="no-export" style="display:flex;gap:6px;align-items:center">
+          <button id="hmdActCopy" class="cmd-hbtn" title="결과 복사">📤</button>
+          <button id="hmdActShare" class="cmd-hbtn" title="공유 카드">🎴</button>
         </div>
         <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none'" aria-label="닫기">✕</button>
       </div>
@@ -3550,6 +3578,49 @@ function openHistDetailModal(key){
   const bar=document.getElementById('hmdScoreBar');
   const bodyEl=document.getElementById('histDetBody');
   const match=reg.m;
+  const idx = (reg.idx!==undefined && reg.idx!==null) ? reg.idx : null;
+  const modeKey = reg.mode || '';
+  // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
+  const _openShareByObj = (obj)=>{
+    try{
+      window._shareMatchObj = obj ? {...obj} : null;
+      window._shareMode = 'match';
+      if(typeof openShareCardModal==='function') openShareCardModal();
+      setTimeout(()=>{ try{ if(window._shareMatchObj && typeof renderShareCardByMatchObj==='function') renderShareCardByMatchObj(window._shareMatchObj); }catch(_){ } }, 80);
+    }catch(e){}
+  };
+  // 헤더 액션(고정)
+  try{
+    const copyBtn=document.getElementById('hmdActCopy');
+    if(copyBtn){
+      copyBtn.onclick = (e)=>{
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        const a=(match.a||reg.lA||''); const b=(match.b||reg.lB||'');
+        copyMatchResult(String(a), match.sa||0, String(b), match.sb||0, match.d||'', modeKey, idx??0);
+      };
+    }
+    const shareBtn=document.getElementById('hmdActShare');
+    if(shareBtn){
+      const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';
+      const canShare = (!_adm || isLoggedIn);
+      shareBtn.style.display = canShare ? '' : 'none';
+      shareBtn.onclick = (e)=>{
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        if(!canShare) return;
+        // comp 포함 전 모드 지원
+        if(typeof openShareCardFromMatch==='function' && idx!==null && modeKey!=='comp'){
+          openShareCardFromMatch(modeKey, idx);
+          return;
+        }
+        if(typeof openShareCardFromMatch==='function' && idx!==null && modeKey==='comp' && Array.isArray(comps) && comps[idx]){
+          openShareCardFromMatch('comp', idx);
+          return;
+        }
+        // fallback: match 객체로 직접 (대회 통합/인덱스 없는 케이스)
+        _openShareByObj({...match, _matchType:(modeKey||'')});
+      };
+    }
+  }catch(e){}
   const labelA=reg.lA || match.a || 'A';
   const labelB=reg.lB || match.b || 'B';
   const isDone=(match.sa!=null && match.sb!=null);
@@ -3609,6 +3680,96 @@ function openHistDetailModal(key){
 function toggleDetail(key){
   // (요청사항) 상세는 인라인 펼치기 대신 팝업으로 표시
   openHistDetailModal(key);
+}
+
+/* ══════════════════════════════════════
+   대전기록 액션 메뉴(⋯)
+   - (개선) 아이콘 버튼(복사/공유/상세/수정/삭제/이동)을 한 곳에 모아 UI 복잡도 감소
+══════════════════════════════════════ */
+function _ensureSuCtxMenu(){
+  let el=document.getElementById('suCtxMenu');
+  if(el) return el;
+  el=document.createElement('div');
+  el.id='suCtxMenu';
+  el.className='su-ctxmenu no-export';
+  el.style.display='none';
+  document.body.appendChild(el);
+  // 바깥 클릭 닫기
+  setTimeout(()=>{
+    try{
+      document.addEventListener('pointerdown',(e)=>{
+        const m=document.getElementById('suCtxMenu');
+        if(!m || m.style.display==='none') return;
+        if(e && e.target && m.contains(e.target)) return;
+        closeSuCtxMenu();
+      }, true);
+    }catch(_){}
+  },0);
+  return el;
+}
+function closeSuCtxMenu(){
+  try{
+    const el=document.getElementById('suCtxMenu');
+    if(el){ el.style.display='none'; el.innerHTML=''; }
+  }catch(e){}
+}
+function openRecActionMenu(ev, opts){
+  try{ if(ev && ev.preventDefault) ev.preventDefault(); }catch(_){}
+  try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_){}
+  const el=_ensureSuCtxMenu();
+  if(!el) return;
+  const o=opts||{};
+  const items=[];
+  // 기본 액션
+  items.push({t:'📤 결과 복사', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
+  if(o.canShare) items.push({t:'🎴 공유 카드', on:()=>openShareCardFromMatch(o.mode,o.idx)});
+  items.push({t:'📂 상세 보기', on:()=>toggleDetail(o.key)});
+  // 관리자 액션
+  if(o.canEdit) items.push({t:'✏️ 수정', on:()=>openRE(o.mode,o.idx)});
+  if(o.canDel) items.push({t:'🗑️ 삭제', on:()=>delRec(o.mode,o.idx)});
+  if(o.canMove) items.push({t:'↗ 이동', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
+
+  el.innerHTML = items.map((it,i)=>`<button type="button" class="su-ctxmenu-item" data-i="${i}">${it.t}</button>`).join('');
+  // 핸들러 연결
+  setTimeout(()=>{
+    try{
+      el.querySelectorAll('button[data-i]').forEach(b=>{
+        b.onclick=(e)=>{
+          try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+          const idx=parseInt(b.getAttribute('data-i')||'0',10)||0;
+          try{ items[idx].on(); }catch(_){}
+          closeSuCtxMenu();
+        };
+      });
+    }catch(_){}
+  },0);
+
+  // 위치 (개선: 메뉴 크기 측정 후 화면 밖으로 안 나가게 보정)
+  try{
+    const pad = 8;
+    const r = (o._btnEl && o._btnEl.getBoundingClientRect) ? o._btnEl.getBoundingClientRect() : null;
+    const ax = r ? r.right : (ev?.clientX||0);
+    const ay = r ? r.bottom : (ev?.clientY||0);
+    el.style.display='block';
+    el.style.visibility='hidden';
+    el.style.left = '0px';
+    el.style.top  = '0px';
+    const bw = el.offsetWidth || 180;
+    const bh = el.offsetHeight || 220;
+    let left = ax;
+    let top  = ay + 6;
+    // 우측/하단 잘림 방지
+    if(left + bw + pad > window.innerWidth) left = window.innerWidth - bw - pad;
+    if(top  + bh + pad > window.innerHeight) top  = ay - bh - 6;
+    // 좌측/상단 잘림 방지
+    if(left < pad) left = pad;
+    if(top  < pad) top  = pad;
+    el.style.left = left + 'px';
+    el.style.top  = top + 'px';
+    el.style.visibility='visible';
+  }catch(e){
+    try{ el.style.display='block'; el.style.visibility='visible'; }catch(_){}
+  }
 }
 
 function savePlayerMemo(name, del=false){
@@ -3680,7 +3841,7 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
    대전 기록 > 프로리그 대회 탭
 ══════════════════════════════════════ */
 function histProCompHTML() {
-  // 프로리그 대회 서브탭 바
+  // 프로리그 대회 기록 서브탭 (조별/토너/팀전/중장전)
   const _pcSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill ${histSub==='procomp'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomp';openDetails={};render()">📅 조별리그</button>
     <button class="pill ${histSub==='procomptn'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='procomptn';openDetails={};render()">🗂️ 토너먼트</button>
@@ -3695,10 +3856,10 @@ function histProCompHTML() {
     (tn.groups||[]).forEach((grp, gi) => {
       const gl = 'ABCDEFGHIJ'[gi]||gi;
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      (grp.matches||[]).forEach(m => {
+      (grp.matches||[]).forEach((m, mi) => {
         if (!m.a||!m.b||!m.winner) return;
         if (typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return;
-        allItems.push({...m, _tnName:tn.name, _stage:'조별리그', _stageDetail:`GROUP ${gl}`, _stageColor:col});
+        allItems.push({...m, _tnName:tn.name, _tnId:tn.id, _gi:gi, _mi:mi, _stage:'조별리그', _stageDetail:`GROUP ${gl}`, _stageColor:col});
       });
     });
   });
@@ -3746,6 +3907,8 @@ function histProCompHTML() {
           ${stageTypeBadge}${stageBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
             <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+            ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">✏️ 결과</button>
+            <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">🗑️ 삭제</button>`:''}
           </div>
         </div>
         <div class="rec-sum-header" style="padding:5px 12px 10px">
@@ -3789,7 +3952,8 @@ function histProCompTourneyHTML() {
     const rounds = tn.bracket||[];
     const totalRounds = rounds.length;
     rounds.forEach((rnd, ri) => {
-      const rndLabel = ri===totalRounds-1?'결승':ri===totalRounds-2?'준결승':ri===totalRounds-3?'4강':`${Math.pow(2,totalRounds-ri)}강`;
+      // 라운드 표기: 16강/8강/4강/결승 (※ 4강=준결승)
+      const rndLabel = ri===totalRounds-1?'결승':ri===totalRounds-2?'4강':ri===totalRounds-3?'8강':`${Math.pow(2,totalRounds-ri)}강`;
       const stageColor = ri===totalRounds-1?'#f59e0b':ri===totalRounds-2?'#7c3aed':ri===totalRounds-3?'#dc2626':'#2563eb';
       rnd.forEach(m => {
         if (!m.a||!m.b) return;

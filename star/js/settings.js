@@ -2278,6 +2278,7 @@ window.cfgSearchSettings = function(q){
   if(!qq){
     try{ _cfgApplyCat(window._cfgCat, false); }catch(e){}
     try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent=''; }catch(e){}
+    try{ const sug=document.getElementById('cfgSearchSug'); if(sug){ sug.innerHTML=''; sug.style.display='none'; } }catch(e){}
     return;
   }
   let shown=0;
@@ -2308,6 +2309,29 @@ window.cfgSearchSettings = function(q){
     }
   }catch(e){}
   try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent = `검색 ${shown}개`; }catch(e){}
+
+  // (개선) 검색 결과 "바로가기" 추천 목록
+  try{
+    const sug=document.getElementById('cfgSearchSug');
+    if(!sug) return;
+    const titles=window._cfgSecTitle||{};
+    const hits=[];
+    for(const id in titles){
+      const t=String(titles[id]||'');
+      const plain=t.replace(/<[^>]+>/g,'');
+      const hay=(id+' '+plain).toLowerCase();
+      if(hay.includes(qq)) hits.push({id,t:plain});
+    }
+    hits.sort((a,b)=>a.t.localeCompare(b.t,'ko'));
+    const top=hits.slice(0,10);
+    if(!top.length){
+      sug.innerHTML='';
+      sug.style.display='none';
+      return;
+    }
+    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()">${x.t}</button>`).join('');
+    sug.style.display='block';
+  }catch(e){}
 };
 
 // 디버그 플래그 (기본 OFF): URL에 ?cfgdebug=1 이 포함되면 콘솔에 자세히 기록
@@ -2392,6 +2416,7 @@ function rCfg(C,T){
       <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex:1;min-width:220px;justify-content:flex-end">
         <div style="position:relative;flex:1;max-width:360px;min-width:220px">
           <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:700" oninput="cfgSearchSettings(this.value)">
+          <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
         </div>
         <span id="cfgSearchCnt" style="font-size:11px;color:var(--gray-l);font-weight:900;white-space:nowrap"></span>
       </div>
@@ -2505,8 +2530,11 @@ ${_scfgD('notice','📢 공지 관리')}
       return `<div class="srow" style="background:${isHidden?'var(--surface)':'transparent'};border-radius:8px;padding:4px 6px;margin:-2px -6px;flex-wrap:wrap;gap:4px">
         <div class="cdot" style="background:${u.color};opacity:${isHidden?0.4:1}"></div>
         <input type="text" value="${u.name}" style="flex:1;max-width:130px;opacity:${isHidden?0.5:1}" onblur="const oldName=univCfg[${i}].name;const v=this.value.trim();if(!v){this.value=oldName;return;}if(v!==oldName&&univCfg.some((x,xi)=>xi!==${i}&&x.name===v)){alert('이미 추가된 대학명입니다.');this.value=oldName;return;}if(v!==oldName){renameUnivAcrossData(oldName,v);univCfg[${i}].name=v;save();render();}">
-        <input type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상"
-          onchange="univCfg[${i}].color=this.value;try{const d=this.parentElement.querySelector('.cdot');if(d)d.style.background=this.value;}catch(e){};save();if(typeof renderBoard==='function')renderBoard()">
+        <input id="cfg-univ-c-${i}" type="color" value="${u.color}" style="width:36px;height:30px;padding:2px;border-radius:5px;cursor:pointer;border:1px solid var(--border2)" title="대학 색상"
+          onchange="cfgUnivSetColor(${i},this.value)">
+        <input id="cfg-univ-hex-${i}" type="text" value="${u.color}" placeholder="#RRGGBB" title="대학 색상 HEX 입력" style="width:96px;padding:4px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800"
+          onblur="cfgUnivSetColor(${i},this.value)">
+        <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgUnivPickColor(${i})">🎯</button>
         <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
           onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
           ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
@@ -2924,8 +2952,10 @@ ${_scfgD('notice','📢 공지 관리')}
             const ic=String(th.icon?.[t]||'');
             return `<div style="padding:10px 10px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:8px">
               <div id="cfg-tier-prev-${i}" style="display:flex;justify-content:center">${getTierBadge(t)}</div>
-              <div style="display:flex;gap:6px;align-items:center;justify-content:center">
-                <input type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+              <div style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap">
+                <input id="cfg-tier-c-${encodeURIComponent(t)}" type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+                <input id="cfg-tier-hex-${encodeURIComponent(t)}" type="text" value="${c}" placeholder="#RRGGBB" title="티어 색상 HEX 입력" style="width:92px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800;text-align:center" onblur="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
+                <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgTierThemePickColor('${_jsq(t)}')">🎯</button>
                 <input type="text" value="${_attr(ic)}" placeholder="이모지" title="티어 이모지" style="width:64px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;text-align:center" oninput="cfgTierThemeSetIcon('${_jsq(t)}',this.value)">
               </div>
               <div style="font-size:10px;color:var(--gray-l);text-align:center">${t}</div>
@@ -6125,7 +6155,17 @@ function cfgTierThemeSetSat(pct){
 }
 function cfgTierThemeSetColor(tier, hex){
   if(typeof setTierTheme!=='function') return;
-  setTierTheme({bg:{[tier]:hex}});
+  const c = cfgNormHex(hex);
+  if(!c){ try{ alert('색상 코드는 #RRGGBB 형식으로 입력하세요.'); }catch(e){}; return; }
+  setTierTheme({bg:{[tier]:c}});
+  // 입력창 동기화
+  try{
+    const sid=encodeURIComponent(tier);
+    const cInp=document.getElementById('cfg-tier-c-'+sid);
+    if(cInp) cInp.value=c;
+    const hInp=document.getElementById('cfg-tier-hex-'+sid);
+    if(hInp) hInp.value=c;
+  }catch(e){}
   if(typeof render==='function') render();
   if(typeof reCfg==='function') reCfg();
 }
@@ -6141,6 +6181,88 @@ function cfgTierThemeReset(){
   resetTierTheme();
   if(typeof render==='function') render();
   if(typeof reCfg==='function') reCfg();
+}
+
+// ── 경기 상세(팝업) FX 프리셋 ─────────────────────────────────────
+function cfgMdFxApplyPreset(preset){
+  try{
+    const p = String(preset||'').trim();
+    if(p==='minimal'){
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','minimal');
+      localStorage.setItem('su_md_fx_anim','shimmer');
+      localStorage.setItem('su_md_fx_speed_mul','1.6');
+      localStorage.setItem('su_md_fx_int','60');
+    }else if(p==='strong'){
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','classic');
+      localStorage.setItem('su_md_fx_anim','glint');
+      localStorage.setItem('su_md_fx_speed_mul','0.8');
+      localStorage.setItem('su_md_fx_int','140');
+    }else{ // basic
+      localStorage.setItem('su_md_fx_on','1');
+      localStorage.setItem('su_md_fx_preset','classic');
+      localStorage.setItem('su_md_fx_anim','both');
+      localStorage.setItem('su_md_fx_speed_mul','1');
+      localStorage.setItem('su_md_fx_int','100');
+    }
+    try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+    try{ if(typeof _renderCfgMatchDetailSection==='function') _renderCfgMatchDetailSection(); }catch(e){}
+  }catch(e){}
+}
+
+// ── 색상 입력/스포이드 공용 유틸 ──
+function cfgNormHex(v){
+  const s=String(v||'').trim();
+  if(!s) return null;
+  const t = s.startsWith('#') ? s.slice(1) : s;
+  if(/^[0-9a-fA-F]{6}$/.test(t)) return '#'+t.toUpperCase();
+  if(/^[0-9a-fA-F]{3}$/.test(t)) return '#'+t.split('').map(ch=>ch+ch).join('').toUpperCase();
+  return null;
+}
+async function cfgPickColorHex(){
+  try{
+    if(!window.EyeDropper){
+      alert('스포이드 기능은 크롬/엣지 등 일부 브라우저에서만 지원됩니다.');
+      return null;
+    }
+    const ed=new EyeDropper();
+    const res=await ed.open();
+    return res && res.sRGBHex ? String(res.sRGBHex) : null;
+  }catch(e){
+    return null;
+  }
+}
+
+function cfgUnivSetColor(i, hex){
+  const c = cfgNormHex(hex);
+  if(!c){ try{ alert('색상 코드는 #RRGGBB 형식으로 입력하세요.'); }catch(e){}; return; }
+  try{ univCfg[i].color = c; }catch(e){ return; }
+  // UI 동기화
+  try{ 
+    const cInp=document.getElementById('cfg-univ-c-'+i);
+    const row=cInp && cInp.closest ? cInp.closest('.srow') : null;
+    const dot=row ? row.querySelector('.cdot') : null;
+    if(dot) dot.style.background=c;
+  }catch(e){}
+  try{
+    const cInp=document.getElementById('cfg-univ-c-'+i);
+    if(cInp) cInp.value=c;
+    const hInp=document.getElementById('cfg-univ-hex-'+i);
+    if(hInp) hInp.value=c;
+  }catch(e){}
+  try{ save(); }catch(e){}
+  try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+}
+async function cfgUnivPickColor(i){
+  const c = await cfgPickColorHex();
+  if(c) cfgUnivSetColor(i,c);
+}
+
+async function cfgTierThemePickColor(tier){
+  const c = await cfgPickColorHex();
+  if(c) cfgTierThemeSetColor(tier,c);
 }
 
 async function addAdminAccount(){
@@ -6387,6 +6509,12 @@ function _renderCfgMatchDetailSection(){
           헤더 애니메이션 사용
           <span style="font-size:11px;color:var(--gray-l);font-weight:700">(ON/OFF)</span>
         </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('basic')">기본</button>
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('strong')">강하게</button>
+          <button class="btn btn-w btn-xs" onclick="cfgMdFxApplyPreset('minimal')">미니멀</button>
+          <span style="font-size:11px;color:var(--gray-l);align-self:center">프리셋을 누르면 ON/색감/효과/속도/강도가 한번에 적용됩니다</span>
+        </div>
         <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center">
           <div style="font-size:12px;font-weight:800;color:var(--text2)">색감 프리셋</div>
           <select style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px"

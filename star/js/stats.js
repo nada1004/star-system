@@ -93,7 +93,7 @@ function rStats(C,T){
   // 1행: 그룹 pill 바
   const _curSub = (window.statsSub||'overview');
   const _curSubObj = _curGrp.tabs.find(t=>t.id===_curSub) || _curGrp.tabs[0];
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px;align-items:center">`;
+  h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px;align-items:center">`;
   // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   if(_enableSubFilter && !_lockOpen){
@@ -126,7 +126,7 @@ function rStats(C,T){
   // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
   if((_enableSubFilter?window._statsFilterOpen:true)){
   // 하위 탭 pill 바
-  h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
+  h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
   _curGrp.tabs.forEach(o=>{
     h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });
