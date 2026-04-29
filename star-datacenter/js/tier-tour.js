@@ -719,7 +719,19 @@ function rTierTourTab(C, T){
         }
       });
     }
-    const _allBkt=[..._bktRecs,..._bktFromBracket].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    // (버그픽스) 브라켓에만 있고 ttM에 없는 기록은 ttM으로 동기화
+    // - 그래야 recSummaryListHTML의 "일괄 선택/삭제"가 인덱스/ID 불일치로 깨지지 않음
+    if(_bktFromBracket.length){
+      try{
+        _bktFromBracket.forEach(m=>{
+          if(!m || !m._id) return;
+          if(ttM.some(x=>x && x._id===m._id)) return;
+          ttM.unshift({...m, n:_ttCurComp, compName:_ttCurComp, stage:'bkt'});
+        });
+        save();
+      }catch(e){}
+    }
+    const _allBkt=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
     if(isLoggedIn && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
@@ -747,7 +759,18 @@ function rTierTourTab(C, T){
         });
       });
     }
-    const _allGrp=[..._grpRecs,..._grpFromTn].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    // (버그픽스) 조별리그도 tourneys에만 있고 ttM에 없는 기록은 ttM으로 동기화
+    if(_grpFromTn.length){
+      try{
+        _grpFromTn.forEach(m=>{
+          if(!m || !m._id) return;
+          if(ttM.some(x=>x && x._id===m._id)) return;
+          ttM.unshift({...m, n:_ttCurComp, compName:_ttCurComp, stage:'league'});
+        });
+        save();
+      }catch(e){}
+    }
+    const _allGrp=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
     h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {

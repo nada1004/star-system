@@ -3638,6 +3638,11 @@ function bulkDeleteRecs(bulkKey){
       }
       arr.splice(idx,1);
       revertMatchRecord(matchObj);
+      // (버그픽스) 티어대회(tt)는 tourneys(조별/브라켓)에도 같은 _id 기록이 남아 있으면
+      // 다음 렌더/마이그레이션에서 다시 ttM으로 복구되어 "삭제가 안 된 것처럼" 보일 수 있음.
+      if(bulkKey==='tt' && matchObj._id) {
+        try{ _removeTierTourneyMatchById(matchObj._id); }catch(e){}
+      }
     }
   });
   // 안전 처리: revertMatchRecord가 놓친 history 항목 직접 정리
@@ -3657,6 +3662,42 @@ function bulkDeleteRecs(bulkKey){
   _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
+}
+
+// (버그픽스) 티어대회 삭제 시 tourneys 내부(조별/브라켓)에 남은 같은 _id 기록도 같이 제거
+function _removeTierTourneyMatchById(matchId){
+  const id = String(matchId||'').trim();
+  if(!id) return 0;
+  let removed = 0;
+  try{
+    (tourneys||[]).filter(t=>t && t.type==='tier').forEach(tn=>{
+      // 조별리그 matches
+      (tn.groups||[]).forEach(grp=>{
+        if(!grp || !Array.isArray(grp.matches)) return;
+        const before = grp.matches.length;
+        grp.matches = grp.matches.filter(m=>!(m && String(m._id||'')===id));
+        removed += (before - grp.matches.length);
+      });
+      // 브라켓 matchDetails/manualMatches
+      const br = tn.bracket || {};
+      if(br.matchDetails){
+        Object.keys(br.matchDetails).forEach(k=>{
+          const m = br.matchDetails[k];
+          if(m && String(m._id||'')===id){
+            delete br.matchDetails[k];
+            removed++;
+            try{ if(br.winners) delete br.winners[k]; }catch(e){}
+          }
+        });
+      }
+      if(Array.isArray(br.manualMatches)){
+        const before = br.manualMatches.length;
+        br.manualMatches = br.manualMatches.filter(m=>!(m && String(m._id||'')===id));
+        removed += (before - br.manualMatches.length);
+      }
+    });
+  }catch(e){}
+  return removed;
 }
 // ─────────────────────────────────────────────────────────────
 
@@ -3688,7 +3729,12 @@ function delRec(mode,i){
   else if(mode==='ck')   { matchObj=ckM[i];    ckM.splice(i,1);   }
   else if(mode==='pro')  { matchObj=proM[i];   proM.splice(i,1);  }
   else if(mode==='tt')   { matchObj=ttM[i];    ttM.splice(i,1);   }
-  if(matchObj) revertMatchRecord(matchObj);
+  if(matchObj) {
+    revertMatchRecord(matchObj);
+    if(mode==='tt' && matchObj._id) {
+      try{ _removeTierTourneyMatchById(matchObj._id); }catch(e){}
+    }
+  }
   if(typeof fixPoints==='function')fixPoints();
   save();render();
 }
