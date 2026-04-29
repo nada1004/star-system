@@ -658,8 +658,14 @@ window.histExtInputToPasteModal = function(){
 // 선택 결과를 "경기 결과 붙여넣기(자동인식)" 모달로 전송
 function _histExtToPasteName(s){
   let t = String(s||'').trim();
+  // "메모: 대호" 같은 형태가 이름 칸에 섞여 들어오는 경우 대비
+  t = t.replace(/^(?:메모|비고|memo)\s*[:：]\s*/i,'').trim();
   // "승 xxx", "패 xxx" 같은 접두 제거
   t = t.replace(/^(승|패)\s+/,'').trim();
+  // 이모지/기호 제거(외부 표 복사 시 섞이는 경우)
+  t = t.replace(/[✅❌⭕⬜🆚🌐⭐★■□●○◆◇]/g,'').trim();
+  // 뒤쪽 괄호 설명 제거: "대호 (프로토스)" / "대호(P)" 등
+  t = t.replace(/\s*\((?:[PTZN]|테란|저그|프로토스|토스|Terran|Zerg|Protoss)\)\s*$/i,'').trim();
   // "이름 P" → "이름 (P)" (자동인식기 TSV 규칙)
   const m = t.match(/^(.+?)\s+([PTZN])$/i);
   if(m) t = `${m[1].trim()} (${m[2].toUpperCase()})`;
@@ -686,9 +692,10 @@ window.histExtSendToPasteModal = function(){
     const w = _histExtToPasteName(x.winner);
     const l = _histExtToPasteName(x.loser);
     const mp = (x.map||'-').trim();
+    const memo = String(x.memo||'').replace(/\t+/g,' ').replace(/\r?\n/g,' ').trim();
     // TSV(2인칭): 선수1\t선수2\t맵\t승/패(ELO)\t[타입]
     // 날짜는 "YYYY-MM-DD " 접두로 포함(파서가 날짜를 먼저 인식)
-    return `${d} ${w}\t${l}\t${mp}\t승\t${target}`;
+    return `${d} ${w}\t${l}\t${mp}\t승\t${target}${memo?`\t${memo}`:''}`;
   }).join('\n');
 
   // 해당 모드의 붙여넣기 모달 열기
