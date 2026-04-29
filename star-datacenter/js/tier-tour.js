@@ -4282,8 +4282,18 @@ function openRE(mode,idx){
     const pSetsGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const pSetsWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const pSetsWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const pDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((pSetsWA!=null && pSetsWA+pSetsWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>A팀 레이블</label><input type="text" id="re-tla" value="${m.teamALabel||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${pDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${pDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${pSetsWA||0};document.getElementById('re-sb').value=${pSetsWB||0};}else{document.getElementById('re-sa').value=${pSetsGA||0};document.getElementById('re-sb').value=${pSetsGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${pSetsWA??0}:${pSetsWB??0} / 게임수 ${pSetsGA??0}:${pSetsGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4300,8 +4310,18 @@ function openRE(mode,idx){
     const ttGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const ttDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((ttWA!=null && ttWA+ttWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${ttDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${ttDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${ttWA||0};document.getElementById('re-sb').value=${ttWB||0};}else{document.getElementById('re-sa').value=${ttGA||0};document.getElementById('re-sb').value=${ttGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${ttWA??0}:${ttWB??0} / 게임수 ${ttGA??0}:${ttGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4374,6 +4394,7 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // proM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -4389,6 +4410,7 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
     // 선수 history 업데이트

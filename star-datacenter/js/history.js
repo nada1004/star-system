@@ -1950,6 +1950,11 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
+          ${isLoggedIn&&m.sets&&m.sets.length?`<div class="no-export" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--gray-l);font-weight:800">점수방식</span>
+            <button class="btn ${(m.scoreMode||'game')==='set'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'set')" title="세트 승리 수로 스코어 계산">세트제</button>
+            <button class="btn ${(m.scoreMode||'game')==='game'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'game')" title="게임(맵) 승리 수로 스코어 계산">경기제</button>
+          </div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
@@ -1991,6 +1996,47 @@ window._detReg = window._detReg || {};
 function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW, idx){
   window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW, idx};
   return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
+}
+
+// ── (요청사항) 경기기록 점수 방식(세트제/경기제) 전환 ──
+function _calcScoreFromSets(sets, scoreMode){
+  let sa=0, sb=0;
+  (sets||[]).forEach(s=>{
+    if(!s) return;
+    const games = Array.isArray(s.games) ? s.games : [];
+    const scoreA = (s.scoreA!=null) ? Number(s.scoreA) : games.filter(g=>g && g.winner==='A').length;
+    const scoreB = (s.scoreB!=null) ? Number(s.scoreB) : games.filter(g=>g && g.winner==='B').length;
+    let w = s.winner;
+    if(!w){
+      w = scoreA>scoreB ? 'A' : scoreB>scoreA ? 'B' : '';
+    }
+    if(scoreMode==='set'){
+      if(w==='A') sa += 1;
+      else if(w==='B') sb += 1;
+    }else{
+      sa += (isNaN(scoreA)?0:scoreA);
+      sb += (isNaN(scoreB)?0:scoreB);
+    }
+  });
+  return {sa, sb};
+}
+function setRecScoreMode(mode, idx, scoreMode){
+  try{
+    const mkey = (mode==='mini'&&typeof histSub!=='undefined'&&histSub==='civil') ? 'civil' : mode;
+    const arr = mkey==='mini'?miniM:mkey==='civil'?miniM:mkey==='univm'?univM:mkey==='ck'?ckM:mkey==='pro'?proM:mkey==='tt'?ttM:mkey==='comp'?comps:null;
+    if(!arr || !arr[idx]) return;
+    const m = arr[idx];
+    if(!m.sets || !Array.isArray(m.sets) || !m.sets.length) return alert('세트 정보가 없어 전환할 수 없습니다.');
+    const sm = (scoreMode==='set') ? 'set' : 'game';
+    const sc = _calcScoreFromSets(m.sets, sm);
+    m.sa = sc.sa;
+    m.sb = sc.sb;
+    m.scoreMode = sm;
+    save();
+    render();
+  }catch(e){
+    console.error('[setRecScoreMode] fail', e);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
