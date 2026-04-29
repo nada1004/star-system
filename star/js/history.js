@@ -155,7 +155,9 @@ function rHist(C,T){
       <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
-    const _ttAll=ttM.filter(m=>!m._proKey);
+    // (요청사항) 티어대회 기록이 "사라져 보이는" 현상 방지:
+    // 일부 데이터는 _proKey가 붙어도 ttM(티어대회 기록)에 포함되므로, 전체 목록에서는 제외하지 않음
+    const _ttAll=(typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [];
     const _ttGen=_ttAll.filter(m=>!m.stage||m.stage==='general'||m.stage==='grp');
     const _ttLeague=_ttAll.filter(m=>m.stage==='league');
     const _ttBkt=_ttAll.filter(m=>m.stage==='bkt');
@@ -188,7 +190,18 @@ window._histExtPage = window._histExtPage || 1;
 const _HIST_EXT_PAGE_SIZE = 30; // 요청: 30경기씩
 function _histExtLoad(){
   try{
-    return JSON.parse(localStorage.getItem(_HIST_EXT_KEY)||'null')||{items:[],raw:'',mode:'today',today:''};
+    const raw = localStorage.getItem(_HIST_EXT_KEY) || '';
+    if(!raw) return {items:[],raw:'',mode:'today',today:''};
+    // (보강) 외부탭 데이터가 100~수천건으로 커질 수 있어 localStorage 용량 문제 방지:
+    // - 기본은 LZString으로 압축 저장("lz:" prefix)
+    // - 구버전(JSON 직접 저장)도 호환
+    if(raw.startsWith('lz:')){
+      const dec = (typeof LZString!=='undefined' && LZString.decompressFromUTF16)
+        ? (LZString.decompressFromUTF16(raw.slice(3)) || '')
+        : '';
+      return JSON.parse(dec || 'null') || {items:[],raw:'',mode:'today',today:''};
+    }
+    return JSON.parse(raw||'null')||{items:[],raw:'',mode:'today',today:''};
   }catch(e){
     console.warn('[_histExtLoad] localStorage 로드 실패:', e.message);
     return {items:[],raw:'',mode:'today',today:''};
@@ -196,9 +209,16 @@ function _histExtLoad(){
 }
 function _histExtSave(v){
   try{
-    localStorage.setItem(_HIST_EXT_KEY, JSON.stringify(v));
+    const json = JSON.stringify(v);
+    // 압축 저장(기본): 대용량 데이터(100건 이상)에서도 안정적으로 저장되게
+    const packed = (typeof LZString!=='undefined' && LZString.compressFromUTF16)
+      ? ('lz:' + LZString.compressFromUTF16(json))
+      : json;
+    localStorage.setItem(_HIST_EXT_KEY, packed);
+    return true;
   }catch(e){
     console.warn('[_histExtSave] localStorage 저장 실패:', e.message);
+    return false;
   }
 }
 function _histExtUid(){ return 'hex_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -417,8 +437,20 @@ function _histExtDedup(items){
     if(seen.has(k)) return;
     seen.add(k); out.push(x);
   });
-  // 날짜 내림차순
-  out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  // 날짜 내림차순 (정규화: 2026-4-2 같은 형태도 최신순이 정확히 나오게)
+  const _normDateSort = (d)=>{
+    const s=String(d||'').trim();
+    if(!s) return '';
+    const m=s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
+  out.sort((a,b)=>_normDateSort(String(b.date||'')).localeCompare(_normDateSort(String(a.date||''))));
   return out;
 }
 
@@ -684,8 +716,13 @@ window.histExtParseAndRender = function(opts){
   // (추가) 붙여넣기 데이터는 기존 items에 누적
   const parsed=(rows?_histExtMapRows(rows):[]).map(x=>({...x, source:x.source||'붙여넣기'}));
   const merged=_histExtDedup([...(st.items||[]), ...parsed]);
-  const next={...st, items:merged, raw, mode:'all', today:''};
-  _histExtSave(next);
+  // (용량 최적화) raw(붙여넣은 원문 HTML/텍스트)는 용량이 매우 커질 수 있어 저장하지 않음
+  // - items(정규화된 데이터)만 저장하면 다른 기기 동기화/검색에는 충분
+  const next={...st, items:merged, raw:'', mode:'all', today:''};
+  const ok=_histExtSave(next);
+  if(!ok){
+    alert('⚠️ 외부 데이터 저장에 실패했습니다.\n브라우저 저장공간(localStorage) 용량이 부족할 수 있어요.\n(가능하면 크롬/엣지에서 다시 시도하거나, 페이지 범위를 줄여주세요)');
+  }
   // 출력
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
   try{ document.getElementById('hist-ext-cnt-raw').textContent=String(parsed.length); }catch(e){}
@@ -777,7 +814,10 @@ window.histExtFetchFromProxy = async function(){
   const st=_histExtLoad();
   const merged=_histExtDedup([...(st.items||[]), ...allItems]);
   const next={...st, items:merged, raw:st.raw||'', mode:'all', today:''};
-  _histExtSave(next);
+  const ok=_histExtSave(next);
+  if(!ok){
+    alert('⚠️ 외부 데이터 저장에 실패했습니다.\n브라우저 저장공간(localStorage) 용량이 부족할 수 있어요.\n(페이지 범위를 줄이거나, 크롬/엣지에서 다시 시도해주세요)');
+  }
 
   try{ document.getElementById('hist-ext-fmt').textContent=fmt; }catch(e){}
   try{ document.getElementById('hist-ext-cnt-raw').textContent=String(rawItems.length); }catch(e){}
@@ -821,6 +861,17 @@ window.histExtFetchFromProxy = async function(){
 };
 window.histExtClear = function(){
   try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ render(); }catch(e){}
+};
+// 외부 데이터 전체 삭제(확인 포함) — 출력 영역에서 바로 실행 가능
+window.histExtClearAll = function(){
+  if(!confirm('외부 탭 데이터를 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
+  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  try{
+    const ta=document.getElementById('hist-ext-raw');
+    if(ta) ta.value='';
+  }catch(e){}
   try{ render(); }catch(e){}
 };
 window.histExtCopy = async function(){
@@ -943,13 +994,10 @@ function histExternalHTML(){
   const initItems = (st.items||[]);
   setTimeout(()=>{ try{ _histExtRenderTable(_histExtGetViewItems()); }catch(e){} }, 0);
   return `
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:10px 0 8px">
-      <div style="font-weight:1000">📎</div>
-    </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
         <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
-        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)">대기</div>
+        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div class="flabel">프리셋</div>
@@ -999,6 +1047,7 @@ function histExternalHTML(){
         <div style="font-weight:900">2) 출력</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-w btn-xs" onclick="histExtCopy()">전체 복사(현재 보기)</button>
+          <button class="btn btn-w btn-xs" onclick="histExtClearAll()">🗑️ 전체 삭제</button>
           <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
             <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
             <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
@@ -1458,18 +1507,32 @@ function statCard(label,w,l,d,col){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // (정렬 보강) 티어대회 등 filtered 목록도 "입력 순서"가 아니라 날짜 기준으로 정렬
+  // - 사용자가 과거 날짜 경기를 나중에 저장하면 unshift 때문에 최신순이 깨질 수 있음
+  const _normDateSort = (d)=>{
+    const s = String(d||'').trim();
+    if(!s) return '';
+    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
   let h='';
   let _filtered=false;
   // 유효 경기만 모아 렌더(그룹 요약 제거 요청)
   const list=[];
-  arr.forEach(m=>{
+  arr.forEach((m, _origIdx)=>{
     if(isCKmode){if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return;}
     else{if(!m.a||!m.b) return;}
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     _filtered=true;
-    list.push(m);
+    list.push({m, _origIdx});
   });
 
   function _renderItem(m){
@@ -1523,13 +1586,37 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     </div>`;
   }
 
-  list.forEach(_renderItem);
+  // 날짜 정렬(기본: 최신순). 같은 날짜면 원래 배열 순서를 유지
+  try{
+    const dir = (typeof recSortDir!=='undefined' && recSortDir==='asc') ? 'asc' : 'desc';
+    list.sort((x,y)=>{
+      const dx=_normDateSort(x.m?.d||''), dy=_normDateSort(y.m?.d||'');
+      const cmp = dir==='asc' ? dx.localeCompare(dy) : dy.localeCompare(dx);
+      if(cmp!==0) return cmp;
+      return (x._origIdx||0) - (y._origIdx||0);
+    });
+  }catch(e){}
+  list.forEach(x=>_renderItem(x.m));
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // 날짜 정규화(정렬용): 2026-4-2 같이 0이 빠진 날짜가 있으면 문자열 정렬이 깨질 수 있음
+  const _normDateSort = (d)=>{
+    const s = String(d||'').trim();
+    if(!s) return '';
+    // yyyy-mm-dd / yyyy.m.d / yyyy/m/d
+    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
   // 기록 카드 스타일 설정 (localStorage 기반)
   function _rcGet(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } }
   const _rcThemeOn = _rcGet('su_rc_theme_on','1')==='1';
@@ -1616,7 +1703,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     return -idx;
   };
   filtered.sort((a,b)=>{
-    const da=(a.m.d||''), db=(b.m.d||'');
+    const da=_normDateSort(a.m.d||''), db=_normDateSort(b.m.d||'');
     const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
     if(cmp!==0) return cmp;
     // 동일 날짜일 때: (1) 시간/생성시각 (2) 원본 인덱스
@@ -1634,9 +1721,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _datePickKey = `su_rec_date_pick_${context||'x'}_${mode}`;
   const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
   const _baseFiltered = filtered.slice(); // 메뉴/카운트는 원본(일자 선택 전) 기준
-  const _allDates = Array.from(new Set(_baseFiltered.map(x=>String(x.m.d||'').trim()).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseFiltered.map(x=>_normDateSort(x.m.d||'')).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
-    filtered = filtered.filter(x => String(x.m.d||'').trim() === _pickedDate);
+    filtered = filtered.filter(x => _normDateSort(x.m.d||'') === _pickedDate);
   }
   const _dateMenuHTML = (()=>{
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
@@ -3584,7 +3671,10 @@ function openHistDetailModal(key){
   // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
   const _openShareByObj = (obj)=>{
     try{
-      window._shareMatchObj = obj ? {...obj} : null;
+      // 티어대회(tt) 등에서 공유카드 표기 보정
+      const _mt = modeKey==='tt' ? 'tt' : (obj?._matchType || (modeKey||''));
+      const _usePhoto = modeKey==='tt' ? true : (obj?._usePlayerPhoto || false);
+      window._shareMatchObj = obj ? {...obj, _matchType:_mt, _usePlayerPhoto:_usePhoto} : null;
       window._shareMode = 'match';
       if(typeof openShareCardModal==='function') openShareCardModal();
       setTimeout(()=>{ try{ if(window._shareMatchObj && typeof renderShareCardByMatchObj==='function') renderShareCardByMatchObj(window._shareMatchObj); }catch(_){ } }, 80);

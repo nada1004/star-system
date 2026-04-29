@@ -345,6 +345,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
       window._renderCfgPdSection();
     }
+    if(el && el.open && id==='profileshape' && typeof window._renderCfgProfileShapeSection==='function'){
+      window._renderCfgProfileShapeSection();
+    }
     if(el && el.open && id==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function'){
       window._renderCfgPdModeBadgeSection();
     }
@@ -364,7 +367,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
   // (요청사항) "최근 경기 종목(종류) 배지" 색상은 별도 메뉴로 분리
-  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
+  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
@@ -1467,6 +1470,9 @@ window._scheduleCloudAppSettingsSave = function(){
   try{
     if(typeof isLoggedIn==='undefined' || !isLoggedIn) return;
     if(typeof window.fbCloudSave!=='function') return;
+    // 클라우드 데이터 수신/적용 중 또는 저장 중이면 재업로드(에코) 방지
+    if(window._applyingCloudData) return;
+    if(window._isSaving) return;
     clearTimeout(window._autoAppSettingsSaveT);
     window._autoAppSettingsSaveT = setTimeout(()=>{
       try{ window.fbCloudSave(); }catch(e){}
@@ -2093,6 +2099,27 @@ function _cfgEnsureModal(){
     `;
     document.body.appendChild(m);
   }catch(e){}
+  // (요청사항) 설정을 수정하면 다른 기기에도 "바로" 반영되도록 자동 Cloud Save 트리거
+  // - cfgModal 안에서 발생하는 input/change 를 감지해 디바운스 저장
+  try{
+    const body = m.querySelector('#cfgModalBody');
+    if(body && !body._autoCloudSyncBound){
+      body._autoCloudSyncBound = true;
+      const _touch = ()=>{
+        try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+      };
+      body.addEventListener('input', _touch, true);
+      body.addEventListener('change', _touch, true);
+      // 버튼 클릭으로만 바뀌는 설정도 있으니 click도 함께 감지(디바운스라 부담 적음)
+      body.addEventListener('click', (ev)=>{
+        try{
+          const t = ev && ev.target;
+          if(!t) return;
+          if(t.tagName==='BUTTON' || (t.closest && t.closest('button'))) _touch();
+        }catch(e){}
+      }, true);
+    }
+  }catch(e){}
   // (요청사항) 모달 바깥(배경) 클릭으로 닫아도 섹션이 원위치로 복구되도록
   try{
     m.addEventListener('click', (ev)=>{
@@ -2376,6 +2403,7 @@ function rCfg(C,T){
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
     univ:'🏛️ 대학', maps:'🗺️ 맵', mAlias:'🔤 맵 약자', si:'🎭 상태 아이콘 (목록/추가)', paste:'🤖 자동인식',
     b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지',
+    profileshape:'🖼️ 프로필 이미지 모양',
     pdModeBadge:'🎨 최근 경기 종목 배지 색상',
     pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
@@ -4366,6 +4394,12 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
+  ${_scfgD('profileshape','🖼️ 프로필 이미지 모양')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">선수 프로필 이미지(스트리머 상세/통계/경기 상세/현황판 등)의 모양을 원형/네모로 통일합니다.</div>
+    <div id="cfg-profileshape-body" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
+    </div>
+  </details>
   ${_scfgD('matchdetail','🎮 경기 상세(팝업) 설정')}
     <div id="cfg-md-body"></div>
   </details>
@@ -4440,12 +4474,8 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="cfg-bcp-circle" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()}"
-            onclick="localStorage.setItem('su_bcp_shape','circle');try{if(typeof applyProfileShapeVars==='function')applyProfileShapeVars();}catch(e){};render()">⭕ 원형 (기본)</button>
-          <button id="cfg-bcp-square" class="btn ${(()=>{try{return (localStorage.getItem('su_bcp_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})()}"
-            onclick="localStorage.setItem('su_bcp_shape','square');try{if(typeof applyProfileShapeVars==='function')applyProfileShapeVars();}catch(e){};render()">⬛ 네모형</button>
-        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">프로필 이미지 모양(원형/네모)은 별도 메뉴에서 전역으로 설정합니다.</div>
+        <button class="btn btn-w btn-xs" onclick="cfgGo('profileshape')">⚙️ 프로필 이미지 모양 설정 열기</button>
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 프로필 이미지 크기 <span id="cfg-bcp-size-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}px</span></div>
@@ -6377,6 +6407,63 @@ function _renderCfgPdModeBadgeSection(){
 }
 try{ window._renderCfgPdModeBadgeSection = _renderCfgPdModeBadgeSection; }catch(e){}
 
+/* ══════════════════════════════════════
+   🖼️ 프로필 이미지 모양/크기/효과 설정 (전역)
+══════════════════════════════════════ */
+function _renderCfgProfileShapeSection(){
+  const body = document.getElementById('cfg-profileshape-body');
+  if(!body) return;
+  const shape = (()=>{ try{ return (localStorage.getItem('su_profile_shape')||'circle'); }catch(e){ return 'circle'; } })();
+  const fx = (()=>{ try{ return (localStorage.getItem('su_profile_fx')||'none'); }catch(e){ return 'none'; } })();
+  const pc = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_pc')||'100',10)||100; }catch(e){ return 100; } })();
+  const tb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_tb')||'96',10)||96; }catch(e){ return 96; } })();
+  const mb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_mb')||'92',10)||92; }catch(e){ return 92; } })();
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">📐 모양</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn ${shape==='circle'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('circle');try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">⭕ 원형</button>
+          <button class="btn ${shape==='square'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('square');try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">⬛ 네모</button>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">현재: ${shape==='square'?'⬛ 네모':'⭕ 원형'}</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">📏 크기 배율 (탭/팝업 공통)</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="min-width:74px;font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+            <input type="range" min="70" max="130" step="2" value="${pc}" style="flex:1;accent-color:var(--blue)"
+              oninput="localStorage.setItem('su_profile_scale_pc',String(this.value));document.getElementById('cfg-ps-pc').textContent=this.value+'%';try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+            <div id="cfg-ps-pc" style="min-width:42px;text-align:right;font-size:11px;color:var(--gray-l);font-weight:900">${pc}%</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="min-width:74px;font-size:12px;font-weight:800;color:var(--text2)">태블릿</div>
+            <input type="range" min="70" max="130" step="2" value="${tb}" style="flex:1;accent-color:var(--blue)"
+              oninput="localStorage.setItem('su_profile_scale_tb',String(this.value));document.getElementById('cfg-ps-tb').textContent=this.value+'%';try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+            <div id="cfg-ps-tb" style="min-width:42px;text-align:right;font-size:11px;color:var(--gray-l);font-weight:900">${tb}%</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="min-width:74px;font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+            <input type="range" min="70" max="130" step="2" value="${mb}" style="flex:1;accent-color:var(--blue)"
+              oninput="localStorage.setItem('su_profile_scale_mb',String(this.value));document.getElementById('cfg-ps-mb').textContent=this.value+'%';try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+            <div id="cfg-ps-mb" style="min-width:42px;text-align:right;font-size:11px;color:var(--gray-l);font-weight:900">${mb}%</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-l)">※ 브라우저 폭 기준: 모바일(≤768) / 태블릿(≤1024) / PC(그 외)</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">✨ 효과</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${[['none','없음'],['shadow','그림자'],['ring','링'],['both','링+그림자']].map(([k,l])=>`<button class="btn btn-xs ${(fx===k)?'btn-b':'btn-w'}" onclick="localStorage.setItem('su_profile_fx','${k}');try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">${l}</button>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 효과는 프로필 이미지(사진/플레이스홀더)에 공통 적용됩니다</div>
+      </div>
+    </div>
+  `;
+}
+try{ window._renderCfgProfileShapeSection = _renderCfgProfileShapeSection; }catch(e){}
+
 function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');
   if(!body) return;
@@ -6398,12 +6485,9 @@ function _renderCfgPdSection(){
   // 설정탭을 열 때도 즉시 반영(캐시/로드 순서 이슈 방지)
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{
-    try{ return (localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
+    try{ return (localStorage.getItem('su_profile_shape')||localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; }
   })(); // circle | square
-  const shapeBtns = `
-    <button class="btn btn-xs ${_shape==='circle'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('circle')">⭕ 원형</button>
-    <button class="btn btn-xs ${_shape==='square'?'btn-b':'btn-w'}" onclick="_setGlobalProfileShape('square')">⬛ 네모</button>
-  `;
+  const _shapeLbl = _shape==='square' ? '⬛ 네모' : '⭕ 원형';
   const darken=s.univ_darken||{};
   const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
   const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
@@ -6434,8 +6518,11 @@ function _renderCfgPdSection(){
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${shapeBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세/통계(티어랭킹·이달의 스트리머·최다기록·킬러/피해자 등)·경기 상세의 프로필 이미지 모양에 공통 적용됩니다</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-xs btn-w" onclick="cfgGo('profileshape')">⚙️ 설정 열기</button>
+        <span style="font-size:11px;color:var(--gray-l);font-weight:800">현재: ${_shapeLbl}</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 모양 설정은 ‘🖼️ 프로필 이미지 모양’ 메뉴로 분리되었습니다.</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
@@ -6757,15 +6844,19 @@ function cfgPdResetModeBadgeColors(){
 
 // 전역 프로필 이미지 모양(원/네모)
 function _setGlobalProfileShape(shape){
+  const _prevCfgSec = window._cfgModalSecId || '';
   try{
     const v = (shape==='square') ? 'square' : 'circle';
-    localStorage.setItem('su_bcp_shape', v);
-    // 현황판 칩 설정과 동일 키 사용
-    try{ if(typeof boardChipPhotoShape!=='undefined') boardChipPhotoShape=v; }catch(e){}
-    try{ if(typeof saveBoardChipPhotoSettings==='function') saveBoardChipPhotoSettings(); }catch(e){}
+    // 전역 프로필 모양은 현황판 칩과 분리 저장
+    localStorage.setItem('su_profile_shape', v);
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}
-  _renderCfgPdSection();
+  // (동기화) 설정 변경 즉시 다른 기기에도 반영
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  // (중요) 설정 모달 안에서 버튼이 "즉시" 바뀌도록 현재 섹션을 다시 렌더링
+  try{ if(_prevCfgSec==='profileshape' && typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection(); }catch(e){}
+  try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
+  // 앱 전체(다른 탭/모달)에도 반영
   try{ if(typeof render==='function') render(); }catch(e){}
 }
 

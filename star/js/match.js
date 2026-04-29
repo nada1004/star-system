@@ -518,8 +518,18 @@ function saveMatch(mode){
         else if (mode==='pro') proM.unshift(matchData);
         else if (mode==='tt') {
             const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
-            const _ttComp=_ttCurComp||'';
-            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp, stage:'general'});
+            // (보강) 티어대회 "일반 기록"이 다른 기기에서 안 보이는 주요 원인:
+            // - compName이 비어 있으면 티어대회 탭에서 대회 필터에 걸려 아예 안 보일 수 있음
+            // → _ttCurComp가 비어 있으면 tourneys의 첫 티어대회 이름으로 보정
+            let _ttComp='';
+            try{
+              _ttComp = String((typeof _ttCurComp!=='undefined' && _ttCurComp) ? _ttCurComp : '').trim();
+              if(!_ttComp){
+                const firstTn = (typeof tourneys!=='undefined' ? (tourneys||[]).find(t=>t && t.type==='tier' && t.name) : null);
+                if(firstTn) _ttComp = String(firstTn.name||'').trim();
+              }
+            }catch(e){ _ttComp = ''; }
+            ttM.unshift({...matchData, tierLabel: tLabel, compName:_ttComp, n:_ttComp, stage:'general'});
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
@@ -535,6 +545,8 @@ function saveMatch(mode){
         }
     }
     
+    // (보강) 티어대회: ttM → history 누락 케이스를 방지하기 위해 저장 직후 동기화
+    try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
     if(mode==='mini')miniSub='records';
     else if(mode==='univm')univmSub='records';
@@ -543,6 +555,13 @@ function saveMatch(mode){
     else if(mode==='comp')compSub='records';
     else if(mode==='tt'){_ttSub='records';compSub='tiertour';}
     render();
+    // (보강) 티어대회 등 기록 저장 직후, 열려있는 스트리머 상세(최근 경기)가 즉시 갱신되지 않는 문제 대응
+    try{
+      const pm = document.getElementById('playerModal');
+      if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
+        window._rebuildPlayerDetail(window._playerModalCurrentName);
+      }
+    }catch(e){}
     return;
   }
   if(!bld.sets.length)return alert('세트를 추가하세요.');
@@ -658,12 +677,22 @@ function saveMatch(mode){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('팀 멤버를 추가하세요.');
     const tLabel=bld.tiers&&bld.tiers.length?bld.tiers.join('+')+'티어':'전체';
+    let _ttComp='';
+    try{
+      _ttComp = String((typeof _ttCurComp!=='undefined' && _ttCurComp) ? _ttCurComp : '').trim();
+      if(!_ttComp){
+        const firstTn = (typeof tourneys!=='undefined' ? (tourneys||[]).find(t=>t && t.type==='tier' && t.name) : null);
+        if(firstTn) _ttComp = String(firstTn.name||'').trim();
+      }
+    }catch(e){ _ttComp=''; }
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
       teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      compName:_ttCurComp||'',stage:'general'
+      compName:_ttComp, n:_ttComp, stage:'general'
     });
   }
+  // (보강) 티어대회: ttM → history 누락 케이스를 방지하기 위해 저장 직후 동기화
+  try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
   BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
   if(mode==='mini')miniSub='records';
   else if(mode==='univm')univmSub='records';
@@ -672,4 +701,11 @@ function saveMatch(mode){
   else if(mode==='comp')compSub='records';
   else if(mode==='tt'){_ttSub='records';compSub='tiertour';}
   render();
+  // (보강) 기록 저장 직후 열려있는 스트리머 상세 즉시 갱신
+  try{
+    const pm = document.getElementById('playerModal');
+    if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
+      window._rebuildPlayerDetail(window._playerModalCurrentName);
+    }
+  }catch(e){}
 }

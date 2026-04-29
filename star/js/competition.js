@@ -1620,15 +1620,35 @@ function grpSaveMatch(){
   m.sa=sa;m.sb=sb;
   const _modeLabel=tn.type==='tier'?'티어대회':'조별리그';
   // 선수 개인 전적 자동 반영 (경기 시점 대학 저장)
-  (m.sets||[]).forEach(set=>{
-    (set.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((set, si)=>{
+    (set.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
-      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(m.a||''):(m.b||'');
-      const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_modeLabel);
-      // 선수 history 업데이트
-      updateHistoryFromGame(g, m.d);
+      // (중요) 게임 단위로 고유 matchId를 써야 중복 방지 로직에 걸리지 않고
+      // ELO/최근경기(스트리머 상세)에도 모든 게임이 정상 반영됨
+      const gameMatchId = g._id || `${matchId}_s${si}_g${gi}`;
+      g._id = gameMatchId;
+
+      // 2v2 팀전 지원: playerA/playerB가 "A1,A2" 형태면 applyGameResult가 실패하므로
+      // applyTeamGameResult로 각 개인 ELO/전적을 반영한다.
+      const sp = (x)=>String(x||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+      const aList = Array.isArray(g.teamA) ? g.teamA : (g.a1||g.a2 ? [g.a1,g.a2].filter(Boolean) : sp(g.playerA));
+      const bList = Array.isArray(g.teamB) ? g.teamB : (g.b1||g.b2 ? [g.b1,g.b2].filter(Boolean) : sp(g.playerB));
+      const isTeam = !!(g._isTeam || aList.length>=2 || bList.length>=2);
+      if(isTeam && typeof applyTeamGameResult==='function'){
+        // winnerSide 보정 (혹시 winner에 이름이 들어온 경우 대비)
+        let side = (g.winner==='A'||g.winner==='B') ? g.winner : '';
+        if(!side){
+          const w = String(g.winner||'').trim();
+          if(aList.includes(w)) side='A';
+          else if(bList.includes(w)) side='B';
+        }
+        applyTeamGameResult(aList, bList, side||'A', m.d||'', g.map||'', gameMatchId, _modeLabel);
+      }else{
+        const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+        const univW=g.winner==='A'?(m.a||''):(m.b||'');
+        const univL=g.winner==='A'?(m.b||''):(m.a||'');
+        applyGameResult(wn,ln,m.d,g.map||'',gameMatchId,univW,univL,_modeLabel);
+      }
     });
   });
   // 티어대회: ttM에도 동기화 (기록 탭에서 표시되도록)
@@ -1638,6 +1658,9 @@ function grpSaveMatch(){
     if(_ei>=0)ttM[_ei]=_rec;else ttM.unshift(_rec);
   }
   save();cm('grpMatchModal');render();
+  // (보강) 저장 직후 스트리머 상세(최근 경기) 즉시 반영
+  try{ if(tn.type==='tier' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 /* ══════════════════════════════════════
@@ -1863,13 +1886,29 @@ function bktSaveMatch(){
     if(w)br.winners[`${rnd}-${mi}`]=w;
   }
   const _bktModeLabel=tn&&tn.type==='tier'?'티어대회':'대회';
-  (m.sets||[]).forEach(set=>{
-    (set.games||[]).forEach(g=>{
+  (m.sets||[]).forEach((set, si)=>{
+    (set.games||[]).forEach((g, gi)=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
-      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-      const univW=g.winner==='A'?(m.a||''):(m.b||'');
-      const univL=g.winner==='A'?(m.b||''):(m.a||'');
-      applyGameResult(wn,ln,m.d,g.map||'',matchId,univW,univL,_bktModeLabel);
+      const gameMatchId = g._id || `${matchId}_s${si}_g${gi}`;
+      g._id = gameMatchId;
+      const sp = (x)=>String(x||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+      const aList = Array.isArray(g.teamA) ? g.teamA : (g.a1||g.a2 ? [g.a1,g.a2].filter(Boolean) : sp(g.playerA));
+      const bList = Array.isArray(g.teamB) ? g.teamB : (g.b1||g.b2 ? [g.b1,g.b2].filter(Boolean) : sp(g.playerB));
+      const isTeam = !!(g._isTeam || aList.length>=2 || bList.length>=2);
+      if(isTeam && typeof applyTeamGameResult==='function'){
+        let side = (g.winner==='A'||g.winner==='B') ? g.winner : '';
+        if(!side){
+          const w = String(g.winner||'').trim();
+          if(aList.includes(w)) side='A';
+          else if(bList.includes(w)) side='B';
+        }
+        applyTeamGameResult(aList, bList, side||'A', m.d||'', g.map||'', gameMatchId, _bktModeLabel);
+      }else{
+        const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
+        const univW=g.winner==='A'?(m.a||''):(m.b||'');
+        const univL=g.winner==='A'?(m.b||''):(m.a||'');
+        applyGameResult(wn,ln,m.d,g.map||'',gameMatchId,univW,univL,_bktModeLabel);
+      }
     });
   });
   // 티어대회 브라켓: ttM에도 동기화
@@ -1880,6 +1919,9 @@ function bktSaveMatch(){
   }
   window._bracketMatchMode=false;
   save();cm('grpMatchModal');render();
+  // (보강) 저장 직후 스트리머 상세(최근 경기) 즉시 반영
+  try{ if(tn&&tn.type==='tier' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 function openBktShareCard(tnId,rnd,mi){

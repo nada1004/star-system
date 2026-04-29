@@ -1572,11 +1572,27 @@ window.pcSaveStageRec = function(tnId, round, idx, mid){
   const r = (['16강','8강','4강','결승'].includes(round)) ? round : '16강';
   const arr = tn.stageRecords[r];
   const d = document.getElementById('_pcsr_d')?.value || '';
-  const a = (document.getElementById('_pcsr_a')?.value || '').trim();
-  const b = (document.getElementById('_pcsr_b')?.value || '').trim();
+  const aRaw = (document.getElementById('_pcsr_a')?.value || '').trim();
+  const bRaw = (document.getElementById('_pcsr_b')?.value || '').trim();
   const w = document.getElementById('_pcsr_w')?.value || '';
   const map = (document.getElementById('_pcsr_map')?.value || '').trim();
-  if(!a || !b) return alert('A/B 선수명을 입력하세요.');
+  if(!aRaw || !bRaw) return alert('A/B 선수명을 입력하세요.');
+  const aInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(aRaw) : {name:aRaw,candidates:[]};
+  const bInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(bRaw) : {name:bRaw,candidates:[]};
+  const a = aInfo.name || aRaw;
+  const b = bInfo.name || bRaw;
+  // 자동 매칭된 경우 입력값도 정규화해서 보여주기
+  try{ const elA=document.getElementById('_pcsr_a'); if(elA && a && elA.value.trim()!==a) elA.value=a; }catch(e){}
+  try{ const elB=document.getElementById('_pcsr_b'); if(elB && b && elB.value.trim()!==b) elB.value=b; }catch(e){}
+  // 후보가 있는데 못 고른 경우 안내(저장은 진행)
+  try{
+    if(aInfo && aInfo.match==='none' && aInfo.candidates && aInfo.candidates.length){
+      console.log('[대진표 기록] A 후보:', aInfo.candidates.map(x=>x.name).join(', '));
+    }
+    if(bInfo && bInfo.match==='none' && bInfo.candidates && bInfo.candidates.length){
+      console.log('[대진표 기록] B 후보:', bInfo.candidates.map(x=>x.name).join(', '));
+    }
+  }catch(e){}
   const prev = (idx>=0 && arr[idx]) ? arr[idx] : null;
   if(prev && prev.winner && prev._id) try{ _revertProMatch(prev._id); }catch(e){}
   const obj = {a,b,winner:w,d,map,_id:mid};
@@ -1636,7 +1652,11 @@ window.pcApplyStageBulkPaste = function(tnId, round){
   lines.forEach(line=>{
     const parts=line.split(/[\s\t]+/).filter(Boolean);
     if(parts.length<2) return;
-    const wName=parts[0], lName=parts[1], map=parts.slice(2).join(' ').trim();
+    const wRaw=parts[0], lRaw=parts[1], map=parts.slice(2).join(' ').trim();
+    const wInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(wRaw) : {name:wRaw};
+    const lInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(lRaw) : {name:lRaw};
+    const wName = wInfo.name || wRaw;
+    const lName = lInfo.name || lRaw;
     const a=wName, b=lName, winner='A';
     const mid=`ptr_${tnId}_${r}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
     tn.stageRecords[r].push({a,b,winner,d,map,_id:mid});
@@ -2275,8 +2295,12 @@ function _bktEditSave() {
   const tn = _findTourneyById(_bktEditTnId); if (!tn) return;
   if (!tn.bracket || !tn.bracket[_bktEditRi]) return;
   const m = tn.bracket[_bktEditRi][_bktEditMi]; if (!m) return;
-  const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim();
-  const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim();
+  const aRaw = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim();
+  const bRaw = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim();
+  const aInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(aRaw) : {name:aRaw};
+  const bInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(bRaw) : {name:bRaw};
+  const aV = aInfo.name || aRaw;
+  const bV = bInfo.name || bRaw;
   const dV = document.getElementById('_bktEditD')?.value || '';
   const bktId = `pbn_${_bktEditTnId}_${_bktEditRi}_${_bktEditMi}`;
   const tieId = `${bktId}_tie`;
@@ -3695,9 +3719,13 @@ function proCompSaveMatch() {
   const recTarget = (grp._recTarget||'').trim(); // pro | stage | none
   if (!recTarget) { alert('조편성 관리에서 해당 조의 “기록 반영”을 먼저 선택하세요.'); return; }
   const recRound = (grp._recRound||'16강').trim();
-  const aVal = document.getElementById('pm_a').value.trim();
-  const bVal = document.getElementById('pm_b').value.trim();
-  if (!aVal || !bVal) { alert('A, B 선수를 모두 선택하세요.'); return; }
+  const aRaw = document.getElementById('pm_a').value.trim();
+  const bRaw = document.getElementById('pm_b').value.trim();
+  if (!aRaw || !bRaw) { alert('A, B 선수를 모두 선택하세요.'); return; }
+  const aInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(aRaw) : {name:aRaw};
+  const bInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(bRaw) : {name:bRaw};
+  const aVal = aInfo.name || aRaw;
+  const bVal = bInfo.name || bRaw;
   const winA = document.getElementById('pm_winA').classList.contains('btn-b');
   const winB = document.getElementById('pm_winB').classList.contains('btn-b');
   const winVal = winA?'A':winB?'B':'';

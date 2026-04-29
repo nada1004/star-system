@@ -222,6 +222,17 @@ window._rebuildPlayerDetail = function(name){
   _mb.innerHTML = buildPlayerDetailHTML(_p);
   injectUnivIcons(_mb);
 };
+// 열려있는 스트리머 상세(최근 경기) 즉시 갱신 헬퍼
+// - 티어대회/대회 조별리그/토너먼트 등 다양한 저장 경로에서 공통 호출 가능
+window.refreshPlayerModalIfOpen = function(){
+  try{
+    const pm = document.getElementById('playerModal');
+    if(!pm || pm.style.display==='none') return;
+    const name = window._playerModalCurrentName || '';
+    if(!name) return;
+    if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(name);
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    선수 이름 클릭 → 모달
@@ -884,10 +895,33 @@ function openProCompMatchShare(a,b,sa,sb,d){
   },80);
 }
 function openShareCardFromMatch(mode,idx){
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
+  const arr=mode==='mini'?miniM
+    :mode==='univm'?univM
+    :mode==='ck'?ckM
+    :mode==='comp'?comps
+    :mode==='pro'?proM
+    :mode==='tt'?(typeof ttM!=='undefined'?ttM:[])
+    :miniM;
   const m=arr[idx]||null;
   const isCKorPro=(mode==='ck'||mode==='pro');
-  window._shareMatchObj=m?{...m,_noUnivIcon:isCKorPro,_matchType:isCKorPro?mode:''}:null;
+  // 티어대회(tt): 대학 로고가 아닌 "선수 사진/종족" 기반으로 표시 (대학 로고 노출 방지)
+  const isTier = (mode==='tt');
+  // (보강) 티어대회 "일반 기록"(A팀/B팀 팀전) 공유카드에서 로고가 '?'로 나오는 문제:
+  // - 일반 기록은 m.a/m.b가 없거나 'A팀'/'B팀' 형태일 수 있어 getPlayerPhotoHTML이 '?'를 출력함
+  // → 이 경우 대학/선수 로고 대신 텍스트(A팀/B팀)만 표시하도록 처리
+  const isTierTeamStyle = isTier && m && (
+    (Array.isArray(m.teamAMembers) && m.teamAMembers.length) ||
+    (Array.isArray(m.teamBMembers) && m.teamBMembers.length) ||
+    (!m.a && !m.b) ||
+    (String(m.a||'').trim()==='A팀' && String(m.b||'').trim()==='B팀')
+  );
+  window._shareMatchObj=m?{...m,
+    _matchType:isCKorPro?mode:(isTier?'tt':''),
+    _noUnivIcon:isCKorPro || isTierTeamStyle,
+    _usePlayerPhoto:isTier ? (!isTierTeamStyle) : (m._usePlayerPhoto||false),
+    // 팀 스타일은 a/b를 강제로 A팀/B팀으로
+    ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
+  }:null;
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{
@@ -1497,6 +1531,49 @@ function buildPlayerDetailHTML(p){
     });
   }
 
+  // (보강) ttM(티어대회 기록) 기반으로도 최근 경기 추출
+  // - 티어대회 "일반 기록"은 tourneys.groups/bracket에 없고 ttM에만 쌓일 수 있음
+  // - 이 경우 players.history 반영이 지연/누락되면 스트리머 상세에서 안 보이는 문제가 발생
+  // → ttM의 세트/게임을 직접 스캔해서 최근 경기 목록에 포함
+  if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){
+    ttM.forEach(m=>{
+      if(!m || !m._id || !m.sets) return;
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
+          if(!g || !g.playerA || !g.playerB || !g.winner) return;
+          // 2v2 팀전/콤마 구분 이름 포함 케이스 지원
+          const sp = (x)=>String(x||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+          const aList = sp(g.playerA), bList = sp(g.playerB);
+          const hasMe = (g.playerA===p.name || g.playerB===p.name || aList.includes(p.name) || bList.includes(p.name));
+          const pushedTeam = (typeof _pushTeamGameIfAny==='function')
+            ? _pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회')
+            : false;
+          if(!pushedTeam && !hasMe) return;
+          const opp = (g.playerA===p.name || aList.includes(p.name)) ? g.playerB : g.playerA;
+          const oppP=players.find(x=>x.name===opp);
+          const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+          // players.history에 동일 gameId가 있으면 eloDelta/eloAfter를 가져와 표시(티어대회 ELO 표시 보강)
+          let _ed=null,_ea=null;
+          try{
+            const hh = (p.history||[]).find(h=>h && h.matchId===gameId);
+            if(hh){ _ed = (hh.eloDelta!=null ? hh.eloDelta : null); _ea = (hh.eloAfter!=null ? hh.eloAfter : null); }
+          }catch(e){}
+          const isDupInHist = _dedupedHistory.some(h =>
+            h.matchId===gameId || (h.date===(m.d||'') && h.map===(g.map||'-') && h.opp===opp)
+          );
+          if(!isDupInHist){
+            _otherMatches.push({
+              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'티어대회',
+              eloDelta:_ed, eloAfter:_ea,
+              _dupKey:`mid:${gameId}`
+            });
+          }
+        });
+      });
+    });
+  }
+
   // tourneys 조별리그/브라켓에서 직접 추출 (p.history 미반영분)
   const _tourMatches=[];
   // proTourneys 조별리그/끝장전에서 직접 추출 (p.history 미반영분)
@@ -1733,16 +1810,16 @@ function buildPlayerDetailHTML(p){
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
   const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-    <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📂 종목</span>
+    <span style="font-size:9px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
-      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
-      style="padding:3px 8px;border:1px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
+      style="padding:2px 6px;border:1px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:10px;font-weight:900;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
       <option value="" ${!window._playerHistFilter?'selected':''}>전체</option>
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
     </select>`}
@@ -1757,17 +1834,17 @@ function buildPlayerDetailHTML(p){
     const _yLoss=_modeHist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
-    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📅 연도</span>
+    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:9px;font-weight:900;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
         </label>
-        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
-        style="padding:3px 8px;border:1px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
+        style="padding:2px 6px;border:1px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:10px;font-weight:900;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
       </select>`}
@@ -2037,7 +2114,15 @@ function buildPlayerDetailHTML(p){
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
-      const modeLbl=hh.mode||'';
+      // (표기 통일) 과거 데이터/외부 데이터에서 mode가 짧은 키로 들어간 경우 사람이 읽는 라벨로 정규화
+      // - 예: 'tier' → '티어대회'
+      // - 가능한 한 "표시만" 바꾸고, matchId 기반 네비게이션은 그대로 유지
+      let modeLbl=hh.mode||'';
+      if(modeLbl==='tier') modeLbl='티어대회';
+      if(modeLbl==='tt') modeLbl='티어대회';
+      if(modeLbl==='univ') modeLbl='대학대전';
+      if(modeLbl==='ck') modeLbl='대학CK';
+      if(modeLbl==='pro') modeLbl='프로리그';
       const _getPdModeBadgeColors = ()=>{
         const defaults={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
         try{
@@ -2053,14 +2138,16 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
+      // (요청사항) '종류' 배지: 모바일/태블릿에서 크게 보이지 않게 더 컴팩트하게
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 5px;border-radius:3px;font-size:8px;font-weight:900;line-height:14px;height:14px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
-        :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
+        ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
+        :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
         :'';
       h+=`<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
-        <td>${modeCellHTML}</td>
+        <td style="white-space:nowrap">${modeCellHTML}</td>
         <td>${isWin
           ?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`
           :isDraw

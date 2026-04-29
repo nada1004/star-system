@@ -357,7 +357,9 @@ function _b2RoleRank(p) {
   return i >= 0 ? i : 99;
 }
 
-// 숨김 대학 항상 제외 (로그인 여부 관계없이 board2에서는 hidden=true인 대학 숨김)
+// 현황판 표시용 대학 리스트
+// - 해체된 대학은 항상 제외
+// - 숨김(hidden) 대학은 로그인 여부와 무관하게 항상 제외 (요청: 원복)
 function _b2VisUnivs() {
   // 해체(해제)된 대학도 현황판에서 제외
   return getAllUnivs().filter(u => !u.hidden && !u.dissolved);
@@ -366,6 +368,9 @@ function _b2VisUnivs() {
 function rBoard2(C, T) {
   try {
   T.innerText = '📊 현황판';
+
+  // 대학명 정규화(공백/개행 때문에 소속된 멤버가 현황판에서 누락되는 현상 방지)
+  const _normUnivName = (u)=>String(u||'').trim();
 
   const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
 
@@ -405,9 +410,15 @@ function rBoard2(C, T) {
 
   const profileTabLabel = '👤 이미지별';
   // 이미지별 필터를 상단 탭에 포함
-  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
-  const playerUnivList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => _normUnivName(u.name))) : new Set();
+  const hiddenUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => _normUnivName(u.name))) : new Set();
+  const visPlayers = players.filter(p => {
+    const pu = _normUnivName(p?.univ);
+    return !p.hidden && !p.retired && !p.hideFromBoard &&
+      !dissolvedUnivs.has(pu) &&
+      !hiddenUnivs.has(pu);
+  });
+  const playerUnivList = [...new Set(visPlayers.map(p => _normUnivName(p.univ)).filter(u => u && u !== '무소속'))];
   // univCfg 순서로 정렬
   if (typeof univCfg !== 'undefined') {
     playerUnivList.sort((a, b) => {
@@ -507,9 +518,9 @@ function rBoard2(C, T) {
 
 /* ── 대학별 뷰 ── */
 function _b2UnivView() {
-  const univList = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
+  let univList = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  const _allVis = players.filter(p => univList.some(u=>u.name===p.univ) && !p.hidden && !p.retired && !p.hideFromBoard);
+  const _allVis = players.filter(p => univList.some(u=>String(u.name||'').trim()===String(p?.univ||'').trim()) && !p.hidden && !p.retired && !p.hideFromBoard);
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
   const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
     <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
@@ -525,7 +536,7 @@ function _b2UnivView() {
       console.warn('[현황판] 대학 이름이 없는 데이터가 발견되었습니다:', u);
       return;
     }
-    const members = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
+    const members = players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -621,7 +632,7 @@ function _b2FemcoView() {
   // 표시 대상 선수(현황판 기준과 동일하게 숨김/은퇴/현황판숨김 제외)
   const membersByUniv = {};
   univList.forEach(u => {
-    membersByUniv[u.name] = players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard);
+    membersByUniv[u.name] = players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
   });
 
   // 공통 로고 크기(기본)
@@ -1369,7 +1380,10 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
 /* ── 무소속 뷰 ── */
 function _b2FreeView() {
-  const freeMembers = players.filter(p => (!p.univ || p.univ === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard);
+  const freeMembers = players.filter(p => {
+    const pu = String(p?.univ||'').trim();
+    return (!pu || pu === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard;
+  });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
   const roledFree = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
@@ -1510,7 +1524,7 @@ function openB2MemberBreakdown(el, univName) {
   const existing = document.getElementById('b2-mbp');
   if (existing) { const wasEl = existing._forEl; existing.remove(); if (wasEl === el) return; }
   const col = gc(univName);
-  const members = players.filter(p => p.univ === univName && !p.hidden && !p.retired && !p.hideFromBoard);
+  const members = players.filter(p => String(p?.univ||'').trim() === String(univName||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
   const roled = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
   const tiered = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
   const tierCounts = {};
@@ -1561,7 +1575,7 @@ async function saveB2Img() {
   tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
   tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>
     <div style="display:flex;flex-direction:column;gap:${gap}px">
-      ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => p.univ === u.name && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
+      ${targets.map(u => _b2UnivBlock(u.name, gc(u.name), players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard), true)).join('')}
     </div>`;
   document.body.appendChild(tmpDiv);
   // no-export 요소 제거 (접기 버튼 등)
@@ -2519,7 +2533,7 @@ function _b2PlayersView() {
   // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
     ? visPlayers 
-    : visPlayers.filter(p => p.univ === _b2PlayersUnivFilter);
+    : visPlayers.filter(p => String(p?.univ||'').trim() === String(_b2PlayersUnivFilter||'').trim());
   
   // 종족 필터링
   const filteredPlayers = _b2PlayersFilter === 'all'
@@ -2546,7 +2560,7 @@ function _b2PlayersView() {
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
-  const univList = [...new Set(visPlayers.map(p => p.univ).filter(u => u && u !== '무소속'))];
+  const univList = [...new Set(visPlayers.map(p => String(p?.univ||'').trim()).filter(u => u && u !== '무소속'))];
   // univCfg 순서로 정렬
   if (typeof univCfg !== 'undefined') {
     univList.sort((a, b) => {

@@ -36,6 +36,8 @@ function _decompressCloudData(d) {
 
 function _applyCloudData(d) {
   d = _decompressCloudData(d);
+  // (동기화) 클라우드 적용 중에는 로컬 설정 변경 감지(자동 업로드)를 막는다
+  try{ window._applyingCloudData = true; }catch(e){}
   // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
   // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
   const _has = (key) => d[key] !== undefined && d[key] !== null;
@@ -47,6 +49,13 @@ function _applyCloudData(d) {
     if(v !== undefined) {
       players=_fbArr(v, []);
       players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+      // photo 복원 (players에 photo가 없고, playerPhotos 맵이 있으면 주입)
+      try{
+        const pm = d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null;
+        if(pm){
+          players.forEach(p=>{ if(p && p.name && !p.photo && pm[p.name]) p.photo = pm[p.name]; });
+        }
+      }catch(e){}
     }
   }
   if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
@@ -102,6 +111,23 @@ function _applyCloudData(d) {
     }
   }
   {
+  }
+  // ttM (티어대회 기록)
+  {
+    const v = d.ttM||d.tiertour||d.tierTourM;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
+    if(arr !== null){
+      ttM = arr;
+      // 중첩 구조 보정
+      try{
+        (ttM||[]).forEach(m=>{
+          if(m.sets) m.sets=_fbArr(m.sets,[]);
+          (m.sets||[]).forEach(s=>{ if(s.games) s.games=_fbArr(s.games,[]); });
+        });
+      }catch(e){}
+      // 티어대회 마이그레이션 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+    }
   }
   {
     const v = d.indM||d.ind;
@@ -163,9 +189,26 @@ function _applyCloudData(d) {
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
+    // - 사진(base64)/토큰/비밀번호 등은 제외
+    try{
+      const ls = s.ls || s.localStorage || null;
+      if(ls && typeof ls==='object'){
+        Object.entries(ls).forEach(([k,v])=>{
+          if(!k || typeof k!=='string') return;
+          if(!k.startsWith('su_')) return;
+          if(k.startsWith('su_pp')) return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          if(k==='su_last_admin_save' || k==='su_last_save_time') return;
+          try{ localStorage.setItem(k, String(v)); }catch(e){}
+        });
+      }
+    }catch(e){}
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    // 프로필 모양/크기/효과 즉시 반영
+    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
     if(s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
@@ -191,6 +234,13 @@ function _applyCloudData(d) {
       if(typeof window.soopApplySettings==='function') window.soopApplySettings();
     }catch(e){}
 
+    // 🧾 대전기록 > 외부 탭 데이터 동기화
+    try{
+      if(s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
+      if(s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
+      if(s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
+    }catch(e){}
+
     // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
     try{
       if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
@@ -210,6 +260,7 @@ function _applyCloudData(d) {
       if(typeof window._applyUiScale==='function') window._applyUiScale();
     }catch(e){}
   }
+  try{ window._applyingCloudData = false; }catch(e){}
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -261,9 +312,45 @@ async function fbCloudSave() {
   window._lastAdminSaveTime = savedAt;
   window._isSaving = true;
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
+  // (용량 최적화) Firebase 페이로드를 줄이기 위해 players.photo(base64)를 분리 저장
+  // - localSave와 동일한 전략: 사진은 map으로 따로 보내고, players에는 photo를 제거
+  // - history의 eloAfter는 UI에서 재계산 가능하므로 제거(크기 절감)
+  const _pPhotoMap = {};
+  const _pNoPhoto = (players||[]).map(p=>{
+    const c={...p};
+    if(c.photo){ _pPhotoMap[c.name]=c.photo; delete c.photo; }
+    if(c.history && c.history.length){
+      // eslint-disable-next-line no-unused-vars
+      c.history = c.history.map(({eloAfter,...h})=>h);
+    }
+    return c;
+  });
+
+  // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  const _syncLs = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k || typeof k!=='string') continue;
+      if(!k.startsWith('su_')) continue;
+      if(k.startsWith('su_pp')) continue;
+      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+      const v = localStorage.getItem(k);
+      if(v==null) continue;
+      // 너무 큰 값은 제외(예: 이미지 base64 등)
+      if(String(v).length > 200000) continue;
+      _syncLs[k] = v;
+    }
+  }catch(e){}
+
   const dataObj = {
-    players, univCfg, maps, tourD, miniM, univM, comps, ckM,
+    players: _pNoPhoto,
+    playerPhotos: _pPhotoMap,
+    univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
+    // 🎯 티어대회 기록(대전기록 탭/스트리머 history 동기화용)
+    ttM: (typeof ttM!=='undefined' ? ttM : []),
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
     curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
@@ -299,7 +386,16 @@ async function fbCloudSave() {
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
       // 📺 SOOP 멀티뷰 (설정 동기화)
-      soopList: localStorage.getItem('su_soop_list') || ''
+      soopList: localStorage.getItem('su_soop_list') || '',
+
+      // 🧾 대전기록 > 외부 탭 데이터 동기화
+      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
+      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
+      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
+      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
+      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
+      // localStorage 설정(문자열) 묶음
+      ls: _syncLs
     },
     savedAt
   };
@@ -827,7 +923,8 @@ function buildUnivBoardCard(u, forExport){
         const rTxt=rc.txt||p.race||'?';
         const chipTierCol2 = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
         const chipTierText2 = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
-        const imgRadius = boardCardShape === 'square' ? '8px' : '50%';
+        // 전역 프로필 이미지 모양 설정(원/네모) 반영
+        const imgRadius = 'var(--su_profile_radius,50%)';
         return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
             ?`<img src="${toHttpsUrl(photoSrcChip)}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
@@ -868,8 +965,8 @@ function buildUnivBoardCard(u, forExport){
       const tierBadgeFs=compact?'9px':'11px';
       // 사진 렌더: 사진 로드 실패 시 플레이스홀더(종족 텍스트) 표시
       const _photoEl = photoSrcChip
-        ? `<span style="width:${photoSz};height:${photoSz};border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`
-        : `<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
+        ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onerror="this.style.display='none'"></span>`
+        : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">

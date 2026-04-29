@@ -217,10 +217,32 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    // (요청사항) 외부 대진기록(히스토리 > 외부탭)도 다른 기기에서 볼 수 있도록 백업에 포함
-    let histExt=null;
-    try{ histExt = JSON.parse(localStorage.getItem('su_hist_ext_data_v1')||'null'); }catch(e){ histExt=null; }
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys,histExt},null,2)],{type:'application/json'});
+    // 외부 대진기록(히스토리 > 외부탭)도 다른 기기에서 볼 수 있도록 백업에 포함
+    // - history.js에서 LZString 압축("lz:") 형태로 저장할 수 있어 JSON.parse를 하지 않고 "원문 문자열" 그대로 백업
+    const histExtRaw = localStorage.getItem('su_hist_ext_data_v1') || '';
+    const histExtProxyPresets = localStorage.getItem('su_hist_ext_proxy_presets_v1') || '';
+    const histExtProxyPresetSel = localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '';
+
+    // (중요) 티어대회 기록(ttM) 및 기타 누락 데이터도 백업에 포함
+    const payload = {
+      players, univCfg, maps, tourD,
+      miniM, univM, comps, ckM,
+      compNames, curComp,
+      proM, proTourneys,
+      tiers: TIERS,
+      tourneys,
+      indM, gjM,
+      // 🎯 티어대회 기록 (대전기록 탭 전용)
+      ttM: (typeof ttM!=='undefined' ? ttM : []),
+      // 설정/부가 데이터
+      curProComp, _ttCurComp,
+      userMapAlias, notices, playerStatusIcons,
+      boardOrder, boardPlayerOrder,
+      seasons, calScheduled,
+      // 외부 탭 데이터(문자열 그대로)
+      histExtRaw, histExtProxyPresets, histExtProxyPresetSel
+    };
+    const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';
@@ -244,23 +266,39 @@ function doFile(inp){
       miniM=d.miniM||[];univM=d.univM||[];comps=d.comps||[];ckM=d.ckM||[];
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
+      if(d.proTourneys!==undefined) proTourneys=d.proTourneys||[];
       tourneys=d.tourneys||[];
-      // (요청사항) 외부 대진기록 복원
-      if(d.histExt){
+      // 🎯 티어대회 기록 복원(있으면 그대로 사용, 없으면 아래에서 tourneys로 마이그레이션)
+      if(d.ttM!==undefined) ttM=d.ttM||[];
+      // 외부 대진기록 복원 (문자열 그대로)
+      if(d.histExtRaw!==undefined){
+        try{ localStorage.setItem('su_hist_ext_data_v1', String(d.histExtRaw||'')); }catch(e){
+          console.warn('[doFile] histExtRaw localStorage 저장 실패:', e.message);
+        }
+      }else if(d.histExt){
+        // 구버전 호환: histExt 객체 형태면 JSON 문자열로 저장
         try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){
           console.warn('[doFile] histExt localStorage 저장 실패:', e.message);
         }
       }
+      if(d.histExtProxyPresets!==undefined){
+        try{ localStorage.setItem('su_hist_ext_proxy_presets_v1', String(d.histExtProxyPresets||'')); }catch(e){}
+      }
+      if(d.histExtProxyPresetSel!==undefined){
+        try{ localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(d.histExtProxyPresetSel||'')); }catch(e){}
+      }
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
       if(d.gjM!==undefined) gjM=d.gjM||[];
-      if(d.proTourneys!==undefined) proTourneys=d.proTourneys||[];
       if(d.curProComp!==undefined) curProComp=d.curProComp||'';
       if(d.userMapAlias!==undefined) userMapAlias=d.userMapAlias||{};
       if(d.notices!==undefined) notices=d.notices||[];
       if(d.playerStatusIcons!==undefined) playerStatusIcons=d.playerStatusIcons||{};
       if(d.boardOrder!==undefined) boardOrder=d.boardOrder||[];
+      if(d.boardPlayerOrder!==undefined) boardPlayerOrder=d.boardPlayerOrder||{};
       if(d.seasons!==undefined) seasons=d.seasons||[];
+      if(d.calScheduled!==undefined) calScheduled=d.calScheduled||[];
+      if(d._ttCurComp!==undefined) _ttCurComp=d._ttCurComp||'';
       window._compListCache={};window._shareAllMatchesCached=null;
       (function(){
         const allD=[...miniM,...univM,...comps,...ckM,...proM];
@@ -269,6 +307,13 @@ function doFile(inp){
         yearOptions.sort();
       })();
       filterYear='전체';filterMonth='전체';
+      // (중요) ttM이 백업에 없었던 구버전 파일이라면 tourneys(type='tier')에서 ttM를 재구성
+      try{
+        if((!ttM || !ttM.length) && typeof _migrateTierTourneys==='function'){
+          try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+          _migrateTierTourneys();
+        }
+      }catch(e){}
       fixPoints();save();init();
       // 동명이인 감지
       const _dupSeen={};const _dupFound=[];
@@ -314,8 +359,9 @@ function openGameEditModal(editRef, si, gi){
 
   const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
   const modal=document.createElement('div');
-  modal.className='modal';modal.style.display='flex';
-  modal.innerHTML=`<div class="mbox" style="max-width:460px">
+  modal.className='modal modal--gameedit';modal.style.display='flex';
+  // (요청사항) 저장/취소 버튼 아래 여백 최소화
+  modal.innerHTML=`<div class="mbox" style="max-width:460px;padding-bottom:12px">
     <div class="mtitle">✏️ 경기 수정 (${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1})</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px">
       <div style="display:flex;gap:8px;align-items:center">
@@ -416,6 +462,9 @@ function saveGameEdit(editRef, si, gi, btn){
   save();
   btn.closest('.modal').remove();
   render();
+  // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
+  try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 async function captureStats(){

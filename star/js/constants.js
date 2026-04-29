@@ -52,9 +52,29 @@ try{
 ══════════════════════════════════════ */
 function applyProfileShapeVars(){
   try{
-    const shape = localStorage.getItem('su_bcp_shape') || 'circle';
-    const radius = (shape === 'square') ? '5px' : '50%';
+    // (보강) 전역 프로필 모양은 su_profile_shape를 우선 사용하고,
+    // 없으면 과거 호환으로 su_bcp_shape(현황판 칩 모양)를 사용
+    const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
+    const radius = (shape === 'square') ? '8px' : '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
+
+    // (추가) 기기별 프로필 이미지 크기 배율
+    // - PC/태블릿/모바일 각각 %로 저장
+    const w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+    const pc = parseInt(localStorage.getItem('su_profile_scale_pc')||'100',10) || 100;
+    const tb = parseInt(localStorage.getItem('su_profile_scale_tb')||'96',10) || 96;
+    const mb = parseInt(localStorage.getItem('su_profile_scale_mb')||'92',10) || 92;
+    const pct = (w<=768) ? mb : (w<=1024 ? tb : pc);
+    const sc = Math.max(0.7, Math.min(1.3, pct/100));
+    document.documentElement.style.setProperty('--su_profile_scale', String(sc));
+
+    // (추가) 프로필 이미지 효과
+    const fx = (localStorage.getItem('su_profile_fx')||'none').trim();
+    let shadow = 'none';
+    if(fx==='shadow') shadow = '0 6px 16px rgba(0,0,0,.18)';
+    if(fx==='ring') shadow = '0 0 0 2px rgba(255,255,255,.85)';
+    if(fx==='both') shadow = '0 0 0 2px rgba(255,255,255,.85), 0 6px 16px rgba(0,0,0,.18)';
+    document.documentElement.style.setProperty('--su_profile_fx', shadow);
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
   }
@@ -63,6 +83,13 @@ function applyProfileShapeVars(){
 try{ applyProfileShapeVars(); }catch(e){
   console.warn('[applyProfileShapeVars 초기화] 실패:', e.message);
 }
+// 화면 크기 변경 시도 반영
+try{
+  if(!window.__suProfileShapeResizeBound){
+    window.__suProfileShapeResizeBound=true;
+    window.addEventListener('resize', ()=>{ try{ applyProfileShapeVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════
    대학 로고 공통 스타일 (현황판/설정 등)
@@ -787,7 +814,8 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:var(--su_profile_radius,50%);flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const sz = 'calc('+size+' * var(--su_profile_scale,1))';
+  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
@@ -795,7 +823,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
     const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
     const txt=p?.race||'?';
-    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
+    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
   const src = toHttpsUrl(p.photo);
   // object-fit: 기본 contain, 경기 상세에서는 설정에 따라 cover 가능
@@ -1091,6 +1119,58 @@ function calcElo(winnerElo, loserElo){
   return Math.round(ELO_K*(1-exp));
 }
 
+// ─────────────────────────────────────────────
+// 스트리머 이름 정규화/별명(메모) 매칭
+// - 예: 김재현 memo에 "샤이니"가 있으면, 입력에 "샤이니"를 넣어도 "김재현"으로 저장되게
+// - 별명/메모가 애매하거나 부분일치만 되면 후보 리스트를 반환
+// ─────────────────────────────────────────────
+function _cleanPlayerInputName(name){
+  const raw = (name||'').trim();
+  // 종족 접미사 제거: "김명운Z", "샤이니T"
+  return raw.replace(/\s*[TZPN]$/i,'').trim();
+}
+function resolvePlayerName(rawName){
+  const raw = (rawName||'').trim();
+  const cleaned = _cleanPlayerInputName(raw);
+  if(!cleaned) return {name:'', player:null, match:'empty', candidates:[]};
+
+  // 1) 정확한 이름
+  let p = (players||[]).find(x=>x && x.name===cleaned) || (players||[]).find(x=>x && x.name===raw);
+  if(p) return {name:p.name, player:p, match:'name', candidates:[p]};
+
+  // 2) 메모(별명) 정확 일치
+  const low = cleaned.toLowerCase();
+  const memoExact = (players||[]).filter(x=>x && x.memo && String(x.memo).split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+  if(memoExact.length===1) return {name:memoExact[0].name, player:memoExact[0], match:'memo', candidates:memoExact};
+
+  // 3) 공백 제거 후 이름 일치
+  const ns = cleaned.replace(/\s+/g,'');
+  const nsMatches = (players||[]).filter(x=>x && x.name && x.name.replace(/\s+/g,'')===ns);
+  if(nsMatches.length===1) return {name:nsMatches[0].name, player:nsMatches[0], match:'space', candidates:nsMatches};
+
+  // 4) 후보 추천(부분 일치)
+  const cand = [];
+  const push = (pp, why)=>{
+    if(!pp || !pp.name) return;
+    if(cand.some(x=>x.p.name===pp.name)) return;
+    cand.push({p:pp, why});
+  };
+  (players||[]).forEach(pp=>{
+    if(!pp || !pp.name) return;
+    const n = String(pp.name);
+    if(n.includes(cleaned) || n.replace(/\s+/g,'').includes(ns)) push(pp,'name');
+    else if(pp.memo){
+      const toks = String(pp.memo).split(/[\s,，\n]+/).map(x=>x.trim()).filter(Boolean);
+      if(toks.some(t=>t.toLowerCase().includes(low))) push(pp,'memo');
+    }
+  });
+  cand.sort((a,b)=>(a.why===b.why? a.p.name.localeCompare(b.p.name) : (a.why==='name'?-1:1)));
+  const candidates = cand.slice(0,8).map(x=>x.p);
+  return {name: raw, player:null, match:'none', candidates};
+}
+// 전역 노출(모달/인라인 onclick에서 사용)
+try{ window.resolvePlayerName = resolvePlayerName; }catch(e){}
+
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
@@ -1116,27 +1196,22 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
-  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
+  // 중복 체크
+  // - matchId가 있으면 matchId가 곧 고유키(게임 단위)라고 가정하고 matchId만으로 중복 판단
+  //   (티어대회/대학CK 등에서 같은 날짜/같은 맵/같은 상대가 여러 번 나올 수 있어 date+map+opp로 막으면 누락됨)
+  // - matchId가 없을 때만 date+map+opp로 중복 방지
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
   // matchId 기반 체크
-  const wDupMatch=matchId
-    ?(isGameId
-      ?(w.history||[]).find(h=>h.matchId===matchId)
-      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
-    :null;
-  const lDupMatch=matchId
-    ?(isGameId
-      ?(l.history||[]).find(h=>h.matchId===matchId)
-      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
-    :null;
-  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
-  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
-  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
-  // 둘 중 하나라도 중복이면 중단
-  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
+  const wDupMatch = matchId ? (w.history||[]).find(h=>h.matchId===matchId) : null;
+  const lDupMatch = matchId ? (l.history||[]).find(h=>h.matchId===matchId) : null;
+  if(wDupMatch||lDupMatch) return;
+  // matchId가 없을 때만 fallback 사용
+  if(!matchId){
+    const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+    const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+    if(wDupFallback||lDupFallback) return;
+  }
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -1179,12 +1254,16 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   if(!b.history)b.history=[];
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  // 중복 체크: matchId 우선, 없으면 date+map+opp
+  // 중복 체크: matchId가 있으면 matchId만으로 판단(게임 단위 중복 허용 방지)
   const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;
   const bDup = matchId ? (b.history||[]).find(h=>h.matchId===matchId) : null;
-  const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
-  const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
-  if(aDup||bDup||aDupFallback||bDupFallback) return;
+  if(aDup||bDup) return;
+  // matchId 없을 때만 fallback
+  if(!matchId){
+    const aDupFallback=(a.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===b.name&&h.result==='무');
+    const bDupFallback=(b.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===a.name&&h.result==='무');
+    if(aDupFallback||bDupFallback) return;
+  }
   const t=Date.now();
   const au=univA||a.univ||'';
   const bu=univB||b.univ||'';
