@@ -110,6 +110,12 @@ function applyUnivLogoVars(){
     // 대학 상세(모달)용
     document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');
     document.documentElement.style.setProperty('--su_univ_logo_box_detail', dBox + 'px');
+
+    // (추가) 모바일/태블릿에서 대학 상세(모달) 헤더가 너무 커 보이는 문제 완화
+    // - 저장값(기본 크기)은 유지하고, 화면폭에 따라 "표시용 배율"만 적용한다.
+    const w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+    const ds = (w<=768) ? 0.82 : (w<=1024 ? 0.90 : 1);
+    document.documentElement.style.setProperty('--su_univ_detail_scale', String(ds));
   }catch(e){
     console.warn('[applyUnivLogoVars] CSS 변수 설정 실패:', e.message);
   }
@@ -117,6 +123,13 @@ function applyUnivLogoVars(){
 try{ applyUnivLogoVars(); }catch(e){
   console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
 }
+// 화면 크기 변경 시도 반영
+try{
+  if(!window.__suUnivLogoResizeBound){
+    window.__suUnivLogoResizeBound=true;
+    window.addEventListener('resize', ()=>{ try{ applyUnivLogoVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════
    현황판(board2) 대학 로고 크기
