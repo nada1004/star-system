@@ -3806,6 +3806,7 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('bulkmap','🗺️ 맵 이름 일괄 교체')}
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">※ 띄어쓰기 차이(예: 투혼 II ↔ 투혼II)는 자동으로 무시하고 교체됩니다.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">교체 전</label>
         <input type="text" id="bulk-map-from" placeholder="예: 투혼II" style="font-size:12px;width:120px">

@@ -2396,21 +2396,34 @@ function bulkChangeDate(){
   if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkChangeMap(){
-  if(!isLoggedIn) return;
+  if(!isLoggedIn){ alert('로그인이 필요합니다.'); return; }
   const from=(document.getElementById('bulk-map-from')?.value||'').trim();
   const to=(document.getElementById('bulk-map-to')?.value||'').trim();
   if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
+  // (보강) 사용자가 '투혼 II' vs '투혼II' 같이 띄어쓰기 차이로 입력하는 경우가 많아서
+  // - 비교는 "공백 제거 + 소문자"로 한 번 더 수행한다.
+  const norm = (s)=>String(s||'').trim().toLowerCase().replace(/\s+/g,'');
+  const fromN = norm(from);
   const arrMap=_bulkArrMapAll();
   const keys=Object.keys(arrMap); // 맵 교체는 전체 적용
   let changed=0;
   const rep=(obj)=>{
     if(!obj||typeof obj!=='object') return;
-    if(typeof obj.map==='string' && obj.map.trim()===from){ obj.map=to; changed++; }
+    if(typeof obj.map==='string'){
+      const cur=obj.map.trim();
+      if(cur===from || norm(cur)===fromN){ obj.map=to; changed++; }
+    }
     // 세트/게임 내부도 체크
     (obj.sets||[]).forEach(st=>{
-      if(typeof st.map==='string' && st.map.trim()===from){ st.map=to; changed++; }
+      if(typeof st.map==='string'){
+        const cur=st.map.trim();
+        if(cur===from || norm(cur)===fromN){ st.map=to; changed++; }
+      }
       (st.games||[]).forEach(g=>{
-        if(typeof g.map==='string' && g.map.trim()===from){ g.map=to; changed++; }
+        if(typeof g.map==='string'){
+          const cur=g.map.trim();
+          if(cur===from || norm(cur)===fromN){ g.map=to; changed++; }
+        }
       });
     });
   };
@@ -2425,7 +2438,7 @@ function bulkChangeMap(){
   // 맵 목록 자체도 교체(선택지 통일)
   try{
     if(Array.isArray(maps)){
-      maps = maps.map(m=> (m===from?to:m));
+      maps = maps.map(m=> ((String(m||'').trim()===from || norm(m)===fromN)?to:m));
     }
   }catch(e){}
   if(changed){ save(); render(); }
