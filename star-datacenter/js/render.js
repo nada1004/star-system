@@ -2156,8 +2156,8 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      // (요청사항) '종류' 배지: 모바일/태블릿에서 크게 보이지 않게 더 컴팩트하게
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 5px;border-radius:3px;font-size:8px;font-weight:900;line-height:14px;height:14px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
