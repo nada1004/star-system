@@ -41,8 +41,10 @@ function rHist(C,T){
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
       tabDefs.push({id:'ext', grp:'외부', lbl:'📎'});
-      // (요청사항) 외부2: 관리자만 볼 수 있는 iframe 페이지
+      // 외부2: 관리자 전용(iframe)
       tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2'});
+      // 외부3: 관리자 전용(iframe, 페이지 이동 지원)
+      tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3'});
     }
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
@@ -65,11 +67,15 @@ function rHist(C,T){
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${g}</button>`;
-    // (요청사항) '외부' 우측에 '외부2' 버튼을 별도로 노출 (관리자 전용)
-    // - 외부 그룹을 눌러 하위메뉴를 펼치지 않아도 바로 이동 가능하게
+    // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
       const isOn2=(histSub==='ext2');
       h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">외부2</button>`;
+    }
+    // '외부' 우측에 '외부3' 버튼 노출(관리자 전용)
+    if(g==='외부' && tabDefs.some(t=>t.id==='ext3')){
+      const isOn3=(histSub==='ext3');
+      h+=`<button class="pill ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext3';openDetails={};render()">외부3</button>`;
     }
   });
   h+=`  </div>`;
@@ -147,6 +153,11 @@ function rHist(C,T){
   }
   if(histSub==='ext2'){
     h+=histExternal2HTML();
+    C.innerHTML=h;
+    return;
+  }
+  if(histSub==='ext3'){
+    h+=histExternal3HTML();
     C.innerHTML=h;
     return;
   }
@@ -703,7 +714,12 @@ window.histExtApplyQuickUrl = function(){
   if(!raw) return;
   try{
     const u = new URL(raw);
-    const base = u.origin + '/';
+    // (개선) 일부 프록시는 /board.php 같은 경로가 필수일 수 있음
+    // - 사용자가 /board.php?... 형태로 넣으면 경로까지 포함해서 저장
+    // - 끝의 '/'는 제거(중복 슬래시 방지)
+    let base = (u.origin || '') + (u.pathname || '');
+    base = base.replace(/\/+$/,'');
+    if(!base) base = u.origin + '/';
     const bo = u.searchParams.get('bo_table') || 'bj_board';
     const pages = u.searchParams.getAll('page').map(x=>parseInt(x,10)).filter(n=>!isNaN(n));
     const pFrom = pages.length ? Math.min(...pages) : (parseInt(u.searchParams.get('pageFrom')||'1',10)||1);
@@ -719,7 +735,7 @@ window.histExtApplyQuickUrl = function(){
     _histExtProxySave(base);
     const pCfg=_histExtProxyCfgLoad();
     _histExtProxyCfgSave({...pCfg, bo, pFrom, pTo});
-    alert('✅ URL 자동 입력 완료');
+    alert(`✅ URL 자동 입력 완료\n- 주소: ${base}\n- bo_table=${bo}\n- 페이지: ${pFrom}~${pTo}`);
   }catch(e){
     alert('URL 형식이 올바르지 않습니다');
   }
@@ -792,7 +808,10 @@ window.histExtFetchFromProxy = async function(){
     setProg(`페이지 ${p}/${end} 불러오는 중...`);
     let html='';
     try{
-      const u = `${proxy.replace(/\/$/,'')}/?bo_table=${encodeURIComponent(bo)}&page=${encodeURIComponent(String(p))}`;
+      // (개선) proxy가 /board.php까지 포함할 수 있으므로 "/?" 고정 결합을 쓰지 않는다
+      const base = proxy.replace(/\/+$/,'');
+      const joiner = base.includes('?') ? '&' : '?';
+      const u = `${base}${joiner}bo_table=${encodeURIComponent(bo)}&page=${encodeURIComponent(String(p))}`;
       const res = await fetch(u, {method:'GET'});
       html = await res.text();
       if(!lastHtmlPreview && html) lastHtmlPreview = html.slice(0, 2500);
@@ -887,6 +906,12 @@ window.histExtClear = function(){
   // 관련 설정도 초기화(선택 프리셋/프리셋 목록)
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, ''); }catch(e){}
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, ''); }catch(e){}
+  // UI 즉시 비우기(렌더/동기화 타이밍에 상관없이 바로 사라지게)
+  try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
+  try{ const ta=document.getElementById('hist-ext-raw'); if(ta) ta.value=''; }catch(e){}
+  try{ const out=document.getElementById('hist-ext-out'); if(out) out.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📎</div><div class="empty-state-title">출력할 데이터가 없습니다</div><div class="empty-state-desc">표를 붙여넣거나 URL로 가져오면 여기에 표시됩니다</div></div>`; }catch(e){}
+  try{ ['hist-ext-cnt-raw','hist-ext-cnt','hist-ext-cnt-store'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; }); }catch(e){}
+  try{ const hint=document.getElementById('hist-ext-hint'); if(hint) hint.textContent=''; }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
   try{ render(); }catch(e){}
 };
@@ -902,6 +927,9 @@ window.histExtClearAll = function(){
     const ta=document.getElementById('hist-ext-raw');
     if(ta) ta.value='';
   }catch(e){}
+  try{ const out=document.getElementById('hist-ext-out'); if(out) out.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📎</div><div class="empty-state-title">출력할 데이터가 없습니다</div><div class="empty-state-desc">표를 붙여넣거나 URL로 가져오면 여기에 표시됩니다</div></div>`; }catch(e){}
+  try{ ['hist-ext-cnt-raw','hist-ext-cnt','hist-ext-cnt-store'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; }); }catch(e){}
+  try{ const hint=document.getElementById('hist-ext-hint'); if(hint) hint.textContent=''; }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
   try{ render(); }catch(e){}
 };
@@ -3830,7 +3858,7 @@ function _ensureSuCtxMenu(){
   return el;
 }
 
-// (요청사항) 대전기록 > 외부2 (관리자 전용, iframe)
+// 대전기록 > 외부2 (관리자 전용, iframe)
 function histExternal2HTML(){
   // 권한 재확인(수동 변경 대비)
   try{
@@ -3859,6 +3887,63 @@ function histExternal2HTML(){
     </div>
   `;
 }
+
+// 대전기록 > 외부3 (관리자 전용, iframe, 페이지 이동 지원)
+// - iframe은 한 번에 1페이지(page=N)만 표시 가능
+// - 대신 페이지 이동(이전/다음/번호 입력) UI를 제공
+const _HIST_EXT3_PAGE_KEY = 'su_hist_ext3_page';
+window.histExt3SetPage = function(p){
+  try{
+    const n = Math.max(1, Math.min(9999, parseInt(p,10) || 1));
+    localStorage.setItem(_HIST_EXT3_PAGE_KEY, String(n));
+    const inp = document.getElementById('hist-ext3-page');
+    if(inp) inp.value = String(n);
+    const frame = document.getElementById('hist-ext3-frame');
+    const base = 'https://elo-proxy1.kpoppd.workers.dev/board.php?bo_table=bj_board&page=';
+    if(frame) frame.src = base + encodeURIComponent(String(n));
+  }catch(e){}
+};
+function histExternal3HTML(){
+  // 권한 재확인(수동 변경 대비)
+  try{
+    if(!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      return `<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">관리자 전용</div><div class="empty-state-desc">관리자 로그인 시 이용 가능합니다</div></div>`;
+    }
+  }catch(e){}
+  const page = (()=>{ try{ return parseInt(localStorage.getItem(_HIST_EXT3_PAGE_KEY)||'1',10)||1; }catch(e){ return 1; } })();
+  const base = 'https://elo-proxy1.kpoppd.workers.dev/board.php?bo_table=bj_board&page=';
+  const url = base + encodeURIComponent(String(page));
+  return `
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div style="font-weight:900">🌐 외부3 (관리자 전용)</div>
+        <a class="btn btn-w btn-xs" href="${url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">새 창으로 열기</a>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-w btn-xs" onclick="histExt3SetPage((parseInt(document.getElementById('hist-ext3-page').value||'1',10)||1)-1)">◀ 이전</button>
+        <div style="font-size:12px;font-weight:900;color:var(--text2)">페이지</div>
+        <input id="hist-ext3-page" type="number" min="1" value="${page}" style="width:92px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-weight:900"
+          onkeydown="if(event.key==='Enter'){histExt3SetPage(this.value)}">
+        <button class="btn btn-b btn-xs" onclick="histExt3SetPage(document.getElementById('hist-ext3-page').value)">이동</button>
+        <button class="btn btn-w btn-xs" onclick="histExt3SetPage((parseInt(document.getElementById('hist-ext3-page').value||'1',10)||1)+1)">다음 ▶</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ iframe은 1페이지만 표시됩니다(페이지 이동으로 2/3/… 확인)</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
+        ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다.
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
+      <iframe
+        id="hist-ext3-frame"
+        src="${url}"
+        style="width:100%;height:72vh;min-height:520px;border:0;display:block;background:#fff"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
+  `;
+}
+
 function closeSuCtxMenu(){
   try{
     const el=document.getElementById('suCtxMenu');
