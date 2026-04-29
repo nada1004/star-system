@@ -61,6 +61,16 @@
   --su_btn_scale: 1;  /* 0.85 ~ 1.25 */
   /* (자동) 모바일/태블릿 환경에 맞춘 추가 스케일 (사용자 설정은 su_btn_scale로 유지) */
   --su_btn_auto_scale: 1;
+  /* (설정) 모바일/태블릿 UI 스케일(기본값은 기존 자동값과 동일) */
+  --su_tb_scale: .92;
+  --su_mb_scale: .88;
+  --su_modal_tb_scale: .78;
+  --su_modal_mb_scale: .70;
+  --su_tab_tb_scale: .94;
+  --su_tab_mb_scale: .90;
+  --su_md_tb_btn_scale: 1;
+  --su_md_mb_btn_scale: 1;
+  --su_pd_badge_scale: 1;
   --su_btn_r: 8px;    /* 기본 버튼 라운드 */
   --su_pill_r: 20px;  /* pill(탭/필터) 라운드 */
   /* (자동) 탭 버튼 추가 스케일 */
@@ -566,8 +576,8 @@ b,strong{font-weight:600;}
 ══════════════════════════════════════ */
 @media (max-width: 1024px){
   :root{
-    --su_btn_auto_scale: .92;
-    --su_tab_auto_scale: .94;
+    --su_btn_auto_scale: var(--su_tb_scale);
+    --su_tab_auto_scale: var(--su_tab_tb_scale);
   }
   /* 팝업/모달: 화면에 맞게 자동 */
   .modal{ padding:12px; }
@@ -588,8 +598,8 @@ b,strong{font-weight:600;}
 }
 @media (max-width: 768px){
   :root{
-    --su_btn_auto_scale: .88;
-    --su_tab_auto_scale: .90;
+    --su_btn_auto_scale: var(--su_mb_scale);
+    --su_tab_auto_scale: var(--su_tab_mb_scale);
   }
   .modal{ padding:10px; }
   .mbox{
@@ -916,27 +926,28 @@ body.dark .hist-ctrl-group{
   background:rgba(255,255,255,.14);
   border:none;
   color:#fff;
-  width:34px;height:34px;
-  border-radius:10px;
+  width:calc(34px * var(--su_md_btn_scale,1));
+  height:calc(34px * var(--su_md_btn_scale,1));
+  border-radius:calc(10px * var(--su_md_btn_scale,1));
   cursor:pointer;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:15px;
+  font-size:calc(15px * var(--su_md_btn_scale,1));
   flex-shrink:0;
 }
 .modal--matchdetail .cmd-hbtn:hover{background:rgba(255,255,255,.22);}
 .pill{
-  padding:calc(5px * var(--su_btn_scale)) calc(13px * var(--su_btn_scale));
+  padding:calc(5px * var(--su_btn_scale) * var(--su_btn_auto_scale)) calc(13px * var(--su_btn_scale) * var(--su_btn_auto_scale));
   border-radius:var(--su_pill_r);
   border:1px solid var(--border);
   background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.65));
   color:var(--text3);
-  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale) * var(--su_btn_auto_scale));
   font-weight:650;
   cursor:pointer;
   transition:var(--tr);
-  min-height:calc(30px * var(--su_btn_scale));
+  min-height:calc(30px * var(--su_btn_scale) * var(--su_btn_auto_scale));
   display:inline-flex;align-items:center;
   box-shadow:0 1px 4px rgba(0,0,0,.04);
 }
@@ -1691,7 +1702,11 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     font-size:11px;
     white-space:normal;
     line-height:1.15;
+    /* 긴 대학명 줄바꿈 허용 + 잘림 방지 */
+    overflow:visible;
+    text-overflow:clip;
   }
+  :root{ --su_md_btn_scale: var(--su_md_mb_btn_scale); }
   .modal--matchdetail .cmd-team .cmd-uicon{
     width:34px !important;
     height:34px !important;
@@ -1711,12 +1726,36 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     font-size:12px;
     padding:7px 9px;
   }
+  :root{ --su_md_btn_scale: var(--su_md_tb_btn_scale); }
 }
 
 @media(max-width:1024px){
   /* (요청사항) 스트리머 상세(팝업) 테이블/필터 UI가 너무 커 보이는 문제 완화 */
   #playerModalBody table th{ padding:8px 8px !important; font-size:10px !important; }
   #playerModalBody table td{ padding:8px 8px !important; font-size:11px !important; }
+}
+
+/* ══════════════════════════════════════
+   (추가) 모바일/태블릿: 스트리머 상세/대학 상세 팝업 내부 버튼 과대 문제
+   - 글자 크기에 맞게 더 타이트하게
+══════════════════════════════════════ */
+@media(max-width:1024px){
+  #playerModal, #univModal{
+    --su_btn_auto_scale: var(--su_modal_tb_scale);
+  }
+  #playerModalBody .mode-filter-chip input,
+  #playerModalBody .year-filter-chip input{
+    width: 10px; height: 10px;
+  }
+}
+@media(max-width:768px){
+  #playerModal, #univModal{
+    --su_btn_auto_scale: var(--su_modal_mb_scale);
+  }
+  #playerModalBody .mode-filter-chip input,
+  #playerModalBody .year-filter-chip input{
+    width: 9px; height: 9px;
+  }
 }
 
 /* ── 설정 메뉴 팝업(cfgModal) 컴포넌트 규격화 ── */
