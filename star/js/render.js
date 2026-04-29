@@ -1190,6 +1190,7 @@ function buildPlayerDetailHTML(p){
   const _darken=((_pdStyle.univ_darken||{})[p.univ]||0);
   // 모바일/PC 이미지 설정 적용
   const _isMobile=window.innerWidth<=768;
+  const _isTablet=(window.innerWidth>768 && window.innerWidth<=1024);
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
   const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
   // (버그) "좌우 개별 크기 사용" 체크가 반영되지 않던 문제 수정
@@ -1721,42 +1722,55 @@ function buildPlayerDetailHTML(p){
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   })();
 
-  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
+  // (요청사항) 모바일/태블릿에서 상단 대학/프로필 카드가 너무 커 보이는 문제 완화
+  const _pmCardR = _isMobile ? 14 : (_isTablet ? 16 : 18);
+  const _pmHdrPad = _isMobile ? '14px 14px 12px' : (_isTablet ? '16px 16px 14px' : '18px 18px 16px');
+  const _pmPhotoSz = _isMobile ? 62 : (_isTablet ? 70 : 76);
+  const _pmPhotoR = _isMobile ? 14 : 16;
+  const _pmNameFs = _isMobile ? 17 : (_isTablet ? 18 : 20);
+  const _pmMetaFs = _isMobile ? 9 : 11;
+  const _pmMetaPad = _isMobile ? '2px 7px' : '3px 10px';
+  const _pmMetaPad2 = _isMobile ? '2px 7px' : '3px 9px';
+  const _pmStatsPad = _isMobile ? '10px 6px' : (_isTablet ? '12px 6px' : '14px 6px');
+  const _pmStatsNum1 = _isMobile ? 13 : 14;
+  const _pmStatsBig = _isMobile ? 18 : 22;
+
+  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:${_pmCardR}px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+    <div style="background:${_hdrBg};padding:${_pmHdrPad};position:relative;overflow:hidden">
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
-        <div style="width:76px;height:76px;border-radius:16px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
+        <div style="width:${_pmPhotoSz}px;height:${_pmPhotoSz}px;border-radius:${_pmPhotoR}px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
+            <span style="font-size:${_pmNameFs}px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
             ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
             ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
-              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:${_pmMetaFs}px;padding:${_pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:800${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:${_pmMetaPad2};font-size:${_pmMetaFs}px;font-weight:800;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
             ${_channelHTML}
           </div>
         </div>
       </div>
     </div>
     <div style="background:${col}${_p2h(_statsTint)};display:grid;grid-template-columns:repeat(4,1fr)">
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
-        <div style="font-weight:900;font-size:14px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
+        <div style="font-weight:900;font-size:${_pmStatsNum1}px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
-        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
+        <div style="font-weight:900;font-size:${_pmStatsBig}px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?_cWin:_cLoss}">${pS(p.points)}</div>
       </div>
-      <div style="text-align:center;padding:14px 6px">
+      <div style="text-align:center;padding:${_pmStatsPad}">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
         ${_eloSparkHTML}
@@ -1809,13 +1823,17 @@ function buildPlayerDetailHTML(p){
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
+  // (요청사항) 모바일/태블릿에서 종목/연도 필터 칩이 너무 커 보이는 문제 완화
+  const _chipFs = _isMobile ? 8 : (_isTablet ? 9 : 9);
+  const _chipPad = _isMobile ? '1px 5px' : '2px 6px';
+  const _chipR = _isMobile ? '7px' : '8px';
   const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-    <span style="font-size:9px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
+    <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
-      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
@@ -1834,13 +1852,13 @@ function buildPlayerDetailHTML(p){
     const _yLoss=_modeHist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
-    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <span style="font-size:9px;font-weight:900;color:var(--text3);flex-shrink:0">📅 연도</span>
+    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:${_isMobile?'5px 7px':'6px 8px'};background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
         </label>
-        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"

@@ -194,12 +194,25 @@ function _applyCloudData(d) {
     try{
       const ls = s.ls || s.localStorage || null;
       if(ls && typeof ls==='object'){
+        // 외부탭(대전기록>외부) 데이터는 로컬이 더 최신인 경우 덮어쓰지 않음
+        // - cloud쪽 timestamp가 없을 수도 있으므로(구버전 데이터), 0으로 간주하고 비교한다.
+        let localExtTs = 0, cloudExtTs = 0;
+        try{ localExtTs = Number(localStorage.getItem('su_hist_ext_last_modified')||0) || 0; }catch(e){}
+        try{ cloudExtTs = Number(ls.su_hist_ext_last_modified||0) || 0; }catch(e){}
+        const extKeys = new Set([
+          'su_hist_ext_data_v1',
+          'su_hist_ext_proxy_presets_v1',
+          'su_hist_ext_proxy_preset_sel_v1',
+          'su_hist_ext_last_modified'
+        ]);
         Object.entries(ls).forEach(([k,v])=>{
           if(!k || typeof k!=='string') return;
           if(!k.startsWith('su_')) return;
           if(k.startsWith('su_pp')) return;
           if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
           if(k==='su_last_admin_save' || k==='su_last_save_time') return;
+          // 로컬 외부탭 데이터가 더 최신이면(삭제/초기화 포함) 클라우드 값으로 덮어쓰지 않음
+          if(extKeys.has(k) && localExtTs && localExtTs > cloudExtTs) return;
           try{ localStorage.setItem(k, String(v)); }catch(e){}
         });
       }
