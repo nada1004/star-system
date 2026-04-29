@@ -36,6 +36,8 @@ function _decompressCloudData(d) {
 
 function _applyCloudData(d) {
   d = _decompressCloudData(d);
+  // (동기화) 클라우드 적용 중에는 로컬 설정 변경 감지(자동 업로드)를 막는다
+  try{ window._applyingCloudData = true; }catch(e){}
   // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
   // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
   const _has = (key) => d[key] !== undefined && d[key] !== null;
@@ -187,6 +189,21 @@ function _applyCloudData(d) {
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
+    // - 사진(base64)/토큰/비밀번호 등은 제외
+    try{
+      const ls = s.ls || s.localStorage || null;
+      if(ls && typeof ls==='object'){
+        Object.entries(ls).forEach(([k,v])=>{
+          if(!k || typeof k!=='string') return;
+          if(!k.startsWith('su_')) return;
+          if(k.startsWith('su_pp')) return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          if(k==='su_last_admin_save' || k==='su_last_save_time') return;
+          try{ localStorage.setItem(k, String(v)); }catch(e){}
+        });
+      }
+    }catch(e){}
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
@@ -241,6 +258,7 @@ function _applyCloudData(d) {
       if(typeof window._applyUiScale==='function') window._applyUiScale();
     }catch(e){}
   }
+  try{ window._applyingCloudData = false; }catch(e){}
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -306,6 +324,24 @@ async function fbCloudSave() {
     return c;
   });
 
+  // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  const _syncLs = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k || typeof k!=='string') continue;
+      if(!k.startsWith('su_')) continue;
+      if(k.startsWith('su_pp')) continue;
+      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+      const v = localStorage.getItem(k);
+      if(v==null) continue;
+      // 너무 큰 값은 제외(예: 이미지 base64 등)
+      if(String(v).length > 200000) continue;
+      _syncLs[k] = v;
+    }
+  }catch(e){}
+
   const dataObj = {
     players: _pNoPhoto,
     playerPhotos: _pPhotoMap,
@@ -355,7 +391,9 @@ async function fbCloudSave() {
       // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
       histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
       histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
-      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || ''
+      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
+      // localStorage 설정(문자열) 묶음
+      ls: _syncLs
     },
     savedAt
   };

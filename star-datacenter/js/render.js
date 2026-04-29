@@ -2138,7 +2138,8 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 글자에 맞게 자동 크기 + 너무 커 보이지 않게 컴팩트하게
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 6px;border-radius:4px;font-size:9px;font-weight:800;line-height:16px;height:16px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
