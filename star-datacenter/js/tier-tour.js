@@ -700,14 +700,15 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    // (버그픽스) 티어대회 토너먼트 대진표는 competition.js의 동적 브라켓(rCompTourDynamic)을 사용
-    // - 외부 자동인식에서 생성하는 tn.bracket.slots / winners 구조와 호환됨
-    // - 기존 proCompBracket은 프로리그 대회 구조(bracket 배열 등)에 더 가깝고, 티어대회에서는 비어 보일 수 있음
+    // 티어대회 탭의 토너먼트는 "개인(스트리머) 대진표"가 기본.
+    // - type 값이 누락된 과거 데이터가 있어도 항상 개인전 브라켓 UI를 우선 사용한다.
+    // - rTierBracketDynamic가 없을 때만 기존 렌더러로 fallback.
     if(_curTierTn){
-      if(typeof rCompTourDynamic==='function') h+=rCompTourDynamic(_curTierTn);
+      if(typeof rTierBracketDynamic==='function') h+=rTierBracketDynamic(_curTierTn);
       else if(typeof proCompBracket==='function') h+=proCompBracket(_curTierTn);
+      else if(typeof rCompTourDynamic==='function') h+=rCompTourDynamic(_curTierTn);
       else h+=_noTnMsg;
-    }else h+=_noTnMsg;
+    } else h+=_noTnMsg;
   } else if(_ttSub==='bktrecords'){
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함

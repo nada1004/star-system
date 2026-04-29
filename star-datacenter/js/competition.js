@@ -897,6 +897,91 @@ function getBracket(tn){
   if(tn.bracket.champ===undefined)tn.bracket.champ='';
   return tn.bracket;
 }
+
+/* ── 티어대회(개인전) 전용 동적 브라켓 ──
+   - tn.type==='tier'
+   - tn.bracket: {slots,winners,champ,matchDetails}
+   - slots: "r-mi-side" → 선수명
+   - winners: "r-mi" → 선수명
+*/
+function rTierBracketDynamic(tn){
+  if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
+  const br=getBracket(tn);
+  const overrideSize=parseInt(tn.bracketOverrideSize||'0',10)||0;
+  const numTeams = overrideSize>1 ? overrideSize : 8;
+  let totalRounds=0;{let n=numTeams;while(n>1){n=Math.ceil(n/2);totalRounds++;}} if(!totalRounds) totalRounds=1;
+
+  const slotName = (rnd,mi,side)=>{
+    const k=`${rnd}-${mi}-${side}`;
+    if(Object.prototype.hasOwnProperty.call(br.slots||{}, k)) return String(br.slots[k]||'');
+    if(rnd<=0) return '';
+    const pk=`${rnd-1}-${mi*2 + (side==='a'?0:1)}`;
+    return String((br.winners||{})[pk]||'');
+  };
+  const matchDetail = (rnd,mi)=>{
+    // matchDetails는 optional. 없으면 표시용만.
+    const k=`${rnd}-${mi}`;
+    return (br.matchDetails && br.matchDetails[k]) ? br.matchDetails[k] : null;
+  };
+  const rndLabel = (ri)=>{
+    const sz = Math.pow(2, totalRounds-ri);
+    if(sz===2) return '결승';
+    if(sz===4) return '4강';
+    if(sz===8) return '8강';
+    if(sz===16) return '16강';
+    if(sz===32) return '32강';
+    return `${sz}강`;
+  };
+
+  let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+    <div style="font-weight:900;font-size:15px;color:var(--blue)">🗂️ ${tn.name} 토너먼트</div>
+    <span style="font-size:11px;color:var(--gray-l)">※ 티어대회(개인전) 대진표</span>
+  </div>`;
+
+  h += `<div style="overflow-x:auto;padding-bottom:14px"><div style="display:inline-flex;gap:0;align-items:flex-start;min-width:fit-content">`;
+  for(let ri=0; ri<totalRounds; ri++){
+    const matchCount = Math.ceil(numTeams/Math.pow(2,ri+1));
+    const isLast = ri===totalRounds-1;
+    const gap = ri===0?8:(Math.pow(2,ri)*60+8);
+    h += `<div style="display:flex;align-items:center">
+      <div style="min-width:${isLast?220:200}px;flex-shrink:0">
+        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:10px;padding:7px 10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:10px;box-shadow:0 3px 8px rgba(37,99,235,.25);letter-spacing:.5px">${rndLabel(ri)}</div>
+        <div style="display:flex;flex-direction:column;gap:${gap}px">`;
+    for(let mi=0; mi<matchCount; mi++){
+      const a = slotName(ri,mi,'a') || 'TBD';
+      const b = slotName(ri,mi,'b') || 'TBD';
+      const w = (br.winners||{})[`${ri}-${mi}`] || '';
+      const aWin = w && w===a, bWin = w && w===b;
+      const md = matchDetail(ri,mi);
+      const sa = md?.sa, sb = md?.sb;
+      const hasScore = (sa!=null && sb!=null);
+      h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:0 1px 6px rgba(0,0,0,.07);border:1.5px solid #e2e8f0">
+        <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?'#2563eb18':a==='TBD'?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid #2563eb`:''};${w && !aWin?'opacity:.55':''}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:${aWin?'900':a==='TBD'?'400':'700'};color:${aWin?'#2563eb':a==='TBD'?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${a!=='TBD'?'pointer':'default'}" onclick="${a!=='TBD'?`openPlayerModal('${String(a).replace(/'/g,"\\'")}')`:''}">${a}</div>
+          </div>
+          ${hasScore?`<span style="font-size:11px;font-weight:900;color:${aWin?'#2563eb':'#94a3b8'};flex-shrink:0">${sa}</span>`:''}
+        </div>
+        <div style="padding:9px 12px;background:${bWin?'#2563eb18':b==='TBD'?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid #2563eb`:''};${w && !bWin?'opacity:.55':''}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:${bWin?'900':b==='TBD'?'400':'700'};color:${bWin?'#2563eb':b==='TBD'?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${b!=='TBD'?'pointer':'default'}" onclick="${b!=='TBD'?`openPlayerModal('${String(b).replace(/'/g,"\\'")}')`:''}">${b}</div>
+          </div>
+          ${hasScore?`<span style="font-size:11px;font-weight:900;color:${bWin?'#2563eb':'#94a3b8'};flex-shrink:0">${sb}</span>`:''}
+        </div>
+        ${(md?.d||md?.map)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${md?.d?`<span>🗓️ ${(md.d||'').slice(2).replace(/-/g,'.')}</span>`:''}${md?.map?`<span>🗺️ ${md.map}</span>`:''}</div>`:''}
+        ${isLoggedIn?`<div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
+          ${(a!=='TBD'&&b!=='TBD')?`<button class="btn btn-xs" style="flex:1;font-size:10px;${aWin?`background:#2563eb;color:#fff;border-color:#2563eb`:''}" onclick="setBracketWinner('${tn.id}',${ri},${mi},'${a.replace(/'/g,"\\'")}')">${a.slice(0,5)} 승</button>
+          <button class="btn btn-xs" style="flex:1;font-size:10px;${bWin?`background:#2563eb;color:#fff;border-color:#2563eb`:''}" onclick="setBracketWinner('${tn.id}',${ri},${mi},'${b.replace(/'/g,"\\'")}')">${b.slice(0,5)} 승</button>`:''}
+        </div>`:''}
+      </div>`;
+    }
+    h += `</div></div>`;
+    if(ri < totalRounds-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">➔</div>`;
+    h += `</div>`;
+  }
+  h += `</div></div>`;
+  return h;
+}
 function setBracketWinner(tnId,rnd,mi,winner){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const br=getBracket(tn);
