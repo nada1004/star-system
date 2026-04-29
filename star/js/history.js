@@ -658,8 +658,14 @@ window.histExtInputToPasteModal = function(){
 // 선택 결과를 "경기 결과 붙여넣기(자동인식)" 모달로 전송
 function _histExtToPasteName(s){
   let t = String(s||'').trim();
+  // "메모: 대호" 같은 형태가 이름 칸에 섞여 들어오는 경우 대비
+  t = t.replace(/^(?:메모|비고|memo)\s*[:：]\s*/i,'').trim();
   // "승 xxx", "패 xxx" 같은 접두 제거
   t = t.replace(/^(승|패)\s+/,'').trim();
+  // 이모지/기호 제거(외부 표 복사 시 섞이는 경우)
+  t = t.replace(/[✅❌⭕⬜🆚🌐⭐★■□●○◆◇]/g,'').trim();
+  // 뒤쪽 괄호 설명 제거: "대호 (프로토스)" / "대호(P)" 등
+  t = t.replace(/\s*\((?:[PTZN]|테란|저그|프로토스|토스|Terran|Zerg|Protoss)\)\s*$/i,'').trim();
   // "이름 P" → "이름 (P)" (자동인식기 TSV 규칙)
   const m = t.match(/^(.+?)\s+([PTZN])$/i);
   if(m) t = `${m[1].trim()} (${m[2].toUpperCase()})`;
@@ -686,9 +692,10 @@ window.histExtSendToPasteModal = function(){
     const w = _histExtToPasteName(x.winner);
     const l = _histExtToPasteName(x.loser);
     const mp = (x.map||'-').trim();
+    const memo = String(x.memo||'').replace(/\t+/g,' ').replace(/\r?\n/g,' ').trim();
     // TSV(2인칭): 선수1\t선수2\t맵\t승/패(ELO)\t[타입]
     // 날짜는 "YYYY-MM-DD " 접두로 포함(파서가 날짜를 먼저 인식)
-    return `${d} ${w}\t${l}\t${mp}\t승\t${target}`;
+    return `${d} ${w}\t${l}\t${mp}\t승\t${target}${memo?`\t${memo}`:''}`;
   }).join('\n');
 
   // 해당 모드의 붙여넣기 모달 열기
@@ -1943,6 +1950,11 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
+          ${isLoggedIn&&m.sets&&m.sets.length?`<div class="no-export" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--gray-l);font-weight:800">점수방식</span>
+            <button class="btn ${(m.scoreMode||'game')==='set'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'set')" title="세트 승리 수로 스코어 계산">세트제</button>
+            <button class="btn ${(m.scoreMode||'game')==='game'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'game')" title="게임(맵) 승리 수로 스코어 계산">경기제</button>
+          </div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
@@ -1984,6 +1996,47 @@ window._detReg = window._detReg || {};
 function _regDet(key, m, mode, lA, lB, ca, cb, aW, bW, idx){
   window._detReg[key] = {m, mode, lA, lB, ca, cb, aW, bW, idx};
   return buildDetailHTML(m, mode, lA, lB, ca, cb, aW, bW);
+}
+
+// ── (요청사항) 경기기록 점수 방식(세트제/경기제) 전환 ──
+function _calcScoreFromSets(sets, scoreMode){
+  let sa=0, sb=0;
+  (sets||[]).forEach(s=>{
+    if(!s) return;
+    const games = Array.isArray(s.games) ? s.games : [];
+    const scoreA = (s.scoreA!=null) ? Number(s.scoreA) : games.filter(g=>g && g.winner==='A').length;
+    const scoreB = (s.scoreB!=null) ? Number(s.scoreB) : games.filter(g=>g && g.winner==='B').length;
+    let w = s.winner;
+    if(!w){
+      w = scoreA>scoreB ? 'A' : scoreB>scoreA ? 'B' : '';
+    }
+    if(scoreMode==='set'){
+      if(w==='A') sa += 1;
+      else if(w==='B') sb += 1;
+    }else{
+      sa += (isNaN(scoreA)?0:scoreA);
+      sb += (isNaN(scoreB)?0:scoreB);
+    }
+  });
+  return {sa, sb};
+}
+function setRecScoreMode(mode, idx, scoreMode){
+  try{
+    const mkey = (mode==='mini'&&typeof histSub!=='undefined'&&histSub==='civil') ? 'civil' : mode;
+    const arr = mkey==='mini'?miniM:mkey==='civil'?miniM:mkey==='univm'?univM:mkey==='ck'?ckM:mkey==='pro'?proM:mkey==='tt'?ttM:mkey==='comp'?comps:null;
+    if(!arr || !arr[idx]) return;
+    const m = arr[idx];
+    if(!m.sets || !Array.isArray(m.sets) || !m.sets.length) return alert('세트 정보가 없어 전환할 수 없습니다.');
+    const sm = (scoreMode==='set') ? 'set' : 'game';
+    const sc = _calcScoreFromSets(m.sets, sm);
+    m.sa = sc.sa;
+    m.sb = sc.sb;
+    m.scoreMode = sm;
+    save();
+    render();
+  }catch(e){
+    console.error('[setRecScoreMode] fail', e);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3631,6 +3684,11 @@ function bulkDeleteRecs(bulkKey){
       }
       arr.splice(idx,1);
       revertMatchRecord(matchObj);
+      // (버그픽스) 티어대회(tt)는 tourneys(조별/브라켓)에도 같은 _id 기록이 남아 있으면
+      // 다음 렌더/마이그레이션에서 다시 ttM으로 복구되어 "삭제가 안 된 것처럼" 보일 수 있음.
+      if(bulkKey==='tt' && matchObj._id) {
+        try{ _removeTierTourneyMatchById(matchObj._id); }catch(e){}
+      }
     }
   });
   // 안전 처리: revertMatchRecord가 놓친 history 항목 직접 정리
@@ -3650,6 +3708,42 @@ function bulkDeleteRecs(bulkKey){
   _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
+}
+
+// (버그픽스) 티어대회 삭제 시 tourneys 내부(조별/브라켓)에 남은 같은 _id 기록도 같이 제거
+function _removeTierTourneyMatchById(matchId){
+  const id = String(matchId||'').trim();
+  if(!id) return 0;
+  let removed = 0;
+  try{
+    (tourneys||[]).filter(t=>t && t.type==='tier').forEach(tn=>{
+      // 조별리그 matches
+      (tn.groups||[]).forEach(grp=>{
+        if(!grp || !Array.isArray(grp.matches)) return;
+        const before = grp.matches.length;
+        grp.matches = grp.matches.filter(m=>!(m && String(m._id||'')===id));
+        removed += (before - grp.matches.length);
+      });
+      // 브라켓 matchDetails/manualMatches
+      const br = tn.bracket || {};
+      if(br.matchDetails){
+        Object.keys(br.matchDetails).forEach(k=>{
+          const m = br.matchDetails[k];
+          if(m && String(m._id||'')===id){
+            delete br.matchDetails[k];
+            removed++;
+            try{ if(br.winners) delete br.winners[k]; }catch(e){}
+          }
+        });
+      }
+      if(Array.isArray(br.manualMatches)){
+        const before = br.manualMatches.length;
+        br.manualMatches = br.manualMatches.filter(m=>!(m && String(m._id||'')===id));
+        removed += (before - br.manualMatches.length);
+      }
+    });
+  }catch(e){}
+  return removed;
 }
 // ─────────────────────────────────────────────────────────────
 
@@ -3681,7 +3775,12 @@ function delRec(mode,i){
   else if(mode==='ck')   { matchObj=ckM[i];    ckM.splice(i,1);   }
   else if(mode==='pro')  { matchObj=proM[i];   proM.splice(i,1);  }
   else if(mode==='tt')   { matchObj=ttM[i];    ttM.splice(i,1);   }
-  if(matchObj) revertMatchRecord(matchObj);
+  if(matchObj) {
+    revertMatchRecord(matchObj);
+    if(mode==='tt' && matchObj._id) {
+      try{ _removeTierTourneyMatchById(matchObj._id); }catch(e){}
+    }
+  }
   if(typeof fixPoints==='function')fixPoints();
   save();render();
 }

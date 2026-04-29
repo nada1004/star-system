@@ -1616,12 +1616,15 @@ function pastePreview() {
             const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
             // 5번째 열: 저장 경로 타입 (mini·gj·ind 등)
             const _lineType = _parseTsvType(_tc[4]);
+            // 6번째 이후: 메모(외부탭 등에서 넘어오는 비고)
+            const _memo = (_tc.slice(5).join(' ') || '').trim();
             results.push({ winName, loseName, map: _tMap, _rawMapStr: _tc[2]||'', setNum: currentSet,
               wPlayer: _wM.player, lPlayer: _lM.player,
               wCandidates: _wM.candidates, lCandidates: _lM.candidates,
               wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
               lineNum: idx+1, rawLine: trimmed, _lineDate: _id,
-              ...(_lineType ? { _lineType } : {}) });
+              ...(_lineType ? { _lineType } : {}),
+              ...(_memo ? { _lineMemo:_memo } : {}) });
             return;
           }
 
@@ -2750,6 +2753,7 @@ function pasteApply() {
   if (!window._pasteResults) return;
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
   const _fromHistExt = !!window._pasteFromHistExt;
+  const _fromTierBkt = !!window._pasteFromTierBkt;
 
   // 대회 경기 세트 적용 모드 분기
   if (window._grpPasteMode) {
@@ -2762,7 +2766,22 @@ function pasteApply() {
       window._pasteResults = null;
       window._pasteErrors  = null;
       const compWrap = document.getElementById('paste-comp-wrap');
-      if(compWrap) { compWrap.style.display='none'; compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">'; }
+      // (버그픽스) 토너먼트/세트 입력(compWrap)을 닫을 때 HTML을 원상복구해야 함
+      // - 기존 코드는 innerHTML을 단일 input으로 덮어써서 "티어대회 구분(일반/조별/토너)" UI가 사라짐
+      // - 그 결과 티어대회 일반 입력도 localStorage 값(이전 토너 선택)으로 저장되어 토너 탭으로 가는 문제가 발생
+      if(compWrap) {
+        compWrap.style.display='none';
+        compWrap.innerHTML=
+          '<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">' +
+          '<div id="paste-tt-stage-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">' +
+            '<label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">구분</label>' +
+            '<select id="paste-tt-stage" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">' +
+              '<option value="general">📝 일반</option>' +
+              '<option value="league">📅 조별리그</option>' +
+              '<option value="bkt">🏆 토너먼트</option>' +
+            '</select>' +
+          '</div>';
+      }
       const hintEl = document.getElementById('paste-mode-hint');
       if(hintEl) hintEl.textContent='';
       const applyBtn = document.getElementById('paste-apply-btn');
@@ -2924,6 +2943,17 @@ function pasteApply() {
     setMap[sn].push(r);
   });
 
+  // (요청사항) 외부 자동인식 메모를 기록에 저장
+  const _joinMemos = (rows)=>{
+    const uniq = [];
+    (rows||[]).forEach(r=>{
+      const m = String(r?._lineMemo||'').trim();
+      if(m && !uniq.includes(m)) uniq.push(m);
+    });
+    return uniq.join(' / ');
+  };
+  const _matchMemo = _joinMemos(savable);
+
   const setsSnap = Object.keys(setMap).sort((a,b) => a-b).map(sn => {
     const rows = setMap[sn];
     const games = rows.map(r => {
@@ -2933,6 +2963,7 @@ function pasteApply() {
         playerB: ab.playerB?.name||'',
         map: r.map && r.map !== '-' ? r.map : '',
         winner: ab.winner,
+        ...(r._lineMemo ? { memo: r._lineMemo } : {}),
         ...(r._isTeam ? { _isTeam: true, teamA: r._teamLeft || null, teamB: r._teamRight || null } : {})
       };
     });
@@ -3013,8 +3044,9 @@ function pasteApply() {
         const sid=genId();
         const _isCivil = grp.some(r=>r._miniType==='civil');
         grp.forEach(r=>{r._id=genId();if(!r._isTeam)applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','',_isCivil?'시빌워':'미니대전');});
-        const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
-        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini'});
+        const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const mm=_joinMemos(grp);
+        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini',...(mm?{memo:mm}:{})});
       });
     }
     save();
@@ -3046,7 +3078,7 @@ function pasteApply() {
     let _a = finalTeamA || 'A팀';
     let _b = finalTeamB || (_mType === 'civil' ? 'B팀' : '?');
     if (_mType === 'civil' && (!_b || _a === _b)) { _a = 'A팀'; _b = 'B팀'; }
-    miniM.unshift({ _id: matchId, d: dateVal, a: _a, b: _b, sa, sb, sets: setsSnap, type: _mType });
+    miniM.unshift({ _id: matchId, d: dateVal, a: _a, b: _b, sa, sb, sets: setsSnap, type: _mType, ...(_matchMemo?{memo:_matchMemo}:{}) });
     // (추가) 팀전 게임은 개인 ELO/승패에도 반영
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
@@ -3057,7 +3089,7 @@ function pasteApply() {
       });});
     }
   } else if (mode === 'univm') {
-    univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap });
+    univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap, ...(_matchMemo?{memo:_matchMemo}:{}) });
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3077,7 +3109,7 @@ function pasteApply() {
       if(!mB.find(x=>x.name===r.lPlayer.name)) mB.push({name:r.lPlayer.name,univ:r.lPlayer.univ||'',race:r.lPlayer.race||'',tier:r.lPlayer.tier||''});
     });
     proM.unshift({_id:matchId,d:dateVal,sa:proSA,sb:proSB,
-      teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{}});
+      teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3105,6 +3137,7 @@ function pasteApply() {
           playerB:ab.playerB?.name||'',
           map:r.map && r.map !== '-' ? r.map : '',
           winner:ab.winner,
+          ...(r._lineMemo ? { memo: r._lineMemo } : {}),
           ...(r._isTeam ? { _isTeam:true, teamA:r._teamLeft||null, teamB:r._teamRight||null } : {})
         };
       });
@@ -3121,7 +3154,7 @@ function pasteApply() {
     });
     const ckSA=ckSetsSnap.filter(s=>s.winner==='A').length;
     const ckSB=ckSetsSnap.filter(s=>s.winner==='B').length;
-    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{}});
+    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (ckSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3133,7 +3166,7 @@ function pasteApply() {
   } else if (mode === 'comp') {
     if (compName && !compNames.includes(compName)) compNames.push(compName);
     curComp = compName;
-    comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
+    comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap, ...(_matchMemo?{memo:_matchMemo}:{}) });
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3205,6 +3238,7 @@ function pasteApply() {
           playerB:ab.playerB?.name||'',
           map:r.map && r.map !== '-' ? r.map : '',
           winner:ab.winner,
+          ...(r._lineMemo ? { memo: r._lineMemo } : {}),
           ...(r._isTeam ? { _isTeam:true, teamA:r._teamLeft||null, teamB:r._teamRight||null } : {})
         };
       });
@@ -3219,21 +3253,226 @@ function pasteApply() {
       if(ab.playerB&&!mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
     const ttSA=ttSetsSnap.filter(s=>s.winner==='A').length, ttSB=ttSetsSnap.filter(s=>s.winner==='B').length;
-    const _ttSaveComp=compName||(typeof _ttCurComp!=='undefined'?_ttCurComp:'')||'';
+    // (요청사항) 외부 자동인식 → 티어대회 입력 시, 대회명이 비어도 자동 생성되게
+    let _ttSaveComp=compName||(typeof _ttCurComp!=='undefined'?_ttCurComp:'')||'';
+    if(!_ttSaveComp){
+      _ttSaveComp = `티어대회 ${dateVal||new Date().toISOString().slice(0,10)}`;
+    }
+    try{
+      if(typeof _ttCurComp!=='undefined') _ttCurComp = _ttSaveComp;
+      localStorage.setItem('su_ttcur', _ttSaveComp);
+    }catch(e){}
+
+    // (요청사항) 티어대회 입력하면 tourneys(티어대회)도 자동 생성
+    let _ttTn = null;
+    try{
+      if(typeof tourneys!=='undefined' && Array.isArray(tourneys)){
+        _ttTn = tourneys.find(t=>t && t.type==='tier' && String(t.name||'').trim()===String(_ttSaveComp||'').trim()) || null;
+        if(!_ttTn){
+          const id = (typeof genId==='function') ? genId() : (Date.now()+'_'+Math.random().toString(16).slice(2));
+          _ttTn = {id, name:String(_ttSaveComp||'').trim(), type:'tier', groups:[], createdAt:new Date().toISOString(), bracket:{slots:{},winners:{},champ:''}};
+          tourneys.unshift(_ttTn);
+        }
+      }
+    }catch(e){}
     // (요청사항) 티어대회: 일반/조별리그/토너먼트 구분 저장
+    // - "대전기록-외부 자동인식"에서만 선택 가능
+    // - 티어대회 토너먼트(🗂️) 탭에서 자동인식 버튼으로 열면 'bkt' 강제
+    // - 그 외(티어대회탭 일반 자동인식)는 항상 'general'
     let _ttStage = 'general';
     try{
-      _ttStage = (document.getElementById('paste-tt-stage')?.value || localStorage.getItem('su_tt_paste_stage') || 'general') + '';
-    }catch(e){}
-    if(!['general','league','bkt','grp'].includes(_ttStage)) _ttStage='general';
-    ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:_ttSaveComp,stage:_ttStage});
-    if(typeof applyTeamGameResult==='function'){
-      (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
-        if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          const gid = `${matchId}_s${si}_g${gi}`;
-          applyTeamGameResult(g.teamA, g.teamB, g.winner||'', dateVal, g.map||'-', gid, '티어대회');
+      if(_fromHistExt){
+        _ttStage = (document.getElementById('paste-tt-stage')?.value || localStorage.getItem('su_tt_paste_stage') || 'general') + '';
+      }else if(_fromTierBkt){
+        _ttStage = 'bkt';
+      }else{
+        _ttStage = 'general';
+      }
+    }catch(e){ _ttStage='general'; }
+    if(_ttStage==='grp') _ttStage='league';
+    if(!['general','league','bkt'].includes(_ttStage)) _ttStage='general';
+
+    // (요청사항) "토너먼트" 선택 + 외부 자동인식 데이터는 여러 매치를 한 번에 붙여넣는 경우가 많아서
+    // 단일 경기(2명)일 때 a/b(표시용)를 채움 — 기록탭에서 "누가 vs 누가"가 보이도록
+    const _uniqNames = (()=>{
+      const s=new Set();
+      (savable||[]).forEach(r=>{ if(r?.wPlayer?.name) s.add(r.wPlayer.name); if(r?.lPlayer?.name) s.add(r.lPlayer.name); });
+      return Array.from(s);
+    })();
+    const _ttA = _uniqNames.length===2 ? _uniqNames[0] : 'A팀';
+    const _ttB = _uniqNames.length===2 ? _uniqNames[1] : 'B팀';
+
+    // - 서로 다른 선수 매치가 섞였을 때 1개 경기로 뭉쳐 저장되는 문제를 방지한다.
+    // - 서로 다른 선수 매치가 섞였을 때 1개 경기로 뭉쳐 저장되는 문제를 방지한다.
+    // - 우선: (선수A,선수B) 페어별로 그룹핑하여 여러 경기로 저장
+    // - 추가: 동일 이름 페어가 현재 티어대회(tourneys) 브라켓 슬롯에 있으면 해당 matchDetails에 기록되게 시도
+    const _normPairKey = (a,b)=>{
+      const x=String(a||'').trim(), y=String(b||'').trim();
+      return [x,y].sort((p,q)=>p.localeCompare(q,'ko')).join('||');
+    };
+    const _normNameForKey = (s)=>{
+      let t = String(s||'').trim();
+      if(!t) return '';
+      // 이모지/기호 제거
+      t = t.replace(/[✅❌⭕⬜🆚🌐⭐★■□●○◆◇]/g,'').trim();
+      // 종족/설명 괄호 제거: "이름 (P)" / "이름(프로토스)" 등
+      t = t.replace(/\s*\((?:[PTZN]|테란|저그|프로토스|토스|Terran|Zerg|Protoss)\)\s*$/i,'').trim();
+      // 다중 공백 정리
+      t = t.replace(/\s+/g,' ').trim();
+      return t;
+    };
+    const _ttNameA = (r)=> _normNameForKey(r?.wPlayer?.name || r?.winName || '');
+    const _ttNameB = (r)=> _normNameForKey(r?.lPlayer?.name || r?.loseName || '');
+
+    const _ttGroups = {};
+    savable.forEach(r=>{
+      const aN=_ttNameA(r); const bN=_ttNameB(r);
+      const key=_normPairKey(aN,bN);
+      if(!_ttGroups[key]) _ttGroups[key]=[];
+      _ttGroups[key].push(r);
+    });
+    const _pairKeys = Object.keys(_ttGroups);
+
+    // (요청사항) 외부 자동인식 "티어대회 토너먼트"에서 대진표(브라켓) 자동 생성/반영 기능 삭제
+    // - 토너먼트 기록(ttM.stage='bkt')만 저장하고, tourneys.bracket에는 손대지 않는다.
+    const _disableAutoBracket = (_fromHistExt && _ttStage === 'bkt');
+
+    // 브라켓 매칭(토너먼트 탭 반영)은 비활성화
+    const _tn = (!_disableAutoBracket && _ttStage==='bkt') ? (_ttTn || null) : null;
+    const _br = (_tn && typeof getBracket==='function') ? getBracket(_tn) : null;
+    const _getSlotName = (rnd, mi, side)=>{
+      if(!_br) return '';
+      const k = `${rnd}-${mi}-${side}`;
+      if(Object.prototype.hasOwnProperty.call(_br.slots||{}, k)) return String(_br.slots[k]||'');
+      if(rnd<=0) return '';
+      const pk = `${rnd-1}-${mi*2 + (side==='a'?0:1)}`;
+      return String((_br.winners||{})[pk]||'');
+    };
+    // 라운드/매치 크기 계산(브라켓 overrideSize 사용)
+    const _totalRounds = (()=>{
+      if(!_tn) return 0;
+      const ov = parseInt(_tn.bracketOverrideSize||'0',10)||0;
+      const numTeams = ov>1 ? ov : 8; // fallback
+      let r=0, n=numTeams;
+      while(n>1){ n=Math.ceil(n/2); r++; }
+      return r||1;
+    })();
+    const _findBktPosByPair = (p1,p2)=>{
+      if(!_tn || !_br) return null;
+      const a=String(p1||'').trim(), b=String(p2||'').trim();
+      if(!a || !b) return null;
+      for(let rnd=0; rnd<_totalRounds; rnd++){
+        const ov = parseInt(_tn.bracketOverrideSize||'0',10)||0;
+        const numTeams = ov>1 ? ov : 8;
+        const matchCount = Math.ceil(numTeams/Math.pow(2,rnd+1));
+        for(let mi=0; mi<matchCount; mi++){
+          const ta=_getSlotName(rnd,mi,'a');
+          const tb=_getSlotName(rnd,mi,'b');
+          if(!ta || !tb) continue;
+          if((ta===a && tb===b) || (ta===b && tb===a)) return {rnd,mi,ta,tb};
         }
-      });});
+      }
+      return null;
+    };
+
+    // (삭제됨) 외부 자동인식 토너먼트 대진표 자동 생성/반영 + 브라켓 매칭 로직
+    const _applyAsBktMatch = ()=>false;
+
+    // 날짜별 묶음(요청): 서로 다른 날짜 라인이 섞이면 날짜별로 분리 저장
+    // - 내부 입력에서도 라인에 날짜가 들어올 수 있어(_lineDate) 날짜 기준으로 분리
+    const _dateOf = (r)=> String(r?._lineDate || dateVal || '').trim();
+    const _dateGroups = {};
+    (savable||[]).forEach(r=>{
+      const d=_dateOf(r) || (dateVal||'');
+      if(!_dateGroups[d]) _dateGroups[d]=[];
+      _dateGroups[d].push(r);
+    });
+    const _dates = Object.keys(_dateGroups);
+
+    // ─────────────────────────────────────────────
+    // 중요: 티어대회 탭(내부)에서 붙여넣기/자동인식은
+    // "여러 줄 = 1경기(팀 매치) 내 여러 게임/세트"인 경우가 대부분이라
+    // 외부 자동인식처럼 (페어/날짜 기준)으로 쪼개면 안 된다.
+    // → 외부에서 넘어온 경우(_fromHistExt)만 분리/대진표 로직을 적용한다.
+    // ─────────────────────────────────────────────
+    if(!_fromHistExt){
+      const _mm = window._pasteMatchMode || 'game';
+      const _isMultiSet = (ttSetsSnap||[]).length > 1;
+      const _sa = (_mm==='set' || _isMultiSet) ? (ttSetsSnap||[]).filter(s=>s.winner==='A').length
+        : (ttSetsSnap||[]).reduce((acc,s)=>acc+(s.scoreA||0),0);
+      const _sb = (_mm==='set' || _isMultiSet) ? (ttSetsSnap||[]).filter(s=>s.winner==='B').length
+        : (ttSetsSnap||[]).reduce((acc,s)=>acc+(s.scoreB||0),0);
+      ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,
+        sa:_sa,sb:_sb,teamALabel:'A팀',teamBLabel:'B팀',
+        teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:'general',...(_matchMemo?{memo:_matchMemo}:{})});
+      // 팀전 형태(_isTeam)가 있을 때만 반영
+      if(typeof applyTeamGameResult==='function'){
+        (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
+          if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+            const gid = `${matchId}_s${si}_g${gi}`;
+            applyTeamGameResult(g.teamA, g.teamB, g.winner||'', dateVal, g.map||'-', gid, '티어대회');
+          }
+        });});
+      }
+    }
+    else if(_ttStage==='bkt' && _pairKeys.length>1){
+      // 여러 페어면 각각 기록 (대진표/브라켓 반영은 하지 않음)
+      _pairKeys.forEach((k,idx)=>{
+        const rows=_ttGroups[k]||[];
+        const names=k.split('||'); const p1=names[0]||''; const p2=names[1]||'';
+        // ttM에 개별 경기로 저장(최소한 "1개로 뭉침" 방지)
+        const mid = genId();
+        const mm = _joinMemos(rows);
+        // 1세트로 저장
+        const set = {games:[]};
+        rows.forEach(r=>{
+          const wn=r.wPlayer?.name||''; const ln=r.lPlayer?.name||'';
+          if(!wn || !ln) return;
+          // p1을 A로 고정
+          const winner = (wn===p1)?'A':(wn===p2)?'B':'A';
+          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||'', ...(r._lineMemo?{memo:r._lineMemo}:{})});
+        });
+        let sA=0,sB=0; (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+        set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
+        const rec={_id:mid,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:p1,b:p2,teamALabel:p1,teamBLabel:p2,sets:[set],sa:sA,sb:sB,stage:'bkt', ...(mm?{memo:mm}:{})};
+        ttM.unshift(rec);
+      });
+    } else if (_pairKeys.length>1) {
+      // (요청 반영) 일반탭은 "날짜별 묶음"을 우선한다.
+      // - 같은 날짜 안에서는 매치가 여러 개라도 1개 기록으로 합치되,
+      //   '누가 vs 누가' 표시는 비우고 sets.games에 라인 단위로 누적한다.
+      // - 날짜가 여러 개면 날짜별로 여러 기록 생성
+      _dates.forEach(d=>{
+        const rows = _dateGroups[d] || [];
+        const mid = genId();
+        const mm = _joinMemos(rows);
+        const set = {games:[]};
+        rows.forEach(r=>{
+          const p1=_ttNameA(r), p2=_ttNameB(r);
+          if(!p1 || !p2) return;
+          // winner: winName 기준으로 A/B 판정
+          const win = _normNameForKey(r?.winName || r?.wPlayer?.name || '');
+          const winner = (win===p1) ? 'A' : (win===p2 ? 'B' : 'A');
+          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||'', ...(r._lineMemo?{memo:r._lineMemo}:{})});
+        });
+        let sA=0,sB=0; (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
+        set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
+        const rec={_id:mid,d:d||dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:'',b:'',teamALabel:'',teamBLabel:'',sets:[set],sa:sA,sb:sB,stage:_ttStage, ...(mm?{memo:mm}:{})};
+        ttM.unshift(rec);
+      });
+    } else {
+      // 단일 페어: 기존 방식 유지(한 경기 저장)
+      ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,
+        a:_ttA,b:_ttB,teamALabel:_ttA,teamBLabel:_ttB,
+        sa:ttSA,sb:ttSB,teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:_ttStage,...(_matchMemo?{memo:_matchMemo}:{})});
+      if(typeof applyTeamGameResult==='function'){
+        (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
+          if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
+            const gid = `${matchId}_s${si}_g${gi}`;
+            applyTeamGameResult(g.teamA, g.teamB, g.winner||'', dateVal, g.map||'-', gid, '티어대회');
+          }
+        });});
+      }
     }
   }
   // individual: 개인 전적만 (이미 applyGameResult 처리됨)
@@ -3258,6 +3497,7 @@ function pasteApply() {
     }
   }
   try{ window._pasteFromHistExt = false; }catch(e){}
+  try{ window._pasteFromTierBkt = false; }catch(e){}
 
   // 성공 토스트
   const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';
@@ -3813,7 +4053,12 @@ function openTTPasteModal() {
   if (sel) { sel.value = 'mini'; sel.style.display = 'none'; }
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
-  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span> <span style="color:var(--gray-l);font-weight:600">(일반/조별리그/토너먼트 선택 가능)</span>';
+  // (요청사항) "구분(일반/조별/토너)" 선택은 대전기록-외부 자동인식에서만 노출
+  // - 티어대회 탭 내부 자동인식에서는 불필요한 선택 UI가 떠서 혼란을 유발
+  const _fromHistExt = !!window._pasteFromHistExt;
+  if (hint) hint.innerHTML = _fromHistExt
+    ? '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span> <span style="color:var(--gray-l);font-weight:600">(외부 자동인식: 일반/조별/토너 선택)</span>'
+    : '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) {
     const inp = compWrap.querySelector('#paste-comp-name');
@@ -3824,11 +4069,13 @@ function openTTPasteModal() {
   try{
     const stWrap = document.getElementById('paste-tt-stage-wrap');
     const stSel = document.getElementById('paste-tt-stage');
-    if(stWrap) stWrap.style.display = 'flex';
-    const saved = localStorage.getItem('su_tt_paste_stage') || 'general';
+    if(stWrap) stWrap.style.display = _fromHistExt ? 'flex' : 'none';
+    // 외부 자동인식일 때만 기억값을 사용
+    const saved = _fromHistExt ? (localStorage.getItem('su_tt_paste_stage') || 'general') : 'general';
     if(stSel){
       stSel.value = saved;
       stSel.onchange = function(){
+        if(!_fromHistExt) return;
         try{ localStorage.setItem('su_tt_paste_stage', this.value); }catch(e){}
       };
     }

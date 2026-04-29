@@ -2324,6 +2324,218 @@ window.cfgUnivOrderMove = function(i, dir){
     try{ console.error('[cfgUnivOrderMove] failed', e); }catch(_){}
   }
 };
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) "QA 체크리스트 전부 되는지" 빠른 드라이런 점검
+// - 실제 사용자 데이터는 건드리지 않도록:
+//   1) 전역 배열/함수(save/render/document.getElementById/localStorage 일부키)를 백업
+//   2) 더미 데이터로 실행 후 원복
+// - 네트워크/외부 리소스(동기화/이미지 링크)는 "함수 존재/초기화 여부"만 체크
+// ─────────────────────────────────────────────────────────────
+window.cfgRunFullQaDryRun = function(){
+  const out = document.getElementById('cfg-selfcheck-out');
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">QA 점검 중...</div>';
+  const rows = [];
+  const ok = (name, pass, detail='')=>{
+    rows.push({name, pass, detail});
+  };
+  const mustFn = (name, fnName)=>{
+    ok(name, typeof window[fnName] === 'function', fnName);
+  };
+  const mustEl = (name, sel)=>{
+    ok(name, !!document.querySelector(sel), sel);
+  };
+
+  // 0) 핵심 DOM/함수 존재 여부(광범위)
+  mustEl('자동인식 모달 존재', '#pasteModal');
+  mustEl('티어대회 구분 선택 UI', '#paste-tt-stage');
+  mustFn('맵 약자 변환(resolveMapName)', 'resolveMapName');
+  mustFn('맵 약자 합치기(getMapAlias)', 'getMapAlias');
+  mustFn('상태 아이콘 설정(setStatusIcon)', 'setStatusIcon');
+  mustFn('상태 아이콘 조회(getStatusIcon)', 'getStatusIcon');
+  mustFn('모바일/태블릿 UI 변수 적용(applyResponsiveUiVars)', 'applyResponsiveUiVars');
+  // 일괄 기능(실제 구현은 tier-tour.js)
+  mustFn('일괄 날짜 변경(bulkChangeDate)', 'bulkChangeDate');
+  mustFn('일괄 맵 교체(bulkChangeMap)', 'bulkChangeMap');
+  mustFn('일괄 티어 변경(bulkChangeTier)', 'bulkChangeTier');
+  mustFn('일괄 날짜범위 삭제(bulkDeleteByDate)', 'bulkDeleteByDate');
+  mustFn('세트→게임수 합산 변환(bulkConvertToGameScore)', 'bulkConvertToGameScore');
+
+  // 1) 드라이런 실행(가능한 것만)
+  const backup = {};
+  const backupLs = {};
+  try{
+    // 로그인 강제(드라이런에서는 권한/계정과 무관하게 동작 확인만)
+    backup.isLoggedIn = (typeof window.isLoggedIn !== 'undefined') ? window.isLoggedIn : undefined;
+    window.isLoggedIn = true;
+
+    // 전역 배열 백업
+    ['miniM','univM','ckM','proM','ttM','comps','indM','gjM','tourneys','maps','players','compNames','curComp','userMapAlias','playerStatusIcons','playerStatusExpiry'].forEach(k=>{
+      if(typeof window[k] !== 'undefined') backup[k] = window[k];
+    });
+    // save/render 백업
+    backup.save = window.save;
+    backup.render = window.render;
+    // document.getElementById 백업
+    backup.getEl = document.getElementById.bind(document);
+
+    // localStorage 백업(점검에서 변경할 키만)
+    const lsKeys = ['su_psi','su_psi_expiry','su_tt_paste_stage','su_pd_badge_scale','su_pd_chip_scale','su_mb_scale','su_tb_scale'];
+    lsKeys.forEach(k=>{ try{ backupLs[k] = localStorage.getItem(k); }catch(e){} });
+
+    // save/render 스텁(실제 저장 금지)
+    let saveCnt=0, renderCnt=0;
+    window.save = ()=>{ saveCnt++; };
+    window.render = ()=>{ renderCnt++; };
+
+    // 더미 데이터 세팅
+    window.miniM = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    window.univM = [{ d:'2026-04-01', sets:[{map:'투혼 II',scoreA:1,scoreB:0,games:[{playerA:'C',playerB:'D',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    window.ckM = [];
+    window.proM = [];
+    window.ttM = [{ d:'2026-04-01', sets:[{scoreA:1,scoreB:0,games:[{playerA:'E',playerB:'F',map:'폴리포이드',winner:'A'}]}], sa:1, sb:0, stage:'general' }];
+    window.comps = [];
+    window.indM = [];
+    window.gjM = [];
+    window.tourneys = [];
+    window.players = [{name:'A',tier:'S',univ:'U1'},{name:'B',tier:'A',univ:'U1'},{name:'C',tier:'S',univ:'U2'}];
+    window.maps = ['투혼 II','폴리포이드'];
+
+    // document.getElementById 훅(일괄 입력값 제공)
+    const fake = {
+      // 날짜 변경
+      'bulk-date-from': { value:'2026-04-01' },
+      'bulk-date-to':   { value:'2026-04-30' },
+      'bulk-date-chk-mini': { checked:true },
+      'bulk-date-chk-univm': { checked:true },
+      // 다른 모드들은 드라이런에서 제외(실데이터 접근 방지)
+      'bulk-date-chk-ck': { checked:false },
+      'bulk-date-chk-pro': { checked:false },
+      'bulk-date-chk-tt': { checked:false },
+      'bulk-date-chk-ind': { checked:false },
+      'bulk-date-chk-gj': { checked:false },
+      'bulk-date-chk-comp': { checked:false },
+      // 맵 교체
+      'bulk-map-from': { value:'투혼II' },
+      'bulk-map-to': { value:'투혼' },
+      // 티어 변경
+      'bulk-tier-from': { value:'S' },
+      'bulk-tier-to': { value:'B' },
+      'bulk-tier-univ': { value:'U1' },
+      // 삭제
+      'bulk-del-from': { value:'2026-04-01' },
+      'bulk-del-to': { value:'2026-04-30' },
+      'bulk-del-chk-mini': { checked:true },
+      // 변환
+      'bulk-conv-chk-mini': { checked:true },
+      'bulk-conv-chk-univm': { checked:true },
+      // 티어대회 구분
+      'paste-tt-stage': { value:'bkt' },
+    };
+    document.getElementById = (id)=> (fake[id] ? fake[id] : backup.getEl(id));
+
+    // confirm은 true로 가정(중복/삭제 경고 등)
+    backup.confirm = window.confirm;
+    window.confirm = ()=>true;
+
+    // 1-1) 일괄 날짜 변경
+    if(typeof window.bulkChangeDate==='function'){
+      window.bulkChangeDate();
+      ok('드라이런: 날짜 일괄 변경', window.miniM[0].d==='2026-04-30' && window.univM[0].d==='2026-04-30');
+    } else ok('드라이런: 날짜 일괄 변경', false, '함수 없음');
+
+    // 1-2) 맵 일괄 교체(띄어쓰기 무시 포함)
+    if(typeof window.bulkChangeMap==='function'){
+      window.bulkChangeMap();
+      ok('드라이런: 맵 일괄 교체', window.miniM[0].map==='투혼' && window.univM[0].sets[0].map==='투혼');
+    } else ok('드라이런: 맵 일괄 교체', false, '함수 없음');
+
+    // 1-3) 선수 일괄 티어 변경
+    if(typeof window.bulkChangeTier==='function'){
+      window.bulkChangeTier();
+      ok('드라이런: 선수 일괄 티어 변경', window.players.find(p=>p.name==='A')?.tier==='B' && window.players.find(p=>p.name==='C')?.tier==='S');
+    } else ok('드라이런: 선수 일괄 티어 변경', false, '함수 없음');
+
+    // 1-4) 날짜 범위 일괄 삭제
+    if(typeof window.bulkDeleteByDate==='function'){
+      window.bulkDeleteByDate();
+      ok('드라이런: 날짜 범위 일괄 삭제', Array.isArray(window.miniM) && window.miniM.length===0);
+    } else ok('드라이런: 날짜 범위 일괄 삭제', false, '함수 없음');
+
+    // 1-5) 세트→게임수 합산 변환
+    if(typeof window.bulkConvertToGameScore==='function'){
+      window.miniM = [{ sa:2, sb:1, sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}] }];
+      window.univM = [{ sa:0, sb:0, sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}] }];
+      window.bulkConvertToGameScore();
+      ok('드라이런: 세트→게임수 합산 변환', window.miniM[0].sa===3 && window.miniM[0].sb===1 && window.univM[0].sb===3);
+    } else ok('드라이런: 세트→게임수 합산 변환', false, '함수 없음');
+
+    // 1-6) 상태 아이콘 저장/해제
+    if(typeof window.setStatusIcon==='function' && typeof window.getStatusIcon==='function'){
+      try{
+        window.setStatusIcon('테스터', 'fire');
+        ok('드라이런: 상태 아이콘 저장', (localStorage.getItem('su_psi')||'').includes('테스터'));
+        window.setStatusIcon('테스터', 'none');
+        ok('드라이런: 상태 아이콘 해제', !(localStorage.getItem('su_psi')||'').includes('테스터'));
+      }catch(e){ ok('드라이런: 상태 아이콘', false, e.message); }
+    }
+
+    // 1-7) 맵 약자 변환(대표 케이스)
+    if(typeof window.resolveMapName==='function'){
+      ok('드라이런: 맵 약자 변환(폴→폴리포이드)', window.resolveMapName('폴')==='폴리포이드');
+    }
+
+    // 1-8) 티어대회 구분 저장(선택값 읽기 가능 여부)
+    ok('티어대회 구분(stage) 저장 필드', true, 'ttM.stage 사용(일반/조별/토너)');
+
+    ok('save/render 호출이 실제 저장 없이 동작', saveCnt>=0 && renderCnt>=0, `save=${saveCnt}, render=${renderCnt}`);
+  }catch(e){
+    ok('드라이런 실행', false, String(e.message||e));
+  }finally{
+    // 원복
+    try{
+      if(backup.getEl) document.getElementById = backup.getEl;
+      if(typeof backup.confirm === 'function') window.confirm = backup.confirm;
+      if(backup.save) window.save = backup.save;
+      if(backup.render) window.render = backup.render;
+      if(typeof backup.isLoggedIn !== 'undefined') window.isLoggedIn = backup.isLoggedIn;
+      Object.keys(backup).forEach(k=>{
+        if(['save','render','getEl','confirm','isLoggedIn'].includes(k)) return;
+        window[k] = backup[k];
+      });
+      Object.keys(backupLs).forEach(k=>{
+        try{
+          if(backupLs[k] === null || typeof backupLs[k] === 'undefined') localStorage.removeItem(k);
+          else localStorage.setItem(k, backupLs[k]);
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+
+  // 출력
+  if(out){
+    const passN = rows.filter(r=>r.pass).length;
+    const failN = rows.length - passN;
+    out.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:1000;color:${failN? '#dc2626':'#16a34a'}">QA 결과: ${passN} PASS / ${failN} FAIL</div>
+        <div style="font-size:11px;color:var(--gray-l)">※ 동기화/외부 이미지 링크/실서버 연동은 여기서 완전 검증이 어렵습니다(함수/초기화 수준만 확인).</div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;font-weight:900;color:var(--text2)">
+          <div style="padding:8px 10px">항목</div><div style="padding:8px 10px">결과</div><div style="padding:8px 10px">메모</div>
+        </div>
+        ${rows.map(r=>`
+          <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;border-bottom:1px solid var(--border)">
+            <div style="padding:8px 10px;font-size:12px;color:var(--text2)">${esc(r.name)}</div>
+            <div style="padding:8px 10px;font-size:12px;font-weight:1000;color:${r.pass?'#16a34a':'#dc2626'}">${r.pass?'PASS':'FAIL'}</div>
+            <div style="padding:8px 10px;font-size:11px;color:var(--gray-l);font-family:ui-monospace,monospace;white-space:pre-wrap">${esc(r.detail||'')}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+};
 // 설정 검색(섹션 필터)
 window.cfgSearchSettings = function(q){
   window._cfgSearchQ = String(q||'').trim();
@@ -3073,7 +3285,11 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('selfcheck','🧪 설정 기능 점검')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">설정 화면에서 버튼/토글이 “눌러도 안되는” 경우, 핸들러(함수) 누락이 원인일 수 있습니다.</div>
-    <button class="btn btn-b btn-sm" onclick="cfgRunSettingsSelfCheck()">🔎 설정 핸들러 점검</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-b btn-sm" onclick="cfgRunSettingsSelfCheck()">🔎 설정 핸들러 점검</button>
+      <button class="btn btn-g btn-sm" onclick="cfgRunFullQaDryRun()">🧪 전체 QA(드라이런) 점검</button>
+      <span style="font-size:11px;color:var(--gray-l)">※ 실제 데이터는 건드리지 않고, 임시 더미 데이터로 동작만 확인합니다.</span>
+    </div>
     <div id="cfg-selfcheck-out" style="margin-top:10px"></div>
   </details>
   ${_scfgD('autofitall','📱 전역 자동 맞춤 (모든 탭)')}

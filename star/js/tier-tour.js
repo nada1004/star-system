@@ -88,6 +88,80 @@ function _migrateTierTourneys(){
   if(changed) save();
 }
 
+// (원복 지원) 티어대회 토너먼트 대진표를 "프로리그 대회 대진표 방식"(tn.bracket = rounds 배열)으로 통일하기 위한 변환
+// - 실험 버전에서 tn.bracket이 {slots,winners,matchDetails} 객체로 저장된 경우가 있어
+//   proCompBracket에서는 "대진표 없음"으로 보일 수 있음.
+// - tourschedule 렌더 직전에 1회 변환한다(가능한 범위: 1R 슬롯/승자/게임).
+function _migrateTierBracketToRoundsIfNeeded(tn){
+  try{
+    if(!tn || tn.type!=='tier') return false;
+    if(Array.isArray(tn.bracket)) return false;
+    const legacy = tn.bracket || {};
+    const slots = legacy.slots || {};
+    const winners = legacy.winners || {};
+    const matchDetails = legacy.matchDetails || {};
+
+    let sz = parseInt(tn.bracketOverrideSize||'0',10)||0;
+    if(sz<2){
+      let maxMi = -1;
+      Object.keys(slots).forEach(k=>{
+        const m = String(k).match(/^0-(\d+)-[ab]$/);
+        if(m) maxMi = Math.max(maxMi, parseInt(m[1],10));
+      });
+      sz = (maxMi>=0) ? (maxMi+1)*2 : 8;
+    }
+    // 2의 거듭제곱으로 보정
+    let p=1; while(p<sz) p*=2; sz=p;
+
+    const firstRound=[];
+    for(let i=0;i<sz;i+=2){
+      const mi = Math.floor(i/2);
+      const a = String(slots[`0-${mi}-a`]||'').trim();
+      const b = String(slots[`0-${mi}-b`]||'').trim();
+      const md = matchDetails[`0-${mi}`] || null;
+      const m = {a:a||'TBD', b:b||'TBD', winner:'', d:(md?.d||''), map:(md?.map||'')};
+      // 세부 게임 이관(가능하면)
+      try{
+        const games = md?.sets?.[0]?.games || [];
+        if(Array.isArray(games) && games.length){
+          m._games = games.map(g=>({winner:g.winner||'', map:g.map||''})).filter(x=>x.winner);
+        }
+      }catch(e){}
+      const wName = String(winners[`0-${mi}`]||'').trim();
+      if(wName && wName===m.a) m.winner='A';
+      else if(wName && wName===m.b) m.winner='B';
+      firstRound.push(m);
+    }
+    const rounds=[firstRound];
+    let cur=firstRound.length;
+    while(cur>1){
+      cur=Math.floor(cur/2);
+      const rnd=[];
+      for(let i=0;i<cur;i++) rnd.push({a:'TBD', b:'TBD', winner:'', d:'', map:''});
+      rounds.push(rnd);
+    }
+    // 승자 전파(표시/다음 라운드 슬롯)
+    for(let ri=0; ri<rounds.length-1; ri++){
+      (rounds[ri]||[]).forEach((m,mi)=>{
+        if(!m || !m.winner) return;
+        const nextMi=Math.floor(mi/2);
+        const isA = mi%2===0;
+        const w = m.winner==='A'?m.a:m.b;
+        if(rounds[ri+1] && rounds[ri+1][nextMi]){
+          if(isA) rounds[ri+1][nextMi].a = w;
+          else rounds[ri+1][nextMi].b = w;
+        }
+      });
+    }
+
+    tn.bracket = rounds;
+    save();
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 /* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */
@@ -700,7 +774,11 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
+    // (원복) 티어대회 토너먼트 대진표를 프로리그 대회 대진표 방식(proCompBracket)으로 통일
+    if(_curTierTn){
+      try{ _migrateTierBracketToRoundsIfNeeded(_curTierTn); }catch(e){}
+      h+= (typeof proCompBracket==='function') ? proCompBracket(_curTierTn) : _noTnMsg;
+    } else h+=_noTnMsg;
   } else if(_ttSub==='bktrecords'){
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
@@ -719,12 +797,24 @@ function rTierTourTab(C, T){
         }
       });
     }
-    const _allBkt=[..._bktRecs,..._bktFromBracket].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    // (버그픽스) 브라켓에만 있고 ttM에 없는 기록은 ttM으로 동기화
+    // - 그래야 recSummaryListHTML의 "일괄 선택/삭제"가 인덱스/ID 불일치로 깨지지 않음
+    if(_bktFromBracket.length){
+      try{
+        _bktFromBracket.forEach(m=>{
+          if(!m || !m._id) return;
+          if(ttM.some(x=>x && x._id===m._id)) return;
+          ttM.unshift({...m, n:_ttCurComp, compName:_ttCurComp, stage:'bkt'});
+        });
+        save();
+      }catch(e){}
+    }
+    const _allBkt=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
     if(isLoggedIn && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
-        <button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
-        <span style="font-size:11px;color:var(--gray-l)">여러 경기를 한 번에 입력하면 토너먼트 대진표(🗂️ 토너먼트)에도 자동 반영됩니다.</span>
+        <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
+        <span style="font-size:11px;color:var(--gray-l)">결과는 “토너먼트 기록”으로 저장됩니다. (대진표 자동 반영은 하지 않음)</span>
       </div>`;
     }
     h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
@@ -747,7 +837,18 @@ function rTierTourTab(C, T){
         });
       });
     }
-    const _allGrp=[..._grpRecs,..._grpFromTn].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+    // (버그픽스) 조별리그도 tourneys에만 있고 ttM에 없는 기록은 ttM으로 동기화
+    if(_grpFromTn.length){
+      try{
+        _grpFromTn.forEach(m=>{
+          if(!m || !m._id) return;
+          if(ttM.some(x=>x && x._id===m._id)) return;
+          ttM.unshift({...m, n:_ttCurComp, compName:_ttCurComp, stage:'league'});
+        });
+        save();
+      }catch(e){}
+    }
+    const _allGrp=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
     h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
@@ -2271,6 +2372,26 @@ function _bulkArrMapAll(){
   // 존재하는 배열만 포함
   const m = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind: (typeof indM!=='undefined'?indM:[]), gj:(typeof gjM!=='undefined'?gjM:[]), comp:comps };
   return m;
+}
+
+// 티어대회(토너먼트 탭)에서 경기 결과 붙여넣기(자동인식) → "토너먼트 기록"으로 저장
+// - 대진표 자동 생성/자동 반영은 하지 않음(사용자가 슬롯/승자 수동 입력)
+function openTierBktPasteModal(tnId){
+  if(!isLoggedIn) return alert('로그인이 필요합니다.');
+  const tn=(tourneys||[]).find(t=>t && t.id===tnId) || null;
+  if(tn && tn.name) _ttCurComp = tn.name;
+  try{ window._pasteFromTierBkt = true; }catch(e){}
+  try{ window._pasteFromHistExt = false; }catch(e){}
+  try{
+    if(typeof openTTPasteModal==='function') openTTPasteModal();
+  }catch(e){}
+  // 대회명 자동 채우기
+  setTimeout(()=>{
+    try{
+      const inp=document.getElementById('paste-comp-name');
+      if(inp && tn && tn.name) inp.value = tn.name;
+    }catch(e){}
+  }, 40);
 }
 
 // (추가) 설정탭 전용: "스트리머별 상태 아이콘 지정"만 보여주는 목록
@@ -4161,8 +4282,18 @@ function openRE(mode,idx){
     const pSetsGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const pSetsWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const pSetsWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const pDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((pSetsWA!=null && pSetsWA+pSetsWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>A팀 레이블</label><input type="text" id="re-tla" value="${m.teamALabel||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${pDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${pDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${pSetsWA||0};document.getElementById('re-sb').value=${pSetsWB||0};}else{document.getElementById('re-sa').value=${pSetsGA||0};document.getElementById('re-sb').value=${pSetsGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${pSetsWA??0}:${pSetsWB??0} / 게임수 ${pSetsGA??0}:${pSetsGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4179,8 +4310,18 @@ function openRE(mode,idx){
     const ttGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const ttDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((ttWA!=null && ttWA+ttWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${ttDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${ttDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${ttWA||0};document.getElementById('re-sb').value=${ttWB||0};}else{document.getElementById('re-sa').value=${ttGA||0};document.getElementById('re-sb').value=${ttGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${ttWA??0}:${ttWB??0} / 게임수 ${ttGA??0}:${ttGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
@@ -4253,6 +4394,7 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // proM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -4268,6 +4410,7 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
