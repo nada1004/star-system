@@ -71,6 +71,7 @@
   --su_md_tb_btn_scale: 1;
   --su_md_mb_btn_scale: 1;
   --su_pd_badge_scale: 1;
+  --su_pd_chip_scale: 1;
   --su_btn_r: 8px;    /* 기본 버튼 라운드 */
   --su_pill_r: 20px;  /* pill(탭/필터) 라운드 */
   /* (자동) 탭 버튼 추가 스케일 */
