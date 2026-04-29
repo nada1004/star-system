@@ -2124,6 +2124,9 @@ function _cfgEnsureModal(){
   try{
     m.addEventListener('click', (ev)=>{
       try{
+        // (모바일 버그픽스) 섹션을 눌러 모달을 여는 "같은 탭" 이벤트에서
+        // 모달 배경 클릭으로 인식되어 바로 닫히는 현상 방지
+        if(window._cfgModalJustOpenedTime && (Date.now()-window._cfgModalJustOpenedTime<350)) return;
         if(ev && ev.target===m && typeof window.closeCfgModal==='function') window.closeCfgModal();
       }catch(_){}
     }, {capture:true});
@@ -2217,11 +2220,19 @@ function _cfgGo(secId){
       // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
       try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
     }
-    // om()/cm()가 "초기 로드 시점에 존재하던 모달만" 관리하는 구현일 수 있어,
-    // 동적 생성 모달은 style.display로도 확실히 띄운 뒤 om()을 보조로 호출한다.
+    // (모바일 버그픽스) pointerdown에서 섹션을 누를 경우,
+    // 같은 탭 이벤트의 click/touchend 타겟이 모달 배경으로 잡히며 "열렸다가 바로 닫히는" 케이스가 있음
+    // → 모달 표시를 다음 tick으로 미뤄 동일 이벤트 사이클에서의 배경 클릭 판정을 회피
     const mm=document.getElementById('cfgModal');
-    if(mm) mm.style.display='flex';
-    if(typeof om==='function'){ try{ om('cfgModal'); }catch(err){ if(window.__CFG_DEBUG) console.error('[cfgGo] om() failed', err); } }
+    if(mm){
+      window._cfgModalJustOpenedTime = Date.now();
+      setTimeout(()=>{
+        try{ mm.style.display='flex'; }catch(e){}
+        if(typeof om==='function'){ try{ om('cfgModal'); }catch(err){ if(window.__CFG_DEBUG) console.error('[cfgGo] om() failed', err); } }
+      }, 0);
+    } else {
+      if(typeof om==='function'){ try{ om('cfgModal'); }catch(err){ if(window.__CFG_DEBUG) console.error('[cfgGo] om() failed', err); } }
+    }
   }catch(e){
     // 기존엔 조용히 삼켜서 “버튼 반응 없음”처럼 보였음 → 콘솔에 노출
     try{ console.error('[cfgGo] failed:', secId, e); }catch(_){}

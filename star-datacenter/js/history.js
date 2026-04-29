@@ -215,6 +215,12 @@ function _histExtSave(v){
       ? ('lz:' + LZString.compressFromUTF16(json))
       : json;
     localStorage.setItem(_HIST_EXT_KEY, packed);
+    // (요청사항) "외부 검색/가져오기" 결과가 잠깐 보였다가 사라지는 현상 방지:
+    // - 클라우드 동기화 수신이 로컬을 덮어쓰는 경우가 있어, 로컬 변경 시각을 기록한다.
+    // - cloud-board.js에서 이 값을 비교해 더 최신 로컬 데이터는 덮어쓰지 않도록 처리.
+    try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
+    // 변경 즉시 클라우드 업로드(관리자 로그인 상태) — 다른 기기에도 바로 반영
+    try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
     return true;
   }catch(e){
     console.warn('[_histExtSave] localStorage 저장 실패:', e.message);
@@ -861,17 +867,21 @@ window.histExtFetchFromProxy = async function(){
 };
 window.histExtClear = function(){
   try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ localStorage.removeItem('su_hist_ext_last_modified'); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
   try{ render(); }catch(e){}
 };
 // 외부 데이터 전체 삭제(확인 포함) — 출력 영역에서 바로 실행 가능
 window.histExtClearAll = function(){
   if(!confirm('외부 탭 데이터를 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
   try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+  try{ localStorage.removeItem('su_hist_ext_last_modified'); }catch(e){}
   try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
   try{
     const ta=document.getElementById('hist-ext-raw');
     if(ta) ta.value='';
   }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
   try{ render(); }catch(e){}
 };
 window.histExtCopy = async function(){
