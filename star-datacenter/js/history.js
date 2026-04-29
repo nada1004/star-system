@@ -41,6 +41,8 @@ function rHist(C,T){
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
       tabDefs.push({id:'ext', grp:'외부', lbl:'📎'});
+      // (요청사항) 외부2: 관리자만 볼 수 있는 iframe 페이지
+      tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2'});
     }
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
@@ -63,6 +65,12 @@ function rHist(C,T){
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${g}</button>`;
+    // (요청사항) '외부' 우측에 '외부2' 버튼을 별도로 노출 (관리자 전용)
+    // - 외부 그룹을 눌러 하위메뉴를 펼치지 않아도 바로 이동 가능하게
+    if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
+      const isOn2=(histSub==='ext2');
+      h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">외부2</button>`;
+    }
   });
   h+=`  </div>`;
   h+=`</div>`;
@@ -134,6 +142,11 @@ function rHist(C,T){
   }
   if(histSub==='ext'){
     h+=histExternalHTML();
+    C.innerHTML=h;
+    return;
+  }
+  if(histSub==='ext2'){
+    h+=histExternal2HTML();
     C.innerHTML=h;
     return;
   }
@@ -866,16 +879,24 @@ window.histExtFetchFromProxy = async function(){
   setProg(`완료: ${_histExtGetViewItems().length}행 출력`);
 };
 window.histExtClear = function(){
-  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
-  try{ localStorage.removeItem('su_hist_ext_last_modified'); }catch(e){}
+  // (요청사항) "초기화"는 외부탭 데이터가 완전히 사라져야 함
+  // - Firebase 실시간 수신이 직후에 옛 데이터를 덮어쓰는 현상 방지:
+  //   삭제 시에도 last_modified를 최신으로 찍고, 데이터는 빈 값으로 저장해 클라우드에 반영한다.
+  try{ localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
+  try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
+  // 관련 설정도 초기화(선택 프리셋/프리셋 목록)
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, ''); }catch(e){}
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, ''); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
   try{ render(); }catch(e){}
 };
 // 외부 데이터 전체 삭제(확인 포함) — 출력 영역에서 바로 실행 가능
 window.histExtClearAll = function(){
   if(!confirm('외부 탭 데이터를 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
-  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
-  try{ localStorage.removeItem('su_hist_ext_last_modified'); }catch(e){}
+  try{ localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
+  try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, ''); }catch(e){}
+  try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, ''); }catch(e){}
   try{ window.histExtResetUI && window.histExtResetUI(); }catch(e){}
   try{
     const ta=document.getElementById('hist-ext-raw');
@@ -3807,6 +3828,36 @@ function _ensureSuCtxMenu(){
     }catch(_){}
   },0);
   return el;
+}
+
+// (요청사항) 대전기록 > 외부2 (관리자 전용, iframe)
+function histExternal2HTML(){
+  // 권한 재확인(수동 변경 대비)
+  try{
+    if(!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin)){
+      return `<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">관리자 전용</div><div class="empty-state-desc">관리자 로그인 시 이용 가능합니다</div></div>`;
+    }
+  }catch(e){}
+  const url = 'https://rapid-scene-ac45.kpoppd.workers.dev/men/bbs/board.php?bo_table=search_list';
+  return `
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div style="font-weight:900">🌐 외부2 (관리자 전용)</div>
+        <a class="btn btn-w btn-xs" href="${url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">새 창으로 열기</a>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
+        ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다. (그 경우 ‘새 창으로 열기’만 가능)
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
+      <iframe
+        src="${url}"
+        style="width:100%;height:72vh;min-height:520px;border:0;display:block;background:#fff"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
+  `;
 }
 function closeSuCtxMenu(){
   try{
