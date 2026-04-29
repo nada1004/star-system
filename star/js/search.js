@@ -2749,6 +2749,7 @@ function _confirmDupBeforeSave(toAdd){
 function pasteApply() {
   if (!window._pasteResults) return;
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
+  const _fromHistExt = !!window._pasteFromHistExt;
 
   // 대회 경기 세트 적용 모드 분기
   if (window._grpPasteMode) {
@@ -3021,7 +3022,11 @@ function pasteApply() {
     const _iC=_mixGroups.ind.length, _gC=_mixGroups.gj.length, _mC=_mixGroups.mini.length;
     alert(`✅ 혼합 저장 완료\n개인전 ${_iC}건 / 끝장전 ${_gC}건 / 미니대전 ${_mC}건 (총 ${_tot}건)`);
     cm('pasteModal');
-    render();
+    // 외부탭(📎/외부2/외부3)에서 넘어온 경우: 저장 후 화면이 리셋(새로고침)되지 않게 render를 생략
+    if(!_fromHistExt){
+      render();
+    }
+    try{ window._pasteFromHistExt = false; }catch(e){}
     return;
   }
 
@@ -3229,7 +3234,9 @@ function pasteApply() {
 
   if (typeof fixPoints === 'function') fixPoints();
   save();
-  render();
+  if(!_fromHistExt){
+    render();
+  }
 
   // 모달 닫고 완료 알림
   cm('pasteModal');
@@ -3237,11 +3244,14 @@ function pasteApply() {
   window._pasteErrors  = null;
 
   // 저장 형식에 따라 해당 탭으로 자동 이동
-  const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind', gj:'gj' };
-  if (tabMap[mode]) {
-    const tabBtn = document.querySelector(`.tab[onclick*="sw('${tabMap[mode]}'"]`);
-    if (tabBtn) tabBtn.click();
+  if(!_fromHistExt){
+    const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind', gj:'gj' };
+    if (tabMap[mode]) {
+      const tabBtn = document.querySelector(`.tab[onclick*="sw('${tabMap[mode]}'"]`);
+      if (tabBtn) tabBtn.click();
+    }
   }
+  try{ window._pasteFromHistExt = false; }catch(e){}
 
   // 성공 토스트
   const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';

@@ -348,6 +348,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='profileshape' && typeof window._renderCfgProfileShapeSection==='function'){
       window._renderCfgProfileShapeSection();
     }
+    if(el && el.open && id==='uisize' && typeof window._renderCfgUiSizeSection==='function'){
+      window._renderCfgUiSizeSection();
+    }
     if(el && el.open && id==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function'){
       window._renderCfgPdModeBadgeSection();
     }
@@ -369,7 +372,8 @@ const _DEFAULT_CATSECS = {
   // (요청사항) "최근 경기 종목(종류) 배지" 색상은 별도 메뉴로 분리
   '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
-  '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','reccard','tourneycard','calui'],
+  // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
+  '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
@@ -2219,6 +2223,14 @@ function _cfgGo(secId){
       body.appendChild(el);
       // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
       try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
+      // (보강) 동적 섹션은 팝업 이동만으로 toggle 이벤트가 안 나는 환경이 있어 수동 렌더
+      try{
+        if(secId==='profileshape' && typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection();
+        if(secId==='uisize' && typeof window._renderCfgUiSizeSection==='function') window._renderCfgUiSizeSection();
+        if(secId==='pd' && typeof window._renderCfgPdSection==='function') window._renderCfgPdSection();
+        if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
+        if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
+      }catch(e){}
     }
     // (모바일 버그픽스) pointerdown에서 섹션을 누를 경우,
     // 같은 탭 이벤트의 click/touchend 타겟이 모달 배경으로 잡히며 "열렸다가 바로 닫히는" 케이스가 있음
@@ -2420,6 +2432,7 @@ function rCfg(C,T){
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
+    uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
@@ -3063,6 +3076,12 @@ ${_scfgD('notice','📢 공지 관리')}
         전체 탭 자동 맞춤 사용
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 켜면 화면 크기 변화(가로/세로 전환 포함)에 따라 자동 적용됩니다.</div>
+    </div>
+  </details>
+  ${_scfgD('uisize','📱 모바일/태블릿 UI 크기 (버튼/메뉴/배지)')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 버튼/메뉴가 너무 커 보일 때 여기서 한 번에 조절합니다. (코드 수정 없이)</div>
+    <div id="cfg-uisize-body" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
     </div>
   </details>
   ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
@@ -6474,6 +6493,60 @@ function _renderCfgProfileShapeSection(){
   `;
 }
 try{ window._renderCfgProfileShapeSection = _renderCfgProfileShapeSection; }catch(e){}
+
+/* ══════════════════════════════════════
+   📱 모바일/태블릿 UI 크기(버튼/메뉴/배지)
+══════════════════════════════════════ */
+function _renderCfgUiSizeSection(){
+  const body = document.getElementById('cfg-uisize-body');
+  if(!body) return;
+  const getF=(k,def)=>{ try{ const v=parseFloat(localStorage.getItem(k)); return isNaN(v)?def:v; }catch(e){ return def; } };
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const mb = clamp(getF('su_mb_scale', 0.88), 0.65, 1.10);
+  const tb = clamp(getF('su_tb_scale', 0.92), 0.65, 1.10);
+  const mmb = clamp(getF('su_modal_mb_scale', 0.70), 0.55, 1.10);
+  const mtb = clamp(getF('su_modal_tb_scale', 0.78), 0.55, 1.10);
+  const mbTab = clamp(getF('su_tab_mb_scale', 0.90), 0.65, 1.10);
+  const tbTab = clamp(getF('su_tab_tb_scale', 0.94), 0.65, 1.10);
+  const mdMb = clamp(getF('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
+  const mdTb = clamp(getF('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
+  const badge = clamp(getF('su_pd_badge_scale', 1.00), 0.70, 1.30);
+  const chip = clamp(getF('su_pd_chip_scale', 1.00), 0.70, 1.30);
+
+  const row=(label, id, val, min, max, step, hint)=>{
+    const pct=Math.round(val*100);
+    return `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="min-width:170px;font-size:12px;font-weight:900;color:var(--text2)">${label}</div>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${val}"
+          oninput="(function(el){ localStorage.setItem('${id}', String(el.value)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; const v=document.getElementById('${id}-v'); if(v) v.textContent=Math.round(parseFloat(el.value)*100)+'%'; })(this)"
+          style="flex:1;min-width:220px;accent-color:var(--blue)">
+        <div id="${id}-v" style="width:52px;text-align:right;font-size:11px;color:var(--gray-l);font-weight:900">${pct}%</div>
+        ${hint?`<div style="font-size:11px;color:var(--gray-l)">${hint}</div>`:''}
+      </div>
+    `;
+  };
+
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${row('모바일 버튼/메뉴 전체', 'su_mb_scale', mb, 0.65, 1.10, 0.02, '기본 88%')}
+      ${row('태블릿 버튼/메뉴 전체', 'su_tb_scale', tb, 0.65, 1.10, 0.02, '기본 92%')}
+      ${row('모바일 팝업(스트리머/대학) 버튼', 'su_modal_mb_scale', mmb, 0.55, 1.10, 0.02, '기본 70%')}
+      ${row('태블릿 팝업(스트리머/대학) 버튼', 'su_modal_tb_scale', mtb, 0.55, 1.10, 0.02, '기본 78%')}
+      ${row('모바일 탭 버튼(.tab)', 'su_tab_mb_scale', mbTab, 0.65, 1.10, 0.02, '기본 90%')}
+      ${row('태블릿 탭 버튼(.tab)', 'su_tab_tb_scale', tbTab, 0.65, 1.10, 0.02, '기본 94%')}
+      ${row('경기 상세 상단 버튼(모바일)', 'su_md_mb_btn_scale', mdMb, 0.70, 1.30, 0.05, '')}
+      ${row('경기 상세 상단 버튼(태블릿)', 'su_md_tb_btn_scale', mdTb, 0.70, 1.30, 0.05, '')}
+      ${row('최근경기 “종류” 배지', 'su_pd_badge_scale', badge, 0.70, 1.30, 0.05, '')}
+      ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
+        <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
+      </div>
+    </div>
+  `;
+}
+try{ window._renderCfgUiSizeSection = _renderCfgUiSizeSection; }catch(e){}
 
 function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');

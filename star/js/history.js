@@ -635,6 +635,8 @@ window.histExtInputToPasteModal = function(){
     return;
   }
   _histExtTargetSave(target);
+  // (요청사항) 외부탭에서 자동인식 모달로 넘어가도, 저장 후 외부탭 화면이 리셋되지 않게
+  try{ window._pasteFromHistExt = true; }catch(e){}
   try{
     if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
     else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
@@ -677,6 +679,8 @@ window.histExtSendToPasteModal = function(){
     return;
   }
   _histExtTargetSave(target);
+  // (요청사항) 외부탭에서 자동인식 모달로 넘어가도, 저장 후 외부탭 화면이 리셋되지 않게
+  try{ window._pasteFromHistExt = true; }catch(e){}
   const lines = picked.map(x=>{
     const d = (x.date||'').trim();
     const w = _histExtToPasteName(x.winner);

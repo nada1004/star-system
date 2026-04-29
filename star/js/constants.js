@@ -110,6 +110,12 @@ function applyUnivLogoVars(){
     // 대학 상세(모달)용
     document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');
     document.documentElement.style.setProperty('--su_univ_logo_box_detail', dBox + 'px');
+
+    // (추가) 모바일/태블릿에서 대학 상세(모달) 헤더가 너무 커 보이는 문제 완화
+    // - 저장값(기본 크기)은 유지하고, 화면폭에 따라 "표시용 배율"만 적용한다.
+    const w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+    const ds = (w<=768) ? 0.82 : (w<=1024 ? 0.90 : 1);
+    document.documentElement.style.setProperty('--su_univ_detail_scale', String(ds));
   }catch(e){
     console.warn('[applyUnivLogoVars] CSS 변수 설정 실패:', e.message);
   }
@@ -117,6 +123,13 @@ function applyUnivLogoVars(){
 try{ applyUnivLogoVars(); }catch(e){
   console.warn('[applyUnivLogoVars 초기화] 실패:', e.message);
 }
+// 화면 크기 변경 시도 반영
+try{
+  if(!window.__suUnivLogoResizeBound){
+    window.__suUnivLogoResizeBound=true;
+    window.addEventListener('resize', ()=>{ try{ applyUnivLogoVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════
    현황판(board2) 대학 로고 크기
@@ -131,6 +144,46 @@ function applyBoard2LogoVars(){
   }
 }
 try{ applyBoard2LogoVars(); }catch(e){}
+
+/* ══════════════════════════════════════
+   📱 반응형 UI 크기(버튼/메뉴/배지) 변수 적용
+══════════════════════════════════════ */
+function applyResponsiveUiVars(){
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const gf=(k,def)=>{ try{ const v=parseFloat(localStorage.getItem(k)); return isNaN(v)?def:v; }catch(e){ return def; } };
+  try{
+    // 전체 버튼/메뉴 스케일(모바일/태블릿)
+    const mb = clamp(gf('su_mb_scale', 0.88), 0.65, 1.10);
+    const tb = clamp(gf('su_tb_scale', 0.92), 0.65, 1.10);
+    const mmb = clamp(gf('su_modal_mb_scale', 0.70), 0.55, 1.10);
+    const mtb = clamp(gf('su_modal_tb_scale', 0.78), 0.55, 1.10);
+    const mbTab = clamp(gf('su_tab_mb_scale', 0.90), 0.65, 1.10);
+    const tbTab = clamp(gf('su_tab_tb_scale', 0.94), 0.65, 1.10);
+    const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
+    const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
+    const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
+    const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
+
+    document.documentElement.style.setProperty('--su_mb_scale', String(mb));
+    document.documentElement.style.setProperty('--su_tb_scale', String(tb));
+    document.documentElement.style.setProperty('--su_modal_mb_scale', String(mmb));
+    document.documentElement.style.setProperty('--su_modal_tb_scale', String(mtb));
+    document.documentElement.style.setProperty('--su_tab_mb_scale', String(mbTab));
+    document.documentElement.style.setProperty('--su_tab_tb_scale', String(tbTab));
+    document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
+    document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
+    document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
+    document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
+  }catch(e){}
+}
+try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}
+try{ applyResponsiveUiVars(); }catch(e){}
+try{
+  if(!window.__suResponsiveUiResizeBound){
+    window.__suResponsiveUiResizeBound=true;
+    window.addEventListener('resize', ()=>{ try{ applyResponsiveUiVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════
    대학별 로고 크기(대학상세/스트리머탭)

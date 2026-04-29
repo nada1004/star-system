@@ -1823,10 +1823,15 @@ function buildPlayerDetailHTML(p){
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
-  // (요청사항) 모바일/태블릿에서 종목/연도 필터 칩이 너무 커 보이는 문제 완화
-  const _chipFs = _isMobile ? 8 : (_isTablet ? 9 : 9);
-  const _chipPad = _isMobile ? '1px 5px' : '2px 6px';
-  const _chipR = _isMobile ? '7px' : '8px';
+  // (요청사항) 종목/연도 필터 칩 크기: 설정(su_pd_chip_scale)로 조절 가능
+  const _chipScale = 'var(--su_pd_chip_scale,1)';
+  const _chipFsBase = _isMobile ? 8 : (_isTablet ? 9 : 9);
+  const _chipPadYBase = _isMobile ? 1 : 2;
+  const _chipPadXBase = _isMobile ? 5 : 6;
+  const _chipRBase = _isMobile ? 7 : 8;
+  const _chipFs = `calc(${_chipFsBase}px * ${_chipScale})`;
+  const _chipPad = `calc(${_chipPadYBase}px * ${_chipScale}) calc(${_chipPadXBase}px * ${_chipScale})`;
+  const _chipR = `calc(${_chipRBase}px * ${_chipScale})`;
   const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
     <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -2156,8 +2161,8 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      // (요청사항) '종류' 배지: 모바일/태블릿에서 크게 보이지 않게 더 컴팩트하게
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 5px;border-radius:3px;font-size:8px;font-weight:900;line-height:14px;height:14px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
@@ -2277,10 +2282,14 @@ function buildPlayerDetailHTML(p){
 
 function buildUnivDetailHTML(univName){
   const col=gc(univName);
+  const _w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+  const _isMobile = _w<=768;
+  const _isTablet = (_w>768 && _w<=1024);
   const members=getMembers(univName);
   const _logoSize = (typeof getUnivLogoSizeStr==='function')
     ? getUnivLogoSizeStr(univName, 'detail', 'var(--su_univ_logo_size_detail,46px)')
     : 'var(--su_univ_logo_size_detail,46px)';
+  const _logoSizeEff = `calc(${_logoSize} * var(--su_univ_detail_scale,1))`;
   const oppStats={};
   function addOpp(myU,oppU,myWin){
     if(myU!==univName)return;
@@ -2306,35 +2315,40 @@ function buildUnivDetailHTML(univName){
   const wr=tot?Math.round(wins/tot*100):0;
 
   // ── 상단 대학 헤더 카드 ──
-  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
+  const _uHdrPad = _isMobile ? '14px 14px' : (_isTablet ? '16px 18px' : '20px 24px');
+  const _uHdrR = _isMobile ? 14 : 16;
+  const _uNameFs = _isMobile ? 17 : (_isTablet ? 18 : 20);
+  const _uSubFs = _isMobile ? 11 : 12;
+  const _uStatPad = _isMobile ? '8px 6px' : '10px 8px';
+  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:${_uHdrR}px;padding:${_uHdrPad};margin-bottom:14px;color:#fff;position:relative;overflow:hidden">
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="width:var(--su_univ_logo_box_detail,72px);height:var(--su_univ_logo_box_detail,72px);border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
-        ${gUI(univName,_logoSize)}
+      <div style="width:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
+        ${gUI(univName,_logoSizeEff)}
       </div>
       <div>
-        <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
+        <div style="font-size:${_uNameFs}px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
           ${univName}
           ${(()=>{const _u=univCfg.find(u=>u.name===univName);return _u?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${_u.dissolvedDate?' '+_u.dissolvedDate:''}</span>`:'';})()}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 스트리머 ${members.length}명</div>
+        <div style="font-size:${_uSubFs}px;color:rgba(255,255,255,.75);margin-top:2px">소속 스트리머 ${members.length}명</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">개인 전적</div>
         <div style="font-weight:900;font-size:13px;color:#fff">${wins}승 ${tot-wins}패</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">개인 승률</div>
         <div style="font-weight:900;font-size:14px;color:${wr>=50?'#bbf7d0':'#fca5a5'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">총 포인트</div>
         <div style="font-weight:900;font-size:13px;color:${pts>0?'#fef08a':pts<0?'#fca5a5':'#fff'}">${pts>0?'+':''}${pts}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">선수 수</div>
         <div style="font-weight:900;font-size:14px;color:#fff">${members.length}명</div>
       </div>
@@ -2376,11 +2390,11 @@ function buildUnivDetailHTML(univName){
     oppList.forEach(([opp,s])=>{
       const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
       const oc=gc(opp);
-      h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;cursor:pointer;min-width:90px;box-shadow:0 1px 4px rgba(0,0,0,.04)"
+      h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:${_isMobile?'8px 10px':(_isTablet?'9px 12px':'10px 14px')};text-align:center;cursor:pointer;min-width:${_isMobile?'76px':'90px'};box-shadow:0 1px 4px rgba(0,0,0,.04)"
         onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">
-        <span class="ubadge" data-icon-done="1" style="background:${oc};font-size:11px;margin-bottom:6px;display:inline-flex;align-items:center;gap:3px">${gUI(opp,'11px')}${opp}</span>
-        <div style="font-size:11px;margin-top:4px"><span class="wt">${s.w}</span>승 <span class="lt">${s.l}</span>패</div>
-        <div style="font-weight:700;font-size:11px;color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
+        <span class="ubadge" data-icon-done="1" style="background:${oc};font-size:${_isMobile?'9px':'10px'};margin-bottom:6px;display:inline-flex;align-items:center;gap:3px">${gUI(opp,_isMobile?'10px':'11px')}${opp}</span>
+        <div style="font-size:${_isMobile?'10px':'11px'};margin-top:4px"><span class="wt">${s.w}</span>승 <span class="lt">${s.l}</span>패</div>
+        <div style="font-weight:800;font-size:${_isMobile?'10px':'11px'};color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
       </div>`;
     });
     h+=`</div>`;
