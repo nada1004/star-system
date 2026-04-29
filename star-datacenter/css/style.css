@@ -59,8 +59,12 @@
 
   /* (요청사항) 버튼/필 전역 크기 조절 */
   --su_btn_scale: 1;  /* 0.85 ~ 1.25 */
+  /* (자동) 모바일/태블릿 환경에 맞춘 추가 스케일 (사용자 설정은 su_btn_scale로 유지) */
+  --su_btn_auto_scale: 1;
   --su_btn_r: 8px;    /* 기본 버튼 라운드 */
   --su_pill_r: 20px;  /* pill(탭/필터) 라운드 */
+  /* (자동) 탭 버튼 추가 스케일 */
+  --su_tab_auto_scale: 1;
   /* 기록/필터 추가 스케일 */
   --ym-scale: 1;              /* 연/월 필터 크기(기록탭) */
   --rc-univ-font-scale: 1;    /* 기록카드 대학명 글자 크기 */
@@ -555,6 +559,53 @@ b,strong{font-weight:600;}
 .tab.cfg{background:transparent;}
 .tab.cfg.on{background:#334155;color:#fff;}
 
+/* ══════════════════════════════════════
+   반응형(모바일/태블릿) 자동 크기 조정
+   - 모든 탭 버튼(.tab) / 모든 버튼(.btn) / 모든 팝업(.modal .mbox)
+   - 사용자 설정(su_btn_scale, su_ui_scale_pct)은 유지하고, 환경별 auto_scale만 추가로 곱함
+══════════════════════════════════════ */
+@media (max-width: 1024px){
+  :root{
+    --su_btn_auto_scale: .92;
+    --su_tab_auto_scale: .94;
+  }
+  /* 팝업/모달: 화면에 맞게 자동 */
+  .modal{ padding:12px; }
+  .mbox{
+    width:min(680px, calc(100vw - 24px));
+    max-height:calc(var(--vh, 1vh) * 100 - 24px);
+    overflow:auto;
+    margin:0 auto;
+    padding:18px 18px;
+  }
+  /* 탭 버튼 */
+  .tab{
+    padding:calc(7px * var(--su_tab_auto_scale)) calc(14px * var(--su_tab_auto_scale));
+    min-height:calc(38px * var(--su_tab_auto_scale));
+    font-size:calc(11px * var(--uiS) * var(--su_tab_auto_scale));
+    border-radius:calc(9px * var(--su_tab_auto_scale));
+  }
+}
+@media (max-width: 768px){
+  :root{
+    --su_btn_auto_scale: .88;
+    --su_tab_auto_scale: .90;
+  }
+  .modal{ padding:10px; }
+  .mbox{
+    width:calc(100vw - 20px);
+    max-height:calc(var(--vh, 1vh) * 100 - 20px);
+    padding:14px 14px;
+    border-radius:14px;
+  }
+  .tab{
+    padding:6px 10px;
+    min-height:34px;
+    font-size:calc(10px * var(--uiS));
+    border-radius:8px;
+  }
+}
+
 /* ── [Fix-3] 룰렛 서브탭 — 메인 탭 톤과 통일 ────────────────────────────── */
 .subtab-bar{background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid var(--border);border-radius:16px;padding:3px;display:flex;gap:2px;margin-bottom:16px;box-shadow:0 2px 12px rgba(2,6,23,.05);}
 .subtab-btn{flex:1;padding:6px 6px;font-size:11px;font-weight:900;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:background .15s,color .15s,box-shadow .15s,transform .12s;text-align:center;line-height:1.15;min-width:0;white-space:nowrap;font-family:inherit;}
@@ -615,14 +666,14 @@ select:disabled{
 }
 input::placeholder{color:var(--gray-l);}
 .btn{
-  padding:calc(8px * var(--su_btn_scale)) calc(16px * var(--su_btn_scale));
+  padding:calc(8px * var(--su_btn_scale) * var(--su_btn_auto_scale)) calc(16px * var(--su_btn_scale) * var(--su_btn_auto_scale));
   border-radius:var(--su_btn_r);
   border:none;
-  font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
+  font-size:calc(12px * var(--uiS) * var(--su_btn_scale) * var(--su_btn_auto_scale));
   font-weight:700;
   transition:all var(--tr);
   display:inline-flex;align-items:center;justify-content:center;
-  gap:calc(4px * var(--su_btn_scale));
+  gap:calc(4px * var(--su_btn_scale) * var(--su_btn_auto_scale));
   cursor:pointer;
 }
 .btn:active{filter:brightness(.92);transform:scale(.98);}
@@ -639,22 +690,22 @@ input::placeholder{color:var(--gray-l);}
 .btn-p{background:linear-gradient(180deg,#ffffff,#faf5ff);color:#6d28d9;border:1px solid rgba(124,58,237,.35);box-shadow:0 2px 10px rgba(124,58,237,.08);}
 .btn-p:hover{background:linear-gradient(135deg,#6d28d9,#7c3aed);border-color:rgba(124,58,237,.55);color:#fff;box-shadow:0 10px 22px rgba(124,58,237,.18);}
 .btn-xs{
-  padding:calc(3px * var(--su_btn_scale)) calc(9px * var(--su_btn_scale));
-  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
-  border-radius:calc(6px * var(--su_btn_scale));
+  padding:calc(3px * var(--su_btn_scale) * var(--su_btn_auto_scale)) calc(9px * var(--su_btn_scale) * var(--su_btn_auto_scale));
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale) * var(--su_btn_auto_scale));
+  border-radius:calc(6px * var(--su_btn_scale) * var(--su_btn_auto_scale));
 }
 .btn-sm{
-  padding:calc(5px * var(--su_btn_scale)) calc(11px * var(--su_btn_scale));
-  font-size:calc(12px * var(--uiS) * var(--su_btn_scale));
-  border-radius:calc(6px * var(--su_btn_scale));
+  padding:calc(5px * var(--su_btn_scale) * var(--su_btn_auto_scale)) calc(11px * var(--su_btn_scale) * var(--su_btn_auto_scale));
+  font-size:calc(12px * var(--uiS) * var(--su_btn_scale) * var(--su_btn_auto_scale));
+  border-radius:calc(6px * var(--su_btn_scale) * var(--su_btn_auto_scale));
 }
 .btn-detail{
-  padding:calc(4px * var(--su_btn_scale)) calc(11px * var(--su_btn_scale));
+  padding:calc(4px * var(--su_btn_scale) * var(--su_btn_auto_scale)) calc(11px * var(--su_btn_scale) * var(--su_btn_auto_scale));
   border-radius:var(--su_btn_r);
   border:1px solid var(--border2);
   background:var(--surface);
   color:var(--text3);
-  font-size:calc(11px * var(--uiS) * var(--su_btn_scale));
+  font-size:calc(11px * var(--uiS) * var(--su_btn_scale) * var(--su_btn_auto_scale));
   font-weight:500;
   cursor:pointer;
   transition:var(--tr);
