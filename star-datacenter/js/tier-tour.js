@@ -700,7 +700,14 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    h+=_curTierTn ? proCompBracket(_curTierTn) : _noTnMsg;
+    // (버그픽스) 티어대회 토너먼트 대진표는 competition.js의 동적 브라켓(rCompTourDynamic)을 사용
+    // - 외부 자동인식에서 생성하는 tn.bracket.slots / winners 구조와 호환됨
+    // - 기존 proCompBracket은 프로리그 대회 구조(bracket 배열 등)에 더 가깝고, 티어대회에서는 비어 보일 수 있음
+    if(_curTierTn){
+      if(typeof rCompTourDynamic==='function') h+=rCompTourDynamic(_curTierTn);
+      else if(typeof proCompBracket==='function') h+=proCompBracket(_curTierTn);
+      else h+=_noTnMsg;
+    }else h+=_noTnMsg;
   } else if(_ttSub==='bktrecords'){
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
