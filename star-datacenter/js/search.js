@@ -3220,7 +3220,13 @@ function pasteApply() {
     });
     const ttSA=ttSetsSnap.filter(s=>s.winner==='A').length, ttSB=ttSetsSnap.filter(s=>s.winner==='B').length;
     const _ttSaveComp=compName||(typeof _ttCurComp!=='undefined'?_ttCurComp:'')||'';
-    ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:_ttSaveComp});
+    // (요청사항) 티어대회: 일반/조별리그/토너먼트 구분 저장
+    let _ttStage = 'general';
+    try{
+      _ttStage = (document.getElementById('paste-tt-stage')?.value || localStorage.getItem('su_tt_paste_stage') || 'general') + '';
+    }catch(e){}
+    if(!['general','league','bkt','grp'].includes(_ttStage)) _ttStage='general';
+    ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,sa:ttSA,sb:ttSB,teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},compName:_ttSaveComp,stage:_ttStage});
     if(typeof applyTeamGameResult==='function'){
       (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3725,6 +3731,12 @@ function openPasteModal() {
   const modeEl = document.getElementById('paste-mode');
   if (modeEl) onPasteModeChange(modeEl.value);
 
+  // 티어대회 구분 선택 UI는 기본 숨김
+  try{
+    const stWrap = document.getElementById('paste-tt-stage-wrap');
+    if(stWrap) stWrap.style.display='none';
+  }catch(e){}
+
   om('pasteModal');
 }
 
@@ -3801,13 +3813,26 @@ function openTTPasteModal() {
   if (sel) { sel.value = 'mini'; sel.style.display = 'none'; }
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
-  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span>';
+  if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎯 티어대회 경기 결과 입력 모드</span> <span style="color:var(--gray-l);font-weight:600">(일반/조별리그/토너먼트 선택 가능)</span>';
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) {
     const inp = compWrap.querySelector('#paste-comp-name');
     if (inp) { inp.placeholder = '티어대회명 입력 (선택)'; inp.value = _ttCurComp||''; }
     compWrap.style.display = 'flex';
   }
+  // (요청사항) 티어대회 구분(일반/조별리그/토너먼트)
+  try{
+    const stWrap = document.getElementById('paste-tt-stage-wrap');
+    const stSel = document.getElementById('paste-tt-stage');
+    if(stWrap) stWrap.style.display = 'flex';
+    const saved = localStorage.getItem('su_tt_paste_stage') || 'general';
+    if(stSel){
+      stSel.value = saved;
+      stSel.onchange = function(){
+        try{ localStorage.setItem('su_tt_paste_stage', this.value); }catch(e){}
+      };
+    }
+  }catch(e){}
 }
 
 /* ── 대회 전용 붙여넣기 ── */
@@ -3820,6 +3845,11 @@ function openCompPasteModal() {
   if (lbl) lbl.style.display = 'none';
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🎖️ 대회 경기 결과 입력 모드</span>';
+  // 대회 모드에서는 티어대회 구분 숨김
+  try{
+    const stWrap = document.getElementById('paste-tt-stage-wrap');
+    if(stWrap) stWrap.style.display='none';
+  }catch(e){}
 }
 
 /* ── 대학대전 전용 붙여넣기 ── */

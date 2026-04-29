@@ -2715,6 +2715,15 @@ ${_scfgD('notice','📢 공지 관리')}
       <datalist id="alias-val-list">${maps.map(m=>`<option value="${m}">`).join('')}</datalist>
       <button class="btn btn-b" onclick="addMapAlias()">+ 약자 추가</button>
     </div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">🧪 약자 변환 테스트</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="alias-test-in" placeholder="예: 폴 / 투혼II / 녹" style="width:200px"
+          oninput="try{const v=this.value.trim();const out=document.getElementById('alias-test-out');if(!out)return; if(!v){out.textContent='';return;} if(typeof resolveMapName==='function'){out.textContent='→ '+resolveMapName(v);} else {out.textContent='(resolveMapName 로딩 전)';}}catch(e){}">
+        <div id="alias-test-out" style="font-size:12px;color:var(--text2);font-weight:900"></div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 붙여넣기 자동인식에서 실제로 적용되는 변환과 동일합니다.</div>
+    </div>
     <div id="alias-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>
   </details>
   ${_scfgD('tablabels','🏷️ 탭 이름(라벨) 설정')}
