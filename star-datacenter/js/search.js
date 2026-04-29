@@ -2943,6 +2943,17 @@ function pasteApply() {
     setMap[sn].push(r);
   });
 
+  // (요청사항) 외부 자동인식 메모를 기록에 저장
+  const _joinMemos = (rows)=>{
+    const uniq = [];
+    (rows||[]).forEach(r=>{
+      const m = String(r?._lineMemo||'').trim();
+      if(m && !uniq.includes(m)) uniq.push(m);
+    });
+    return uniq.join(' / ');
+  };
+  const _matchMemo = _joinMemos(savable);
+
   const setsSnap = Object.keys(setMap).sort((a,b) => a-b).map(sn => {
     const rows = setMap[sn];
     const games = rows.map(r => {
@@ -2952,6 +2963,7 @@ function pasteApply() {
         playerB: ab.playerB?.name||'',
         map: r.map && r.map !== '-' ? r.map : '',
         winner: ab.winner,
+        ...(r._lineMemo ? { memo: r._lineMemo } : {}),
         ...(r._isTeam ? { _isTeam: true, teamA: r._teamLeft || null, teamB: r._teamRight || null } : {})
       };
     });
@@ -3032,8 +3044,9 @@ function pasteApply() {
         const sid=genId();
         const _isCivil = grp.some(r=>r._miniType==='civil');
         grp.forEach(r=>{r._id=genId();if(!r._isTeam)applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','',_isCivil?'시빌워':'미니대전');});
-        const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
-        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini'});
+        const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A',...(r._lineMemo?{memo:r._lineMemo}:{})}));
+        const mm=_joinMemos(grp);
+        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini',...(mm?{memo:mm}:{})});
       });
     }
     save();
@@ -3065,7 +3078,7 @@ function pasteApply() {
     let _a = finalTeamA || 'A팀';
     let _b = finalTeamB || (_mType === 'civil' ? 'B팀' : '?');
     if (_mType === 'civil' && (!_b || _a === _b)) { _a = 'A팀'; _b = 'B팀'; }
-    miniM.unshift({ _id: matchId, d: dateVal, a: _a, b: _b, sa, sb, sets: setsSnap, type: _mType });
+    miniM.unshift({ _id: matchId, d: dateVal, a: _a, b: _b, sa, sb, sets: setsSnap, type: _mType, ...(_matchMemo?{memo:_matchMemo}:{}) });
     // (추가) 팀전 게임은 개인 ELO/승패에도 반영
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
@@ -3076,7 +3089,7 @@ function pasteApply() {
       });});
     }
   } else if (mode === 'univm') {
-    univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap });
+    univM.unshift({ _id: matchId, d: dateVal, a: finalTeamA, b: finalTeamB, sa, sb, sets: setsSnap, ...(_matchMemo?{memo:_matchMemo}:{}) });
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3096,7 +3109,7 @@ function pasteApply() {
       if(!mB.find(x=>x.name===r.lPlayer.name)) mB.push({name:r.lPlayer.name,univ:r.lPlayer.univ||'',race:r.lPlayer.race||'',tier:r.lPlayer.tier||''});
     });
     proM.unshift({_id:matchId,d:dateVal,sa:proSA,sb:proSB,
-      teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{}});
+      teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3124,6 +3137,7 @@ function pasteApply() {
           playerB:ab.playerB?.name||'',
           map:r.map && r.map !== '-' ? r.map : '',
           winner:ab.winner,
+          ...(r._lineMemo ? { memo: r._lineMemo } : {}),
           ...(r._isTeam ? { _isTeam:true, teamA:r._teamLeft||null, teamB:r._teamRight||null } : {})
         };
       });
@@ -3140,7 +3154,7 @@ function pasteApply() {
     });
     const ckSA=ckSetsSnap.filter(s=>s.winner==='A').length;
     const ckSB=ckSetsSnap.filter(s=>s.winner==='B').length;
-    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{}});
+    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (ckSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3152,7 +3166,7 @@ function pasteApply() {
   } else if (mode === 'comp') {
     if (compName && !compNames.includes(compName)) compNames.push(compName);
     curComp = compName;
-    comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap });
+    comps.unshift({ _id: matchId, d: dateVal, n: compName, a: finalTeamA||'', b: finalTeamB||'', sa, sb, sets: setsSnap, ...(_matchMemo?{memo:_matchMemo}:{}) });
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -3224,6 +3238,7 @@ function pasteApply() {
           playerB:ab.playerB?.name||'',
           map:r.map && r.map !== '-' ? r.map : '',
           winner:ab.winner,
+          ...(r._lineMemo ? { memo: r._lineMemo } : {}),
           ...(r._isTeam ? { _isTeam:true, teamA:r._teamLeft||null, teamB:r._teamRight||null } : {})
         };
       });
@@ -3389,7 +3404,7 @@ function pasteApply() {
         : (ttSetsSnap||[]).reduce((acc,s)=>acc+(s.scoreB||0),0);
       ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,
         sa:_sa,sb:_sb,teamALabel:'A팀',teamBLabel:'B팀',
-        teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:'general'});
+        teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:'general',...(_matchMemo?{memo:_matchMemo}:{})});
       // 팀전 형태(_isTeam)가 있을 때만 반영
       if(typeof applyTeamGameResult==='function'){
         (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
@@ -3407,6 +3422,7 @@ function pasteApply() {
         const names=k.split('||'); const p1=names[0]||''; const p2=names[1]||'';
         // ttM에 개별 경기로 저장(최소한 "1개로 뭉침" 방지)
         const mid = genId();
+        const mm = _joinMemos(rows);
         // 1세트로 저장
         const set = {games:[]};
         rows.forEach(r=>{
@@ -3414,11 +3430,11 @@ function pasteApply() {
           if(!wn || !ln) return;
           // p1을 A로 고정
           const winner = (wn===p1)?'A':(wn===p2)?'B':'A';
-          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||''});
+          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||'', ...(r._lineMemo?{memo:r._lineMemo}:{})});
         });
         let sA=0,sB=0; (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
         set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
-        const rec={_id:mid,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:p1,b:p2,teamALabel:p1,teamBLabel:p2,sets:[set],sa:sA,sb:sB,stage:'bkt'};
+        const rec={_id:mid,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:p1,b:p2,teamALabel:p1,teamBLabel:p2,sets:[set],sa:sA,sb:sB,stage:'bkt', ...(mm?{memo:mm}:{})};
         ttM.unshift(rec);
       });
     } else if (_pairKeys.length>1) {
@@ -3429,6 +3445,7 @@ function pasteApply() {
       _dates.forEach(d=>{
         const rows = _dateGroups[d] || [];
         const mid = genId();
+        const mm = _joinMemos(rows);
         const set = {games:[]};
         rows.forEach(r=>{
           const p1=_ttNameA(r), p2=_ttNameB(r);
@@ -3436,18 +3453,18 @@ function pasteApply() {
           // winner: winName 기준으로 A/B 판정
           const win = _normNameForKey(r?.winName || r?.wPlayer?.name || '');
           const winner = (win===p1) ? 'A' : (win===p2 ? 'B' : 'A');
-          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||''});
+          set.games.push({playerA:p1, playerB:p2, winner, map:r.map||'', ...(r._lineMemo?{memo:r._lineMemo}:{})});
         });
         let sA=0,sB=0; (set.games||[]).forEach(g=>{if(g.winner==='A')sA++;else if(g.winner==='B')sB++;});
         set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
-        const rec={_id:mid,d:d||dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:'',b:'',teamALabel:'',teamBLabel:'',sets:[set],sa:sA,sb:sB,stage:_ttStage};
+        const rec={_id:mid,d:d||dateVal,n:_ttSaveComp,compName:_ttSaveComp,a:'',b:'',teamALabel:'',teamBLabel:'',sets:[set],sa:sA,sb:sB,stage:_ttStage, ...(mm?{memo:mm}:{})};
         ttM.unshift(rec);
       });
     } else {
       // 단일 페어: 기존 방식 유지(한 경기 저장)
       ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,
         a:_ttA,b:_ttB,teamALabel:_ttA,teamBLabel:_ttB,
-        sa:ttSA,sb:ttSB,teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:_ttStage});
+        sa:ttSA,sb:ttSB,teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:_ttStage,...(_matchMemo?{memo:_matchMemo}:{})});
       if(typeof applyTeamGameResult==='function'){
         (ttSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
           if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){

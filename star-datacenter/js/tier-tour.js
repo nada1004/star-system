@@ -88,6 +88,80 @@ function _migrateTierTourneys(){
   if(changed) save();
 }
 
+// (원복 지원) 티어대회 토너먼트 대진표를 "프로리그 대회 대진표 방식"(tn.bracket = rounds 배열)으로 통일하기 위한 변환
+// - 실험 버전에서 tn.bracket이 {slots,winners,matchDetails} 객체로 저장된 경우가 있어
+//   proCompBracket에서는 "대진표 없음"으로 보일 수 있음.
+// - tourschedule 렌더 직전에 1회 변환한다(가능한 범위: 1R 슬롯/승자/게임).
+function _migrateTierBracketToRoundsIfNeeded(tn){
+  try{
+    if(!tn || tn.type!=='tier') return false;
+    if(Array.isArray(tn.bracket)) return false;
+    const legacy = tn.bracket || {};
+    const slots = legacy.slots || {};
+    const winners = legacy.winners || {};
+    const matchDetails = legacy.matchDetails || {};
+
+    let sz = parseInt(tn.bracketOverrideSize||'0',10)||0;
+    if(sz<2){
+      let maxMi = -1;
+      Object.keys(slots).forEach(k=>{
+        const m = String(k).match(/^0-(\d+)-[ab]$/);
+        if(m) maxMi = Math.max(maxMi, parseInt(m[1],10));
+      });
+      sz = (maxMi>=0) ? (maxMi+1)*2 : 8;
+    }
+    // 2의 거듭제곱으로 보정
+    let p=1; while(p<sz) p*=2; sz=p;
+
+    const firstRound=[];
+    for(let i=0;i<sz;i+=2){
+      const mi = Math.floor(i/2);
+      const a = String(slots[`0-${mi}-a`]||'').trim();
+      const b = String(slots[`0-${mi}-b`]||'').trim();
+      const md = matchDetails[`0-${mi}`] || null;
+      const m = {a:a||'TBD', b:b||'TBD', winner:'', d:(md?.d||''), map:(md?.map||'')};
+      // 세부 게임 이관(가능하면)
+      try{
+        const games = md?.sets?.[0]?.games || [];
+        if(Array.isArray(games) && games.length){
+          m._games = games.map(g=>({winner:g.winner||'', map:g.map||''})).filter(x=>x.winner);
+        }
+      }catch(e){}
+      const wName = String(winners[`0-${mi}`]||'').trim();
+      if(wName && wName===m.a) m.winner='A';
+      else if(wName && wName===m.b) m.winner='B';
+      firstRound.push(m);
+    }
+    const rounds=[firstRound];
+    let cur=firstRound.length;
+    while(cur>1){
+      cur=Math.floor(cur/2);
+      const rnd=[];
+      for(let i=0;i<cur;i++) rnd.push({a:'TBD', b:'TBD', winner:'', d:'', map:''});
+      rounds.push(rnd);
+    }
+    // 승자 전파(표시/다음 라운드 슬롯)
+    for(let ri=0; ri<rounds.length-1; ri++){
+      (rounds[ri]||[]).forEach((m,mi)=>{
+        if(!m || !m.winner) return;
+        const nextMi=Math.floor(mi/2);
+        const isA = mi%2===0;
+        const w = m.winner==='A'?m.a:m.b;
+        if(rounds[ri+1] && rounds[ri+1][nextMi]){
+          if(isA) rounds[ri+1][nextMi].a = w;
+          else rounds[ri+1][nextMi].b = w;
+        }
+      });
+    }
+
+    tn.bracket = rounds;
+    save();
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 /* ══════════════════════════════════════
    📋 대회 경기 붙여넣기 일괄 입력
 ══════════════════════════════════════ */
@@ -700,14 +774,10 @@ function rTierTourTab(C, T){
   } else if(_ttSub==='grprank'){
     h+=_curTierTn ? rCompGrpRankFull(_curTierTn) : _noTnMsg;
   } else if(_ttSub==='tourschedule'){
-    // 티어대회 탭의 토너먼트는 "개인(스트리머) 대진표"가 기본.
-    // - type 값이 누락된 과거 데이터가 있어도 항상 개인전 브라켓 UI를 우선 사용한다.
-    // - rTierBracketDynamic가 없을 때만 기존 렌더러로 fallback.
+    // (원복) 티어대회 토너먼트 대진표를 프로리그 대회 대진표 방식(proCompBracket)으로 통일
     if(_curTierTn){
-      if(typeof rTierBracketDynamic==='function') h+=rTierBracketDynamic(_curTierTn);
-      else if(typeof proCompBracket==='function') h+=proCompBracket(_curTierTn);
-      else if(typeof rCompTourDynamic==='function') h+=rCompTourDynamic(_curTierTn);
-      else h+=_noTnMsg;
+      try{ _migrateTierBracketToRoundsIfNeeded(_curTierTn); }catch(e){}
+      h+= (typeof proCompBracket==='function') ? proCompBracket(_curTierTn) : _noTnMsg;
     } else h+=_noTnMsg;
   } else if(_ttSub==='bktrecords'){
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
