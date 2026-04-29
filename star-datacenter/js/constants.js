@@ -57,6 +57,24 @@ function applyProfileShapeVars(){
     const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
     const radius = (shape === 'square') ? '8px' : '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
+
+    // (추가) 기기별 프로필 이미지 크기 배율
+    // - PC/태블릿/모바일 각각 %로 저장
+    const w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+    const pc = parseInt(localStorage.getItem('su_profile_scale_pc')||'100',10) || 100;
+    const tb = parseInt(localStorage.getItem('su_profile_scale_tb')||'96',10) || 96;
+    const mb = parseInt(localStorage.getItem('su_profile_scale_mb')||'92',10) || 92;
+    const pct = (w<=768) ? mb : (w<=1024 ? tb : pc);
+    const sc = Math.max(0.7, Math.min(1.3, pct/100));
+    document.documentElement.style.setProperty('--su_profile_scale', String(sc));
+
+    // (추가) 프로필 이미지 효과
+    const fx = (localStorage.getItem('su_profile_fx')||'none').trim();
+    let shadow = 'none';
+    if(fx==='shadow') shadow = '0 6px 16px rgba(0,0,0,.18)';
+    if(fx==='ring') shadow = '0 0 0 2px rgba(255,255,255,.85)';
+    if(fx==='both') shadow = '0 0 0 2px rgba(255,255,255,.85), 0 6px 16px rgba(0,0,0,.18)';
+    document.documentElement.style.setProperty('--su_profile_fx', shadow);
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
   }
@@ -65,6 +83,13 @@ function applyProfileShapeVars(){
 try{ applyProfileShapeVars(); }catch(e){
   console.warn('[applyProfileShapeVars 초기화] 실패:', e.message);
 }
+// 화면 크기 변경 시도 반영
+try{
+  if(!window.__suProfileShapeResizeBound){
+    window.__suProfileShapeResizeBound=true;
+    window.addEventListener('resize', ()=>{ try{ applyProfileShapeVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════
    대학 로고 공통 스타일 (현황판/설정 등)
@@ -789,7 +814,8 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:var(--su_profile_radius,50%);flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const sz = 'calc('+size+' * var(--su_profile_scale,1))';
+  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
@@ -797,7 +823,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
     const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
     const txt=p?.race||'?';
-    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * 0.42);'+clickStyle+'">'+txt+'</span>';
+    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
   }
   const src = toHttpsUrl(p.photo);
   // object-fit: 기본 contain, 경기 상세에서는 설정에 따라 cover 가능

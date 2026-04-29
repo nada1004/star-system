@@ -207,6 +207,8 @@ function _applyCloudData(d) {
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    // 프로필 모양/크기/효과 즉시 반영
+    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
     if(s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
