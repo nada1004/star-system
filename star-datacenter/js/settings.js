@@ -2223,6 +2223,14 @@ function _cfgGo(secId){
       body.appendChild(el);
       // (요청사항) 팝업에서는 내용이 보여야 하므로 펼침
       try{ if(el.tagName==='DETAILS') el.open=true; }catch(e){}
+      // (보강) 동적 섹션은 팝업 이동만으로 toggle 이벤트가 안 나는 환경이 있어 수동 렌더
+      try{
+        if(secId==='profileshape' && typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection();
+        if(secId==='uisize' && typeof window._renderCfgUiSizeSection==='function') window._renderCfgUiSizeSection();
+        if(secId==='pd' && typeof window._renderCfgPdSection==='function') window._renderCfgPdSection();
+        if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
+        if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
+      }catch(e){}
     }
     // (모바일 버그픽스) pointerdown에서 섹션을 누를 경우,
     // 같은 탭 이벤트의 click/touchend 타겟이 모달 배경으로 잡히며 "열렸다가 바로 닫히는" 케이스가 있음
@@ -6503,6 +6511,7 @@ function _renderCfgUiSizeSection(){
   const mdMb = clamp(getF('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
   const mdTb = clamp(getF('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
   const badge = clamp(getF('su_pd_badge_scale', 1.00), 0.70, 1.30);
+  const chip = clamp(getF('su_pd_chip_scale', 1.00), 0.70, 1.30);
 
   const row=(label, id, val, min, max, step, hint)=>{
     const pct=Math.round(val*100);
@@ -6529,8 +6538,9 @@ function _renderCfgUiSizeSection(){
       ${row('경기 상세 상단 버튼(모바일)', 'su_md_mb_btn_scale', mdMb, 0.70, 1.30, 0.05, '')}
       ${row('경기 상세 상단 버튼(태블릿)', 'su_md_tb_btn_scale', mdTb, 0.70, 1.30, 0.05, '')}
       ${row('최근경기 “종류” 배지', 'su_pd_badge_scale', badge, 0.70, 1.30, 0.05, '')}
+      ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
+        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
         <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
       </div>
     </div>

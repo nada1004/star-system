@@ -1823,10 +1823,15 @@ function buildPlayerDetailHTML(p){
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
-  // (요청사항) 모바일/태블릿에서 종목/연도 필터 칩이 너무 커 보이는 문제 완화
-  const _chipFs = _isMobile ? 8 : (_isTablet ? 9 : 9);
-  const _chipPad = _isMobile ? '1px 5px' : '2px 6px';
-  const _chipR = _isMobile ? '7px' : '8px';
+  // (요청사항) 종목/연도 필터 칩 크기: 설정(su_pd_chip_scale)로 조절 가능
+  const _chipScale = 'var(--su_pd_chip_scale,1)';
+  const _chipFsBase = _isMobile ? 8 : (_isTablet ? 9 : 9);
+  const _chipPadYBase = _isMobile ? 1 : 2;
+  const _chipPadXBase = _isMobile ? 5 : 6;
+  const _chipRBase = _isMobile ? 7 : 8;
+  const _chipFs = `calc(${_chipFsBase}px * ${_chipScale})`;
+  const _chipPad = `calc(${_chipPadYBase}px * ${_chipScale}) calc(${_chipPadXBase}px * ${_chipScale})`;
+  const _chipR = `calc(${_chipRBase}px * ${_chipScale})`;
   const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
     <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">

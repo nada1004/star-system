@@ -162,6 +162,7 @@ function applyResponsiveUiVars(){
     const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
     const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
+    const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
 
     document.documentElement.style.setProperty('--su_mb_scale', String(mb));
     document.documentElement.style.setProperty('--su_tb_scale', String(tb));
@@ -172,6 +173,7 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
     document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
+    document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
   }catch(e){}
 }
 try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}
