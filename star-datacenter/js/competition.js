@@ -936,6 +936,15 @@ function rTierBracketDynamic(tn){
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">🗂️ ${tn.name} 토너먼트</div>
     <span style="font-size:11px;color:var(--gray-l)">※ 티어대회(개인전) 대진표</span>
+    ${isLoggedIn?`
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+        <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal && openTierBktPasteModal('${tn.id}')" title="여러 경기 결과를 붙여넣어 토너먼트 기록으로 저장">📋 자동인식</button>
+        <span style="font-size:11px;color:var(--gray-l);font-weight:800">강수</span>
+        <select onchange="setTierBracketSize('${tn.id}', this.value)" style="border:1px solid var(--border2);border-radius:8px;padding:5px 8px;font-size:12px">
+          ${[2,4,8,16,32,64].map(x=>`<option value="${x}" ${x===numTeams?'selected':''}>${x}강</option>`).join('')}
+        </select>
+      </div>
+    `:''}
   </div>`;
 
   h += `<div style="overflow-x:auto;padding-bottom:14px"><div style="display:inline-flex;gap:0;align-items:flex-start;min-width:fit-content">`;
@@ -955,23 +964,27 @@ function rTierBracketDynamic(tn){
       const md = matchDetail(ri,mi);
       const sa = md?.sa, sb = md?.sb;
       const hasScore = (sa!=null && sb!=null);
+      const _esc = s => String(s||'').replace(/'/g,"\\'");
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:0 1px 6px rgba(0,0,0,.07);border:1.5px solid #e2e8f0">
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?'#2563eb18':a==='TBD'?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid #2563eb`:''};${w && !aWin?'opacity:.55':''}">
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${aWin?'900':a==='TBD'?'400':'700'};color:${aWin?'#2563eb':a==='TBD'?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${a!=='TBD'?'pointer':'default'}" onclick="${a!=='TBD'?`openPlayerModal('${String(a).replace(/'/g,"\\'")}')`:''}">${a}</div>
           </div>
           ${hasScore?`<span style="font-size:11px;font-weight:900;color:${aWin?'#2563eb':'#94a3b8'};flex-shrink:0">${sa}</span>`:''}
+          ${isLoggedIn?`<button class="btn btn-xs" style="font-size:10px;padding:0 6px" onclick="(function(){const v=prompt('A 슬롯 선수명 입력(빈칸=삭제, BYE 가능)', '${_esc(a==='TBD'?'':a)}'); if(v===null)return; setBracketSlot('${tn.id}',${ri},${mi},'a', (v||'').trim()); })()">✏️</button>`:''}
         </div>
         <div style="padding:9px 12px;background:${bWin?'#2563eb18':b==='TBD'?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid #2563eb`:''};${w && !bWin?'opacity:.55':''}">
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${bWin?'900':b==='TBD'?'400':'700'};color:${bWin?'#2563eb':b==='TBD'?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${b!=='TBD'?'pointer':'default'}" onclick="${b!=='TBD'?`openPlayerModal('${String(b).replace(/'/g,"\\'")}')`:''}">${b}</div>
           </div>
           ${hasScore?`<span style="font-size:11px;font-weight:900;color:${bWin?'#2563eb':'#94a3b8'};flex-shrink:0">${sb}</span>`:''}
+          ${isLoggedIn?`<button class="btn btn-xs" style="font-size:10px;padding:0 6px" onclick="(function(){const v=prompt('B 슬롯 선수명 입력(빈칸=삭제, BYE 가능)', '${_esc(b==='TBD'?'':b)}'); if(v===null)return; setBracketSlot('${tn.id}',${ri},${mi},'b', (v||'').trim()); })()">✏️</button>`:''}
         </div>
         ${(md?.d||md?.map)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${md?.d?`<span>🗓️ ${(md.d||'').slice(2).replace(/-/g,'.')}</span>`:''}${md?.map?`<span>🗺️ ${md.map}</span>`:''}</div>`:''}
         ${isLoggedIn?`<div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
           ${(a!=='TBD'&&b!=='TBD')?`<button class="btn btn-xs" style="flex:1;font-size:10px;${aWin?`background:#2563eb;color:#fff;border-color:#2563eb`:''}" onclick="setBracketWinner('${tn.id}',${ri},${mi},'${a.replace(/'/g,"\\'")}')">${a.slice(0,5)} 승</button>
           <button class="btn btn-xs" style="flex:1;font-size:10px;${bWin?`background:#2563eb;color:#fff;border-color:#2563eb`:''}" onclick="setBracketWinner('${tn.id}',${ri},${mi},'${b.replace(/'/g,"\\'")}')">${b.slice(0,5)} 승</button>`:''}
+          <button class="btn btn-xs btn-r" style="font-size:10px;padding:0 6px" onclick="clearBracketWinner('${tn.id}',${ri},${mi})" title="승자 초기화">↩️</button>
         </div>`:''}
       </div>`;
     }
@@ -990,6 +1003,15 @@ function setBracketWinner(tnId,rnd,mi,winner){
   else{br.winners[key]=winner;}
   save();render();
 }
+function clearBracketWinner(tnId,rnd,mi){
+  const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
+  const br=getBracket(tn);
+  const key=`${rnd}-${mi}`;
+  if(br.winners && Object.prototype.hasOwnProperty.call(br.winners, key)){
+    delete br.winners[key];
+  }
+  save();render();
+}
 function setBracketSlot(tnId,rnd,mi,side,val){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const br=getBracket(tn);
@@ -1006,6 +1028,22 @@ function resetBracket(tnId){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   if(!confirm('브라켓을 초기화하시겠습니까?\n수동으로 입력한 팀 배치와 결과가 모두 삭제됩니다.'))return;
   tn.bracket={slots:{},winners:{},champ:''};save();render();
+}
+
+// (요청사항) 티어대회 토너먼트 강수(브라켓 크기) 선택 지원
+// - tn.bracketOverrideSize: 2/4/8/16/32/64...
+// - 강수를 바꾸면 기존 슬롯/결과가 의미가 없어질 수 있으므로 브라켓을 초기화한다.
+function setTierBracketSize(tnId, size){
+  const tn=(tourneys||[]).find(t=>t && t.id===tnId); if(!tn) return;
+  const sz=parseInt(size,10)||0;
+  if(sz<2) return;
+  const cur=parseInt(tn.bracketOverrideSize||'0',10)||0;
+  if(cur===sz) return;
+  if(!confirm(`토너먼트 강수를 ${sz}강으로 변경할까요?\n\n⚠️ 강수를 변경하면 기존 대진표 슬롯/결과가 초기화됩니다.`)) return;
+  tn.bracketOverrideSize = sz;
+  // 브라켓 데이터 초기화
+  tn.bracket = {slots:{},winners:{},champ:'',matchDetails:{}};
+  save(); render();
 }
 
 /* ── 동적 브라켓 시각화 (스포츠 대진표 스타일) ── */

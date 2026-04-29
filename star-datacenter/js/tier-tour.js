@@ -743,8 +743,8 @@ function rTierTourTab(C, T){
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
     if(isLoggedIn && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
-        <button class="btn btn-p btn-sm" onclick="openPcBktBulkPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
-        <span style="font-size:11px;color:var(--gray-l)">여러 경기를 한 번에 입력하면 토너먼트 대진표(🗂️ 토너먼트)에도 자동 반영됩니다.</span>
+        <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
+        <span style="font-size:11px;color:var(--gray-l)">결과는 “토너먼트 기록”으로 저장됩니다. (대진표 자동 반영은 하지 않음)</span>
       </div>`;
     }
     h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
@@ -2302,6 +2302,26 @@ function _bulkArrMapAll(){
   // 존재하는 배열만 포함
   const m = { mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM, ind: (typeof indM!=='undefined'?indM:[]), gj:(typeof gjM!=='undefined'?gjM:[]), comp:comps };
   return m;
+}
+
+// 티어대회(토너먼트 탭)에서 경기 결과 붙여넣기(자동인식) → "토너먼트 기록"으로 저장
+// - 대진표 자동 생성/자동 반영은 하지 않음(사용자가 슬롯/승자 수동 입력)
+function openTierBktPasteModal(tnId){
+  if(!isLoggedIn) return alert('로그인이 필요합니다.');
+  const tn=(tourneys||[]).find(t=>t && t.id===tnId) || null;
+  if(tn && tn.name) _ttCurComp = tn.name;
+  try{ window._pasteFromTierBkt = true; }catch(e){}
+  try{ window._pasteFromHistExt = false; }catch(e){}
+  try{
+    if(typeof openTTPasteModal==='function') openTTPasteModal();
+  }catch(e){}
+  // 대회명 자동 채우기
+  setTimeout(()=>{
+    try{
+      const inp=document.getElementById('paste-comp-name');
+      if(inp && tn && tn.name) inp.value = tn.name;
+    }catch(e){}
+  }, 40);
 }
 
 // (추가) 설정탭 전용: "스트리머별 상태 아이콘 지정"만 보여주는 목록

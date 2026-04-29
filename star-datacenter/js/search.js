@@ -2753,6 +2753,7 @@ function pasteApply() {
   if (!window._pasteResults) return;
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
   const _fromHistExt = !!window._pasteFromHistExt;
+  const _fromTierBkt = !!window._pasteFromTierBkt;
 
   // 대회 경기 세트 적용 모드 분기
   if (window._grpPasteMode) {
@@ -3261,11 +3262,14 @@ function pasteApply() {
     }catch(e){}
     // (요청사항) 티어대회: 일반/조별리그/토너먼트 구분 저장
     // - "대전기록-외부 자동인식"에서만 선택 가능
-    // - 티어대회탭 내부 자동인식에서는 항상 'general'로 저장(선택 UI 노출 X)
+    // - 티어대회 토너먼트(🗂️) 탭에서 자동인식 버튼으로 열면 'bkt' 강제
+    // - 그 외(티어대회탭 일반 자동인식)는 항상 'general'
     let _ttStage = 'general';
     try{
       if(_fromHistExt){
         _ttStage = (document.getElementById('paste-tt-stage')?.value || localStorage.getItem('su_tt_paste_stage') || 'general') + '';
+      }else if(_fromTierBkt){
+        _ttStage = 'bkt';
       }else{
         _ttStage = 'general';
       }
@@ -3314,8 +3318,12 @@ function pasteApply() {
     });
     const _pairKeys = Object.keys(_ttGroups);
 
-    // 브라켓 매칭(선택한 대회명이 실제 tourneys 티어대회에 있으면 그 브라켓에 기록)
-    const _tn = (_ttStage==='bkt') ? (_ttTn || null) : null;
+    // (요청사항) 외부 자동인식 "티어대회 토너먼트"에서 대진표(브라켓) 자동 생성/반영 기능 삭제
+    // - 토너먼트 기록(ttM.stage='bkt')만 저장하고, tourneys.bracket에는 손대지 않는다.
+    const _disableAutoBracket = (_fromHistExt && _ttStage === 'bkt');
+
+    // 브라켓 매칭(토너먼트 탭 반영)은 비활성화
+    const _tn = (!_disableAutoBracket && _ttStage==='bkt') ? (_ttTn || null) : null;
     const _br = (_tn && typeof getBracket==='function') ? getBracket(_tn) : null;
     const _getSlotName = (rnd, mi, side)=>{
       if(!_br) return '';
@@ -3352,139 +3360,8 @@ function pasteApply() {
       return null;
     };
 
-    // (요청사항) 토너먼트 선택인데 브라켓 슬롯이 비어있으면,
-    // 외부 입력에 포함된 페어를 기준으로 1라운드 대진표를 자동 생성한다.
-    if(_ttStage==='bkt' && _tn && _br){
-      try{
-        // tier-tour.js 마이그레이션(브라켓 필드 보강)이 있으면 먼저 실행
-        try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
-        const uniqPlayers = new Set();
-        (savable||[]).forEach(r=>{ if(r?.wPlayer?.name) uniqPlayers.add(r.wPlayer.name); if(r?.lPlayer?.name) uniqPlayers.add(r.lPlayer.name); });
-        const n = uniqPlayers.size;
-        const nextPow2 = (x)=>{ let p=1; while(p<x) p*=2; return p; };
-        const size = nextPow2(Math.max(2,n));
-        if(!_tn.bracketOverrideSize) _tn.bracketOverrideSize = size;
-        // 페어별로 슬롯 생성 (0라운드)
-        const pairs = Object.keys(_ttGroups).map(k=>k.split('||')).filter(x=>x.length===2);
-        // (확인팝업) 외부 자동인식에서만 "자동 대진표 생성" 여부 확인
-        if(_fromHistExt){
-          const preview = pairs.slice(0,10).map((ab,i)=>`  ${i+1}) ${ab[0]} vs ${ab[1]}`).join('\n');
-          const more = pairs.length>10 ? `\n  ... 외 ${pairs.length-10}경기` : '';
-          const msg =
-`외부 자동인식 결과로 토너먼트 대진표(1R)를 자동 생성합니다.
-
-대회명: ${_ttSaveComp}
-참가자 수(추정): ${n}
-대진(1R, 페어 기준):
-${preview}${more}
-
-※ 이후 라운드는 토너먼트 탭에서 결과를 입력하면 승자 진행으로 채워집니다.
-지금 대진표를 생성할까요?`;
-          if(!confirm(msg)){
-            // 사용자가 원치 않으면 대진표 생성만 스킵(기록 저장은 그대로 진행)
-            throw new Error('__SKIP_AUTO_BRACKET__');
-          }
-        }
-        pairs.forEach((ab,mi)=>{
-          const a=String(ab[0]||'').trim(), b=String(ab[1]||'').trim();
-          if(!a || !b) return;
-          _br.slots[`0-${mi}-a`] = a;
-          _br.slots[`0-${mi}-b`] = b;
-          // matchDetails도 미리 생성해 둬서 "대진표가 안 만들어진 것처럼 보이는" 문제 방지
-          try{
-            if(typeof getBktMatch==='function'){
-              const m = getBktMatch(_tn.id, 0, mi);
-              if(m){
-                if(!m.a) m.a = a;
-                if(!m.b) m.b = b;
-                if(!m.d) m.d = dateVal || new Date().toISOString().slice(0,10);
-                if(!m._id && typeof genId==='function') m._id = genId();
-                // 초기화: 점수/세트가 없으면 빈 세트 배열
-                if(!m.sets) m.sets = [];
-                if(m.sa === undefined) m.sa = null;
-                if(m.sb === undefined) m.sb = null;
-              }
-            }
-          }catch(e){}
-        });
-        // 생성 완료 플래그 (아래에서 "토너먼트 탭으로 이동" 제안)
-        try{ window._ttAutoBracketMade = true; }catch(e){}
-      }catch(e){}
-        if(String(e && e.message || '').includes('__SKIP_AUTO_BRACKET__')){
-          try{ window._ttAutoBracketMade = false; }catch(_e){}
-        }
-    }
-
-
-    const _applyAsBktMatch = (grpRows, pA, pB)=>{
-      if(!_tn || !_br || typeof getBktMatch!=='function') return false;
-      const found = _findBktPosByPair(pA, pB);
-      if(!found) return false;
-      const {rnd,mi,ta,tb} = found;
-      // 슬롯 방향을 기준으로 teamA/teamB 고정
-      const teamA = ta, teamB = tb;
-      const m = getBktMatch(_tn.id, rnd, mi);
-      if(!m) return false;
-      m.d = dateVal || (m.d||new Date().toISOString().slice(0,10));
-      m.a = teamA;
-      m.b = teamB;
-      // sets 구성: 기본은 1세트(게임 수 누적)
-      const set = {games:[]};
-      grpRows.forEach((r,gi)=>{
-        const wn=r.wPlayer?.name||''; const ln=r.lPlayer?.name||'';
-        if(!wn || !ln) return;
-        let winner = (wn===teamA) ? 'A' : (wn===teamB ? 'B' : '');
-        // 혹시 반대 입력(승/패 뒤집힘)인 경우 보정
-        if(!winner){
-          if(ln===teamA) winner='B';
-          else if(ln===teamB) winner='A';
-        }
-        set.games.push({playerA:teamA, playerB:teamB, winner: winner||'A', map:r.map||''});
-      });
-      // 스코어 계산
-      let sA=0,sB=0;
-      (set.games||[]).forEach(g=>{ if(g.winner==='A') sA++; else if(g.winner==='B') sB++; });
-      set.scoreA=sA; set.scoreB=sB; set.winner=sA>sB?'A':sB>sA?'B':'';
-      m.sets = [set];
-      // match score: game 모드면 게임수 합산, set 모드면 세트 승수(여기선 1세트이므로 동일)
-      let sa = (window._pasteMatchMode==='game') ? sA : (set.winner==='A'?1:set.winner==='B'?0:0);
-      let sb = (window._pasteMatchMode==='game') ? sB : (set.winner==='B'?1:set.winner==='A'?0:0);
-      m.sa = sa; m.sb = sb;
-
-      // 기존 기록 롤백 후 재적용(중복 방지)
-      const matchId2 = m._id || genId();
-      if(m._id && typeof revertMatchRecord==='function'){ try{ revertMatchRecord({...m,_id:matchId2}); }catch(e){} }
-      m._id = matchId2;
-
-      // 브라켓 승자 반영
-      if(rnd!==-1){
-        const w = sa>sb ? m.a : sb>sa ? m.b : '';
-        if(w) (_br.winners||{})[`${rnd}-${mi}`] = w;
-      }
-      // 개인전적 반영
-      try{
-        (m.sets||[]).forEach((st,si)=>{
-          (st.games||[]).forEach((g,gi)=>{
-            if(!g.playerA||!g.playerB||!g.winner) return;
-            const gid = g._id || `${matchId2}_s${si}_g${gi}`;
-            g._id = gid;
-            const wn = g.winner==='A'?g.playerA:g.playerB;
-            const ln = g.winner==='A'?g.playerB:g.playerA;
-            applyGameResult(wn, ln, m.d||'', g.map||'', gid, (g.winner==='A'?m.a:m.b), (g.winner==='A'?m.b:m.a), '티어대회');
-          });
-        });
-      }catch(e){}
-
-      // ttM 동기화(토너먼트 기록 탭에서 보이게)
-      try{
-        if(typeof ttM!=='undefined'){
-          const _ei=ttM.findIndex(x=>x._id===matchId2);
-          const _rec={_id:matchId2,d:m.d,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:_tn.name,compName:_tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
-          if(_ei>=0)ttM[_ei]=_rec; else ttM.unshift(_rec);
-        }
-      }catch(e){}
-      return true;
-    };
+    // (삭제됨) 외부 자동인식 토너먼트 대진표 자동 생성/반영 + 브라켓 매칭 로직
+    const _applyAsBktMatch = ()=>false;
 
     // 날짜별 묶음(요청): 서로 다른 날짜 라인이 섞이면 날짜별로 분리 저장
     // - 내부 입력에서도 라인에 날짜가 들어올 수 있어(_lineDate) 날짜 기준으로 분리
@@ -3524,13 +3401,11 @@ ${preview}${more}
       }
     }
     else if(_ttStage==='bkt' && _pairKeys.length>1){
-      // 여러 페어면 각각 기록 (가능하면 브라켓 매칭 → 아니면 ttM에 개별 기록)
+      // 여러 페어면 각각 기록 (대진표/브라켓 반영은 하지 않음)
       _pairKeys.forEach((k,idx)=>{
         const rows=_ttGroups[k]||[];
         const names=k.split('||'); const p1=names[0]||''; const p2=names[1]||'';
-        const done = _applyAsBktMatch(rows, p1, p2);
-        if(done) return;
-        // 브라켓 매칭 실패 시: ttM에 개별 경기로 저장(최소한 "1개로 뭉침" 방지)
+        // ttM에 개별 경기로 저장(최소한 "1개로 뭉침" 방지)
         const mid = genId();
         // 1세트로 저장
         const set = {games:[]};
@@ -3604,25 +3479,8 @@ ${preview}${more}
       if (tabBtn) tabBtn.click();
     }
   }
-  // (요청사항) 외부 자동인식으로 토너먼트 대진표 생성까지 했으면, 바로 티어대회→토너먼트 탭으로 이동 제안
-  if(_fromHistExt && mode==='tt'){
-    try{
-      if(window._ttAutoBracketMade){
-        const go = confirm('🏆 토너먼트 대진표(1R) 생성 완료!\n지금 티어대회 → 🗂️ 토너먼트 탭으로 이동할까요?');
-        if(go){
-          try{
-            if(typeof sw==='function') sw('tiertour');
-          }catch(e){}
-          try{
-            if(typeof _ttCurComp!=='undefined') _ttCurComp = _ttSaveComp;
-            window._ttSub = 'tourschedule';
-          }catch(e){}
-          try{ render(); }catch(e){}
-        }
-      }
-    }catch(e){}
-  }
   try{ window._pasteFromHistExt = false; }catch(e){}
+  try{ window._pasteFromTierBkt = false; }catch(e){}
 
   // 성공 토스트
   const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';
