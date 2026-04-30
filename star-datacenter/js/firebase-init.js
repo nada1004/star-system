@@ -50,7 +50,7 @@ async function startGithubPolling(){
   let lastSavedAt = 0;
   let _adminFirstApplied = false; // 관리자 최초 1회는 새로고침 시 원격 반영 허용
   let _lastAdminHintTs = 0;
-  const _isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
+  // 로그인은 페이지 로드 후에 발생할 수 있으므로, 관리자 여부는 "매 폴링마다" 동적으로 판별한다.
 
   const _shouldApplyToAdmin = (remoteSavedAt)=>{
     try{
@@ -78,6 +78,7 @@ async function startGithubPolling(){
 
   async function once(){
     if (document.visibilityState !== 'visible') return;
+    const isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
     try{
       const url = _ghRawUrl();
       const r = await fetch(url + '?_=' + Date.now(), { cache:'no-store' });
@@ -87,7 +88,7 @@ async function startGithubPolling(){
       const sa = Number(d.savedAt||0) || 0;
       if(!lastSavedAt || sa > lastSavedAt){
         lastSavedAt = sa || lastSavedAt;
-        if (_isAdminSession) {
+        if (isAdminSession) {
           // ✅ 새로고침(초기 로드)에서는 1회 원격 반영 허용(로컬이 더 최신이면 보호)
           if(!_adminFirstApplied){
             _adminFirstApplied = true;
