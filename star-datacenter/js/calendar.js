@@ -8,39 +8,27 @@ function rCal(C,T){
   if(typeof calScheduled==='undefined') window.calScheduled=[];
   window._calScheduled=calScheduled;
   const _calT=localStorage.getItem('su_last_save_time')||'0';
-  if(_calT!==window._calMatchCacheTime){
-    window._calMatchCache=null;
-    window._calDateMatchMap=null;
-    window._calRawDateMatchMap=null;
-    window._calMatchCacheTime=_calT;
-  }
-  function _markCalType(arr, type, mode){
-    return (arr||[]).map(m=>{
-      try{
-        if(m && typeof m === 'object'){
-          Object.defineProperty(m, '__calType', { value:type, writable:true, configurable:true, enumerable:false });
-          Object.defineProperty(m, '__calMode', { value:(mode||type), writable:true, configurable:true, enumerable:false });
-        }
-      }catch(e){}
-      return m;
-    });
-  }
+  if(_calT!==window._calMatchCacheTime){window._calMatchCache=null;window._calMatchCacheTime=_calT;}
   if(!window._calMatchCache) window._calMatchCache=[
-    ..._markCalType(miniM,'mini'),
-    ..._markCalType(univM,'univm'),
-    ..._markCalType(comps,'comp'),
-    ..._markCalType(ckM,'ck'),
-    ..._markCalType(proM,'pro'),
-    ..._markCalType((typeof getTourneyMatches==='function'?getTourneyMatches():[]),'comp'),
-    ..._markCalType((typeof indM!=='undefined'?indM:[]),'ind'),
-    ..._markCalType((typeof gjM!=='undefined'?gjM:[]),'gj'),
-    ..._markCalType((typeof ttM!=='undefined'?ttM:[]),'tt'),
-    ..._markCalType(window._calScheduled,'sched')
+    ...miniM,...univM,...comps,...ckM,...proM,
+    ...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),
+    ...(typeof indM!=='undefined'?indM:[]),
+    ...(typeof gjM!=='undefined'?gjM:[]),
+    ...(typeof ttM!=='undefined'?ttM:[]),
+    ...window._calScheduled
   ];
 
   // Bug fix: 통합 타입 감지 (한 곳에서 관리)
   function matchType(m){
-    return (m && m.__calType) || 'comp';
+    if(window._calScheduled&&window._calScheduled.includes(m)) return 'sched';
+    if(typeof indM!=='undefined'&&indM.includes(m)) return 'ind';
+    if(typeof gjM!=='undefined'&&gjM.includes(m)) return 'gj';
+    if(typeof ttM!=='undefined'&&ttM.includes(m)) return 'tt';
+    if(miniM.includes(m)) return 'mini';
+    if(univM.includes(m)) return 'univm';
+    if(ckM.includes(m)) return 'ck';
+    if(proM.includes(m)) return 'pro';
+    return 'comp';
   }
 
   const TYPE_INFO={
@@ -82,16 +70,6 @@ function rCal(C,T){
 
   // Feature 2: 타입 필터 적용
   const rawAll=window._calMatchCache;
-  if(!window._calRawDateMatchMap){
-    const rawMap={};
-    rawAll.forEach(m=>{
-      const d=m.d||'';
-      if(!d) return;
-      if(!rawMap[d]) rawMap[d]=[];
-      rawMap[d].push(m);
-    });
-    window._calRawDateMatchMap=rawMap;
-  }
   const allMatches=(calTypeFilter&&calTypeFilter!=='all')
     ? rawAll.filter(m=>matchType(m)===calTypeFilter)
     : rawAll;
@@ -104,7 +82,6 @@ function rCal(C,T){
     if(!dateMatchMap[d])dateMatchMap[d]=[];
     dateMatchMap[d].push(m);
   });
-  window._calDateMatchMap=dateMatchMap;
 
   const now=new Date(calYear,calMonth,1);
   const year=now.getFullYear();
@@ -278,7 +255,7 @@ function rCal(C,T){
         const hasResult=_isIG?!!m.wName:(m.sa!=null&&m.sa!=='');
         const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${m.time}</span>`:'';
         const detKey=`calday-${calDayDate}-${mi}`;
-        const modeKey=(m && m.__calMode) || matchType(m);
+        const modeKey=(typeof indM!=='undefined'&&indM.includes(m))?'ind':(typeof gjM!=='undefined'&&gjM.includes(m))?'gj':miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
         const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
         const leftCol = hasResult?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
         const MODE_COL = {ind:'#2563eb',gj:'#dc2626',mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',comp:'#3b82f6'};
@@ -432,15 +409,15 @@ function calShowDay(ds){
   }
   _calActiveDay=ds;
   _calDetailState={};
-  const matches=((window._calRawDateMatchMap&&window._calRawDateMatchMap[ds])?window._calRawDateMatchMap[ds]:[]).slice();
+  const allM=[...miniM,...univM,...comps,...ckM,...proM,...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),...(typeof indM!=='undefined'?indM:[]),...(typeof gjM!=='undefined'?gjM:[])];
+  const matches=allM.filter(m=>m.d===ds);
   const schedMatches=(calScheduled||[]).filter(m=>m.d===ds);
   if(!window._calDayCache) window._calDayCache={};
   window._calDayCache[ds]=matches;
 
   function buildMatchRow(m,mi){
-    const _type=(m && m.__calType) || 'comp';
-    const _isInd=_type==='ind';
-    const _isGj=_type==='gj';
+    const _isInd=typeof indM!=='undefined'&&indM.includes(m);
+    const _isGj=typeof gjM!=='undefined'&&gjM.includes(m);
     const _isIG=_isInd||_isGj;
     // ind/gj: 별도 처리 (sa/sb 없음)
     if(_isIG){
@@ -472,16 +449,16 @@ function calShowDay(ds){
         +'</div>';
     }
     if(m.sa==null||m.sa==='') return '';
-    const isCKorPro=_type==='ck'||_type==='pro';
+    const isCKorPro=ckM.includes(m)||proM.includes(m);
     const tA=isCKorPro?'A팀':(m.a||'');
     const tB=isCKorPro?'B팀':(m.b||'');
     const ca=isCKorPro?'#2563eb':gc(m.a||'');
     const cb=isCKorPro?'#dc2626':gc(m.b||'');
     const aWin=(m.sa??-1)>(m.sb??-1), bWin=(m.sb??-1)>(m.sa??-1);
-    const typeBg=_type==='mini'?'#2563eb':_type==='univm'?'#7c3aed':_type==='ck'?'#d97706':_type==='pro'?'#7c3aed':'#16a34a';
-    const typeLabel=_type==='mini'?'⚡ 미니대전':_type==='univm'?'🏟️ 대학대전':_type==='ck'?'🤝 대학CK':_type==='pro'?'🏅 프로리그':'🎖️ 대회';
+    const typeBg=miniM.includes(m)?'#2563eb':univM.includes(m)?'#7c3aed':ckM.includes(m)?'#d97706':proM.includes(m)?'#7c3aed':'#16a34a';
+    const typeLabel=miniM.includes(m)?'⚡ 미니대전':univM.includes(m)?'🏟️ 대학대전':ckM.includes(m)?'🤝 대학CK':proM.includes(m)?'🏅 프로리그':'🎖️ 대회';
     const detKey='caldm-'+ds+'-'+mi;
-    const modeKey=(m && m.__calMode) || _type || 'comp';
+    const modeKey=miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
     const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
     const winLabel=aWin?'▶ '+tA+' 승':bWin?'▶ '+tB+' 승':'무승부';
     const winColor=aWin?ca:bWin?cb:'#888';

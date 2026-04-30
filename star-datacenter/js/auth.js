@@ -472,7 +472,6 @@ async function captureStats(){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
-    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     const a=document.createElement('a');a.download=`stats_${new Date().toISOString().slice(0,10)}.jpg`;
@@ -486,7 +485,6 @@ async function captureSection(sectionId, filename){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
-    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false,logging:false});
     const a=document.createElement('a');
