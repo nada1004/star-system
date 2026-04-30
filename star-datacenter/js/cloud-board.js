@@ -353,27 +353,6 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  // (중요) 관리자 기기에서 원격 데이터가 더 "과거"인 경우, 로컬에서 방금 입력한 기록이
-  // GitHub 폴링/원격 수신으로 덮여서 "사라지는" 문제가 발생할 수 있음.
-  // → 로컬 저장 시각(su_last_admin_save)이 원격 savedAt보다 최신이면 적용을 스킵한다.
-  try{
-    const isAdmin = (typeof isLoggedIn !== 'undefined' && isLoggedIn);
-    const remoteSa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
-    const localAdminSa = (()=>{ try{ return Number(localStorage.getItem('su_last_admin_save')||0) || 0; }catch(e){ return 0; } })();
-    const localSa = localAdminSa || (Number(window._lastAdminSaveTime||0) || 0);
-    if(isAdmin && !window._forcingSync && remoteSa && localSa && remoteSa < localSa){
-      // 상태 표시(선택)
-      try{
-        const statusEl = document.getElementById('cloudStatus');
-        if(statusEl){
-          statusEl.style.color = '#d97706';
-          statusEl.textContent = '⚠️ 원격 데이터가 더 오래됨(업로드 실패/지연 가능) — 로컬 입력을 보호하기 위해 동기화 적용을 건너뜀';
-          setTimeout(()=>{ try{ if(statusEl) statusEl.textContent=''; }catch(e){} }, 4500);
-        }
-      }catch(e){}
-      return;
-    }
-  }catch(e){}
   // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
   // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
   try{
@@ -621,71 +600,47 @@ async function githubDataSave(dataObj) {
   if (/[^ -~]/.test(token)) {
     throw new Error('GitHub 토큰이 깨졌습니다(한글/이모지 포함). 설정에서 토큰을 지우고 ghp_... 또는 github_pat_... 값을 다시 저장하세요.');
   }
-  const cfg = ghGetRepoCfg();
   const apiUrl = ghGetContentsApiUrl();
-  const apiUrlWithRef = apiUrl + '?ref=' + encodeURIComponent(cfg.branch || 'main');
-
-  async function _getSha(){
-    const getRes = await fetch(apiUrlWithRef, {
-      // Fine-grained PAT는 Bearer 권장
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if (getRes.ok) {
-      const fileInfo = await getRes.json();
-      return { sha: (fileInfo && fileInfo.sha ? String(fileInfo.sha) : null) };
-    } else if (getRes.status === 404) {
-      // 신규 생성
-      return { sha: null };
-    } else {
-      let msg = '';
-      try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
-      throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
-    }
+  // 현재 파일 SHA 조회 (업데이트 시 필수)
+  const getRes = await fetch(apiUrl, {
+    // Fine-grained PAT는 Bearer 권장
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+  });
+  let sha = null;
+  if (getRes.ok) {
+    const fileInfo = await getRes.json();
+    sha = fileInfo && fileInfo.sha ? String(fileInfo.sha) : null;
+  } else if (getRes.status === 404) {
+    // 신규 생성
+    sha = null;
+  } else {
+    let msg = '';
+    try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
+    throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
   }
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
   const payload = { _lz: compressed };
   const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-
-  async function _put(sha){
-    const putRes = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-        content: b64,
-        branch: cfg.branch || 'main',
-        ...(sha ? { sha } : {})
-      })
-    });
-    if (putRes.ok) return true;
+  // 파일 업데이트
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: b64,
+      ...(sha ? { sha } : {})
+    })
+  });
+  if (!putRes.ok) {
     let msg = '';
     try{
       const j = await putRes.json();
       msg = (j && (j.message || j.error)) ? String(j.message || j.error) : '';
       if (j && j.documentation_url) msg += (msg ? ' ' : '') + String(j.documentation_url);
     }catch(e){}
-    const err = new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
-    // @ts-ignore
-    err._status = putRes.status;
-    throw err;
-  }
-
-  // 1차 시도
-  let shaInfo = await _getSha();
-  try{
-    await _put(shaInfo.sha);
-  }catch(e){
-    // 409(Conflict/sha mismatch)면 최신 sha 재조회 후 1회 재시도
-    // @ts-ignore
-    const st = e && (e._status || e.status) ? Number(e._status || e.status) : 0;
-    if (st === 409) {
-      shaInfo = await _getSha();
-      await _put(shaInfo.sha);
-    } else {
-      throw e;
-    }
+    throw new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
   }
 }
 

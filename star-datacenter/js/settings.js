@@ -4247,7 +4247,6 @@ ${_scfgD('notice','📢 공지 관리')}
           ${(!isSubAdmin?`<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer"><input id="cfg-gist-enabled" type="checkbox"> 동기화 ON</label>`:'')}
           ${(!isSubAdmin?`<input id="cfg-gist-token" type="password" placeholder="GitHub 토큰(gist)" style="width:220px;max-width:100%" autocomplete="new-password">`:'')}
           ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`:`<button class="btn btn-w btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`)}
-          ${(!isSubAdmin?`<button class="btn btn-r btn-sm" onclick="cfgGistSyncReset()">초기화</button>`:'')}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <button class="btn btn-w btn-sm" onclick="cfgGistSyncPull()">⬇️ 원격 불러오기</button>
@@ -5140,43 +5139,16 @@ window.cfgGistSyncSaveCfg = function(){
   const enEl=document.getElementById('cfg-gist-enabled');
   const en = enEl ? !!enEl.checked : (window.SettingsStore.cfg().enabled);
   const patch={};
-  // 빈 값도 저장(=초기화/삭제) 가능해야 함
-  // - 잘못 입력한 Gist ID가 계속 남아있는 문제 해결
-  if(/[^a-f0-9]/i.test(gid) && gid){ 
-    const msg=document.getElementById('cfg-gist-sync-msg');
-    if(msg) msg.textContent='❌ Gist ID는 영문/숫자(16진수) 형태여야 합니다. 예: a1b2c3d4...';
-    return;
-  }
-  patch.gistId = gid; // '' 허용
+  if(gid) patch.gistId=gid;
   if(typeof en !== 'undefined') patch.enabled=en;
-  // 토큰도 빈 값이면 삭제(초기화)되도록 허용
-  patch.token = tok; // '' 허용
+  // 보안: 토큰은 입력했을 때만 업데이트(빈 값은 "유지")
+  if(tok) patch.token=tok;
   try{
     window.SettingsStore.setCfg(patch);
     const msg=document.getElementById('cfg-gist-sync-msg');
     if(msg) msg.textContent='✅ 저장됨';
   }catch(e){
     alert('저장 실패: '+e.message);
-  }
-  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
-};
-
-// (요청사항) Gist 동기화 초기화 버튼
-window.cfgGistSyncReset = function(){
-  if(!window.SettingsStore) return alert('SettingsStore 모듈이 없습니다.');
-  if(!confirm('Gist 동기화 설정(Gist ID/토큰/ON)을 초기화할까요?')) return;
-  try{
-    window.SettingsStore.setCfg({ enabled:false, gistId:'', token:'' });
-    // 상태 표시용 키도 함께 정리
-    try{ localStorage.removeItem('su_sync_last_error'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_pull'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_push'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_remote_mode'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_migrated'); }catch(e){}
-    const msg=document.getElementById('cfg-gist-sync-msg');
-    if(msg) msg.textContent='🧹 초기화 완료';
-  }catch(e){
-    alert('초기화 실패: '+e.message);
   }
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
