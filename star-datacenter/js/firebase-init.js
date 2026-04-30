@@ -48,13 +48,36 @@ let _cbSet = false;
 
 async function startGithubPolling(){
   let lastSavedAt = 0;
+  let _adminFirstApplied = false; // 관리자 최초 1회는 새로고침 시 원격 반영 허용
+  let _lastAdminHintTs = 0;
+  const _isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
+
+  const _shouldApplyToAdmin = (remoteSavedAt)=>{
+    try{
+      const localAdminSa = Number(localStorage.getItem('su_last_admin_save')||0) || 0;
+      // 로컬이 더 최신이면(아직 업로드 실패/지연) 덮어쓰지 않음
+      if(localAdminSa && remoteSavedAt && localAdminSa > remoteSavedAt) return false;
+    }catch(e){}
+    return true;
+  };
+
+  const _hintAdminRemoteUpdated = ()=>{
+    try{
+      const now = Date.now();
+      // 너무 자주 띄우지 않게(최소 60초 간격)
+      if(_lastAdminHintTs && now - _lastAdminHintTs < 60000) return;
+      _lastAdminHintTs = now;
+      const el = document.getElementById('cloudStatus');
+      if(el){
+        el.style.color = '#0ea5e9';
+        el.textContent = 'ℹ️ 원격 데이터 갱신 감지됨 — 새로고침하면 반영됩니다(관리자 기록 보호를 위해 자동 반영은 꺼짐)';
+        setTimeout(()=>{ try{ if(el) el.textContent=''; }catch(e){} }, 4500);
+      }
+    }catch(e){}
+  };
+
   async function once(){
     if (document.visibilityState !== 'visible') return;
-    // 관리자(로그인) 기기에서는 자동 폴링 적용이 로컬 입력을 덮어써서
-    // "기록이 몇 초 뒤 사라지는" 현상을 유발할 수 있음.
-    // → 관리자는 자동 반영을 끄고, 원격 갱신은 표시만 하고 수동 불러오기로 처리.
-    // (관람자/비로그인 기기만 자동 적용)
-    const isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
     try{
       const url = _ghRawUrl();
       const r = await fetch(url + '?_=' + Date.now(), { cache:'no-store' });
@@ -64,20 +87,23 @@ async function startGithubPolling(){
       const sa = Number(d.savedAt||0) || 0;
       if(!lastSavedAt || sa > lastSavedAt){
         lastSavedAt = sa || lastSavedAt;
-        if (isAdminSession) {
-          // 원격 데이터는 보관만 하고(필요 시 수동 적용), 화면에 힌트만 표시
-          _lastSnapshot = d;
-          try{
-            const el = document.getElementById('cloudStatus');
-            if(el){
-              el.style.color = '#0ea5e9';
-              el.textContent = 'ℹ️ 원격 데이터 갱신 감지됨 — 관리자 기기에서는 자동 반영을 끄고 있습니다(기록 보호). 필요 시 “데이터 불러오기/동기화 확인”을 사용하세요.';
-              setTimeout(()=>{ try{ if(el) el.textContent=''; }catch(e){} }, 4500);
+        if (_isAdminSession) {
+          // ✅ 새로고침(초기 로드)에서는 1회 원격 반영 허용(로컬이 더 최신이면 보호)
+          if(!_adminFirstApplied){
+            _adminFirstApplied = true;
+            if(_shouldApplyToAdmin(sa)){
+              _deliver(d);
+            }else{
+              _lastSnapshot = d;
             }
-          }catch(e){}
+            return;
+          }
+          // 이후에는 자동 반영 금지(기록 보호) + 알림만(너무 자주 X)
+          _lastSnapshot = d;
+          _hintAdminRemoteUpdated();
           return;
         }
-        _deliver(d);
+        _deliver(d); // 관람자/비로그인 기기: 자동 반영
       }
     }catch(e){}
   }
