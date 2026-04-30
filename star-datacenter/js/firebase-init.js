@@ -286,6 +286,11 @@ async function _saveSplitStore(fullData){
   await _putRepoJson(GH_ENTRY_PATH, _encodeGithubPayload(built.entry), 'data.json 엔트리 업데이트');
 }
 
+async function _saveLegacySingleFile(fullData){
+  const legacy = _encodeGithubPayload(fullData || {});
+  await _putRepoJson(GH_ENTRY_PATH, legacy, 'data.json 단일 저장');
+}
+
 async function _fetchSplitGithubData(indexLike){
   const idx = indexLike && indexLike.corePath ? indexLike : await _fetchRepoJson(GH_SPLIT_INDEX_PATH);
   const months = Array.isArray(idx && idx.historyMonths) ? idx.historyMonths : [];
@@ -356,7 +361,12 @@ window.__suFetchGithubMergedData = _fetchGithubData;
 // - data는 보통 { _lz: '...' } 형태로 들어옴
 window.fbSet = async function (data) {
   const full = _decodeGithubPayload(data);
-  await _saveSplitStore(full);
+  try{
+    await _saveSplitStore(full);
+  }catch(splitErr){
+    console.warn('[split-save] failed, fallback to legacy data.json', splitErr);
+    await _saveLegacySingleFile(full);
+  }
 };
 
 // 부분 업데이트 호환
@@ -364,7 +374,12 @@ window.fbSet = async function (data) {
 window.fbUpdate = async function (patch) {
   const cur = await _fetchGithubData().catch(()=>({}));
   const next = { ...(cur || {}), ...(patch || {}), savedAt: Date.now() };
-  await _saveSplitStore(next);
+  try{
+    await _saveSplitStore(next);
+  }catch(splitErr){
+    console.warn('[split-save] failed on update, fallback to legacy data.json', splitErr);
+    await _saveLegacySingleFile(next);
+  }
 };
 
 // 강제 1회 fetch (수동 동기화 버튼용)
@@ -384,7 +399,7 @@ setTimeout(()=>{ _pollGithubOnce(true); }, 600);
 setInterval(()=>{
   if(document.visibilityState !== 'visible') return;
   _pollGithubOnce(false);
-}, 10000);
+}, 5000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') _pollGithubOnce(true);
 });

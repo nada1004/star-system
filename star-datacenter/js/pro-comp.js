@@ -4371,7 +4371,7 @@ function _openProCompLeagueShareCard(tnId, gi, mi) {
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: ''  // ?�수 ?�로???�진 + ?�???�상
+    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'pro'  // 프로리그 일반 카드 스타일 사용
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';
