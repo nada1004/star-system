@@ -594,49 +594,77 @@ async function fbCloudSave() {
 // GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
 // 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
 async function githubDataSave(dataObj) {
-  const token = localStorage.getItem('su_gh_token');
+  const token = (localStorage.getItem('su_gh_token') || '').trim();
   if (!token) return; // 토큰 미설정 시 skip
+  // 헤더(ByteString) 오류 방지: Authorization 헤더 값은 ASCII여야 함
+  if (/[^ -~]/.test(token)) {
+    throw new Error('GitHub 토큰이 깨졌습니다(한글/이모지 포함). 설정에서 토큰을 지우고 ghp_... 또는 github_pat_... 값을 다시 저장하세요.');
+  }
+  const cfg = ghGetRepoCfg();
   const apiUrl = ghGetContentsApiUrl();
-  // 현재 파일 SHA 조회 (업데이트 시 필수)
-  const getRes = await fetch(apiUrl, {
-    // Fine-grained PAT는 Bearer 권장
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-  });
-  let sha = null;
-  if (getRes.ok) {
-    const fileInfo = await getRes.json();
-    sha = fileInfo && fileInfo.sha ? String(fileInfo.sha) : null;
-  } else if (getRes.status === 404) {
-    // 신규 생성
-    sha = null;
-  } else {
-    let msg = '';
-    try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
-    throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
+  const apiUrlWithRef = apiUrl + '?ref=' + encodeURIComponent(cfg.branch || 'main');
+
+  async function _getSha(){
+    const getRes = await fetch(apiUrlWithRef, {
+      // Fine-grained PAT는 Bearer 권장
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (getRes.ok) {
+      const fileInfo = await getRes.json();
+      return { sha: (fileInfo && fileInfo.sha ? String(fileInfo.sha) : null) };
+    } else if (getRes.status === 404) {
+      // 신규 생성
+      return { sha: null };
+    } else {
+      let msg = '';
+      try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
+      throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
+    }
   }
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
   const payload = { _lz: compressed };
   const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-  // 파일 업데이트
-  const putRes = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-      content: b64,
-      ...(sha ? { sha } : {})
-    })
-  });
-  if (!putRes.ok) {
+
+  async function _put(sha){
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+        content: b64,
+        branch: cfg.branch || 'main',
+        ...(sha ? { sha } : {})
+      })
+    });
+    if (putRes.ok) return true;
     let msg = '';
     try{
       const j = await putRes.json();
       msg = (j && (j.message || j.error)) ? String(j.message || j.error) : '';
       if (j && j.documentation_url) msg += (msg ? ' ' : '') + String(j.documentation_url);
     }catch(e){}
-    throw new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
+    const err = new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
+    // @ts-ignore
+    err._status = putRes.status;
+    throw err;
+  }
+
+  // 1차 시도
+  let shaInfo = await _getSha();
+  try{
+    await _put(shaInfo.sha);
+  }catch(e){
+    // 409(Conflict/sha mismatch)면 최신 sha 재조회 후 1회 재시도
+    // @ts-ignore
+    const st = e && (e._status || e.status) ? Number(e._status || e.status) : 0;
+    if (st === 409) {
+      shaInfo = await _getSha();
+      await _put(shaInfo.sha);
+    } else {
+      throw e;
+    }
   }
 }
 
