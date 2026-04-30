@@ -431,6 +431,7 @@ async function generateResponse(msg) {
       // 설정에서 프록시 서버 URL을 지정하면 그쪽으로 호출(다른 기기에도 설정 동기화 가능)
       let proxyUrl = '';
       let apiKey = '';
+      const _isAdmin = (typeof isLoggedIn!=='undefined' && !!isLoggedIn) && !(typeof isSubAdmin!=='undefined' && !!isSubAdmin);
       try{
         if(window.SettingsStore && typeof window.SettingsStore.getAiCfg==='function'){
           const cfg = window.SettingsStore.getAiCfg() || {};
@@ -453,20 +454,24 @@ async function generateResponse(msg) {
       }
 
       // 1) 프록시 서버 우선
+      // - 단, 프록시 실패 시 관리자 + API Key가 있으면 직접 호출로 fallback
       if(proxyUrl){
-        const url = proxyUrl + '/api/aibot';
-        const r = await fetch(url, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ messages: recent })
-        });
-        const j = await r.json().catch(()=>null);
-        if(!r.ok) throw new Error((j && j.error) ? j.error : ('HTTP '+r.status));
-        return (j && j.text) ? String(j.text) : '응답이 비어있어.';
+        try{
+          const url = proxyUrl + '/api/aibot';
+          const r = await fetch(url, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ messages: recent })
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok) throw new Error((j && j.error) ? j.error : ('HTTP '+r.status));
+          return (j && j.text) ? String(j.text) : '응답이 비어있어.';
+        }catch(proxyErr){
+          if(!(apiKey && _isAdmin)) throw proxyErr;
+        }
       }
 
       // 2) API Key 직접 호출(관리자 전용 설정)
-      const _isAdmin = (typeof isLoggedIn!=='undefined' && !!isLoggedIn) && !(typeof isSubAdmin!=='undefined' && !!isSubAdmin);
       if(apiKey && _isAdmin){
         const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method:'POST',

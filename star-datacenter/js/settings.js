@@ -398,7 +398,7 @@ window.cfgInitAiProxy = async function(){
   try{
     const st=document.getElementById('cfg-ai-key-status');
     const has = !!(cur && cur.apiKey);
-    if(st) st.textContent = has ? '✅ 키 설정됨' : '미설정';
+    if(st) st.textContent = has ? '✅ 키 설정됨 (보안상 다시 표시하지 않음)' : '미설정';
   }catch(e){}
 };
 window.cfgSaveAiProxyUrl = async function(){
@@ -480,13 +480,13 @@ window.cfgSaveAiApiKey = async function(){
           return;
         }
       }catch(e){}
-      if(st) st.textContent='✅ 키 저장 완료';
+      if(st) st.textContent='✅ 키 저장 완료 (보안상 입력칸은 비워집니다)';
     }else{
       const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
       const next={ ...cur, apiKey:key, updatedAt:new Date().toISOString() };
       localStorage.setItem('su_ai_cfg', JSON.stringify(next));
       try{ if(inp) inp.value=''; }catch(e){}
-      if(st) st.textContent='✅ 키 저장 완료';
+      if(st) st.textContent='✅ 키 저장 완료 (보안상 입력칸은 비워집니다)';
     }
   }catch(e){
     if(st) st.textContent='❌ 저장 실패: '+(e.message||e);

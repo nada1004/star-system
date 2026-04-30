@@ -117,15 +117,53 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/cloud-board.js?v=20260425-01');
+  await _loadScriptOnce('js/cloud-board.js?v=20260430-02');
 }
+function _lazyGsSetStatus(msg, color='var(--gray-l)'){
+  try{
+    const el = document.getElementById('cloudStatus');
+    if(el){ el.textContent = msg || ''; el.style.color = color || 'var(--gray-l)'; }
+  }catch(e){}
+}
+async function _ensureCloudFeatureReady(){
+  try{
+    await _ensureCloudBoardLoaded();
+    return true;
+  }catch(e){
+    console.error('[lazy] cloud feature load fail', e);
+    return false;
+  }
+}
+async function _lazyFbCloudSave(opts){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.fbCloudSave;
+  if(typeof fn === 'function' && fn !== _lazyFbCloudSave) return fn(opts);
+  throw new Error('fbCloudSave unavailable');
+}
+async function _lazyFbUpdate(patch){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.fbUpdate;
+  if(typeof fn === 'function' && fn !== _lazyFbUpdate) return fn(patch);
+  throw new Error('fbUpdate unavailable');
+}
+async function _lazyCloudLoad(){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.cloudLoad;
+  if(typeof fn === 'function' && fn !== _lazyCloudLoad) return fn();
+  throw new Error('cloudLoad unavailable');
+}
+window.gsSetStatus = window.gsSetStatus || _lazyGsSetStatus;
+window.fbCloudSave = window.fbCloudSave || _lazyFbCloudSave;
+window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
+window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
 async function _ensureElboardLoaded(){
   await _loadScriptOnce('js/elboard.js?v=20260422-01');
 }
 async function _ensureChatbotLoaded(){
-  await window.ensureChartJS();
-  await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/chatbot.js?v=20260423-08');
+  await _loadScriptOnce('js/chatbot.js?v=20260430-01');
 }
 
 // 챗봇은 HTML onclick에서 직접 호출되므로, 스텁을 제공해 먼저 로드 후 실행

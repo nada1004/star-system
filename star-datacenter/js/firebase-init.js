@@ -71,7 +71,7 @@ async function _fetchGithubData(){
   throw lastErr || new Error('GitHub data.json fetch failed');
 }
 
-async function _putGithubPayload(payloadObj){
+async function _putGithubPayloadOnce(payloadObj){
   const token = localStorage.getItem('su_gh_token');
   if(!token) throw new Error('GitHub 토큰이 설정되어 있지 않습니다.');
 
@@ -97,6 +97,22 @@ async function _putGithubPayload(payloadObj){
     })
   });
   if (!putRes.ok) throw new Error('GitHub 저장 실패: ' + putRes.status);
+}
+
+async function _putGithubPayload(payloadObj){
+  let lastErr = null;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      return await _putGithubPayloadOnce(payloadObj);
+    }catch(e){
+      lastErr = e;
+      const msg = String((e && e.message) || e || '');
+      // 409 = sha 충돌(다른 기기/탭에서 먼저 저장)
+      if(!/409/.test(msg)) throw e;
+      await new Promise(r=>setTimeout(r, 250 * (attempt + 1)));
+    }
+  }
+  throw lastErr || new Error('GitHub 저장 실패: 409');
 }
 
 async function _pollGithubOnce(force){
