@@ -1314,14 +1314,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   gap:12px;
 }
 .modal--matchdetail .cmd-head__txt{flex:1;min-width:0;}
-.modal--matchdetail .cmd-head-actions{
-  display:flex;
-  gap:6px;
-  align-items:center;
-  flex-shrink:0;
-}
 .modal--matchdetail .cmd-title{
-  font-size:var(--su_md_title_font,15px);
+  font-size:15px;
   font-weight:1000;
   letter-spacing:-.2px;
   white-space:nowrap;
@@ -1330,7 +1324,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 }
 .modal--matchdetail .cmd-sub{
   margin-top:3px;
-  font-size:var(--su_md_sub_font,11px);
+  font-size:11px;
   opacity:.86;
   font-weight:700;
   white-space:nowrap;
@@ -1341,14 +1335,13 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   background:rgba(255,255,255,.14);
   border:none;
   color:#fff;
-  width:calc(34px * var(--su_md_btn_scale,1));
-  height:calc(34px * var(--su_md_btn_scale,1));
-  border-radius:calc(10px * var(--su_md_btn_scale,1));
+  width:34px;height:34px;
+  border-radius:10px;
   cursor:pointer;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:calc(16px * var(--su_md_btn_scale,1));
+  font-size:16px;
   flex-shrink:0;
 }
 .modal--matchdetail .cmd-scorebar{
@@ -1400,16 +1393,15 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 }
 .modal--matchdetail .cmd-team{
   flex:1;min-width:0;
-  display:flex;align-items:center;justify-content:var(--su_md_head_justify,center);
+  display:flex;align-items:center;justify-content:center;
   gap:8px;
   padding:8px 10px;
   border-radius:14px;
   color:#fff;
   font-weight:1000;
-  font-size:var(--su_md_team_font,16px);
+  font-size:13px;
   box-shadow:0 6px 18px rgba(0,0,0,.10);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  text-align:var(--su_md_head_text_align,center);
 }
 .modal--matchdetail .cmd-team .cmd-uicon{
   width:var(--su_md_logo_size, 42px);
@@ -1437,7 +1429,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   object-fit:cover !important;
 }
 .modal--matchdetail .cmd-team{
-  font-size:var(--su_md_team_font,16px);
+  font-size:16px;
   border-radius:18px;
   border:1px solid rgba(255,255,255,.28);
   box-shadow:0 10px 28px rgba(0,0,0,.12);
@@ -1448,15 +1440,6 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   isolation:isolate;
 }
 .modal--matchdetail .cmd-team > *{ position:relative; z-index:1; }
-.modal--matchdetail .cmd-team .cmd-team-name{
-  font-size:inherit;
-  line-height:1.08;
-  min-width:0;
-  flex:1 1 auto;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
 .modal--matchdetail .cmd-team::after{
   content:'';
   position:absolute;
@@ -1713,38 +1696,11 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     border-radius:20px 20px 0 0;
   }
   /* (요청사항) 모바일에서 상단 대학/팀 카드 글자 짤림 완화 */
-  .modal--matchdetail .cmd-head{
-    padding:12px 12px;
-    gap:8px;
-    display:grid;
-    grid-template-columns:minmax(0,1fr) auto auto;
-    align-items:start;
-  }
-  .modal--matchdetail .cmd-title{
-    white-space:normal;
-    overflow:hidden;
-    text-overflow:initial;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    line-height:1.2;
-  }
-  .modal--matchdetail .cmd-sub{
-    white-space:normal;
-    overflow:hidden;
-    text-overflow:initial;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    line-height:1.25;
-  }
-  .modal--matchdetail .cmd-head-actions{
-    gap:4px;
-  }
+  .modal--matchdetail .cmd-head{ padding:12px 12px; gap:10px; }
   .modal--matchdetail .cmd-team{
     padding:6px 8px;
     border-radius:12px;
-    font-size:var(--su_md_team_font,16px);
+    font-size:11px;
     white-space:normal;
     line-height:1.15;
     /* 긴 대학명 줄바꿈 허용 + 잘림 방지 */
@@ -1753,18 +1709,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   }
   :root{ --su_md_btn_scale: var(--su_md_mb_btn_scale); }
   .modal--matchdetail .cmd-team .cmd-uicon{
-    width:clamp(28px, var(--su_md_logo_size,42px), 52px) !important;
-    height:clamp(28px, var(--su_md_logo_size,42px), 52px) !important;
-  }
-  .modal--matchdetail .cmd-team .cmd-team-name{
-    white-space:normal;
-    overflow:visible;
-    text-overflow:clip;
-    word-break:keep-all;
-    overflow-wrap:anywhere;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
+    width:34px !important;
+    height:34px !important;
   }
   /* (요청사항) 경기 수정/기록 수정 모달: 저장/취소 버튼 아래 과한 여백 제거 */
   /* - 기본 바텀시트는 safe-area 포함해 하단 패딩이 커서 공백이 크게 보일 수 있음 */
@@ -1778,12 +1724,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 @media(max-width:1024px){
   /* (요청사항) 태블릿에서도 경기 상세 상단 대학/팀 카드 글자 짤림 완화 */
   .modal--matchdetail .cmd-team{
-    font-size:var(--su_md_team_font,16px);
+    font-size:12px;
     padding:7px 9px;
-  }
-  .modal--matchdetail .cmd-team .cmd-uicon{
-    width:clamp(30px, var(--su_md_logo_size,42px), 58px);
-    height:clamp(30px, var(--su_md_logo_size,42px), 58px);
   }
   :root{ --su_md_btn_scale: var(--su_md_tb_btn_scale); }
 }
