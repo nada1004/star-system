@@ -50,6 +50,11 @@ async function startGithubPolling(){
   let lastSavedAt = 0;
   async function once(){
     if (document.visibilityState !== 'visible') return;
+    // 관리자(로그인) 기기에서는 자동 폴링 적용이 로컬 입력을 덮어써서
+    // "기록이 몇 초 뒤 사라지는" 현상을 유발할 수 있음.
+    // → 관리자는 자동 반영을 끄고, 원격 갱신은 표시만 하고 수동 불러오기로 처리.
+    // (관람자/비로그인 기기만 자동 적용)
+    const isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
     try{
       const url = _ghRawUrl();
       const r = await fetch(url + '?_=' + Date.now(), { cache:'no-store' });
@@ -59,6 +64,19 @@ async function startGithubPolling(){
       const sa = Number(d.savedAt||0) || 0;
       if(!lastSavedAt || sa > lastSavedAt){
         lastSavedAt = sa || lastSavedAt;
+        if (isAdminSession) {
+          // 원격 데이터는 보관만 하고(필요 시 수동 적용), 화면에 힌트만 표시
+          _lastSnapshot = d;
+          try{
+            const el = document.getElementById('cloudStatus');
+            if(el){
+              el.style.color = '#0ea5e9';
+              el.textContent = 'ℹ️ 원격 데이터 갱신 감지됨 — 관리자 기기에서는 자동 반영을 끄고 있습니다(기록 보호). 필요 시 “데이터 불러오기/동기화 확인”을 사용하세요.';
+              setTimeout(()=>{ try{ if(el) el.textContent=''; }catch(e){} }, 4500);
+            }
+          }catch(e){}
+          return;
+        }
         _deliver(d);
       }
     }catch(e){}
