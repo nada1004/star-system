@@ -161,8 +161,19 @@ function applyResponsiveUiVars(){
     const tbTab = clamp(gf('su_tab_tb_scale', 0.94), 0.65, 1.10);
     const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
     const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
+    const pdBadgeMb = clamp(gf('su_pd_badge_scale_mb', gf('su_pd_badge_scale', 1.00)), 0.55, 1.20);
+    const pdBadgeTb = clamp(gf('su_pd_badge_scale_tb', gf('su_pd_badge_scale', 1.00)), 0.60, 1.25);
+    const univRecentMb = clamp(gf('su_univ_recent_chip_scale_mb', 1.00), 0.60, 1.20);
+    const univRecentTb = clamp(gf('su_univ_recent_chip_scale_tb', 1.00), 0.65, 1.25);
+    const selMb = clamp(gf('su_select_mb_scale', 0.92), 0.70, 1.15);
+    const selTb = clamp(gf('su_select_tb_scale', 0.96), 0.70, 1.15);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
     const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
+    const topTabMbFont = clamp(gf('su_top_tab_font_mb_px', 10), 8, 16);
+    const topTabTbFont = clamp(gf('su_top_tab_font_tb_px', 11), 9, 18);
+    const topTabMbGap = clamp(gf('su_top_tab_gap_mb_px', 2), 0, 16);
+    const topTabMbAlign = (()=>{ try{ return (localStorage.getItem('su_top_tab_align_mb')||'start').trim(); }catch(e){ return 'start'; } })();
+    const topTabMbJustify = topTabMbAlign === 'center' ? 'center' : 'flex-start';
 
     document.documentElement.style.setProperty('--su_mb_scale', String(mb));
     document.documentElement.style.setProperty('--su_tb_scale', String(tb));
@@ -172,8 +183,18 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_tab_tb_scale', String(tbTab));
     document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
     document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
+    document.documentElement.style.setProperty('--su_pd_badge_scale_mb', String(pdBadgeMb));
+    document.documentElement.style.setProperty('--su_pd_badge_scale_tb', String(pdBadgeTb));
+    document.documentElement.style.setProperty('--su_univ_recent_chip_scale_mb', String(univRecentMb));
+    document.documentElement.style.setProperty('--su_univ_recent_chip_scale_tb', String(univRecentTb));
+    document.documentElement.style.setProperty('--su_select_mb_scale', String(selMb));
+    document.documentElement.style.setProperty('--su_select_tb_scale', String(selTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
     document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
+    document.documentElement.style.setProperty('--su_top_tab_font_mb', topTabMbFont + 'px');
+    document.documentElement.style.setProperty('--su_top_tab_font_tb', topTabTbFont + 'px');
+    document.documentElement.style.setProperty('--su_top_tab_gap_mb', topTabMbGap + 'px');
+    document.documentElement.style.setProperty('--su_tabs_justify_mb', topTabMbJustify);
   }catch(e){}
 }
 try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}
@@ -210,14 +231,38 @@ try{ window.getUnivLogoSizeStr = getUnivLogoSizeStr; }catch(e){}
 ══════════════════════════════════════ */
 function applyMatchDetailVars(){
   try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    const dKey = w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+    const getPxByDevice = (baseKey, legacyKey, def, min, max)=>{
+      const raw = localStorage.getItem(`${baseKey}_${dKey}`);
+      const legacy = localStorage.getItem(legacyKey);
+      const n = parseInt((raw ?? legacy ?? String(def)), 10);
+      return Math.max(min, Math.min(max, isNaN(n) ? def : n));
+    };
     const losePct = parseInt(localStorage.getItem('su_md_lose_gray') || '12', 10);
     const lp = Math.max(0, Math.min(30, isNaN(losePct) ? 12 : losePct));
     document.documentElement.style.setProperty('--su_md_lose_gray', String(lp/100));
 
     // 상단 대학 로고(대학 카드) 크기
-    const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
-    const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
+    const ls = getPxByDevice('su_md_logo_size', 'su_md_logo_size', 42, 28, 64);
     document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
+
+    // 상단 대학 카드 정렬/폰트
+    const align = (localStorage.getItem('su_md_head_align') || 'center').trim();
+    const justify =
+      align === 'left' ? 'flex-start' :
+      align === 'right' ? 'flex-end' : 'center';
+    const textAlign =
+      align === 'left' ? 'left' :
+      align === 'right' ? 'right' : 'center';
+    const tf = getPxByDevice('su_md_team_font', 'su_md_team_font', 16, 11, 26);
+    const ttf = getPxByDevice('su_md_title_font', 'su_md_title_font', 15, 12, 24);
+    const sf = getPxByDevice('su_md_sub_font', 'su_md_sub_font', 11, 10, 18);
+    document.documentElement.style.setProperty('--su_md_head_justify', justify);
+    document.documentElement.style.setProperty('--su_md_head_text_align', textAlign);
+    document.documentElement.style.setProperty('--su_md_team_font', tf + 'px');
+    document.documentElement.style.setProperty('--su_md_title_font', ttf + 'px');
+    document.documentElement.style.setProperty('--su_md_sub_font', sf + 'px');
 
     // ── 헤더 애니메이션/효과 설정 ──
     const fxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
@@ -287,6 +332,24 @@ function applyMatchDetailVars(){
     console.warn('[applyMatchDetailVars] CSS 변수 설정 실패:', e.message);
   }
 }
+function _getMdDeviceKey(){
+  const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+  return w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+}
+function getMatchDetailAvatarSetting(kind){
+  try{
+    const dk = _getMdDeviceKey();
+    if(kind === 'fit'){
+      const v = localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || 'cover';
+      return ['cover','contain'].includes(String(v).trim()) ? String(v).trim() : 'cover';
+    }
+    const raw = localStorage.getItem(`su_md_avatar_scale_${dk}`) || localStorage.getItem('su_md_avatar_scale') || '100';
+    const n = parseInt(raw, 10);
+    return Math.max(80, Math.min(200, isNaN(n) ? 100 : n));
+  }catch(e){
+    return kind === 'fit' ? 'cover' : 100;
+  }
+}
 
 // (추가) 2:2 팀전(2명 vs 2명)도 개인 ELO/승패에 반영
 // - teamA/teamB: ["영희","철수"] 형태의 선수명 배열
@@ -348,6 +411,12 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
 try{ applyMatchDetailVars(); }catch(e){
   console.warn('[applyMatchDetailVars 초기화] 실패:', e.message);
 }
+try{
+  if(!window.__suMatchDetailVarsResizeBound){
+    window.__suMatchDetailVarsResizeBound = true;
+    window.addEventListener('resize', ()=>{ try{ applyMatchDetailVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 function _hexToRgbObj(hex){
   const h=String(hex||'').replace('#','').trim();
@@ -855,7 +924,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   try{
     const ctx = String(window.__detailCtx||'');
     if(ctx==='compModal' || ctx==='histModal'){
-      const mdPct = parseFloat(localStorage.getItem('su_md_avatar_scale') || '100');
+      const mdPct = parseFloat(getMatchDetailAvatarSetting('scale') || '100');
       const mdScale = Math.max(0.8, Math.min(2.0, isNaN(mdPct) ? 1 : (mdPct/100)));
       const m2=String(size).match(/^(\d+(?:\.\d+)?)px$/);
       if(m2 && mdScale!==1){
@@ -887,7 +956,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       const ctx = String(window.__detailCtx||'');
       if(ctx==='compModal' || ctx==='histModal'){
         // 경기 상세: 기본은 "가득 채우기(cover)" 쪽이 더 보기 좋음
-        fit = (localStorage.getItem('su_md_avatar_fit') || 'cover').trim();
+        fit = getMatchDetailAvatarSetting('fit');
       } else {
         fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
       }
@@ -991,6 +1060,52 @@ function saveCfg(){
     _lsSave('su_mAlias',userMapAlias);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     localStorage.setItem('su_last_save_time',Date.now().toString());
+
+    // 설정 변경도 다른 기기에 반영되도록 GitHub data.json 부분 업데이트
+    try{
+      const statusEl = document.getElementById('cloudStatus');
+      if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+        const token = localStorage.getItem('su_gh_token') || '';
+        if (token && typeof window.fbUpdate === 'function') {
+          // su_* 키 일부(큰 값/비밀 값 제외)도 함께 동기화 → 설정탭 변경이 다른 기기에 바로 적용
+          const _syncLs = {};
+          try{
+            for(let i=0;i<localStorage.length;i++){
+              const k = localStorage.key(i);
+              if(!k || typeof k!=='string') continue;
+              if(!k.startsWith('su_')) continue;
+              if(k.startsWith('su_pp')) continue;
+              if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+              if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+              const v = localStorage.getItem(k);
+              if(v==null) continue;
+              if(String(v).length > 200000) continue;
+              _syncLs[k] = v;
+            }
+          }catch(e){}
+
+          const patch = {
+            tiers: TIERS,
+            univCfg,
+            maps,
+            userMapAlias,
+            playerStatusIcons: (typeof playerStatusIcons!=='undefined' ? playerStatusIcons : {}),
+            appSettings: { ls: _syncLs },
+          };
+          if(statusEl){ statusEl.style.color=''; statusEl.textContent='⏫ 설정 GitHub 저장 중...'; }
+          window.fbUpdate(patch)
+            .then(()=>{ if(statusEl){ statusEl.style.color='#16a34a'; statusEl.textContent='✅ 설정 GitHub 반영됨'; setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2500);} })
+            .catch((e)=>{ if(statusEl){ statusEl.style.color='#dc2626'; statusEl.textContent='❌ 설정 GitHub 실패'; } console.error('[fbUpdate cfg]',e); });
+        } else {
+          // GitHub 토큰 미설정이면 로컬만 저장
+          if(statusEl && !token){
+            statusEl.style.color='#d97706';
+            statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
+            setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
+          }
+        }
+      }
+    }catch(e){}
   }catch(e){console.error('[saveCfg error]',e);}
 }
 // 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
@@ -1002,23 +1117,53 @@ function savePhotos(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-function save(){
+async function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
-      // 비밀번호 미설정 → Firebase 저장 안 됨 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+    if (!localStorage.getItem('su_gh_token')) {
+      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
+      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+      else if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; }
       return;
     }
-    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+    if (typeof window.fbCloudSave !== 'function') {
+      try{
+        if (typeof window._ensureCloudBoardLoaded === 'function') {
+          await window._ensureCloudBoardLoaded();
+        } else if (typeof window._loadScriptOnce === 'function') {
+          await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
+        }
+      }catch(e){
+        console.error('[save] cloud-board load fail', e);
+      }
+    }
+    if (typeof window.fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
+      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 저장 모듈 미연결'); }catch(e){}
+      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('❌ GitHub 저장 모듈 미연결', '#dc2626');
+      else if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; }
       return;
     }
-    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
-    fbCloudSave()
-      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
+    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 저장 중...'; }
+    // 경기 기록 저장은 "데이터"만 우선 빠르게 업로드
+    // - 설정 동기화는 saveCfg()/자동 설정 저장 경로에서 별도로 처리
+    window.fbCloudSave({ includeSettings:false })
+      .then(() => {
+        try{
+          const now = Date.now();
+          localStorage.setItem('su_last_save_time', String(now));
+          localStorage.setItem('su_sync_last_upload_ok_at', String(now));
+          localStorage.removeItem('su_sync_last_fail_msg');
+        }catch(e){}
+        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✅ GitHub 저장됨', '#16a34a');
+        else if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨';}
+      })
+      .catch(e => {
+        try{ localStorage.setItem('su_sync_last_fail_msg', String((e&&e.message)||e||'GitHub 저장 실패')); }catch(err){}
+        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('❌ GitHub 저장 실패', '#dc2626');
+        else if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';}
+        console.error('[fbCloudSave]',e);
+      });
   }
 }
 
@@ -1224,6 +1369,16 @@ function resolvePlayerName(rawName){
 // 전역 노출(모달/인라인 onclick에서 사용)
 try{ window.resolvePlayerName = resolvePlayerName; }catch(e){}
 
+function _normalizeStoredMode(mode){
+  const raw = String(mode||'').trim();
+  if(!raw) return '';
+  const low = raw.toLowerCase();
+  if(raw === '중장전') return '끝장전';
+  if(raw === 'CK' || raw === '대학 ck' || raw === '대학 CK' || low === '대학ck') return '대학CK';
+  if(raw === '일반' || raw === '프로리그 일반') return '프로리그';
+  if(raw === '티어대회 일반' || raw === '티어 일반') return '티어대회';
+  return raw;
+}
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
@@ -1276,8 +1431,9 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+  const modeNorm = _normalizeStoredMode(mode);
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm});
 }
 
 // (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
@@ -1322,8 +1478,9 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   const bu=univB||b.univ||'';
   const scoreStr = (scoreA!=null && scoreB!=null) ? `${scoreA}:${scoreB}` : '';
   // eloDelta는 null로 두어 UI에서 "-" 처리되게 함
-  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:mode||'',score:scoreStr});
-  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:mode||'',score:scoreStr});
+  const modeNorm = _normalizeStoredMode(mode);
+  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:modeNorm,score:scoreStr});
+  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:modeNorm,score:scoreStr});
 }
 
 function rebuildAllPlayerHistory() {

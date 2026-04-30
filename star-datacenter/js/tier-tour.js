@@ -1517,40 +1517,20 @@ function rTierTourCfg(C,T){
     </div>
   </div>
   <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
-      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+      <h4 style="margin:0">☁️ 동기화 관리</h4>
+      <button class="btn btn-w btn-xs" onclick="openUnifiedSyncSettings()">설정탭에서 열기 ↗</button>
     </div>
-    <div id="cfg-fb-body" style="display:none">
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
-    <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
-        <button class="btn btn-w btn-xs" onclick="checkFbSyncStatus()">🔍 지금 확인</button>
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">동기화 설정은 한 곳에서만 관리됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        실제 데이터 원본은 GitHub에 저장되고, 보조 신호 채널은 다른 기기에 새 데이터 알림을 더 빠르게 전달합니다.<br>
+        비밀번호, 토큰, 누락 월 다시받기, 전체 다시 동기화는 설정탭 <b>☁️ GitHub 동기화</b> 섹션에서만 관리합니다.
       </div>
-      <div id="cfg-fb-sync-result" style="font-size:12px;color:var(--gray-l)">확인 버튼을 눌러 상태를 확인하세요.</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearFbPw()">지우기</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="openUnifiedSyncSettings()">☁️ 동기화 설정 열기</button>
+        <button class="btn btn-w btn-sm" onclick="(async()=>{try{if(typeof window.fbForceSync==='function') await window.fbForceSync();}catch(e){console.error(e);}})()">🔄 지금 동기화</button>
       </div>
-      <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
-      </div>
-      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
-    </div>
     </div>
   </div>
   ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
@@ -1828,6 +1808,7 @@ function rTierTourCfg(C,T){
   </details>
   ${_cfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">모바일/태블릿/PC 크기를 따로 저장합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
         <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
@@ -1850,21 +1831,25 @@ function rTierTourCfg(C,T){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(모바일) 크기</label>
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">모바일 크기</label>
           <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
         <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(PC) 크기</label>
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">태블릿 크기</label>
+          <span id="cfg-img-scale-tablet-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">PC 크기</label>
           <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
         <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-use-right-scale" style="width:14px;height:14px"> 좌우 개별 크기 사용
-      </label>
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
@@ -2032,13 +2017,21 @@ function rTierTourCfg(C,T){
       `;
     }
     // 스트리머 상세 이미지 설정 초기화
-    const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    const rawImgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    const imgSettings=(rawImgSettings.__byDevice && typeof rawImgSettings.__byDevice==='object')
+      ? {
+          ...rawImgSettings,
+          scaleMb: rawImgSettings.__byDevice.mb?.scale ?? rawImgSettings.scaleMb ?? rawImgSettings.scaleLeft ?? rawImgSettings.scale ?? 1,
+          scaleTb: rawImgSettings.__byDevice.tb?.scale ?? rawImgSettings.scaleTb ?? rawImgSettings.scaleRight ?? rawImgSettings.scale ?? 1,
+          scalePc: rawImgSettings.__byDevice.pc?.scale ?? rawImgSettings.scalePc ?? rawImgSettings.scaleRight ?? rawImgSettings.scale ?? 1
+        }
+      : rawImgSettings;
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleLeft||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleLeft||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scaleRight||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scaleRight||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-use-right-scale'))document.getElementById('cfg-img-use-right-scale').checked=imgSettings.useRightScale||false;
+    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleMb||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleMb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-tablet')){document.getElementById('cfg-img-scale-tablet').value=imgSettings.scaleTb||1;document.getElementById('cfg-img-scale-tablet-val').textContent=(imgSettings.scaleTb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scalePc||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scalePc||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
     if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
     // 구현황판 밝기 설정 초기화
@@ -2054,7 +2047,7 @@ function rTierTourCfg(C,T){
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 스트리머 상세 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-tablet','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
@@ -2174,46 +2167,63 @@ function saveOldDashboardBrightness(){
 
 // ── 이미지 설정 저장 함수 ──
 function saveImageSettings(){
+  const rawPrev = (()=>{ try{ return JSON.parse(localStorage.getItem('su_img_settings')||'{}')||{}; }catch(e){ return {}; } })();
   const settings = {
     fill: document.getElementById('cfg-img-fill')?.checked || false,
     scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
     brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
-    scaleLeft: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1,
-    scaleRight: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1,
-    useRightScale: document.getElementById('cfg-img-use-right-scale')?.checked || false,
+    scaleMb: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1,
+    scaleTb: parseFloat(document.getElementById('cfg-img-scale-tablet')?.value) || 1,
+    scalePc: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1,
     randomRotation: document.getElementById('cfg-img-random')?.checked || false,
-    interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
-  };
-  localStorage.setItem('su_img_settings', JSON.stringify(settings));
-  
-  // 이미지탭(board2)과 동기화를 위한 저장
-  const b2Settings = {
-    primary: {
-      fill: settings.fill ? 'contain' : 'cover',
-      scale: settings.scale * 100,
-      brightness: settings.brightness * 100,
-      offsetX: 0,
-      offsetY: 0,
-      zoom: settings.scale * 100,
-      posX: 0,
-      posY: 0
-    },
-    secondary: {
-      fill: settings.fill ? 'contain' : 'cover',
-      scale: settings.scale * 100,
-      brightness: settings.brightness * 100,
-      offsetX: 0,
-      offsetY: 0,
-      zoom: settings.scale * 100,
-      posX: 0,
-      posY: 0
+    interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5,
+    __byDevice: {
+      mb: { scale: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1 },
+      tb: { scale: parseFloat(document.getElementById('cfg-img-scale-tablet')?.value) || 1 },
+      pc: { scale: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1 }
     }
   };
-  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(b2Settings));
+  if(rawPrev.__byDevice && typeof rawPrev.__byDevice==='object'){
+    settings.__byDevice = {
+      mb: { ...(rawPrev.__byDevice.mb||{}), ...(settings.__byDevice.mb||{}) },
+      tb: { ...(rawPrev.__byDevice.tb||{}), ...(settings.__byDevice.tb||{}) },
+      pc: { ...(rawPrev.__byDevice.pc||{}), ...(settings.__byDevice.pc||{}) }
+    };
+  }
+  localStorage.setItem('su_img_settings', JSON.stringify(settings));
+  try{
+    const pd = JSON.parse(localStorage.getItem('su_pd_style')||'{}')||{};
+    delete pd.img_fill;
+    localStorage.setItem('su_pd_style', JSON.stringify(pd));
+  }catch(e){}
+  
+  // 이미지탭(board2)과 동기화를 위한 저장
+  const raw = (()=>{ try{ return JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}')||{}; }catch(e){ return {}; } })();
+  if(!raw.__byDevice || typeof raw.__byDevice!=='object') raw.__byDevice = {};
+  const _mkB2Device = (scale)=>({
+    primary:{ fit: settings.fill ? 'cover' : 'contain', scale: scale * 100, brightness: settings.brightness * 100, offsetX: 0, offsetY: 0, zoom: scale * 100, posX: 0, posY: 0 },
+    secondary:{ fit: settings.fill ? 'cover' : 'contain', scale: scale * 100, brightness: settings.brightness * 100, offsetX: 0, offsetY: 0, zoom: scale * 100, posX: 0, posY: 0 }
+  });
+  raw.__byDevice.mb = _mkB2Device(settings.scaleMb);
+  raw.__byDevice.tb = _mkB2Device(settings.scaleTb);
+  raw.__byDevice.pc = _mkB2Device(settings.scalePc);
+  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(raw));
   
   if(typeof save==='function')save();
-  alert('이미지 설정이 저장되었습니다.');
   if(typeof render === 'function') render();
+  try{
+    const pm = document.getElementById('playerModal');
+    if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof openPlayerModal==='function'){
+      openPlayerModal(window._playerModalCurrentName);
+    }
+  }catch(e){}
+  try{
+    const um = document.getElementById('univModal');
+    if(um && um.style.display !== 'none' && window._univModalCurrentName && typeof openUnivModal==='function'){
+      openUnivModal(window._univModalCurrentName);
+    }
+  }catch(e){}
+  alert('이미지 설정이 저장되었습니다.');
 }
 
 // ── 우클릭 이미지 조절 메뉴 ──
@@ -2500,7 +2510,10 @@ function _bulkSelected(keys, prefix, defaultChecked=true){
   });
 }
 function bulkChangeDate(){
-  if(!isLoggedIn) return;
+  // (QA 드라이런/호환) 일부 환경은 isLoggedIn이 top-level let 으로 선언되어 window.isLoggedIn과 분리됨
+  // - 드라이런은 window.isLoggedIn을 조작하므로 둘 다 허용
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const from=document.getElementById('bulk-date-from')?.value||'';
   const to=document.getElementById('bulk-date-to')?.value||'';
   if(!from||!to){ alert('변경 전/후 날짜를 입력하세요.'); return; }
@@ -2517,7 +2530,8 @@ function bulkChangeDate(){
   if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkChangeMap(){
-  if(!isLoggedIn){ alert('로그인이 필요합니다.'); return; }
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li){ alert('로그인이 필요합니다.'); return; }
   const from=(document.getElementById('bulk-map-from')?.value||'').trim();
   const to=(document.getElementById('bulk-map-to')?.value||'').trim();
   if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
@@ -2567,7 +2581,8 @@ function bulkChangeMap(){
   if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkDeleteByDate(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const from=document.getElementById('bulk-del-from')?.value||'';
   const to=document.getElementById('bulk-del-to')?.value||'';
   if(!from||!to){ alert('시작/종료 날짜를 입력하세요.'); return; }
@@ -2624,7 +2639,8 @@ function deleteSeason(i){
 }
 
 function bulkChangeTier(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';
   const toTier=document.getElementById('bulk-tier-to')?.value||'';
   const targetUniv=document.getElementById('bulk-tier-univ')?.value||'';
@@ -2646,7 +2662,8 @@ function bulkChangeTier(){
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
 function bulkConvertToGameScore(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
   const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
   if(!targets.length){ alert('대상을 선택하세요.'); return; }
@@ -2661,6 +2678,7 @@ function bulkConvertToGameScore(){
       // 세트 수와 다를 때만 변환
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -2676,6 +2694,7 @@ function bulkConvertToGameScore(){
         const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
         if(gA!==m.sa||gB!==m.sb){
           m.sa=gA; m.sb=gB;
+          m.scoreMode='game';
           converted++;
         }
       });
@@ -2688,6 +2707,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -2697,6 +2717,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -4136,7 +4157,7 @@ function savePlayer(){
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
   if(_photo){
     if(_photo.startsWith('data:')){
-      alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+      alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
       return;
     }
     if(_photo.length>2000){
@@ -4238,13 +4259,40 @@ function delPlayer(){
 
 function openRE(mode,idx){
   reMode=mode;reIdx=idx;const allU=getAllUnivs();
+  const _calcSetGameCounts = (sets)=>{
+    const out = {gameA:0, gameB:0, setA:0, setB:0};
+    try{
+      (sets||[]).forEach(s=>{
+        if(!s) return;
+        const games = Array.isArray(s.games) ? s.games : [];
+        const gA = (s.scoreA!=null) ? (parseInt(s.scoreA,10)||0) : games.filter(g=>g && g.winner==='A').length;
+        const gB = (s.scoreB!=null) ? (parseInt(s.scoreB,10)||0) : games.filter(g=>g && g.winner==='B').length;
+        out.gameA += gA; out.gameB += gB;
+        const w = s.winner || (gA>gB?'A':gB>gA?'B':'');
+        if(w==='A') out.setA += 1;
+        else if(w==='B') out.setB += 1;
+      });
+    }catch(e){}
+    return out;
+  };
   let body='',tit='';
   if(mode==='mini'){
     const m=miniM[idx];tit='⚡ 미니대전 수정';
-    const mSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
-    const mSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const cnt = _calcSetGameCounts(m.sets||[]);
+    const mSetsA=cnt.gameA, mSetsB=cnt.gameB;
+    const mSetWA=cnt.setA,  mSetWB=cnt.setB;
+    const mDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((mSetWA+mSetWB>1)?'set':'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A 대학</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${mDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${mDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${mSetWA||0};document.getElementById('re-sb').value=${mSetWB||0};}else{document.getElementById('re-sa').value=${mSetsA||0};document.getElementById('re-sb').value=${mSetsB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${mSetWA}:${mSetWB} / 게임수 ${mSetsA}:${mSetsB}</span>
+      </div>
       <label>팀 A 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
@@ -4252,13 +4300,24 @@ function openRE(mode,idx){
       </div>
       <label>팀 B 대학</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>팀 B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
-      ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}`;
+      ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${mSetWA} / B ${mSetWB} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}`;
   } else if(mode==='univm'){
     const m=univM[idx];tit='🏟️ 대학대전 수정';
-    const uSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
-    const uSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const cnt = _calcSetGameCounts(m.sets||[]);
+    const uSetsA=cnt.gameA, uSetsB=cnt.gameB;
+    const uSetWA=cnt.setA,  uSetWB=cnt.setB;
+    const uDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((uSetWA+uSetWB>1)?'set':'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${uDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${uDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${uSetWA||0};document.getElementById('re-sb').value=${uSetWB||0};}else{document.getElementById('re-sa').value=${uSetsA||0};document.getElementById('re-sb').value=${uSetsB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${uSetWA}:${uSetWB} / 게임수 ${uSetsA}:${uSetsB}</span>
+      </div>
       <label>A 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
@@ -4266,15 +4325,28 @@ function openRE(mode,idx){
       </div>
       <label>팀 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
-      ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}`;
+      ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${uSetWA} / B ${uSetWB} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}`;
   } else if(mode==='comp'){
     const c=comps[idx];tit='🎖️ 대회 수정';
+    const cnt = _calcSetGameCounts(c.sets||[]);
+    const cGA=cnt.gameA, cGB=cnt.gameB;
+    const cWA=cnt.setA,  cWB=cnt.setB;
+    const cDefMode = (c.scoreMode||'') ? String(c.scoreMode) : ((cWA+cWB>1)?'set':'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${c.d}">
       <label>대회명</label><input type="text" id="re-cn" value="${c.n}">
       <label>대학 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${(c.a||c.u)===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>A 세트 승</label><input type="number" id="re-sa" value="${c.sa||0}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${cDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${cDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${cWA||0};document.getElementById('re-sb').value=${cWB||0};}else{document.getElementById('re-sa').value=${cGA||0};document.getElementById('re-sb').value=${cGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${cWA}:${cWB} / 게임수 ${cGA}:${cGB}</span>
+      </div>
+      <label>A 점수 (sa)</label><input type="number" id="re-sa" value="${c.sa||0}">
       <label>대학 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${c.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>B 세트 승</label><input type="number" id="re-sb" value="${c.sb||0}">`;
+      <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${c.sb||0}">`;
   } else if(mode==='pro'){
     const m=proM[idx];tit='🏅 프로리그 수정';
     const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
@@ -4282,13 +4354,21 @@ function openRE(mode,idx){
     const pSetsGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const pSetsWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const pSetsWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const pDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((pSetsWA!=null && pSetsWA+pSetsWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>A팀 레이블</label><input type="text" id="re-tla" value="${m.teamALabel||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${pDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${pDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${pSetsWA||0};document.getElementById('re-sb').value=${pSetsWB||0};}else{document.getElementById('re-sa').value=${pSetsGA||0};document.getElementById('re-sb').value=${pSetsGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${pSetsWA??0}:${pSetsWB??0} / 게임수 ${pSetsGA??0}:${pSetsGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
-        ${pSetsGA!==null&&pSetsGA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${pSetsGA};document.getElementById('re-sb').value=${pSetsGB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer">🔄 게임수(${pSetsGA}:${pSetsGB})</button>`:''}
-        ${pSetsWA!==null&&pSetsWA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${pSetsWA};document.getElementById('re-sb').value=${pSetsWB}" style="font-size:11px;padding:2px 8px;background:#dbeafe;border:1px solid #2563eb;border-radius:6px;cursor:pointer">🔄 세트수(${pSetsWA}:${pSetsWB})</button>`:''}
       </div>
       <label>B팀 레이블</label><input type="text" id="re-tlb" value="${m.teamBLabel||''}">
       <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
@@ -4300,22 +4380,43 @@ function openRE(mode,idx){
     const ttGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const ttDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((ttWA!=null && ttWA+ttWB>1) ? 'set' : 'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${ttDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${ttDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${ttWA||0};document.getElementById('re-sb').value=${ttWB||0};}else{document.getElementById('re-sa').value=${ttGA||0};document.getElementById('re-sb').value=${ttGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${ttWA??0}:${ttWB??0} / 게임수 ${ttGA??0}:${ttGB??0}</span>
+      </div>
       <label>A팀 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa||0}" style="flex:1">
-        ${ttGA!==null&&ttGA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${ttGA};document.getElementById('re-sb').value=${ttGB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer">🔄 게임수(${ttGA}:${ttGB})</button>`:''}
-        ${ttWA!==null&&ttWA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${ttWA};document.getElementById('re-sb').value=${ttWB}" style="font-size:11px;padding:2px 8px;background:#dbeafe;border:1px solid #2563eb;border-radius:6px;cursor:pointer">🔄 세트수(${ttWA}:${ttWB})</button>`:''}
       </div>
       <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${ttGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${ttWA} / B ${ttWB} | 게임 수: A ${ttGA} / B ${ttGB}</div>`:''}
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='ck'){
     const m=ckM[idx];tit='🤝 대학CK 수정';
+    const cnt=_calcSetGameCounts(m.sets||[]);
+    const cGA=cnt.gameA, cGB=cnt.gameB;
+    const cWA=cnt.setA,  cWB=cnt.setB;
+    const cDefMode=(m.scoreMode||'')?String(m.scoreMode):((cWA+cWB>1)?'set':'game');
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
-      <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
-      <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
+      <label>점수 방식</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <select id="re-scoremode" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-size:12px">
+          <option value="game" ${cDefMode==='game'?'selected':''}>경기제(게임수)</option>
+          <option value="set" ${cDefMode==='set'?'selected':''}>세트제(세트승)</option>
+        </select>
+        <button type="button" class="btn btn-w btn-xs" onclick="(function(){const sm=document.getElementById('re-scoremode').value; if(sm==='set'){document.getElementById('re-sa').value=${cWA||0};document.getElementById('re-sb').value=${cWB||0};}else{document.getElementById('re-sa').value=${cGA||0};document.getElementById('re-sb').value=${cGB||0};}})()">적용</button>
+        <span style="font-size:11px;color:var(--gray-l)">세트수 ${cWA}:${cWB} / 게임수 ${cGA}:${cGB}</span>
+      </div>
+      <label>A조 점수 (sa)</label><input type="number" id="re-sa" value="${m.sa||0}">
+      <label>B조 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='gj'){
     const m=gjM[idx];tit='⚔️ 끝장전 수정';
@@ -4341,6 +4442,7 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) miniM[reIdx].scoreMode=sm; }catch(e){}
     // miniM에 _id가 없으면 생성
     if(!miniM[reIdx]._id)miniM[reIdx]._id=genId();
     // 선수 history 업데이트
@@ -4354,6 +4456,7 @@ function saveRow(){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // univM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -4368,12 +4471,14 @@ function saveRow(){
     c.a=document.getElementById('re-a').value;c.u=c.a;c.hostUniv=c.a;
     c.sa=parseInt(document.getElementById('re-sa').value)||0;
     c.b=document.getElementById('re-b').value;c.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) c.scoreMode=sm; }catch(e){}
   } else if(reMode==='pro'){
     const m=proM[reIdx];m.d=d;
     m.teamALabel=document.getElementById('re-tla')?.value||m.teamALabel;
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // proM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -4389,6 +4494,7 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -4402,6 +4508,7 @@ function saveRow(){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
@@ -4744,12 +4851,35 @@ async function clearAllAdmins(){
   doLogout();
 }
 
+function openUnifiedSyncSettings(){
+  try{
+    if(typeof sw==='function'){
+      const cfgBtn=document.querySelector('.tab.cfg') || [...document.querySelectorAll('.tab')].find(b=>String(b.getAttribute('onclick')||'').includes("'cfg'"));
+      sw('cfg', cfgBtn || document.querySelector('.tab.on') || document.querySelector('.tab'));
+    }
+  }catch(e){}
+  setTimeout(()=>{
+    try{
+      if(typeof cfgApplyCat==='function') cfgApplyCat('💾 데이터');
+    }catch(e){}
+    try{
+      if(typeof checkFbSyncStatus==='function') checkFbSyncStatus();
+    }catch(e){}
+    try{
+      const sec=document.getElementById('cfg-sec-firebase');
+      if(sec){
+        sec.open = true;
+        sec.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    }catch(e){}
+  }, 80);
+}
 function saveFbPw(){
   const pw = document.getElementById('cfg-fb-pw')?.value.trim();
   const statusEl = document.getElementById('fb-pw-status');
-  if (!pw) { if(statusEl) statusEl.textContent = '⚠️ 비밀번호를 입력하세요.'; return; }
+  if (!pw) { if(statusEl) statusEl.textContent = '⚠️ 보조 신호 비밀번호를 입력하세요.'; return; }
   localStorage.setItem('su_fb_pw', pw);
-  if (statusEl) statusEl.textContent = '✅ 비밀번호 저장됨';
+  if (statusEl) statusEl.textContent = '✅ 보조 신호 비밀번호 저장됨';
   const input = document.getElementById('cfg-fb-pw');
   if (input) input.value = '';
 }
@@ -4770,7 +4900,7 @@ function saveGhToken(){
 function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
-  if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
+  if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성 / 보조 신호만 수신)';
 }
 
 // ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────

@@ -308,13 +308,13 @@ function rCompLeague(tn){
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name}</div>
   </div>`;
   if(isLoggedIn&&tn.groups.length){
-    h+=`<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+    h+=`<div class="no-export grp-univ-action-row" style="margin-bottom:12px">
       <button class="btn btn-p btn-sm" onclick="openCompAutoDetectPaste('${tn.id}')" title="선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장">📋 자동인식</button>
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l);margin-left:4px">경기 추가:</span>`;
+      <span class="grp-univ-action-label" style="margin-left:4px">경기 추가:</span>`;
     tn.groups.forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi];
       const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      h+=`<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
+      h+=`<button class="btn btn-xs grp-univ-action-btn" style="background:${col};color:#fff;border-color:${col}" onclick="grpAddMatch('${tn.id}',${gi})">+ ${gl}조</button>`;
     });
     h+=`</div>`;
   }

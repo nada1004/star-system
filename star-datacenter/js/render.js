@@ -1,6 +1,18 @@
 /* ══════════════════════════════════════
    TAB & RENDER
 ══════════════════════════════════════ */
+window._centerActiveTopTab = function(smooth){
+  try{
+    const on = document.querySelector('.tabs .tab.on');
+    if(!on) return;
+    const tabs = on.closest('.tabs');
+    if(!tabs) return;
+    const mode = (localStorage.getItem('su_top_tab_align_mb')||'start').trim();
+    if(window.innerWidth <= 768 && mode === 'center'){
+      on.scrollIntoView({ behavior: smooth===false ? 'auto' : 'smooth', inline:'center', block:'nearest' });
+    }
+  }catch(e){}
+};
 function sw(t,el){
   // (요청사항) 부관리자는 설정탭 접근 불가
   try{
@@ -41,8 +53,279 @@ function sw(t,el){
   const C=document.getElementById('rcont');
   if(C) C.innerHTML='';
   render();
+  try{ setTimeout(()=>{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(); }, 30); }catch(e){}
 }
-function render(){
+
+// ─────────────────────────────────────────────────────────────
+// (성능) 탭별 지연 로딩 유틸
+// - 큰 기능(룰렛/부가게임 등)은 실제 탭 진입 시에만 JS를 로드
+// - 로딩 후 render(true)로 즉시 갱신
+// ─────────────────────────────────────────────────────────────
+window._lazy = window._lazy || {loaded:{}, loading:{}};
+function _loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    try{
+      if(window._lazy.loaded[src]) return resolve(true);
+      if(window._lazy.loading[src]) return window._lazy.loading[src].then(resolve).catch(reject);
+      const p = new Promise((res, rej)=>{
+        const s=document.createElement('script');
+        s.src=src;
+        s.async=true;
+        s.onload=()=>{ window._lazy.loaded[src]=true; res(true); };
+        s.onerror=()=>{ rej(new Error('load fail: '+src)); };
+        document.head.appendChild(s);
+      });
+      window._lazy.loading[src]=p;
+      p.then(resolve).catch(reject);
+    }catch(e){ reject(e); }
+  });
+}
+// 다른 파일(init.js 등)에서도 사용 가능하도록 노출
+window._loadScriptOnce = window._loadScriptOnce || _loadScriptOnce;
+
+// ─────────────────────────────────────────────────────────────
+// (성능) 외부 라이브러리 지연 로딩 (CDN)
+// ─────────────────────────────────────────────────────────────
+window.ensureHtml2Canvas = window.ensureHtml2Canvas || function(){
+  // html2canvas@1.4.1
+  return window._loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+};
+window.ensureChartJS = window.ensureChartJS || function(){
+  // chart.js@4.4.0 (UMD)
+  return window._loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js');
+};
+
+function _lazyLoadingView(T, C, title, desc){
+  try{ if(T) T.textContent = title||''; }catch(e){}
+  try{
+    if(C) C.innerHTML =
+      `<div class="empty-state"><div class="empty-state-icon">⏳</div>`+
+      `<div class="empty-state-title">${title||'로딩 중...'}</div>`+
+      `<div class="empty-state-desc">${desc||'최초 1회만 로드됩니다.'}</div></div>`;
+  }catch(e){}
+}
+
+async function _ensureRouletteLoaded(){
+  // rRoulette + 룰렛 내부 부가기능(덕레이스/휠)
+  const scripts=[
+    'js/roulette.js?v=20260424-08',
+    'js/duck-race.js?v=20260424-04',
+    'js/wheel.js?v=20260416-08',
+  ];
+  for(const src of scripts){
+    await _loadScriptOnce(src);
+  }
+}
+
+async function _ensureStatsLoaded(){
+  await window.ensureChartJS();
+  await _loadScriptOnce('js/stats.js?v=20260430-01');
+}
+async function _ensureCalendarLoaded(){
+  await _loadScriptOnce('js/calendar.js?v=20260422-01');
+}
+try{
+  const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
+  if(typeof window.requestIdleCallback === 'function'){
+    window.requestIdleCallback(_prewarmCalendar, { timeout: 2500 });
+  }else{
+    setTimeout(_prewarmCalendar, 1200);
+  }
+}catch(e){}
+async function _ensureVoteLoaded(){
+  await window.ensureHtml2Canvas();
+  await _loadScriptOnce('js/vote.js');
+}
+async function _ensureCloudBoardLoaded(){
+  await window.ensureHtml2Canvas();
+  await _loadScriptOnce('js/cloud-board.js?v=20260430-02');
+}
+function _lazyGsSetStatus(msg, color='var(--gray-l)'){
+  try{
+    const el = document.getElementById('cloudStatus');
+    if(el){ el.textContent = msg || ''; el.style.color = color || 'var(--gray-l)'; }
+  }catch(e){}
+}
+async function _ensureCloudFeatureReady(){
+  try{
+    await _ensureCloudBoardLoaded();
+    return true;
+  }catch(e){
+    console.error('[lazy] cloud feature load fail', e);
+    return false;
+  }
+}
+async function _lazyFbCloudSave(opts){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.fbCloudSave;
+  if(typeof fn === 'function' && fn !== _lazyFbCloudSave) return fn(opts);
+  throw new Error('fbCloudSave unavailable');
+}
+async function _lazyFbUpdate(patch){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.fbUpdate;
+  if(typeof fn === 'function' && fn !== _lazyFbUpdate) return fn(patch);
+  throw new Error('fbUpdate unavailable');
+}
+async function _lazyCloudLoad(){
+  const ok = await _ensureCloudFeatureReady();
+  if(!ok) throw new Error('cloud-board load fail');
+  const fn = window.cloudLoad;
+  if(typeof fn === 'function' && fn !== _lazyCloudLoad) return fn();
+  throw new Error('cloudLoad unavailable');
+}
+window.gsSetStatus = window.gsSetStatus || _lazyGsSetStatus;
+window.fbCloudSave = window.fbCloudSave || _lazyFbCloudSave;
+window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
+window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
+async function _ensureElboardLoaded(){
+  await _loadScriptOnce('js/elboard.js?v=20260422-01');
+}
+async function _ensureChatbotLoaded(){
+  await _loadScriptOnce('js/chatbot.js?v=20260430-01');
+}
+
+// 챗봇은 HTML onclick에서 직접 호출되므로, 스텁을 제공해 먼저 로드 후 실행
+function _lazyOpenChatbot(mode){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.openChatbot;
+      if(typeof fn === 'function' && fn !== _lazyOpenChatbot) fn(mode);
+    }catch(e){
+      console.error('[lazy] chatbot load fail', e);
+      try{ alert('챗봇 로딩 실패: 새로고침 후 다시 시도해주세요.'); }catch(_){}
+    }
+  })();
+}
+function _lazyCloseChatbot(ev){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.closeChatbot;
+      if(typeof fn === 'function' && fn !== _lazyCloseChatbot) fn(ev);
+    }catch(e){}
+  })();
+}
+function _lazySendMessage(){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.sendMessage;
+      if(typeof fn === 'function' && fn !== _lazySendMessage) fn();
+    }catch(e){}
+  })();
+}
+function _lazyClearChatHistory(){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.clearChatHistory;
+      if(typeof fn === 'function' && fn !== _lazyClearChatHistory) fn();
+    }catch(e){}
+  })();
+}
+window.openChatbot = window.openChatbot || _lazyOpenChatbot;
+window.closeChatbot = window.closeChatbot || _lazyCloseChatbot;
+window.sendMessage = window.sendMessage || _lazySendMessage;
+window.clearChatHistory = window.clearChatHistory || _lazyClearChatHistory;
+
+// ─────────────────────────────────────────────────────────────
+// (호환) 탭 렌더러/핸들러 스텁
+// - settings.js의 QA 드라이런/자체점검에서 함수 존재 여부를 체크하므로
+//   지연 로딩 대상은 “스텁”을 먼저 제공하고, 호출 시 실제 모듈을 불러옵니다.
+// ─────────────────────────────────────────────────────────────
+function _lazyRStats(C, T){
+  _lazyLoadingView(T, C, '통계', '통계 모듈을 불러오는 중...');
+  (async()=>{
+    try{
+      await _ensureStatsLoaded();
+      const fn = window.rStats;
+      if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
+      else render(true);
+    }catch(e){
+      console.error('[lazy] rStats load fail', e);
+      try{ if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">통계 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>'; }catch(_){}
+    }
+  })();
+}
+async function _ensureStatsFeatureReady(){
+  try{
+    await _ensureStatsLoaded();
+    return true;
+  }catch(e){
+    console.error('[lazy] stats feature load fail', e);
+    return false;
+  }
+}
+function _lazyOnGlobalSearch(val){
+  const q = String(val||'');
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.onGlobalSearch;
+    if(typeof fn === 'function' && fn !== _lazyOnGlobalSearch) fn(q);
+  })();
+}
+function _lazyOpenShareCardModal(){
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.openShareCardModal;
+    if(typeof fn === 'function' && fn !== _lazyOpenShareCardModal) fn();
+  })();
+}
+function _lazyRenderShareCardByMatchObj(m){
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.renderShareCardByMatchObj;
+    if(typeof fn === 'function' && fn !== _lazyRenderShareCardByMatchObj) fn(m);
+  })();
+}
+window.onGlobalSearch = window.onGlobalSearch || _lazyOnGlobalSearch;
+window.openShareCardModal = window.openShareCardModal || _lazyOpenShareCardModal;
+window.renderShareCardByMatchObj = window.renderShareCardByMatchObj || _lazyRenderShareCardByMatchObj;
+function _lazyRCal(C, T){
+  _lazyLoadingView(T, C, '캘린더', '캘린더 모듈을 불러오는 중...');
+  (async()=>{
+    try{
+      await _ensureCalendarLoaded();
+      const fn = window.rCal;
+      if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
+      else render(true);
+    }catch(e){
+      console.error('[lazy] rCal load fail', e);
+      try{ if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">캘린더 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>'; }catch(_){}
+    }
+  })();
+}
+window.rStats = window.rStats || _lazyRStats;
+window.rCal   = window.rCal   || _lazyRCal;
+
+function _lazyCheckFbSyncStatus(){
+  (async()=>{
+    try{
+      await _ensureCloudBoardLoaded();
+      const fn = window.checkFbSyncStatus;
+      if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
+    }catch(e){
+      console.error('[lazy] checkFbSyncStatus load fail', e);
+      try{ alert('동기화 상태 확인 로딩 실패: 새로고침 후 다시 시도해주세요.'); }catch(_){}
+    }
+  })();
+}
+window.checkFbSyncStatus = window.checkFbSyncStatus || _lazyCheckFbSyncStatus;
+
+// ─────────────────────────────────────────────────────────────
+// (성능) render 디바운스
+// - 연속 save(); render(); 호출이 많은 구조라, 1프레임에 render 1회만 수행
+// - 즉시 반영이 꼭 필요하면 render(true) 또는 window.renderNow() 사용 가능
+// ─────────────────────────────────────────────────────────────
+let _renderScheduled = false;
+function _renderImpl(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
@@ -68,13 +351,67 @@ function render(){
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
-    case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
-    case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
-    case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
-    case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
-    case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
+    case 'stats':
+      if(typeof rStats==='function'){
+        // chart.js는 통계에서 필요
+        if(typeof Chart==='undefined'){ window.ensureChartJS().then(()=>render(true)).catch(()=>rStats(C,T)); return; }
+        rStats(C,T);
+      }else{
+        _lazyLoadingView(T,C,'통계','통계 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureStatsLoaded(); render(true); }catch(e){ console.error('[lazy] stats load fail', e); } })();
+      }
+      break;
+    case 'cal':
+      if(typeof rCal==='function'){
+        rCal(C,T);
+      }else{
+        _lazyLoadingView(T,C,'캘린더','캘린더 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureCalendarLoaded(); render(true); }catch(e){ console.error('[lazy] calendar load fail', e); } })();
+      }
+      break;
+    case 'roulette':
+      if(typeof rRoulette==='function'){
+        rRoulette(C,T);
+      }else{
+        // 지연 로딩(첫 진입)
+        T.textContent = '룰렛';
+        C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">룰렛 기능 로딩 중...</div><div class="empty-state-desc">최초 1회만 로드됩니다.</div></div>';
+        (async()=>{
+          try{
+            await _ensureRouletteLoaded();
+            render(true);
+          }catch(e){
+            console.error('[lazy] roulette load fail', e);
+            C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">룰렛 로딩 실패</div><div class="empty-state-desc">콘솔 에러를 확인해주세요.</div></div>';
+          }
+        })();
+      }
+      break;
+    case 'vote':
+      if(typeof rVote==='function'){
+        rVote(C,T);
+      }else{
+        _lazyLoadingView(T,C,'투표','투표 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureVoteLoaded(); render(true); }catch(e){ console.error('[lazy] vote load fail', e); } })();
+      }
+      break;
+    case 'board':
+      if(typeof rBoard==='function'){
+        rBoard(C,T);
+      }else{
+        _lazyLoadingView(T,C,'현황판','현황판 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureCloudBoardLoaded(); render(true); }catch(e){ console.error('[lazy] board load fail', e); } })();
+      }
+      break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
-    case 'elboard': if(typeof rElboard==='function') rElboard(C,T); break;
+    case 'elboard':
+      if(typeof rElboard==='function'){
+        rElboard(C,T);
+      }else{
+        _lazyLoadingView(T,C,'ELO 현황판','ELO 현황판 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureElboardLoaded(); render(true); }catch(e){ console.error('[lazy] elboard load fail', e); } })();
+      }
+      break;
     default: break;
   }
   // (설정 반영 보강) 일부 환경에서 body class/변수 적용이 누락되는 케이스가 있어 렌더 후 항상 재적용
@@ -131,6 +468,19 @@ function render(){
         });
       }catch(e){}
     });
+  });
+}
+
+// 외부에서 즉시 렌더가 필요할 때 사용(디버깅/특수 케이스)
+window.renderNow = window.renderNow || _renderImpl;
+
+function render(immediate){
+  if(immediate===true) return window.renderNow();
+  if(_renderScheduled) return;
+  _renderScheduled = true;
+  requestAnimationFrame(()=>{
+    _renderScheduled = false;
+    try{ window.renderNow(); }catch(e){ console.error('[render] fail', e); }
   });
 }
 
@@ -490,7 +840,7 @@ function openPlayerHistBulkEdit(playerName){
           ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
           <option value="개인전">개인전</option>
           <option value="프로리그">프로리그</option>
-          <option value="끝장전">중장전</option>
+          <option value="끝장전">끝장전</option>
           <option value="미니대전">미니대전</option>
           <option value="시빌워">시빌워</option>
           <option value="대학대전">대학대전</option>
@@ -923,10 +1273,18 @@ function openShareCardFromMatch(mode,idx){
     ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
   }:null;
   _shareMode='match';
-  openShareCardModal();
-  setTimeout(()=>{
-    if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);
-  },80);
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    if(typeof window.openShareCardModal==='function') window.openShareCardModal();
+    setTimeout(()=>{
+      try{
+        if(window._shareMatchObj && typeof window.renderShareCardByMatchObj==='function'){
+          window.renderShareCardByMatchObj(window._shareMatchObj);
+        }
+      }catch(e){}
+    },80);
+  })();
 }
 
 // ── 이미지 저장 로딩 토스트 ──────────────────────────────────────
@@ -956,6 +1314,7 @@ async function capturePlayerModal(){
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${window._playerModalCurrentName||'player'}_stat.png`,'png');
@@ -969,6 +1328,7 @@ async function captureUnivModal(){
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.png`,'png');
@@ -981,6 +1341,7 @@ async function captureDetail(id, filename){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`경기상세_${filename}.png`,'png');
@@ -1192,7 +1553,15 @@ function buildPlayerDetailHTML(p){
   const _isMobile=window.innerWidth<=768;
   const _isTablet=(window.innerWidth>768 && window.innerWidth<=1024);
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
-  const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const _rawImgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+  const _imgSettings=(_rawImgSettings.__byDevice && typeof _rawImgSettings.__byDevice==='object')
+    ? {
+        ..._rawImgSettings,
+        scaleMb:_rawImgSettings.__byDevice.mb?.scale ?? _rawImgSettings.scaleMb ?? _rawImgSettings.scaleLeft ?? _rawImgSettings.scale ?? 1,
+        scaleTb:_rawImgSettings.__byDevice.tb?.scale ?? _rawImgSettings.scaleTb ?? _rawImgSettings.scaleRight ?? _rawImgSettings.scale ?? 1,
+        scalePc:_rawImgSettings.__byDevice.pc?.scale ?? _rawImgSettings.scalePc ?? _rawImgSettings.scaleRight ?? _rawImgSettings.scale ?? 1
+      }
+    : _rawImgSettings;
   // (버그) "좌우 개별 크기 사용" 체크가 반영되지 않던 문제 수정
   // - 기본: settings.scale 사용
   // - 체크 시: 모바일=scaleLeft, PC=scaleRight
@@ -1201,10 +1570,11 @@ function buildPlayerDetailHTML(p){
     ? (_isMobile ? (_imgSettings.scaleLeft||1) : (_imgSettings.scaleRight||1))
     : (_imgSettings.scale||1);
   const _imgZoom=(_pdStyle.img_zoom||100) * _scaleMul;
-  // (버그) "이미지 채우기(cover)/맞춤(contain)" 설정이 반영되지 않던 문제 수정
-  const _imgFill=(_pdStyle.img_fill!=null && _pdStyle.img_fill!=='')
-    ? _pdStyle.img_fill
-    : (_imgSettings.fill ? 'cover' : 'contain');
+  // 스트리머 상세 이미지 설정이 있으면 그것을 우선 사용하고, 없을 때만 레거시(pd_style) 사용
+  const _hasImgFillSetting = typeof _imgSettings.fill === 'boolean';
+  const _imgFill=_hasImgFillSetting
+    ? (_imgSettings.fill ? 'cover' : 'contain')
+    : ((_pdStyle.img_fill!=null && _pdStyle.img_fill!=='') ? _pdStyle.img_fill : 'contain');
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
   let _hdrBg;
@@ -1687,10 +2057,20 @@ function buildPlayerDetailHTML(p){
   const _photoHTML=(()=>{
     if(p.photo){
       const raceL=p.race||'?';
-      const imageFit = localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain';
-      const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-      const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
+      const _rawImgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+      const _imgSettings=(_rawImgSettings.__byDevice && typeof _rawImgSettings.__byDevice==='object')
+        ? {
+            ..._rawImgSettings,
+            scaleMb:_rawImgSettings.__byDevice.mb?.scale ?? _rawImgSettings.scaleMb ?? _rawImgSettings.scaleLeft ?? _rawImgSettings.scale ?? 1,
+            scaleTb:_rawImgSettings.__byDevice.tb?.scale ?? _rawImgSettings.scaleTb ?? _rawImgSettings.scaleRight ?? _rawImgSettings.scale ?? 1,
+            scalePc:_rawImgSettings.__byDevice.pc?.scale ?? _rawImgSettings.scalePc ?? _rawImgSettings.scaleRight ?? _rawImgSettings.scale ?? 1
+          }
+        : _rawImgSettings;
+      const _imgScale = _isMobile ? (_imgSettings.scaleMb||_imgSettings.scale||1) : (_isTablet ? (_imgSettings.scaleTb||_imgSettings.scale||1) : (_imgSettings.scalePc||_imgSettings.scale||1));
       const _imgBrightness=_imgSettings.brightness||1;
+      const imageFit = (typeof _imgSettings.fill === 'boolean')
+        ? (_imgSettings.fill ? 'cover' : 'contain')
+        : (localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain');
       return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
@@ -2161,8 +2541,17 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 모바일에서는 기본 크기를 한 단계 더 줄임
+      const _pdDevKey = window.innerWidth<=768 ? 'mb' : (window.innerWidth<=1024 ? 'tb' : 'pc');
+      const _pdBadgeScaleRaw = parseFloat(localStorage.getItem(`su_pd_badge_scale_${_pdDevKey}`) || localStorage.getItem('su_pd_badge_scale') || '1');
+      const _pdBadgeScale = isNaN(_pdBadgeScaleRaw) ? 1 : Math.max(_pdDevKey==='mb' ? 0.55 : (_pdDevKey==='tb' ? 0.60 : 0.70), Math.min(_pdDevKey==='mb' ? 1.20 : (_pdDevKey==='tb' ? 1.25 : 1.3), _pdBadgeScaleRaw));
+      const _pdBadgeBase = _pdDevKey==='mb'
+        ? {px:2, fs:5.1, lh:10, rr:3}
+        : (_pdDevKey==='tb'
+          ? {px:4, fs:7, lh:13, rr:4}
+          : {px:5, fs:8, lh:14, rr:3});
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 ${(_pdBadgeBase.px*_pdBadgeScale).toFixed(2)}px;border-radius:${(_pdBadgeBase.rr*_pdBadgeScale).toFixed(2)}px;font-size:${(_pdBadgeBase.fs*_pdBadgeScale).toFixed(2)}px;font-weight:900;line-height:${(_pdBadgeBase.lh*_pdBadgeScale).toFixed(2)}px;height:${(_pdBadgeBase.lh*_pdBadgeScale).toFixed(2)}px;white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle;max-width:100%;flex-shrink:0;letter-spacing:0`;
+      const _resultBadgeStyle = `display:inline-flex;align-items:center;justify-content:center;min-width:${Math.max(32, (_pdBadgeBase.lh*2.7*_pdBadgeScale)).toFixed(2)}px;padding:0 ${Math.max(4, (_pdBadgeBase.px*1.7*_pdBadgeScale)).toFixed(2)}px;border-radius:${Math.max(8, (_pdBadgeBase.rr*4*_pdBadgeScale)).toFixed(2)}px;font-size:${(_pdBadgeBase.fs*_pdBadgeScale).toFixed(2)}px;font-weight:900;line-height:${(_pdBadgeBase.lh*_pdBadgeScale).toFixed(2)}px;height:${(_pdBadgeBase.lh*_pdBadgeScale).toFixed(2)}px;white-space:nowrap;letter-spacing:0`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
@@ -2170,12 +2559,12 @@ function buildPlayerDetailHTML(p){
       h+=`<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
-        <td style="white-space:nowrap">${modeCellHTML}</td>
-        <td>${isWin
-          ?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`
+        <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>
+        <td style="text-align:center">${isWin
+          ?`<span style="${_resultBadgeStyle};background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0">WIN</span>`
           :isDraw
-            ?`<span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px">DRAW</span>`
-            :`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
+            ?`<span style="${_resultBadgeStyle};background:#f1f5f9;color:#475569;border:1px solid #e2e8f0">DRAW</span>`
+            :`<span style="${_resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
         <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
@@ -2406,11 +2795,20 @@ function buildUnivDetailHTML(univName){
     ...univM.filter(m=>m.a===univName||m.b===univName).map(m=>({...m,mode:'대학대전'})),
   ].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   if(myMatches.length){
+    const _urDevKey = window.innerWidth<=768 ? 'mb' : (window.innerWidth<=1024 ? 'tb' : 'pc');
+    const _urScaleRaw = parseFloat(localStorage.getItem(`su_univ_recent_chip_scale_${_urDevKey}`) || '1');
+    const _urScale = isNaN(_urScaleRaw) ? 1 : Math.max(_urDevKey==='mb'?0.60:(_urDevKey==='tb'?0.65:0.70), Math.min(_urDevKey==='mb'?1.20:(_urDevKey==='tb'?1.25:1.30), _urScaleRaw));
+    const _urBase = _urDevKey==='mb'
+      ? {date:10, chipFs:6.8, chipPx:3, chipH:12, chipR:4}
+      : (_urDevKey==='tb'
+        ? {date:11, chipFs:8.4, chipPx:5, chipH:15, chipR:5}
+        : {date:12, chipFs:10, chipPx:7, chipH:18, chipR:5});
+    const _urChipStyle = (bg, color)=>`background:${bg};color:${color};padding:0 ${(_urBase.chipPx*_urScale).toFixed(2)}px;border-radius:${(_urBase.chipR*_urScale).toFixed(2)}px;font-size:${(_urBase.chipFs*_urScale).toFixed(2)}px;font-weight:800;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;line-height:${(_urBase.chipH*_urScale).toFixed(2)}px;height:${(_urBase.chipH*_urScale).toFixed(2)}px;letter-spacing:0;min-width:${(_urBase.chipH*2.4*_urScale).toFixed(2)}px`;
     h+=`<div style="font-weight:700;font-size:12px;color:#d97706;margin-bottom:10px;display:flex;align-items:center;gap:6px">
       <span style="display:inline-block;width:3px;height:14px;background:#d97706;border-radius:2px"></span>최근 대전 기록
     </div>`;
     h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">`;
-    h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr><th>날짜</th><th>종류</th><th>상대</th><th>결과</th></tr></thead><tbody>`;
+    h+=`<table style="margin:0;border:none;border-radius:0;table-layout:fixed;width:100%"><thead><tr><th style="width:${_urDevKey==='mb'?'78px':(_urDevKey==='tb'?'92px':'104px')};text-align:center">날짜</th><th style="width:${_urDevKey==='mb'?'62px':(_urDevKey==='tb'?'78px':'92px')};text-align:center">종류</th><th style="text-align:center">상대</th><th style="width:${_urDevKey==='mb'?'64px':(_urDevKey==='tb'?'72px':'84px')};text-align:center">결과</th></tr></thead><tbody>`;
     myMatches.slice(0,10).forEach(m=>{
       const isA=m.a===univName;
       const opp=isA?m.b:m.a;
@@ -2418,10 +2816,10 @@ function buildUnivDetailHTML(univName){
       const win=myS>oppS;const oc=gc(opp);
       const modeBg=m.mode==='미니대전'?'#2563eb':'#7c3aed';
       h+=`<tr>
-        <td style="color:var(--text3);font-size:12px;font-weight:600">${m.d||''}</td>
-        <td><span style="background:${modeBg};color:#fff;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700">${m.mode}</span></td>
-        <td><span class="ubadge clickable-univ" style="background:${oc};font-size:10px;padding:1px 7px" onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">${opp}</span></td>
-        <td>${win?`<span class="wt" style="font-weight:800">${myS}:${oppS} 승</span>`:`<span class="lt" style="font-weight:800">${myS}:${oppS} 패</span>`}</td>
+        <td style="color:var(--text3);font-size:${_urBase.date}px;font-weight:700;text-align:center;vertical-align:middle">${m.d||''}</td>
+        <td style="text-align:center;vertical-align:middle"><span style="${_urChipStyle(modeBg,'#fff')}">${m.mode}</span></td>
+        <td style="text-align:center;vertical-align:middle"><span class="ubadge clickable-univ" style="${_urChipStyle(oc,'#fff')};min-width:${(_urBase.chipH*2.9*_urScale).toFixed(2)}px;box-shadow:none;border:0" onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">${opp}</span></td>
+        <td style="text-align:center;vertical-align:middle">${win?`<span style="${_urChipStyle('#dcfce7','#16a34a')};border:1px solid #bbf7d0">${myS}:${oppS} 승</span>`:`<span style="${_urChipStyle('#fee2e2','#dc2626')};border:1px solid #fecaca">${myS}:${oppS} 패</span>`}</td>
       </tr>`;
     });
     h+=`</tbody></table></div>`;
@@ -2491,7 +2889,7 @@ function _mergedSubBar(tabs, curSub, setFn) {
 
 function rMergedInd(C, T) {
   const bar = _mergedSubBar(
-    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 중장전'}],
+    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
@@ -2534,7 +2932,7 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 중장전'},{id:'comp',lbl:'🎖️ 대회'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');

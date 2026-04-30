@@ -34,9 +34,45 @@ let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' |
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 
-// 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
+// 프로필 탭 이미지 조절 설정 (기기별 전역 설정 - 모든 선수 동일)
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
+function _b2DeviceKey(){
+  const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+  return w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+}
+
+function _b2EnsureDeviceImgSettings(){
+  try{
+    if(!_b2GlobalImgSettings || typeof _b2GlobalImgSettings !== 'object') _b2GlobalImgSettings = {};
+    const defaults = {
+      primary: _b2DefaultSingleImgSettings(),
+      secondary: _b2DefaultSingleImgSettings()
+    };
+    if(!_b2GlobalImgSettings.__byDevice || typeof _b2GlobalImgSettings.__byDevice !== 'object'){
+      const legacyPrimary = (_b2GlobalImgSettings.primary && typeof _b2GlobalImgSettings.primary === 'object') ? {...defaults.primary, ..._b2GlobalImgSettings.primary} : {...defaults.primary};
+      const legacySecondary = (_b2GlobalImgSettings.secondary && typeof _b2GlobalImgSettings.secondary === 'object') ? {...defaults.secondary, ..._b2GlobalImgSettings.secondary} : {...defaults.secondary};
+      _b2GlobalImgSettings.__byDevice = {
+        pc: { primary:{...legacyPrimary}, secondary:{...legacySecondary} },
+        tb: { primary:{...legacyPrimary}, secondary:{...legacySecondary} },
+        mb: { primary:{...legacyPrimary}, secondary:{...legacySecondary} }
+      };
+    }
+    const dk = _b2DeviceKey();
+    if(!_b2GlobalImgSettings.__byDevice[dk] || typeof _b2GlobalImgSettings.__byDevice[dk] !== 'object'){
+      _b2GlobalImgSettings.__byDevice[dk] = {
+        primary: _b2DefaultSingleImgSettings(),
+        secondary: _b2DefaultSingleImgSettings()
+      };
+    }
+    ['primary','secondary'].forEach(slot=>{
+      if(!_b2GlobalImgSettings.__byDevice[dk][slot] || typeof _b2GlobalImgSettings.__byDevice[dk][slot] !== 'object'){
+        _b2GlobalImgSettings.__byDevice[dk][slot] = _b2DefaultSingleImgSettings();
+      }
+    });
+  }catch(e){}
+}
 function _b2SaveImgSettings() {
+  _b2EnsureDeviceImgSettings();
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
   // Firebase에 설정 동기화
   if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
@@ -55,14 +91,15 @@ function _b2DefaultSingleImgSettings() {
   };
 }
 function _b2GetImgSettings(playerName, slot) {
-  // 전역 설정 사용 (모든 선수 동일)
+  _b2EnsureDeviceImgSettings();
+  const dk = _b2DeviceKey();
   const key = slot === 'secondary' ? 'secondary' : 'primary';
-  if (!_b2GlobalImgSettings[key]) {
-    _b2GlobalImgSettings[key] = _b2DefaultSingleImgSettings();
+  if (!_b2GlobalImgSettings.__byDevice[dk][key]) {
+    _b2GlobalImgSettings.__byDevice[dk][key] = _b2DefaultSingleImgSettings();
   }
   // (버그/호환) 과거 버전에서 fit 대신 fill, scale 대신 zoom 등으로 저장된 경우 보정
   try{
-    const s=_b2GlobalImgSettings[key];
+    const s=_b2GlobalImgSettings.__byDevice[dk][key];
     if(s && typeof s==='object'){
       if(s.fit==null && typeof s.fill==='string') s.fit=s.fill;
       if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
@@ -73,11 +110,11 @@ function _b2GetImgSettings(playerName, slot) {
     console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
   }
   // 동기화
-  _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
-  _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
-  _b2GlobalImgSettings[key].posX = _b2GlobalImgSettings[key].offsetX;
-  _b2GlobalImgSettings[key].posY = _b2GlobalImgSettings[key].offsetY;
-  return _b2GlobalImgSettings[key];
+  _b2GlobalImgSettings.__byDevice[dk][key].zoom = _b2GlobalImgSettings.__byDevice[dk][key].scale;
+  _b2GlobalImgSettings.__byDevice[dk][key].fill = _b2GlobalImgSettings.__byDevice[dk][key].fit;
+  _b2GlobalImgSettings.__byDevice[dk][key].posX = _b2GlobalImgSettings.__byDevice[dk][key].offsetX;
+  _b2GlobalImgSettings.__byDevice[dk][key].posY = _b2GlobalImgSettings.__byDevice[dk][key].offsetY;
+  return _b2GlobalImgSettings.__byDevice[dk][key];
 }
 function _b2SetImgSetting(playerName, slot, key, val) {
   // 호환: (playerName, key, val) 형태로도 호출 가능
@@ -87,9 +124,10 @@ function _b2SetImgSetting(playerName, slot, key, val) {
   _b2SaveImgSettings();
 }
 window._b2ResetImgSettings = function(playerName, slot) {
-  // 전역 설정 초기화 (모든 선수 동일하게 적용)
+  _b2EnsureDeviceImgSettings();
+  const dk = _b2DeviceKey();
   if (slot === 'primary' || slot === 'secondary') {
-    _b2GlobalImgSettings[slot] = _b2DefaultSingleImgSettings();
+    _b2GlobalImgSettings.__byDevice[dk][slot] = _b2DefaultSingleImgSettings();
     _b2SaveImgSettings();
   }
 };
@@ -111,6 +149,26 @@ function _b2ApplyImgSettingsToElement(el, settings) {
 }
 function _b2ApplyImgSettingsToDom(playerName, slot) {
   _b2ApplyImgSettingsToElement(document.getElementById(_b2GetImgDomId(slot)), _b2GetImgSettings(playerName, slot));
+}
+function _b2PreviewImgSetting(playerName, slot, key, val){
+  try{
+    const keyMap = { zoom:'scale', fill:'fit', posX:'offsetX', posY:'offsetY' };
+    key = keyMap[key] || key;
+    const s = _b2GetImgSettings(playerName, slot);
+    const prev = s[key];
+    const numVal = parseInt(val, 10);
+    s[key] = isNaN(numVal) ? val : numVal;
+    s.zoom = s.scale;
+    s.fill = s.fit;
+    s.posX = s.offsetX;
+    s.posY = s.offsetY;
+    _b2ApplyImgSettingsToDom(playerName, slot);
+    s[key] = prev;
+    s.zoom = s.scale;
+    s.fill = s.fit;
+    s.posX = s.offsetX;
+    s.posY = s.offsetY;
+  }catch(e){}
 }
 
 // 설정 탭용 이미지 설정 함수
@@ -291,13 +349,13 @@ function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
         <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
-          oninput="document.getElementById('${prefix}-scale-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          oninput="document.getElementById('${prefix}-scale-val').textContent=this.value+'%';_b2PreviewImgSetting('${safeName}','${slot}','scale',this.value);this.dataset.pendingValue=this.value"
           onchange="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
       </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">밝기 <span id="${prefix}-brightness-val">${settings.brightness}%</span></div>
         <input type="range" class="b2-players-img-slider" min="20" max="180" value="${settings.brightness}" ${disabled}
-          oninput="document.getElementById('${prefix}-brightness-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
+          oninput="document.getElementById('${prefix}-brightness-val').textContent=this.value+'%';_b2PreviewImgSetting('${safeName}','${slot}','brightness',this.value);this.dataset.pendingValue=this.value"
           onchange="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
       </div>
       <div class="b2-players-img-control-group">
@@ -2684,24 +2742,7 @@ function _b2PlayersView() {
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
       }
-      /* 모바일/태블릿: 이미지 설정(줌/이동) 때문에 잘리는 문제 방지 → 자동 맞춤 */
-      @media (max-width: 1024px) {
-        .b2-players-main-image{
-          object-fit: contain !important;
-          object-position: center !important;
-          transform: translate(0,0) scale(1) !important;
-          filter: brightness(1) !important;
-        }
-      }
-      /* 태블릿(아이패드 프로 등) 대응: 폭이 1024를 넘더라도 터치 디바이스면 자동 맞춤 */
-      @media (max-width: 1366px) and (pointer: coarse) {
-        .b2-players-main-image{
-          object-fit: contain !important;
-          object-position: center !important;
-          transform: translate(0,0) scale(1) !important;
-          filter: brightness(1) !important;
-        }
-      }
+      /* 모바일/태블릿에서도 사용자가 지정한 이미지별 설정(채우기/맞춤/확대/이동/밝기)을 그대로 사용 */
       .b2-players-img-controls {
         position: absolute;
         top: 16px;
@@ -3458,7 +3499,7 @@ function saveB2Profile(playerName) {
   
   // base64 체크
   if (photoUrl && photoUrl.startsWith('data:')) {
-    alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+    alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
     return;
   }
   

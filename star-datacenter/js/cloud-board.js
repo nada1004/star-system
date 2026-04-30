@@ -268,6 +268,9 @@ function _applyCloudData(d) {
       if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
       if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
       if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
+      if(s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
+      if(s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
       if(typeof window._applyAppFont==='function') window._applyAppFont();
       if(typeof window.applyDesignV2==='function') window.applyDesignV2();
       if(typeof window._applyUiScale==='function') window._applyUiScale();
@@ -317,9 +320,10 @@ window.onFirebaseLoad = function(data) {
 const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
-async function fbCloudSave() {
-  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
-  if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
+async function fbCloudSave(opts) {
+  const includeSettings = !(opts && opts.includeSettings === false);
+  const token = localStorage.getItem('su_gh_token');
+  if (!token || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -340,22 +344,27 @@ async function fbCloudSave() {
   });
 
   // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  // 단, 일반 "경기 기록 저장"에서는 너무 무거워질 수 있어 opts.includeSettings=false 시 생략
   const _syncLs = {};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(!k || typeof k!=='string') continue;
-      if(!k.startsWith('su_')) continue;
-      if(k.startsWith('su_pp')) continue;
-      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
-      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
-      const v = localStorage.getItem(k);
-      if(v==null) continue;
-      // 너무 큰 값은 제외(예: 이미지 base64 등)
-      if(String(v).length > 200000) continue;
-      _syncLs[k] = v;
-    }
-  }catch(e){}
+  if(includeSettings){
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(!k || typeof k!=='string') continue;
+        if(!k.startsWith('su_')) continue;
+        if(k.startsWith('su_pp')) continue;
+        if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+        if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+        // 기록 저장 때마다 외부탭 원문/대형 설정까지 같이 올리면 과도하게 무거워짐
+        if(k==='su_hist_ext_data_v1' || k==='su_hist_ext_proxy_presets_v1' || k==='su_hist_ext_proxy_preset_sel_v1' || k==='su_hist_ext_last_modified') continue;
+        const v = localStorage.getItem(k);
+        if(v==null) continue;
+        // 너무 큰 값은 제외(예: 이미지 base64 등)
+        if(String(v).length > 200000) continue;
+        _syncLs[k] = v;
+      }
+    }catch(e){}
+  }
 
   const dataObj = {
     players: _pNoPhoto,
@@ -368,8 +377,10 @@ async function fbCloudSave() {
     curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
-    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
-    appSettings: {
+    savedAt
+  };
+  if(includeSettings){
+    dataObj.appSettings = {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
@@ -378,51 +389,47 @@ async function fbCloudSave() {
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
-      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
       designV2On: localStorage.getItem('su_design_v2')==='1',
       designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
       designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
       designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
       designV2Colors: localStorage.getItem('su_design_v2_colors')||'{}',
       designV2Effects: localStorage.getItem('su_design_v2_effects')||'{}',
-      // 🅰️ 전역 폰트 — 모든 기기 동기화
       appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
       appFontCss: localStorage.getItem('su_app_font_css')||'',
       appFontFamily: localStorage.getItem('su_app_font_family')||'',
       appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
       appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
-      // 📏 전역 UI 배율(글자/아이콘)
       uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
-      // 🎵 유튜브 BGM (설정 동기화)
+      uiScalePcPct: localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleTbPct: localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleMbPct: localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
       bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
       bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
-      // 📺 SOOP 멀티뷰 (설정 동기화)
       soopList: localStorage.getItem('su_soop_list') || '',
-
-      // 🧾 대전기록 > 외부 탭 데이터 동기화
-      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
-      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
-      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
-      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
-      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
-      // localStorage 설정(문자열) 묶음
       ls: _syncLs
-    },
-    savedAt
-  };
+    };
+  }
   // 페이로드 크기 검사
   let _fbPayloadSize = 0;
   try {
     _fbPayloadSize = JSON.stringify(dataObj).length;
     const statusEl = document.getElementById('cloudStatus');
-    if (_fbPayloadSize > 3 * 1024 * 1024) { // 3MB 초과 — Firebase 저장 실패 가능성 높음
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — Firebase 저장 실패 가능 (설정탭에서 base64 이미지 삭제 필요)`; }
-      console.warn('[fbCloudSave] 크기 위험:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-    } else if (_fbPayloadSize > 2 * 1024 * 1024) { // 2MB 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — 곧 저장 실패할 수 있습니다`; }
-      console.warn('[fbCloudSave] 크기 경고:', (_fbPayloadSize/1024).toFixed(0)+'KB');
+    const splitInfo = (typeof window.__suEstimateSplitStore === 'function')
+      ? window.__suEstimateSplitStore(dataObj)
+      : null;
+    const warnBytes = splitInfo && splitInfo.maxBytes ? splitInfo.maxBytes : _fbPayloadSize;
+    const warnLabel = splitInfo && splitInfo.maxBytes
+      ? `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`
+      : `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB`;
+    if (warnBytes > 3 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ ${warnLabel} — 저장 실패 가능`; }
+      console.warn('[fbCloudSave] 크기 위험:', (warnBytes/1024).toFixed(0)+'KB');
+    } else if (warnBytes > 2 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ ${warnLabel} — 곧 저장 실패할 수 있습니다`; }
+      console.warn('[fbCloudSave] 크기 경고:', (warnBytes/1024).toFixed(0)+'KB');
     }
     console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
@@ -451,11 +458,11 @@ async function fbCloudSave() {
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
     console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
-    return window.fbSet(payload, pw);
+    return window.fbSet(payload);
   };
   try {
     await _tryFbSet(dataObj);
-    githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
+    // GitHub-only 모드: window.fbSet가 이미 GitHub data.json 저장을 수행함
   } catch(e) {
     // 에러 상세 정보 최대한 추출
     const errCode = e.code || '';
@@ -468,10 +475,10 @@ async function fbCloudSave() {
     if (statusEl) {
       const isSizeErr = fullErr.includes('exceeded') || fullErr.includes('too large') || fullErr.includes('payload') || fullErr.includes('413');
       const isAuthErr = fullErr.includes('Permission') || fullErr.includes('PERMISSION') || fullErr.includes('auth') || fullErr.includes('denied') || fullErr.includes('401') || fullErr.includes('403');
-      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → Firebase 보안 규칙 차단' : '';
+      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → GitHub 토큰/권한 문제' : '';
       const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
       statusEl.style.color='#dc2626';
-      statusEl.innerHTML = '❌ Firebase 저장 실패: ' + display + hint
+      statusEl.innerHTML = '❌ GitHub 저장 실패: ' + display + hint
         + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
     }
     throw e;
@@ -530,6 +537,43 @@ function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
   if(el){el.textContent=msg;el.style.color=color;}
 }
+try{ window.gsSetStatus = gsSetStatus; }catch(e){}
+function _fmtSyncTs(ts){
+  const n = Number(ts||0) || 0;
+  if(!n) return '기록 없음';
+  try{ return new Date(n).toLocaleString('ko-KR'); }catch(e){ return '기록 없음'; }
+}
+function refreshCloudSyncStatus(msg, color){
+  const el=document.getElementById('cloudStatus');
+  const panel=document.getElementById('cfg-fb-sync-result');
+  const lastUploadOk = Number(localStorage.getItem('su_sync_last_upload_ok_at')||0) || 0;
+  const lastReceived = Number(localStorage.getItem('su_sync_last_received_at')||0) || 0;
+  const lastRemoteSaved = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const lastSignalSeen = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+  const lastSignalPush = Number(localStorage.getItem('su_sync_last_firebase_signal_push_at')||0) || 0;
+  const missingMonths = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
+  const failMsg = String(localStorage.getItem('su_sync_last_fail_msg')||'').trim();
+  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}${lastSignalSeen?` / 신호 ${_fmtSyncTs(lastSignalSeen)}`:''}`;
+  if(el){
+    el.style.color = color || (failMsg ? '#dc2626' : 'var(--gray-l)');
+    el.textContent = msg ? `${msg} · ${summary}` : summary;
+  }
+  if(panel){
+    panel.innerHTML = `
+      <div style="display:grid;gap:6px">
+        <div><b>최근 업로드:</b> ${_fmtSyncTs(lastUploadOk)}</div>
+        <div><b>최근 수신:</b> ${_fmtSyncTs(lastReceived)}</div>
+        <div><b>원격 savedAt:</b> ${_fmtSyncTs(lastRemoteSaved)}</div>
+        <div><b>보조 신호 수신:</b> ${_fmtSyncTs(lastSignalSeen)}</div>
+        <div><b>보조 신호 발행:</b> ${_fmtSyncTs(lastSignalPush)}</div>
+        <div><b>누락 월 파일:</b> ${missingMonths.length ? missingMonths.join(', ') : '없음'}</div>
+        <div><b>최근 상태:</b> ${msg || (failMsg ? '업로드 실패 기록 있음' : '대기 중')}</div>
+        ${failMsg?`<div style="color:#dc2626"><b>최근 실패:</b> ${failMsg}</div>`:''}
+      </div>`;
+  }
+}
+try{ window.refreshCloudSyncStatus = refreshCloudSyncStatus; }catch(e){}
+try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
 window.cloudLoad = async function(){
@@ -538,6 +582,9 @@ window.cloudLoad = async function(){
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
     let d=null;
+    if(typeof window.__suFetchGithubMergedData === 'function'){
+      d = await window.__suFetchGithubMergedData();
+    }else{
     const baseUrl=GITHUB_JSON_URL;
     const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
     const urls=[
@@ -576,13 +623,14 @@ window.cloudLoad = async function(){
       const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
       throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
     }
+    }
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
     // 필드명 별칭 지원 (파싱 유연성)
     _applyCloudData(d);
     console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
-    save();
+    localSave();
     fixPoints();
     window._compListCache={}; // 대회 목록 캐시 초기화
     window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
@@ -2000,14 +2048,16 @@ async function checkFbSyncStatus(){
   if(!el)return;
   el.innerHTML='<span style="color:var(--blue)">🔄 확인 중...</span>';
 
-  // Firebase 연결 확인
+  // GitHub data.json 동기화 상태 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
+  const hasPw=!!localStorage.getItem('su_gh_token');
   const lastSave=localStorage.getItem('su_last_save_time');
+  const lastSignal=Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+  const missingMonths=(()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
 
-  // Firebase 실제 데이터 크기 확인 (onValue로 받은 마지막 스냅샷 크기)
+  // 마지막 수신 데이터 크기(호환 변수명 유지)
   const fbSize=window._lastFbDataSize||null;
 
   let rows=`
@@ -2015,15 +2065,29 @@ async function checkFbSyncStatus(){
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${fbConnected?'#f0fdf4':'#fef2f2'};border:1px solid ${fbConnected?'#bbf7d0':'#fecaca'}">
         <span style="font-size:16px">${fbConnected?'✅':'❌'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">Firebase 연결</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'Firebase 스크립트 미로드'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 동기화 모듈</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'GitHub 동기화 모듈 미로드'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${hasPw?'#f0fdf4':'#fffbeb'};border:1px solid ${hasPw?'#bbf7d0':'#fde68a'}">
         <span style="font-size:16px">${hasPw?'🔑':'⚠️'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">쓰기 비밀번호</div>
-          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 Firebase에 업로드됨':'미설정 — 저장해도 Firebase 업로드 안 됨'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 토큰</div>
+          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 GitHub data.json에 업로드됨':'미설정 — 저장해도 GitHub 업로드 안 됨'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${lastSignal?'#eff6ff':'#f8fafc'};border:1px solid ${lastSignal?'#bfdbfe':'var(--border)'}">
+        <span style="font-size:16px">📡</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">보조 신호 채널</div>
+          <div style="font-size:11px;color:var(--gray-l)">${lastSignal?`최근 신호 ${new Date(lastSignal).toLocaleString('ko-KR')}`:'아직 수신 기록 없음'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${missingMonths.length?'#fff7ed':'var(--surface)'};border:1px solid ${missingMonths.length?'#fdba74':'var(--border)'}">
+        <span style="font-size:16px">${missingMonths.length?'⚠️':'🗂️'}</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">월별 기록 파일</div>
+          <div style="font-size:11px;color:var(--gray-l)">${missingMonths.length?`누락: ${missingMonths.join(', ')}`:'누락 없음'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
@@ -2037,10 +2101,14 @@ async function checkFbSyncStatus(){
         <span style="font-size:16px">📦</span>
         <div>
           <div style="font-weight:700;font-size:12px">로컬 데이터 크기</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ Firebase: ${fmt(fbSize*2)}`:'(Firebase 크기 미확인)'}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ 동기화 데이터: ${fmt(fbSize*2)}`:'(동기화 크기 미확인)'}</div>
         </div>
       </div>
-      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 Firebase에 업로드</button>`:''}
+      <div style="display:grid;gap:8px;grid-template-columns:1fr">
+        ${missingMonths.length?`<button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 누락 월 재수신 중...';try{if(typeof fbRetryMissingMonths==='function') await fbRetryMissingMonths();}catch(e){console.error('[fbRetryMissingMonths]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🗂️ 누락 월 다시받기</button>`:''}
+        <button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 전체 동기화 중...';try{if(typeof window.fbForceSync==='function') await window.fbForceSync();}catch(e){console.error('[fbForceSync]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🔄 전체 다시 동기화</button>
+        ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='⏫ 업로드 중...';try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());btn.textContent='✅ 완료';}catch(e){btn.textContent='❌ 실패';}finally{setTimeout(()=>{btn.disabled=false;btn.textContent=old;checkFbSyncStatus();},500);}})(this)" style="width:100%">⬆️ 지금 GitHub data.json에 업로드</button>`:''}
+      </div>
     </div>`;
   el.innerHTML=rows;
 }
