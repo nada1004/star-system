@@ -48,6 +48,7 @@ let _cbSet = false;
 
 async function startGithubPolling(){
   let lastSavedAt = 0;
+  let lastText = '';
   let _adminFirstApplied = false; // 관리자 최초 1회는 새로고침 시 원격 반영 허용
   let _lastAdminHintTs = 0;
   // 로그인은 페이지 로드 후에 발생할 수 있으므로, 관리자 여부는 "매 폴링마다" 동적으로 판별한다.
@@ -83,11 +84,27 @@ async function startGithubPolling(){
       const url = _ghRawUrl();
       const r = await fetch(url + '?_=' + Date.now(), { cache:'no-store' });
       if(!r.ok) return;
-      const d = await r.json().catch(()=>null);
+      const text = await r.text().catch(()=> '');
+      if(!text) return;
+      const d = JSON.parse(text);
       if(!d) return;
       const sa = Number(d.savedAt||0) || 0;
-      // savedAt이 0이면(구버전 파일) 매번 덮어쓰는 문제가 있으므로 자동 반영하지 않음
-      if(!sa) return;
+      // savedAt이 없는(구버전: {_lz:...}) 파일도 지원:
+      // - 관람자: raw 텍스트가 바뀔 때만 반영
+      // - 관리자: 기록 보호를 위해 savedAt이 없으면 자동 반영하지 않음(업로드 후 새 포맷으로 전환 권장)
+      if(!sa){
+        if(isAdminSession){
+          _lastSnapshot = d;
+          _hintAdminRemoteUpdated();
+          return;
+        }
+        if(!lastText || text !== lastText){
+          lastText = text;
+          _deliver(d);
+        }
+        return;
+      }
+
       if(!lastSavedAt || sa > lastSavedAt){
         lastSavedAt = sa || lastSavedAt;
         if (isAdminSession) {
