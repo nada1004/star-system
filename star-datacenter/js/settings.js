@@ -6882,24 +6882,11 @@ function clearFbPw(){
   if (statusEl) statusEl.textContent = '미설정';
 }
 function saveGhToken(){
-  let val = document.getElementById('cfg-gh-token')?.value || '';
-  val = String(val).trim();
+  const val = document.getElementById('cfg-gh-token')?.value.trim();
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
-  // 사용자가 "Bearer xxx" / "token xxx" 형태로 붙여넣는 경우 방지
-  val = val.replace(/^Bearer\s+/i,'').replace(/^token\s+/i,'').trim();
-  // 헤더(ByteString) 오류 방지: 토큰은 ASCII여야 함
-  if (/[^ -~]/.test(val)) {
-    if(statusEl) statusEl.textContent = '❌ 토큰에 한글/이모지/특수문자가 포함되어 있어 저장할 수 없습니다. (ghp_... 또는 github_pat_...만 입력)';
-    return;
-  }
-  // 형식 힌트(강제는 아님)
-  if (!/^ghp_[A-Za-z0-9_]+$/.test(val) && !/^github_pat_[A-Za-z0-9_]+$/.test(val)) {
-    if(statusEl) statusEl.textContent = '⚠️ 토큰 형식이 일반적이지 않습니다. (ghp_... 또는 github_pat_...) 그래도 저장은 됩니다.';
-  } else {
-    if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
-  }
   localStorage.setItem('su_gh_token', val);
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
 }
