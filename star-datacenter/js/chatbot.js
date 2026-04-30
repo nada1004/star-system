@@ -475,7 +475,8 @@ async function generateResponse(msg) {
             'Authorization': 'Bearer ' + apiKey
           },
           body: JSON.stringify({
-            model: 'llama-3.1-70b-versatile',
+            // Groq 권장 모델(구버전 3.1 모델은 decommissioned)
+            model: 'llama-3.3-70b-versatile',
             messages: recent,
             temperature: 0.2,
             max_tokens: 700
