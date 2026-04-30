@@ -338,6 +338,342 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
       window._renderCfgPdSection();
     }
+  }catch(e){}
+
+/* ══════════════════════════════════════
+   🎨 디자인 모드(리뉴얼)
+   - 기본은 기존 UI 유지
+   - 켜면 body에 design-v2 클래스를 부여하여 CSS로 전환
+══════════════════════════════════════ */
+window.applyDesignV2 = function(forceOn){
+  try{
+    const on = (typeof forceOn==='boolean') ? forceOn : (localStorage.getItem('su_design_v2')==='1');
+    document.body.classList.toggle('design-v2', !!on);
+    // (신규) 디자인 모드 밝기(라이트닝) 적용 — bg/white/surface 변수만 조절 (CSS에서 --dm-bright 사용)
+    try{
+      const pct = parseInt(localStorage.getItem('su_design_v2_bright')||'0',10) || 0;
+      const v = Math.max(0, Math.min(100, pct)) + '%';
+      if(on) document.body.style.setProperty('--dm-bright', v);
+      else document.body.style.setProperty('--dm-bright', '0%');
+    }catch(e){}
+    // (신규) 디자인 모드 어둡게(진하게) — 0~40%
+    try{
+      const pct = parseInt(localStorage.getItem('su_design_v2_dark')||'0',10) || 0;
+      const v = Math.max(0, Math.min(40, pct)) + '%';
+      if(on) document.body.style.setProperty('--dm-dark', v);
+      else document.body.style.setProperty('--dm-dark', '0%');
+    }catch(e){}
+    // 프리셋(계절/이벤트) 클래스 적용
+    const preset = String(localStorage.getItem('su_design_v2_preset')||'base');
+    // (요청사항) 태극기 모드 삭제, 신규 "Nada Dark" 프리셋 추가
+    const allow = new Set(['base','nada','nadalight','spring','summer','autumn','winter','xmas','summerbreak','winterbreak','valentine','whiteday','buddha','liberation','hangul','samil']);
+    const p = allow.has(preset) ? preset : 'base';
+    // (마이그레이션) 삭제된 프리셋(예: taegeuk)이 남아있으면 base로 정리
+    try{
+      if(preset !== p) localStorage.setItem('su_design_v2_preset', p);
+    }catch(e){}
+    document.body.classList.remove(
+      'designv2-base','designv2-nada','designv2-nadalight','designv2-spring','designv2-summer','designv2-autumn','designv2-winter',
+      'designv2-xmas','designv2-summerbreak','designv2-winterbreak','designv2-valentine','designv2-whiteday',
+      'designv2-buddha','designv2-liberation','designv2-hangul','designv2-samil'
+    );
+    if(!!on) document.body.classList.add('designv2-'+p);
+
+    // (신규) 커스텀 색상 적용
+    try{
+      const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+      const presetColors = colors[p] || {};
+      Object.keys(presetColors).forEach(varName => {
+        document.body.style.setProperty('--' + varName, presetColors[varName]);
+      });
+    }catch(e){}
+
+    // (신규) 커스텀 효과 적용
+    try{
+      const effects = JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}');
+      const presetEffects = effects[p] || {};
+      // 그림자 강도
+      if(presetEffects.shadowIntensity !== undefined){
+        document.body.style.setProperty('--custom-shadow-intensity', presetEffects.shadowIntensity);
+      }
+      // 투명도
+      if(presetEffects.cardOpacity !== undefined){
+        document.body.style.setProperty('--custom-card-opacity', presetEffects.cardOpacity);
+      }
+      // 그라데이션 각도
+      if(presetEffects.gradientAngle !== undefined){
+        document.body.style.setProperty('--custom-gradient-angle', presetEffects.gradientAngle);
+      }
+    }catch(e){}
+
+    // (요청사항) Nada Dark 프리셋은 다크 모드가 기본
+    // - 기존 다크 설정(localStorage su_dark) 값은 건드리지 않고, 프리셋 활성 동안만 강제로 body.dark 부여
+    try{
+      const forced = document.body.dataset.designForceDark === '1';
+      if(on && p === 'nada'){
+        // 진입 시 기존 다크 상태를 저장
+        if(!forced){
+          document.body.dataset.designPrevDark = document.body.classList.contains('dark') ? '1' : '0';
+          document.body.dataset.designForceDark = '1';
+        }
+        document.body.classList.add('dark');
+      }else{
+        // 이탈 시: 사용자가 다크를 '영구'로 켜둔 상태면 유지, 아니면 진입 전 상태로 복원
+        if(forced){
+          const keep = (localStorage.getItem('su_dark')==='1') || (document.body.dataset.designPrevDark==='1');
+          delete document.body.dataset.designForceDark;
+          delete document.body.dataset.designPrevDark;
+          if(!keep) document.body.classList.remove('dark');
+        }
+      }
+    }catch(e){}
+
+    // (중요) 밝기/명암이 브라우저 color-mix 지원 여부에 따라 안 먹는 경우가 있어
+    // JS로 --bg/--white/--surface 를 직접 계산해서 항상 적용
+    try{
+      const _supportsMix = (window.CSS && typeof CSS.supports==='function')
+        ? CSS.supports('color', 'color-mix(in srgb, #000, #fff)')
+        : false;
+      // color-mix 지원이면 CSS에서도 되지만, 일관성을 위해 JS도 적용(덮어쓰기)
+      const brightPct = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_design_v2_bright')||'0',10)||0));
+      const darkPct   = Math.max(0, Math.min(40,  parseInt(localStorage.getItem('su_design_v2_dark')||'0',10)||0));
+
+      const parseRGB = (c)=>{
+        c = String(c||'').trim();
+        if(!c) return null;
+        const hex = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if(hex){
+          let h = hex[1];
+          if(h.length===3) h = h.split('').map(x=>x+x).join('');
+          const n = parseInt(h,16);
+          return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+        }
+        const rgb = c.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i);
+        if(rgb) return { r:Math.round(+rgb[1]), g:Math.round(+rgb[2]), b:Math.round(+rgb[3]) };
+        return null;
+      };
+      const mixTo = (base, to, t)=>{
+        t = Math.max(0, Math.min(1, t));
+        return {
+          r: Math.round(base.r + (to.r - base.r)*t),
+          g: Math.round(base.g + (to.g - base.g)*t),
+          b: Math.round(base.b + (to.b - base.b)*t),
+        };
+      };
+      const rgbToCss = (v)=>`rgb(${v.r} ${v.g} ${v.b})`;
+      const cs = getComputedStyle(document.body);
+      const bg0 = parseRGB(cs.getPropertyValue('--bg0'));
+      const w0  = parseRGB(cs.getPropertyValue('--white0'));
+      const s0  = parseRGB(cs.getPropertyValue('--surface0'));
+      if(on && bg0 && w0 && s0){
+        const darkT = darkPct/100;
+        const lightT = brightPct/100;
+        const black = {r:0,g:0,b:0};
+        const white = {r:255,g:255,b:255};
+        const bg1 = mixTo(bg0, black, darkT);
+        const w1  = mixTo(w0,  black, darkT);
+        const s1  = mixTo(s0,  black, darkT);
+        const bg2 = mixTo(bg1, white, lightT);
+        const w2  = mixTo(w1,  white, lightT);
+        const s2  = mixTo(s1,  white, lightT);
+        document.body.style.setProperty('--bg', rgbToCss(bg2));
+        document.body.style.setProperty('--white', rgbToCss(w2));
+        document.body.style.setProperty('--surface', rgbToCss(s2));
+
+        // (추가) 기록 카드/모달 글래스 배경도 밝기 슬라이더에 반응하도록 재계산
+        const pStart = parseRGB(cs.getPropertyValue('--primary-start')) || parseRGB(cs.getPropertyValue('--primary-mid'));
+        if(pStart){
+          // 밝기(연하게)가 높아질수록 포인트색(초록/보라 등) 섞임을 줄여 "진한 틴트"가 남지 않게 함
+          const k2 = Math.max(0, 1 - (brightPct/100)); // 1(원본) → 0(완전 화이트)
+          const rcCard = mixTo(s2, pStart, 0.12 * k2);  // surface + 포인트(가변)
+          const rcHd   = mixTo(w2, pStart, 0.10 * k2);  // header + 포인트(가변)
+          // body + documentElement 둘 다 세팅(우선순위/브라우저별 편차 방지)
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-card-bg', rgbToCss(rcCard));
+            t.style.setProperty('--rc-card-hd-bg', rgbToCss(rcHd));
+            t.style.setProperty('--rc-detail-bg', rgbToCss(w2));
+          });
+        }else{
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-card-bg', rgbToCss(s2));
+            t.style.setProperty('--rc-card-hd-bg', rgbToCss(w2));
+            t.style.setProperty('--rc-detail-bg', rgbToCss(w2));
+          });
+        }
+        // glass 배경도 white 기반으로 (불투명도는 CSS에서 처리)
+        [document.body, document.documentElement].forEach(t=>{
+          if(!t) return;
+          t.style.setProperty('--glass-bg', rgbToCss(w2));
+        });
+
+        // (추가) 기록 카드 승리색 테마(rc-theme-on)의 알파도 밝기/명암에 반응하도록 보정
+        // - 밝기(연하게)가 높아질수록 승리색 틴트를 약하게
+        try{
+          const rs = getComputedStyle(document.documentElement);
+          const baseBgA = parseFloat(rs.getPropertyValue('--rc-bg-a')||'0.12') || 0.12;
+          const baseHdA = parseFloat(rs.getPropertyValue('--rc-hd-a')||'0.14') || 0.14;
+          const k = Math.max(0, 1 - (brightPct/100)); // 0~1
+          // 너무 밋밋해지는 걸 막기 위해 최소치 유지(0.02)
+          const effBgA = Math.max(0.02, baseBgA * k);
+          const effHdA = Math.max(0.03, baseHdA * k);
+          [document.body, document.documentElement].forEach(t=>{
+            if(!t) return;
+            t.style.setProperty('--rc-bg-a', String(effBgA));
+            t.style.setProperty('--rc-hd-a', String(effHdA));
+          });
+        }catch(e){}
+      }else{
+        document.body.style.removeProperty('--bg');
+        document.body.style.removeProperty('--white');
+        document.body.style.removeProperty('--surface');
+        [document.body, document.documentElement].forEach(t=>{
+          if(!t) return;
+          t.style.removeProperty('--rc-card-bg');
+          t.style.removeProperty('--rc-card-hd-bg');
+          t.style.removeProperty('--rc-detail-bg');
+          t.style.removeProperty('--glass-bg');
+          t.style.removeProperty('--rc-bg-a');
+          t.style.removeProperty('--rc-hd-a');
+        });
+      }
+      // eslint-disable-next-line no-unused-vars
+      void _supportsMix;
+    }catch(e){}
+  }catch(e){}
+};
+window.cfgSetDesignV2 = function(on){
+  try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.cfgSetDesignV2Preset = function(v){
+  try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
+  // 프리셋을 바꾸면 "디자인 모드"가 꺼져 있어도 체감이 안 나서 혼동이 많음 → 자동 ON
+  try{
+    const pv = String(v||'base');
+    if(pv && pv !== 'base' && localStorage.getItem('su_design_v2')!=='1'){
+      localStorage.setItem('su_design_v2','1');
+      const cb=document.getElementById('cfg-designv2-on');
+      if(cb) cb.checked = true;
+    }
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (신규) 디자인 모드 밝기(배경만 더 밝게) — 0~35%
+window.cfgSetDesignV2Bright = function(v){
+  try{
+    const n = Math.max(0, Math.min(100, parseInt(v||'0',10)||0));
+    localStorage.setItem('su_design_v2_bright', String(n));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (신규) 디자인 모드 어둡게(배경만 더 진하게) — 0~40%
+window.cfgSetDesignV2Dark = function(v){
+  try{
+    const n = Math.max(0, Math.min(40, parseInt(v||'0',10)||0));
+    localStorage.setItem('su_design_v2_dark', String(n));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// (요청사항) 디자인 모드 밝기 프리셋 버튼
+window.cfgApplyDesignV2TonePreset = function(key){
+  const k = String(key||'base');
+  const map = {
+    base: {b:0, d:0},
+    light: {b:40, d:0},
+    verylight: {b:80, d:0},
+    maxlight: {b:100, d:0},
+    dark: {b:0, d:20}
+  };
+  const v = map[k] || map.base;
+  try{ localStorage.setItem('su_design_v2_bright', String(v.b)); }catch(e){}
+  try{ localStorage.setItem('su_design_v2_dark', String(v.d)); }catch(e){}
+  try{
+    const r1=document.querySelector('#cfg-designv2-bright'); if(r1) r1.value=String(v.b);
+    const r2=document.querySelector('#cfg-designv2-dark'); if(r2) r2.value=String(v.d);
+    const s1=document.getElementById('cfg-designv2-bright-v'); if(s1) s1.textContent=v.b+'%';
+    const s2=document.getElementById('cfg-designv2-dark-v'); if(s2) s2.textContent=v.d+'%';
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+// ══════════════════════════════════════
+// 🎨 디자인 모드 색상 커스터마이징
+// ══════════════════════════════════════
+window.cfgSetDesignV2Color = function(varName, value){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+    if(!colors[preset]) colors[preset] = {};
+    colors[preset][varName] = value;
+    localStorage.setItem('su_design_v2_colors', JSON.stringify(colors));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+window.cfgResetDesignV2Colors = function(){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const colors = JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}');
+    delete colors[preset];
+    localStorage.setItem('su_design_v2_colors', JSON.stringify(colors));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+window.cfgSetDesignV2Effect = function(effectName, value){
+  try{
+    const preset = localStorage.getItem('su_design_v2_preset') || 'base';
+    const effects = JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}');
+    if(!effects[preset]) effects[preset] = {};
+    effects[preset][effectName] = value;
+    localStorage.setItem('su_design_v2_effects', JSON.stringify(effects));
+  }catch(e){}
+  try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
+  try{ render(); }catch(e){}
+};
+
+/* ══════════════════════════════════════
+
+/* ══════════════════════════════════════
+   ⚙️ 설정 섹션 접힘 상태 영속 헬퍼
+══════════════════════════════════════ */
+// ⚠️ tier-tour.js에도 _cfgOpen/_cfgToggle/_cfgD가 존재해서 전역이 덮어써지는 문제가 있음.
+// settings.js는 고유 접두사(_scfg*)를 사용해 충돌을 원천 차단한다.
+function _scfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
+function _scfgToggle(id,el){
+  try{
+    // 아코디언: 하나 열리면 나머지는 닫기
+    if(el && el.open){
+      document.querySelectorAll('[data-cfg-sec]').forEach(d=>{
+        if(d!==el && d.tagName==='DETAILS') d.open=false;
+      });
+    }
+  }catch(e){}
+  try{
+    const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');
+    o[id]=el.open;
+    localStorage.setItem('su_cfg_open',JSON.stringify(o));
+    const sp=el.querySelector('summary .cfg-toggle-txt');
+    if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';
+  }catch(e){}
+  // (요청사항) 특정 섹션은 열릴 때 동적 렌더링
+  try{
+    if(el && el.open && id==='pd' && typeof window._renderCfgPdSection==='function'){
+      window._renderCfgPdSection();
+    }
+>>>>>>> 327f15d53523157a6dd786e9ce577ddf6833ea17
     if(el && el.open && id==='profileshape' && typeof window._renderCfgProfileShapeSection==='function'){
       window._renderCfgProfileShapeSection();
     }
