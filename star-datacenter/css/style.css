@@ -71,7 +71,10 @@
   --su_md_tb_btn_scale: 1;
   --su_md_mb_btn_scale: 1;
   --su_pd_badge_scale: 1;
+  --su_pd_badge_font_scale: 1;
   --su_pd_chip_scale: 1;
+  --su_player_modal_tb_scale: .78;
+  --su_player_modal_mb_scale: .70;
   --su_btn_r: 8px;    /* 기본 버튼 라운드 */
   --su_pill_r: 20px;  /* pill(탭/필터) 라운드 */
   /* (자동) 탭 버튼 추가 스케일 */
@@ -1742,8 +1745,10 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 ══════════════════════════════════════ */
 @media(max-width:1024px){
   #playerModal, #univModal{
+    /* (요청사항) 스트리머 상세 팝업은 별도 스케일을 적용할 수 있게 분리 */
     --su_btn_auto_scale: var(--su_modal_tb_scale);
   }
+  #playerModal{ --su_btn_auto_scale: var(--su_player_modal_tb_scale, var(--su_modal_tb_scale)); }
   #playerModalBody .mode-filter-chip input,
   #playerModalBody .year-filter-chip input{
     width: 10px; height: 10px;
@@ -1753,6 +1758,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   #playerModal, #univModal{
     --su_btn_auto_scale: var(--su_modal_mb_scale);
   }
+  #playerModal{ --su_btn_auto_scale: var(--su_player_modal_mb_scale, var(--su_modal_mb_scale)); }
   #playerModalBody .mode-filter-chip input,
   #playerModalBody .year-filter-chip input{
     width: 9px; height: 9px;
