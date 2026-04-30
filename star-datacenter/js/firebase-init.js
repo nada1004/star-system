@@ -86,6 +86,8 @@ async function startGithubPolling(){
       const d = await r.json().catch(()=>null);
       if(!d) return;
       const sa = Number(d.savedAt||0) || 0;
+      // savedAt이 0이면(구버전 파일) 매번 덮어쓰는 문제가 있으므로 자동 반영하지 않음
+      if(!sa) return;
       if(!lastSavedAt || sa > lastSavedAt){
         lastSavedAt = sa || lastSavedAt;
         if (isAdminSession) {

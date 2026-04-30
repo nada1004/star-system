@@ -654,7 +654,9 @@ async function githubDataSave(dataObj) {
   }
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
-  const payload = { _lz: compressed };
+  // (중요) GitHub RAW 폴링(firebase-init.js)이 변경 여부를 판단할 수 있도록
+  // savedAt은 압축 밖(평문)에도 넣어둔다. (그렇지 않으면 savedAt=0으로 인식되어 매 폴링마다 덮어쓰기 발생)
+  const payload = { savedAt: Number(dataObj?.savedAt||0) || Date.now(), _lz: compressed };
   const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
 
