@@ -353,6 +353,27 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
+  // (중요) 관리자 기기에서 원격 데이터가 더 "과거"인 경우, 로컬에서 방금 입력한 기록이
+  // GitHub 폴링/원격 수신으로 덮여서 "사라지는" 문제가 발생할 수 있음.
+  // → 로컬 저장 시각(su_last_admin_save)이 원격 savedAt보다 최신이면 적용을 스킵한다.
+  try{
+    const isAdmin = (typeof isLoggedIn !== 'undefined' && isLoggedIn);
+    const remoteSa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
+    const localAdminSa = (()=>{ try{ return Number(localStorage.getItem('su_last_admin_save')||0) || 0; }catch(e){ return 0; } })();
+    const localSa = localAdminSa || (Number(window._lastAdminSaveTime||0) || 0);
+    if(isAdmin && !window._forcingSync && remoteSa && localSa && remoteSa < localSa){
+      // 상태 표시(선택)
+      try{
+        const statusEl = document.getElementById('cloudStatus');
+        if(statusEl){
+          statusEl.style.color = '#d97706';
+          statusEl.textContent = '⚠️ 원격 데이터가 더 오래됨(업로드 실패/지연 가능) — 로컬 입력을 보호하기 위해 동기화 적용을 건너뜀';
+          setTimeout(()=>{ try{ if(statusEl) statusEl.textContent=''; }catch(e){} }, 4500);
+        }
+      }catch(e){}
+      return;
+    }
+  }catch(e){}
   // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
   // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
   try{
@@ -593,54 +614,116 @@ async function fbCloudSave() {
 
 // GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
 // 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
+try{ window.__ghBuild = '20260430-07'; }catch(e){}
 async function githubDataSave(dataObj) {
+  const _BUILD = '20260430-07';
   const token = (localStorage.getItem('su_gh_token') || '').trim();
   if (!token) return; // 토큰 미설정 시 skip
   // 헤더(ByteString) 오류 방지: Authorization 헤더 값은 ASCII여야 함
   if (/[^ -~]/.test(token)) {
     throw new Error('GitHub 토큰이 깨졌습니다(한글/이모지 포함). 설정에서 토큰을 지우고 ghp_... 또는 github_pat_... 값을 다시 저장하세요.');
   }
+  // 같은 탭에서 연속 저장(자동 저장/수동 저장)이 겹치면 sha mismatch(409)가 자주 발생함
+  // → 업로드는 1개만 진행하고, 추가 호출은 "대기/병합" 처리한다.
+  try{
+    if (window.__ghSaveInFlight) {
+      window.__ghSavePending = true;
+      return await window.__ghSaveInFlight;
+    }
+  }catch(e){}
+  const cfg = ghGetRepoCfg();
   const apiUrl = ghGetContentsApiUrl();
-  // 현재 파일 SHA 조회 (업데이트 시 필수)
-  const getRes = await fetch(apiUrl, {
-    // Fine-grained PAT는 Bearer 권장
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-  });
-  let sha = null;
-  if (getRes.ok) {
-    const fileInfo = await getRes.json();
-    sha = fileInfo && fileInfo.sha ? String(fileInfo.sha) : null;
-  } else if (getRes.status === 404) {
-    // 신규 생성
-    sha = null;
-  } else {
-    let msg = '';
-    try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
-    throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
+  const apiUrlWithRef = apiUrl + '?ref=' + encodeURIComponent(cfg.branch || 'main');
+  async function _getSha(){
+    const getRes = await fetch(apiUrlWithRef, {
+      // Fine-grained PAT는 Bearer 권장
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (getRes.ok) {
+      const fileInfo = await getRes.json();
+      return { sha: (fileInfo && fileInfo.sha ? String(fileInfo.sha) : null) };
+    } else if (getRes.status === 404) {
+      // 신규 생성
+      return { sha: null };
+    } else {
+      let msg = '';
+      try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
+      throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
+    }
   }
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
   const payload = { _lz: compressed };
   const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-  // 파일 업데이트
-  const putRes = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-      content: b64,
-      ...(sha ? { sha } : {})
-    })
-  });
-  if (!putRes.ok) {
+
+  async function _put(sha){
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+        content: b64,
+        branch: cfg.branch || 'main',
+        ...(sha ? { sha } : {})
+      })
+    });
+    if (putRes.ok) return true;
     let msg = '';
     try{
       const j = await putRes.json();
       msg = (j && (j.message || j.error)) ? String(j.message || j.error) : '';
       if (j && j.documentation_url) msg += (msg ? ' ' : '') + String(j.documentation_url);
     }catch(e){}
-    throw new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
+    const err = new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
+    // @ts-ignore
+    err._status = putRes.status;
+    throw err;
+  }
+
+  const _sleep = (ms)=>new Promise(r=>setTimeout(r, ms));
+  const _run = async ()=>{
+    // 409(sha mismatch / Conflict)는 "동시에 저장" 시 흔함 → sha 재조회하며 몇 번 재시도
+    const maxTries = 4;
+    let lastErr = null;
+    for(let i=0;i<maxTries;i++){
+      try{
+        const shaInfo = await _getSha();
+        await _put(shaInfo.sha);
+        return true;
+      }catch(e){
+        lastErr = e;
+        // @ts-ignore
+        const st = e && (e._status || e.status) ? Number(e._status || e.status) : 0;
+        if(st === 409){
+          // 약간 기다렸다가 재시도(짧은 백오프)
+          await _sleep(180 * (i+1));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr || new Error(`GitHub 저장 실패: 409 (충돌) - 동시 저장(다른 탭/기기) 또는 자동 저장 겹침 가능. build=${_BUILD}`);
+  };
+
+  // in-flight 잠금 + pending 병합
+  try{
+    window.__ghSaveInFlight = _run();
+    await window.__ghSaveInFlight;
+  }finally{
+    try{ window.__ghSaveInFlight = null; }catch(e){}
+  }
+  // 저장 중에 추가 저장 요청이 들어왔으면 1회 더 수행(마지막 상태로 수렴)
+  try{
+    if(window.__ghSavePending){
+      window.__ghSavePending = false;
+      window.__ghSaveInFlight = _run();
+      await window.__ghSaveInFlight;
+    }
+  }finally{
+    try{ window.__ghSaveInFlight = null; }catch(e){}
   }
 }
 
@@ -2126,6 +2209,8 @@ async function checkFbSyncStatus(){
     const rawUrl = ghGetRawUrl();
     const pollMs = ghGetPollMs();
     const token = !!(localStorage.getItem('su_gh_token')||'').trim();
+    const build = (typeof window.__ghBuild !== 'undefined' && window.__ghBuild) ? String(window.__ghBuild) : '';
+    const inflight = !!(window.__ghSaveInFlight);
     const lastSave = localStorage.getItem('su_last_save_time');
     const lastAdminSave = localStorage.getItem('su_last_admin_save');
     const cfg = ghGetRepoCfg();
@@ -2165,6 +2250,13 @@ async function checkFbSyncStatus(){
           <div>
             <div style="font-weight:900;font-size:12px">마지막 업로드(로컬 기록)</div>
             <div style="font-size:11px;color:var(--gray-l)">${lastSave?new Date(parseInt(lastSave)).toLocaleString('ko-KR'):'기록 없음'} ${lastAdminSave?`(adminSave: ${new Date(parseInt(lastAdminSave)).toLocaleTimeString('ko-KR')})`:''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
+          <span style="font-size:16px">${inflight?'⏳':'🧩'}</span>
+          <div>
+            <div style="font-weight:900;font-size:12px">업로드 엔진</div>
+            <div style="font-size:11px;color:var(--gray-l)">${build?`build ${build}`:'build ?'} / ${inflight?'현재 업로드 진행 중(잠시만 기다려주세요)':'대기 중'}</div>
           </div>
         </div>
         ${isLoggedIn&&token?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 GitHub에 업로드</button>`:''}
