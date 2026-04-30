@@ -10,7 +10,12 @@ function _syncMode(){
 function _ghRawUrl(){
   try{
     const v = (localStorage.getItem('su_gh_raw_url') || '').trim();
-    if (v) return v;
+    if (v) {
+      // blob 주소 자동 보정
+      const m = v.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
+      if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+      return v;
+    }
   }catch(e){}
   try{
     if (typeof window.CONFIG !== 'undefined' && window.CONFIG?.GITHUB?.DATA_URL) return String(window.CONFIG.GITHUB.DATA_URL);

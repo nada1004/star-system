@@ -7,10 +7,25 @@ const _GH_DEFAULT_RAW_URL = (typeof CONFIG !== 'undefined' && CONFIG?.GITHUB?.DA
   ? String(CONFIG.GITHUB.DATA_URL)
   : 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
+function ghNormalizeRawUrl(u){
+  try{
+    const s = String(u||'').trim();
+    if(!s) return '';
+    // 사용자가 blob 주소를 RAW URL로 착각하는 케이스를 자동 보정
+    // https://github.com/<owner>/<repo>/blob/<branch>/<path>
+    const m = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
+    if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+    return s;
+  }catch(e){
+    return String(u||'').trim();
+  }
+}
+
 function ghGetRawUrl(){
   try{
     const v = (localStorage.getItem('su_gh_raw_url') || '').trim();
-    return v || _GH_DEFAULT_RAW_URL;
+    const out = ghNormalizeRawUrl(v) || ghNormalizeRawUrl(_GH_DEFAULT_RAW_URL);
+    return out || _GH_DEFAULT_RAW_URL;
   }catch(e){
     return _GH_DEFAULT_RAW_URL;
   }
@@ -18,7 +33,7 @@ function ghGetRawUrl(){
 
 function ghParseRawUrl(rawUrl){
   try{
-    const u = String(rawUrl||'').trim();
+    const u = ghNormalizeRawUrl(rawUrl);
     // https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>
     const m = u.match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/i);
     if(!m) return null;

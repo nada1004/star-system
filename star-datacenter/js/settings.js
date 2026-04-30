@@ -6949,7 +6949,13 @@ function saveSyncMode(){
 }
 
 function saveGhSyncSettings(){
-  const raw = (document.getElementById('cfg-gh-raw-url')?.value || '').trim();
+  let raw = (document.getElementById('cfg-gh-raw-url')?.value || '').trim();
+  // 사용자가 blob 주소를 붙여넣는 실수를 자주 해서 자동 보정
+  // https://github.com/<owner>/<repo>/blob/<branch>/<path> → raw.githubusercontent.com/...
+  try{
+    const m = raw.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
+    if(m) raw = `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+  }catch(e){}
   const sec = parseInt(document.getElementById('cfg-gh-poll-sec')?.value || '45', 10);
   if(raw) localStorage.setItem('su_gh_raw_url', raw);
   else localStorage.removeItem('su_gh_raw_url');
