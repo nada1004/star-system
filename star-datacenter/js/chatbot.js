@@ -248,7 +248,7 @@ function addMessage(role, content) {
 // 챗봇 모달 열기
 function openChatbot(mode) {
   chatbotOpen = true;
-  if (mode) chatbotMode = mode;
+  chatbotMode = (mode === 'aibot') ? 'aibot' : 'aldeungi';
   // 열 때마다 채팅 초기화
   loadChatHistory();
   renderChatHistory();

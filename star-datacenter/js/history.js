@@ -1288,53 +1288,53 @@ function histAllHTML(){
   const allItems=[];
   // 팀전 (mini/ck/univm/pro): m.a, m.b, m.sa, m.sb, m.d
   [[miniM,'mini'],[ckM,'ck'],[univM,'univm'],[proM,'pro']].forEach(([arr,type])=>{
-    (arr||[]).forEach(m=>{
+    (arr||[]).forEach((m,idx)=>{
       const isCK=(type==='ck'||type==='pro');
       if(isCK){if(!m.teamAMembers||!m.teamBMembers)return;}else{if(!m.a||!m.b)return;}
       if(m.sa==null||m.sb==null||m.sa===''||m.sb==='')return;
       if(!passDateFilter(m.d||''))return;
-      allItems.push({type,d:m.d||'',m});
+      allItems.push({type,d:m.d||'',m,idx});
     });
   });
   // 개인전/끝장전 (ind/gj): m.wName, m.lName, m.d
   [[indM,'ind'],[gjM,'gj']].forEach(([arr,type])=>{
-    (arr||[]).forEach(m=>{
+    (arr||[]).forEach((m,idx)=>{
       if(!m.wName||!m.lName)return;
       if(!passDateFilter(m.d||''))return;
-      allItems.push({type,d:m.d||'',m});
+      allItems.push({type,d:m.d||'',m,idx});
     });
   });
   // 티어대회 (tt): m.a, m.b, m.sa, m.sb, m.d
-  (ttM||[]).forEach(m=>{
+  (ttM||[]).forEach((m,idx)=>{
     if(!m.a||!m.b)return;
     if(!passDateFilter(m.d||''))return;
-    allItems.push({type:'tt',d:m.d||'',m});
+    allItems.push({type:'tt',d:m.d||'',m,idx});
   });
   // 대회 tourney
   if(typeof getTourneyMatches==='function'){
-    getTourneyMatches().forEach(m=>{
+    getTourneyMatches().forEach((m,idx)=>{
       if(!m.a||!m.b||m.sa==null||m.sb==null)return;
       if(!passDateFilter(m.d||''))return;
-      allItems.push({type:'tourney',d:m.d||'',m});
+      allItems.push({type:'tourney',d:m.d||'',m,idx});
     });
   }
   // 대회 토너먼트 (comps)
-  (comps||[]).forEach(m=>{
+  (comps||[]).forEach((m,idx)=>{
     if(!m.a&&!m.u) return; if(!m.b) return;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
     if(!passDateFilter(m.d||'')) return;
-    allItems.push({type:'tourney',d:m.d||'',m:{...m,a:m.a||m.u}});
+    allItems.push({type:'tourney',d:m.d||'',m:{...m,a:m.a||m.u},idx});
   });
   // 프로리그 개인 대회 (procomp)
-  (proTourneys||[]).forEach(tn=>{
-    (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>{
+  (proTourneys||[]).forEach((tn,tnIdx)=>{
+    (tn.groups||[]).forEach((grp,grpIdx)=>{
+      (grp.matches||[]).forEach((m,matchIdx)=>{
         if(!m.a||!m.b||!m.winner)return;
         if(!passDateFilter(m.d||''))return;
         const wName=m.winner==='A'?m.a:m.b;
         const lName=m.winner==='A'?m.b:m.a;
-        allItems.push({type:'procomp',d:m.d||'',m:{...m,wName,lName}});
+        allItems.push({type:'procomp',d:m.d||'',m:{...m,wName,lName},idx:matchIdx,_ref:`procomp:${tnIdx}:${grpIdx}:${matchIdx}`});
       });
     });
   });
@@ -1386,7 +1386,7 @@ function histAllHTML(){
     return h;
   }
 
-  paged.forEach(({type,d,m})=>{
+  paged.forEach(({type,d,m,idx,_ref}, pageIdx)=>{
     const ti=typeInfo[type]||{lbl:type,col:'#64748b'};
     const isCK=(type==='ck'||type==='pro');
     const isInd=(type==='ind'||type==='gj'||type==='procomp');
@@ -1414,6 +1414,8 @@ function histAllHTML(){
     const bWin=!isInd && Number(scoreB)>Number(scoreA);
     const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',tourney:'comp',procomp:'comp'};
     const mode=modeMap[type]||'comp';
+    const _regIdx = (typeof idx==='number' ? idx : pageIdx);
+    const _detM = _ref ? {...m, _editRef:_ref} : m;
     h+=`<div class="rec-summary rec-mode-tierrank" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${(function(){const h=String(ti.col||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};border-left:3px solid ${ti.col}">
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
@@ -1444,7 +1446,7 @@ function histAllHTML(){
                 ${mapStr}
               </div>`;
             })()
-          : _regDet(key, m, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
+          : _regDet(key, _detM, mode, labelA, labelB, ca, cb, aWin, bWin, _regIdx)}
       </div>
     </div>`;
   });
@@ -2050,11 +2052,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
-          ${isLoggedIn&&m.sets&&m.sets.length?`<div class="no-export" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:11px;color:var(--gray-l);font-weight:800">점수방식</span>
-            <button class="btn ${(m.scoreMode||'game')==='set'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'set')" title="세트 승리 수로 스코어 계산">세트제</button>
-            <button class="btn ${(m.scoreMode||'game')==='game'?'btn-b':'btn-w'} btn-xs" onclick="setRecScoreMode('${mode}',${i},'game')" title="게임(맵) 승리 수로 스코어 계산">경기제</button>
-          </div>`:''}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
             <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>

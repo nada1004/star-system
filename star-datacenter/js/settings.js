@@ -4216,7 +4216,7 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${_scfgD('firebase','☁️ GitHub data.json 동기화')}
     <div id="cfg-fb-body">
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 GitHub <code>star-datacenter/data.json</code>에 업로드됩니다. 다른 기기는 GitHub data.json을 주기적으로 확인해 반영합니다.</p>
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 GitHub <code>star-datacenter/data/</code> 폴더에 분리 저장됩니다. 다른 기기는 인덱스를 읽고 필요한 파일들을 합쳐 반영합니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
@@ -4226,7 +4226,7 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호 (현재 미사용)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현재는 GitHub data.json 방식만 사용합니다. 이 입력칸은 예전 호환용으로만 남아 있습니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현재는 GitHub 폴더 분리 저장 방식만 사용합니다. 이 입력칸은 예전 호환용으로만 남아 있습니다.</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
         <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
@@ -4236,7 +4236,7 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub <code>star-datacenter/data.json</code>으로 업로드됩니다. 다른 기기/관람자는 이 파일을 읽어 반영합니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub <code>star-datacenter/data/</code> 아래 인덱스/코어/월별 기록 파일로 업로드됩니다. 다른 기기/관람자는 이를 합쳐 반영합니다.</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">

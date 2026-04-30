@@ -417,12 +417,19 @@ async function fbCloudSave(opts) {
   try {
     _fbPayloadSize = JSON.stringify(dataObj).length;
     const statusEl = document.getElementById('cloudStatus');
-    if (_fbPayloadSize > 3 * 1024 * 1024) { // 3MB 초과 — Firebase 저장 실패 가능성 높음
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — Firebase 저장 실패 가능 (설정탭에서 base64 이미지 삭제 필요)`; }
-      console.warn('[fbCloudSave] 크기 위험:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-    } else if (_fbPayloadSize > 2 * 1024 * 1024) { // 2MB 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — 곧 저장 실패할 수 있습니다`; }
-      console.warn('[fbCloudSave] 크기 경고:', (_fbPayloadSize/1024).toFixed(0)+'KB');
+    const splitInfo = (typeof window.__suEstimateSplitStore === 'function')
+      ? window.__suEstimateSplitStore(dataObj)
+      : null;
+    const warnBytes = splitInfo && splitInfo.maxBytes ? splitInfo.maxBytes : _fbPayloadSize;
+    const warnLabel = splitInfo && splitInfo.maxBytes
+      ? `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`
+      : `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB`;
+    if (warnBytes > 3 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ ${warnLabel} — 저장 실패 가능`; }
+      console.warn('[fbCloudSave] 크기 위험:', (warnBytes/1024).toFixed(0)+'KB');
+    } else if (warnBytes > 2 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ ${warnLabel} — 곧 저장 실패할 수 있습니다`; }
+      console.warn('[fbCloudSave] 크기 경고:', (warnBytes/1024).toFixed(0)+'KB');
     }
     console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
@@ -540,6 +547,9 @@ window.cloudLoad = async function(){
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
     let d=null;
+    if(typeof window.__suFetchGithubMergedData === 'function'){
+      d = await window.__suFetchGithubMergedData();
+    }else{
     const baseUrl=GITHUB_JSON_URL;
     const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
     const urls=[
@@ -577,6 +587,7 @@ window.cloudLoad = async function(){
     }catch(aggErr){
       const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
       throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+    }
     }
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 

@@ -111,6 +111,14 @@ async function _ensureStatsLoaded(){
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260422-01');
 }
+try{
+  const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
+  if(typeof window.requestIdleCallback === 'function'){
+    window.requestIdleCallback(_prewarmCalendar, { timeout: 2500 });
+  }else{
+    setTimeout(_prewarmCalendar, 1200);
+  }
+}catch(e){}
 async function _ensureVoteLoaded(){
   await window.ensureHtml2Canvas();
   await _loadScriptOnce('js/vote.js');
