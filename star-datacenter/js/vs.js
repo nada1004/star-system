@@ -474,6 +474,7 @@ async function downloadVsShareCard(fmt){
   if(!el){alert('카드를 먼저 생성하세요.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:null,scale:3,useCORS:false,allowTaint:false,logging:false});
     const _fn=`vs_${vsNameA}_vs_${vsNameB}_${new Date().toISOString().slice(0,10)}.${fmt}`;
@@ -589,6 +590,7 @@ async function captureVsCard(){
   if(!el){alert('결과 카드가 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:null,scale:2,useCORS:false,allowTaint:false,logging:false,ignoreElements:e=>e.classList.contains('no-export')});
     const a=document.createElement('a');

@@ -42,7 +42,194 @@ function sw(t,el){
   if(C) C.innerHTML='';
   render();
 }
-function render(){
+
+// ─────────────────────────────────────────────────────────────
+// (성능) 탭별 지연 로딩 유틸
+// - 큰 기능(룰렛/부가게임 등)은 실제 탭 진입 시에만 JS를 로드
+// - 로딩 후 render(true)로 즉시 갱신
+// ─────────────────────────────────────────────────────────────
+window._lazy = window._lazy || {loaded:{}, loading:{}};
+function _loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    try{
+      if(window._lazy.loaded[src]) return resolve(true);
+      if(window._lazy.loading[src]) return window._lazy.loading[src].then(resolve).catch(reject);
+      const p = new Promise((res, rej)=>{
+        const s=document.createElement('script');
+        s.src=src;
+        s.async=true;
+        s.onload=()=>{ window._lazy.loaded[src]=true; res(true); };
+        s.onerror=()=>{ rej(new Error('load fail: '+src)); };
+        document.head.appendChild(s);
+      });
+      window._lazy.loading[src]=p;
+      p.then(resolve).catch(reject);
+    }catch(e){ reject(e); }
+  });
+}
+// 다른 파일(init.js 등)에서도 사용 가능하도록 노출
+window._loadScriptOnce = window._loadScriptOnce || _loadScriptOnce;
+
+// ─────────────────────────────────────────────────────────────
+// (성능) 외부 라이브러리 지연 로딩 (CDN)
+// ─────────────────────────────────────────────────────────────
+window.ensureHtml2Canvas = window.ensureHtml2Canvas || function(){
+  // html2canvas@1.4.1
+  return window._loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+};
+window.ensureChartJS = window.ensureChartJS || function(){
+  // chart.js@4.4.0 (UMD)
+  return window._loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js');
+};
+
+function _lazyLoadingView(T, C, title, desc){
+  try{ if(T) T.textContent = title||''; }catch(e){}
+  try{
+    if(C) C.innerHTML =
+      `<div class="empty-state"><div class="empty-state-icon">⏳</div>`+
+      `<div class="empty-state-title">${title||'로딩 중...'}</div>`+
+      `<div class="empty-state-desc">${desc||'최초 1회만 로드됩니다.'}</div></div>`;
+  }catch(e){}
+}
+
+async function _ensureRouletteLoaded(){
+  // rRoulette + 룰렛 내부 부가기능(덕레이스/휠)
+  const scripts=[
+    'js/roulette.js?v=20260424-08',
+    'js/duck-race.js?v=20260424-04',
+    'js/wheel.js?v=20260416-08',
+  ];
+  for(const src of scripts){
+    await _loadScriptOnce(src);
+  }
+}
+
+async function _ensureStatsLoaded(){
+  await window.ensureChartJS();
+  await _loadScriptOnce('js/stats.js?v=20260425-01');
+}
+async function _ensureCalendarLoaded(){
+  await _loadScriptOnce('js/calendar.js?v=20260422-01');
+}
+async function _ensureVoteLoaded(){
+  await window.ensureHtml2Canvas();
+  await _loadScriptOnce('js/vote.js');
+}
+async function _ensureCloudBoardLoaded(){
+  await window.ensureHtml2Canvas();
+  await _loadScriptOnce('js/cloud-board.js?v=20260425-01');
+}
+async function _ensureElboardLoaded(){
+  await _loadScriptOnce('js/elboard.js?v=20260422-01');
+}
+async function _ensureChatbotLoaded(){
+  await window.ensureChartJS();
+  await window.ensureHtml2Canvas();
+  await _loadScriptOnce('js/chatbot.js?v=20260423-08');
+}
+
+// 챗봇은 HTML onclick에서 직접 호출되므로, 스텁을 제공해 먼저 로드 후 실행
+function _lazyOpenChatbot(mode){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.openChatbot;
+      if(typeof fn === 'function' && fn !== _lazyOpenChatbot) fn(mode);
+    }catch(e){
+      console.error('[lazy] chatbot load fail', e);
+      try{ alert('챗봇 로딩 실패: 새로고침 후 다시 시도해주세요.'); }catch(_){}
+    }
+  })();
+}
+function _lazyCloseChatbot(ev){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.closeChatbot;
+      if(typeof fn === 'function' && fn !== _lazyCloseChatbot) fn(ev);
+    }catch(e){}
+  })();
+}
+function _lazySendMessage(){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.sendMessage;
+      if(typeof fn === 'function' && fn !== _lazySendMessage) fn();
+    }catch(e){}
+  })();
+}
+function _lazyClearChatHistory(){
+  (async()=>{
+    try{
+      await _ensureChatbotLoaded();
+      const fn = window.clearChatHistory;
+      if(typeof fn === 'function' && fn !== _lazyClearChatHistory) fn();
+    }catch(e){}
+  })();
+}
+window.openChatbot = window.openChatbot || _lazyOpenChatbot;
+window.closeChatbot = window.closeChatbot || _lazyCloseChatbot;
+window.sendMessage = window.sendMessage || _lazySendMessage;
+window.clearChatHistory = window.clearChatHistory || _lazyClearChatHistory;
+
+// ─────────────────────────────────────────────────────────────
+// (호환) 탭 렌더러/핸들러 스텁
+// - settings.js의 QA 드라이런/자체점검에서 함수 존재 여부를 체크하므로
+//   지연 로딩 대상은 “스텁”을 먼저 제공하고, 호출 시 실제 모듈을 불러옵니다.
+// ─────────────────────────────────────────────────────────────
+function _lazyRStats(C, T){
+  _lazyLoadingView(T, C, '통계', '통계 모듈을 불러오는 중...');
+  (async()=>{
+    try{
+      await _ensureStatsLoaded();
+      const fn = window.rStats;
+      if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
+      else render(true);
+    }catch(e){
+      console.error('[lazy] rStats load fail', e);
+      try{ if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">통계 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>'; }catch(_){}
+    }
+  })();
+}
+function _lazyRCal(C, T){
+  _lazyLoadingView(T, C, '캘린더', '캘린더 모듈을 불러오는 중...');
+  (async()=>{
+    try{
+      await _ensureCalendarLoaded();
+      const fn = window.rCal;
+      if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
+      else render(true);
+    }catch(e){
+      console.error('[lazy] rCal load fail', e);
+      try{ if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">캘린더 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>'; }catch(_){}
+    }
+  })();
+}
+window.rStats = window.rStats || _lazyRStats;
+window.rCal   = window.rCal   || _lazyRCal;
+
+function _lazyCheckFbSyncStatus(){
+  (async()=>{
+    try{
+      await _ensureCloudBoardLoaded();
+      const fn = window.checkFbSyncStatus;
+      if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
+    }catch(e){
+      console.error('[lazy] checkFbSyncStatus load fail', e);
+      try{ alert('Firebase 상태 확인 로딩 실패: 새로고침 후 다시 시도해주세요.'); }catch(_){}
+    }
+  })();
+}
+window.checkFbSyncStatus = window.checkFbSyncStatus || _lazyCheckFbSyncStatus;
+
+// ─────────────────────────────────────────────────────────────
+// (성능) render 디바운스
+// - 연속 save(); render(); 호출이 많은 구조라, 1프레임에 render 1회만 수행
+// - 즉시 반영이 꼭 필요하면 render(true) 또는 window.renderNow() 사용 가능
+// ─────────────────────────────────────────────────────────────
+let _renderScheduled = false;
+function _renderImpl(){
   const C=document.getElementById('rcont');
   const T=document.getElementById('rtitle');
   if(!C||!T)return;
@@ -68,13 +255,67 @@ function render(){
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
     case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
-    case 'stats':   if(typeof rStats==='function')   rStats(C,T);   break;
-    case 'cal':     if(typeof rCal==='function')     rCal(C,T);     break;
-    case 'roulette':if(typeof rRoulette==='function')rRoulette(C,T);break;
-    case 'vote':    if(typeof rVote==='function')    rVote(C,T);    break;
-    case 'board':   if(typeof rBoard==='function')   rBoard(C,T);   break;
+    case 'stats':
+      if(typeof rStats==='function'){
+        // chart.js는 통계에서 필요
+        if(typeof Chart==='undefined'){ window.ensureChartJS().then(()=>render(true)).catch(()=>rStats(C,T)); return; }
+        rStats(C,T);
+      }else{
+        _lazyLoadingView(T,C,'통계','통계 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureStatsLoaded(); render(true); }catch(e){ console.error('[lazy] stats load fail', e); } })();
+      }
+      break;
+    case 'cal':
+      if(typeof rCal==='function'){
+        rCal(C,T);
+      }else{
+        _lazyLoadingView(T,C,'캘린더','캘린더 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureCalendarLoaded(); render(true); }catch(e){ console.error('[lazy] calendar load fail', e); } })();
+      }
+      break;
+    case 'roulette':
+      if(typeof rRoulette==='function'){
+        rRoulette(C,T);
+      }else{
+        // 지연 로딩(첫 진입)
+        T.textContent = '룰렛';
+        C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">룰렛 기능 로딩 중...</div><div class="empty-state-desc">최초 1회만 로드됩니다.</div></div>';
+        (async()=>{
+          try{
+            await _ensureRouletteLoaded();
+            render(true);
+          }catch(e){
+            console.error('[lazy] roulette load fail', e);
+            C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">룰렛 로딩 실패</div><div class="empty-state-desc">콘솔 에러를 확인해주세요.</div></div>';
+          }
+        })();
+      }
+      break;
+    case 'vote':
+      if(typeof rVote==='function'){
+        rVote(C,T);
+      }else{
+        _lazyLoadingView(T,C,'투표','투표 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureVoteLoaded(); render(true); }catch(e){ console.error('[lazy] vote load fail', e); } })();
+      }
+      break;
+    case 'board':
+      if(typeof rBoard==='function'){
+        rBoard(C,T);
+      }else{
+        _lazyLoadingView(T,C,'현황판','현황판 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureCloudBoardLoaded(); render(true); }catch(e){ console.error('[lazy] board load fail', e); } })();
+      }
+      break;
     case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
-    case 'elboard': if(typeof rElboard==='function') rElboard(C,T); break;
+    case 'elboard':
+      if(typeof rElboard==='function'){
+        rElboard(C,T);
+      }else{
+        _lazyLoadingView(T,C,'ELO 현황판','ELO 현황판 모듈을 불러오는 중...');
+        (async()=>{ try{ await _ensureElboardLoaded(); render(true); }catch(e){ console.error('[lazy] elboard load fail', e); } })();
+      }
+      break;
     default: break;
   }
   // (설정 반영 보강) 일부 환경에서 body class/변수 적용이 누락되는 케이스가 있어 렌더 후 항상 재적용
@@ -131,6 +372,19 @@ function render(){
         });
       }catch(e){}
     });
+  });
+}
+
+// 외부에서 즉시 렌더가 필요할 때 사용(디버깅/특수 케이스)
+window.renderNow = window.renderNow || _renderImpl;
+
+function render(immediate){
+  if(immediate===true) return window.renderNow();
+  if(_renderScheduled) return;
+  _renderScheduled = true;
+  requestAnimationFrame(()=>{
+    _renderScheduled = false;
+    try{ window.renderNow(); }catch(e){ console.error('[render] fail', e); }
   });
 }
 
@@ -956,6 +1210,7 @@ async function capturePlayerModal(){
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${window._playerModalCurrentName||'player'}_stat.png`,'png');
@@ -969,6 +1224,7 @@ async function captureUnivModal(){
   if(!body){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
     const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.png`,'png');
@@ -981,6 +1237,7 @@ async function captureDetail(id, filename){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     await _saveCanvasImage(canvas,`경기상세_${filename}.png`,'png');
@@ -2161,8 +2418,8 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      // (요청사항) '종류' 배지: 배지 전체 크기(su_pd_badge_scale) + 폰트 크기(su_pd_badge_font_scale) 분리
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1) * var(--su_pd_badge_font_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)

@@ -162,12 +162,7 @@ function applyResponsiveUiVars(){
     const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
     const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
-    // (요청사항) 최근경기 종류(종목) 폰트 크기만 별도로 조절
-    const badgeFont = clamp(gf('su_pd_badge_font_scale', 1.00), 0.70, 1.80);
     const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
-    // (요청사항) 스트리머 상세(팝업) 버튼/메뉴 크기 별도 조절
-    const pdModalMb = clamp(gf('su_player_modal_mb_scale', gf('su_modal_mb_scale', 0.70)), 0.45, 1.20);
-    const pdModalTb = clamp(gf('su_player_modal_tb_scale', gf('su_modal_tb_scale', 0.78)), 0.45, 1.20);
 
     document.documentElement.style.setProperty('--su_mb_scale', String(mb));
     document.documentElement.style.setProperty('--su_tb_scale', String(tb));
@@ -178,10 +173,7 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
     document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
-    document.documentElement.style.setProperty('--su_pd_badge_font_scale', String(badgeFont));
     document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
-    document.documentElement.style.setProperty('--su_player_modal_mb_scale', String(pdModalMb));
-    document.documentElement.style.setProperty('--su_player_modal_tb_scale', String(pdModalTb));
   }catch(e){}
 }
 try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}
@@ -226,6 +218,26 @@ function applyMatchDetailVars(){
     const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
     const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
     document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
+
+    // 상단 대학 카드 정렬/폰트
+    const align = (localStorage.getItem('su_md_head_align') || 'center').trim();
+    const justify =
+      align === 'left' ? 'flex-start' :
+      align === 'right' ? 'flex-end' : 'center';
+    const textAlign =
+      align === 'left' ? 'left' :
+      align === 'right' ? 'right' : 'center';
+    const teamFont = parseInt(localStorage.getItem('su_md_team_font') || '16', 10);
+    const tf = Math.max(11, Math.min(26, isNaN(teamFont) ? 16 : teamFont));
+    const titleFont = parseInt(localStorage.getItem('su_md_title_font') || '15', 10);
+    const ttf = Math.max(12, Math.min(24, isNaN(titleFont) ? 15 : titleFont));
+    const subFont = parseInt(localStorage.getItem('su_md_sub_font') || '11', 10);
+    const sf = Math.max(10, Math.min(18, isNaN(subFont) ? 11 : subFont));
+    document.documentElement.style.setProperty('--su_md_head_justify', justify);
+    document.documentElement.style.setProperty('--su_md_head_text_align', textAlign);
+    document.documentElement.style.setProperty('--su_md_team_font', tf + 'px');
+    document.documentElement.style.setProperty('--su_md_title_font', ttf + 'px');
+    document.documentElement.style.setProperty('--su_md_sub_font', sf + 'px');
 
     // ── 헤더 애니메이션/효과 설정 ──
     const fxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
@@ -999,6 +1011,52 @@ function saveCfg(){
     _lsSave('su_mAlias',userMapAlias);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     localStorage.setItem('su_last_save_time',Date.now().toString());
+
+    // 설정 변경도 다른 기기에 반영되도록 GitHub data.json 부분 업데이트
+    try{
+      const statusEl = document.getElementById('cloudStatus');
+      if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+        const token = localStorage.getItem('su_gh_token') || '';
+        if (token && typeof window.fbUpdate === 'function') {
+          // su_* 키 일부(큰 값/비밀 값 제외)도 함께 동기화 → 설정탭 변경이 다른 기기에 바로 적용
+          const _syncLs = {};
+          try{
+            for(let i=0;i<localStorage.length;i++){
+              const k = localStorage.key(i);
+              if(!k || typeof k!=='string') continue;
+              if(!k.startsWith('su_')) continue;
+              if(k.startsWith('su_pp')) continue;
+              if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+              if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+              const v = localStorage.getItem(k);
+              if(v==null) continue;
+              if(String(v).length > 200000) continue;
+              _syncLs[k] = v;
+            }
+          }catch(e){}
+
+          const patch = {
+            tiers: TIERS,
+            univCfg,
+            maps,
+            userMapAlias,
+            playerStatusIcons: (typeof playerStatusIcons!=='undefined' ? playerStatusIcons : {}),
+            appSettings: { ls: _syncLs },
+          };
+          if(statusEl){ statusEl.style.color=''; statusEl.textContent='⏫ 설정 GitHub 저장 중...'; }
+          window.fbUpdate(patch)
+            .then(()=>{ if(statusEl){ statusEl.style.color='#16a34a'; statusEl.textContent='✅ 설정 GitHub 반영됨'; setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2500);} })
+            .catch((e)=>{ if(statusEl){ statusEl.style.color='#dc2626'; statusEl.textContent='❌ 설정 GitHub 실패'; } console.error('[fbUpdate cfg]',e); });
+        } else {
+          // GitHub 토큰 미설정이면 로컬만 저장
+          if(statusEl && !token){
+            statusEl.style.color='#d97706';
+            statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
+            setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
+          }
+        }
+      }
+    }catch(e){}
   }catch(e){console.error('[saveCfg error]',e);}
 }
 // 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
@@ -1014,37 +1072,20 @@ function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    const mode = (localStorage.getItem('su_sync_mode') || 'github').trim() || 'github';
-
-    if (mode === 'firebase') {
-      if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
-        // 비밀번호 미설정 → Firebase 저장 안 됨 경고
-        if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
-        return;
-      }
-      if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-        if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
-        return;
-      }
-      if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
-      fbCloudSave()
-        .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-        .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
-    } else {
-      // GitHub 모드: 토큰이 있으면 저장 시 Repo에 자동 커밋 업로드
-      if (!localStorage.getItem('su_gh_token')) {
-        if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
-        return;
-      }
-      if (typeof fbCloudSave !== 'function') {
-        if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ 동기화 모듈 미로드'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
-        return;
-      }
-      if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 업로드 중...'; }
-      fbCloudSave()
-        .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-        .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';} console.error('[fbCloudSave]',e); });
+    if (!localStorage.getItem('su_gh_token')) {
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+      return;
     }
+    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+      return;
+    }
+    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 저장 중...'; }
+    // 경기 기록 저장은 "데이터"만 우선 빠르게 업로드
+    // - 설정 동기화는 saveCfg()/자동 설정 저장 경로에서 별도로 처리
+    fbCloudSave({ includeSettings:false })
+      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
+      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';} console.error('[fbCloudSave]',e); });
   }
 }
 

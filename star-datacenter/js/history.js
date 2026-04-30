@@ -655,6 +655,93 @@ window.histExtInputToPasteModal = function(){
   }, 60);
 };
 
+function _histOpenPasteModalByTarget(target){
+  try{
+    if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
+    else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
+    else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
+    else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
+    else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
+    else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
+    else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
+  }catch(e){}
+}
+function _histExtRowsToPasteLines(items, target){
+  return (items||[]).map(x=>{
+    const d = (x.date||'').trim();
+    const w = _histExtToPasteName(x.winner);
+    const l = _histExtToPasteName(x.loser);
+    const mp = (x.map||'-').trim();
+    const memo = String(x.memo||'').replace(/\t+/g,' ').replace(/\r?\n/g,' ').trim();
+    return `${d} ${w}\t${l}\t${mp}\t승\t${target}${memo?`\t${memo}`:''}`;
+  }).join('\n');
+}
+function _histExtRawToPastePayload(raw, target){
+  const txt = String(raw||'').trim();
+  if(!txt) return '';
+  // 1) HTML 테이블 통째 복사 → 기존 외부탭 파서 재사용
+  const htmlRows = _histExtParseHTMLTable(txt);
+  if(htmlRows && htmlRows.length){
+    const parsed = _histExtMapRows(htmlRows);
+    if(parsed && parsed.length) return _histExtRowsToPasteLines(parsed, target);
+  }
+  // 2) TSV/간격 기반 텍스트 표
+  const textRows = _histExtParseTextTable(txt);
+  if(textRows && textRows.length){
+    const parsed = _histExtMapRows(textRows);
+    if(parsed && parsed.length) return _histExtRowsToPasteLines(parsed, target);
+  }
+  // 3) 날짜/승자/패자/맵 정도가 한 줄에 있을 때의 단순 표 보정
+  const lines = txt.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+  const simple = [];
+  for(const line of lines){
+    const cols = line.split(/\s{2,}|\t+/).map(v=>v.trim()).filter(Boolean);
+    if(cols.length >= 4){
+      const d = _histExtNormDate(cols[0]);
+      if(d){
+        simple.push({
+          date: d,
+          winner: cols[1] || '',
+          loser: cols[2] || '',
+          map: cols[3] || '-',
+          elo: cols[4] || '',
+          type: cols[5] || '',
+          memo: cols.slice(6).join(' ') || ''
+        });
+      }
+    }
+  }
+  if(simple.length) return _histExtRowsToPasteLines(simple, target);
+  // 4) 위 규칙으로 못 읽으면 원문 그대로 자동인식 모달에 넘김
+  return txt;
+}
+window.histExt2SendRawToPasteModal = function(){
+  const raw = (document.getElementById('hist-ext2-raw')?.value || '').trim();
+  if(!raw){ alert('붙여넣기 내용이 없습니다'); return; }
+  const target = (document.getElementById('hist-ext2-target')?.value || '').trim();
+  if(!target){ alert('저장 대상(미니/개인전 등)을 먼저 선택해주세요'); return; }
+  _histExtTargetSave(target);
+  try{ window._pasteFromHistExt = true; }catch(e){}
+  _histOpenPasteModalByTarget(target);
+  const payload = _histExtRawToPastePayload(raw, target);
+  setTimeout(()=>{
+    try{
+      const ta = document.getElementById('paste-input');
+      if(ta) ta.value = payload;
+      if(typeof pastePreview==='function') pastePreview();
+    }catch(e){}
+  }, 60);
+};
+window.histExt2PasteFromClipboard = async function(){
+  try{
+    const t = await navigator.clipboard.readText();
+    const ta = document.getElementById('hist-ext2-raw');
+    if(ta) ta.value = t || '';
+  }catch(e){
+    alert('클립보드 읽기 실패: 브라우저 권한(HTTPS/사용자 허용) 문제일 수 있어요.');
+  }
+};
+
 // 선택 결과를 "경기 결과 붙여넣기(자동인식)" 모달로 전송
 function _histExtToPasteName(s){
   let t = String(s||'').trim();
@@ -3802,7 +3889,7 @@ function _ensureHistDetailModal(){
           <div id="hmdTitle" class="cmd-title">📅 경기 상세</div>
           <div id="hmdSub" class="cmd-sub"></div>
         </div>
-        <div class="no-export" style="display:flex;gap:6px;align-items:center">
+        <div class="cmd-head-actions no-export">
           <button id="hmdActCopy" class="cmd-hbtn" title="결과 복사">📤</button>
           <button id="hmdActShare" class="cmd-hbtn" title="공유 카드">🎴</button>
         </div>
@@ -3910,9 +3997,9 @@ function openHistDetailModal(key){
         const ca=(reg.ca||'#64748b');
         const cb=(reg.cb||'#64748b');
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team" style="background:linear-gradient(135deg,${ca},${ca}cc);justify-content:center;text-align:center">${_icon(labelA)}<span style="font-weight:1000;font-size:22px">${safe(labelA)}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${ca},${ca}cc)">${_icon(labelA)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelA)}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'#111827'}">${match.sa??''}</span><span class="cmd-colon">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'#111827'}">${match.sb??''}</span></div>
-          <div class="cmd-team" style="background:linear-gradient(135deg,${cb},${cb}cc);justify-content:center;text-align:center">${_icon(labelB)}<span style="font-weight:1000;font-size:22px">${safe(labelB)}</span></div>
+          <div class="cmd-team" style="background:linear-gradient(135deg,${cb},${cb}cc)">${_icon(labelB)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelB)}</span></div>
         </div>`;
         bar.style.display='block';
       }else{
@@ -3970,6 +4057,7 @@ function histExternal2HTML(){
     }
   }catch(e){}
   const url = 'https://rapid-scene-ac45.kpoppd.workers.dev/men/bbs/board.php?bo_table=search_list';
+  const tSel = _histExtTargetLoad();
   return `
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
@@ -3979,6 +4067,28 @@ function histExternal2HTML(){
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
         ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다. (그 경우 ‘새 창으로 열기’만 가능)
       </div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
+      <div style="font-weight:900;margin-bottom:8px">📋 특정 경기만 복사 → 자동인식</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.55;margin-bottom:8px">
+        외부2 화면이나 새 창에서 <b>원하는 경기 몇 개만 드래그 복사</b>한 뒤 여기에 붙여넣고 자동인식을 누르면 됩니다.<br>
+        표 형태(날짜/승자/패자/맵)면 자동 정리해서 보내고, 아니면 원문 그대로 자동인식 모달에 넘깁니다.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <select id="hist-ext2-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
+          <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
+          <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
+          <option value="gj" ${tSel==='gj'?'selected':''}>중장전</option>
+          <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
+          <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
+          <option value="tt" ${tSel==='tt'?'selected':''}>티어대회</option>
+          <option value="comp" ${tSel==='comp'?'selected':''}>대회</option>
+        </select>
+        <button class="btn btn-w btn-xs" onclick="histExt2PasteFromClipboard()">📋 클립보드 붙여넣기</button>
+        <button class="btn btn-p btn-xs" onclick="histExt2SendRawToPasteModal()">➡️ 자동인식 열기</button>
+      </div>
+      <textarea id="hist-ext2-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 특정 경기 몇 개만 선택 복사한 텍스트"></textarea>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
       <iframe

@@ -26,6 +26,9 @@
     lastError: 'su_sync_last_error',
     lastRemoteMode: 'su_sync_last_remote_mode', // new|legacy|none
     lastMigrated: 'su_sync_last_migrated', // 1/0
+
+    // AI(프록시/API키) 설정
+    aiCfg: 'su_ai_cfg',
   };
 
   function cfg(){
@@ -83,7 +86,15 @@
         updatedAt: null,
       }
     };
-    return { memo, ui };
+    // ai (proxy url, apiKey)
+    let ai = { proxyUrl: '', apiKey: '', updatedAt: null };
+    try{
+      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
+      ai.proxyUrl = String(a.proxyUrl || '');
+      ai.apiKey = String(a.apiKey || '');
+      ai.updatedAt = a.updatedAt || null;
+    }catch(e){}
+    return { memo, ui, ai };
   }
 
   function _applyLocalState(state){
@@ -104,6 +115,18 @@
         localStorage.setItem(LS.fabHidePC, fab.hidePC ? '1' : '0');
       }
     }catch(e){}
+
+    // ai
+    try{
+      if(state.ai && typeof state.ai === 'object'){
+        const ai = {
+          proxyUrl: String(state.ai.proxyUrl || ''),
+          apiKey: String(state.ai.apiKey || ''),
+          updatedAt: state.ai.updatedAt || null,
+        };
+        localStorage.setItem(LS.aiCfg, JSON.stringify(ai));
+      }
+    }catch(e){}
   }
 
   function _mergeByUpdatedAt(localState, remoteState){
@@ -119,7 +142,31 @@
       out.ui = out.ui || {};
       out.ui.fab = remoteState.ui.fab;
     }
+
+    const lAiT = new Date((localState && localState.ai && localState.ai.updatedAt) || 0).getTime();
+    const rAiT = new Date((remoteState && remoteState.ai && remoteState.ai.updatedAt) || 0).getTime();
+    if (rAiT >= lAiT && remoteState && remoteState.ai) out.ai = remoteState.ai;
     return out;
+  }
+
+  // ── AI 설정 API ────────────────────────────────────────────────
+  function getAiCfg(){
+    try{
+      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
+      return { proxyUrl: String(a.proxyUrl || ''), apiKey: String(a.apiKey || ''), updatedAt: a.updatedAt || null };
+    }catch(e){
+      return { proxyUrl:'', apiKey:'', updatedAt:null };
+    }
+  }
+  function setAiCfg(p){
+    const cur = getAiCfg();
+    const next = {
+      proxyUrl: ('proxyUrl' in p) ? String(p.proxyUrl||'') : cur.proxyUrl,
+      apiKey: ('apiKey' in p) ? String(p.apiKey||'') : cur.apiKey,
+      updatedAt: new Date().toISOString(),
+    };
+    try{ localStorage.setItem(LS.aiCfg, JSON.stringify(next)); }catch(e){}
+    return next;
   }
 
   function _markSync(ok, mode, migrated){
@@ -268,6 +315,7 @@
       const remoteInfo = await _getRemoteStateWithMigrationDecision();
       const remote = remoteInfo.state;
       if (!remote) { _markSync(null, 'none', false); return false; }
+
       const local = _loadLocalState();
       const merged = _mergeByUpdatedAt(local, remote);
       _applyLocalState(merged);
@@ -310,9 +358,11 @@
     const local = _loadLocalState();
     if (section === 'memo') local.memo.updatedAt = new Date().toISOString();
     if (section === 'ui.fab') { local.ui.fab.updatedAt = new Date().toISOString(); }
+    if (section === 'ai') { local.ai = local.ai || {}; local.ai.updatedAt = new Date().toISOString(); }
     if (!section) {
       local.memo.updatedAt = local.memo.updatedAt || new Date().toISOString();
       local.ui.fab.updatedAt = local.ui.fab.updatedAt || new Date().toISOString();
+      if (local.ai) local.ai.updatedAt = local.ai.updatedAt || new Date().toISOString();
     }
     let remoteState = null;
     let mode = 'none';
@@ -361,6 +411,8 @@
     getSyncStatus,
     getMemo, setMemo,
     getFab, setFab,
+    // ai
+    getAiCfg, setAiCfg,
     FILE
   };
 })();

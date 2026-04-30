@@ -2,92 +2,7 @@
    GitHub JSON 읽기 전용 불러오기
    ▼ GitHub에 올린 data.json 의 RAW URL을 입력하세요 ▼
 ══════════════════════════════════════ */
-// 기본값: config.js의 CONFIG.GITHUB.DATA_URL 우선, 없으면 기존 하드코딩값 fallback
-const _GH_DEFAULT_RAW_URL = (typeof CONFIG !== 'undefined' && CONFIG?.GITHUB?.DATA_URL)
-  ? String(CONFIG.GITHUB.DATA_URL)
-  : 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
-
-function ghNormalizeRawUrl(u){
-  try{
-    const s = String(u||'').trim();
-    if(!s) return '';
-    // 사용자가 blob 주소를 RAW URL로 착각하는 케이스를 자동 보정
-    // https://github.com/<owner>/<repo>/blob/<branch>/<path>
-    const m = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
-    if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
-    return s;
-  }catch(e){
-    return String(u||'').trim();
-  }
-}
-
-function ghGetRawUrl(){
-  try{
-    const v = (localStorage.getItem('su_gh_raw_url') || '').trim();
-    const out = ghNormalizeRawUrl(v) || ghNormalizeRawUrl(_GH_DEFAULT_RAW_URL);
-    return out || _GH_DEFAULT_RAW_URL;
-  }catch(e){
-    return _GH_DEFAULT_RAW_URL;
-  }
-}
-
-function ghParseRawUrl(rawUrl){
-  try{
-    const u = ghNormalizeRawUrl(rawUrl);
-    // https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>
-    const m = u.match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/i);
-    if(!m) return null;
-    return { owner:m[1], repo:m[2], branch:m[3], path:m[4] };
-  }catch(e){
-    return null;
-  }
-}
-
-function ghGetRepoCfg(){
-  // localStorage override 우선
-  const read = (k)=>{ try{ return (localStorage.getItem(k)||'').trim(); }catch(e){ return ''; } };
-  let owner = read('su_gh_owner');
-  let repo = read('su_gh_repo');
-  let branch = read('su_gh_branch');
-  let path = read('su_gh_path');
-  if(owner && repo && branch && path) return { owner, repo, branch, path };
-
-  // raw url에서 자동 추출
-  const parsed = ghParseRawUrl(ghGetRawUrl());
-  if(parsed){
-    owner = owner || parsed.owner;
-    repo = repo || parsed.repo;
-    branch = branch || parsed.branch;
-    path = path || parsed.path;
-  }
-
-  // 여전히 없으면 기존 기본값
-  return {
-    owner: owner || 'nada1004',
-    repo: repo || 'star-system',
-    branch: branch || 'main',
-    path: path || 'star-datacenter/data.json'
-  };
-}
-
-function ghGetContentsApiUrl(){
-  const c = ghGetRepoCfg();
-  return `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${c.path}`;
-}
-
-function ghGetPollMs(){
-  try{
-    const ms = parseInt(localStorage.getItem('su_gh_poll_ms')||'45000',10);
-    return Math.max(10000, Math.min(300000, isNaN(ms)?45000:ms)); // 10초~5분
-  }catch(e){
-    return 45000;
-  }
-}
-
-function ghGetSyncMode(){
-  // 기본: github (Firebase 한도 문제 회피)
-  try{ return (localStorage.getItem('su_sync_mode') || 'github').trim() || 'github'; }catch(e){ return 'github'; }
-}
+const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
 /* ══════════════════════════════════════
    Firebase 연동 (실시간 동기화)
@@ -368,27 +283,6 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  // (중요) 관리자 기기에서 원격 데이터가 더 "과거"인 경우, 로컬에서 방금 입력한 기록이
-  // GitHub 폴링/원격 수신으로 덮여서 "사라지는" 문제가 발생할 수 있음.
-  // → 로컬 저장 시각(su_last_admin_save)이 원격 savedAt보다 최신이면 적용을 스킵한다.
-  try{
-    const isAdmin = (typeof isLoggedIn !== 'undefined' && isLoggedIn);
-    const remoteSa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
-    const localAdminSa = (()=>{ try{ return Number(localStorage.getItem('su_last_admin_save')||0) || 0; }catch(e){ return 0; } })();
-    const localSa = localAdminSa || (Number(window._lastAdminSaveTime||0) || 0);
-    if(isAdmin && !window._forcingSync && remoteSa && localSa && remoteSa < localSa){
-      // 상태 표시(선택)
-      try{
-        const statusEl = document.getElementById('cloudStatus');
-        if(statusEl){
-          statusEl.style.color = '#d97706';
-          statusEl.textContent = '⚠️ 원격 데이터가 더 오래됨(업로드 실패/지연 가능) — 로컬 입력을 보호하기 위해 동기화 적용을 건너뜀';
-          setTimeout(()=>{ try{ if(statusEl) statusEl.textContent=''; }catch(e){} }, 4500);
-        }
-      }catch(e){}
-      return;
-    }
-  }catch(e){}
   // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
   // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
   try{
@@ -423,12 +317,10 @@ window.onFirebaseLoad = function(data) {
 const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
-async function fbCloudSave() {
-  const mode = ghGetSyncMode(); // 'github' | 'firebase'
-  if (!isLoggedIn) return;
-  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
-  // Firebase 모드인 경우에만 fbSet/pw 필요
-  if (mode === 'firebase' && (!pw || typeof window.fbSet !== 'function')) return;
+async function fbCloudSave(opts) {
+  const includeSettings = !(opts && opts.includeSettings === false);
+  const token = localStorage.getItem('su_gh_token');
+  if (!token || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -449,24 +341,27 @@ async function fbCloudSave() {
   });
 
   // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  // 단, 일반 "경기 기록 저장"에서는 너무 무거워질 수 있어 opts.includeSettings=false 시 생략
   const _syncLs = {};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(!k || typeof k!=='string') continue;
-      if(!k.startsWith('su_')) continue;
-      if(k.startsWith('su_pp')) continue;
-      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
-      // 보안: AI API Key는 GitHub(특히 public repo)에 올리면 유출 위험 → 동기화 제외(각 기기에서 따로 입력)
-      if(k==='su_aibot_api_key') continue;
-      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
-      const v = localStorage.getItem(k);
-      if(v==null) continue;
-      // 너무 큰 값은 제외(예: 이미지 base64 등)
-      if(String(v).length > 200000) continue;
-      _syncLs[k] = v;
-    }
-  }catch(e){}
+  if(includeSettings){
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(!k || typeof k!=='string') continue;
+        if(!k.startsWith('su_')) continue;
+        if(k.startsWith('su_pp')) continue;
+        if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+        if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+        // 기록 저장 때마다 외부탭 원문/대형 설정까지 같이 올리면 과도하게 무거워짐
+        if(k==='su_hist_ext_data_v1' || k==='su_hist_ext_proxy_presets_v1' || k==='su_hist_ext_proxy_preset_sel_v1' || k==='su_hist_ext_last_modified') continue;
+        const v = localStorage.getItem(k);
+        if(v==null) continue;
+        // 너무 큰 값은 제외(예: 이미지 base64 등)
+        if(String(v).length > 200000) continue;
+        _syncLs[k] = v;
+      }
+    }catch(e){}
+  }
 
   const dataObj = {
     players: _pNoPhoto,
@@ -479,8 +374,10 @@ async function fbCloudSave() {
     curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
-    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
-    appSettings: {
+    savedAt
+  };
+  if(includeSettings){
+    dataObj.appSettings = {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
@@ -489,40 +386,26 @@ async function fbCloudSave() {
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
-      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
       designV2On: localStorage.getItem('su_design_v2')==='1',
       designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
       designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
       designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
       designV2Colors: localStorage.getItem('su_design_v2_colors')||'{}',
       designV2Effects: localStorage.getItem('su_design_v2_effects')||'{}',
-      // 🅰️ 전역 폰트 — 모든 기기 동기화
       appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
       appFontCss: localStorage.getItem('su_app_font_css')||'',
       appFontFamily: localStorage.getItem('su_app_font_family')||'',
       appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
       appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
-      // 📏 전역 UI 배율(글자/아이콘)
       uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
-      // 🎵 유튜브 BGM (설정 동기화)
       bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
       bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
-      // 📺 SOOP 멀티뷰 (설정 동기화)
       soopList: localStorage.getItem('su_soop_list') || '',
-
-      // 🧾 대전기록 > 외부 탭 데이터 동기화
-      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
-      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
-      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
-      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
-      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
-      // localStorage 설정(문자열) 묶음
       ls: _syncLs
-    },
-    savedAt
-  };
+    };
+  }
   // 페이로드 크기 검사
   let _fbPayloadSize = 0;
   try {
@@ -537,27 +420,6 @@ async function fbCloudSave() {
     }
     console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
-
-  // GitHub 모드: Firebase 저장 없이 GitHub Repo에만 커밋 업로드
-  if (mode === 'github') {
-    try{
-      gsSetStatus('⏫ GitHub 업로드 중...', 'var(--blue)');
-      await githubDataSave(dataObj);
-      try{ localStorage.setItem('su_last_save_time', String(Date.now())); }catch(e){}
-      gsSetStatus(`✅ GitHub 업로드 완료 (${new Date().toLocaleTimeString('ko-KR')})`, 'var(--green)');
-      return true;
-    }catch(e){
-      const statusEl = document.getElementById('cloudStatus');
-      if (statusEl) {
-        statusEl.style.color = '#dc2626';
-        statusEl.textContent = '❌ GitHub 저장 실패: ' + (e?.message || e);
-      }
-      throw e;
-    }finally{
-      window._isSaving = false;
-    }
-  }
-
   // 🔧 Firebase는 undefined 값 저장 불가 → 전송 전 재귀적으로 undefined 제거
   function _removeUndefined(obj) {
     if (Array.isArray(obj)) {
@@ -583,11 +445,11 @@ async function fbCloudSave() {
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
     console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
-    return window.fbSet(payload, pw);
+    return window.fbSet(payload);
   };
   try {
     await _tryFbSet(dataObj);
-    githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
+    // GitHub-only 모드: window.fbSet가 이미 GitHub data.json 저장을 수행함
   } catch(e) {
     // 에러 상세 정보 최대한 추출
     const errCode = e.code || '';
@@ -600,10 +462,10 @@ async function fbCloudSave() {
     if (statusEl) {
       const isSizeErr = fullErr.includes('exceeded') || fullErr.includes('too large') || fullErr.includes('payload') || fullErr.includes('413');
       const isAuthErr = fullErr.includes('Permission') || fullErr.includes('PERMISSION') || fullErr.includes('auth') || fullErr.includes('denied') || fullErr.includes('401') || fullErr.includes('403');
-      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → Firebase 보안 규칙 차단' : '';
+      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → GitHub 토큰/권한 문제' : '';
       const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
       statusEl.style.color='#dc2626';
-      statusEl.innerHTML = '❌ Firebase 저장 실패: ' + display + hint
+      statusEl.innerHTML = '❌ GitHub 저장 실패: ' + display + hint
         + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
     }
     throw e;
@@ -629,119 +491,32 @@ async function fbCloudSave() {
 
 // GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
 // 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
-try{ window.__ghBuild = '20260430-07'; }catch(e){}
 async function githubDataSave(dataObj) {
-  const _BUILD = '20260430-07';
-  const token = (localStorage.getItem('su_gh_token') || '').trim();
+  const token = localStorage.getItem('su_gh_token');
   if (!token) return; // 토큰 미설정 시 skip
-  // 헤더(ByteString) 오류 방지: Authorization 헤더 값은 ASCII여야 함
-  if (/[^ -~]/.test(token)) {
-    throw new Error('GitHub 토큰이 깨졌습니다(한글/이모지 포함). 설정에서 토큰을 지우고 ghp_... 또는 github_pat_... 값을 다시 저장하세요.');
-  }
-  // 같은 탭에서 연속 저장(자동 저장/수동 저장)이 겹치면 sha mismatch(409)가 자주 발생함
-  // → 업로드는 1개만 진행하고, 추가 호출은 "대기/병합" 처리한다.
-  try{
-    if (window.__ghSaveInFlight) {
-      window.__ghSavePending = true;
-      return await window.__ghSaveInFlight;
-    }
-  }catch(e){}
-  const cfg = ghGetRepoCfg();
-  const apiUrl = ghGetContentsApiUrl();
-  const apiUrlWithRef = apiUrl + '?ref=' + encodeURIComponent(cfg.branch || 'main');
-  async function _getSha(){
-    const getRes = await fetch(apiUrlWithRef, {
-      // Fine-grained PAT는 Bearer 권장
-      cache: 'no-store',
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if (getRes.ok) {
-      const fileInfo = await getRes.json();
-      return { sha: (fileInfo && fileInfo.sha ? String(fileInfo.sha) : null) };
-    } else if (getRes.status === 404) {
-      // 신규 생성
-      return { sha: null };
-    } else {
-      let msg = '';
-      try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
-      throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
-    }
-  }
+  const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
+  // 현재 파일 SHA 조회 (업데이트 시 필수)
+  const getRes = await fetch(apiUrl, {
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (!getRes.ok) throw new Error('GitHub 파일 조회 실패: ' + getRes.status);
+  const fileInfo = await getRes.json();
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
-  // (중요) GitHub RAW 폴링(firebase-init.js)이 변경 여부를 판단할 수 있도록
-  // savedAt은 압축 밖(평문)에도 넣어둔다. (그렇지 않으면 savedAt=0으로 인식되어 매 폴링마다 덮어쓰기 발생)
-  const payload = { savedAt: Number(dataObj?.savedAt||0) || Date.now(), _lz: compressed };
+  const payload = { _lz: compressed };
   const jsonStr = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-
-  async function _put(sha){
-    const putRes = await fetch(apiUrl, {
-      method: 'PUT',
-      cache: 'no-store',
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-        content: b64,
-        branch: cfg.branch || 'main',
-        ...(sha ? { sha } : {})
-      })
-    });
-    if (putRes.ok) return true;
-    let msg = '';
-    try{
-      const j = await putRes.json();
-      msg = (j && (j.message || j.error)) ? String(j.message || j.error) : '';
-      if (j && j.documentation_url) msg += (msg ? ' ' : '') + String(j.documentation_url);
-    }catch(e){}
-    const err = new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
-    // @ts-ignore
-    err._status = putRes.status;
-    throw err;
-  }
-
-  const _sleep = (ms)=>new Promise(r=>setTimeout(r, ms));
-  const _run = async ()=>{
-    // 409(sha mismatch / Conflict)는 "동시에 저장" 시 흔함 → sha 재조회하며 몇 번 재시도
-    const maxTries = 4;
-    let lastErr = null;
-    for(let i=0;i<maxTries;i++){
-      try{
-        const shaInfo = await _getSha();
-        await _put(shaInfo.sha);
-        return true;
-      }catch(e){
-        lastErr = e;
-        // @ts-ignore
-        const st = e && (e._status || e.status) ? Number(e._status || e.status) : 0;
-        if(st === 409){
-          // 약간 기다렸다가 재시도(짧은 백오프)
-          await _sleep(180 * (i+1));
-          continue;
-        }
-        throw e;
-      }
-    }
-    throw lastErr || new Error(`GitHub 저장 실패: 409 (충돌) - 동시 저장(다른 탭/기기) 또는 자동 저장 겹침 가능. build=${_BUILD}`);
-  };
-
-  // in-flight 잠금 + pending 병합
-  try{
-    window.__ghSaveInFlight = _run();
-    await window.__ghSaveInFlight;
-  }finally{
-    try{ window.__ghSaveInFlight = null; }catch(e){}
-  }
-  // 저장 중에 추가 저장 요청이 들어왔으면 1회 더 수행(마지막 상태로 수렴)
-  try{
-    if(window.__ghSavePending){
-      window.__ghSavePending = false;
-      window.__ghSaveInFlight = _run();
-      await window.__ghSaveInFlight;
-    }
-  }finally{
-    try{ window.__ghSaveInFlight = null; }catch(e){}
-  }
+  // 파일 업데이트
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: b64,
+      sha: fileInfo.sha
+    })
+  });
+  if (!putRes.ok) throw new Error('GitHub 저장 실패: ' + putRes.status);
 }
 
 
@@ -757,13 +532,11 @@ window.cloudLoad = async function(){
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
     let d=null;
-    const baseUrl = ghGetRawUrl();
-    const ghApiUrl = ghGetContentsApiUrl();
-    const cfg = ghGetRepoCfg();
-    const jsDelivr = `https://cdn.jsdelivr.net/gh/${cfg.owner}/${cfg.repo}@${cfg.branch}/${cfg.path}`;
+    const baseUrl=GITHUB_JSON_URL;
+    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
     const urls=[
       baseUrl+'?nocache='+Date.now(),
-      jsDelivr,
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
       ghApiUrl,
       'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
       'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
@@ -803,7 +576,7 @@ window.cloudLoad = async function(){
     _applyCloudData(d);
     console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
-    save();
+    localSave();
     fixPoints();
     window._compListCache={}; // 대회 목록 캐시 초기화
     window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
@@ -2221,75 +1994,14 @@ async function checkFbSyncStatus(){
   if(!el)return;
   el.innerHTML='<span style="color:var(--blue)">🔄 확인 중...</span>';
 
-  const mode = ghGetSyncMode(); // 'github' | 'firebase'
-  if (mode === 'github') {
-    const rawUrl = ghGetRawUrl();
-    const pollMs = ghGetPollMs();
-    const token = !!(localStorage.getItem('su_gh_token')||'').trim();
-    const build = (typeof window.__ghBuild !== 'undefined' && window.__ghBuild) ? String(window.__ghBuild) : '';
-    const inflight = !!(window.__ghSaveInFlight);
-    const lastSave = localStorage.getItem('su_last_save_time');
-    const lastAdminSave = localStorage.getItem('su_last_admin_save');
-    const cfg = ghGetRepoCfg();
-    const fmt = (ms)=> (ms>=60000?Math.round(ms/1000/60)+'분':Math.round(ms/1000)+'초');
-    const row = `
-      <div style="display:grid;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:#f0f9ff;border:1px solid #bae6fd">
-          <span style="font-size:16px">🟦</span>
-          <div>
-            <div style="font-weight:900;font-size:12px">동기화 모드: GitHub</div>
-            <div style="font-size:11px;color:var(--gray-l)">관람자는 GitHub RAW를 ${fmt(pollMs)}마다 자동 갱신합니다.</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-          <span style="font-size:16px">🔗</span>
-          <div style="min-width:0">
-            <div style="font-weight:900;font-size:12px">RAW URL</div>
-            <div style="font-size:11px;color:var(--gray-l);word-break:break-all">${rawUrl}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-          <span style="font-size:16px">${token?'✅':'⚠️'}</span>
-          <div>
-            <div style="font-weight:900;font-size:12px">GitHub 토큰</div>
-            <div style="font-size:11px;color:var(--gray-l)">${token?'설정됨 — 관리자 저장 시 Repo에 커밋 업로드':'미설정 — 관리자도 로컬만 저장됨'}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-          <span style="font-size:16px">📌</span>
-          <div style="min-width:0">
-            <div style="font-weight:900;font-size:12px">업로드 대상</div>
-            <div style="font-size:11px;color:var(--gray-l);word-break:break-all">${cfg.owner}/${cfg.repo}@${cfg.branch} / ${cfg.path}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-          <span style="font-size:16px">💾</span>
-          <div>
-            <div style="font-weight:900;font-size:12px">마지막 업로드(로컬 기록)</div>
-            <div style="font-size:11px;color:var(--gray-l)">${lastSave?new Date(parseInt(lastSave)).toLocaleString('ko-KR'):'기록 없음'} ${lastAdminSave?`(adminSave: ${new Date(parseInt(lastAdminSave)).toLocaleTimeString('ko-KR')})`:''}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-          <span style="font-size:16px">${inflight?'⏳':'🧩'}</span>
-          <div>
-            <div style="font-weight:900;font-size:12px">업로드 엔진</div>
-            <div style="font-size:11px;color:var(--gray-l)">${build?`build ${build}`:'build ?'} / ${inflight?'현재 업로드 진행 중(잠시만 기다려주세요)':'대기 중'}</div>
-          </div>
-        </div>
-        ${isLoggedIn&&token?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 GitHub에 업로드</button>`:''}
-      </div>`;
-    el.innerHTML = row;
-    return;
-  }
-
-  // Firebase 연결 확인
+  // GitHub data.json 동기화 상태 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
+  const hasPw=!!localStorage.getItem('su_gh_token');
   const lastSave=localStorage.getItem('su_last_save_time');
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
 
-  // Firebase 실제 데이터 크기 확인 (onValue로 받은 마지막 스냅샷 크기)
+  // 마지막 수신 데이터 크기(호환 변수명 유지)
   const fbSize=window._lastFbDataSize||null;
 
   let rows=`
@@ -2297,15 +2009,15 @@ async function checkFbSyncStatus(){
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${fbConnected?'#f0fdf4':'#fef2f2'};border:1px solid ${fbConnected?'#bbf7d0':'#fecaca'}">
         <span style="font-size:16px">${fbConnected?'✅':'❌'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">Firebase 연결</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'Firebase 스크립트 미로드'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 동기화 모듈</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'GitHub 동기화 모듈 미로드'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${hasPw?'#f0fdf4':'#fffbeb'};border:1px solid ${hasPw?'#bbf7d0':'#fde68a'}">
         <span style="font-size:16px">${hasPw?'🔑':'⚠️'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">쓰기 비밀번호</div>
-          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 Firebase에 업로드됨':'미설정 — 저장해도 Firebase 업로드 안 됨'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 토큰</div>
+          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 GitHub data.json에 업로드됨':'미설정 — 저장해도 GitHub 업로드 안 됨'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
@@ -2319,10 +2031,10 @@ async function checkFbSyncStatus(){
         <span style="font-size:16px">📦</span>
         <div>
           <div style="font-weight:700;font-size:12px">로컬 데이터 크기</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ Firebase: ${fmt(fbSize*2)}`:'(Firebase 크기 미확인)'}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ 동기화 데이터: ${fmt(fbSize*2)}`:'(동기화 크기 미확인)'}</div>
         </div>
       </div>
-      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 Firebase에 업로드</button>`:''}
+      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 GitHub data.json에 업로드</button>`:''}
     </div>`;
   el.innerHTML=rows;
 }

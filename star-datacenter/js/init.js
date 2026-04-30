@@ -161,10 +161,19 @@ function init(){
   initLoginHash();
   applyLoginState();
   render();
-  // 🎵 BGM 버튼 초기화
-  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
-  // 📺 SOOP 멀티뷰 버튼 초기화
-  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
+  // (성능) 부가 기능은 idle 시 지연 로딩
+  // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
+  try{
+    const loadExtras = ()=>{
+      try{
+        if(typeof window._loadScriptOnce!=='function') return;
+        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
+      }catch(e){}
+    };
+    if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
+    else setTimeout(loadExtras, 1200);
+  }catch(e){}
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{
@@ -194,6 +203,47 @@ function init(){
 }
 init();
 initDark();
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
+// - Gist 동기화(enabled)로 저장(push)한 설정을 다른 기기가 자동으로 주기적으로 pull
+// - 토큰이 없는 기기는 읽기만(pull) 가능
+// ─────────────────────────────────────────────────────────────
+(function(){
+  if(window._settingsAutoSyncStarted) return;
+  window._settingsAutoSyncStarted = true;
+
+  const doPull = async ()=>{
+    try{
+      if(!window.SettingsStore || typeof window.SettingsStore.pull!=='function') return;
+      const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
+      if(!c || !c.gistId) return;
+      await window.SettingsStore.pull({silent:true});
+      // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
+      try{
+        const m = document.getElementById('cfgModal');
+        if(m && m.style.display!=='none'){
+          const sec = document.getElementById('cfg-sec-aibot');
+          if(sec && sec.closest && sec.closest('#cfgModalBody')){
+            if(typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
+          }
+        }
+      }catch(e){}
+    }catch(e){}
+  };
+
+  // 첫 pull
+  setTimeout(doPull, 1200);
+  // 주기적 pull (너무 잦지 않게)
+  setInterval(doPull, 20000);
+  // 포커스/재진입 시 즉시 반영
+  try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
+  try{
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') doPull();
+    });
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // 전역 폰트 설정
@@ -844,7 +894,7 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
         if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
         _migrateTierTourName();
       }
-      save(); render();
+      localSave(); render();
       gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
     }catch(e){
       console.error('[자동 불러오기] 데이터 적용 오류:', e);

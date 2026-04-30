@@ -374,9 +374,144 @@ const _DEFAULT_CATSECS = {
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
   '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','calui'],
-  '🧠 자동화/도구':['bgm','soopmv','aibotkey','pasteRoute','autofitall','fab'],
+  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
+};
+
+// ─────────────────────────────────────────────────────────────
+// 🤖 AI봇(Groq) 프록시 서버 설정
+// - 브라우저에 API 키를 저장/동기화하지 않고, 서버에만 키를 두는 방식(권장)
+// - 여기서는 프록시 서버 URL만 저장하고 SettingsStore(동기화)로 다른 기기 반영
+// ─────────────────────────────────────────────────────────────
+window.cfgInitAiProxy = async function(){
+  try{ if(window.SettingsStore) await window.SettingsStore.pull({silent:true}); }catch(e){}
+  let cur = { proxyUrl:'' };
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.getAiCfg==='function') cur = window.SettingsStore.getAiCfg() || cur;
+    else cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}') || cur;
+  }catch(e){}
+  const inp=document.getElementById('cfg-ai-proxy-url');
+  if(inp) inp.value = cur.proxyUrl || '';
+
+  // 키 상태
+  try{
+    const st=document.getElementById('cfg-ai-key-status');
+    const has = !!(cur && cur.apiKey);
+    if(st) st.textContent = has ? '✅ 키 설정됨' : '미설정';
+  }catch(e){}
+};
+window.cfgSaveAiProxyUrl = async function(){
+  const inp=document.getElementById('cfg-ai-proxy-url');
+  const url=String(inp?.value||'').trim();
+  const st=document.getElementById('cfg-ai-proxy-status');
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
+      window.SettingsStore.setAiCfg({ proxyUrl: url });
+      // (관리자+동기화 ON) 즉시 원격 반영
+      try{
+        const c = window.SettingsStore.cfg();
+        if(c && c.enabled){
+          await window.SettingsStore.push('ai'); // 토큰 필요
+          if(st) st.textContent = '✅ 저장 + 다른 기기 반영 완료';
+          return;
+        }
+      }catch(e){}
+      // enabled인데 push 실패한 경우(토큰 없음 등) 메시지 보강
+      try{
+        const c2 = window.SettingsStore.cfg();
+        if(c2 && c2.enabled){
+          if(st) st.textContent = '⚠️ 로컬 저장됨. 다른 기기 반영은 실패했습니다. (GitHub 토큰 필요)';
+          return;
+        }
+      }catch(e){}
+      if(st) st.textContent = '✅ 저장 완료';
+    }else{
+      const next={ proxyUrl:url, updatedAt:new Date().toISOString() };
+      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
+      if(st) st.textContent = '✅ 저장 완료';
+    }
+  }catch(e){
+    if(st) st.textContent = '❌ 저장 실패: '+(e.message||e);
+  }
+};
+window.cfgTestAiProxy = async function(){
+  const inp=document.getElementById('cfg-ai-proxy-url');
+  const st=document.getElementById('cfg-ai-proxy-status');
+  const base=String(inp?.value||'').trim().replace(/\/+$/,'');
+  if(!base){ if(st) st.textContent='서버 주소를 입력하세요.'; return; }
+  if(st) st.textContent='테스트 중...';
+  try{
+    const r = await fetch(base+'/api/health', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json().catch(()=>({}));
+    if(j && j.ok) { if(st) st.textContent='✅ 연결 성공'; }
+    else { if(st) st.textContent='⚠️ 응답은 받았지만 ok가 아닙니다.'; }
+  }catch(e){
+    if(st) st.textContent='❌ 연결 실패: '+(e.message||e);
+  }
+};
+
+window.cfgSaveAiApiKey = async function(){
+  const inp=document.getElementById('cfg-ai-api-key');
+  const key=String(inp?.value||'').trim();
+  const st=document.getElementById('cfg-ai-key-status');
+  if(!key){ if(st) st.textContent='키를 입력하세요.'; return; }
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
+      window.SettingsStore.setAiCfg({ apiKey: key });
+      // 입력칸은 즉시 비움(노출 최소화)
+      try{ if(inp) inp.value=''; }catch(e){}
+      try{
+        const c = window.SettingsStore.cfg();
+        if(c && c.enabled){
+          await window.SettingsStore.push('ai'); // 토큰 필요
+          if(st) st.textContent='✅ 키 저장 + 다른 기기 반영 완료';
+          return;
+        }
+      }catch(e){
+        // push 실패면 로컬 저장은 성공. (대부분 토큰 없음)
+      }
+      // enabled인데 push 실패한 경우(토큰 없음 등) 메시지 보강
+      try{
+        const c2 = window.SettingsStore.cfg();
+        if(c2 && c2.enabled){
+          if(st) st.textContent='⚠️ 키는 이 기기에 저장됨. 다른 기기 반영은 실패했습니다. (GitHub 토큰 필요)';
+          return;
+        }
+      }catch(e){}
+      if(st) st.textContent='✅ 키 저장 완료';
+    }else{
+      const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
+      const next={ ...cur, apiKey:key, updatedAt:new Date().toISOString() };
+      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
+      try{ if(inp) inp.value=''; }catch(e){}
+      if(st) st.textContent='✅ 키 저장 완료';
+    }
+  }catch(e){
+    if(st) st.textContent='❌ 저장 실패: '+(e.message||e);
+  }
+};
+window.cfgClearAiApiKey = async function(){
+  const st=document.getElementById('cfg-ai-key-status');
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
+      window.SettingsStore.setAiCfg({ apiKey: '' });
+      try{
+        const c = window.SettingsStore.cfg();
+        if(c && c.enabled){
+          await window.SettingsStore.push('ai');
+        }
+      }catch(e){}
+    }else{
+      const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
+      const next={ ...cur, apiKey:'', updatedAt:new Date().toISOString() };
+      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
+    }
+    if(st) st.textContent='✅ 키 삭제됨';
+  }catch(e){
+    if(st) st.textContent='❌ 실패: '+(e.message||e);
+  }
 };
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
 
@@ -1454,35 +1589,6 @@ window.cfgSaveSoopSettings = function(){
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 
-// ─────────────────────────────────────────────────────────────
-// ⚽ 펨붕이붓 AI API Key 저장
-// - localStorage: su_aibot_api_key
-// - chatbot.js → /api/aibot 호출 시 apiKey로 함께 전송
-// ─────────────────────────────────────────────────────────────
-window.cfgSaveAIBotKey = function(){
-  const v = String(document.getElementById('cfg-aibot-key')?.value || '').trim();
-  if(!v){ alert('API Key를 입력하세요.'); return; }
-  try{ localStorage.setItem('su_aibot_api_key', v); }catch(e){}
-  try{
-    const st = document.getElementById('cfg-aibot-key-status');
-    if(st) st.textContent = '✅ 저장됨';
-  }catch(e){}
-  // 보안: 이 키는 GitHub/클라우드 동기화 대상에서 제외됨(각 기기에서 따로 입력)
-  try{ alert('✅ 저장됨 (보안상 다른 기기 자동 동기화는 하지 않습니다)'); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-window.cfgClearAIBotKey = function(){
-  if(!confirm('저장된 AI API Key를 삭제할까요?')) return;
-  try{ localStorage.removeItem('su_aibot_api_key'); }catch(e){}
-  try{
-    const inp = document.getElementById('cfg-aibot-key');
-    if(inp) inp.value = '';
-    const st = document.getElementById('cfg-aibot-key-status');
-    if(st) st.textContent = '미설정';
-  }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-
 // ─────────────────────────────────────────────
 // (요청사항) 결과 붙여넣기 자동 분리 저장 규칙
 // - localStorage: su_paste_route_rules
@@ -1508,7 +1614,7 @@ window._scheduleCloudAppSettingsSave = function(){
     if(window._isSaving) return;
     clearTimeout(window._autoAppSettingsSaveT);
     window._autoAppSettingsSaveT = setTimeout(()=>{
-      try{ window.fbCloudSave(); }catch(e){}
+      try{ window.fbCloudSave({ includeSettings:true }); }catch(e){}
     }, 1200);
   }catch(e){}
 };
@@ -2259,6 +2365,7 @@ function _cfgGo(secId){
         if(secId==='pd' && typeof window._renderCfgPdSection==='function') window._renderCfgPdSection();
         if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
         if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
+        if(secId==='aibot' && typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
       }catch(e){}
     }
     // (모바일 버그픽스) pointerdown에서 섹션을 누를 경우,
@@ -2355,6 +2462,69 @@ window.cfgUnivOrderMove = function(i, dir){
 };
 
 // ─────────────────────────────────────────────────────────────
+// (호환/성능) 지연 로딩으로 인해 “함수 없음”으로 오탐되는 케이스 방지용 스텁들
+// - settings.js는 render.js보다 먼저 로드되므로 여기서 먼저 기본 스텁을 제공해둔다.
+// - 실제 구현 파일이 로드되면(또는 render.js가 더 강력한 스텁을 등록하면) 자동으로 대체된다.
+// ─────────────────────────────────────────────────────────────
+(function(){
+  // cloud-board.js에 정의됨
+  function _lazyCheckFbSyncStatus(){
+    try{
+      const loader = window._loadScriptOnce;
+      if(typeof loader !== 'function'){
+        alert('기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      loader('js/cloud-board.js?v=20260425-01').then(()=>{
+        const fn = window.checkFbSyncStatus;
+        if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
+      }).catch((e)=>{
+        console.error('[lazy] checkFbSyncStatus load fail', e);
+        alert('Firebase 상태 확인 로딩 실패');
+      });
+    }catch(e){}
+  }
+  window.checkFbSyncStatus = window.checkFbSyncStatus || _lazyCheckFbSyncStatus;
+
+  // calendar.js에 정의됨
+  function _lazyRCal(C, T){
+    try{
+      const loader = window._loadScriptOnce;
+      if(typeof loader !== 'function'){
+        if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">캘린더 로딩 중...</div>';
+        return;
+      }
+      loader('js/calendar.js?v=20260422-01').then(()=>{
+        const fn = window.rCal;
+        if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
+      }).catch((e)=>{
+        console.error('[lazy] rCal load fail', e);
+      });
+    }catch(e){}
+  }
+  window.rCal = window.rCal || _lazyRCal;
+
+  // stats.js + Chart.js에 정의됨
+  function _lazyRStats(C, T){
+    try{
+      const loader = window._loadScriptOnce;
+      if(typeof loader !== 'function'){
+        if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">통계 로딩 중...</div>';
+        return;
+      }
+      const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260425-01')).then(()=>{
+        const fn = window.rStats;
+        if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
+      }).catch((e)=>{
+        console.error('[lazy] rStats load fail', e);
+      });
+    }catch(e){}
+  }
+  window.rStats = window.rStats || _lazyRStats;
+})();
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) "QA 체크리스트 전부 되는지" 빠른 드라이런 점검
 // - 실제 사용자 데이터는 건드리지 않도록:
 //   1) 전역 배열/함수(save/render/document.getElementById/localStorage 일부키)를 백업
@@ -2396,12 +2566,27 @@ window.cfgRunFullQaDryRun = function(){
   try{
     // 로그인 강제(드라이런에서는 권한/계정과 무관하게 동작 확인만)
     backup.isLoggedIn = (typeof window.isLoggedIn !== 'undefined') ? window.isLoggedIn : undefined;
-    window.isLoggedIn = true;
+    backup.isLoggedInLex = (typeof isLoggedIn !== 'undefined') ? isLoggedIn : undefined;
+    try{ window.isLoggedIn = true; }catch(e){}
+    try{ if(typeof isLoggedIn !== 'undefined') isLoggedIn = true; }catch(e){}
 
     // 전역 배열 백업
     ['miniM','univM','ckM','proM','ttM','comps','indM','gjM','tourneys','maps','players','compNames','curComp','userMapAlias','playerStatusIcons','playerStatusExpiry'].forEach(k=>{
       if(typeof window[k] !== 'undefined') backup[k] = window[k];
     });
+    // (중요) 이 프로젝트는 constants.js/auth.js에서 top-level let로 전역 데이터를 들고 있어
+    // window.*와 분리될 수 있음 → 드라이런은 실제 바인딩(miniM 등)을 직접 교체해야 테스트가 통과함
+    try{ backup._lex_miniM = (typeof miniM!=='undefined') ? miniM : undefined; }catch(e){}
+    try{ backup._lex_univM = (typeof univM!=='undefined') ? univM : undefined; }catch(e){}
+    try{ backup._lex_ckM   = (typeof ckM!=='undefined') ? ckM : undefined; }catch(e){}
+    try{ backup._lex_proM  = (typeof proM!=='undefined') ? proM : undefined; }catch(e){}
+    try{ backup._lex_ttM   = (typeof ttM!=='undefined') ? ttM : undefined; }catch(e){}
+    try{ backup._lex_comps = (typeof comps!=='undefined') ? comps : undefined; }catch(e){}
+    try{ backup._lex_indM  = (typeof indM!=='undefined') ? indM : undefined; }catch(e){}
+    try{ backup._lex_gjM   = (typeof gjM!=='undefined') ? gjM : undefined; }catch(e){}
+    try{ backup._lex_tourneys = (typeof tourneys!=='undefined') ? tourneys : undefined; }catch(e){}
+    try{ backup._lex_maps  = (typeof maps!=='undefined') ? maps : undefined; }catch(e){}
+    try{ backup._lex_players = (typeof players!=='undefined') ? players : undefined; }catch(e){}
     // save/render 백업
     backup.save = window.save;
     backup.render = window.render;
@@ -2418,17 +2603,36 @@ window.cfgRunFullQaDryRun = function(){
     window.render = ()=>{ renderCnt++; };
 
     // 더미 데이터 세팅
-    window.miniM = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
-    window.univM = [{ d:'2026-04-01', sets:[{map:'투혼 II',scoreA:1,scoreB:0,games:[{playerA:'C',playerB:'D',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
-    window.ckM = [];
-    window.proM = [];
-    window.ttM = [{ d:'2026-04-01', sets:[{scoreA:1,scoreB:0,games:[{playerA:'E',playerB:'F',map:'폴리포이드',winner:'A'}]}], sa:1, sb:0, stage:'general' }];
-    window.comps = [];
-    window.indM = [];
-    window.gjM = [];
-    window.tourneys = [];
-    window.players = [{name:'A',tier:'S',univ:'U1'},{name:'B',tier:'A',univ:'U1'},{name:'C',tier:'S',univ:'U2'}];
-    window.maps = ['투혼 II','폴리포이드'];
+    const _dmMini = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    const _dmUniv = [{ d:'2026-04-01', sets:[{map:'투혼 II',scoreA:1,scoreB:0,games:[{playerA:'C',playerB:'D',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    const _dmTT   = [{ d:'2026-04-01', sets:[{scoreA:1,scoreB:0,games:[{playerA:'E',playerB:'F',map:'폴리포이드',winner:'A'}]}], sa:1, sb:0, stage:'general' }];
+    const _dmPlayers = [{name:'A',tier:'S',univ:'U1'},{name:'B',tier:'A',univ:'U1'},{name:'C',tier:'S',univ:'U2'}];
+    const _dmMaps = ['투혼 II','폴리포이드'];
+
+    try{ if(typeof miniM!=='undefined') miniM = _dmMini; }catch(e){}
+    try{ if(typeof univM!=='undefined') univM = _dmUniv; }catch(e){}
+    try{ if(typeof ckM!=='undefined') ckM = []; }catch(e){}
+    try{ if(typeof proM!=='undefined') proM = []; }catch(e){}
+    try{ if(typeof ttM!=='undefined') ttM = _dmTT; }catch(e){}
+    try{ if(typeof comps!=='undefined') comps = []; }catch(e){}
+    try{ if(typeof indM!=='undefined') indM = []; }catch(e){}
+    try{ if(typeof gjM!=='undefined') gjM = []; }catch(e){}
+    try{ if(typeof tourneys!=='undefined') tourneys = []; }catch(e){}
+    try{ if(typeof players!=='undefined') players = _dmPlayers; }catch(e){}
+    try{ if(typeof maps!=='undefined') maps = _dmMaps; }catch(e){}
+
+    // window.*도 동일 객체를 가리키게 맞춰서 검증/출력 PASS 처리
+    try{ window.miniM = (typeof miniM!=='undefined') ? miniM : _dmMini; }catch(e){}
+    try{ window.univM = (typeof univM!=='undefined') ? univM : _dmUniv; }catch(e){}
+    try{ window.ckM   = (typeof ckM!=='undefined') ? ckM : []; }catch(e){}
+    try{ window.proM  = (typeof proM!=='undefined') ? proM : []; }catch(e){}
+    try{ window.ttM   = (typeof ttM!=='undefined') ? ttM : _dmTT; }catch(e){}
+    try{ window.comps = (typeof comps!=='undefined') ? comps : []; }catch(e){}
+    try{ window.indM  = (typeof indM!=='undefined') ? indM : []; }catch(e){}
+    try{ window.gjM   = (typeof gjM!=='undefined') ? gjM : []; }catch(e){}
+    try{ window.tourneys = (typeof tourneys!=='undefined') ? tourneys : []; }catch(e){}
+    try{ window.players = (typeof players!=='undefined') ? players : _dmPlayers; }catch(e){}
+    try{ window.maps = (typeof maps!=='undefined') ? maps : _dmMaps; }catch(e){}
 
     // document.getElementById 훅(일괄 입력값 제공)
     const fake = {
@@ -2470,33 +2674,33 @@ window.cfgRunFullQaDryRun = function(){
     // 1-1) 일괄 날짜 변경
     if(typeof window.bulkChangeDate==='function'){
       window.bulkChangeDate();
-      ok('드라이런: 날짜 일괄 변경', window.miniM[0].d==='2026-04-30' && window.univM[0].d==='2026-04-30');
+      ok('드라이런: 날짜 일괄 변경', (miniM?.[0]?.d)==='2026-04-30' && (univM?.[0]?.d)==='2026-04-30');
     } else ok('드라이런: 날짜 일괄 변경', false, '함수 없음');
 
     // 1-2) 맵 일괄 교체(띄어쓰기 무시 포함)
     if(typeof window.bulkChangeMap==='function'){
       window.bulkChangeMap();
-      ok('드라이런: 맵 일괄 교체', window.miniM[0].map==='투혼' && window.univM[0].sets[0].map==='투혼');
+      ok('드라이런: 맵 일괄 교체', (miniM?.[0]?.map)==='투혼' && (univM?.[0]?.sets?.[0]?.map)==='투혼');
     } else ok('드라이런: 맵 일괄 교체', false, '함수 없음');
 
     // 1-3) 선수 일괄 티어 변경
     if(typeof window.bulkChangeTier==='function'){
       window.bulkChangeTier();
-      ok('드라이런: 선수 일괄 티어 변경', window.players.find(p=>p.name==='A')?.tier==='B' && window.players.find(p=>p.name==='C')?.tier==='S');
+      ok('드라이런: 선수 일괄 티어 변경', players.find(p=>p.name==='A')?.tier==='B' && players.find(p=>p.name==='C')?.tier==='S');
     } else ok('드라이런: 선수 일괄 티어 변경', false, '함수 없음');
 
     // 1-4) 날짜 범위 일괄 삭제
     if(typeof window.bulkDeleteByDate==='function'){
       window.bulkDeleteByDate();
-      ok('드라이런: 날짜 범위 일괄 삭제', Array.isArray(window.miniM) && window.miniM.length===0);
+      ok('드라이런: 날짜 범위 일괄 삭제', Array.isArray(miniM) && miniM.length===0);
     } else ok('드라이런: 날짜 범위 일괄 삭제', false, '함수 없음');
 
     // 1-5) 세트→게임수 합산 변환
     if(typeof window.bulkConvertToGameScore==='function'){
-      window.miniM = [{ sa:2, sb:1, sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}] }];
-      window.univM = [{ sa:0, sb:0, sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}] }];
+      try{ if(typeof miniM!=='undefined') miniM = [{ sa:2, sb:1, sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}] }]; }catch(e){}
+      try{ if(typeof univM!=='undefined') univM = [{ sa:0, sb:0, sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}] }]; }catch(e){}
       window.bulkConvertToGameScore();
-      ok('드라이런: 세트→게임수 합산 변환', window.miniM[0].sa===3 && window.miniM[0].sb===1 && window.univM[0].sb===3);
+      ok('드라이런: 세트→게임수 합산 변환', miniM[0].sa===3 && miniM[0].sb===1 && univM[0].sb===3);
     } else ok('드라이런: 세트→게임수 합산 변환', false, '함수 없음');
 
     // 1-6) 상태 아이콘 저장/해제
@@ -2528,10 +2732,23 @@ window.cfgRunFullQaDryRun = function(){
       if(backup.save) window.save = backup.save;
       if(backup.render) window.render = backup.render;
       if(typeof backup.isLoggedIn !== 'undefined') window.isLoggedIn = backup.isLoggedIn;
+      try{ if(typeof backup.isLoggedInLex !== 'undefined' && typeof isLoggedIn !== 'undefined') isLoggedIn = backup.isLoggedInLex; }catch(e){}
       Object.keys(backup).forEach(k=>{
         if(['save','render','getEl','confirm','isLoggedIn'].includes(k)) return;
         window[k] = backup[k];
       });
+      // lexical 전역 원복
+      try{ if(typeof backup._lex_miniM!=='undefined' && typeof miniM!=='undefined') miniM = backup._lex_miniM; }catch(e){}
+      try{ if(typeof backup._lex_univM!=='undefined' && typeof univM!=='undefined') univM = backup._lex_univM; }catch(e){}
+      try{ if(typeof backup._lex_ckM!=='undefined' && typeof ckM!=='undefined') ckM = backup._lex_ckM; }catch(e){}
+      try{ if(typeof backup._lex_proM!=='undefined' && typeof proM!=='undefined') proM = backup._lex_proM; }catch(e){}
+      try{ if(typeof backup._lex_ttM!=='undefined' && typeof ttM!=='undefined') ttM = backup._lex_ttM; }catch(e){}
+      try{ if(typeof backup._lex_comps!=='undefined' && typeof comps!=='undefined') comps = backup._lex_comps; }catch(e){}
+      try{ if(typeof backup._lex_indM!=='undefined' && typeof indM!=='undefined') indM = backup._lex_indM; }catch(e){}
+      try{ if(typeof backup._lex_gjM!=='undefined' && typeof gjM!=='undefined') gjM = backup._lex_gjM; }catch(e){}
+      try{ if(typeof backup._lex_tourneys!=='undefined' && typeof tourneys!=='undefined') tourneys = backup._lex_tourneys; }catch(e){}
+      try{ if(typeof backup._lex_maps!=='undefined' && typeof maps!=='undefined') maps = backup._lex_maps; }catch(e){}
+      try{ if(typeof backup._lex_players!=='undefined' && typeof players!=='undefined') players = backup._lex_players; }catch(e){}
       Object.keys(backupLs).forEach(k=>{
         try{
           if(backupLs[k] === null || typeof backupLs[k] === 'undefined') localStorage.removeItem(k);
@@ -2659,7 +2876,7 @@ function rCfg(C,T){
     '🖼️ 이미지/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)',
     '🧩 현황판/펨코':'신현황판/펨코스타일/순서/칩/밝기/배경',
     '🎨 디자인/테마':'디자인모드/헤더/폰트/카드/캘린더',
-    '🧠 자동화/도구':'BGM/멀티뷰/AI키/붙여넣기 분리/자동 맞춤',
+    '🧠 자동화/도구':'BGM/멀티뷰/붙여넣기 분리/자동 맞춤',
     '🧪 고급/점검':'메뉴정리/저장소/설정 점검',
     '💾 데이터':'동기화/백업/일괄 작업'
   };
@@ -2676,7 +2893,7 @@ function rCfg(C,T){
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
-    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', aibotkey:'⚽ 펨붕이붓 AI API Key', pasteRoute:'🧠 붙여넣기 자동 분리',
+    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
@@ -3159,28 +3376,6 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-b btn-sm" onclick="cfgSaveSoopSettings();if(typeof showToast==='function')showToast('저장됨');">저장</button>
           <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-soop-list').value='';cfgSaveSoopSettings();">목록 비우기</button>
-        </div>
-      </div>
-    </details>`;
-  })()}
-  ${(()=>{
-    const has = !!(localStorage.getItem('su_aibot_api_key')||'').trim();
-    return _scfgD('aibotkey','⚽ 펨붕이붓 AI API Key') + `
-      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
-        펨붕이붓(채팅 AI) 호출에 사용할 API Key를 저장합니다.<br>
-        <span style="color:#dc2626;font-weight:800">주의:</span> 키는 이 브라우저(localStorage)에 저장됩니다. 공유 PC에서는 저장하지 마세요.
-      </div>
-      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <input id="cfg-aibot-key" type="password" placeholder="${has ? '이미 저장됨 (새로 입력하면 변경)' : 'API Key 입력'}" autocomplete="new-password"
-            value=""
-            style="flex:1;min-width:220px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;background:var(--white)">
-          <button class="btn btn-b btn-sm" onclick="cfgSaveAIBotKey()">저장</button>
-          <button class="btn btn-w btn-sm" onclick="cfgClearAIBotKey()">삭제</button>
-          <span id="cfg-aibot-key-status" style="font-size:11px;color:var(--gray-l);font-weight:900">${has?'✅ 저장됨':'미설정'}</span>
-        </div>
-        <div style="font-size:11px;color:var(--gray-l);line-height:1.5">
-          입력 후 <b>펨붕이붓</b> 모드에서 자동으로 적용됩니다.
         </div>
       </div>
     </details>`;
@@ -3987,60 +4182,9 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
-  ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
+  ${_scfgD('firebase','☁️ GitHub data.json 동기화')}
     <div id="cfg-fb-body">
-    ${(()=>{
-      const mode=(localStorage.getItem('su_sync_mode')||'github').trim()||'github';
-      const raw=(()=>{try{ return (localStorage.getItem('su_gh_raw_url')||'').trim(); }catch(e){ return ''; }})();
-      const raw2 = raw || (typeof CONFIG!=='undefined' && CONFIG?.GITHUB?.DATA_URL ? String(CONFIG.GITHUB.DATA_URL) : '');
-      const pollMs = (()=>{ try{ return parseInt(localStorage.getItem('su_gh_poll_ms')||'45000',10); }catch(e){ return 45000; }})();
-      const pollSec = Math.round((isNaN(pollMs)?45000:pollMs)/1000);
-      // raw url에서 repo 정보 자동 추출
-      const m = (raw2||'').match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/i);
-      const ls = (k)=>{ try{ return (localStorage.getItem(k)||'').trim(); }catch(e){ return ''; } };
-      const owner = ls('su_gh_owner') || (m?m[1]:'');
-      const repo = ls('su_gh_repo') || (m?m[2]:'');
-      const branch = ls('su_gh_branch') || (m?m[3]:'');
-      const path = ls('su_gh_path') || (m?m[4]:'');
-      return `
-        <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px;line-height:1.6">
-          기본 추천은 <b>GitHub 모드</b>입니다. (Firebase 한도/동시접속 이슈 없이 “보기 전용” 다기기 자동 반영)<br>
-          다른 기기 반영은 GitHub RAW를 <b>${pollSec}초</b>마다 자동 확인(폴링)해서 갱신합니다.
-        </p>
-        <div style="margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🔧 동기화 설정</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-            <span style="font-size:11px;color:var(--gray-l);font-weight:900">모드</span>
-            <select id="cfg-sync-mode" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px;font-weight:900">
-              <option value="github" ${mode==='github'?'selected':''}>GitHub(추천)</option>
-              <option value="firebase" ${mode==='firebase'?'selected':''}>Firebase</option>
-            </select>
-            <button class="btn btn-b btn-xs" onclick="saveSyncMode()">저장</button>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-            <span style="font-size:11px;color:var(--gray-l);font-weight:900">RAW URL</span>
-            <input id="cfg-gh-raw-url" type="text" value="${raw2.replace(/"/g,'&quot;')}" placeholder="https://raw.githubusercontent.com/owner/repo/branch/path/data.json"
-              style="flex:1;min-width:260px;height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-            <span style="font-size:11px;color:var(--gray-l);font-weight:900">폴링(초)</span>
-            <input id="cfg-gh-poll-sec" type="number" min="10" max="300" value="${pollSec}"
-              style="width:120px;height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px;font-weight:900">
-            <button class="btn btn-w btn-xs" onclick="saveGhSyncSettings()">RAW/폴링 저장</button>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center">
-            <input id="cfg-gh-owner" type="text" value="${owner.replace(/"/g,'&quot;')}" placeholder="owner" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
-            <input id="cfg-gh-repo" type="text" value="${repo.replace(/"/g,'&quot;')}" placeholder="repo" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
-            <input id="cfg-gh-branch" type="text" value="${branch.replace(/"/g,'&quot;')}" placeholder="branch (예: main)" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
-            <input id="cfg-gh-path" type="text" value="${path.replace(/"/g,'&quot;')}" placeholder="path (예: star-datacenter/data.json)" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-            <button class="btn btn-w btn-xs" onclick="saveGhRepoSettings()">Repo 경로 저장</button>
-            <span style="font-size:11px;color:var(--gray-l)">※ Repo 경로는 <b>업로드(커밋)</b>에 필요합니다. (보기만이면 RAW URL만 있어도 됨)</span>
-          </div>
-        </div>
-      `;
-    })()}
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 GitHub <code>star-datacenter/data.json</code>에 업로드됩니다. 다른 기기는 GitHub data.json을 주기적으로 확인해 반영합니다.</p>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
@@ -4049,8 +4193,8 @@ ${_scfgD('notice','📢 공지 관리')}
       <div id="cfg-fb-sync-result" style="font-size:12px;color:var(--gray-l)">확인 버튼을 눌러 상태를 확인하세요.</div>
     </div>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호 (현재 미사용)</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현재는 GitHub data.json 방식만 사용합니다. 이 입력칸은 예전 호환용으로만 남아 있습니다.</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
         <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
@@ -4060,15 +4204,46 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub <code>star-datacenter/data.json</code>으로 업로드됩니다. 다른 기기/관람자는 이 파일을 읽어 반영합니다.</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">
         <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
         <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
       </div>
-      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (GitHub 업로드 비활성)'}</div>
+      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (GitHub 저장 불가, 로컬만 저장)'}</div>
     </div>
+    </div>
+  </details>
+  ${_scfgD('aibot','🤖 AI봇(Groq) 서버 설정')}
+    <div style="font-size:12px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+      펨붕이봇(AI봇)은 기본적으로 <code>/api/aibot</code> 프록시 서버가 필요합니다.<br>
+      관리자 전용으로 <b>API Key를 직접 입력</b>해서 사용할 수도 있습니다. (동기화 ON이면 다른 기기에도 적용)
+    </div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <label style="font-size:12px;font-weight:800;color:var(--text2)">AI봇 서버 주소</label>
+        <input id="cfg-ai-proxy-url" type="text" placeholder="예: http://내서버:3000" style="width:320px;max-width:100%">
+        <button class="btn btn-b btn-sm" onclick="cfgSaveAiProxyUrl()">💾 저장</button>
+        <button class="btn btn-w btn-sm" onclick="cfgTestAiProxy()">🔍 테스트</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">※ 저장 후 (관리자+동기화 ON이면) 다른 기기에도 자동 반영됩니다.</div>
+      <div id="cfg-ai-proxy-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--blue)"></div>
+    </div>
+    <div style="height:10px"></div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">Groq API Key (관리자 전용)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        • 키를 저장하면 서버 없이도 AI봇을 바로 호출할 수 있습니다.<br>
+        • <b>동기화 ON</b>이면 다른 기기에도 반영됩니다. (다른 기기에서 토큰이 없어도 pull로 받아옵니다)<br>
+        • 주의: 이 경우 Gist를 아는 사람이면 키를 볼 수 있어 <b>유출 위험</b>이 있습니다.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="password" id="cfg-ai-api-key" placeholder="gsk_..." style="width:320px;max-width:100%" autocomplete="new-password">
+        <button class="btn btn-b btn-sm" onclick="cfgSaveAiApiKey()">💾 저장</button>
+        <button class="btn btn-r btn-xs" onclick="cfgClearAiApiKey()">지우기</button>
+      </div>
+      <div id="cfg-ai-key-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)"></div>
     </div>
   </details>
   ${_scfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
@@ -4247,7 +4422,6 @@ ${_scfgD('notice','📢 공지 관리')}
           ${(!isSubAdmin?`<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer"><input id="cfg-gist-enabled" type="checkbox"> 동기화 ON</label>`:'')}
           ${(!isSubAdmin?`<input id="cfg-gist-token" type="password" placeholder="GitHub 토큰(gist)" style="width:220px;max-width:100%" autocomplete="new-password">`:'')}
           ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`:`<button class="btn btn-w btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`)}
-          ${(!isSubAdmin?`<button class="btn btn-r btn-sm" onclick="cfgGistSyncReset()">초기화</button>`:'')}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <button class="btn btn-w btn-sm" onclick="cfgGistSyncPull()">⬇️ 원격 불러오기</button>
@@ -5100,7 +5274,11 @@ ${_scfgD('notice','📢 공지 관리')}
     // UI 반영(열려있는 FAB 표시/숨김)
     try{ if(typeof updateFabVisibility==='function') updateFabVisibility(); }catch(e){}
   };
-  setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
+  setTimeout(function(){
+    window.initFabTabSettings();
+    window.initFabVisibilitySettings();
+    try{ window.cfgInitAiProxy && window.cfgInitAiProxy(); }catch(e){}
+  }, 50);
 } // end first rCfg
 
 // ── 설정/메모 동기화(GitHub Gist) 상태 패널 ──
@@ -5140,43 +5318,16 @@ window.cfgGistSyncSaveCfg = function(){
   const enEl=document.getElementById('cfg-gist-enabled');
   const en = enEl ? !!enEl.checked : (window.SettingsStore.cfg().enabled);
   const patch={};
-  // 빈 값도 저장(=초기화/삭제) 가능해야 함
-  // - 잘못 입력한 Gist ID가 계속 남아있는 문제 해결
-  if(/[^a-f0-9]/i.test(gid) && gid){ 
-    const msg=document.getElementById('cfg-gist-sync-msg');
-    if(msg) msg.textContent='❌ Gist ID는 영문/숫자(16진수) 형태여야 합니다. 예: a1b2c3d4...';
-    return;
-  }
-  patch.gistId = gid; // '' 허용
+  if(gid) patch.gistId=gid;
   if(typeof en !== 'undefined') patch.enabled=en;
-  // 토큰도 빈 값이면 삭제(초기화)되도록 허용
-  patch.token = tok; // '' 허용
+  // 보안: 토큰은 입력했을 때만 업데이트(빈 값은 "유지")
+  if(tok) patch.token=tok;
   try{
     window.SettingsStore.setCfg(patch);
     const msg=document.getElementById('cfg-gist-sync-msg');
     if(msg) msg.textContent='✅ 저장됨';
   }catch(e){
     alert('저장 실패: '+e.message);
-  }
-  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
-};
-
-// (요청사항) Gist 동기화 초기화 버튼
-window.cfgGistSyncReset = function(){
-  if(!window.SettingsStore) return alert('SettingsStore 모듈이 없습니다.');
-  if(!confirm('Gist 동기화 설정(Gist ID/토큰/ON)을 초기화할까요?')) return;
-  try{
-    window.SettingsStore.setCfg({ enabled:false, gistId:'', token:'' });
-    // 상태 표시용 키도 함께 정리
-    try{ localStorage.removeItem('su_sync_last_error'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_pull'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_push'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_remote_mode'); }catch(e){}
-    try{ localStorage.removeItem('su_sync_last_migrated'); }catch(e){}
-    const msg=document.getElementById('cfg-gist-sync-msg');
-    if(msg) msg.textContent='🧹 초기화 완료';
-  }catch(e){
-    alert('초기화 실패: '+e.message);
   }
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
@@ -6910,72 +7061,18 @@ function clearFbPw(){
   if (statusEl) statusEl.textContent = '미설정';
 }
 function saveGhToken(){
-  let val = document.getElementById('cfg-gh-token')?.value || '';
-  val = String(val).trim();
+  const val = document.getElementById('cfg-gh-token')?.value.trim();
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
-  // 사용자가 "Bearer xxx" / "token xxx" 형태로 붙여넣는 경우 방지
-  val = val.replace(/^Bearer\s+/i,'').replace(/^token\s+/i,'').trim();
-  // 헤더(ByteString) 오류 방지: 토큰은 ASCII여야 함
-  if (/[^ -~]/.test(val)) {
-    if(statusEl) statusEl.textContent = '❌ 토큰에 한글/이모지/특수문자가 포함되어 있어 저장할 수 없습니다. (ghp_... 또는 github_pat_...만 입력)';
-    return;
-  }
-  // 형식 힌트(강제는 아님)
-  if (!/^ghp_[A-Za-z0-9_]+$/.test(val) && !/^github_pat_[A-Za-z0-9_]+$/.test(val)) {
-    if(statusEl) statusEl.textContent = '⚠️ 토큰 형식이 일반적이지 않습니다. (ghp_... 또는 github_pat_...) 그래도 저장은 됩니다.';
-  } else {
-    if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
-  }
   localStorage.setItem('su_gh_token', val);
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
 }
 function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
-  if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성)';
-}
-
-// ─────────────────────────────────────────────
-// 동기화 설정 (GitHub 기본)
-// ─────────────────────────────────────────────
-function saveSyncMode(){
-  const sel = document.getElementById('cfg-sync-mode');
-  const mode = (sel?.value || 'github').trim() || 'github';
-  localStorage.setItem('su_sync_mode', mode);
-  alert(`동기화 모드가 ${mode==='github'?'GitHub':'Firebase'}로 설정되었습니다.\n페이지를 새로고침합니다.`);
-  location.reload();
-}
-
-function saveGhSyncSettings(){
-  let raw = (document.getElementById('cfg-gh-raw-url')?.value || '').trim();
-  // 사용자가 blob 주소를 붙여넣는 실수를 자주 해서 자동 보정
-  // https://github.com/<owner>/<repo>/blob/<branch>/<path> → raw.githubusercontent.com/...
-  try{
-    const m = raw.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
-    if(m) raw = `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
-  }catch(e){}
-  const sec = parseInt(document.getElementById('cfg-gh-poll-sec')?.value || '45', 10);
-  if(raw) localStorage.setItem('su_gh_raw_url', raw);
-  else localStorage.removeItem('su_gh_raw_url');
-  const pollMs = Math.max(10, Math.min(300, isNaN(sec)?45:sec)) * 1000;
-  localStorage.setItem('su_gh_poll_ms', String(pollMs));
-  alert('RAW URL / 폴링 설정을 저장했습니다.\n페이지를 새로고침합니다.');
-  location.reload();
-}
-
-function saveGhRepoSettings(){
-  const owner = (document.getElementById('cfg-gh-owner')?.value || '').trim();
-  const repo = (document.getElementById('cfg-gh-repo')?.value || '').trim();
-  const branch = (document.getElementById('cfg-gh-branch')?.value || '').trim();
-  const path = (document.getElementById('cfg-gh-path')?.value || '').trim();
-  if(owner) localStorage.setItem('su_gh_owner', owner); else localStorage.removeItem('su_gh_owner');
-  if(repo) localStorage.setItem('su_gh_repo', repo); else localStorage.removeItem('su_gh_repo');
-  if(branch) localStorage.setItem('su_gh_branch', branch); else localStorage.removeItem('su_gh_branch');
-  if(path) localStorage.setItem('su_gh_path', path); else localStorage.removeItem('su_gh_path');
-  alert('Repo 업로드 경로를 저장했습니다.\n페이지를 새로고침합니다.');
-  location.reload();
+  if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
 }
 
 // ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
@@ -7095,10 +7192,7 @@ function _renderCfgUiSizeSection(){
   const mdMb = clamp(getF('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
   const mdTb = clamp(getF('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
   const badge = clamp(getF('su_pd_badge_scale', 1.00), 0.70, 1.30);
-  const badgeFont = clamp(getF('su_pd_badge_font_scale', 1.00), 0.70, 1.80);
   const chip = clamp(getF('su_pd_chip_scale', 1.00), 0.70, 1.30);
-  const pdModalMb = clamp(getF('su_player_modal_mb_scale', mmb), 0.45, 1.20);
-  const pdModalTb = clamp(getF('su_player_modal_tb_scale', mtb), 0.45, 1.20);
 
   const row=(label, id, val, min, max, step, hint)=>{
     const pct=Math.round(val*100);
@@ -7120,17 +7214,14 @@ function _renderCfgUiSizeSection(){
       ${row('태블릿 버튼/메뉴 전체', 'su_tb_scale', tb, 0.65, 1.10, 0.02, '기본 92%')}
       ${row('모바일 팝업(스트리머/대학) 버튼', 'su_modal_mb_scale', mmb, 0.55, 1.10, 0.02, '기본 70%')}
       ${row('태블릿 팝업(스트리머/대학) 버튼', 'su_modal_tb_scale', mtb, 0.55, 1.10, 0.02, '기본 78%')}
-      ${row('스트리머 상세 버튼/메뉴(모바일)', 'su_player_modal_mb_scale', pdModalMb, 0.45, 1.20, 0.02, '기본값은 “모바일 팝업”과 동일')}
-      ${row('스트리머 상세 버튼/메뉴(태블릿)', 'su_player_modal_tb_scale', pdModalTb, 0.45, 1.20, 0.02, '기본값은 “태블릿 팝업”과 동일')}
       ${row('모바일 탭 버튼(.tab)', 'su_tab_mb_scale', mbTab, 0.65, 1.10, 0.02, '기본 90%')}
       ${row('태블릿 탭 버튼(.tab)', 'su_tab_tb_scale', tbTab, 0.65, 1.10, 0.02, '기본 94%')}
       ${row('경기 상세 상단 버튼(모바일)', 'su_md_mb_btn_scale', mdMb, 0.70, 1.30, 0.05, '')}
       ${row('경기 상세 상단 버튼(태블릿)', 'su_md_tb_btn_scale', mdTb, 0.70, 1.30, 0.05, '')}
       ${row('최근경기 “종류” 배지', 'su_pd_badge_scale', badge, 0.70, 1.30, 0.05, '')}
-      ${row('최근경기 “종류” 폰트', 'su_pd_badge_font_scale', badgeFont, 0.70, 1.80, 0.05, '배지 높이/패딩은 유지하고 글자만 조절')}
       ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_player_modal_mb_scale','su_player_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_badge_font_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
+        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
         <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
       </div>
     </div>
@@ -7312,6 +7403,10 @@ function _renderCfgMatchDetailSection(){
   const mdWinTint = (()=>{ try{ return parseInt(localStorage.getItem('su_md_win_tint')||'13',10);}catch(e){return 13;} })();
   const mdLoseGray = (()=>{ try{ return parseInt(localStorage.getItem('su_md_lose_gray')||'12',10);}catch(e){return 12;} })();
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
+  const mdHeadAlign = (()=>{ try{ return (localStorage.getItem('su_md_head_align')||'center').trim(); }catch(e){ return 'center'; } })();
+  const mdTeamFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_team_font')||'16',10);}catch(e){return 16;} })();
+  const mdTitleFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_title_font')||'15',10);}catch(e){return 15;} })();
+  const mdSubFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_sub_font')||'11',10);}catch(e){return 11;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
   const mdFxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
@@ -7381,11 +7476,46 @@ function _renderCfgMatchDetailSection(){
     </div>
 
     <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">↔️ 상단 대학 카드 정렬</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-xs ${mdHeadAlign==='left'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_head_align','left');try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};_renderCfgMatchDetailSection()">좌측</button>
+        <button class="btn btn-xs ${mdHeadAlign==='center'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_head_align','center');try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};_renderCfgMatchDetailSection()">가운데</button>
+        <button class="btn btn-xs ${mdHeadAlign==='right'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_head_align','right');try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};_renderCfgMatchDetailSection()">우측</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">모바일/태블릿 포함 상단 대학 카드 텍스트 정렬</div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🔠 상단 폰트 크기</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">대학 카드 폰트</label>
+        <input type="range" min="11" max="26" step="1" value="${mdTeamFont}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_team_font',String(this.value));document.getElementById('cfg-md-teamfont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+        <span id="cfg-md-teamfont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdTeamFont}px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">제목 폰트</label>
+        <input type="range" min="12" max="24" step="1" value="${mdTitleFont}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_title_font',String(this.value));document.getElementById('cfg-md-titlefont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+        <span id="cfg-md-titlefont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdTitleFont}px</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">부제 폰트</label>
+        <input type="range" min="10" max="18" step="1" value="${mdSubFont}" style="flex:1;accent-color:var(--blue)"
+          oninput="localStorage.setItem('su_md_sub_font',String(this.value));document.getElementById('cfg-md-subfont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+        <span id="cfg-md-subfont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdSubFont}px</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 상단 대학 로고 크기</div>
       <div style="display:flex;gap:8px;align-items:center">
         <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
         <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
+          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
         <span id="cfg-md2-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
       </div>
     </div>

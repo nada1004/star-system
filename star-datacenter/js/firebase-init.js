@@ -1,213 +1,150 @@
 /* ══════════════════════════════════════
-   동기화 초기화 (GitHub 기본 / 필요 시 Firebase)
-   (ES Module - type="module" 로 로드)
+   GitHub data.json 동기화 호환 레이어
+   - 파일명은 firebase-init.js 유지(기존 참조 호환)
+   - 실제 동작은 Firebase를 쓰지 않고 GitHub data.json 업로드/폴링만 수행
 ══════════════════════════════════════ */
 
-// 기본 모드: github (Firebase 한도/동시접속 이슈 회피)
-function _syncMode(){
-  try{ return (localStorage.getItem('su_sync_mode') || 'github').trim() || 'github'; }catch(e){ return 'github'; }
-}
-function _ghRawUrl(){
-  try{
-    const v = (localStorage.getItem('su_gh_raw_url') || '').trim();
-    if (v) {
-      // blob 주소 자동 보정
-      const m = v.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)$/i);
-      if(m) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
-      return v;
-    }
-  }catch(e){}
-  try{
-    if (typeof window.CONFIG !== 'undefined' && window.CONFIG?.GITHUB?.DATA_URL) return String(window.CONFIG.GITHUB.DATA_URL);
-  }catch(e){}
-  return 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
-}
-function _pollMs(){
-  try{
-    const ms = parseInt(localStorage.getItem('su_gh_poll_ms')||'45000',10);
-    return Math.max(10000, Math.min(300000, isNaN(ms)?45000:ms)); // 10초~5분
-  }catch(e){ return 45000; }
-}
+const GH_API_URL = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+const GH_RAW_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
+const GH_CDN_URL = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json';
 
 let _pending = null;
 let _lastSnapshot = null;
+let _lastSavedAt = 0;
 
-function _deliver(data){
+function _deliver(data) {
   _lastSnapshot = data;
+  try{
+    const sa = Number(data && data.savedAt || 0) || 0;
+    if(sa) _lastSavedAt = sa;
+  }catch(e){}
   if (typeof window.onFirebaseLoad === 'function') window.onFirebaseLoad(data);
   else _pending = data;
 }
 
-// onFirebaseLoad가 나중에 등록될 때 _pending 전달
-let _cbSet = false;
-(function pollCallback(){
-  if(_cbSet) return;
-  if(typeof window.onFirebaseLoad === 'function' && _pending){
-    _cbSet = true;
+let _fbCallbackSet = false;
+(function pollCallback() {
+  if (_fbCallbackSet) return;
+  if (typeof window.onFirebaseLoad === 'function' && _pending) {
+    _fbCallbackSet = true;
     window.onFirebaseLoad(_pending);
     _pending = null;
-  }else{
+  } else {
     setTimeout(pollCallback, 200);
   }
 })();
 
-async function startGithubPolling(){
-  let lastSavedAt = 0;
-  let lastText = '';
-  let _adminFirstApplied = false; // 관리자 최초 1회는 새로고침 시 원격 반영 허용
-  let _lastAdminHintTs = 0;
-  // 로그인은 페이지 로드 후에 발생할 수 있으므로, 관리자 여부는 "매 폴링마다" 동적으로 판별한다.
-
-  const _shouldApplyToAdmin = (remoteSavedAt)=>{
-    try{
-      const localAdminSa = Number(localStorage.getItem('su_last_admin_save')||0) || 0;
-      // 로컬이 더 최신이면(아직 업로드 실패/지연) 덮어쓰지 않음
-      if(localAdminSa && remoteSavedAt && localAdminSa > remoteSavedAt) return false;
-    }catch(e){}
-    return true;
-  };
-
-  const _hintAdminRemoteUpdated = ()=>{
-    try{
-      const now = Date.now();
-      // 너무 자주 띄우지 않게(최소 60초 간격)
-      if(_lastAdminHintTs && now - _lastAdminHintTs < 60000) return;
-      _lastAdminHintTs = now;
-      const el = document.getElementById('cloudStatus');
-      if(el){
-        el.style.color = '#0ea5e9';
-        el.textContent = 'ℹ️ 원격 데이터 갱신 감지됨 — 새로고침하면 반영됩니다(관리자 기록 보호를 위해 자동 반영은 꺼짐)';
-        setTimeout(()=>{ try{ if(el) el.textContent=''; }catch(e){} }, 4500);
-      }
-    }catch(e){}
-  };
-
-  async function once(){
-    if (document.visibilityState !== 'visible') return;
-    const isAdminSession = (()=>{ try{ return localStorage.getItem('su_session') === '1'; }catch(e){ return false; } })();
-    try{
-      const url = _ghRawUrl();
-      const r = await fetch(url + '?_=' + Date.now(), { cache:'no-store' });
-      if(!r.ok) return;
-      const text = await r.text().catch(()=> '');
-      if(!text) return;
-      const d = JSON.parse(text);
-      if(!d) return;
-      const sa = Number(d.savedAt||0) || 0;
-      // savedAt이 없는(구버전: {_lz:...}) 파일도 지원:
-      // - 관람자: raw 텍스트가 바뀔 때만 반영
-      // - 관리자: 기록 보호를 위해 savedAt이 없으면 자동 반영하지 않음(업로드 후 새 포맷으로 전환 권장)
-      if(!sa){
-        if(isAdminSession){
-          _lastSnapshot = d;
-          _hintAdminRemoteUpdated();
-          return;
-        }
-        if(!lastText || text !== lastText){
-          lastText = text;
-          _deliver(d);
-        }
-        return;
-      }
-
-      if(!lastSavedAt || sa > lastSavedAt){
-        lastSavedAt = sa || lastSavedAt;
-        if (isAdminSession) {
-          // ✅ 새로고침(초기 로드)에서는 1회 원격 반영 허용(로컬이 더 최신이면 보호)
-          if(!_adminFirstApplied){
-            _adminFirstApplied = true;
-            if(_shouldApplyToAdmin(sa)){
-              _deliver(d);
-            }else{
-              _lastSnapshot = d;
-            }
-            return;
-          }
-          // 이후에는 자동 반영 금지(기록 보호) + 알림만(너무 자주 X)
-          _lastSnapshot = d;
-          _hintAdminRemoteUpdated();
-          return;
-        }
-        _deliver(d); // 관람자/비로그인 기기: 자동 반영
-      }
-    }catch(e){}
+function _decodeGithubPayload(raw){
+  let d = raw;
+  if(d && d.content && d.encoding === 'base64'){
+    const b64 = String(d.content || '').replace(/\s/g,'');
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    d = JSON.parse(new TextDecoder('utf-8').decode(bytes));
   }
-  // 최초 1회
-  await once();
-  // 주기 폴링
-  setInterval(once, _pollMs());
-  // 포그라운드 복귀 시 즉시 1회
-  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') once(); });
+  if(d && typeof d._lz === 'string' && window.LZString){
+    d = JSON.parse(window.LZString.decompressFromBase64(d._lz));
+  }
+  return d;
 }
 
-async function startFirebase(){
-  // Firebase 모드는 동적 import로만 로드(기본 GitHub 모드에서는 Firebase를 아예 안 불러옴)
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
-  const { getDatabase, ref, onValue, get, set } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAM7YWzo13XEx7J57Z5OhGPs4GRvjZ-GzY",
-    authDomain: "stardata1004.firebaseapp.com",
-    databaseURL: "https://stardata1004-default-rtdb.firebaseio.com",
-    projectId: "stardata1004",
-    storageBucket: "stardata1004.firebasestorage.app",
-    messagingSenderId: "286293082488",
-    appId: "1:286293082488:web:ce7226ee05d4843cb4088d"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const dataRef = ref(db, '/');
-
-  // 관리자 판별: su_session(로그인) + su_fb_pw(Firebase 비밀번호) 둘 다 있으면 관리자
-  const _isAdminDevice = localStorage.getItem('su_session') === '1' && !!localStorage.getItem('su_fb_pw');
-
-  // 관리자/관람자 모두 onValue 사용 (기존 동작 유지)
-  onValue(dataRef, (snapshot)=>{
-    const data = snapshot.val();
-    if(!data) return;
-    _deliver(data);
-  });
-
-  // 포그라운드 복귀 시 최신 데이터 강제 재요청
-  document.addEventListener('visibilitychange', async ()=>{
-    if(document.visibilityState !== 'visible') return;
+async function _fetchGithubData(){
+  const urls = [
+    GH_RAW_URL + '?_=' + Date.now(),
+    GH_CDN_URL + '?_=' + Date.now(),
+    GH_API_URL
+  ];
+  let lastErr = null;
+  for(const url of urls){
     try{
-      const snapshot = await get(dataRef);
-      const data = snapshot.val();
-      if(data) _deliver(data);
+      const res = await fetch(url, { cache:'no-store', mode:'cors' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const text = (await res.text()).replace(/^\uFEFF/, '').trim();
+      if(!text || text.startsWith('<')) throw new Error('invalid response');
+      const raw = JSON.parse(text);
+      return _decodeGithubPayload(raw);
     }catch(e){
-      if(_lastSnapshot) _deliver(_lastSnapshot);
+      lastErr = e;
     }
-  });
-
-  // 데이터 쓰기 함수 (관리자 전용)
-  window.fbSet = async function(data, pw){
-    const finalData = { ...data, admin_pw: pw };
-    await set(dataRef, finalData);
-  };
-
-  // 강제 1회 fetch (수동 동기화 버튼용)
-  window.fbForceSync = async function(){
-    const snapshot = await get(dataRef);
-    const data = snapshot.val();
-    if(!data) return;
-    _lastSnapshot = data;
-    if (typeof window.onFirebaseLoad === 'function') {
-      window._forcingSync = true;
-      window.onFirebaseLoad(data);
-      window._forcingSync = false;
-    }
-  };
-
-  // 관람자 보호를 위해 firebase 모드여도 GitHub 보조 폴링을 붙일 수 있게(옵션)
-  if (!_isAdminDevice) {
-    setTimeout(()=>{ try{ startGithubPolling(); }catch(e){} }, 5000);
   }
+  throw lastErr || new Error('GitHub data.json fetch failed');
 }
 
-(async function(){
-  const mode = _syncMode();
-  if (mode === 'firebase') await startFirebase();
-  else await startGithubPolling();
-})();
+async function _putGithubPayload(payloadObj){
+  const token = localStorage.getItem('su_gh_token');
+  if(!token) throw new Error('GitHub 토큰이 설정되어 있지 않습니다.');
+
+  const getRes = await fetch(GH_API_URL, {
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (!getRes.ok) throw new Error('GitHub 파일 조회 실패: ' + getRes.status);
+  const fileInfo = await getRes.json();
+
+  const jsonStr = JSON.stringify(payloadObj);
+  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+  const putRes = await fetch(GH_API_URL, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: `data.json 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: b64,
+      sha: fileInfo.sha
+    })
+  });
+  if (!putRes.ok) throw new Error('GitHub 저장 실패: ' + putRes.status);
+}
+
+async function _pollGithubOnce(force){
+  try{
+    const d = await _fetchGithubData();
+    const sa = Number(d && d.savedAt || 0) || 0;
+    if(force || (sa && sa > _lastSavedAt) || !_lastSnapshot){
+      _deliver(d);
+    }
+  }catch(e){}
+}
+
+// 데이터 쓰기 함수 (기존 fbSet 호환)
+// - data는 보통 { _lz: '...' } 형태로 들어옴
+window.fbSet = async function (data) {
+  await _putGithubPayload(data);
+};
+
+// 부분 업데이트 호환
+// - 현재 GitHub data.json을 읽어서 병합 후 다시 업로드
+window.fbUpdate = async function (patch) {
+  const cur = await _fetchGithubData().catch(()=>({}));
+  const next = { ...(cur || {}), ...(patch || {}), savedAt: Date.now() };
+  const compressed = window.LZString
+    ? window.LZString.compressToBase64(JSON.stringify(next))
+    : null;
+  const payload = compressed ? { _lz: compressed } : next;
+  await _putGithubPayload(payload);
+};
+
+// 강제 1회 fetch (수동 동기화 버튼용)
+window.fbForceSync = async function () {
+  const data = await _fetchGithubData();
+  if (!data) return;
+  _lastSnapshot = data;
+  if (typeof window.onFirebaseLoad === 'function') {
+    window._forcingSync = true;
+    window.onFirebaseLoad(data);
+    window._forcingSync = false;
+  }
+};
+
+// 초기 로드 + 주기적 GitHub polling
+setTimeout(()=>{ _pollGithubOnce(true); }, 600);
+setInterval(()=>{
+  if(document.visibilityState !== 'visible') return;
+  _pollGithubOnce(false);
+}, 10000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') _pollGithubOnce(true);
+});

@@ -967,178 +967,6 @@ function deleteGjSession(idsArr){
 }
 
 /* ══════════════════════════════════════
-   끝장전 — 수정 모달
-   - 기록 카드(📋 기록)에서 세션 단위로 수정 가능
-══════════════════════════════════════ */
-function _gjEscHtml(s){
-  return String(s ?? '').replace(/[&<>"']/g, m => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[m]));
-}
-window.openGjEditModal = function(idsArr, proOnlyFlag){
-  try{
-    if(!isLoggedIn) return;
-    if(!Array.isArray(idsArr) || !idsArr.length) return;
-    const proOnly = !!proOnlyFlag;
-    const list = (gjM||[]).filter(m=>idsArr.includes(m._id));
-    if(!list.length) return;
-    // 표시 순서: idsArr 기준
-    const games = idsArr.map(id=>list.find(m=>m._id===id)).filter(Boolean);
-    const sid = games[0].sid || games[0]._id || genId();
-    const names = Array.from(new Set(games.flatMap(g=>[g.wName,g.lName]).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
-    const p1 = names[0] || games[0].wName || 'A';
-    const p2 = names[1] || games[0].lName || 'B';
-    const d0 = games.map(g=>g.d||'').filter(Boolean).sort().slice(-1)[0] || new Date().toISOString().slice(0,10);
-
-    // 기존 모달 제거
-    try{ document.getElementById('_gjEditModal')?.remove(); }catch(e){}
-
-    window._gjEditState = { ids: [...idsArr], proOnly, sid, p1, p2 };
-
-    const wrap = document.createElement('div');
-    wrap.id = '_gjEditModal';
-    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-    const rowsHtml = games.map((g, idx)=>{
-      const w = g.wName===p2 ? p2 : p1;
-      return `<div class="_gjEditRow" data-id="${_gjEscHtml(g._id)}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border)">
-        <span style="min-width:54px;font-size:11px;color:var(--gray-l)">${idx+1}게임</span>
-        <select class="_gjEditWinner" style="flex:1;min-width:140px;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-weight:800;font-size:12px">
-          <option value="${_gjEscHtml(p1)}" ${w===p1?'selected':''}>🔵 ${_gjEscHtml(p1)} 승</option>
-          <option value="${_gjEscHtml(p2)}" ${w===p2?'selected':''}>🔴 ${_gjEscHtml(p2)} 승</option>
-        </select>
-        <input class="_gjEditMap" type="text" value="${_gjEscHtml(g.map||'')}" placeholder="맵" style="flex:1;min-width:160px;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-size:12px">
-        <button class="btn btn-r btn-xs" onclick="_gjEditRemoveRow('${_gjEscHtml(g._id)}')" type="button">×</button>
-      </div>`;
-    }).join('');
-
-    wrap.innerHTML = `
-      <div style="background:var(--white);border-radius:14px;padding:16px;width:min(640px,100%);max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-          <div style="font-weight:1000;font-size:14px">✏️ ${proOnly?'프로리그 끝장전':'끝장전'} 수정</div>
-          <div style="margin-left:auto;display:flex;gap:6px">
-            <button class="btn btn-g btn-sm" type="button" onclick="_gjEditSave()">저장</button>
-            <button class="btn btn-w btn-sm" type="button" onclick="_gjEditClose()">닫기</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:900;color:var(--text2)">날짜</div>
-          <input id="_gjEditDate" type="date" value="${_gjEscHtml(d0)}" style="width:160px;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-size:12px">
-          <div style="font-size:12px;color:var(--gray-l);font-weight:800">${_gjEscHtml(p1)} vs ${_gjEscHtml(p2)}</div>
-        </div>
-        <div id="_gjEditRows" style="border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px 12px">
-          ${rowsHtml || `<div style="padding:14px;text-align:center;color:var(--gray-l);font-size:12px">게임이 없습니다</div>`}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn btn-b btn-sm" type="button" onclick="_gjEditAddRow()">+ 게임 추가</button>
-          <button class="btn btn-r btn-sm" type="button" onclick="if(confirm('이 세션(게임)을 모두 삭제할까요?')){deleteGjSession(${JSON.stringify(idsArr).replace(/"/g,"'")});_gjEditClose();}">🗑️ 전체 삭제</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(wrap);
-  }catch(e){
-    alert('수정 모달 오류: '+(e && e.message ? e.message : e));
-  }
-};
-
-window._gjEditClose = function(){
-  try{ document.getElementById('_gjEditModal')?.remove(); }catch(e){}
-  try{ delete window._gjEditState; }catch(e){}
-};
-window._gjEditRemoveRow = function(id){
-  try{
-    const row = document.querySelector(`#_gjEditRows ._gjEditRow[data-id="${CSS.escape(String(id))}"]`);
-    if(row) row.remove();
-  }catch(e){}
-};
-window._gjEditAddRow = function(){
-  try{
-    const st = window._gjEditState||{};
-    const rows = document.getElementById('_gjEditRows');
-    if(!rows) return;
-    const idx = rows.querySelectorAll('._gjEditRow').length;
-    const p1 = st.p1||'A', p2 = st.p2||'B';
-    const tmpId = 'new_' + genId();
-    const el = document.createElement('div');
-    el.className = '_gjEditRow';
-    el.setAttribute('data-id', tmpId);
-    el.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border)';
-    el.innerHTML = `
-      <span style="min-width:54px;font-size:11px;color:var(--gray-l)">${idx+1}게임</span>
-      <select class="_gjEditWinner" style="flex:1;min-width:140px;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-weight:800;font-size:12px">
-        <option value="${_gjEscHtml(p1)}">🔵 ${_gjEscHtml(p1)} 승</option>
-        <option value="${_gjEscHtml(p2)}">🔴 ${_gjEscHtml(p2)} 승</option>
-      </select>
-      <input class="_gjEditMap" type="text" value="" placeholder="맵" style="flex:1;min-width:160px;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-size:12px">
-      <button class="btn btn-r btn-xs" onclick="_gjEditRemoveRow('${tmpId}')" type="button">×</button>
-    `;
-    rows.appendChild(el);
-  }catch(e){}
-};
-window._gjEditSave = function(){
-  try{
-    const st = window._gjEditState;
-    if(!st || !Array.isArray(st.ids) || !st.ids.length) return;
-    const d = (document.getElementById('_gjEditDate')?.value||'').trim() || new Date().toISOString().slice(0,10);
-    const p1 = st.p1, p2 = st.p2;
-    const sid = st.sid || genId();
-    const proOnly = !!st.proOnly;
-
-    // 기존 게임(원본) 확보
-    const oldGames = (gjM||[]).filter(m=>st.ids.includes(m._id));
-    if(!oldGames.length) { alert('원본 데이터를 찾을 수 없습니다.'); return; }
-
-    // UI에서 새 게임 목록 수집
-    const rows = [...document.querySelectorAll('#_gjEditRows ._gjEditRow')];
-    if(!rows.length){ alert('게임이 1개 이상 있어야 합니다.'); return; }
-    const nextGames = rows.map(row=>{
-      const id = row.getAttribute('data-id') || genId();
-      const winner = (row.querySelector('select._gjEditWinner')?.value||'').trim();
-      const map = (row.querySelector('input._gjEditMap')?.value||'').trim();
-      return { id, winner, map };
-    }).filter(x=>x.winner && (x.winner===p1 || x.winner===p2));
-    if(!nextGames.length){ alert('승자 선택이 올바르지 않습니다.'); return; }
-
-    // 1) 기존 전적 롤백 (세션 단위)
-    oldGames.forEach(g=>{
-      _removeGjResult(g.wName, g.lName, g.d||'', g.map||'-', g.sid || g.matchId || undefined);
-    });
-
-    // 2) 기존 게임 삭제 후, 새 게임으로 교체
-    const oldIdSet = new Set(st.ids);
-    gjM = (gjM||[]).filter(m=>!oldIdSet.has(m._id));
-    const newObjs = nextGames.map((ng)=>{
-      const wName = ng.winner;
-      const lName = (wName === p1) ? p2 : p1;
-      // 기존 _id 재사용(가능하면) — new_로 시작하면 신규
-      const isNew = String(ng.id).startsWith('new_');
-      const _id = isNew ? genId() : ng.id;
-      const obj = {
-        _id,
-        sid,
-        d,
-        wName,
-        lName,
-        map: ng.map || '-',
-        ...(proOnly ? {_proLabel:true} : {})
-      };
-      return obj;
-    });
-    // 최신순 유지: 세션을 맨 앞으로
-    gjM.unshift(...newObjs);
-
-    // 3) 전적 반영(기존 방식 유지: sid를 matchId로 사용)
-    newObjs.forEach(g=>{
-      applyGameResult(g.wName, g.lName, d, g.map||'-', sid, '', '', proOnly?'프로리그끝장전':'끝장전');
-    });
-
-    save(); render();
-    _gjEditClose();
-  }catch(e){
-    alert('저장 실패: '+(e && e.message ? e.message : e));
-  }
-};
-
-/* ══════════════════════════════════════
    끝장전
 ══════════════════════════════════════ */
 let _gjInput={date:'',playerA:'',playerB:'',games:[]};
@@ -1493,7 +1321,6 @@ function gjRecordsHTML(proOnly){
     const delBtn=isLoggedIn?`<button class="btn btn-r btn-xs" style="white-space:nowrap" onclick="deleteGjSession(${idsJson})">삭제</button>`:'';
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const moveBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();window._pendingMoveIds=${idsJson};openMoveIndPop(this,window._pendingMoveIds,'${_gjMoveCtx}')">↗ 이동</button>`:'';
-    const editBtn=isLoggedIn?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGjEditModal(${idsJson}, ${proOnly?1:0})">✏️ 수정</button>`:'';
     const shareBtn=`<button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="event.stopPropagation();openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}')">🎴 공유카드</button>`;
     const bulkDateBtn=''; // 요청: 날짜 버튼 삭제
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
@@ -1510,7 +1337,7 @@ function gjRecordsHTML(proOnly){
         <span style="display:inline-flex;align-items:center;gap:4px"><span style="font-weight:800;font-size:15px;cursor:pointer;color:var(--blue)" onclick="event.stopPropagation();openPlayerModal('${s.p2.replace(/'/g,"\\'")}')">${s.p2}</span><span style="font-size:11px;color:var(--gray-l)">${players.find(x=>x.name===s.p2)?.univ||''}</span>${getPlayerPhotoHTML(s.p2,'28px')}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        <span style="margin-left:auto;display:flex;gap:4px" onclick="event.stopPropagation()">${shareBtn}${editBtn}${moveBtn}${delBtn}</span>
+        <span style="margin-left:auto;display:flex;gap:4px" onclick="event.stopPropagation()">${shareBtn}${moveBtn}${delBtn}</span>
       </div>
     </div>`;
   });
