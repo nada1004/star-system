@@ -1303,27 +1303,45 @@ window.cfgSetUiBtnStyleSettings = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
-// (요청사항) 전역 UI 배율(폰트/아이콘 크기) — 자동 스케일에 추가로 곱 적용
-// - localStorage: su_ui_scale_pct (80~140, 기본 100)
+// (요청사항) 전역 UI 배율(폰트/아이콘 크기) — 기기별 분리
+// - localStorage:
+//   su_ui_scale_pc_pct / su_ui_scale_tb_pct / su_ui_scale_mb_pct
+//   (구버전 호환: su_ui_scale_pct)
 // ─────────────────────────────────────────────────────────────
-window.cfgSetUiScalePct = function(v){
+window.cfgSetUiScalePct = function(device, v){
   try{
     const n = Math.max(80, Math.min(140, parseInt(v||'100',10)||100));
-    localStorage.setItem('su_ui_scale_pct', String(n));
+    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : device==='mb' ? 'su_ui_scale_mb_pct' : 'su_ui_scale_pct';
+    localStorage.setItem(key, String(n));
+    if(key === 'su_ui_scale_pct'){
+      localStorage.setItem('su_ui_scale_pc_pct', String(n));
+      localStorage.setItem('su_ui_scale_tb_pct', String(n));
+      localStorage.setItem('su_ui_scale_mb_pct', String(n));
+    }
   }catch(e){}
   try{
-    const el=document.getElementById('cfg-uiscale-v');
-    if(el) el.textContent = (localStorage.getItem('su_ui_scale_pct')||'100') + '%';
+    const id = device==='pc' ? 'cfg-uiscale-pc-v' : device==='tb' ? 'cfg-uiscale-tb-v' : device==='mb' ? 'cfg-uiscale-mb-v' : 'cfg-uiscale-v';
+    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : device==='mb' ? 'su_ui_scale_mb_pct' : 'su_ui_scale_pct';
+    const el=document.getElementById(id);
+    if(el) el.textContent = (localStorage.getItem(key)||'100') + '%';
   }catch(e){}
   try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 window.cfgResetUiScalePct = function(){
-  try{ localStorage.setItem('su_ui_scale_pct','100'); }catch(e){}
-  try{ const r=document.getElementById('cfg-uiscale'); if(r) r.value='100'; }catch(e){}
-  try{ const el=document.getElementById('cfg-uiscale-v'); if(el) el.textContent='100%'; }catch(e){}
+  try{
+    ['su_ui_scale_pct','su_ui_scale_pc_pct','su_ui_scale_tb_pct','su_ui_scale_mb_pct'].forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  try{
+    [['cfg-uiscale-pc','100'],['cfg-uiscale-tb','100'],['cfg-uiscale-mb','100']].forEach(([id,v])=>{ const r=document.getElementById(id); if(r) r.value=v; });
+  }catch(e){}
+  try{
+    [['cfg-uiscale-pc-v','100%'],['cfg-uiscale-tb-v','100%'],['cfg-uiscale-mb-v','100%']].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.textContent=v; });
+  }catch(e){}
   try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 window.cfgResetUiBtnStyleSettings = function(){
   try{ localStorage.removeItem('su_btn_scale_pct'); }catch(e){}
@@ -3885,7 +3903,9 @@ ${_scfgD('notice','📢 공지 관리')}
     const css = (localStorage.getItem('su_app_font_css') ?? '');
     const fam = (localStorage.getItem('su_app_font_family') ?? '');
     const cssTxt = (localStorage.getItem('su_app_font_css_text') ?? '');
-    const uiPct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctPc = parseInt(localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctTb = parseInt(localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctMb = parseInt(localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
     // CSS 직접입력에서 font-family 자동 추출 → 프리셋 드롭다운에도 합치기(요청)
     const customFams = (()=>{
       const out=[]; const seen=new Set();
@@ -3960,11 +3980,9 @@ ${_scfgD('notice','📢 공지 관리')}
           ${ffChoices.map(o=>`<option value="${esc(o.k)}">${esc(o.l)}</option>`).join('')}
         </select>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">폰트 크기(전역)</div>
-        <input type="range" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPct))}"
-          oninput="cfgSetUiScalePct(this.value)" style="flex:1;min-width:180px">
-        <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:48px;text-align:right">${Math.max(80,Math.min(140,uiPct))}%</div>
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);font-size:11px;color:var(--gray-l);line-height:1.6">
+        전역 폰트의 <b>기기별 크기(PC/태블릿/모바일)</b>는 아래 <b>🎛️ 버튼 스타일 → 전역 UI 배율</b>에서 따로 조절할 수 있습니다.<br>
+        현재 값: PC ${Math.max(80,Math.min(140,uiPctPc))}% / 태블릿 ${Math.max(80,Math.min(140,uiPctTb))}% / 모바일 ${Math.max(80,Math.min(140,uiPctMb))}%
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">커스텀 프리셋</div>
@@ -4015,18 +4033,32 @@ ${_scfgD('notice','📢 공지 관리')}
     const pct = parseInt(localStorage.getItem('su_btn_scale_pct')||'100',10)||100;
     const br  = parseInt(localStorage.getItem('su_btn_r')||'8',10)||8;
     const pr  = parseInt(localStorage.getItem('su_pill_r')||'20',10)||20;
-    const uiPct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctPc = parseInt(localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctTb = parseInt(localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const uiPctMb = parseInt(localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
     return _scfgD('uibtn','🎛️ 버튼 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">앱 전체 버튼/필(탭·필터) 크기와 라운드를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
       <div>
-        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">전역 UI 배율(글자/아이콘)</div>
-        <input type="range" id="cfg-uiscale" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPct))}"
-          oninput="cfgSetUiScalePct(this.value)" style="width:100%">
-        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-uiscale-v">${Math.max(80,Math.min(140,uiPct))}%</span>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:6px">전역 UI 배율(글자/아이콘)</div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+          <input type="range" id="cfg-uiscale-pc" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPctPc))}" oninput="cfgSetUiScalePct('pc',this.value)" style="width:100%">
+          <div id="cfg-uiscale-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(80,Math.min(140,uiPctPc))}%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">태블릿</div>
+          <input type="range" id="cfg-uiscale-tb" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPctTb))}" oninput="cfgSetUiScalePct('tb',this.value)" style="width:100%">
+          <div id="cfg-uiscale-tb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(80,Math.min(140,uiPctTb))}%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+          <input type="range" id="cfg-uiscale-mb" min="80" max="140" step="5" value="${Math.max(80,Math.min(140,uiPctMb))}" oninput="cfgSetUiScalePct('mb',this.value)" style="width:100%">
+          <div id="cfg-uiscale-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(80,Math.min(140,uiPctMb))}%</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">※ 자동(기기 폭) 스케일에 추가로 곱해집니다. (100%=기본)
           <button class="btn btn-w btn-xs" style="margin-left:8px" onclick="cfgResetUiScalePct()">초기화</button>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">※ 자동(기기 폭) 스케일에 추가로 곱해집니다. (100%=기본)</div>
       </div>
       <div>
         <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">버튼 크기</div>
@@ -7407,6 +7439,18 @@ function _renderCfgMatchDetailSection(){
   const mdTeamFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_team_font')||'16',10);}catch(e){return 16;} })();
   const mdTitleFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_title_font')||'15',10);}catch(e){return 15;} })();
   const mdSubFont = (()=>{ try{ return parseInt(localStorage.getItem('su_md_sub_font')||'11',10);}catch(e){return 11;} })();
+  const mdTeamFontPc = (()=>{ try{ return parseInt(localStorage.getItem('su_md_team_font_pc')||String(mdTeamFont),10);}catch(e){return mdTeamFont;} })();
+  const mdTeamFontTb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_team_font_tb')||String(mdTeamFont),10);}catch(e){return mdTeamFont;} })();
+  const mdTeamFontMb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_team_font_mb')||String(mdTeamFont),10);}catch(e){return mdTeamFont;} })();
+  const mdTitleFontPc = (()=>{ try{ return parseInt(localStorage.getItem('su_md_title_font_pc')||String(mdTitleFont),10);}catch(e){return mdTitleFont;} })();
+  const mdTitleFontTb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_title_font_tb')||String(mdTitleFont),10);}catch(e){return mdTitleFont;} })();
+  const mdTitleFontMb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_title_font_mb')||String(mdTitleFont),10);}catch(e){return mdTitleFont;} })();
+  const mdSubFontPc = (()=>{ try{ return parseInt(localStorage.getItem('su_md_sub_font_pc')||String(mdSubFont),10);}catch(e){return mdSubFont;} })();
+  const mdSubFontTb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_sub_font_tb')||String(mdSubFont),10);}catch(e){return mdSubFont;} })();
+  const mdSubFontMb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_sub_font_mb')||String(mdSubFont),10);}catch(e){return mdSubFont;} })();
+  const mdLogoSizePc = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size_pc')||String(mdLogoSize),10);}catch(e){return mdLogoSize;} })();
+  const mdLogoSizeTb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size_tb')||String(mdLogoSize),10);}catch(e){return mdLogoSize;} })();
+  const mdLogoSizeMb = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size_mb')||String(mdLogoSize),10);}catch(e){return mdLogoSize;} })();
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem('su_md_avatar_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
   const mdFxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
@@ -7489,35 +7533,43 @@ function _renderCfgMatchDetailSection(){
     </div>
 
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🔠 상단 폰트 크기</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">대학 카드 폰트</label>
-        <input type="range" min="11" max="26" step="1" value="${mdTeamFont}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_team_font',String(this.value));document.getElementById('cfg-md-teamfont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
-        <span id="cfg-md-teamfont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdTeamFont}px</span>
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🔠 상단 폰트/로고 크기 (기기별)</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${[
+          ['pc','PC', mdTeamFontPc, mdTitleFontPc, mdSubFontPc, mdLogoSizePc],
+          ['tb','태블릿', mdTeamFontTb, mdTitleFontTb, mdSubFontTb, mdLogoSizeTb],
+          ['mb','모바일', mdTeamFontMb, mdTitleFontMb, mdSubFontMb, mdLogoSizeMb]
+        ].map(([dv, lbl, teamV, titleV, subV, logoV])=>`
+          <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+            <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">${lbl}</div>
+            <div style="display:grid;grid-template-columns:minmax(118px,128px) 1fr 48px;gap:8px;align-items:center;margin-bottom:8px">
+              <label style="font-size:12px;font-weight:700;color:var(--text2)">대학 카드</label>
+              <input type="range" min="11" max="26" step="1" value="${teamV}" style="width:100%;accent-color:var(--blue)"
+                oninput="localStorage.setItem('su_md_team_font_${dv}',String(this.value));document.getElementById('cfg-md-teamfont-${dv}-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+              <span id="cfg-md-teamfont-${dv}-val" style="font-size:11px;color:var(--gray-l);text-align:right;font-weight:800">${teamV}px</span>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(118px,128px) 1fr 48px;gap:8px;align-items:center;margin-bottom:8px">
+              <label style="font-size:12px;font-weight:700;color:var(--text2)">제목</label>
+              <input type="range" min="12" max="24" step="1" value="${titleV}" style="width:100%;accent-color:var(--blue)"
+                oninput="localStorage.setItem('su_md_title_font_${dv}',String(this.value));document.getElementById('cfg-md-titlefont-${dv}-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+              <span id="cfg-md-titlefont-${dv}-val" style="font-size:11px;color:var(--gray-l);text-align:right;font-weight:800">${titleV}px</span>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(118px,128px) 1fr 48px;gap:8px;align-items:center;margin-bottom:8px">
+              <label style="font-size:12px;font-weight:700;color:var(--text2)">부제</label>
+              <input type="range" min="10" max="18" step="1" value="${subV}" style="width:100%;accent-color:var(--blue)"
+                oninput="localStorage.setItem('su_md_sub_font_${dv}',String(this.value));document.getElementById('cfg-md-subfont-${dv}-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+              <span id="cfg-md-subfont-${dv}-val" style="font-size:11px;color:var(--gray-l);text-align:right;font-weight:800">${subV}px</span>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(118px,128px) 1fr 48px;gap:8px;align-items:center">
+              <label style="font-size:12px;font-weight:700;color:var(--text2)">대학 로고</label>
+              <input type="range" min="28" max="64" step="2" value="${logoV}" style="width:100%;accent-color:var(--blue)"
+                oninput="localStorage.setItem('su_md_logo_size_${dv}',String(this.value));document.getElementById('cfg-md-logo-${dv}-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
+              <span id="cfg-md-logo-${dv}-val" style="font-size:11px;color:var(--gray-l);text-align:right;font-weight:800">${logoV}px</span>
+            </div>
+          </div>
+        `).join('')}
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">제목 폰트</label>
-        <input type="range" min="12" max="24" step="1" value="${mdTitleFont}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_title_font',String(this.value));document.getElementById('cfg-md-titlefont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
-        <span id="cfg-md-titlefont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdTitleFont}px</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">부제 폰트</label>
-        <input type="range" min="10" max="18" step="1" value="${mdSubFont}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_sub_font',String(this.value));document.getElementById('cfg-md-subfont-val').textContent=this.value+'px';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
-        <span id="cfg-md-subfont-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdSubFont}px</span>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 상단 대학 로고 크기</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
-        <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
-          oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md2-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){}">
-        <span id="cfg-md2-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
-      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:8px">PC/태블릿/모바일에서 각각 다른 상단 대학 카드 폰트와 로고 크기를 사용할 수 있습니다.</div>
     </div>
 
     <div style="margin-bottom:16px">

@@ -268,6 +268,9 @@ function _applyCloudData(d) {
       if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
       if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
       if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
+      if(s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
+      if(s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
       if(typeof window._applyAppFont==='function') window._applyAppFont();
       if(typeof window.applyDesignV2==='function') window.applyDesignV2();
       if(typeof window._applyUiScale==='function') window._applyUiScale();
@@ -398,6 +401,9 @@ async function fbCloudSave(opts) {
       appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
       appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
       uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScalePcPct: localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleTbPct: localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleMbPct: localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
       bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
       bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
@@ -524,6 +530,8 @@ function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
   if(el){el.textContent=msg;el.style.color=color;}
 }
+try{ window.gsSetStatus = gsSetStatus; }catch(e){}
+try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
 window.cloudLoad = async function(){

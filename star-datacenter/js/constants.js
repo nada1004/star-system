@@ -210,13 +210,20 @@ try{ window.getUnivLogoSizeStr = getUnivLogoSizeStr; }catch(e){}
 ══════════════════════════════════════ */
 function applyMatchDetailVars(){
   try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    const dKey = w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+    const getPxByDevice = (baseKey, legacyKey, def, min, max)=>{
+      const raw = localStorage.getItem(`${baseKey}_${dKey}`);
+      const legacy = localStorage.getItem(legacyKey);
+      const n = parseInt((raw ?? legacy ?? String(def)), 10);
+      return Math.max(min, Math.min(max, isNaN(n) ? def : n));
+    };
     const losePct = parseInt(localStorage.getItem('su_md_lose_gray') || '12', 10);
     const lp = Math.max(0, Math.min(30, isNaN(losePct) ? 12 : losePct));
     document.documentElement.style.setProperty('--su_md_lose_gray', String(lp/100));
 
     // 상단 대학 로고(대학 카드) 크기
-    const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
-    const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
+    const ls = getPxByDevice('su_md_logo_size', 'su_md_logo_size', 42, 28, 64);
     document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
 
     // 상단 대학 카드 정렬/폰트
@@ -227,12 +234,9 @@ function applyMatchDetailVars(){
     const textAlign =
       align === 'left' ? 'left' :
       align === 'right' ? 'right' : 'center';
-    const teamFont = parseInt(localStorage.getItem('su_md_team_font') || '16', 10);
-    const tf = Math.max(11, Math.min(26, isNaN(teamFont) ? 16 : teamFont));
-    const titleFont = parseInt(localStorage.getItem('su_md_title_font') || '15', 10);
-    const ttf = Math.max(12, Math.min(24, isNaN(titleFont) ? 15 : titleFont));
-    const subFont = parseInt(localStorage.getItem('su_md_sub_font') || '11', 10);
-    const sf = Math.max(10, Math.min(18, isNaN(subFont) ? 11 : subFont));
+    const tf = getPxByDevice('su_md_team_font', 'su_md_team_font', 16, 11, 26);
+    const ttf = getPxByDevice('su_md_title_font', 'su_md_title_font', 15, 12, 24);
+    const sf = getPxByDevice('su_md_sub_font', 'su_md_sub_font', 11, 10, 18);
     document.documentElement.style.setProperty('--su_md_head_justify', justify);
     document.documentElement.style.setProperty('--su_md_head_text_align', textAlign);
     document.documentElement.style.setProperty('--su_md_team_font', tf + 'px');
@@ -368,6 +372,12 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
 try{ applyMatchDetailVars(); }catch(e){
   console.warn('[applyMatchDetailVars 초기화] 실패:', e.message);
 }
+try{
+  if(!window.__suMatchDetailVarsResizeBound){
+    window.__suMatchDetailVarsResizeBound = true;
+    window.addEventListener('resize', ()=>{ try{ applyMatchDetailVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 function _hexToRgbObj(hex){
   const h=String(hex||'').replace('#','').trim();
@@ -1068,7 +1078,7 @@ function savePhotos(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-function save(){
+async function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
@@ -1076,14 +1086,25 @@ function save(){
       if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
       return;
     }
-    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
+    if (typeof window.fbCloudSave !== 'function') {
+      try{
+        if (typeof window._ensureCloudBoardLoaded === 'function') {
+          await window._ensureCloudBoardLoaded();
+        } else if (typeof window._loadScriptOnce === 'function') {
+          await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
+        }
+      }catch(e){
+        console.error('[save] cloud-board load fail', e);
+      }
+    }
+    if (typeof window.fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
       if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
       return;
     }
     if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 저장 중...'; }
     // 경기 기록 저장은 "데이터"만 우선 빠르게 업로드
     // - 설정 동기화는 saveCfg()/자동 설정 저장 경로에서 별도로 처리
-    fbCloudSave({ includeSettings:false })
+    window.fbCloudSave({ includeSettings:false })
       .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
       .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';} console.error('[fbCloudSave]',e); });
   }
