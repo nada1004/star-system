@@ -4091,7 +4091,11 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('bulkconv','🔄 세트제 → 게임수 합산 일괄 변환')}
     <div style="padding:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">sets 배열의 게임 수 합산으로 sa/sb를 재계산합니다.<br>세트 수와 게임 수가 다른 경기만 변환됩니다.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
+        sets 배열 기준으로 점수를 다시 계산합니다.<br>
+        • <b>게임수(경기제)</b>: 각 세트의 scoreA/scoreB 합산<br>
+        • <b>세트승(세트제)</b>: 각 세트의 winner(A/B) 개수 합산
+      </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
         <label style="font-size:11px;font-weight:600;color:var(--text3)">대상:</label>
         ${['mini','univm','ck','pro','tt'].map(m=>`
@@ -4100,8 +4104,12 @@ ${_scfgD('notice','📢 공지 관리')}
           ${{ mini:'미니대전', univm:'대학대전', ck:'CK', pro:'프로리그', tt:'티어대회' }[m]}
         </label>`).join('')}
       </div>
-      <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
-      <span id="bulk-conv-result" style="font-size:12px;margin-left:8px;color:var(--blue)"></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
+        <button class="btn btn-b btn-sm" onclick="bulkConvertToSetScore()">🔄 세트승으로 변환</button>
+        <span id="bulk-conv-result" style="font-size:12px;color:var(--blue)"></span>
+        <span id="bulk-conv2-result" style="font-size:12px;color:var(--blue)"></span>
+      </div>
     </div>
   </details>
   ${_scfgD('boardbg','🖼️ 현황판 라벨 배경 이미지별 설정')}
@@ -5423,6 +5431,86 @@ function bulkConvertToGameScore(){
   }
   save(); render();
   const el=document.getElementById('bulk-conv-result');
+  if(el) el.textContent='✅ '+converted+'건 변환 완료!';
+  setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
+}
+
+// (요청사항) 경기 기록을 "세트제(세트 승리 수)" 스코어로 일괄 변환
+// - sets 배열 기반으로 sa/sb를 (세트 승)으로 재계산
+// - 기존 sa/sb가 게임수로 저장된 경우를 한번에 수정하기 위함
+function bulkConvertToSetScore(){
+  if(!isLoggedIn) return;
+  const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
+  const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
+  if(!targets.length){ alert('대상을 선택하세요.'); return; }
+
+  const _setWins = (sets)=>{
+    let sa=0, sb=0;
+    (sets||[]).forEach(st=>{
+      if(!st) return;
+      const w = st.winner || ((st.scoreA||0)>(st.scoreB||0)?'A':(st.scoreB||0)>(st.scoreA||0)?'B':'');
+      if(w==='A') sa++;
+      else if(w==='B') sb++;
+    });
+    return {sa, sb};
+  };
+
+  let converted = 0;
+  targets.forEach(key=>{
+    const arr = arrMap[key]||[];
+    arr.forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const w=_setWins(m.sets);
+      if(w.sa!==m.sa || w.sb!==m.sb){
+        m.sa=w.sa; m.sb=w.sb;
+        m.scoreMode='set';
+        converted++;
+      }
+    });
+  });
+
+  // 대회(tourneys) 조별리그/브라켓도 변환(있으면)
+  (tourneys||[]).forEach(tn=>{
+    if(!tn.groups) return;
+    tn.groups.forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if(!m.sets||!m.sets.length) return;
+        const w=_setWins(m.sets);
+        if(w.sa!==m.sa || w.sb!==m.sb){
+          m.sa=w.sa; m.sb=w.sb;
+          m.scoreMode='set';
+          converted++;
+        }
+      });
+    });
+    const br=tn.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(m=>{
+      if(!m||!m.sets||!m.sets.length) return;
+      const w=_setWins(m.sets);
+      if(w.sa!==m.sa || w.sb!==m.sb){
+        m.sa=w.sa; m.sb=w.sb;
+        m.scoreMode='set';
+        converted++;
+      }
+    });
+    (br.manualMatches||[]).forEach(m=>{
+      if(!m.sets||!m.sets.length) return;
+      const w=_setWins(m.sets);
+      if(w.sa!==m.sa || w.sb!==m.sb){
+        m.sa=w.sa; m.sb=w.sb;
+        m.scoreMode='set';
+        converted++;
+      }
+    });
+  });
+
+  if(converted===0){
+    const el=document.getElementById('bulk-conv2-result');
+    if(el) el.textContent='변환할 경기가 없습니다. (이미 세트제로 저장됨)';
+    return;
+  }
+  save(); render();
+  const el=document.getElementById('bulk-conv2-result');
   if(el) el.textContent='✅ '+converted+'건 변환 완료!';
   setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
 }
