@@ -106,7 +106,7 @@ async function _ensureRouletteLoaded(){
 
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260425-01');
+  await _loadScriptOnce('js/stats.js?v=20260430-01');
 }
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260422-01');
