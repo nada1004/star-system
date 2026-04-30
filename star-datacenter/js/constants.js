@@ -1006,19 +1006,37 @@ function save(){
   localSave();
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
-      // 비밀번호 미설정 → Firebase 저장 안 됨 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
-      return;
+    const mode = (localStorage.getItem('su_sync_mode') || 'github').trim() || 'github';
+
+    if (mode === 'firebase') {
+      if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
+        // 비밀번호 미설정 → Firebase 저장 안 됨 경고
+        if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+        return;
+      }
+      if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
+        if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+        return;
+      }
+      if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
+      fbCloudSave()
+        .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
+        .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
+    } else {
+      // GitHub 모드: 토큰이 있으면 저장 시 Repo에 자동 커밋 업로드
+      if (!localStorage.getItem('su_gh_token')) {
+        if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+        return;
+      }
+      if (typeof fbCloudSave !== 'function') {
+        if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ 동기화 모듈 미로드'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+        return;
+      }
+      if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 업로드 중...'; }
+      fbCloudSave()
+        .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
+        .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';} console.error('[fbCloudSave]',e); });
     }
-    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
-      return;
-    }
-    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
-    fbCloudSave()
-      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
   }
 }
 

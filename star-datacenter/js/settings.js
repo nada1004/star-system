@@ -3987,7 +3987,58 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${_scfgD('firebase','☁️ Firebase 실시간 동기화')}
     <div id="cfg-fb-body">
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
+    ${(()=>{
+      const mode=(localStorage.getItem('su_sync_mode')||'github').trim()||'github';
+      const raw=(()=>{try{ return (localStorage.getItem('su_gh_raw_url')||'').trim(); }catch(e){ return ''; }})();
+      const raw2 = raw || (typeof CONFIG!=='undefined' && CONFIG?.GITHUB?.DATA_URL ? String(CONFIG.GITHUB.DATA_URL) : '');
+      const pollMs = (()=>{ try{ return parseInt(localStorage.getItem('su_gh_poll_ms')||'45000',10); }catch(e){ return 45000; }})();
+      const pollSec = Math.round((isNaN(pollMs)?45000:pollMs)/1000);
+      // raw url에서 repo 정보 자동 추출
+      const m = (raw2||'').match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/i);
+      const ls = (k)=>{ try{ return (localStorage.getItem(k)||'').trim(); }catch(e){ return ''; } };
+      const owner = ls('su_gh_owner') || (m?m[1]:'');
+      const repo = ls('su_gh_repo') || (m?m[2]:'');
+      const branch = ls('su_gh_branch') || (m?m[3]:'');
+      const path = ls('su_gh_path') || (m?m[4]:'');
+      return `
+        <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px;line-height:1.6">
+          기본 추천은 <b>GitHub 모드</b>입니다. (Firebase 한도/동시접속 이슈 없이 “보기 전용” 다기기 자동 반영)<br>
+          다른 기기 반영은 GitHub RAW를 <b>${pollSec}초</b>마다 자동 확인(폴링)해서 갱신합니다.
+        </p>
+        <div style="margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🔧 동기화 설정</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--gray-l);font-weight:900">모드</span>
+            <select id="cfg-sync-mode" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px;font-weight:900">
+              <option value="github" ${mode==='github'?'selected':''}>GitHub(추천)</option>
+              <option value="firebase" ${mode==='firebase'?'selected':''}>Firebase</option>
+            </select>
+            <button class="btn btn-b btn-xs" onclick="saveSyncMode()">저장</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--gray-l);font-weight:900">RAW URL</span>
+            <input id="cfg-gh-raw-url" type="text" value="${raw2.replace(/"/g,'&quot;')}" placeholder="https://raw.githubusercontent.com/owner/repo/branch/path/data.json"
+              style="flex:1;min-width:260px;height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--gray-l);font-weight:900">폴링(초)</span>
+            <input id="cfg-gh-poll-sec" type="number" min="10" max="300" value="${pollSec}"
+              style="width:120px;height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px;font-weight:900">
+            <button class="btn btn-w btn-xs" onclick="saveGhSyncSettings()">RAW/폴링 저장</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center">
+            <input id="cfg-gh-owner" type="text" value="${owner.replace(/"/g,'&quot;')}" placeholder="owner" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
+            <input id="cfg-gh-repo" type="text" value="${repo.replace(/"/g,'&quot;')}" placeholder="repo" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
+            <input id="cfg-gh-branch" type="text" value="${branch.replace(/"/g,'&quot;')}" placeholder="branch (예: main)" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
+            <input id="cfg-gh-path" type="text" value="${path.replace(/"/g,'&quot;')}" placeholder="path (예: star-datacenter/data.json)" style="height:32px;border-radius:10px;border:1px solid var(--border2);padding:0 10px;font-size:12px">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+            <button class="btn btn-w btn-xs" onclick="saveGhRepoSettings()">Repo 경로 저장</button>
+            <span style="font-size:11px;color:var(--gray-l)">※ Repo 경로는 <b>업로드(커밋)</b>에 필요합니다. (보기만이면 RAW URL만 있어도 됨)</span>
+          </div>
+        </div>
+      `;
+    })()}
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
@@ -4014,7 +4065,7 @@ ${_scfgD('notice','📢 공지 관리')}
         <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
         <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
       </div>
-      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
+      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (GitHub 업로드 비활성)'}</div>
     </div>
     </div>
   </details>
@@ -6840,7 +6891,42 @@ function saveGhToken(){
 function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
-  if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
+  if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성)';
+}
+
+// ─────────────────────────────────────────────
+// 동기화 설정 (GitHub 기본)
+// ─────────────────────────────────────────────
+function saveSyncMode(){
+  const sel = document.getElementById('cfg-sync-mode');
+  const mode = (sel?.value || 'github').trim() || 'github';
+  localStorage.setItem('su_sync_mode', mode);
+  alert(`동기화 모드가 ${mode==='github'?'GitHub':'Firebase'}로 설정되었습니다.\n페이지를 새로고침합니다.`);
+  location.reload();
+}
+
+function saveGhSyncSettings(){
+  const raw = (document.getElementById('cfg-gh-raw-url')?.value || '').trim();
+  const sec = parseInt(document.getElementById('cfg-gh-poll-sec')?.value || '45', 10);
+  if(raw) localStorage.setItem('su_gh_raw_url', raw);
+  else localStorage.removeItem('su_gh_raw_url');
+  const pollMs = Math.max(10, Math.min(300, isNaN(sec)?45:sec)) * 1000;
+  localStorage.setItem('su_gh_poll_ms', String(pollMs));
+  alert('RAW URL / 폴링 설정을 저장했습니다.\n페이지를 새로고침합니다.');
+  location.reload();
+}
+
+function saveGhRepoSettings(){
+  const owner = (document.getElementById('cfg-gh-owner')?.value || '').trim();
+  const repo = (document.getElementById('cfg-gh-repo')?.value || '').trim();
+  const branch = (document.getElementById('cfg-gh-branch')?.value || '').trim();
+  const path = (document.getElementById('cfg-gh-path')?.value || '').trim();
+  if(owner) localStorage.setItem('su_gh_owner', owner); else localStorage.removeItem('su_gh_owner');
+  if(repo) localStorage.setItem('su_gh_repo', repo); else localStorage.removeItem('su_gh_repo');
+  if(branch) localStorage.setItem('su_gh_branch', branch); else localStorage.removeItem('su_gh_branch');
+  if(path) localStorage.setItem('su_gh_path', path); else localStorage.removeItem('su_gh_path');
+  alert('Repo 업로드 경로를 저장했습니다.\n페이지를 새로고침합니다.');
+  location.reload();
 }
 
 // ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
